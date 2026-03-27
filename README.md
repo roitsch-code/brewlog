@@ -186,7 +186,12 @@ Weekly research agent — every Monday at 06:00 UTC (`vercel.json`):
 
 ## Screenshots
 
-> Add screenshots here — home screen, brew flow, match finder, explore chat
+<div align="center">
+  <img src="public/screenshots/home.png" width="22%" alt="Home — brew diary" />
+  <img src="public/screenshots/library.png" width="22%" alt="Coffee Library" />
+  <img src="public/screenshots/match.png" width="22%" alt="Match Finder" />
+  <img src="public/screenshots/explore.png" width="22%" alt="Explore — AMA chat" />
+</div>
 
 ---
 
