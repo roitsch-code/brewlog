@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "brewlog",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--hostname", "0.0.0.0"],
+      "port": 3000,
+      "cwd": "/Users/A10091393/Claude Code/coffee-brew-log"
+    }
+  ]
+}

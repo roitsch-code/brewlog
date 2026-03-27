@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: #0A0A0A;
+  }
+
+  body {
+    background-color: #0A0A0A;
+    color: #FFFFFF;
+    font-family: 'Inter', system-ui, sans-serif;
+    overscroll-behavior: none;
+    min-height: 100svh;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  .font-display {
+    font-family: 'DM Serif Display', Georgia, serif;
+  }
+  .font-mono-num {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  .text-gradient-amber {
+    background: linear-gradient(135deg, #F0EDE8, #ffffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .card-scrim {
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+  }
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  BrewLog Typography System
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ *  TYPEFACES
+ *  .font-display   DM Serif Display — page titles, active brew step hero
+ *  .font-mono-num  JetBrains Mono   — every number, time, gram value
+ *  (default)       Inter            — all other text
+ *
+ *  SCALE
+ *  text-3xl  font-display   — H1: page title (BrewLog, Taste Profile…)
+ *  text-2xl  font-display   — H2: card heading, section hero
+ *  text-xl   font-display   — H3: active step title
+ *  text-sm   Inter          — body / card content
+ *  text-xs   Inter          — caption / helper
+ *
+ *  SECTION LABELS  → ONE style only:
+ *  text-xs uppercase tracking-widest text-brew-muted
+ *  (never use tracking-wider, never use font-medium on labels alone)
+ *
+ *  COLOR LEVELS
+ *  text-white          primary content
+ *  text-white/60       secondary (sub-titles, card meta, readable secondary)
+ *  text-white/30       dim / inactive / placeholder
+ *  text-brew-muted     section labels & meta (named token, ~white/50)
+ *  text-brew-accent    highlights & accent values
+ *
+ *  BANNED
+ *  text-white/{90,80,75,70,55,50}  → use text-white or text-white/60
+ *  text-white/{35,25,20}           → use text-white/30
+ *  tracking-wider (in label context) → tracking-widest
+ *  arbitrary sizes text-[9px] text-[10px] → text-xs minimum
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+@keyframes spin-once {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin-once {
+  animation: spin-once 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes step-activate {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+.animate-step-activate {
+  animation: step-activate 0.35s ease-out;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+.animate-countdown-pulse {
+  animation: countdown-pulse 0.7s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Coffee knowledge hint: slow fade-in, hold, slow fade-out over 10s */
+@keyframes hint-cycle {
+  0%   { opacity: 0; transform: translateY(5px); }
+  10%  { opacity: 1; transform: translateY(0); }
+  88%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+.animate-hint-cycle {
+  animation: hint-cycle 10s ease-in-out forwards;
+}

@@ -1,0 +1,15 @@
+export interface Coffee {
+  id: string;
+  roaster: string;
+  name: string;
+  origin: string;
+  process: string;
+  firstSeenAt: string;
+  sessionCount: number;
+  sessionIds: string[];
+  bestMethod?: string;
+  avgRating?: number;
+  ratingSum?: number;
+  ratingCount?: number;
+  bagPhotoUrl?: string;
+}

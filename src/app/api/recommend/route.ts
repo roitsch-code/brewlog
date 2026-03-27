@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+import { generateRecommendation } from "@/lib/claude/recommend";
+import { getAdminDb } from "@/lib/firebase/admin";
+import type { UserPreferences } from "@/lib/types/preferences";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { coffee, context, pastSessions } = await req.json();
+
+    let preferences: UserPreferences | null = null;
+    try {
+      const db = getAdminDb();
+      const snap = await db.collection("preferences").doc("default").get();
+      if (snap.exists) preferences = snap.data() as UserPreferences;
+    } catch {}
+    const prefs = preferences || {
+      equipment: ["V60", "V60 + Drip Assist", "OreaV4", "Kalita", "CleverDripper", "AeroPress", "Moccamaster"],
+      grinder: "Niche Zero",
+      tasteProfile: { preferredBodyLevel: "medium", preferredAcidityLevel: "medium-high", likedOrigins: ["Ethiopia", "Brazil", "Kenya", "Costa Rica"], likedProcesses: ["Natural", "Washed", "Honey"], avoidProcesses: ["Anaerobic"] },
+      defaultAmount: "small",
+      onboardingComplete: true,
+    };
+
+    const recommendation = await generateRecommendation(coffee, context, prefs, pastSessions || []);
+    return NextResponse.json(recommendation);
+  } catch (err) {
+    console.error("recommend error:", err);
+    return NextResponse.json({ error: "Recommendation failed" }, { status: 500 });
+  }
+}
