@@ -127,6 +127,15 @@ cp .env.example .env.local
 npm run dev
 ```
 
+### Personalise for your setup
+
+1. Set `USER_DISPLAY_NAME` and `USER_LOCATION` in `.env.local`
+2. Update your equipment, grind settings, and taste profile in:
+   - `src/lib/claude/recommend.ts` — brew recipe system prompt
+   - `src/app/api/explore/route.ts` — AMA chat system prompt
+   - `src/app/api/match/route.ts` — match scoring baseline
+3. Update `CLAUDE.md` with your own profile for Claude Code context
+
 ### Firebase
 
 1. Create a Firebase project
@@ -172,6 +181,12 @@ Weekly research agent — every Monday at 06:00 UTC (`vercel.json`):
 
 /coffeeAlerts/{id}          — incoming alerts from webhook
 ```
+
+---
+
+## Screenshots
+
+> Add screenshots here — home screen, brew flow, match finder, explore chat
 
 ---
 

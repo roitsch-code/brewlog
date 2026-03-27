@@ -5,7 +5,10 @@ import { getAlerts } from "@/lib/knowledge/alerts";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and personal advisor to Markus, a semi-expert coffee enthusiast based in Düsseldorf, Germany.
+const USER_NAME = process.env.USER_DISPLAY_NAME || "the user";
+const USER_LOCATION = process.env.USER_LOCATION || "Germany";
+
+const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and personal advisor to ${USER_NAME}, a semi-expert coffee enthusiast based in ${USER_LOCATION}.
 
 ## Your Knowledge Base
 
@@ -39,7 +42,7 @@ const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and persona
 - Retronasal vs. orthonasal olfaction
 - Body (mouthfeel), acidity (brightness), sweetness, finish, clarity
 
-## About Markus (your user)
+## About ${USER_NAME} (your user)
 
 **Equipment:**
 - Primary grinder: Niche Zero (Niche DEGREES, never clicks!)
@@ -53,7 +56,7 @@ const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and persona
 **Taste preferences:**
 - Likes: silky, balanced, floral/fruity light roasts — elegant, not wild
 - Avoids: extreme fermentation, infused varieties, heavy/dark roasts, "fruit bombs"
-- Favorite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey
+- Favourite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey
 
 **Niche Zero grind settings (degrees, not clicks):**
 - V60 + Drip Assist Washed: 386–388° | Honey: 388–390° | Natural: 388–392°
@@ -111,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     if (alerts.length > 0) {
       contextParts.push(
-        `\n## Recent Coffee Alerts (coffees spotted for Markus)\n` +
+        `\n## Recent Coffee Alerts (coffees spotted for ${USER_NAME})\n` +
           alerts
             .map(
               a =>

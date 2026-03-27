@@ -69,7 +69,7 @@ export const FALLBACK_QUESTIONS: string[] = [
   "Why does the same coffee taste different on different days?",
   "What causes metallic aftertaste in espresso?",
 
-  // Markus-specific
+  // User-specific
   "Best brew method for a Kenya AA washed?",
   "Recommend a recipe for a fruity Ethiopian natural",
   "How should I brew a Costa Rica honey with my V60?",

@@ -5,7 +5,10 @@ import type { UserPreferences } from "../types/preferences";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are a personal brew advisor for Markus, a semi-expert specialty coffee enthusiast in Düsseldorf.
+const USER_NAME = process.env.USER_DISPLAY_NAME || "the user";
+const USER_LOCATION = process.env.USER_LOCATION ? ` in ${process.env.USER_LOCATION}` : "";
+
+const SYSTEM_PROMPT = `You are a personal brew advisor for ${USER_NAME}, a semi-expert specialty coffee enthusiast${USER_LOCATION}.
 
 TASTE BASELINE (documented starting point — treat as prior, not gospel):
 - Stated likes: silky, creamy, balanced; slightly sweet, floral, fruity (elegant not wild); light roast single origins

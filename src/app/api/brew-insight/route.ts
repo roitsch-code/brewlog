@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
       )
       .join("\n");
 
-    const prompt = `You are reviewing a brew session for Markus, a specialty coffee enthusiast.
+    const userName = process.env.USER_DISPLAY_NAME || "the user";
+    const prompt = `You are reviewing a brew session for ${userName}, a specialty coffee enthusiast.
 
 This session:
 - Coffee: ${coffee.name} by ${coffee.roaster || "?"}
