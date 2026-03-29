@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrewLog</title>
+  <meta name="description" content="A private, personal coffee advisor and diary. Scan a bag, get a recipe tuned to your history, brew, log, and watch the recommendations get sharper with every cup." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">BrewLog</a>
+  <ul class="nav-links">
+    <li><a href="the-gap.html">The Gap</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="open-source.html">Open Source</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+  <header class="hero">
+    <span class="eyebrow">A personal project</span>
+    <h1>The coffee tool<br />that learns <em>your</em> palate.</h1>
+    <p class="hero-sub">A private brew advisor and diary. Scan a bag, get a recipe tuned to your history, brew, log. The more you use it, the sharper it gets.</p>
+    <div class="btn-row">
+      <a href="how-it-works.html" class="btn-primary">See how it works</a>
+      <a href="the-gap.html" class="btn-secondary">Why it exists</a>
+    </div>
+  </header>
+
+  <div class="phone-row fade-in">
+    <div>
+      <div class="phone"><img src="screenshots/home.png" alt="BrewLog home feed" /></div>
+      <p class="phone-caption">Your brew diary</p>
+    </div>
+    <div>
+      <div class="phone"><img src="screenshots/match.png" alt="Match Finder" /></div>
+      <p class="phone-caption">Match Finder</p>
+    </div>
+    <div>
+      <div class="phone"><img src="screenshots/explore.png" alt="Explore — Ask anything" /></div>
+      <p class="phone-caption">Explore</p>
+    </div>
+  </div>
+
+  <section>
+    <span class="section-label">The idea</span>
+    <h2>Not a product.<br /><em>A personal tool.</em></h2>
+    <p>
+      Every other coffee app tries to make everyone happy. BrewLog tries to make one person happy — whoever built it. The equipment list, the grind settings, the taste baseline, the recommendation logic: all of it is configured around a single person's setup and palate. That is the point. And that is what became possible with tools like Claude Code.
+    </p>
+    <p>
+      Built in three evenings. A €20 Claude Code account. No team. No roadmap. No compromise.
+    </p>
+    <div class="btn-row" style="margin-top: 24px;">
+      <a href="about.html" class="btn-secondary">About the idea →</a>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">End to end</span>
+    <h2>Every interaction<br /><em>creates data.</em></h2>
+    <p>BrewLog is not a feature set. It is a loop. Every part of it — every tap, every rating, every coffee shop visit — is a data occasion that makes the next recommendation sharper.</p>
+
+    <div class="flywheel" style="margin-top: 32px;">
+      <div class="flywheel-title">The feedback loop</div>
+      <div class="flywheel-nodes">
+        <span class="fw-node">Scan a bag</span>
+        <span class="fw-arrow">→</span>
+        <span class="fw-node">Get a recipe</span>
+        <span class="fw-arrow">→</span>
+        <span class="fw-node">Brew it</span>
+        <span class="fw-arrow">→</span>
+        <span class="fw-node">Log taste + craft</span>
+        <span class="fw-arrow">→</span>
+        <span class="fw-node highlight">Sharper next time</span>
+      </div>
+    </div>
+
+    <p style="margin-top: 8px;">The loop works whether you're home with your V60 or in a coffee shop across town. <a href="how-it-works.html">See the full picture →</a></p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="footer-logo">BrewLog</span>
+    <p class="footer-sub">A personal brew advisor. Open source.</p>
+    <ul class="footer-links">
+      <li><a href="the-gap.html">The Gap</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="open-source.html">Open Source</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

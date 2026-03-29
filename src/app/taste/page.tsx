@@ -122,6 +122,9 @@ function computeStats(sessions: Session[]): TasteStats {
 export default function TastePage() {
   const [stats, setStats] = useState<TasteStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{type: string; text: string; tag: string}>>([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -129,7 +132,23 @@ export default function TastePage() {
 
     fetch("/api/sessions?limit=100", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
-      .then((sessions: Session[]) => setStats(computeStats(Array.isArray(sessions) ? sessions : [])))
+      .then((sessions: Session[]) => {
+        const s = computeStats(Array.isArray(sessions) ? sessions : []);
+        setStats(s);
+        // Fetch AI narrative once we have stats
+        if (s.totalSessions >= 3) {
+          setSummaryLoading(true);
+          fetch("/api/taste-summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(s),
+          })
+            .then(r => r.json())
+            .then(d => { setSummary(d.summary ?? null); setSuggestions(d.suggestions ?? []); })
+            .catch(() => {})
+            .finally(() => setSummaryLoading(false));
+        }
+      })
       .catch(() => setStats(computeStats([])))
       .finally(() => { clearTimeout(timer); setLoading(false); });
 
@@ -182,6 +201,21 @@ export default function TastePage() {
             <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Rated Brews</p>
           </div>
         </div>
+
+        {/* AI narrative summary */}
+        {(summaryLoading || summary) && (
+          <div className="bg-brew-surface rounded-2xl px-4 py-4 border border-brew-border/40">
+            {summaryLoading && !summary ? (
+              <div className="space-y-2">
+                <div className="h-3 bg-brew-elevated rounded-full w-full animate-pulse" />
+                <div className="h-3 bg-brew-elevated rounded-full w-5/6 animate-pulse" />
+                <div className="h-3 bg-brew-elevated rounded-full w-4/6 animate-pulse" />
+              </div>
+            ) : (
+              <p className="text-white/80 text-sm leading-relaxed">{summary}</p>
+            )}
+          </div>
+        )}
 
         {/* Flavor radar */}
         <Section title="Flavor Profile">
@@ -262,6 +296,20 @@ export default function TastePage() {
         {stats.topMethods.length > 0 && (
           <Section title="Best Methods">
             <RankedList items={stats.topMethods} />
+          </Section>
+        )}
+
+        {/* Explore Next */}
+        {suggestions.length > 0 && (
+          <Section title="Explore Next">
+            <div className="space-y-3">
+              {suggestions.map((s, i) => (
+                <div key={i} className="bg-brew-surface rounded-2xl px-4 py-3 border border-brew-border/40 flex items-start gap-3">
+                  <span className="text-brew-accent text-xs font-mono-num uppercase tracking-wide shrink-0 mt-0.5 bg-brew-accent/10 px-2 py-1 rounded-lg">{s.tag}</span>
+                  <p className="text-white/70 text-sm leading-relaxed">{s.text}</p>
+                </div>
+              ))}
+            </div>
           </Section>
         )}
       </div>

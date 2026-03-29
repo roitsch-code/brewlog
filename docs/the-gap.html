@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Gap — BrewLog</title>
+  <meta name="description" content="An NYT article, a befriended coffee expert, and a missing tool. Why BrewLog exists." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">BrewLog</a>
+  <ul class="nav-links">
+    <li><a href="the-gap.html" class="active">The Gap</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="open-source.html">Open Source</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+  <header class="page-header">
+    <span class="eyebrow">Why it exists</span>
+    <h1>An article, a befriended<br />coffee expert,<br /><em>and a missing tool.</em></h1>
+  </header>
+
+  <section style="border-top: 1px solid var(--border);">
+    <span class="section-label">The spark</span>
+    <h2>An AI sommelier<br /><em>gets something right.</em></h2>
+
+    <p>
+      It started with <strong>Mateusz Petlinski</strong> sharing an <a href="https://www.nytimes.com/2026/03/19/dining/drinks/ai-wine-sommelier.html" target="_blank" rel="noopener">article in the New York Times</a> about an AI wine sommelier. Mateusz has a reliable talent for sending me down rabbit holes. More than a decade ago he was the person who made me understand how specialty coffee actually works. Before him I was brewing an espresso blend as filter and calling it a day. Today I travel through airport security with a precision kit that makes the staff genuinely unsure whether I am a chemist or something worse.
+    </p>
+
+    <p>
+      The AI sommelier thesis in the article was correct — and the implications go further than just getting a recommendation. Feed a model enough honest personal data and it becomes a confident, calibrated interlocutor. Not just for deciding what to drink, but for knowing what to ask the human sommelier, for articulating your own taste more precisely, for having a conversation about flavour with actual substance behind it.
+    </p>
+
+    <div class="pull-quote fade-in">
+      <p>"What if the data from all those careful brews could teach something back to you — patterns in what you actually love, not just what you think or say you'd love?"</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">The problem</span>
+    <h2>The execution<br /><em>was wrong.</em></h2>
+
+    <p>
+      But how most people use AI for taste and recommendations is almost worthless. A one-off question, no personal context, no history — the model has nothing to work with beyond generalised knowledge. It tells you what most people with your stated preferences might like. That is not the same thing as what you will like.
+    </p>
+
+    <p>
+      A great sommelier carries years of expertise and empathic understanding. But even they cannot connect the dots across hundreds of your cups. They don't know what you drank last Tuesday, in what mood, with what food, brewed how. They can't know that your palate shifted in winter, or that you rate a certain origin lower when you brew it before 8am, or that one roaster you'd written off was consistently suffering from your own over-extraction rather than their sourcing.
+    </p>
+
+    <p>
+      That gap is not filled by expertise alone. It is filled by data — your data, accumulated over time, fed back honestly into a model that has the context to interpret it.
+    </p>
+
+    <div class="divider"></div>
+
+    <p>
+      The tools that existed were either passive archives (great for logging, useless for learning) or generic recommendation engines (optimised for a broad audience, not for one person). Nothing closed the loop. Nothing took what you carefully documented and made it actionable for the next cup.
+    </p>
+
+    <div class="feature-grid fade-in">
+      <div class="feature-card">
+        <span class="feature-icon">✗</span>
+        <div class="feature-title">Brew diaries</div>
+        <p class="feature-desc">Capture what happened. Never tell you what to do differently. The data accumulates but stays inert.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✗</span>
+        <div class="feature-title">Generic recommendation apps</div>
+        <p class="feature-desc">Built for an audience. Average preferences, average results. The opposite of personal.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✗</span>
+        <div class="feature-title">One-off AI queries</div>
+        <p class="feature-desc">No history, no context. Like asking a stranger on the street what you should order for lunch.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✓</span>
+        <div class="feature-title">BrewLog</div>
+        <p class="feature-desc">Every session feeds the next. The loop is the product. Documentation and recommendation are the same tool.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">The insight</span>
+    <h2>Data occasions,<br /><em>not just features.</em></h2>
+
+    <p>
+      The design principle behind BrewLog is not "add useful features." It is: create more reasons to generate honest data, so the recommendations get sharper over time.
+    </p>
+
+    <p>
+      Every interaction is a data occasion. A home brew gives you the full loop — recipe, execution, result, attribution. A coffee shop visit gives you a taste log without the brewing variables. The Match Finder gives you a pre-purchase evaluation against your actual history. The Explore page gives you a place to build knowledge and ask questions in context. Every one of these occasions teaches the system something.
+    </p>
+
+    <p>
+      The system is circular by design. <a href="how-it-works.html">See how each piece connects →</a>
+    </p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="footer-logo">BrewLog</span>
+    <p class="footer-sub">A personal brew advisor. Open source.</p>
+    <ul class="footer-links">
+      <li><a href="the-gap.html">The Gap</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="open-source.html">Open Source</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

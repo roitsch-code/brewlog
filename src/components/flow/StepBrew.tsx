@@ -142,7 +142,9 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSe
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep  = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
-  const allPoursDone = started && elapsed >= steps[steps.length - 1].startTimeSec;
+  const lastPourStart = steps[steps.length - 1].startTimeSec;
+  const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastPourStart) * 0.35));
+  const allPoursDone = started && elapsed >= lastPourStart + pourGraceSec;
 
   const [flashKey, setFlashKey] = useState(0);
   useEffect(() => {
@@ -319,8 +321,16 @@ function StepDots({ steps, activeIdx, allDone }: {
   activeIdx: number;
   allDone: boolean;
 }) {
-  const shortLabel = (s: PourStep, i: number) =>
-    i === 0 ? "Bloom" : i === steps.length - 1 ? "Final" : `P${i + 1}`;
+  // Build full dot sequence matching the pour plan: Ready → pours → Drain
+  const pourLabels = steps.map((_, i) =>
+    i === 0 ? "Bloom" : i === steps.length - 1 ? "Final" : `P${i + 1}`
+  );
+  const labels = ["Ready", ...pourLabels, "Drain"];
+  const total = labels.length;
+
+  // activeIdx === -1 means not yet started → position 0 (Ready)
+  const currentPos = allDone ? total - 1 : activeIdx === -1 ? 0 : activeIdx + 1;
+  const fillPct = total > 1 ? (currentPos / (total - 1)) * 100 : 0;
 
   return (
     <div className="px-1">
@@ -330,18 +340,14 @@ function StepDots({ steps, activeIdx, allDone }: {
         {/* Progress fill */}
         <div
           className="absolute top-[9px] left-[9px] h-px bg-brew-accent/50 transition-all duration-500"
-          style={{
-            width: steps.length > 1
-              ? `${(Math.min(activeIdx, steps.length - 1) / (steps.length - 1)) * 100}%`
-              : "0%",
-          }}
+          style={{ width: `${fillPct}%` }}
         />
 
-        {steps.map((step, i) => {
-          const isDone   = allDone || i < activeIdx;
-          const isActive = !allDone && i === activeIdx;
+        {labels.map((label, pos) => {
+          const isDone   = pos < currentPos;
+          const isActive = pos === currentPos;
           return (
-            <div key={i} className="relative flex flex-col items-center gap-1.5 z-10">
+            <div key={pos} className="relative flex flex-col items-center gap-1.5 z-10">
               <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all duration-300 ${
                 isDone
                   ? "bg-brew-accent/20 border border-brew-accent/50"
@@ -349,13 +355,13 @@ function StepDots({ steps, activeIdx, allDone }: {
                     ? "bg-brew-accent/20 border-2 border-brew-accent"
                     : "bg-brew-bg border border-white/20"
               }`}>
-                {isDone && <div className="w-1.5 h-1.5 rounded-full bg-brew-accent/70" />}
+                {isDone   && <div className="w-1.5 h-1.5 rounded-full bg-brew-accent/70" />}
                 {isActive && <div className="w-1.5 h-1.5 rounded-full bg-brew-accent" />}
               </div>
-              <span className={`text-xs font-mono-num leading-none text-center ${
+              <span className={`text-[10px] font-mono-num leading-none text-center ${
                 isActive ? "text-brew-accent" : isDone ? "text-white/30" : "text-white/30"
               }`}>
-                {shortLabel(step, i)}
+                {label}
               </span>
             </div>
           );

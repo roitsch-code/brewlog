@@ -78,6 +78,8 @@ function analyzeHistory(rated: Session[]) {
   const avgRatingByKey = (key: "origin" | "process" | "roastLevel") => {
     const sums: Record<string, { sum: number; count: number }> = {};
     for (const s of rated) {
+      // Exclude brew errors from taste-profile calculations — the cup was bad, not the bean
+      if (s.result?.attribution === "brew") continue;
       const val = s.coffee?.[key];
       const r = s.result?.rating;
       if (val && r) {
@@ -102,6 +104,34 @@ function analyzeHistory(rated: Session[]) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k);
   })();
 
+  // Roaster craft reliability: avg craft score per roaster (off=1, solid=2, exceptional=3)
+  const roasterCraftMap: Record<string, { sum: number; count: number; exceptional: number; off: number }> = {};
+  for (const s of rated) {
+    const roaster = s.coffee?.roaster;
+    const craft = s.result?.craft;
+    if (!roaster || !craft) continue;
+    if (!roasterCraftMap[roaster]) roasterCraftMap[roaster] = { sum: 0, count: 0, exceptional: 0, off: 0 };
+    roasterCraftMap[roaster].sum += craft === "exceptional" ? 3 : craft === "solid" ? 2 : 1;
+    roasterCraftMap[roaster].count++;
+    if (craft === "exceptional") roasterCraftMap[roaster].exceptional++;
+    if (craft === "off") roasterCraftMap[roaster].off++;
+  }
+  const roasterCraft = Object.entries(roasterCraftMap)
+    .map(([name, v]) => ({ name, avgCraft: Math.round(v.sum / v.count * 10) / 10, count: v.count, exceptional: v.exceptional, off: v.off }))
+    .sort((a, b) => b.avgCraft - a.avgCraft);
+
+  // Fit by process: how often each process feels like "my kind of cup" vs "not my style"
+  const fitByProcess: Record<string, { myKind: number; neutral: number; notMyStyle: number }> = {};
+  for (const s of rated) {
+    const process = s.coffee?.process;
+    const fit = s.result?.fit;
+    if (!process || !fit) continue;
+    if (!fitByProcess[process]) fitByProcess[process] = { myKind: 0, neutral: 0, notMyStyle: 0 };
+    if (fit === "my-kind") fitByProcess[process].myKind++;
+    else if (fit === "neutral") fitByProcess[process].neutral++;
+    else if (fit === "not-my-style") fitByProcess[process].notMyStyle++;
+  }
+
   return {
     totalRated: rated.length,
     highCount: high.length,
@@ -111,6 +141,8 @@ function analyzeHistory(rated: Session[]) {
     processRatings: avgRatingByKey("process"),
     roastLevelRatings: avgRatingByKey("roastLevel"),
     topFlavorNotes,
+    roasterCraft,
+    fitByProcess,
   };
 }
 
@@ -179,9 +211,22 @@ export async function POST(req: NextRequest) {
       : "";
 
     // Recent sessions (last 12 rated)
-    const recentHistory = rated.slice(0, 12).map(s =>
-      `- ${s.coffee?.name ?? "?"} by ${s.coffee?.roaster ?? "?"}: ${s.coffee?.origin ?? "?"} ${s.coffee?.process ?? ""} ${s.coffee?.roastLevel ?? ""} | ${s.result?.rating}/5 | ${s.result?.flavorNotes?.join(", ") || "no notes"} | body: ${s.result?.body ?? "?"} | acidity: ${s.result?.acidity ?? "?"}`
-    ).join("\n");
+    const recentHistory = rated.slice(0, 12).map(s => {
+      const attr = s.result?.attribution ? ` | attributed to: ${s.result.attribution}` : "";
+      const craft = s.result?.craft ? ` | craft: ${s.result.craft}` : "";
+      const fit = s.result?.fit ? ` | fit: ${s.result.fit}` : "";
+      return `- ${s.coffee?.name ?? "?"} by ${s.coffee?.roaster ?? "?"}: ${s.coffee?.origin ?? "?"} ${s.coffee?.process ?? ""} ${s.coffee?.roastLevel ?? ""} | ${s.result?.rating}/5 | ${s.result?.flavorNotes?.join(", ") || "no notes"} | body: ${s.result?.body ?? "?"} | acidity: ${s.result?.acidity ?? "?"}${attr}${craft}${fit}`;
+    }).join("\n");
+
+    // Roaster craft summary
+    const roasterCraftSummary = patterns.roasterCraft.length > 0
+      ? patterns.roasterCraft.map(r => `  ${r.name}: avg craft ${r.avgCraft}/3 (${r.count} sessions, ${r.exceptional} exceptional, ${r.off} off)`).join("\n")
+      : "  (no craft data yet)";
+
+    // Fit by process summary
+    const fitProcessSummary = Object.keys(patterns.fitByProcess).length > 0
+      ? Object.entries(patterns.fitByProcess).map(([p, v]) => `  ${p}: ${v.myKind} my-kind / ${v.neutral} neutral / ${v.notMyStyle} not-my-style`).join("\n")
+      : "  (no fit data yet)";
 
     // Roast freshness
     let freshnessNote = "";
@@ -228,6 +273,8 @@ export async function POST(req: NextRequest) {
       `\nACTUAL RATINGS BY PROCESS:\n${processSummary}`,
       `\nACTUAL RATINGS BY ROAST LEVEL:\n${roastLevelSummary}`,
       flavorAffinities && `\n${flavorAffinities}`,
+      `\nROASTER CRAFT RELIABILITY:\n${roasterCraftSummary}`,
+      `\nSTYLE FIT BY PROCESS:\n${fitProcessSummary}`,
       rated.length > 0 && `\nRECENT SESSION HISTORY (${patterns.totalRated} rated total — ${patterns.highCount} high, ${patterns.midCount} mid, ${patterns.lowCount} low):\n${recentHistory}`,
       !rated.length && "\nNo brew history yet — rely on stated preferences.",
       `\nAssess how well this coffee suits the user. The actual ratings by origin/process/roast level are the strongest signal. Stated preferences are secondary.${freshnessNote ? " The freshness note is important — factor it into the caution field if relevant." : ""}
@@ -265,6 +312,8 @@ ANALYSIS RULES:
 4. Coffee in the 5–21 day post-roast window is ideal. Under 5 days is too fresh.
 5. Be direct and specific. "Matches your Kenya Washed pattern (avg 4.2★)" beats generic statements.
 6. Score calibration: 85–100 = great, 65–84 = good, 45–64 = maybe, 0–44 = avoid.
+7. Craft vs fit: low rating + craft="exceptional" + fit="not-my-style" = style mismatch, not quality failure. Don't penalise the roaster — flag the style gap instead.
+8. Roaster craft scores are independent of taste fit. A roaster can execute exceptionally on a style the user doesn't prefer — note both signals separately.
 
 Return valid JSON only. No markdown, no explanation outside the JSON.`,
       messages: [{ role: "user", content: contentParts }],

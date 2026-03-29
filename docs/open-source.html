@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Open Source — BrewLog</title>
+  <meta name="description" content="BrewLog is open source and built to be forked. Adapt it to your own setup in an afternoon." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .file-ref {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--amber); background: rgba(200,121,65,0.08);
+      border: 1px solid rgba(200,121,65,0.2); border-radius: 6px;
+      padding: 2px 8px; white-space: nowrap;
+    }
+    .personalise-steps { display: flex; flex-direction: column; gap: 16px; margin: 28px 0; }
+    .personalise-step {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+    }
+    .ps-num {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--amber); flex-shrink: 0; margin-top: 1px; width: 20px;
+    }
+    .ps-content {}
+    .ps-title { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .ps-desc { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">BrewLog</a>
+  <ul class="nav-links">
+    <li><a href="the-gap.html">The Gap</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="open-source.html" class="active">Open Source</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+  <header class="page-header">
+    <span class="eyebrow">Fork it</span>
+    <h1>Personalised by design.<br /><em>Open by default.</em></h1>
+    <p class="hero-sub" style="margin-bottom: 0;">BrewLog is deeply opinionated — built around one person's equipment, grinder, water setup, and taste profile. But it was built to be forked.</p>
+  </header>
+
+  <section style="border-top: 1px solid var(--border);">
+    <span class="section-label">The stack</span>
+    <h2>Deliberately<br /><em>minimal.</em></h2>
+
+    <p>No exotic dependencies. No proprietary lock-in. Everything is replaceable.</p>
+
+    <ul class="stack-list fade-in">
+      <li><span class="stack-key">Framework</span> Next.js 14 App Router + TypeScript</li>
+      <li><span class="stack-key">Database</span> Firebase Firestore (your own instance)</li>
+      <li><span class="stack-key">Storage</span> Firebase Storage (bag photos)</li>
+      <li><span class="stack-key">AI</span> Claude API — Sonnet 4.6 for recommendations, Haiku for lightweight tasks</li>
+      <li><span class="stack-key">Hosting</span> Vercel (one-click deploy)</li>
+      <li><span class="stack-key">Auth</span> WebAuthn / Face ID + PIN fallback, JWT sessions</li>
+      <li><span class="stack-key">Platform</span> iPhone PWA — add to home screen, runs like a native app</li>
+    </ul>
+
+    <div class="tech-note fade-in">
+      <span class="tech-note-icon">→</span>
+      <span>Your brew history never leaves your own Firestore database. Claude API calls are stateless — no session data persists outside your instance. Face ID keeps the app private on device.</span>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">What's personal</span>
+    <h2>Two files hold<br /><em>everything opinionated.</em></h2>
+
+    <p>
+      The entire personality of the recommendation engine lives in two places. Swap those out for your own setup and BrewLog becomes your tool, not someone else's.
+    </p>
+
+    <div style="margin: 24px 0; display: flex; flex-direction: column; gap: 16px;">
+      <div class="about-card fade-in">
+        <h3><span class="file-ref">src/lib/claude/recommend.ts</span></h3>
+        <p style="margin-top: 10px; font-size: 14px;">The brew recommendation system prompt. Contains the full equipment list (every brewer with capacity limits), grinder reference (Niche° settings or Comandante clicks), water setup, taste baseline, championship recipes, timing rules, and the novelty logic for experiment mode. This is where your setup lives.</p>
+      </div>
+      <div class="about-card fade-in">
+        <h3><span class="file-ref">src/app/api/match/route.ts</span></h3>
+        <p style="margin-top: 10px; font-size: 14px;">The coffee match scoring logic. Analyses your brew history for taste patterns — which origins, processes, and methods correlate with your highest ratings — and uses that to evaluate new coffees. The craft/fit attribution data feeds back here to separate execution quality from style alignment.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">Getting started</span>
+    <h2>Adapt it to your<br /><em>setup in an afternoon.</em></h2>
+
+    <div class="personalise-steps">
+      <div class="personalise-step fade-in">
+        <span class="ps-num">1</span>
+        <div class="ps-content">
+          <div class="ps-title">Fork the repo and clone it</div>
+          <p class="ps-desc">Everything is in <a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">github.com/roitsch-code/brewlog</a>. The README has the full setup guide including Firebase project creation and environment variables.</p>
+        </div>
+      </div>
+      <div class="personalise-step fade-in">
+        <span class="ps-num">2</span>
+        <div class="ps-content">
+          <div class="ps-title">Set your environment variables</div>
+          <p class="ps-desc">Set <span class="file-ref">USER_DISPLAY_NAME</span> and <span class="file-ref">USER_LOCATION</span> in <span class="file-ref">.env.local</span>. Add your Anthropic API key, Firebase credentials, and auth secrets. The README lists every variable.</p>
+        </div>
+      </div>
+      <div class="personalise-step fade-in">
+        <span class="ps-num">3</span>
+        <div class="ps-content">
+          <div class="ps-title">Update the equipment and taste profile</div>
+          <p class="ps-desc">Edit <span class="file-ref">recommend.ts</span> with your brewers, grinder, water setup, and taste baseline. The system prompt is written in plain English — update the relevant sections for your kit. The <span class="file-ref">CLAUDE.md</span> file explains each section.</p>
+        </div>
+      </div>
+      <div class="personalise-step fade-in">
+        <span class="ps-num">4</span>
+        <div class="ps-content">
+          <div class="ps-title">Deploy to Vercel</div>
+          <p class="ps-desc">Push to GitHub, connect to Vercel, add the environment variables in the Vercel dashboard. One important note: set all env vars with <span class="file-ref">printf 'value' | vercel env add KEY production</span> — not with heredoc or echo, which add a trailing newline that will break WebAuthn.</p>
+        </div>
+      </div>
+      <div class="personalise-step fade-in">
+        <span class="ps-num">5</span>
+        <div class="ps-content">
+          <div class="ps-title">Add to your iPhone home screen</div>
+          <p class="ps-desc">Open the deployed URL in Safari, tap Share → Add to Home Screen. From that point it runs as a standalone PWA — full screen, no browser chrome, Face ID for auth.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">One honest note</span>
+    <h2>It is a personal tool,<br /><em>not a product.</em></h2>
+    <p>
+      There is no issue tracker, no support, no roadmap. The code is annotated and the CLAUDE.md explains the architecture. If you brew seriously and want something that learns from your data — it should work. If something is broken for your setup, the codebase is small enough to debug yourself.
+    </p>
+    <div class="btn-row" style="margin-top: 24px;">
+      <a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        View source on GitHub
+      </a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="footer-logo">BrewLog</span>
+    <p class="footer-sub">A personal brew advisor. Open source.</p>
+    <ul class="footer-links">
+      <li><a href="the-gap.html">The Gap</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="open-source.html">Open Source</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.08 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

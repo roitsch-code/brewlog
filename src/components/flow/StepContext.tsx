@@ -23,9 +23,9 @@ const AMOUNTS = [
 ];
 
 const TIMES = [
-  { id: "quick",     label: "Quick",     sub: "~5 min" },
-  { id: "normal",    label: "Normal",    sub: "10–15 min" },
-  { id: "unhurried", label: "Unhurried", sub: "20+ min" },
+  { id: "quick",     label: "Quick",     sub: "~2 min" },
+  { id: "normal",    label: "Normal",    sub: "~5 min" },
+  { id: "unhurried", label: "Unhurried", sub: "7 min+" },
 ];
 
 const MOODS = [

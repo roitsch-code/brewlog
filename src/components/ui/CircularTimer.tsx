@@ -43,12 +43,7 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [running]);
 
-  // Auto-stop when target reached
-  useEffect(() => {
-    if (targetSeconds && elapsed >= targetSeconds && running) {
-      stop();
-    }
-  }, [elapsed, targetSeconds, running, stop]);
+  // No auto-stop — user decides when the brew is actually done
 
   const reset = () => {
     setRunning(false);
@@ -61,10 +56,14 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
   const seconds = elapsed % 60;
   const timeStr = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
+  const overtime = targetSeconds ? elapsed > targetSeconds : false;
+  const overSec  = overtime && targetSeconds ? elapsed - targetSeconds : 0;
+
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
   const progress = targetSeconds ? Math.min(elapsed / targetSeconds, 1) : 0;
   const dashOffset = circumference * (1 - progress);
+  const ringColor = overtime ? "#F59E0B" : "#F0EDE8"; // amber when over, accent when on time
 
   return (
     <div className={cn("flex flex-col items-center gap-5", className)}>
@@ -75,7 +74,7 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
           <circle
             cx="90" cy="90" r={radius}
             fill="none"
-            stroke="#F0EDE8"
+            stroke={ringColor}
             strokeWidth="5"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -84,10 +83,17 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono-num text-4xl font-medium text-white tabular-nums">{timeStr}</span>
-          {targetSeconds && (
+          <span className={`font-mono-num text-4xl font-medium tabular-nums ${overtime ? "text-amber-400" : "text-white"}`}>
+            {timeStr}
+          </span>
+          {targetSeconds && !overtime && (
             <span className="text-brew-muted text-xs mt-1">
               / {Math.floor(targetSeconds / 60)}:{String(targetSeconds % 60).padStart(2, "0")}
+            </span>
+          )}
+          {overtime && (
+            <span className="text-amber-400/70 text-xs mt-1 font-mono-num">
+              +{Math.floor(overSec / 60)}:{String(overSec % 60).padStart(2, "0")} over
             </span>
           )}
         </div>
@@ -111,12 +117,12 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
           onClick={() => running ? stop() : setRunning(true)}
           className={cn(
             "px-10 py-4 rounded-full font-semibold text-base transition-all active:scale-95",
-            running
-              ? "bg-brew-surface border border-brew-border text-white"
-              : "bg-white text-black"
+            running && overtime  ? "bg-amber-400/10 border border-amber-400/50 text-amber-400" :
+            running              ? "bg-brew-surface border border-brew-border text-white" :
+                                   "bg-white text-black"
           )}
         >
-          {running ? "Stop" : elapsed > 0 ? "Resume" : "Start Brew"}
+          {running && overtime ? "Done" : running ? "Stop" : elapsed > 0 ? "Resume" : "Start Brew"}
         </button>
       </div>
     </div>

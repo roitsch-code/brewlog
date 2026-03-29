@@ -25,6 +25,9 @@ export default function StepLog() {
   const [flow, setFlow] = useState<string>("");
   const [timing, setTiming] = useState<string>("");
   const [showAllFlavors, setShowAllFlavors] = useState(false);
+  const [attribution, setAttribution] = useState<"brew" | "bean" | "roaster" | null>(null);
+  const [craft, setCraft] = useState<"off" | "solid" | "exceptional" | null>(null);
+  const [fit, setFit] = useState<"not-my-style" | "neutral" | "my-kind" | null>(null);
 
   const toggleFlavor = (f: string) =>
     setSelectedFlavors(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
@@ -33,7 +36,17 @@ export default function StepLog() {
 
   const handleNext = () => {
     setBrew({ ...draft.brew, flow: flow as "too-fast" | "perfect" | "too-slow" | "na", timing: timing as "as-expected" | "faster" | "slower" });
-    setResult({ rating, flavorNotes: selectedFlavors, body, acidity, freeNotes, wouldUseMethodAgain: wouldAgain ?? true });
+    setResult({
+      rating,
+      flavorNotes: selectedFlavors,
+      body,
+      acidity,
+      freeNotes,
+      wouldUseMethodAgain: wouldAgain ?? true,
+      ...(rating <= 3 && attribution ? { attribution } : {}),
+      ...(craft ? { craft } : {}),
+      ...(fit ? { fit } : {}),
+    });
     setStep("summary");
   };
 
@@ -54,6 +67,61 @@ export default function StepLog() {
             {rating === 0 ? "Tap to rate" : ["", "Disappointing", "Okay", "Good", "Great", "Outstanding"][rating]}
           </p>
         </div>
+
+        {/* Attribution — only shown for low ratings */}
+        {rating > 0 && rating <= 3 && (
+          <div className="space-y-3">
+            <h3 className="text-brew-muted text-xs uppercase tracking-widest">What held it back?</h3>
+            <div className="flex gap-2">
+              {(["brew", "bean", "roaster"] as const).map(opt => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setAttribution(prev => prev === opt ? null : opt)}
+                  className={`flex-1 py-3 rounded-2xl border text-sm font-medium transition-all active:scale-95 ${
+                    attribution === opt
+                      ? "border-brew-accent/60 bg-brew-accent/10 text-white"
+                      : "border-brew-border text-brew-muted"
+                  }`}
+                >
+                  {opt === "brew" ? "My brew" : opt === "bean" ? "The bean" : "The roaster"}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Craft — how well was it executed */}
+        {rating > 0 && (
+          <Section title="Craft">
+            <div className="flex gap-2">
+              {(["off", "solid", "exceptional"] as const).map(opt => (
+                <Chip
+                  key={opt}
+                  label={opt === "off" ? "Off" : opt === "solid" ? "Solid" : "Exceptional"}
+                  selected={craft === opt}
+                  onClick={() => setCraft(prev => prev === opt ? null : opt)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Fit — does it suit your taste */}
+        {rating > 0 && (
+          <Section title="Fit">
+            <div className="flex gap-2 flex-wrap">
+              {(["not-my-style", "neutral", "my-kind"] as const).map(opt => (
+                <Chip
+                  key={opt}
+                  label={opt === "not-my-style" ? "Not my style" : opt === "neutral" ? "Neutral" : "My kind of cup"}
+                  selected={fit === opt}
+                  onClick={() => setFit(prev => prev === opt ? null : opt)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* Flow + Timing — home mode only */}
         {!isExternal && (

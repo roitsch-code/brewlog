@@ -47,12 +47,18 @@ The Drip Assist works with V60, Orea V4, Kalita Wave, and Chemex — not just V6
    - Small (350ml): 23g:350ml (1:15.2) | Bloom 50g → 150g → 250g → 350g | ~3:30 total
 
 CHAMPIONSHIP / EXPLORATION MODE — triggers: "experiment", "exploration", "championship", "4:6", "Peng", "Wölfl":
-- Always V60 WITHOUT Drip Assist | Championship water: ~55 ppm (1:3 Brita:distilled) default
-- Niche° without assist: 375–385° (finer than with assist) | Temp: 94–96°C (no extra compensation needed)
-- Methods:
-  · Peng 2025 Temp-Staging: 15g:210g | Water 1:4 (44 ppm) | Niche° 365–375° | 96°C bloom+dev → 80°C final pour → ~1:45 total
-  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 380–390° | 4 rapid pours → ~2:25 total
-  · Kasuya 4:6: 20g:300ml | Water 1:3 (55 ppm) | Niche° 390–400° | 40% acid/sweet phase + 60% strength phase → ~3:00–3:30 total
+NOVELTY RULE (critical for experiment mode): First, scan the brew history. Identify which methods and brewers have been used in the last 8 sessions. Then pick something the user has NOT done recently — or has never done with this specific coffee. If V60 appears ≥3 times in recent history, do NOT recommend V60 as primary. Rotate to Orea, AeroPress, Clever Dripper, or Kalita. The goal is genuine exploration, not repeating the familiar.
+- Championship water: ~55 ppm (1:3 Brita:distilled) default | Temp: 94–96°C
+- Methods — pick the best fit for the coffee profile and user's mood:
+  · Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44 ppm) | Niche° 365–375° | 96°C bloom+dev → 80°C final pour → ~2:00 total
+  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 380–390° | 4 rapid pours → ~3:00 total
+  · Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55 ppm) | Niche° 390–400° | 40% acid/sweet phase + 60% strength phase → ~3:30–4:00 total
+  · Hoffmann AeroPress: 11g:200g | 85°C | Niche° 360–365° | inverted, 2min steep, fast press → ~3:30 total
+  · AeroPress Bypass: 14g:90g concentrate | 88°C | Niche° 355–360° | inverted + 140g bypass water after press → ~3:00 total
+  · Clever Dripper Extended: 20g:300ml | 92°C | Niche° 400–410° | 4min steep, drain → ~5:30 total
+  · Orea Apex (for clarity): 17g:270ml | 95°C | Niche° 382–386° | 3 even pours → ~3:30 total
+  · Orea Classic (for sweetness): 17g:270ml | 94°C | Niche° 385–390° | 3 pours with 30s agitation after bloom → ~4:00 total
+  · Turbo V60 (fast, high turbulence): 15g:250ml | 100°C | Niche° 370–375° | 2 fast pours → ~2:00 total
 
 NICHE° GRIND REFERENCE:
 V60 + Drip Assist: 386–392° | V60 without Assist: 375–385° | Orea: 380–390° | Kalita: 375–385°
@@ -67,6 +73,14 @@ TIMING RULE (critical!):
 Drawdown end = total time = DONE. NEVER add a separate "total time" line after the drawdown.
 Pour sequence format: cumulative weights separated by " – " (e.g. "70 – 220 – 370 – 520")
 For Clever Dripper / Moccamaster / AeroPress: use a short prose description instead.
+
+TIMING & GRIND CALIBRATION:
+- "quick" (2 min): AeroPress, Turbo V60, Peng. targetTimeSec ≤ 150.
+- "normal" (5 min): V60 Drip Assist, Kalita, Orea, Clever. targetTimeSec 240–300.
+- "unhurried" (7 min+): Moccamaster, extended Clever, 4:6. targetTimeSec ≥ 360.
+If a TIMING CALIBRATION note appears in the user message: use it to adjust grindSize, not targetTimeSec.
+Consistently long brews = grind too fine → go coarser. Consistently short = too coarse → go finer.
+Keep targetTimeSec realistic for the method. Let grind do the correcting.
 
 Always give exactly one primary recommendation and one alternative.
 Be specific: include Niche° (or Comandante clicks if travelling), water temp, dose, and pour sequence.
@@ -88,7 +102,10 @@ function buildHistorySummary(pastSessions: Session[]): string {
     const wouldRepeat = s.result?.wouldUseMethodAgain === false ? " · would NOT repeat this method" : "";
     const flow = s.brew?.flow ? ` · flow: ${s.brew.flow}` : "";
     const mods = s.brew?.modifications ? ` · modified: ${s.brew.modifications}` : "";
-    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${flow}${mods}${wouldRepeat}${freeNote}`;
+    const attribution = s.result?.attribution ? ` · low-rated due to: ${s.result.attribution}` : "";
+    const craft = s.result?.craft ? ` · craft: ${s.result.craft}` : "";
+    const fit = s.result?.fit ? ` · fit: ${s.result.fit}` : "";
+    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${flow}${mods}${wouldRepeat}${freeNote}${attribution}${craft}${fit}`;
   });
 
   return lines.join("\n");
@@ -105,6 +122,17 @@ export async function generateRecommendation(
     : "V60, AeroPress, Bialetti";
 
   const historyStr = buildHistorySummary(pastSessions);
+
+  const timingDelta = (() => {
+    const withTiming = pastSessions.filter(s =>
+      s.brew?.actualTimeSec && s.recommendation?.primaryRecipe?.targetTimeSec
+    );
+    if (withTiming.length < 2) return null;
+    const avg = withTiming.reduce((sum, s) =>
+      sum + (s.brew!.actualTimeSec! - s.recommendation!.primaryRecipe!.targetTimeSec), 0
+    ) / withTiming.length;
+    return Math.round(avg);
+  })();
 
   // Translate amount selection to target water volume
   const amountGuide: Record<string, string> = {
@@ -144,7 +172,7 @@ ${grinderNote}
 Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=${preferences.tasteProfile.preferredAcidityLevel}
 User's brew history (use this to learn their taste and refine the recommendation):
 ${historyStr}
-
+${timingDelta !== null ? `\nTIMING CALIBRATION: User's last ${pastSessions.filter(s => s.brew?.actualTimeSec && s.recommendation?.primaryRecipe?.targetTimeSec).length} brews averaged ${timingDelta > 0 ? "+" : ""}${timingDelta}s vs target. ${timingDelta > 20 ? "Grind is likely too fine — adjust 1–2° coarser than baseline to hit target time." : timingDelta < -20 ? "Grind may be too coarse — adjust 1–2° finer." : "Timing is well-calibrated."}` : ""}
 IMPORTANT — pour sequence format:
 Express the pour sequence as CUMULATIVE weight milestones separated by " – ", e.g. "50 – 180 – 320 – 500"
 Each number is the total water in the cup at that moment (not the amount added per pour).

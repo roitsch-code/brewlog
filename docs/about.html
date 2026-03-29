@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — BrewLog</title>
+  <meta name="description" content="About Markus Reuter — the person with the idea. T Gallery, Deutsche Telekom, Third Wave Wichteln, and the instinct to make things real." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 32px 0;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      position: relative;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 17px; top: 40px; bottom: -2px;
+      width: 1px; background: var(--border);
+    }
+    .timeline-item:last-child::before { display: none; }
+    .tl-dot {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--elevated); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: var(--amber); flex-shrink: 0; margin-top: 2px; z-index: 1;
+    }
+    .tl-body { padding-bottom: 28px; }
+    .tl-year { font-size: 11px; color: var(--subtle); letter-spacing: 0.08em; margin-bottom: 3px; }
+    .tl-title { font-weight: 600; font-size: 15px; color: var(--accent); margin-bottom: 5px; }
+    .tl-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0; }
+
+    .parallel-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin: 36px 0;
+    }
+    .parallel-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 20px;
+    }
+    @media (max-width: 520px) { .parallel-cols { grid-template-columns: 1fr; } }
+    .parallel-col-label {
+      font-size: 10px; font-weight: 500; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 10px; display: block;
+    }
+    .parallel-col h4 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px; color: var(--accent); margin-bottom: 8px;
+    }
+    .parallel-col p { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0; }
+    .parallel-divider {
+      width: 1px; background: var(--border);
+      display: none;
+    }
+    @media (min-width: 521px) { .parallel-divider { display: block; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">BrewLog</a>
+  <ul class="nav-links">
+    <li><a href="the-gap.html">The Gap</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="open-source.html">Open Source</a></li>
+    <li><a href="about.html" class="active">About</a></li>
+    <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+  <header class="page-header">
+    <span class="eyebrow">The person with the idea</span>
+    <h1>Ideas are easy.<br /><em>Making them real<br />is the work.</em></h1>
+  </header>
+
+  <section style="border-top: 1px solid var(--border);">
+    <span class="section-label">Who</span>
+    <h2>Markus Reuter<br /><em>aka roitsch.</em></h2>
+
+    <p>
+      I work at <strong>Deutsche Telekom</strong> — at the <a href="https://www.telekom.com/en/company/details/t-gallery-441512" target="_blank" rel="noopener">T Gallery</a> in Bonn. My job is to explore possible futures. Not by collecting trends. Not by filling Miro boards or writing strategy papers that live in a shared drive and shape nothing. By building future scenarios in real life — so people can walk into them, experience them physically, and form an actual opinion about what they want.
+    </p>
+
+    <p>
+      The T Gallery is a space where ideas stop being abstract. Where a future mobility concept becomes a room you can walk through. Where a vision of how we might work or live or communicate is something you touch, not something you read about in a PDF.
+    </p>
+
+    <div class="pull-quote fade-in">
+      <p>"The gap between idea and experience is where most futures die. The work is collapsing that gap."</p>
+    </div>
+
+    <p>
+      That instinct — make it real, make it experienceable, don't let it exist only on a slide — runs through everything. It is why Third Wave Wichteln existed. It is why BrewLog exists.
+    </p>
+  </section>
+
+  <section>
+    <span class="section-label">The thread</span>
+    <h2>The same instinct,<br /><em>three times.</em></h2>
+
+    <div class="timeline fade-in">
+      <div class="timeline-item">
+        <div class="tl-dot">01</div>
+        <div class="tl-body">
+          <div class="tl-year">T Gallery · Deutsche Telekom · Bonn</div>
+          <div class="tl-title">Building futures, not describing them</div>
+          <p class="tl-desc">When a future scenario becomes a room people walk through rather than a document they read, something fundamentally different happens to their understanding of it. That's the premise the T Gallery is built on.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot">02</div>
+        <div class="tl-body">
+          <div class="tl-year">2013 – 2019 · with André Krüger & Tho Keller</div>
+          <div class="tl-title">Third Wave Wichteln</div>
+          <p class="tl-desc">An international coffee gift exchange that connected more than 2,000 people across 50+ countries through a bag of coffee and a handwritten note. It started as a simple idea — what if specialty coffee people sent each other what they loved — and became something that ran for six years across five continents. It ended when COVID stopped the logistics and the trust-based system showed its limits. But it existed. That matters. <a href="https://thirdwavewichteln.com/" target="_blank" rel="noopener">thirdwavewichteln.com ↗</a></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot">03</div>
+        <div class="tl-body">
+          <div class="tl-year">2025 · three evenings · €20</div>
+          <div class="tl-title">BrewLog</div>
+          <p class="tl-desc">A tool I wanted and couldn't find. Built not because the idea seemed feasible, but because not building it felt like a waste. The feedback loop — scan, recommend, brew, log, learn — exists now. It runs on my phone. It gets smarter with every cup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">The parallel</span>
+    <h2>Why BrewLog is<br /><em>a T Gallery project in disguise.</em></h2>
+
+    <p>
+      The connection is not metaphorical. Both are about the same thing: not waiting for someone else to build the thing you can see clearly in your head.
+    </p>
+
+    <div class="parallel-box fade-in">
+      <div class="parallel-cols">
+        <div class="parallel-col">
+          <span class="parallel-col-label">T Gallery</span>
+          <h4>Futures made walkable</h4>
+          <p>A future scenario exists as a physical experience — not a presentation, not a prototype behind glass. People form opinions about things they can actually stand inside.</p>
+        </div>
+        <div class="parallel-divider"></div>
+        <div class="parallel-col">
+          <span class="parallel-col-label">BrewLog</span>
+          <h4>A tool made real</h4>
+          <p>An idea about how AI and personal data could transform how you understand your own taste — not as a concept, not as a feature request, but as a thing running on a phone, learning from every cup.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      What changed is the barrier. Building BrewLog — with a back-end, a database, an AI recommendation pipeline, authentication, a taste profile engine — used to require a team, a budget, months. Now it requires being able to describe clearly what you want and having the patience to refine it. The tools do the execution.
+    </p>
+
+    <p>
+      That shift matters far beyond coffee apps. When the cost of making an idea real collapses, the ideas worth making real change completely. You stop filtering for what is feasible and start building what is actually useful — to you, precisely, without compromise.
+    </p>
+
+    <div class="pull-quote fade-in">
+      <p>"The extraordinary thing is not that I built something sophisticated. It is that I was able to build exactly what I wanted — not a compromise, not a product shaped for a market, but something calibrated entirely to one person's way of working."</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-label">Thanks</span>
+    <h2>People who opened<br /><em>the rabbit holes.</em></h2>
+
+    <p>
+      <strong>Mateusz Petlinski</strong> — for the NYT article and for a decade of making coffee feel like something worth understanding properly.
+    </p>
+    <p>
+      <strong>André Krüger</strong> and <strong>Tho Keller</strong> — for co-founding Third Wave Wichteln and building something that actually connected people rather than just describing how they might be connected.
+    </p>
+    <p>
+      And to everyone who ever packed a bag of coffee and trusted a stranger on another continent to appreciate it.
+    </p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="footer-logo">BrewLog</span>
+    <p class="footer-sub">A personal brew advisor. Open source.</p>
+    <ul class="footer-links">
+      <li><a href="the-gap.html">The Gap</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+      <li><a href="open-source.html">Open Source</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+    <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.08 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+
+type Mode = "loading" | "login" | "register" | "pin";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>("loading");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [error, setError] = useState("");
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const res = await fetch("/api/auth/status");
+        const { registered } = await res.json();
+        if (registered) {
+          setMode("login");
+          await triggerFaceID();
+        } else {
+          setMode("register");
+        }
+      } catch {
+        setMode("register");
+      }
+    }
+    init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function triggerFaceID() {
+    setError("");
+    setWorking(true);
+    try {
+      const challengeRes = await fetch("/api/auth/login-challenge", { method: "POST" });
+      if (!challengeRes.ok) throw new Error("Challenge failed");
+      const options = await challengeRes.json();
+
+      const credential = await startAuthentication({ optionsJSON: options });
+
+      const verifyRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credential),
+      });
+
+      if (verifyRes.ok) {
+        router.replace("/");
+      } else {
+        const data = await verifyRes.json().catch(() => ({}));
+        setError(data.error || "Face ID failed — try again");
+      }
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const msg  = err instanceof Error ? err.message : "";
+      if (name === "NotAllowedError") {
+        setError(""); // user cancelled — stay quiet
+      } else {
+        setError(`Face ID unavailable${msg ? `: ${msg}` : ""} — use PIN below`);
+      }
+    } finally {
+      setWorking(false);
+      setMode("login");
+    }
+  }
+
+  async function handleRegister() {
+    setError("");
+    setWorking(true);
+    try {
+      const challengeRes = await fetch("/api/auth/register-challenge", { method: "POST" });
+      if (!challengeRes.ok) throw new Error("Challenge request failed");
+      const options = await challengeRes.json();
+
+      const credential = await startRegistration({ optionsJSON: options });
+
+      const verifyRes = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credential),
+      });
+
+      if (verifyRes.ok) {
+        router.replace("/");
+      } else {
+        const data = await verifyRes.json().catch(() => ({}));
+        setError(data.error || "Setup failed — try again");
+      }
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const msg  = err instanceof Error ? err.message : "";
+      if (name === "InvalidStateError") {
+        setMode("login");
+        setError("Already set up — tap Use Face ID");
+      } else {
+        setError(`Setup failed${msg ? `: ${msg}` : ""}`);
+      }
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function handlePin() {
+    setPinError("");
+    setWorking(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pin", pin }),
+      });
+      if (res.ok) {
+        router.replace("/");
+      } else {
+        setPinError("Wrong PIN");
+        setPin("");
+      }
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (mode === "loading") {
+    return (
+      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center gap-6">
+        <CoffeeBeanGlow size={72} />
+        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+      </div>
+    );
+  }
+
+  // ── PIN entry ────────────────────────────────────────────────────────────
+  if (mode === "pin") {
+    return (
+      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+        <div className="flex flex-col items-center gap-4">
+          <CoffeeBeanGlow size={56} />
+          <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+        </div>
+
+        <div className="w-full max-w-xs flex flex-col gap-4">
+          <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="PIN"
+            value={pin}
+            onChange={e => setPin(e.target.value)}
+            className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-4 text-white text-center text-2xl tracking-widest placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+            autoFocus
+          />
+          {pinError && <p className="text-red-400 text-sm text-center">{pinError}</p>}
+          <button
+            onClick={handlePin}
+            disabled={pin.length < 4 || working}
+            className="w-full py-4 rounded-2xl bg-brew-accent text-black font-semibold text-base disabled:opacity-40 active:scale-95 transition-all"
+          >
+            {working ? "Checking…" : "Unlock"}
+          </button>
+          <button
+            onClick={() => { setMode("login"); setPin(""); setPinError(""); }}
+            className="text-brew-muted text-sm text-center py-2"
+          >
+            ← Use Face ID
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Face ID (login or register) ──────────────────────────────────────────
+  return (
+    <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+      <div className="flex flex-col items-center gap-4">
+        <CoffeeBeanGlow size={72} />
+        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+      </div>
+
+      <div className="w-full max-w-xs flex flex-col gap-4">
+        {error && (
+          <p className="text-amber-400 text-sm text-center leading-relaxed">{error}</p>
+        )}
+
+        {mode === "register" ? (
+          <button
+            onClick={handleRegister}
+            disabled={working}
+            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+          >
+            {working ? <Spinner /> : <FaceIDIcon />}
+            {working ? "Setting up…" : "Set up Face ID"}
+          </button>
+        ) : (
+          <button
+            onClick={triggerFaceID}
+            disabled={working}
+            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+          >
+            {working ? <Spinner /> : <FaceIDIcon />}
+            {working ? "Verifying…" : "Use Face ID"}
+          </button>
+        )}
+
+        <button
+          onClick={() => setMode("pin")}
+          className="text-brew-muted text-sm text-center py-2"
+        >
+          Use PIN instead
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FaceIDIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 7V4a2 2 0 0 1 2-2h3" />
+      <path d="M17 2h3a2 2 0 0 1 2 2v3" />
+      <path d="M22 17v3a2 2 0 0 1-2 2h-3" />
+      <path d="M7 22H4a2 2 0 0 1-2-2v-3" />
+      <path d="M9 9h.01" />
+      <path d="M15 9h.01" />
+      <path d="M9 15a3 3 0 0 0 6 0" />
+    </svg>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="w-5 h-5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+  );
+}
