@@ -133,11 +133,14 @@ section + section { border-top: 1px solid var(--border); }
 .phone {
   width: 220px;
   background: #0c0c0c;
-  border-radius: 36px;
+  border-radius: 12px;
   border: 1px solid #2a2a2a;
   overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  cursor: zoom-in;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
+.phone:hover { box-shadow: 0 20px 60px rgba(0,0,0,0.7); transform: translateY(-2px); }
 .phone img { display: block; width: 100%; }
 
 /* Phone row (2-3 side by side) */

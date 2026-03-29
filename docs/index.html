@@ -15,10 +15,10 @@
 <nav>
   <a href="index.html" class="nav-logo">BrewLog</a>
   <ul class="nav-links">
-    <li><a href="the-gap.html">The Gap</a></li>
-    <li><a href="how-it-works.html">How It Works</a></li>
-    <li><a href="open-source.html">Open Source</a></li>
-    <li><a href="about.html">About</a></li>
+    <li><a href="the-gap.html">Why it exists</a></li>
+    <li><a href="how-it-works.html">How it works</a></li>
+    <li><a href="about.html">Who built it</a></li>
+    <li><a href="open-source.html">Fork it</a></li>
     <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
   </ul>
 </nav>
@@ -28,7 +28,18 @@
   <header class="hero">
     <span class="eyebrow">A personal project</span>
     <h1>The coffee tool<br />that learns <em>your</em> palate.</h1>
-    <p class="hero-sub">A private brew advisor and diary. Built for one person. Gets sharper with every cup.</p>
+
+    <p class="hero-sub">
+      A rabbit hole that started with an NYT article and a befriended coffee expert — and ended with a private brew advisor that gets sharper with every cup.
+      <a href="the-gap.html">Why it exists.</a>
+      The app scans a bag, reads your history, and suggests an exact recipe tuned to your equipment, your mood, and your palate — then logs the result to make the next one better.
+      <a href="how-it-works.html">How it works.</a>
+      It was built in three evenings by one person with a €20 Claude Code account, for no one but himself.
+      <a href="about.html">Who built it.</a>
+      The code is open, the system prompt is two files, and adapting it to your own setup takes an afternoon.
+      <a href="open-source.html">Fork it.</a>
+    </p>
+
     <div class="btn-row">
       <a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
@@ -37,42 +48,6 @@
     </div>
   </header>
 
-  <div class="phone-row fade-in">
-    <div>
-      <div class="phone"><img src="screenshots/home.png" alt="BrewLog home feed" /></div>
-      <p class="phone-caption">Your brew diary</p>
-    </div>
-    <div>
-      <div class="phone"><img src="screenshots/match.png" alt="Match Finder" /></div>
-      <p class="phone-caption">Match Finder</p>
-    </div>
-    <div>
-      <div class="phone"><img src="screenshots/explore.png" alt="Explore" /></div>
-      <p class="phone-caption">Explore</p>
-    </div>
-  </div>
-
-  <section>
-    <span class="section-label">The loop</span>
-    <h2>Every interaction<br /><em>feeds the next.</em></h2>
-    <p>Not a feature set. A circular system. Every home brew, every coffee shop visit, every bag you check before buying — all of it becomes data that makes the next recommendation sharper.</p>
-
-    <div class="flywheel fade-in" style="margin-top: 28px;">
-      <div class="flywheel-title">The feedback loop</div>
-      <div class="flywheel-nodes">
-        <span class="fw-node">Scan a bag</span>
-        <span class="fw-arrow">→</span>
-        <span class="fw-node">Get a recipe</span>
-        <span class="fw-arrow">→</span>
-        <span class="fw-node">Brew it</span>
-        <span class="fw-arrow">→</span>
-        <span class="fw-node">Log taste + craft</span>
-        <span class="fw-arrow">→</span>
-        <span class="fw-node highlight">A better brew, every time</span>
-      </div>
-    </div>
-  </section>
-
 </div>
 
 <footer>
@@ -80,19 +55,15 @@
     <span class="footer-logo">BrewLog</span>
     <p class="footer-sub">A personal brew advisor. Open source.</p>
     <ul class="footer-links">
-      <li><a href="the-gap.html">The Gap</a></li>
-      <li><a href="how-it-works.html">How It Works</a></li>
-      <li><a href="open-source.html">Open Source</a></li>
-      <li><a href="about.html">About</a></li>
+      <li><a href="the-gap.html">Why it exists</a></li>
+      <li><a href="how-it-works.html">How it works</a></li>
+      <li><a href="about.html">Who built it</a></li>
+      <li><a href="open-source.html">Fork it</a></li>
       <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
     </ul>
     <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
   </div>
 </footer>
 
-<script>
-  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.1 });
-  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
-</script>
 </body>
 </html>

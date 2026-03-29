@@ -10,6 +10,18 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
+    /* Lightbox */
+    .lightbox-overlay {
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; cursor: zoom-out;
+    }
+    .lightbox-overlay.open { display: flex; }
+    .lightbox-overlay img {
+      max-height: 88vh; max-width: 90vw;
+      border-radius: 12px; box-shadow: 0 40px 120px rgba(0,0,0,0.8);
+    }
+
     .screen-feature {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -64,10 +76,10 @@
 <nav>
   <a href="index.html" class="nav-logo">BrewLog</a>
   <ul class="nav-links">
-    <li><a href="the-gap.html">The Gap</a></li>
-    <li><a href="how-it-works.html" class="active">How It Works</a></li>
-    <li><a href="open-source.html">Open Source</a></li>
-    <li><a href="about.html">About</a></li>
+    <li><a href="the-gap.html">Why it exists</a></li>
+    <li><a href="how-it-works.html" class="active">How it works</a></li>
+    <li><a href="open-source.html">Fork it</a></li>
+    <li><a href="about.html">Who built it</a></li>
     <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="cta">GitHub ↗</a></li>
   </ul>
 </nav>
@@ -285,15 +297,20 @@
 
 </div>
 
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox">
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
 <footer>
   <div class="container">
     <span class="footer-logo">BrewLog</span>
     <p class="footer-sub">A personal brew advisor. Open source.</p>
     <ul class="footer-links">
-      <li><a href="the-gap.html">The Gap</a></li>
-      <li><a href="how-it-works.html">How It Works</a></li>
-      <li><a href="open-source.html">Open Source</a></li>
-      <li><a href="about.html">About</a></li>
+      <li><a href="the-gap.html">Why it exists</a></li>
+      <li><a href="how-it-works.html">How it works</a></li>
+      <li><a href="open-source.html">Fork it</a></li>
+      <li><a href="about.html">Who built it</a></li>
       <li><a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener">GitHub</a></li>
     </ul>
     <p class="footer-note">Built by Markus Reuter aka roitsch. Personal project. Not a product. Fork it.</p>
@@ -303,6 +320,18 @@
 <script>
   const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.08 });
   document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  document.querySelectorAll('.phone img').forEach(img => {
+    img.parentElement.addEventListener('click', () => {
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightbox.classList.add('open');
+    });
+  });
+  lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lightbox.classList.remove('open'); });
 </script>
 </body>
 </html>
