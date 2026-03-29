@@ -25,24 +25,75 @@
 
 <div class="container">
 
+  <!-- Hero -->
   <header class="hero">
     <span class="eyebrow">A personal project</span>
     <h1>The coffee tool<br />that learns <em>your</em> palate.</h1>
+  </header>
 
-    <div class="hero-sub" style="display: flex; flex-direction: column; gap: 18px; text-align: left;">
-      <p>A rabbit hole that started with an NYT article and a befriended coffee expert — and ended with a private brew advisor that gets sharper with every cup. <a href="the-gap.html">Why it exists →</a></p>
-      <p>The app scans a bag, reads your history, and suggests an exact recipe tuned to your equipment, your mood, and your palate — then logs the result to make the next one better. <a href="how-it-works.html">How it works →</a></p>
-      <p>It was built in three evenings by one person with a €20 Claude Code account, for no one but himself. <a href="about.html">Who built it →</a></p>
-      <p>The code is open, the system prompt is two files, and adapting it to your own setup takes an afternoon. <a href="open-source.html">Fork it →</a></p>
+  <!-- Chapter 1: Why it exists -->
+  <section>
+    <span class="section-label">Why it exists</span>
+    <h2>An article, a befriended<br /><em>coffee expert, and a gap.</em></h2>
+    <p>
+      It started with a friend sharing an article in the New York Times about an AI wine sommelier. The thesis was right: feed a model enough personal data over time, and it stops guessing what you might like — it knows what you actually rated. Better than any expert who only hears your stated preferences once.
+    </p>
+    <p>
+      The gap was obvious. No tool for coffee closed this loop. Brew diaries were passive archives. Recommendation apps were built for everyone, which means they were built for no one in particular. Nothing took what you carefully documented and made it actionable for the next cup.
+    </p>
+    <div class="btn-row" style="margin-top: 20px;">
+      <a href="the-gap.html" class="btn-secondary">Read the full story →</a>
     </div>
+  </section>
 
-    <div class="btn-row">
+  <!-- Chapter 2: How it works -->
+  <section>
+    <span class="section-label">How it works</span>
+    <h2>Scan, brew, log.<br /><em>Repeat until it knows you.</em></h2>
+    <p>
+      Every session starts with a bag scan — Claude reads the label and fills in what the label doesn't say. Then four taps set the context: occasion, amount, time available, mood. The model returns an exact recipe tuned to the coffee's character, your equipment, and your actual brew history. Grind size to the degree. Pour sequence as cumulative weights.
+    </p>
+    <p>
+      After brewing, you log the result: rating, flavour notes, body, acidity. And two dimensions most apps ignore — how well it was executed, and whether it was your style regardless of execution. Each data point flows back into the next recommendation.
+    </p>
+    <p>
+      The loop works at home with your V60 and in a coffee shop across town. Every interaction — a home brew, a café visit, a bag you scan before buying — is a data occasion that makes the whole system sharper.
+    </p>
+    <div class="btn-row" style="margin-top: 20px;">
+      <a href="how-it-works.html" class="btn-secondary">See the full picture →</a>
+    </div>
+  </section>
+
+  <!-- Chapter 3: Who built it -->
+  <section>
+    <span class="section-label">Who built it</span>
+    <h2>Three evenings.<br /><em>A €20 Claude Code account.</em></h2>
+    <p>
+      Built by Markus Reuter — someone who works at Deutsche Telekom's <a href="https://www.telekom.com/en/company/details/t-gallery-441512" target="_blank" rel="noopener">T Gallery</a> in Bonn, where the job is to make possible futures experienceable rather than just describable. The same instinct that runs the T Gallery runs this project: ideas should exist in the world, not just in documents.
+    </p>
+    <p>
+      Third Wave Wichteln — an international coffee gift exchange that connected more than 2,000 people across 50+ countries from 2013 to 2019 — started the same way. With curiosity, and a decision to make the thing rather than talk about it.
+    </p>
+    <div class="btn-row" style="margin-top: 20px;">
+      <a href="about.html" class="btn-secondary">About the idea →</a>
+    </div>
+  </section>
+
+  <!-- Chapter 4: Fork it -->
+  <section>
+    <span class="section-label">Fork it</span>
+    <h2>Open source.<br /><em>Adapt it in an afternoon.</em></h2>
+    <p>
+      The entire personality of the recommendation engine lives in two files — the system prompt with the equipment list and taste baseline, and the match scoring logic. Swap those for your own setup and it becomes your tool, not someone else's. The stack is Next.js, Firebase, and the Claude API. It runs as a PWA on your iPhone.
+    </p>
+    <div class="btn-row" style="margin-top: 20px;">
       <a href="https://github.com/roitsch-code/brewlog" target="_blank" rel="noopener" class="btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
         View on GitHub
       </a>
+      <a href="open-source.html" class="btn-secondary">Setup guide →</a>
     </div>
-  </header>
+  </section>
 
 </div>
 
@@ -61,5 +112,9 @@
   </div>
 </footer>
 
+<script>
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
 </body>
 </html>

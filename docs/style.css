@@ -159,7 +159,7 @@ section + section { border-top: 1px solid var(--border); }
 .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
 .feature-icon { font-size: 20px; margin-bottom: 10px; display: block; }
 .feature-title { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
-.feature-desc { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
+.feature-desc { font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0; }
 
 /* Flow steps */
 .flow-steps { margin: 32px 0; display: flex; flex-direction: column; }
@@ -178,7 +178,7 @@ section + section { border-top: 1px solid var(--border); }
 }
 .step-content { padding-bottom: 28px; }
 .step-title { font-weight: 600; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
-.step-desc { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.6; }
+.step-desc { font-size: 15px; color: var(--muted); margin: 0; line-height: 1.65; }
 
 /* Recipe card */
 .recipe-card {
@@ -224,7 +224,7 @@ section + section { border-top: 1px solid var(--border); }
   padding: 3px 10px; border-radius: 100px; margin-bottom: 10px;
 }
 .occasion-title { font-size: 15px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
-.occasion-desc { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0; }
+.occasion-desc { font-size: 15px; color: var(--muted); line-height: 1.6; margin: 0; }
 
 /* Page header (for inner pages) */
 .page-header { padding: 120px 0 60px; }
@@ -235,7 +235,7 @@ section + section { border-top: 1px solid var(--border); }
   display: flex; align-items: center; gap: 14px;
   padding: 14px 18px; background: var(--surface);
   border: 1px solid var(--border); border-radius: 12px;
-  font-size: 14px; color: rgba(232,228,223,0.75);
+  font-size: 15px; color: rgba(232,228,223,0.75);
 }
 .stack-list .stack-key { font-weight: 600; color: var(--accent); width: 130px; flex-shrink: 0; }
 
@@ -250,8 +250,8 @@ section + section { border-top: 1px solid var(--border); }
 /* Tech note */
 .tech-note {
   background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 14px 18px; margin: 18px 0; font-size: 13px; color: var(--muted);
-  display: flex; gap: 12px; align-items: flex-start; line-height: 1.55;
+  padding: 16px 20px; margin: 18px 0; font-size: 15px; color: var(--muted);
+  display: flex; gap: 12px; align-items: flex-start; line-height: 1.65;
 }
 .tech-note-icon { color: var(--amber); flex-shrink: 0; }
 
