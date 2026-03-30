@@ -45,20 +45,17 @@ Rules:
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 600,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "user", content: prompt },
+        { role: "assistant", content: "{" },
+      ],
     });
 
-    const text = response.content[0].type === "text" ? response.content[0].text.trim() : null;
-    const stripped = text?.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim() ?? null;
+    const text = response.content[0].type === "text" ? "{" + response.content[0].text.trim() : null;
     try {
-      const jsonStr = stripped?.match(/\{[\s\S]*\}/)?.[0] ?? stripped ?? "{}";
+      const jsonStr = text?.match(/\{[\s\S]*\}/)?.[0] ?? "{}";
       const parsed = JSON.parse(jsonStr);
-      // Safety: if summary itself contains code fences or looks like JSON, discard it
-      let summary = parsed.summary ?? null;
-      if (typeof summary === "string" && (summary.includes("```") || summary.trimStart().startsWith("{"))) {
-        summary = null;
-      }
-      return NextResponse.json({ summary, suggestions: parsed.suggestions ?? [] });
+      return NextResponse.json({ summary: parsed.summary ?? null, suggestions: parsed.suggestions ?? [] });
     } catch {
       return NextResponse.json({ summary: null, suggestions: [] });
     }
