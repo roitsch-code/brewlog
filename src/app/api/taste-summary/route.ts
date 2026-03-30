@@ -39,16 +39,18 @@ Return ONLY valid JSON in this exact structure, no other text:
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 350,
+      max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text.trim() : null;
+    // Strip markdown code fences if present
+    const cleaned = text?.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim() ?? null;
     try {
-      const parsed = JSON.parse(text?.match(/\{[\s\S]*\}/)?.[0] || text || "{}");
+      const parsed = JSON.parse(cleaned?.match(/\{[\s\S]*\}/)?.[0] || cleaned || "{}");
       return NextResponse.json({ summary: parsed.summary ?? null, suggestions: parsed.suggestions ?? [] });
     } catch {
-      return NextResponse.json({ summary: text, suggestions: [] });
+      return NextResponse.json({ summary: null, suggestions: [] });
     }
   } catch (err) {
     console.error("taste-summary error:", err);
