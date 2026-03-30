@@ -13,29 +13,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ summary: null });
     }
 
-    const prompt = `You are writing a personal taste profile summary for a specialty coffee enthusiast. Based on their actual brew data, return valid JSON with two keys: "summary" and "suggestions".
+    const prompt = `You are analysing a specialty coffee brew log. Respond with ONLY a raw JSON object — no markdown, no code fences, no explanation before or after. Start your response with { and end with }.
 
-DATA:
+BREW DATA:
 - Total rated brews: ${stats.totalSessions}
 - Overall average rating: ${stats.avgRating}★
-- Top origins by avg rating: ${stats.topOrigins.map((o: {name:string;avg:number;count:number}) => `${o.name} (${o.avg}★, ${o.count} brews)`).join(", ") || "none yet"}
-- Top processes by avg rating: ${stats.topProcesses.map((p: {name:string;avg:number;count:number}) => `${p.name} (${p.avg}★, ${p.count} brews)`).join(", ") || "none yet"}
-- Top flavors in best sessions: ${stats.topFlavors.slice(0, 5).map((f: {name:string;count:number}) => f.name).join(", ") || "none yet"}
-- Top brew methods: ${stats.topMethods.map((m: {name:string;avg:number;count:number}) => `${m.name} (${m.avg}★)`).join(", ") || "none yet"}
-- Body preference: ${JSON.stringify(stats.bodyDist)}
-- Acidity preference: ${JSON.stringify(stats.acidityDist)}
-- Rating trend (oldest→newest): ${stats.ratingTrend.map((t: {label:string;avg:number}) => `${t.label}: ${t.avg}★`).join(", ") || "not enough data"}
+- Top origins: ${stats.topOrigins.map((o: {name:string;avg:number;count:number}) => `${o.name} (${o.avg}★, ${o.count} brews)`).join(", ") || "none yet"}
+- Top processes: ${stats.topProcesses.map((p: {name:string;avg:number;count:number}) => `${p.name} (${p.avg}★, ${p.count} brews)`).join(", ") || "none yet"}
+- Top flavors: ${stats.topFlavors.slice(0, 5).map((f: {name:string;count:number}) => f.name).join(", ") || "none yet"}
+- Top methods: ${stats.topMethods.map((m: {name:string;avg:number;count:number}) => `${m.name} (${m.avg}★)`).join(", ") || "none yet"}
+- Body: ${JSON.stringify(stats.bodyDist)}
+- Acidity: ${JSON.stringify(stats.acidityDist)}
+- Rating trend: ${stats.ratingTrend.map((t: {label:string;avg:number}) => `${t.label}: ${t.avg}★`).join(", ") || "not enough data"}
 
-"summary": 3–4 sentences in a direct, personal, insightful tone — like a knowledgeable friend who has studied their log. No fluff, no generic coffee facts. Reference actual numbers. Spot real patterns and name them. No title, no bullet points, no intro phrase like "Based on your data". Just the paragraph text.
+Required JSON structure:
+{
+  "summary": "3-4 sentence plain text paragraph. Direct and personal tone. Reference actual numbers. No intro phrase like Based on your data. No bullet points. No markdown.",
+  "suggestions": [
+    { "type": "origin", "text": "1-2 sentence plain text explanation.", "tag": "Try: Ethiopia" }
+  ]
+}
 
-"suggestions": an array of 2–3 objects identifying what to explore next. For each suggestion:
-- Spot the dominant origin/process pattern in the data
-- Identify what has been MISSING or underexplored (origins not tried, processes tried only once, etc.)
-- Suggest specific things to seek out next, each with a short explanation and a short tag label
-- Each object must have: "type" (either "origin" or "process"), "text" (1–2 sentence explanation referencing the data), "tag" (short label like "Try: Brazil" or "Explore: Honey")
-
-Return ONLY valid JSON in this exact structure, no other text:
-{ "summary": "...", "suggestions": [{ "type": "origin", "text": "...", "tag": "..." }] }`;
+Rules:
+- summary must be plain prose text, nothing else
+- suggestions array must have 2-3 items
+- type is either origin or process
+- tag is a short label like Try: Kenya or Explore: Washed
+- NO markdown anywhere in the values
+- Start response with { immediately`;
 
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
@@ -44,11 +49,16 @@ Return ONLY valid JSON in this exact structure, no other text:
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text.trim() : null;
-    // Strip markdown code fences if present
-    const cleaned = text?.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim() ?? null;
+    const stripped = text?.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim() ?? null;
     try {
-      const parsed = JSON.parse(cleaned?.match(/\{[\s\S]*\}/)?.[0] || cleaned || "{}");
-      return NextResponse.json({ summary: parsed.summary ?? null, suggestions: parsed.suggestions ?? [] });
+      const jsonStr = stripped?.match(/\{[\s\S]*\}/)?.[0] ?? stripped ?? "{}";
+      const parsed = JSON.parse(jsonStr);
+      // Safety: if summary itself contains code fences or looks like JSON, discard it
+      let summary = parsed.summary ?? null;
+      if (typeof summary === "string" && (summary.includes("```") || summary.trimStart().startsWith("{"))) {
+        summary = null;
+      }
+      return NextResponse.json({ summary, suggestions: parsed.suggestions ?? [] });
     } catch {
       return NextResponse.json({ summary: null, suggestions: [] });
     }
