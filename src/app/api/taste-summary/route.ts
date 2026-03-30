@@ -52,6 +52,7 @@ Rules:
     });
 
     const text = response.content[0].type === "text" ? "{" + response.content[0].text.trim() : null;
+    // v3
     try {
       const jsonStr = text?.match(/\{[\s\S]*\}/)?.[0] ?? "{}";
       const parsed = JSON.parse(jsonStr);
