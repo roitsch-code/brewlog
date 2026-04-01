@@ -20,8 +20,9 @@ This app is deeply personalised — the AI system prompts adapt to the user's eq
 | Grinder (travel) | Comandante C40 MK2 — clicks |
 | Kettle | Fellow Corvo EKG (900ml, temp-hold) |
 | Scales | Acaia Lunar & Pearl |
-| Water (daily) | Brita P1000 → ~220 ppm TDS |
-| Water (championship) | Brita diluted with distilled: 1:3 = ~55 ppm / 1:4 = ~44 ppm |
+| Water (daily) | Tap ~300 ppm TDS |
+| Water (diluted) | 1:1 tap + distilled = ~150 ppm (SCA optimal) |
+| Water (championship) | 1:3 tap + distilled = ~75 ppm / 1:4 = ~75 ppm |
 
 ### Taste baseline
 
@@ -66,16 +67,16 @@ NEVER add a separate "total" row after the drawdown row.
 
 | Method | Niche° |
 |--------|--------|
-| V60 + Drip Assist (Washed) | 386–388° |
-| V60 + Drip Assist (Honey) | 388–390° |
-| V60 + Drip Assist (Natural) | 388–392° |
-| V60 without Assist | 375–385° |
-| Orea V4 | 380–390° |
-| Clever Dripper | 395–415° |
+| V60 + Drip Assist (Washed) | 390–393° |
+| V60 + Drip Assist (Honey) | 392–395° |
+| V60 + Drip Assist (Natural) | 393–397° |
+| V60 without Assist | 379–389° |
+| Orea V4 | 384–394° |
+| Clever Dripper | 399–419° |
 | AeroPress | 360–370° |
-| Moccamaster | 410–420° |
-| Peng (Championship) | 365–375° |
-| 4:6 Method | 390–400° |
+| Moccamaster | 414–424° |
+| Peng (Championship) | 369–379° |
+| 4:6 Method | 394–404° |
 
 ---
 

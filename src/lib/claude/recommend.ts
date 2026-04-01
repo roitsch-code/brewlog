@@ -31,7 +31,8 @@ EQUIPMENT & CAPACITY LIMITS (hard constraints — never exceed):
 - Moccamaster — batch brewer ONLY; suitable for ≥500ml (minimum fill for proper extraction). Do NOT recommend for single-cup amounts (Small/Big).
 - Grinder: Niche Zero (GRAD ° — NEVER clicks!) + Comandante C40 MK2 (travel, clicks)
 - Kettle: Fellow Corvo EKG (900ml, temp-hold — MUST return to base between pours!)
-- Water: Brita P1000 → ~220 ppm TDS (daily) | Championship water: diluted to 44–73 ppm
+- Water: Tap ~300 ppm TDS (Brita-filtered daily use) | Diluted: 1:1 tap+distilled = ~150 ppm (SCA optimal) | Championship: 1:3 or 1:4 tap+distilled = 75–100 ppm
+- When water is "diluted", suggest the 1:1 mix in reasoning (150 ppm hits SCA optimal). When water is "tap", note it's above SCA ceiling (300 ppm > 250 ppm) and will mute flavors — especially on delicate light roasts.
 
 DRIP ASSIST — CRITICAL RULES:
 The Drip Assist works with V60, Orea V4, Kalita Wave, and Chemex — not just V60.
@@ -39,7 +40,7 @@ The Drip Assist works with V60, Orea V4, Kalita Wave, and Chemex — not just V6
    Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
 2. Kettle back on base after EVERY pour (Fellow Corvo reheats in 10–15s)
 3. Bloom agitation mandatory at 0:10 — vigorous stir 3–5× for Washed, gentle swirl for Natural/Honey
-4. Niche° with Drip Assist: Washed 386–388° | Honey 388–390° | Natural 388–392°
+4. Niche° with Drip Assist: Washed 390–393° | Honey 392–395° | Natural 393–397°
    (Orea/Kalita with Assist: go 2–4° coarser than V60 equivalent)
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Standard recipes (apply to any Assist-compatible brewer):
@@ -50,19 +51,19 @@ CHAMPIONSHIP / EXPLORATION MODE — triggers: "experiment", "exploration", "cham
 NOVELTY RULE (critical for experiment mode): First, scan the brew history. Identify which methods and brewers have been used in the last 8 sessions. Then pick something the user has NOT done recently — or has never done with this specific coffee. If V60 appears ≥3 times in recent history, do NOT recommend V60 as primary. Rotate to Orea, AeroPress, Clever Dripper, or Kalita. The goal is genuine exploration, not repeating the familiar.
 - Championship water: ~55 ppm (1:3 Brita:distilled) default | Temp: 94–96°C
 - Methods — pick the best fit for the coffee profile and user's mood:
-  · Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44 ppm) | Niche° 365–375° | 96°C bloom+dev → 80°C final pour → ~2:00 total
-  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 380–390° | 4 rapid pours → ~3:00 total
-  · Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55 ppm) | Niche° 390–400° | 40% acid/sweet phase + 60% strength phase → ~3:30–4:00 total
+  · Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44 ppm) | Niche° 369–379° | 96°C bloom+dev → 80°C final pour → ~2:00 total
+  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 384–394° | 4 rapid pours → ~3:00 total
+  · Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55 ppm) | Niche° 394–404° | 40% acid/sweet phase + 60% strength phase → ~3:30–4:00 total
   · Hoffmann AeroPress: 11g:200g | 85°C | Niche° 360–365° | inverted, 2min steep, fast press → ~3:30 total
   · AeroPress Bypass: 14g:90g concentrate | 88°C | Niche° 355–360° | inverted + 140g bypass water after press → ~3:00 total
-  · Clever Dripper Extended: 20g:300ml | 92°C | Niche° 400–410° | 4min steep, drain → ~5:30 total
-  · Orea Apex (for clarity): 17g:270ml | 95°C | Niche° 382–386° | 3 even pours → ~3:30 total
-  · Orea Classic (for sweetness): 17g:270ml | 94°C | Niche° 385–390° | 3 pours with 30s agitation after bloom → ~4:00 total
-  · Turbo V60 (fast, high turbulence): 15g:250ml | 100°C | Niche° 370–375° | 2 fast pours → ~2:00 total
+  · Clever Dripper Extended: 20g:300ml | 92°C | Niche° 404–414° | 4min steep, drain → ~5:30 total
+  · Orea Apex (for clarity): 17g:270ml | 95°C | Niche° 386–390° | 3 even pours → ~3:30 total
+  · Orea Classic (for sweetness): 17g:270ml | 94°C | Niche° 389–394° | 3 pours with 30s agitation after bloom → ~4:00 total
+  · Turbo V60 (fast, high turbulence): 15g:250ml | 100°C | Niche° 374–379° | 2 fast pours → ~2:00 total
 
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 386–392° | V60 without Assist: 375–385° | Orea: 380–390° | Kalita: 375–385°
-Clever Dripper: 395–415° (coarse, immersion) | AeroPress: 360–370° | Moccamaster: 410–420°
+V60 + Drip Assist: 390–397° | V60 without Assist: 379–389° | Orea: 384–394° | Kalita: 379–389°
+Clever Dripper: 399–419° (coarse, immersion) | AeroPress: 360–370° | Moccamaster: 414–424°
 Comandante C40 (travel): V60 22–28 clicks | AeroPress 18–22 clicks | Clever 26–30 clicks
 
 AEROPRESS MODES:
@@ -155,6 +156,10 @@ export async function generateRecommendation(
     ? `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value only (e.g. "388°"). NO ranges like "386–388°". NEVER use clicks.`
     : `Grinder: ${sessionGrinder} → grindSize must be ONE specific click count only (e.g. "26"). NO ranges like "24–26". NEVER use Niche°.`;
 
+  const waterNote = context.waterSource === "diluted"
+    ? "Diluted water available (1:1 tap+distilled = ~150 ppm, SCA optimal) — prefer this for delicate light roasts"
+    : "Tap water only (~300 ppm, above SCA ceiling) — compensate with slightly lower temp and note potential flavor muting in reasoning";
+
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}
 Process: ${coffee.process || "Unknown"} | Roast: ${coffee.roastLevel || "Unknown"}
@@ -166,6 +171,7 @@ Context:
 - Time available: ${context.timeAvailable}
 - Mood: ${context.moodPreference}
 - Grinder for this brew: ${sessionGrinder}
+- Water: ${waterNote}
 
 Equipment available: ${equipment}
 ${grinderNote}

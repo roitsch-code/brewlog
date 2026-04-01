@@ -220,6 +220,37 @@ export default function StepContext() {
           )}
         </Section>
 
+        <Section title="Water">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => update("waterSource", "tap")}
+              className={`flex-1 p-4 rounded-2xl border text-left transition-all active:scale-95 ${
+                ctx.waterSource === "tap" ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
+              }`}
+            >
+              <p className={`font-semibold text-sm ${ctx.waterSource === "tap" ? "text-brew-accent" : "text-white"}`}>Tap only</p>
+              <p className="text-brew-muted text-xs mt-1">~300 ppm</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => update("waterSource", "diluted")}
+              className={`flex-1 p-4 rounded-2xl border text-left transition-all active:scale-95 ${
+                ctx.waterSource === "diluted" ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
+              }`}
+            >
+              <p className={`font-semibold text-sm ${ctx.waterSource === "diluted" ? "text-brew-accent" : "text-white"}`}>Diluted</p>
+              <p className="text-brew-muted text-xs mt-1">1:1 tap + distilled · ~150 ppm</p>
+            </button>
+          </div>
+          {ctx.waterSource === "diluted" && (
+            <p className="text-brew-muted text-xs mt-1.5 px-1">Equal parts tap and distilled water. SCA optimal range.</p>
+          )}
+          {ctx.waterSource === "tap" && (
+            <p className="text-brew-muted text-xs mt-1.5 px-1">Above SCA ceiling. Recipe will adjust accordingly.</p>
+          )}
+        </Section>
+
       </div>
     </FlowShell>
   );

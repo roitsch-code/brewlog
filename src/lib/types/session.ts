@@ -24,6 +24,7 @@ export interface SessionContext {
   timeAvailable: string; // quick | normal | unhurried
   moodPreference: string; // strong | balanced | light | sweet | curious
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
+  waterSource?: string; // "tap" | "diluted" — tap = ~300ppm, diluted = 1:1 tap+distilled = ~150ppm
 }
 
 export interface BrewRecipe {
