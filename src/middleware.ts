@@ -18,7 +18,11 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "dev-secret-change-me");
+    if (!process.env.AUTH_SECRET) {
+      console.error("AUTH_SECRET environment variable is not set");
+      return new NextResponse("Server misconfiguration", { status: 500 });
+    }
+    const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
     await jwtVerify(token, secret);
     return NextResponse.next();
   } catch {

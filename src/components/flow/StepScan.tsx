@@ -16,6 +16,7 @@ export default function StepScan() {
   const [clarificationIndex, setClarificationIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<BagAnalysisResult | null>(null);
   const [freeText, setFreeText] = useState("");
+  const [scanError, setScanError] = useState<string | null>(null);
 
   // Place fields (external mode)
   const [placeSearch, setPlaceSearch] = useState("");
@@ -35,6 +36,7 @@ export default function StepScan() {
 
   const handlePhoto = async (file: File) => {
     setIsAnalyzing(true);
+    setScanError(null);
     clearClarifications();
     setShowManualForm(false);
 
@@ -68,6 +70,7 @@ export default function StepScan() {
       }
     } catch (err) {
       console.error(err);
+      setScanError("Could not analyze the photo. Please try again or enter details manually.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -179,6 +182,11 @@ export default function StepScan() {
 
         {/* Photo Upload */}
         <PhotoUpload onFile={handlePhoto} preview={preview || undefined} loading={isAnalyzing} />
+
+        {/* Scan error */}
+        {scanError && !isAnalyzing && (
+          <p className="text-red-400 text-sm text-center">{scanError}</p>
+        )}
 
         {/* Extracted info */}
         {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzing && (

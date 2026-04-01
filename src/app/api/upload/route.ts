@@ -13,6 +13,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing file or path" }, { status: 400 });
     }
 
+    // Path validation — prevent path traversal attacks
+    const ALLOWED_PREFIXES = ["bags/", "uploads/"];
+    if (path.includes("..") || path.startsWith("/") || !ALLOWED_PREFIXES.some(p => path.startsWith(p))) {
+      return NextResponse.json({ error: "Invalid upload path" }, { status: 400 });
+    }
+
+    // MIME type whitelist
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
+    }
+
+    // Size limit: 10 MB
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: "File too large (max 10 MB)" }, { status: 400 });
+    }
+
     const storage = getAdminStorage();
     const bucket = storage.bucket();
     const fileRef = bucket.file(path);

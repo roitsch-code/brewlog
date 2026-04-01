@@ -1,23 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { getAdminDb } from "@/lib/firebase/admin";
 import type { Session } from "@/lib/types/session";
+
+const SessionPostSchema = z.object({
+  type: z.enum(["coffee", "wine"]),
+  mode: z.enum(["home", "external"]),
+  createdAt: z.string(),
+  coffee: z.object({
+    roaster: z.string().max(200),
+    name: z.string().max(200),
+    origin: z.string().max(200).optional().default(""),
+    region: z.string().max(200).optional(),
+    variety: z.string().max(200).optional(),
+    process: z.string().max(100).optional().default(""),
+    roastLevel: z.string().max(100).optional().default(""),
+    roastDate: z.string().optional(),
+    bagPhotoUrl: z.string().url().optional().or(z.literal("")),
+    bagPhotoPath: z.string().max(500).optional(),
+    aiExtracted: z.boolean().default(false),
+    tastingNotesFromBag: z.array(z.string().max(100)).max(20).optional(),
+    coffeeId: z.string().optional(),
+  }).optional(),
+  place: z.object({
+    name: z.string().max(200),
+    location: z.string().max(300).optional(),
+    methodServed: z.string().max(100).optional(),
+  }).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
+  recommendation: z.record(z.string(), z.unknown()).optional(),
+  brew: z.record(z.string(), z.unknown()).optional(),
+  result: z.object({
+    rating: z.number().min(0).max(5),
+    flavorNotes: z.array(z.string().max(100)).max(30).optional().default([]),
+    body: z.string().max(50).optional().default(""),
+    acidity: z.string().max(50).optional().default(""),
+    freeNotes: z.string().max(2000).optional(),
+    wouldUseMethodAgain: z.boolean().optional(),
+    attribution: z.enum(["brew", "bean", "roaster"]).optional(),
+    craft: z.enum(["off", "solid", "exceptional"]).optional(),
+    fit: z.enum(["not-my-style", "neutral", "my-kind"]).optional(),
+  }).optional(),
+});
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
-    const limit = Number(new URL(req.url).searchParams.get("limit") || "50");
+    const rawLimit = Number(new URL(req.url).searchParams.get("limit") || "50");
+    const limit = Math.min(Math.max(1, rawLimit), 100);
     const db = getAdminDb();
-    // No orderBy — avoids issues with mixed createdAt field types (string vs Timestamp)
-    // Client sorts after receiving
-    const snap = await db.collection("sessions").limit(limit).get();
-    const sessions: Session[] = snap.docs
-      .map(d => ({ id: d.id, ...d.data() } as Session))
-      .sort((a, b) => {
-        const ta = typeof a.createdAt === "string" ? a.createdAt : "";
-        const tb = typeof b.createdAt === "string" ? b.createdAt : "";
-        return tb.localeCompare(ta);
-      });
+    // orderBy createdAtMs (Unix ms integer) — added to all new sessions to avoid
+    // mixed-type issues with the legacy createdAt field (string vs Timestamp)
+    const snap = await db.collection("sessions")
+      .orderBy("createdAtMs", "desc")
+      .limit(limit)
+      .get();
+    const sessions: Session[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Session));
     return NextResponse.json(sessions);
   } catch (err) {
     console.error("sessions GET error:", err);
@@ -27,9 +66,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json() as Omit<Session, "id">;
+    const body = await req.json();
+    const parsed = SessionPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid session data", details: parsed.error.flatten() }, { status: 400 });
+    }
+    const data = parsed.data as Omit<Session, "id">;
     const db = getAdminDb();
-    const ref = await db.collection("sessions").add(data);
+    // Add createdAtMs for reliable orderBy (avoids mixed createdAt type issue)
+    const ref = await db.collection("sessions").add({ ...data, createdAtMs: Date.now() });
     const sessionId = ref.id;
 
     // Upsert coffee library entry

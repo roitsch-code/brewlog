@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getInsights } from "@/lib/knowledge/insights";
 import { getAlerts } from "@/lib/knowledge/alerts";
+import { requireAuth } from "@/lib/auth/requireAuth";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -82,13 +83,19 @@ STRICT rules — follow every one:
 - No emojis.`;
 
 export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json() as {
       messages: { role: "user" | "assistant"; content: string }[];
       sessionId?: string;
     };
 
-    const { messages } = body;
+    // Strip any injected system-role messages from client — only user/assistant allowed
+    const messages = (body.messages ?? []).filter(
+      (m: { role: string }) => m.role === "user" || m.role === "assistant"
+    );
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages required" }, { status: 400 });

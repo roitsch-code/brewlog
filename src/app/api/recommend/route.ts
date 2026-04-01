@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateRecommendation } from "@/lib/claude/recommend";
 import { getAdminDb } from "@/lib/firebase/admin";
+import { requireAuth } from "@/lib/auth/requireAuth";
 import type { UserPreferences } from "@/lib/types/preferences";
 
 export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
   try {
     const { coffee, context, pastSessions } = await req.json();
 

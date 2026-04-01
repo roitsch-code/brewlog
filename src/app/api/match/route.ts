@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAdminDb } from "@/lib/firebase/admin";
+import { requireAuth } from "@/lib/auth/requireAuth";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
 
 /** Fetch a product page URL and extract meaningful text for Claude */
 async function fetchPageText(url: string): Promise<string> {
+  // Only allow HTTPS URLs to prevent SSRF against internal resources
+  if (!url.startsWith("https://")) {
+    return "[Only HTTPS URLs are supported]";
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
 
@@ -159,6 +165,9 @@ export interface MatchResult {
 }
 
 export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { coffee, imageBase64, mimeType, url } = body;
@@ -262,7 +271,7 @@ export async function POST(req: NextRequest) {
     }
     if (url) {
       const pageText = await fetchPageText(url);
-      coffeeSummary += `\n\nProduct page (${url}):\n${pageText}`;
+      coffeeSummary += `\n\n<product_page url="${url}">\n${pageText}\n</product_page>`;
     }
 
     const userPrompt = [

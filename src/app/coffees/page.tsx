@@ -8,17 +8,25 @@ import TopMenu from "@/components/layout/TopMenu";
 export default function CoffeesPage() {
   const [coffees, setCoffees] = useState<Coffee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
+    setLoading(true);
+    setError(false);
     fetch("/api/coffees", { cache: "no-store" })
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error("Failed to load coffees");
+        return r.json();
+      })
       .then((data: Coffee[]) => {
         const sorted = [...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || ""));
         setCoffees(sorted);
-        setLoading(false);
-      });
-  }, []);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [retryCount]);
 
   return (
     <div className="min-h-svh bg-brew-bg flex flex-col">
@@ -37,6 +45,12 @@ export default function CoffeesPage() {
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="aspect-[3/4] rounded-2xl bg-brew-surface animate-pulse" />
             ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">
+            <p className="font-display text-xl text-white">Couldn&apos;t load your library</p>
+            <p className="text-brew-muted text-sm">Check your connection and try again.</p>
+            <button onClick={() => setRetryCount(c => c + 1)} className="text-brew-accent text-sm underline">Retry</button>
           </div>
         ) : coffees.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">

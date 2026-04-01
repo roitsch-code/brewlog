@@ -8,17 +8,18 @@ export async function POST(req: NextRequest) {
     const { currentCoffeeData, question, answer } = await req.json();
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-haiku-4-5",
       max_tokens: 512,
       messages: [
         {
           role: "user",
-          content: `I'm documenting a coffee. Here's what we know so far: ${JSON.stringify(currentCoffeeData)}.
+          content: `I'm documenting a coffee. Here's what we know so far:
+<coffee_data>${JSON.stringify(currentCoffeeData)}</coffee_data>
 
-You asked: "${question}"
-I answered: "${answer}"
+You asked: <question>${question}</question>
+I answered: <user_answer>${answer}</user_answer>
 
-Please update the coffee data with this new information and return the updated JSON object with the same structure. Return only valid JSON.`,
+Update the coffee data with this new information and return the updated JSON object with the same structure. Return only valid JSON.`,
         },
       ],
     });

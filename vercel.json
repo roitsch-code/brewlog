@@ -4,5 +4,11 @@
       "path": "/api/research",
       "schedule": "0 6 * * 1"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/match/route.ts": { "maxDuration": 30 },
+    "src/app/api/explore/route.ts": { "maxDuration": 20 },
+    "src/app/api/recommend/route.ts": { "maxDuration": 20 },
+    "src/app/api/analyze-bag/route.ts": { "maxDuration": 20 }
+  }
 }
