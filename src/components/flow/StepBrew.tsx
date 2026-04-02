@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import CircularTimer from "@/components/ui/CircularTimer";
@@ -102,15 +102,6 @@ export default function StepBrew() {
           onTick={handleTick}
         />
 
-        {/* Agitation cue — fixed upper-right corner */}
-        {steps && (
-          <BrewAgitationCue
-            elapsed={elapsed}
-            started={started}
-            process={draft.coffee?.process}
-          />
-        )}
-
         {/* Pour-over: structured live sequence */}
         {steps && recipe && (
           <LivePourSequence
@@ -118,6 +109,7 @@ export default function StepBrew() {
             elapsed={elapsed}
             targetTimeSec={recipe.targetTimeSec}
             started={started}
+            process={draft.coffee?.process}
           />
         )}
 
@@ -144,12 +136,16 @@ interface LivePourSequenceProps {
   elapsed: number;
   targetTimeSec: number;
   started: boolean;
+  process?: string;
 }
 
-function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSequenceProps) {
+function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep  = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
+  const isWashed = process?.toLowerCase() === "washed";
+  // Bloom cue: highlight the agitation button from t=5s until t=15s
+  const bloomCueActive = started && activeStep?.action === "bloom" && elapsed >= 5 && elapsed < 15;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
   const lastPourStart = steps[steps.length - 1].startTimeSec;
   const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastPourStart) * 0.35));
@@ -235,7 +231,11 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSe
             </div>
 
             {(activeStep.action === "bloom" || activeStep.action === "final") && (
-              <SwirlButton label={activeStep.action === "bloom" ? "Stir" : "Swirl"} />
+              <SwirlButton
+                isStir={activeStep.action === "bloom" && isWashed}
+                label={activeStep.action === "bloom" ? (isWashed ? "Stir" : "Swirl") : "Swirl"}
+                cueActive={activeStep.action === "bloom" ? bloomCueActive : false}
+              />
             )}
           </div>
 
@@ -563,39 +563,72 @@ function ProseStepGuide({
 
 // ── SwirlButton ────────────────────────────────────────────────────────────
 
-function SwirlButton({ label }: { label: string }) {
+interface SwirlButtonProps {
+  label: string;
+  isStir?: boolean;   // true = Washed (vigorous back-and-forth); false = gentle circular swirl
+  cueActive?: boolean; // highlight to prompt the user it's time to agitate
+}
+
+function SwirlButton({ label, isStir = false, cueActive = false }: SwirlButtonProps) {
   const [spinKey, setSpinKey] = useState(0);
-  const [active, setActive]   = useState(false);
+  const [tapped, setTapped]   = useState(false);
 
   const handleTap = () => {
     setSpinKey(k => k + 1);
-    setActive(true);
-    setTimeout(() => setActive(false), 650);
-    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(55);
+    setTapped(true);
+    setTimeout(() => setTapped(false), 650);
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(isStir ? [55, 30, 55] : 55);
+    }
   };
+
+  // Visual state: tapped overrides cue, cue overrides idle
+  const isHighlighted = tapped || cueActive;
 
   return (
     <button
       type="button"
       onClick={handleTap}
       className={`flex-shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all active:scale-90 ${
-        active
+        isHighlighted
           ? "bg-brew-accent/20 border-brew-accent/60"
           : "bg-brew-surface border-brew-border"
-      }`}
+      } ${cueActive && !tapped ? "animate-step-activate" : ""}`}
     >
-      <svg
-        key={spinKey}
-        className={`w-7 h-7 ${active ? "text-brew-accent animate-spin-once" : "text-white/60"}`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.75}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round"
-          d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-      </svg>
-      <span className={`text-xs font-medium ${active ? "text-brew-accent" : "text-white/30"}`}>
+      {isStir ? (
+        // Stir icon: two opposing arrows (vigorous back-and-forth)
+        <svg
+          key={spinKey}
+          className={`w-7 h-7 ${isHighlighted ? "text-brew-accent" : "text-white/60"} ${tapped ? "animate-spin-once" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M4 8l-3 3 3 3" />
+          <path d="M1 11h9" />
+          <path d="M20 16l3-3-3-3" />
+          <path d="M23 13H14" />
+          <path d="M10 8h4" />
+          <path d="M10 16h4" />
+        </svg>
+      ) : (
+        // Swirl icon: gentle circular arrow (existing)
+        <svg
+          key={spinKey}
+          className={`w-7 h-7 ${isHighlighted ? "text-brew-accent animate-spin-once" : "text-white/60"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.75}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+      )}
+      <span className={`text-xs font-medium ${isHighlighted ? "text-brew-accent" : "text-white/30"}`}>
         {label}
       </span>
     </button>
@@ -626,76 +659,3 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ── BrewAgitationCue ───────────────────────────────────────────────────────
-// Fires at t=5s into the brew (bloom phase) to cue stir or swirl.
-// Stir = Washed (vigorous, 3–5×) | Swirl = Natural/Honey (gentle circular).
-
-interface BrewAgitationCueProps {
-  elapsed: number;
-  started: boolean;
-  process?: string;
-}
-
-function BrewAgitationCue({ elapsed, started, process }: BrewAgitationCueProps) {
-  const [active, setActive] = useState(false);
-  const firedRef = useRef(false);
-
-  const isWashed = process?.toLowerCase() === "washed";
-  const label = isWashed ? "Stir 3×" : "Swirl";
-
-  useEffect(() => {
-    if (!started || firedRef.current) return;
-    // Fire at t=5s — gives 5s warning before the 0:10 agitation moment
-    if (elapsed >= 5) {
-      firedRef.current = true;
-      setActive(true);
-      // Haptic cue if available
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([60, 40, 60]);
-      }
-      // Highlight lasts 4 seconds then fades
-      const timer = setTimeout(() => setActive(false), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [elapsed, started]);
-
-  return (
-    <div
-      className={`fixed top-16 right-4 z-50 flex flex-col items-center gap-1 transition-all duration-500 ${
-        active ? "opacity-100 scale-100" : "opacity-20 scale-95"
-      }`}
-    >
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-          active
-            ? "bg-brew-accent shadow-[0_0_20px_rgba(240,237,232,0.5)]"
-            : "bg-brew-surface border border-brew-border"
-        }`}
-        style={active ? { animation: "cue-pulse 0.6s ease-in-out 3" } : undefined}
-      >
-        {isWashed ? (
-          // Stir icon: two opposing horizontal arrows (vigorous back-and-forth)
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#0A0A0A" : "#888"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 8l-3 3 3 3" />
-            <path d="M2 11h10" />
-            <path d="M19 16l3-3-3-3" />
-            <path d="M22 13H12" />
-          </svg>
-        ) : (
-          // Swirl icon: gentle circular arrow (clockwise)
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#0A0A0A" : "#888"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
-          </svg>
-        )}
-      </div>
-      <span
-        className={`text-xs font-medium transition-all duration-300 ${
-          active ? "text-brew-accent" : "text-transparent"
-        }`}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
