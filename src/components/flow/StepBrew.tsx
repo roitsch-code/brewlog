@@ -144,8 +144,12 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep  = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const isWashed = process?.toLowerCase() === "washed";
-  // Bloom cue: highlight the agitation button from t=5s until t=15s
+  // Bloom cue: highlight from t=5s until t=15s into the brew
   const bloomCueActive = started && activeStep?.action === "bloom" && elapsed >= 5 && elapsed < 15;
+  // Final pour cue: highlight for the first 10s after the final pour starts
+  const finalStep = steps[steps.length - 1];
+  const finalCueActive = started && activeStep?.action === "final" &&
+    elapsed >= finalStep.startTimeSec && elapsed < finalStep.startTimeSec + 10;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
   const lastPourStart = steps[steps.length - 1].startTimeSec;
   const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastPourStart) * 0.35));
@@ -234,7 +238,7 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
               <SwirlButton
                 isStir={activeStep.action === "bloom" && isWashed}
                 label={activeStep.action === "bloom" ? (isWashed ? "Stir" : "Swirl") : "Swirl"}
-                cueActive={activeStep.action === "bloom" ? bloomCueActive : false}
+                cueActive={activeStep.action === "bloom" ? bloomCueActive : finalCueActive}
               />
             )}
           </div>
@@ -447,7 +451,11 @@ function ProseStepGuide({
     if (manualIdx !== null && autoIdx >= manualIdx) setManualIdx(null);
   }, [autoIdx, manualIdx]);
 
-  const needsSwirl = (s: string) => /stir|swirl|agitate|mix|shake/i.test(s);
+  const needsAgitation = (s: string) => /stir|swirl|agitate|mix|shake/i.test(s);
+  // "stir" implies vigorous back-and-forth; "swirl" implies gentle circular
+  const isStirStep = (s: string) => /\bstir\b|agitat|mix/i.test(s) && !/swirl/i.test(s);
+  // Cue active for first 10s of the current step, so it highlights when step first appears
+  const stepCueActive = started && elapsed >= cumulativeStarts[currentIdx] && elapsed < cumulativeStarts[currentIdx] + 10;
 
   const nextStart = currentIdx < effectiveSteps.length - 1 ? cumulativeStarts[currentIdx + 1] : null;
   const nextCountdown = nextStart !== null && started ? Math.max(0, nextStart - elapsed) : null;
@@ -484,7 +492,13 @@ function ProseStepGuide({
               </p>
             )}
           </div>
-          {needsSwirl(effectiveSteps[currentIdx]) && <SwirlButton label="Stir" />}
+          {needsAgitation(effectiveSteps[currentIdx]) && (
+            <SwirlButton
+              isStir={isStirStep(effectiveSteps[currentIdx])}
+              label={isStirStep(effectiveSteps[currentIdx]) ? "Stir" : "Swirl"}
+              cueActive={stepCueActive}
+            />
+          )}
         </div>
 
         {/* Next step countdown — shown in last 15s before transition */}
