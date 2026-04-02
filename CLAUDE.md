@@ -41,7 +41,7 @@ This app is deeply personalised — the AI system prompts adapt to the user's eq
 1. **Start temp +2–3°C higher** (heat loss from transfers): Washed **98–99°C** | Natural **95–96°C** | Honey **97°C**
 2. **Kettle back on base after EVERY pour** (Fellow Corvo reheats in 10–15s)
 3. **Bloom agitation mandatory at 0:10** — vigorous stir 3–5× for Washed, gentle swirl for Natural/Honey
-4. **Niche°:** Washed 386–388° | Honey 388–390° | Natural 388–392°
+4. **Niche°:** Washed 403–408° | Honey 405–410° | Natural 406–412°
 
 ### Standard Drip Assist Recipes
 
@@ -67,16 +67,16 @@ NEVER add a separate "total" row after the drawdown row.
 
 | Method | Niche° |
 |--------|--------|
-| V60 + Drip Assist (Washed) | 390–393° |
-| V60 + Drip Assist (Honey) | 392–395° |
-| V60 + Drip Assist (Natural) | 393–397° |
-| V60 without Assist | 379–389° |
-| Orea V4 | 384–394° |
-| Clever Dripper | 399–419° |
-| AeroPress | 360–370° |
-| Moccamaster | 414–424° |
-| Peng (Championship) | 369–379° |
-| 4:6 Method | 394–404° |
+| V60 + Drip Assist (Washed) | 403–408° |
+| V60 + Drip Assist (Honey) | 405–410° |
+| V60 + Drip Assist (Natural) | 406–412° |
+| V60 without Assist | 396–406° |
+| Orea V4 | 401–411° |
+| Clever Dripper | 416–436° |
+| AeroPress | 377–387° |
+| Moccamaster | 431–441° |
+| Peng (Championship) | 386–396° |
+| 4:6 Method | 411–421° |
 
 ---
 

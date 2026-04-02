@@ -40,7 +40,7 @@ The Drip Assist works with V60, Orea V4, Kalita Wave, and Chemex — not just V6
    Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
 2. Kettle back on base after EVERY pour (Fellow Corvo reheats in 10–15s)
 3. Bloom agitation mandatory at 0:10 — vigorous stir 3–5× for Washed, gentle swirl for Natural/Honey
-4. Niche° with Drip Assist: Washed 390–393° | Honey 392–395° | Natural 393–397°
+4. Niche° with Drip Assist: Washed 403–408° | Honey 405–410° | Natural 406–412°
    (Orea/Kalita with Assist: go 2–4° coarser than V60 equivalent)
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Standard recipes (apply to any Assist-compatible brewer):
@@ -51,23 +51,23 @@ CHAMPIONSHIP / EXPLORATION MODE — triggers: "experiment", "exploration", "cham
 NOVELTY RULE (critical for experiment mode): First, scan the brew history. Identify which methods and brewers have been used in the last 8 sessions. Then pick something the user has NOT done recently — or has never done with this specific coffee. If V60 appears ≥3 times in recent history, do NOT recommend V60 as primary. Rotate to Orea, AeroPress, Clever Dripper, or Kalita. The goal is genuine exploration, not repeating the familiar.
 - Championship water: ~55 ppm (1:3 Brita:distilled) default | Temp: 94–96°C
 - Methods — pick the best fit for the coffee profile and user's mood:
-  · Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44 ppm) | Niche° 369–379° | 96°C bloom+dev → 80°C final pour → ~2:00 total
-  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 384–394° | 4 rapid pours → ~3:00 total
-  · Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55 ppm) | Niche° 394–404° | 40% acid/sweet phase + 60% strength phase → ~3:30–4:00 total
-  · Hoffmann AeroPress: 11g:200g | 85°C | Niche° 360–365° | inverted, 2min steep, fast press → ~3:30 total
-  · AeroPress Bypass: 14g:90g concentrate | 88°C | Niche° 355–360° | inverted + 140g bypass water after press → ~3:00 total
-  · Clever Dripper Extended: 20g:300ml | 92°C | Niche° 404–414° | 4min steep, drain → ~5:30 total
-  · Orea Apex (for clarity): 17g:270ml | 95°C | Niche° 386–390° | 3 even pours → ~3:30 total
-  · Orea Classic (for sweetness): 17g:270ml | 94°C | Niche° 389–394° | 3 pours with 30s agitation after bloom → ~4:00 total
-  · Turbo V60 (fast, high turbulence): 15g:250ml | 100°C | Niche° 374–379° | 2 fast pours → ~2:00 total
+  · Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44 ppm) | Niche° 386–396° | 96°C bloom+dev → 80°C final pour → ~2:00 total
+  · Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55 ppm) | Niche° 401–411° | 4 rapid pours → ~3:00 total
+  · Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55 ppm) | Niche° 411–421° | 40% acid/sweet phase + 60% strength phase → ~3:30–4:00 total
+  · Hoffmann AeroPress: 11g:200g | 85°C | Niche° 377–382° | inverted, 2min steep, fast press → ~3:30 total
+  · AeroPress Bypass: 14g:90g concentrate | 88°C | Niche° 372–377° | inverted + 140g bypass water after press → ~3:00 total
+  · Clever Dripper Extended: 20g:300ml | 92°C | Niche° 421–431° | 4min steep, drain → ~5:30 total
+  · Orea Apex (for clarity): 17g:270ml | 95°C | Niche° 403–407° | 3 even pours → ~3:30 total
+  · Orea Classic (for sweetness): 17g:270ml | 94°C | Niche° 406–411° | 3 pours with 30s agitation after bloom → ~4:00 total
+  · Turbo V60 (fast, high turbulence): 15g:250ml | 100°C | Niche° 391–396° | 2 fast pours → ~2:00 total
 
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 390–397° | V60 without Assist: 379–389° | Orea: 384–394° | Kalita: 379–389°
-Clever Dripper: 399–419° (coarse, immersion) | AeroPress: 360–370° | Moccamaster: 414–424°
+V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Kalita: 396–406°
+Clever Dripper: 416–436° (coarse, immersion) | AeroPress: 377–387° | Moccamaster: 431–441°
 Comandante C40 (travel): V60 22–28 clicks | AeroPress 18–22 clicks | Clever 26–30 clicks
 
 AEROPRESS MODES:
-- Normal: 14g / 240g / 88°C / Niche° 360–370° / ~2 min | champion-style inverted
+- Normal: 14g / 240g / 88°C / Niche° 377–387° / ~2 min | champion-style inverted
 - Concentrate: 14g / 90g / 86°C / ~1:30 | for naturally sweet coffees or desired intensity; avoid for delicate floral washed
 
 TIMING RULE (critical!):

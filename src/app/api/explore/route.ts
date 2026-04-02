@@ -60,10 +60,10 @@ const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and persona
 - Favourite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey
 
 **Niche Zero grind settings (degrees, not clicks):**
-- V60 + Drip Assist Washed: 390–393° | Honey: 392–395° | Natural: 393–397°
-- V60 without Assist: 379–389° | Orea V4: 384–394° | Clever Dripper: 399–419°
-- AeroPress: 360–370° | Moccamaster: 414–424°
-- Championship/Peng: 369–379° | 4:6 Method: 394–404°
+- V60 + Drip Assist Washed: 403–408° | Honey: 405–410° | Natural: 406–412°
+- V60 without Assist: 396–406° | Orea V4: 401–411° | Clever Dripper: 416–436°
+- AeroPress: 377–387° | Moccamaster: 431–441°
+- Championship/Peng: 386–396° | 4:6 Method: 411–421°
 
 **Drip Assist rules:**
 - Start temp +2–3°C higher (heat loss): Washed 98–99°C, Natural 95–96°C, Honey 97°C
