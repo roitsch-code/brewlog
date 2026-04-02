@@ -58,7 +58,7 @@ export interface BagAnalysisResult {
   isCoffeeBag: boolean;
 }
 
-export async function analyzeBagImage(imageBase64: string, mimeType: string): Promise<BagAnalysisResult> {
+export async function analyzeBagImage(imageBase64: string, mimeType: string): Promise<{ result: BagAnalysisResult; usage: { input_tokens: number; output_tokens: number } }> {
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
@@ -79,16 +79,14 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
   try {
-    return JSON.parse(text) as BagAnalysisResult;
+    return { result: JSON.parse(text) as BagAnalysisResult, usage: response.usage };
   } catch {
     // Try to extract JSON from text
     const match = text.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]) as BagAnalysisResult;
+    if (match) return { result: JSON.parse(match[0]) as BagAnalysisResult, usage: response.usage };
     return {
-      extracted: {},
-      confidence: {},
-      clarifications: [],
-      isCoffeeBag: false,
+      result: { extracted: {}, confidence: {}, clarifications: [], isCoffeeBag: false },
+      usage: response.usage,
     };
   }
 }

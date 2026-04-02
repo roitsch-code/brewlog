@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -24,6 +25,7 @@ Update the coffee data with this new information and return the updated JSON obj
       ],
     });
 
+    void logTokenUsage({ endpoint: "bag-clarify", model: "claude-haiku-4-5", usage: response.usage, userId: "user" });
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
     const match = text.match(/\{[\s\S]*\}/);
     const updated = match ? JSON.parse(match[0]) : currentCoffeeData;

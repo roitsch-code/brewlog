@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeBagImage } from "@/lib/claude/analyzeBag";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,8 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(bytes).toString("base64");
     const mimeType = file.type || "image/jpeg";
 
-    const result = await analyzeBagImage(base64, mimeType);
+    const { result, usage } = await analyzeBagImage(base64, mimeType);
+    void logTokenUsage({ endpoint: "analyze-bag", model: "claude-sonnet-4-6", usage, userId: "user" });
     return NextResponse.json(result);
   } catch (err) {
     console.error("analyze-bag error:", err);

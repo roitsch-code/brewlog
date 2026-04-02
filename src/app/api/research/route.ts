@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 import { getInsights, saveInsights } from "@/lib/knowledge/insights";
 import { getHints, saveHints, FALLBACK_HINTS } from "@/lib/knowledge/hints";
 import { addNewsItems } from "@/lib/knowledge/news";
@@ -105,6 +106,7 @@ Return only valid JSON.`,
     ],
   });
 
+  void logTokenUsage({ endpoint: "research-web", model: "claude-haiku-4-5", usage: response.usage, userId: null });
   // Extract the final text response
   const textContent = response.content.find(
     (c: { type: string }) => c.type === "text"
@@ -154,6 +156,7 @@ Return only valid JSON.`,
     ],
   });
 
+  void logTokenUsage({ endpoint: "research-fallback", model: "claude-haiku-4-5", usage: response.usage, userId: null });
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -173,6 +176,7 @@ async function generateNewQuestions(): Promise<string[]> {
         },
       ],
     });
+    void logTokenUsage({ endpoint: "research-questions", model: "claude-haiku-4-5", usage: response.usage, userId: null });
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) return [];
@@ -199,6 +203,7 @@ async function generateNewHints(): Promise<string[]> {
       ],
     });
 
+    void logTokenUsage({ endpoint: "research-hints", model: "claude-haiku-4-5", usage: response.usage, userId: null });
     const text =
       response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\[[\s\S]*\]/);

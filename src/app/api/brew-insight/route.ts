@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ Be direct. No generic praise. No "great choice". No emojis. Speak like a knowled
       messages: [{ role: "user", content: prompt }],
     });
 
+    void logTokenUsage({ endpoint: "brew-insight", model: "claude-haiku-4-5", usage: msg.usage, userId: "user" });
     const insight = (msg.content[0] as { type: string; text: string })?.text?.trim() || null;
     return NextResponse.json({ insight });
   } catch (err) {

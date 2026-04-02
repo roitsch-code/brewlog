@@ -117,7 +117,7 @@ export async function generateRecommendation(
   context: SessionContext,
   preferences: UserPreferences,
   pastSessions: Session[] = []
-): Promise<Recommendation> {
+): Promise<{ recommendation: Recommendation; usage: { input_tokens: number; output_tokens: number } }> {
   const equipment = preferences.equipment.length
     ? preferences.equipment.join(", ")
     : "V60, AeroPress, Bialetti";
@@ -220,12 +220,15 @@ Respond with this exact JSON structure:
   try {
     const raw = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || text);
     return {
-      primaryMethod: raw.primaryMethod,
-      primaryRecipe: raw.primaryRecipe as BrewRecipe,
-      alternativeMethod: raw.alternativeMethod,
-      alternativeRecipe: raw.alternativeRecipe as BrewRecipe,
-      reasoning: raw.reasoning,
-      generatedAt: new Date().toISOString(),
+      recommendation: {
+        primaryMethod: raw.primaryMethod,
+        primaryRecipe: raw.primaryRecipe as BrewRecipe,
+        alternativeMethod: raw.alternativeMethod,
+        alternativeRecipe: raw.alternativeRecipe as BrewRecipe,
+        reasoning: raw.reasoning,
+        generatedAt: new Date().toISOString(),
+      },
+      usage: response.usage,
     };
   } catch {
     throw new Error("Failed to parse recommendation from Claude");

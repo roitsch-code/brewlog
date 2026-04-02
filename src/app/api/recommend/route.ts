@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateRecommendation } from "@/lib/claude/recommend";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 import type { UserPreferences } from "@/lib/types/preferences";
 
 export async function POST(req: NextRequest) {
@@ -25,7 +26,8 @@ export async function POST(req: NextRequest) {
       onboardingComplete: true,
     };
 
-    const recommendation = await generateRecommendation(coffee, context, prefs, pastSessions || []);
+    const { recommendation, usage } = await generateRecommendation(coffee, context, prefs, pastSessions || []);
+    void logTokenUsage({ endpoint: "recommend", model: "claude-sonnet-4-6", usage, userId: "user" });
     return NextResponse.json(recommendation);
   } catch (err) {
     console.error("recommend error:", err);

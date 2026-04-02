@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getInsights } from "@/lib/knowledge/insights";
 import { getAlerts } from "@/lib/knowledge/alerts";
 import { requireAuth } from "@/lib/auth/requireAuth";
+import { logTokenUsage } from "@/lib/claude/logUsage";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -144,6 +145,7 @@ export async function POST(req: NextRequest) {
       })),
     });
 
+    void logTokenUsage({ endpoint: "explore", model: "claude-sonnet-4-6", usage: response.usage, userId: "user" });
     const replyContent = response.content[0];
     const reply =
       replyContent.type === "text" ? replyContent.text : "Unable to respond.";
