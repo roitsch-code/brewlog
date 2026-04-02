@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import TopMenu from "@/components/layout/TopMenu";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import type { Session } from "@/lib/types/session";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -116,6 +117,7 @@ function AskTab() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [starterQuestions, setStarterQuestions] = useState<string[]>(DEFAULT_STARTER_QUESTIONS);
+  const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -128,6 +130,12 @@ function AskTab() {
         }
       })
       .catch(() => {/* keep defaults */});
+
+    // Load recent sessions so explore can reference the user's actual brew history
+    fetch("/api/sessions?limit=5", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: Session[]) => { if (Array.isArray(data)) setRecentSessions(data); })
+      .catch(() => {});
   }, []);
 
   // Auto-scroll on new messages
@@ -153,6 +161,7 @@ function AskTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          recentSessions,
         }),
       });
 

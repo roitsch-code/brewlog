@@ -130,3 +130,10 @@
 .animate-hint-cycle {
   animation: hint-cycle 10s ease-in-out forwards;
 }
+
+/* Brew agitation cue: brief scale pulse to draw attention */
+@keyframes cue-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import CircularTimer from "@/components/ui/CircularTimer";
@@ -101,6 +101,15 @@ export default function StepBrew() {
           onComplete={handleTimerComplete}
           onTick={handleTick}
         />
+
+        {/* Agitation cue — fixed upper-right corner */}
+        {steps && (
+          <BrewAgitationCue
+            elapsed={elapsed}
+            started={started}
+            process={draft.coffee?.process}
+          />
+        )}
 
         {/* Pour-over: structured live sequence */}
         {steps && recipe && (
@@ -613,6 +622,80 @@ function MiniStat({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-brew-muted text-xs uppercase tracking-widest mb-0.5">{label}</p>
       <p className="font-mono-num text-white text-sm font-medium truncate">{value}</p>
+    </div>
+  );
+}
+
+// ── BrewAgitationCue ───────────────────────────────────────────────────────
+// Fires at t=5s into the brew (bloom phase) to cue stir or swirl.
+// Stir = Washed (vigorous, 3–5×) | Swirl = Natural/Honey (gentle circular).
+
+interface BrewAgitationCueProps {
+  elapsed: number;
+  started: boolean;
+  process?: string;
+}
+
+function BrewAgitationCue({ elapsed, started, process }: BrewAgitationCueProps) {
+  const [active, setActive] = useState(false);
+  const firedRef = useRef(false);
+
+  const isWashed = process?.toLowerCase() === "washed";
+  const label = isWashed ? "Stir 3×" : "Swirl";
+
+  useEffect(() => {
+    if (!started || firedRef.current) return;
+    // Fire at t=5s — gives 5s warning before the 0:10 agitation moment
+    if (elapsed >= 5) {
+      firedRef.current = true;
+      setActive(true);
+      // Haptic cue if available
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([60, 40, 60]);
+      }
+      // Highlight lasts 4 seconds then fades
+      const timer = setTimeout(() => setActive(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [elapsed, started]);
+
+  return (
+    <div
+      className={`fixed top-16 right-4 z-50 flex flex-col items-center gap-1 transition-all duration-500 ${
+        active ? "opacity-100 scale-100" : "opacity-20 scale-95"
+      }`}
+    >
+      <div
+        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+          active
+            ? "bg-brew-accent shadow-[0_0_20px_rgba(240,237,232,0.5)]"
+            : "bg-brew-surface border border-brew-border"
+        }`}
+        style={active ? { animation: "cue-pulse 0.6s ease-in-out 3" } : undefined}
+      >
+        {isWashed ? (
+          // Stir icon: two opposing horizontal arrows (vigorous back-and-forth)
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#0A0A0A" : "#888"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 8l-3 3 3 3" />
+            <path d="M2 11h10" />
+            <path d="M19 16l3-3-3-3" />
+            <path d="M22 13H12" />
+          </svg>
+        ) : (
+          // Swirl icon: gentle circular arrow (clockwise)
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? "#0A0A0A" : "#888"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </svg>
+        )}
+      </div>
+      <span
+        className={`text-xs font-medium transition-all duration-300 ${
+          active ? "text-brew-accent" : "text-transparent"
+        }`}
+      >
+        {label}
+      </span>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { getInsights } from "@/lib/knowledge/insights";
 import { getAlerts } from "@/lib/knowledge/alerts";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { logTokenUsage } from "@/lib/claude/logUsage";
+import { buildHistorySummary } from "@/lib/claude/historyUtils";
+import type { Session } from "@/lib/types/session";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -53,7 +55,7 @@ const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and persona
 - Other brewers: Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster
 - Kettle: Fellow Corvo EKG (900ml, PID temp-hold)
 - Scales: Acaia Lunar & Pearl
-- Water: Brita P1000 (~220 ppm TDS daily), diluted with distilled for championship brewing (44–55 ppm)
+- Water: Tap ~300 ppm TDS daily, diluted with distilled for better brewing (150 ppm SCA optimal), championship water 44–55 ppm
 
 **Taste preferences:**
 - Likes: silky, balanced, floral/fruity light roasts — elegant, not wild
@@ -81,7 +83,10 @@ STRICT rules — follow every one:
 - Always use Niche DEGREES for grind (never generic "fine/medium/coarse").
 - Use metric units (g, °C, ml).
 - If uncertain, say so in one short sentence — don't hedge extensively.
-- No emojis.`;
+- No emojis.
+
+## Source citation rule
+If you draw on a research insight from the knowledge base below, include its ID tag (e.g. [I2]) at the end of the relevant sentence. Only cite IDs that were listed below — do not invent IDs.`;
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
@@ -91,6 +96,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json() as {
       messages: { role: "user" | "assistant"; content: string }[];
       sessionId?: string;
+      recentSessions?: Session[];
     };
 
     // Strip any injected system-role messages from client — only user/assistant allowed
@@ -111,12 +117,27 @@ export async function POST(req: NextRequest) {
     // Build dynamic context to append to system prompt
     const contextParts: string[] = [];
 
-    if (insights.length > 0) {
+    // Brew history — makes explore context-aware of recent brews
+    const recentSessions: Session[] = Array.isArray(body.recentSessions)
+      ? body.recentSessions.slice(0, 5)
+      : [];
+    if (recentSessions.length > 0) {
       contextParts.push(
-        `\n## Recent Research Insights (from your knowledge base)\n` +
-          insights
-            .map(i => `- **${i.title}** (${i.source}): ${i.summary}`)
-            .join("\n")
+        `\n## ${USER_NAME}'s Recent Brews (use this as context for personal questions)\n` +
+          buildHistorySummary(recentSessions, 5)
+      );
+    }
+
+    // Research insights with stable IDs for attribution
+    const insightMap: Map<string, typeof insights[number]> = new Map();
+    if (insights.length > 0) {
+      const insightLines = insights.map((i, idx) => {
+        const id = `I${idx + 1}`;
+        insightMap.set(id, i);
+        return `- [${id}] **${i.title}** (${i.source}): ${i.summary}`;
+      });
+      contextParts.push(
+        `\n## Research Insights (cite by ID if used, e.g. [I1])\n` + insightLines.join("\n")
       );
     }
 
@@ -137,7 +158,7 @@ export async function POST(req: NextRequest) {
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 512,
+      max_tokens: 900,
       system: fullSystemPrompt,
       messages: messages.map(m => ({
         role: m.role,
@@ -147,18 +168,28 @@ export async function POST(req: NextRequest) {
 
     void logTokenUsage({ endpoint: "explore", model: "claude-sonnet-4-6", usage: response.usage, userId: "user" });
     const replyContent = response.content[0];
-    const reply =
+    const rawReply =
       replyContent.type === "text" ? replyContent.text : "Unable to respond.";
 
-    // Only surface sources that have a valid HTTP URL and whose title appears in the reply
+    // Extract cited insight IDs from reply (e.g. [I1], [I3])
+    const citedIds: string[] = [];
+    const idRegex = /\[I(\d+)\]/g;
+    let idMatch: RegExpExecArray | null;
+    while ((idMatch = idRegex.exec(rawReply)) !== null) {
+      citedIds.push(`I${idMatch[1]}`);
+    }
+    // Strip the ID tags from the reply before returning to client
+    const reply = rawReply.replace(/\s*\[I\d+\]/g, "").trim();
+
+    // Map cited IDs back to source objects
     const sources: { title: string; url: string }[] = [];
-    for (const insight of insights) {
-      if (
-        insight.url &&
-        /^https?:\/\/.+/.test(insight.url) &&
-        reply.toLowerCase().includes(insight.title.toLowerCase().slice(0, 20))
-      ) {
-        sources.push({ title: insight.title, url: insight.url });
+    for (const id of citedIds) {
+      const insight = insightMap.get(id);
+      if (insight?.url && /^https?:\/\/.+/.test(insight.url)) {
+        // Deduplicate
+        if (!sources.some(s => s.url === insight.url)) {
+          sources.push({ title: insight.title, url: insight.url });
+        }
       }
     }
 

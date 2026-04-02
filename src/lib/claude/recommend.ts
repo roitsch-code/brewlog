@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { CoffeeIdentity, SessionContext, Recommendation, BrewRecipe } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
+import { buildHistorySummary } from "./historyUtils";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -89,28 +90,6 @@ Keep reasoning to 2–3 sentences.
 LANGUAGE: Always respond in English. All text fields (reasoning, pourSequence descriptions) must be in English only.
 Return valid JSON only.`;
 
-function buildHistorySummary(pastSessions: Session[]): string {
-  if (!pastSessions.length) return "No previous sessions yet — this is the user's first brew.";
-
-  const lines = pastSessions.slice(0, 8).map(s => {
-    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod || "unknown";
-    const rating = s.result?.rating != null ? `${s.result.rating}★` : "unrated";
-    const coffee = s.coffee?.name ? `${s.coffee.name} (${s.coffee.origin || "?"}, ${s.coffee.process || "?"})` : "unknown coffee";
-    const notes = s.result?.flavorNotes?.slice(0, 4).join(", ") || "";
-    const body = s.result?.body || "";
-    const acidity = s.result?.acidity || "";
-    const freeNote = s.result?.freeNotes ? ` · "${s.result.freeNotes}"` : "";
-    const wouldRepeat = s.result?.wouldUseMethodAgain === false ? " · would NOT repeat this method" : "";
-    const flow = s.brew?.flow ? ` · flow: ${s.brew.flow}` : "";
-    const mods = s.brew?.modifications ? ` · modified: ${s.brew.modifications}` : "";
-    const attribution = s.result?.attribution ? ` · low-rated due to: ${s.result.attribution}` : "";
-    const craft = s.result?.craft ? ` · craft: ${s.result.craft}` : "";
-    const fit = s.result?.fit ? ` · fit: ${s.result.fit}` : "";
-    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${flow}${mods}${wouldRepeat}${freeNote}${attribution}${craft}${fit}`;
-  });
-
-  return lines.join("\n");
-}
 
 export async function generateRecommendation(
   coffee: CoffeeIdentity,
@@ -124,9 +103,21 @@ export async function generateRecommendation(
 
   const historyStr = buildHistorySummary(pastSessions);
 
+  // Only use percolation methods for timing calibration (immersion/pressure methods have
+  // irrelevant timing signals — AeroPress, Clever Dripper, Moccamaster, French Press)
+  const PERCOLATION_METHODS = new Set([
+    "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
+    "kalita", "kalita wave", "chemex", "drip assist", "v60 + drip assist",
+    "turbo v60", "peng", "4:6", "kasuya",
+  ]);
+  const isPercolation = (method?: string) =>
+    method ? PERCOLATION_METHODS.has(method.toLowerCase().trim()) : false;
+
   const timingDelta = (() => {
     const withTiming = pastSessions.filter(s =>
-      s.brew?.actualTimeSec && s.recommendation?.primaryRecipe?.targetTimeSec
+      s.brew?.actualTimeSec &&
+      s.recommendation?.primaryRecipe?.targetTimeSec &&
+      isPercolation(s.brew?.methodUsed || s.recommendation?.primaryMethod)
     );
     if (withTiming.length < 2) return null;
     const avg = withTiming.reduce((sum, s) =>
@@ -134,6 +125,11 @@ export async function generateRecommendation(
     ) / withTiming.length;
     return Math.round(avg);
   })();
+  const percolationSampleSize = pastSessions.filter(s =>
+    s.brew?.actualTimeSec &&
+    s.recommendation?.primaryRecipe?.targetTimeSec &&
+    isPercolation(s.brew?.methodUsed || s.recommendation?.primaryMethod)
+  ).length;
 
   // Translate amount selection to target water volume
   const amountGuide: Record<string, string> = {
@@ -178,7 +174,7 @@ ${grinderNote}
 Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=${preferences.tasteProfile.preferredAcidityLevel}
 User's brew history (use this to learn their taste and refine the recommendation):
 ${historyStr}
-${timingDelta !== null ? `\nTIMING CALIBRATION: User's last ${pastSessions.filter(s => s.brew?.actualTimeSec && s.recommendation?.primaryRecipe?.targetTimeSec).length} brews averaged ${timingDelta > 0 ? "+" : ""}${timingDelta}s vs target. ${timingDelta > 20 ? "Grind is likely too fine — adjust 1–2° coarser than baseline to hit target time." : timingDelta < -20 ? "Grind may be too coarse — adjust 1–2° finer." : "Timing is well-calibrated."}` : ""}
+${timingDelta !== null ? `\nTIMING CALIBRATION (percolation methods only, ${percolationSampleSize} brews): User averaged ${timingDelta > 0 ? "+" : ""}${timingDelta}s vs target. ${timingDelta > 20 ? "Grind is likely too fine — adjust 1–2° coarser than baseline to hit target time." : timingDelta < -20 ? "Grind may be too coarse — adjust 1–2° finer." : "Timing is well-calibrated."} Apply only if recommending a percolation method.` : ""}
 IMPORTANT — pour sequence format:
 Express the pour sequence as CUMULATIVE weight milestones separated by " – ", e.g. "50 – 180 – 320 – 500"
 Each number is the total water in the cup at that moment (not the amount added per pour).
@@ -210,7 +206,7 @@ Respond with this exact JSON structure:
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 800,
+    max_tokens: 1200,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   });
