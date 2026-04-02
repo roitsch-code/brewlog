@@ -50,13 +50,21 @@ export async function GET(req: NextRequest) {
     const rawLimit = Number(new URL(req.url).searchParams.get("limit") || "50");
     const limit = Math.min(Math.max(1, rawLimit), 100);
     const db = getAdminDb();
-    // orderBy createdAtMs (Unix ms integer) — added to all new sessions to avoid
-    // mixed-type issues with the legacy createdAt field (string vs Timestamp)
-    const snap = await db.collection("sessions")
-      .orderBy("createdAtMs", "desc")
-      .limit(limit)
-      .get();
-    const sessions: Session[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Session));
+    // Fetch without orderBy to include both old sessions (no createdAtMs) and new ones,
+    // then sort client-side. createdAtMs is a Unix ms integer added to new sessions;
+    // legacy sessions use createdAt (ISO string). For old sessions without either, fall back to 0.
+    const snap = await db.collection("sessions").limit(limit * 3).get();
+    const sessions: Session[] = snap.docs
+      .map(d => ({ id: d.id, ...d.data() } as Session))
+      .sort((a, b) => {
+        const getMs = (s: Session & { createdAtMs?: number }) => {
+          if (s.createdAtMs) return s.createdAtMs;
+          if (s.createdAt) return new Date(s.createdAt).getTime();
+          return 0;
+        };
+        return getMs(b) - getMs(a);
+      })
+      .slice(0, limit);
     return NextResponse.json(sessions);
   } catch (err) {
     console.error("sessions GET error:", err);
