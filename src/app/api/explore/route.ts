@@ -4,6 +4,8 @@ import { getInsights } from "@/lib/knowledge/insights";
 import { getAlerts } from "@/lib/knowledge/alerts";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildHistorySummary } from "@/lib/claude/historyUtils";
+import { detectPatterns } from "@/lib/claude/patterns";
+import { translate } from "@/lib/claude/translate";
 import type { Session } from "@/lib/types/session";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -129,13 +131,53 @@ export async function POST(req: NextRequest) {
 
     // Brew history — makes explore context-aware of recent brews
     const recentSessions: Session[] = Array.isArray(body.recentSessions)
-      ? body.recentSessions.slice(0, 5)
+      ? body.recentSessions.slice(0, 10)
       : [];
+
     if (recentSessions.length > 0) {
-      contextParts.push(
-        `\n## ${USER_NAME}'s Recent Brews (use this as context for personal questions)\n` +
-          buildHistorySummary(recentSessions, 5)
-      );
+      const patternAnalysis = detectPatterns(recentSessions);
+
+      if (patternAnalysis.hasEnoughData) {
+        // Stage 2: translate patterns + recent activity into nuanced narrative
+        const lastUserMessage = messages.findLast(
+          (m: { role: string; content: string }) => m.role === "user"
+        )?.content as string | undefined;
+
+        const recentActivity = recentSessions.slice(0, 5).map(s => ({
+          coffee: s.coffee?.name ?? "unknown",
+          roaster: s.coffee?.roaster ?? "unknown",
+          method: s.brew?.methodUsed ?? s.recommendation?.primaryMethod ?? "unknown",
+          rating: s.result?.rating ?? 0,
+          craft: s.result?.craft,
+          fit: s.result?.fit,
+          occasion: s.context?.occasion,
+          grindSize: s.recommendation?.primaryRecipe?.grindSize as string | undefined,
+          wouldBrewAgain: (s.result as (typeof s.result & { wouldBrewAgain?: boolean; wouldUseMethodAgain?: boolean }) | undefined)?.wouldBrewAgain
+            ?? (s.result as (typeof s.result & { wouldBrewAgain?: boolean; wouldUseMethodAgain?: boolean }) | undefined)?.wouldUseMethodAgain,
+          freeNotes: s.result?.freeNotes,
+        }));
+
+        try {
+          const translated = await translate({ patterns: patternAnalysis, recentActivity, userQuery: lastUserMessage });
+          if (translated.narrative) {
+            contextParts.push(
+              `\n## ${USER_NAME}'s Brew Pattern Context (pre-computed — use as background inference, do not repeat verbatim)\n` +
+                translated.narrative
+            );
+          }
+        } catch {
+          // Fall back to standard history summary on translate failure
+          contextParts.push(
+            `\n## ${USER_NAME}'s Recent Brews\n` + buildHistorySummary(recentSessions, 5)
+          );
+        }
+      } else {
+        // Stage 1 only: not enough data for pattern claims
+        contextParts.push(
+          `\n## ${USER_NAME}'s Recent Brews (use this as context for personal questions)\n` +
+            buildHistorySummary(recentSessions, 5)
+        );
+      }
     }
 
     // Research insights with stable IDs for attribution

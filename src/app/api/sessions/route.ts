@@ -52,7 +52,7 @@ const SessionPostSchema = z.object({
     body: z.string().max(50).optional().default(""),
     acidity: z.string().max(50).optional().default(""),
     freeNotes: z.string().max(2000).optional(),
-    wouldUseMethodAgain: z.boolean().optional(),
+    wouldBrewAgain: z.boolean().optional(),
     attribution: z.enum(["brew", "bean", "roaster"]).optional(),
     craft: z.enum(["off", "solid", "exceptional"]).optional(),
     fit: z.enum(["not-my-style", "neutral", "my-kind"]).optional(),

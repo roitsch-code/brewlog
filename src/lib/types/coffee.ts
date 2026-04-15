@@ -16,4 +16,5 @@ export interface Coffee {
   writtenSummary?: string;
   lastSummarizedAt?: string;
   commonNotes?: string[];
+  personalNotes?: string; // free-text notes written by the user
 }

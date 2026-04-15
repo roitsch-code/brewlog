@@ -12,6 +12,7 @@ import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
 import { buildHistorySummary, buildTimingStats } from "./historyUtils";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
+import { detectPatterns } from "./patterns";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -288,6 +289,7 @@ export async function generateRecommendation(
     : "V60, AeroPress, Bialetti";
 
   const historyStr = buildHistorySummary(pastSessions);
+  const patternAnalysis = detectPatterns(pastSessions);
 
   const PERCOLATION_METHODS = new Set([
     "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
@@ -419,6 +421,27 @@ ${
         })
         .join("\n") +
       "\nApply the relevant row only when recommending that specific method."
+    : ""
+}
+
+${
+  patternAnalysis.hasEnoughData
+    ? (() => {
+        const lines: string[] = ["\nDetected behavioral patterns (inform portfolio reasoning — do not override recipe physics):"];
+        for (const o of patternAnalysis.oscillation) {
+          lines.push(`  Oscillation — ${o.coffee}: ${o.parameter} ${o.direction}`);
+        }
+        for (const m of patternAnalysis.ratingBehaviorMismatch) {
+          lines.push(`  Rating mismatch — ${m.description}: ${m.evidence}`);
+        }
+        for (const c of patternAnalysis.craftVsFitDivergence) {
+          lines.push(`  Craft-vs-fit — ${c.coffeeName}: craft=${c.craft}, fit=${c.fit}, rated ${c.rating}★`);
+        }
+        for (const op of patternAnalysis.occasionDependentPreference) {
+          lines.push(`  Occasion split — ${op.coffee}: ${op.occasionA} avg ${op.avgA}★ vs ${op.occasionB} avg ${op.avgB}★`);
+        }
+        return lines.length > 1 ? lines.join("\n") : "";
+      })()
     : ""
 }
 

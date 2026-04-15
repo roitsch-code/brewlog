@@ -5,6 +5,7 @@ import FlowShell from "./FlowShell";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/Chip";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
+import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
 import { Camera, PenLine, Link2, Coffee, ShoppingBag, Target } from "lucide-react";
 
 type InputMethod = "photo" | "manual" | "link";
@@ -74,6 +75,21 @@ export default function StepScan() {
       .catch(() => {});
   };
 
+  // Library match — check if this coffee has been brewed before
+  const [libraryMatch, setLibraryMatch] = useState<CoffeeLibEntry | null>(null);
+  const checkLibraryMatch = (name?: string, roaster?: string) => {
+    const n = name?.trim();
+    const r = roaster?.trim();
+    if (!n && !r) { setLibraryMatch(null); return; }
+    const params = new URLSearchParams({ match: "true" });
+    if (n) params.set("name", n);
+    if (r) params.set("roaster", r);
+    fetch(`/api/coffees?${params}`, { cache: "no-store" })
+      .then(res => res.ok ? res.json() : null)
+      .then((match: CoffeeLibEntry | null) => setLibraryMatch(match ?? null))
+      .catch(() => {});
+  };
+
   const handlePhoto = async (file: File) => {
     setIsAnalyzing(true);
     setScanError(null);
@@ -111,6 +127,7 @@ export default function StepScan() {
         aiExtracted: true,
         tastingNotesFromBag: result.extracted.tastingNotesFromBag ?? [],
       });
+      checkLibraryMatch(result.extracted.name, result.extracted.roaster);
 
       // If roaster is unknown, auto-generate its profile immediately — no Q&A interruption
       if (result.extracted.roaster && (!result.roasterPrior || result.roasterPrior.confidence === "fallback")) {
@@ -226,6 +243,10 @@ export default function StepScan() {
         Object.entries(extracted).filter(([, v]) => v !== null && v !== undefined)
       ) as Parameters<typeof setCoffee>[0];
       setCoffee({ ...clean, aiExtracted: true });
+      checkLibraryMatch(
+        typeof extracted.name === "string" ? extracted.name : undefined,
+        typeof extracted.roaster === "string" ? extracted.roaster : undefined
+      );
       if (roasterPrior) {
         setManualRoasterPrior(roasterPrior);
       } else if (extracted.roaster && typeof extracted.roaster === "string") {
@@ -588,7 +609,9 @@ export default function StepScan() {
                   onBlur={handleManualRoasterBlur}
                 />
                 {manualRoasterPrior && <RoasterProfileCard prior={manualRoasterPrior} compact />}
-                <input type="text" value={manualName} onChange={e => setManualName(e.target.value)}
+                <input type="text" value={manualName}
+                  onChange={e => setManualName(e.target.value)}
+                  onBlur={() => checkLibraryMatch(manualName, manualRoaster)}
                   placeholder="Coffee name" className="w-full rounded-2xl px-4 py-3 text-base focus:outline-none"
                   style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                 />
@@ -698,6 +721,28 @@ export default function StepScan() {
             </div>
           )}
         </div>
+
+        {/* Library match notice */}
+        {libraryMatch && (
+          <a
+            href={`/coffees/${libraryMatch.id}`}
+            className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-all active:scale-[0.98]"
+            style={{ background: "rgba(212,184,150,0.08)", borderColor: "rgba(212,184,150,0.25)" }}
+          >
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--primary)" }}>You&apos;ve had this before</p>
+              <p className="text-sm truncate" style={{ color: "var(--foreground)" }}>
+                {libraryMatch.name}
+                {libraryMatch.avgRating != null ? ` · ${libraryMatch.avgRating.toFixed(1)}★` : ""}
+                {libraryMatch.sessionCount ? ` · ${libraryMatch.sessionCount} brew${libraryMatch.sessionCount !== 1 ? "s" : ""}` : ""}
+              </p>
+              {libraryMatch.personalNotes && (
+                <p className="text-xs mt-0.5 truncate" style={{ color: "var(--muted-foreground)" }}>&ldquo;{libraryMatch.personalNotes}&rdquo;</p>
+              )}
+            </div>
+            <span className="text-xs shrink-0" style={{ color: "var(--muted-foreground)" }}>Library →</span>
+          </a>
+        )}
 
         {/* THEN CHOOSE */}
         <div>

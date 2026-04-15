@@ -187,10 +187,15 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
     const body = s.result?.body || "";
     const acidity = s.result?.acidity || "";
     const freeNote = s.result?.freeNotes ? ` · "${s.result.freeNotes}"` : "";
-    const wouldRepeat =
-      s.result?.wouldUseMethodAgain === false
-        ? " · would NOT repeat this method"
-        : "";
+    // Support both new field name (wouldBrewAgain) and legacy stored name (wouldUseMethodAgain)
+    type ResultCompat = typeof s.result & { wouldUseMethodAgain?: boolean };
+    const wouldBrewAgainVal =
+      (s.result as ResultCompat | undefined)?.wouldBrewAgain ??
+      (s.result as ResultCompat | undefined)?.wouldUseMethodAgain;
+    const wouldBrewAgain =
+      wouldBrewAgainVal === false ? " · would NOT brew this setup again" :
+      wouldBrewAgainVal === true  ? " · would brew this setup again" : "";
+    const occasion = s.context?.occasion ? ` · occasion: ${s.context.occasion}` : "";
     const flow = s.brew?.flow ? ` · flow: ${s.brew.flow}` : "";
     const mods = s.brew?.modifications
       ? ` · modified: ${s.brew.modifications}`
@@ -216,7 +221,7 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
       bagNotes?.length && actualNotes?.length
         ? ` · bag promised: [${bagNotes.join(", ")}] → actually tasted: [${actualNotes.join(", ")}]`
         : "";
-    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldRepeat}${freeNote}${attribution}${craft}${fit}${drift}`;
+    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldBrewAgain}${freeNote}${attribution}${craft}${fit}${occasion}${drift}`;
   });
 
   return rankingBlock + sensoryBlock + roasterBlock + lines.join("\n");

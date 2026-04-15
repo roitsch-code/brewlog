@@ -51,6 +51,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(summaries);
     }
 
+    // ?match=true&name=X&roaster=Y — case-insensitive lookup for coffee recognition
+    if (req.nextUrl.searchParams.get("match") === "true") {
+      const name = (req.nextUrl.searchParams.get("name") || "").toLowerCase().trim();
+      const roaster = (req.nextUrl.searchParams.get("roaster") || "").toLowerCase().trim();
+      const match = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as Coffee))
+        .find(c =>
+          (name ? c.name?.toLowerCase().trim() === name : true) &&
+          (roaster ? c.roaster?.toLowerCase().trim() === roaster : true) &&
+          (name || roaster) // need at least one filter
+        ) ?? null;
+      return NextResponse.json(match);
+    }
+
     const coffees: Coffee[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Coffee));
     return NextResponse.json(coffees);
   } catch (err) {
