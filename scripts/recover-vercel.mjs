@@ -25,7 +25,7 @@ if (!TOKEN) {
   console.error('  export VERCEL_TOKEN=<your-token>  # then re-run');
   process.exit(1);
 }
-const DEPLOYMENT_ID = '82RzzAfVC';
+const DEPLOYMENT_ID = process.env.DEPLOYMENT_ID || 'dpl_82RzzAfVC2q63sQA9CqtMRuZR3bi';
 const OUTPUT_DIR = path.resolve('./vercel-recovery');
 const DIFF_LOG = path.resolve('./vercel-diff.txt');
 
