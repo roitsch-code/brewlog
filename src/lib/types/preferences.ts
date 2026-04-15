@@ -1,1 +1,26 @@
-{"data":"ZXhwb3J0IGludGVyZmFjZSBVc2VyUHJlZmVyZW5jZXMgewogIGVxdWlwbWVudDogc3RyaW5nW107CiAgZ3JpbmRlcj86IHN0cmluZzsKICB0YXN0ZVByb2ZpbGU6IHsKICAgIGxpa2VkT3JpZ2luczogc3RyaW5nW107CiAgICBsaWtlZFByb2Nlc3Nlczogc3RyaW5nW107CiAgICBhdm9pZFByb2Nlc3Nlczogc3RyaW5nW107CiAgICBwcmVmZXJyZWRCb2R5TGV2ZWw6IHN0cmluZzsKICAgIHByZWZlcnJlZEFjaWRpdHlMZXZlbDogc3RyaW5nOwogIH07CiAgZGVmYXVsdEFtb3VudDogc3RyaW5nOwogIG9uYm9hcmRpbmdDb21wbGV0ZTogYm9vbGVhbjsKfQoKZXhwb3J0IGNvbnN0IERFRkFVTFRfUFJFRkVSRU5DRVM6IFVzZXJQcmVmZXJlbmNlcyA9IHsKICBlcXVpcG1lbnQ6IFtdLAogIHRhc3RlUHJvZmlsZTogewogICAgbGlrZWRPcmlnaW5zOiBbXSwKICAgIGxpa2VkUHJvY2Vzc2VzOiBbXSwKICAgIGF2b2lkUHJvY2Vzc2VzOiBbXSwKICAgIHByZWZlcnJlZEJvZHlMZXZlbDogIm1lZGl1bSIsCiAgICBwcmVmZXJyZWRBY2lkaXR5TGV2ZWw6ICJtZWRpdW0iLAogIH0sCiAgZGVmYXVsdEFtb3VudDogInNvbG8iLAogIG9uYm9hcmRpbmdDb21wbGV0ZTogZmFsc2UsCn07Cg=="}
+export interface UserPreferences {
+  equipment: string[];
+  grinder?: string;
+  tasteProfile: {
+    likedOrigins: string[];
+    likedProcesses: string[];
+    avoidProcesses: string[];
+    preferredBodyLevel: string;
+    preferredAcidityLevel: string;
+  };
+  defaultAmount: string;
+  onboardingComplete: boolean;
+}
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  equipment: [],
+  tasteProfile: {
+    likedOrigins: [],
+    likedProcesses: [],
+    avoidProcesses: [],
+    preferredBodyLevel: "medium",
+    preferredAcidityLevel: "medium",
+  },
+  defaultAmount: "solo",
+  onboardingComplete: false,
+};

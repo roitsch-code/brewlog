@@ -1,1 +1,2 @@
-{"data":"Ly8gUmUtZXhwb3J0cyBmcm9tIHRoZSBTQ0EtYWxpZ25lZCBmbGF2b3Igd2hlZWwgZm9yIGJhY2t3YXJkIGNvbXBhdGliaWxpdHkuCmV4cG9ydCB7IEZMQVZPUl9UQVhPTk9NWSwgUVVJQ0tfRkxBVk9SUywgQUxMX0ZMQVZPUl9OT1RFUyB9IGZyb20gIi4vc2NhRmxhdm9yV2hlZWwiOwo="}
+// Re-exports from the SCA-aligned flavor wheel for backward compatibility.
+export { FLAVOR_TAXONOMY, QUICK_FLAVORS, ALL_FLAVOR_NOTES } from "./scaFlavorWheel";

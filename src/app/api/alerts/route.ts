@@ -1,1 +1,27 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBOZXh0UmVxdWVzdCB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2V0QWxlcnRzLCBtYXJrUmVhZCB9IGZyb20gIkAvbGliL2tub3dsZWRnZS9hbGVydHMiOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVCgpIHsKICB0cnkgewogICAgY29uc3QgYWxlcnRzID0gYXdhaXQgZ2V0QWxlcnRzKDIwKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGFsZXJ0cyB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoImFsZXJ0cy9yb3V0ZSBHRVQgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGFsZXJ0czogW10gfSwgeyBzdGF0dXM6IDUwMCB9KTsKICB9Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQQVRDSChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgdHJ5IHsKICAgIGNvbnN0IGJvZHkgPSBhd2FpdCByZXEuanNvbigpIGFzIHsgaWQ6IHN0cmluZyB9OwogICAgaWYgKCFib2R5LmlkKSB7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiaWQgcmVxdWlyZWQiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CiAgICB9CiAgICBhd2FpdCBtYXJrUmVhZChib2R5LmlkKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IG9rOiB0cnVlIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigiYWxlcnRzL3JvdXRlIFBBVENIIGVycm9yOiIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkZhaWxlZCB0byB1cGRhdGUiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { getAlerts, markRead } from "@/lib/knowledge/alerts";
+
+export async function GET() {
+  try {
+    const alerts = await getAlerts(20);
+    return NextResponse.json({ alerts });
+  } catch (err) {
+    console.error("alerts/route GET error:", err);
+    return NextResponse.json({ alerts: [] }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json() as { id: string };
+    if (!body.id) {
+      return NextResponse.json({ error: "id required" }, { status: 400 });
+    }
+    await markRead(body.id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("alerts/route PATCH error:", err);
+    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+  }
+}

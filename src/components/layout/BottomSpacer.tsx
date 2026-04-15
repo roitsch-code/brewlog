@@ -1,1 +1,6 @@
-{"data":"Ly8gUHJldmVudHMgY29udGVudCBmcm9tIGJlaW5nIGhpZGRlbiBiZWhpbmQgdGhlIGJvdHRvbSBuYXYgKyBpUGhvbmUgaG9tZSBpbmRpY2F0b3IKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQm90dG9tU3BhY2VyKCkgewogIHJldHVybiAoCiAgICA8ZGl2IHN0eWxlPXt7IGhlaWdodDogImNhbGMoNC41cmVtICsgZW52KHNhZmUtYXJlYS1pbnNldC1ib3R0b20pKSIgfX0gYXJpYS1oaWRkZW4gLz4KICApOwp9Cg=="}
+// Prevents content from being hidden behind the bottom nav + iPhone home indicator
+export default function BottomSpacer() {
+  return (
+    <div style={{ height: "calc(4.5rem + env(safe-area-inset-bottom))" }} aria-hidden />
+  );
+}

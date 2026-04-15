@@ -1,1 +1,23 @@
-{"data":"ZXhwb3J0IGludGVyZmFjZSBCcmV3TWV0aG9kIHsKICBpZDogc3RyaW5nOwogIGxhYmVsOiBzdHJpbmc7CiAgZW1vamk6IHN0cmluZzsKICBkZWZhdWx0VGVtcDogbnVtYmVyOwogIGRlZmF1bHREb3NlOiBudW1iZXI7CiAgZGVmYXVsdFdhdGVyOiBudW1iZXI7CiAgZGVmYXVsdFRpbWVTZWM6IG51bWJlcjsKICBjYXRlZ29yeTogInBvdXItb3ZlciIgfCAiaW1tZXJzaW9uIiB8ICJvdGhlciI7Cn0KCmV4cG9ydCBjb25zdCBCUkVXX01FVEhPRFM6IEJyZXdNZXRob2RbXSA9IFsKICB7IGlkOiAidjYwIiwgbGFiZWw6ICJWNjAiLCBlbW9qaTogIuKYlSIsIGRlZmF1bHRUZW1wOiA5OCwgZGVmYXVsdERvc2U6IDIzLCBkZWZhdWx0V2F0ZXI6IDM1MCwgZGVmYXVsdFRpbWVTZWM6IDIxMCwgY2F0ZWdvcnk6ICJwb3VyLW92ZXIiIH0sCiAgeyBpZDogInY2MC1kcmlwLWFzc2lzdCIsIGxhYmVsOiAiVjYwICsgRHJpcCBBc3Npc3QiLCBlbW9qaTogIuKYlSIsIGRlZmF1bHRUZW1wOiA5OCwgZGVmYXVsdERvc2U6IDM0LCBkZWZhdWx0V2F0ZXI6IDUyMCwgZGVmYXVsdFRpbWVTZWM6IDI0MCwgY2F0ZWdvcnk6ICJwb3VyLW92ZXIiIH0sCiAgeyBpZDogIm9yZWEiLCBsYWJlbDogIk9yZWEgVjQiLCBlbW9qaTogIuKsoSIsIGRlZmF1bHRUZW1wOiA5NCwgZGVmYXVsdERvc2U6IDE3LCBkZWZhdWx0V2F0ZXI6IDI3MCwgZGVmYXVsdFRpbWVTZWM6IDE1MCwgY2F0ZWdvcnk6ICJwb3VyLW92ZXIiIH0sCiAgeyBpZDogImthbGl0YSIsIGxhYmVsOiAiS2FsaXRhIFdhdmUiLCBlbW9qaTogIuKWsyIsIGRlZmF1bHRUZW1wOiA5NCwgZGVmYXVsdERvc2U6IDE1LCBkZWZhdWx0V2F0ZXI6IDI1MCwgZGVmYXVsdFRpbWVTZWM6IDIxMCwgY2F0ZWdvcnk6ICJwb3VyLW92ZXIiIH0sCiAgeyBpZDogImNsZXZlciIsIGxhYmVsOiAiQ2xldmVyIERyaXBwZXIiLCBlbW9qaTogIuKKoSIsIGRlZmF1bHRUZW1wOiA5MywgZGVmYXVsdERvc2U6IDI1LCBkZWZhdWx0V2F0ZXI6IDQwMCwgZGVmYXVsdFRpbWVTZWM6IDMwMCwgY2F0ZWdvcnk6ICJpbW1lcnNpb24iIH0sCiAgeyBpZDogImFlcm9wcmVzcyIsIGxhYmVsOiAiQWVyb1ByZXNzIiwgZW1vamk6ICLiipkiLCBkZWZhdWx0VGVtcDogODgsIGRlZmF1bHREb3NlOiAxNCwgZGVmYXVsdFdhdGVyOiAyNDAsIGRlZmF1bHRUaW1lU2VjOiAxMjAsIGNhdGVnb3J5OiAiaW1tZXJzaW9uIiB9LAogIHsgaWQ6ICJhZXJvcHJlc3MtY29uY2VudHJhdGUiLCBsYWJlbDogIkFlcm9QcmVzcyBDb25jZW50cmF0ZSIsIGVtb2ppOiAi4oqZIiwgZGVmYXVsdFRlbXA6IDg2LCBkZWZhdWx0RG9zZTogMTQsIGRlZmF1bHRXYXRlcjogOTAsIGRlZmF1bHRUaW1lU2VjOiA5MCwgY2F0ZWdvcnk6ICJpbW1lcnNpb24iIH0sCiAgeyBpZDogIm1vY2NhbWFzdGVyIiwgbGFiZWw6ICJNb2NjYW1hc3RlciIsIGVtb2ppOiAi4pqhIiwgZGVmYXVsdFRlbXA6IDkyLCBkZWZhdWx0RG9zZTogNDUsIGRlZmF1bHRXYXRlcjogNzUwLCBkZWZhdWx0VGltZVNlYzogMzYwLCBjYXRlZ29yeTogIm90aGVyIiB9LApdOwoKZXhwb3J0IGNvbnN0IGdldE1ldGhvZEJ5SWQgPSAoaWQ6IHN0cmluZykgPT4gQlJFV19NRVRIT0RTLmZpbmQobSA9PiBtLmlkID09PSBpZCk7Cg=="}
+export interface BrewMethod {
+  id: string;
+  label: string;
+  emoji: string;
+  defaultTemp: number;
+  defaultDose: number;
+  defaultWater: number;
+  defaultTimeSec: number;
+  category: "pour-over" | "immersion" | "other";
+}
+
+export const BREW_METHODS: BrewMethod[] = [
+  { id: "v60", label: "V60", emoji: "☕", defaultTemp: 98, defaultDose: 23, defaultWater: 350, defaultTimeSec: 210, category: "pour-over" },
+  { id: "v60-drip-assist", label: "V60 + Drip Assist", emoji: "☕", defaultTemp: 98, defaultDose: 34, defaultWater: 520, defaultTimeSec: 240, category: "pour-over" },
+  { id: "orea", label: "Orea V4", emoji: "⬡", defaultTemp: 94, defaultDose: 17, defaultWater: 270, defaultTimeSec: 150, category: "pour-over" },
+  { id: "kalita", label: "Kalita Wave", emoji: "△", defaultTemp: 94, defaultDose: 15, defaultWater: 250, defaultTimeSec: 210, category: "pour-over" },
+  { id: "clever", label: "Clever Dripper", emoji: "⊡", defaultTemp: 93, defaultDose: 25, defaultWater: 400, defaultTimeSec: 300, category: "immersion" },
+  { id: "aeropress", label: "AeroPress", emoji: "⊙", defaultTemp: 88, defaultDose: 14, defaultWater: 240, defaultTimeSec: 120, category: "immersion" },
+  { id: "aeropress-concentrate", label: "AeroPress Concentrate", emoji: "⊙", defaultTemp: 86, defaultDose: 14, defaultWater: 90, defaultTimeSec: 90, category: "immersion" },
+  { id: "moccamaster", label: "Moccamaster", emoji: "⚡", defaultTemp: 92, defaultDose: 45, defaultWater: 750, defaultTimeSec: 360, category: "other" },
+];
+
+export const getMethodById = (id: string) => BREW_METHODS.find(m => m.id === id);

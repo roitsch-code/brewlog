@@ -1,1 +1,42 @@
-{"data":"ewogICJuYW1lIjogImNvZmZlZS1icmV3LWxvZyIsCiAgInZlcnNpb24iOiAiMC4xLjAiLAogICJwcml2YXRlIjogdHJ1ZSwKICAic2NyaXB0cyI6IHsKICAgICJkZXYiOiAibmV4dCBkZXYiLAogICAgImJ1aWxkIjogIm5leHQgYnVpbGQiLAogICAgInN0YXJ0IjogIm5leHQgc3RhcnQiLAogICAgImxpbnQiOiAibmV4dCBsaW50IgogIH0sCiAgImRlcGVuZGVuY2llcyI6IHsKICAgICJAYW50aHJvcGljLWFpL3NkayI6ICJeMC44MC4wIiwKICAgICJAZHVjYW5oMjkxMi9uZXh0LXB3YSI6ICJeMTAuMi45IiwKICAgICJAaG9va2Zvcm0vcmVzb2x2ZXJzIjogIl41LjIuMiIsCiAgICAiQHNpbXBsZXdlYmF1dGhuL2Jyb3dzZXIiOiAiXjEzLjMuMCIsCiAgICAiQHNpbXBsZXdlYmF1dGhuL3NlcnZlciI6ICJeMTMuMy4wIiwKICAgICJAdGFpbHdpbmRjc3MvZm9ybXMiOiAiXjAuNS4xMSIsCiAgICAiQHVzZS1nZXN0dXJlL3JlYWN0IjogIl4xMC4zLjEiLAogICAgImNsc3giOiAiXjIuMS4xIiwKICAgICJkYXRlLWZucyI6ICJeNC4xLjAiLAogICAgImZpcmViYXNlIjogIl4xMi4xMS4wIiwKICAgICJmaXJlYmFzZS1hZG1pbiI6ICJeMTMuNy4wIiwKICAgICJnZWlzdCI6ICJeMS43LjAiLAogICAgImpvc2UiOiAiXjYuMi4yIiwKICAgICJsdWNpZGUtcmVhY3QiOiAiXjEuOC4wIiwKICAgICJuZXh0IjogIjE0LjIuMzUiLAogICAgInJlYWN0IjogIl4xOCIsCiAgICAicmVhY3QtZG9tIjogIl4xOCIsCiAgICAicmVhY3QtaG9vay1mb3JtIjogIl43LjcyLjAiLAogICAgInRhaWx3aW5kLW1lcmdlIjogIl4zLjUuMCIsCiAgICAiem9kIjogIl40LjMuNiIsCiAgICAienVzdGFuZCI6ICJeNS4wLjEyIgogIH0sCiAgImRldkRlcGVuZGVuY2llcyI6IHsKICAgICJAdHlwZXMvbm9kZSI6ICJeMjAuMTkuMzciLAogICAgIkB0eXBlcy9yZWFjdCI6ICJeMTgiLAogICAgIkB0eXBlcy9yZWFjdC1kb20iOiAiXjE4IiwKICAgICJwb3N0Y3NzIjogIl44IiwKICAgICJ0YWlsd2luZGNzcyI6ICJeMy40LjEiLAogICAgInR5cGVzY3JpcHQiOiAiXjUiCiAgfQp9Cg=="}
+{
+  "name": "coffee-brew-log",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@hookform/resolvers": "^5.2.2",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
+    "@tailwindcss/forms": "^0.5.11",
+    "@use-gesture/react": "^10.3.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.11.0",
+    "firebase-admin": "^13.7.0",
+    "geist": "^1.7.0",
+    "jose": "^6.2.2",
+    "lucide-react": "^1.8.0",
+    "next": "14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-hook-form": "^7.72.0",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}

@@ -1,1 +1,371 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VFZmZlY3QsIHVzZVN0YXRlIH0gZnJvbSAicmVhY3QiOwppbXBvcnQgdHlwZSB7IFNlc3Npb24gfSBmcm9tICJAL2xpYi90eXBlcy9zZXNzaW9uIjsKaW1wb3J0IHsgU0NBX0NBVEVHT1JJRVMsIGZsYXZvckNhdGVnb3J5IH0gZnJvbSAiQC9saWIvY29uc3RhbnRzL3NjYUZsYXZvcldoZWVsIjsKaW1wb3J0IEZsYXZvcldoZWVsIGZyb20gIkAvY29tcG9uZW50cy91aS9GbGF2b3JXaGVlbCI7CmltcG9ydCBDb2ZmZWVCZWFuR2xvdyBmcm9tICJAL2NvbXBvbmVudHMvdWkvQ29mZmVlQmVhbkdsb3ciOwoKaW50ZXJmYWNlIFRhc3RlU3RhdHMgewogIHJhZGFyRGF0YTogeyBsYWJlbDogc3RyaW5nOyB2YWx1ZTogbnVtYmVyIH1bXTsKICB0b3BGbGF2b3JzOiB7IG5hbWU6IHN0cmluZzsgY291bnQ6IG51bWJlciB9W107CiAgYm9keURpc3Q6IFJlY29yZDxzdHJpbmcsIG51bWJlcj47CiAgYWNpZGl0eURpc3Q6IFJlY29yZDxzdHJpbmcsIG51bWJlcj47CiAgdG9wT3JpZ2luczogeyBuYW1lOiBzdHJpbmc7IGF2ZzogbnVtYmVyOyBjb3VudDogbnVtYmVyIH1bXTsKICB0b3BQcm9jZXNzZXM6IHsgbmFtZTogc3RyaW5nOyBhdmc6IG51bWJlcjsgY291bnQ6IG51bWJlciB9W107CiAgdG9wTWV0aG9kczogeyBuYW1lOiBzdHJpbmc7IGF2ZzogbnVtYmVyOyBjb3VudDogbnVtYmVyIH1bXTsKICBhdmdSYXRpbmc6IG51bWJlcjsKICByYXRpbmdUcmVuZDogeyBsYWJlbDogc3RyaW5nOyBhdmc6IG51bWJlciB9W107CiAgdG90YWxTZXNzaW9uczogbnVtYmVyOwp9CgpmdW5jdGlvbiBjb21wdXRlU3RhdHMoc2Vzc2lvbnM6IFNlc3Npb25bXSk6IFRhc3RlU3RhdHMgewogIGNvbnN0IHJhdGVkID0gc2Vzc2lvbnMuZmlsdGVyKHMgPT4gcy5yZXN1bHQ/LnJhdGluZyk7CiAgY29uc3QgdG90YWxTZXNzaW9ucyA9IHJhdGVkLmxlbmd0aDsKCiAgLy8gRmxhdm9yIGNhdGVnb3J5IHJhZGFyIOKAlCBrZXllZCB0byA3IFNDQSB0b3AtbGV2ZWwgY2F0ZWdvcmllcwogIGNvbnN0IGNhdGVnb3J5Q291bnQ6IFJlY29yZDxzdHJpbmcsIG51bWJlcj4gPSB7fTsKICBjb25zdCBmbGF2b3JDb3VudDogUmVjb3JkPHN0cmluZywgbnVtYmVyPiA9IHt9OwoKICByYXRlZC5mb3JFYWNoKHMgPT4gewogICAgY29uc3Qgbm90ZXMgPSBzLnJlc3VsdD8uZmxhdm9yTm90ZXMgfHwgW107CiAgICBub3Rlcy5mb3JFYWNoKG5vdGUgPT4gewogICAgICBmbGF2b3JDb3VudFtub3RlXSA9IChmbGF2b3JDb3VudFtub3RlXSB8fCAwKSArIDE7CiAgICAgIGNvbnN0IGNhdCA9IGZsYXZvckNhdGVnb3J5KG5vdGUpOwogICAgICBpZiAoY2F0KSBjYXRlZ29yeUNvdW50W2NhdF0gPSAoY2F0ZWdvcnlDb3VudFtjYXRdIHx8IDApICsgMTsKICAgIH0pOwogIH0pOwoKICBjb25zdCBtYXhDYXQgPSBNYXRoLm1heCgxLCAuLi5PYmplY3QudmFsdWVzKGNhdGVnb3J5Q291bnQpKTsKICBjb25zdCByYWRhckRhdGEgPSBTQ0FfQ0FURUdPUklFUy5tYXAoY2F0ID0+ICh7CiAgICBsYWJlbDogY2F0LAogICAgdmFsdWU6IE1hdGgucm91bmQoKChjYXRlZ29yeUNvdW50W2NhdF0gfHwgMCkgLyBtYXhDYXQpICogMTAwKSwKICB9KSk7CgogIC8vIFRvcCBmbGF2b3JzCiAgY29uc3QgdG9wRmxhdm9ycyA9IE9iamVjdC5lbnRyaWVzKGZsYXZvckNvdW50KQogICAgLnNvcnQoKGEsIGIpID0+IGJbMV0gLSBhWzFdKQogICAgLnNsaWNlKDAsIDgpCiAgICAubWFwKChbbmFtZSwgY291bnRdKSA9PiAoeyBuYW1lLCBjb3VudCB9KSk7CgogIC8vIEJvZHkgZGlzdHJpYnV0aW9uCiAgY29uc3QgYm9keURpc3Q6IFJlY29yZDxzdHJpbmcsIG51bWJlcj4gPSB7fTsKICBjb25zdCBhY2lkaXR5RGlzdDogUmVjb3JkPHN0cmluZywgbnVtYmVyPiA9IHt9OwogIHJhdGVkLmZvckVhY2gocyA9PiB7CiAgICBpZiAocy5yZXN1bHQ/LmJvZHkpIGJvZHlEaXN0W3MucmVzdWx0LmJvZHldID0gKGJvZHlEaXN0W3MucmVzdWx0LmJvZHldIHx8IDApICsgMTsKICAgIGlmIChzLnJlc3VsdD8uYWNpZGl0eSkgYWNpZGl0eURpc3Rbcy5yZXN1bHQuYWNpZGl0eV0gPSAoYWNpZGl0eURpc3Rbcy5yZXN1bHQuYWNpZGl0eV0gfHwgMCkgKyAxOwogIH0pOwoKICAvLyBUb3Agb3JpZ2lucyBieSBhdmcgcmF0aW5nCiAgY29uc3Qgb3JpZ2luRGF0YTogUmVjb3JkPHN0cmluZywgeyBzdW06IG51bWJlcjsgY291bnQ6IG51bWJlciB9PiA9IHt9OwogIGNvbnN0IHByb2Nlc3NEYXRhOiBSZWNvcmQ8c3RyaW5nLCB7IHN1bTogbnVtYmVyOyBjb3VudDogbnVtYmVyIH0+ID0ge307CiAgY29uc3QgbWV0aG9kRGF0YTogUmVjb3JkPHN0cmluZywgeyBzdW06IG51bWJlcjsgY291bnQ6IG51bWJlciB9PiA9IHt9OwoKICByYXRlZC5mb3JFYWNoKHMgPT4gewogICAgY29uc3QgciA9IHMucmVzdWx0IS5yYXRpbmc7CiAgICBpZiAocy5jb2ZmZWU/Lm9yaWdpbikgewogICAgICBjb25zdCBrID0gcy5jb2ZmZWUub3JpZ2luOwogICAgICBvcmlnaW5EYXRhW2tdID0gb3JpZ2luRGF0YVtrXSB8fCB7IHN1bTogMCwgY291bnQ6IDAgfTsKICAgICAgb3JpZ2luRGF0YVtrXS5zdW0gKz0gcjsgb3JpZ2luRGF0YVtrXS5jb3VudCArPSAxOwogICAgfQogICAgaWYgKHMuY29mZmVlPy5wcm9jZXNzKSB7CiAgICAgIGNvbnN0IGsgPSBzLmNvZmZlZS5wcm9jZXNzOwogICAgICBwcm9jZXNzRGF0YVtrXSA9IHByb2Nlc3NEYXRhW2tdIHx8IHsgc3VtOiAwLCBjb3VudDogMCB9OwogICAgICBwcm9jZXNzRGF0YVtrXS5zdW0gKz0gcjsgcHJvY2Vzc0RhdGFba10uY291bnQgKz0gMTsKICAgIH0KICAgIGNvbnN0IG1ldGhvZCA9IHMuYnJldz8ubWV0aG9kVXNlZCB8fCBzLnJlY29tbWVuZGF0aW9uPy5wcmltYXJ5TWV0aG9kOwogICAgaWYgKG1ldGhvZCkgewogICAgICBtZXRob2REYXRhW21ldGhvZF0gPSBtZXRob2REYXRhW21ldGhvZF0gfHwgeyBzdW06IDAsIGNvdW50OiAwIH07CiAgICAgIG1ldGhvZERhdGFbbWV0aG9kXS5zdW0gKz0gcjsgbWV0aG9kRGF0YVttZXRob2RdLmNvdW50ICs9IDE7CiAgICB9CiAgfSk7CgogIGNvbnN0IHRvUmFua2VkID0gKGQ6IFJlY29yZDxzdHJpbmcsIHsgc3VtOiBudW1iZXI7IGNvdW50OiBudW1iZXIgfT4pID0+CiAgICBPYmplY3QuZW50cmllcyhkKQogICAgICAuZmlsdGVyKChbLCB2XSkgPT4gdi5jb3VudCA+PSAxKQogICAgICAubWFwKChbbmFtZSwgdl0pID0+ICh7IG5hbWUsIGF2ZzogTWF0aC5yb3VuZCgodi5zdW0gLyB2LmNvdW50KSAqIDEwKSAvIDEwLCBjb3VudDogdi5jb3VudCB9KSkKICAgICAgLnNvcnQoKGEsIGIpID0+IGIuYXZnIC0gYS5hdmcpCiAgICAgIC5zbGljZSgwLCA0KTsKCiAgY29uc3QgdG9wT3JpZ2lucyA9IHRvUmFua2VkKG9yaWdpbkRhdGEpOwogIGNvbnN0IHRvcFByb2Nlc3NlcyA9IHRvUmFua2VkKHByb2Nlc3NEYXRhKTsKICBjb25zdCB0b3BNZXRob2RzID0gdG9SYW5rZWQobWV0aG9kRGF0YSk7CgogIC8vIE92ZXJhbGwgYXZnIHJhdGluZwogIGNvbnN0IGF2Z1JhdGluZyA9IHRvdGFsU2Vzc2lvbnMgPiAwCiAgICA/IE1hdGgucm91bmQoKHJhdGVkLnJlZHVjZSgoc3VtLCBzKSA9PiBzdW0gKyAocy5yZXN1bHQ/LnJhdGluZyB8fCAwKSwgMCkgLyB0b3RhbFNlc3Npb25zKSAqIDEwKSAvIDEwCiAgICA6IDA7CgogIC8vIFJhdGluZyB0cmVuZCBieSBtb250aCAobGFzdCA2IG1vbnRocykKICBjb25zdCBieU1vbnRoOiBSZWNvcmQ8c3RyaW5nLCB7IHN1bTogbnVtYmVyOyBjb3VudDogbnVtYmVyIH0+ID0ge307CiAgcmF0ZWQuZm9yRWFjaChzID0+IHsKICAgIGNvbnN0IGQgPSAocyBhcyBTZXNzaW9uICYgeyBjcmVhdGVkQXRNcz86IG51bWJlciB9KS5jcmVhdGVkQXRNcwogICAgICA/IG5ldyBEYXRlKChzIGFzIFNlc3Npb24gJiB7IGNyZWF0ZWRBdE1zPzogbnVtYmVyIH0pLmNyZWF0ZWRBdE1zISkKICAgICAgOiBuZXcgRGF0ZShzLmNyZWF0ZWRBdCk7CiAgICBjb25zdCBrZXkgPSBgJHtkLmdldEZ1bGxZZWFyKCl9LSR7U3RyaW5nKGQuZ2V0TW9udGgoKSArIDEpLnBhZFN0YXJ0KDIsICIwIil9YDsKICAgIGJ5TW9udGhba2V5XSA9IGJ5TW9udGhba2V5XSB8fCB7IHN1bTogMCwgY291bnQ6IDAgfTsKICAgIGJ5TW9udGhba2V5XS5zdW0gKz0gcy5yZXN1bHQhLnJhdGluZzsKICAgIGJ5TW9udGhba2V5XS5jb3VudCArPSAxOwogIH0pOwogIGNvbnN0IHJhdGluZ1RyZW5kID0gT2JqZWN0LmVudHJpZXMoYnlNb250aCkKICAgIC5zb3J0KChhLCBiKSA9PiBhWzBdLmxvY2FsZUNvbXBhcmUoYlswXSkpCiAgICAuc2xpY2UoLTYpCiAgICAubWFwKChba2V5LCB2XSkgPT4gKHsKICAgICAgbGFiZWw6IG5ldyBEYXRlKGtleSArICItMDEiKS50b0xvY2FsZURhdGVTdHJpbmcoImVuIiwgeyBtb250aDogInNob3J0IiwgeWVhcjogIjItZGlnaXQiIH0pLAogICAgICBhdmc6IE1hdGgucm91bmQoKHYuc3VtIC8gdi5jb3VudCkgKiAxMCkgLyAxMCwKICAgIH0pKTsKCiAgcmV0dXJuIHsgcmFkYXJEYXRhLCB0b3BGbGF2b3JzLCBib2R5RGlzdCwgYWNpZGl0eURpc3QsIHRvcE9yaWdpbnMsIHRvcFByb2Nlc3NlcywgdG9wTWV0aG9kcywgYXZnUmF0aW5nLCByYXRpbmdUcmVuZCwgdG90YWxTZXNzaW9ucyB9Owp9CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBUYXN0ZVBhZ2UoKSB7CiAgY29uc3QgW3N0YXRzLCBzZXRTdGF0c10gPSB1c2VTdGF0ZTxUYXN0ZVN0YXRzIHwgbnVsbD4obnVsbCk7CiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddID0gdXNlU3RhdGUodHJ1ZSk7CiAgY29uc3QgW3N1bW1hcnksIHNldFN1bW1hcnldID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbCk7CiAgY29uc3QgW3N1Z2dlc3Rpb25zLCBzZXRTdWdnZXN0aW9uc10gPSB1c2VTdGF0ZTxBcnJheTx7dHlwZTogc3RyaW5nOyB0ZXh0OiBzdHJpbmc7IHRhZzogc3RyaW5nfT4+KFtdKTsKICBjb25zdCBbc3VtbWFyeUxvYWRpbmcsIHNldFN1bW1hcnlMb2FkaW5nXSA9IHVzZVN0YXRlKGZhbHNlKTsKCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGNvbnN0IGNvbnRyb2xsZXIgPSBuZXcgQWJvcnRDb250cm9sbGVyKCk7CiAgICBjb25zdCB0aW1lciA9IHNldFRpbWVvdXQoKCkgPT4gY29udHJvbGxlci5hYm9ydCgpLCAxMDAwMCk7CgogICAgZmV0Y2goIi9hcGkvc2Vzc2lvbnM/bGltaXQ9MzAwIiwgeyBjYWNoZTogIm5vLXN0b3JlIiwgc2lnbmFsOiBjb250cm9sbGVyLnNpZ25hbCB9KQogICAgICAudGhlbihyID0+IHIuanNvbigpKQogICAgICAudGhlbigoc2Vzc2lvbnM6IFNlc3Npb25bXSkgPT4gewogICAgICAgIGNvbnN0IHMgPSBjb21wdXRlU3RhdHMoQXJyYXkuaXNBcnJheShzZXNzaW9ucykgPyBzZXNzaW9ucyA6IFtdKTsKICAgICAgICBzZXRTdGF0cyhzKTsKICAgICAgICAvLyBGZXRjaCBBSSBuYXJyYXRpdmUgb25jZSB3ZSBoYXZlIHN0YXRzCiAgICAgICAgaWYgKHMudG90YWxTZXNzaW9ucyA+PSAzKSB7CiAgICAgICAgICBzZXRTdW1tYXJ5TG9hZGluZyh0cnVlKTsKICAgICAgICAgIGZldGNoKCIvYXBpL3Rhc3RlLXN1bW1hcnkiLCB7CiAgICAgICAgICAgIG1ldGhvZDogIlBPU1QiLAogICAgICAgICAgICBoZWFkZXJzOiB7ICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiIgfSwKICAgICAgICAgICAgYm9keTogSlNPTi5zdHJpbmdpZnkocyksCiAgICAgICAgICB9KQogICAgICAgICAgICAudGhlbihyID0+IHIuanNvbigpKQogICAgICAgICAgICAudGhlbihkID0+IHsgc2V0U3VtbWFyeShkLnN1bW1hcnkgPz8gbnVsbCk7IHNldFN1Z2dlc3Rpb25zKGQuc3VnZ2VzdGlvbnMgPz8gW10pOyB9KQogICAgICAgICAgICAuY2F0Y2goKCkgPT4ge30pCiAgICAgICAgICAgIC5maW5hbGx5KCgpID0+IHNldFN1bW1hcnlMb2FkaW5nKGZhbHNlKSk7CiAgICAgICAgfQogICAgICB9KQogICAgICAuY2F0Y2goKCkgPT4gc2V0U3RhdHMoY29tcHV0ZVN0YXRzKFtdKSkpCiAgICAgIC5maW5hbGx5KCgpID0+IHsgY2xlYXJUaW1lb3V0KHRpbWVyKTsgc2V0TG9hZGluZyhmYWxzZSk7IH0pOwoKICAgIHJldHVybiAoKSA9PiB7IGNsZWFyVGltZW91dCh0aW1lcik7IGNvbnRyb2xsZXIuYWJvcnQoKTsgfTsKICB9LCBbXSk7CgogIGlmIChsb2FkaW5nKSB7CiAgICByZXR1cm4gKAogICAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtZnVsbCBiZy1icmV3LWJnIGZsZXggZmxleC1jb2wiPgogICAgICAgIDxIZWFkZXIgLz4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIj4KICAgICAgICAgIDxDb2ZmZWVCZWFuR2xvdyBzaXplPXs2NH0gLz4KICAgICAgICA8L2Rpdj4KICAgICAgPC9kaXY+CiAgICApOwogIH0KCiAgaWYgKCFzdGF0cyB8fCBzdGF0cy50b3RhbFNlc3Npb25zID09PSAwKSB7CiAgICByZXR1cm4gKAogICAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtZnVsbCBiZy1icmV3LWJnIGZsZXggZmxleC1jb2wiPgogICAgICAgIDxIZWFkZXIgLz4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC00IHRleHQtY2VudGVyIHB4LTgiPgogICAgICAgICAgPHN2ZyBjbGFzc05hbWU9InctMTIgaC0xMiB0ZXh0LWJyZXctbXV0ZWQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZVdpZHRoPSIxLjUiPgogICAgICAgICAgICA8cGF0aCBzdHJva2VMaW5lY2FwPSJyb3VuZCIgc3Ryb2tlTGluZWpvaW49InJvdW5kIiBkPSJNMyAxMy41VjIxTTcuNSA5VjIxTTEyIDZ2MTVNMTYuNSAxMC41VjIxTTIxIDcuNVYyMSIgLz4KICAgICAgICAgIDwvc3ZnPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJmb250LWRpc3BsYXkgdGV4dC0yeGwgdGV4dC13aGl0ZSI+Tm8gZGF0YSB5ZXQ8L3A+CiAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXNtIj5Mb2cgYW5kIHJhdGUgYSBmZXcgYnJld3MgdG8gc2VlIHlvdXIgdGFzdGUgcHJvZmlsZS48L3A+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgKTsKICB9CgogIGNvbnN0IG1heEZsYXZvciA9IHN0YXRzLnRvcEZsYXZvcnNbMF0/LmNvdW50IHx8IDE7CiAgY29uc3QgdHJlbmRNYXggPSBNYXRoLm1heCg1LCAuLi5zdGF0cy5yYXRpbmdUcmVuZC5tYXAodCA9PiB0LmF2ZykpOwoKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9Im1pbi1oLXN2aCBiZy1icmV3LWJnIGZsZXggZmxleC1jb2wiPgogICAgICA8SGVhZGVyIC8+CgogICAgICA8ZGl2IGNsYXNzTmFtZT0icHgtNSBwYi0xMiBmbGV4IGZsZXgtY29sIGdhcC04Ij4KICAgICAgICB7LyogU3VtbWFyeSBzdGF0ICovfQogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtNCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC1jZW50ZXIiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9ImZvbnQtbW9uby1udW0gdGV4dC00eGwgdGV4dC13aGl0ZSBmb250LW1lZGl1bSI+e3N0YXRzLmF2Z1JhdGluZ308L3A+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQteHMgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVzdCBtdC0xIj5BdmcgUmF0aW5nPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy1weCBoLTEwIGJnLWJyZXctYm9yZGVyIiAvPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQtY2VudGVyIj4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJmb250LW1vbm8tbnVtIHRleHQtNHhsIHRleHQtd2hpdGUgZm9udC1tZWRpdW0iPntzdGF0cy50b3RhbFNlc3Npb25zfTwvcD4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWJyZXctbXV0ZWQgdGV4dC14cyB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXN0IG10LTEiPlJhdGVkIEJyZXdzPC9wPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtd2hpdGUvMjAgdGV4dC14cyBtbC1hdXRvIHNlbGYtZW5kIj5BbGwgdGltZTwvcD4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgey8qIEFJIG5hcnJhdGl2ZSBzdW1tYXJ5ICovfQogICAgICAgIHsoc3VtbWFyeUxvYWRpbmcgfHwgc3VtbWFyeSkgJiYgKAogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImJnLWJyZXctc3VyZmFjZSByb3VuZGVkLTJ4bCBweC00IHB5LTQgYm9yZGVyIGJvcmRlci1icmV3LWJvcmRlci80MCI+CiAgICAgICAgICAgIHtzdW1tYXJ5TG9hZGluZyAmJiAhc3VtbWFyeSA/ICgKICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJoLTMgYmctYnJldy1lbGV2YXRlZCByb3VuZGVkLWZ1bGwgdy1mdWxsIGFuaW1hdGUtcHVsc2UiIC8+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC0zIGJnLWJyZXctZWxldmF0ZWQgcm91bmRlZC1mdWxsIHctNS82IGFuaW1hdGUtcHVsc2UiIC8+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC0zIGJnLWJyZXctZWxldmF0ZWQgcm91bmRlZC1mdWxsIHctNC82IGFuaW1hdGUtcHVsc2UiIC8+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICkgOiAoCiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlLzgwIHRleHQtc20gbGVhZGluZy1yZWxheGVkIj57c3VtbWFyeX08L3A+CiAgICAgICAgICAgICl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICApfQoKICAgICAgICB7LyogRmxhdm9yIFByb2ZpbGUg4oCUIFNDQSB3aGVlbCB3aXRoIHJhZGFyIG92ZXJsYXkgKi99CiAgICAgICAgPFNlY3Rpb24gdGl0bGU9IkZsYXZvciBQcm9maWxlIj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ3LWZ1bGwiPgogICAgICAgICAgICA8Rmxhdm9yV2hlZWwgbW9kZT0icHJvZmlsZSIgcHJvZmlsZURhdGE9e3N0YXRzLnJhZGFyRGF0YX0gc2l6ZT17MzIwfSAvPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9TZWN0aW9uPgoKICAgICAgICB7LyogVG9wIGZsYXZvcnMgKi99CiAgICAgICAge3N0YXRzLnRvcEZsYXZvcnMubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgICA8U2VjdGlvbiB0aXRsZT0iVG9wIEZsYXZvcnMiPgogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ic3BhY2UteS0yIj4KICAgICAgICAgICAgICB7c3RhdHMudG9wRmxhdm9ycy5tYXAoZiA9PiAoCiAgICAgICAgICAgICAgICA8ZGl2IGtleT17Zi5uYW1lfSBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIj4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlIHRleHQtc20gdy0yOCBzaHJpbmstMCI+e2YubmFtZX08L3NwYW4+CiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4LTEgaC0xLjUgYmctYnJldy1zdXJmYWNlIHJvdW5kZWQtZnVsbCBvdmVyZmxvdy1oaWRkZW4iPgogICAgICAgICAgICAgICAgICAgIDxkaXYKICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0iaC1mdWxsIGJnLWJyZXctYWNjZW50IHJvdW5kZWQtZnVsbCB0cmFuc2l0aW9uLWFsbCIKICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPXt7IHdpZHRoOiBgJHsoZi5jb3VudCAvIG1heEZsYXZvcikgKiAxMDB9JWAgfX0KICAgICAgICAgICAgICAgICAgICAvPgogICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LWJyZXctbXV0ZWQgdGV4dC14cyB3LTUgdGV4dC1yaWdodCI+e2YuY291bnR9PC9zcGFuPgogICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgKSl9CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgPC9TZWN0aW9uPgogICAgICAgICl9CgogICAgICAgIHsvKiBSYXRpbmcgdHJlbmQgKi99CiAgICAgICAge3N0YXRzLnJhdGluZ1RyZW5kLmxlbmd0aCA+IDEgJiYgKAogICAgICAgICAgPFNlY3Rpb24gdGl0bGU9IlJhdGluZyBPdmVyIFRpbWUiPgogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1lbmQgZ2FwLTIgaC0yNCI+CiAgICAgICAgICAgICAge3N0YXRzLnJhdGluZ1RyZW5kLm1hcCh0ID0+ICgKICAgICAgICAgICAgICAgIDxkaXYga2V5PXt0LmxhYmVsfSBjbGFzc05hbWU9ImZsZXgtMSBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMSI+CiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQteHMiPnt0LmF2Z308L3NwYW4+CiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ3LWZ1bGwgYmctYnJldy1zdXJmYWNlIHJvdW5kZWQtdC1sZyBvdmVyZmxvdy1oaWRkZW4iIHN0eWxlPXt7IGhlaWdodDogIjYwcHgiIH19PgogICAgICAgICAgICAgICAgICAgIDxkaXYKICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0idy1mdWxsIGJnLWJyZXctYWNjZW50IHJvdW5kZWQtdC1sZyB0cmFuc2l0aW9uLWFsbCIKICAgICAgICAgICAgICAgICAgICAgIHN0eWxlPXt7IGhlaWdodDogYCR7KHQuYXZnIC8gdHJlbmRNYXgpICogNjB9cHhgLCBtYXJnaW5Ub3A6IGAkezYwIC0gKHQuYXZnIC8gdHJlbmRNYXgpICogNjB9cHhgIH19CiAgICAgICAgICAgICAgICAgICAgLz4KICAgICAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQteHMiPnt0LmxhYmVsfTwvc3Bhbj4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICkpfQogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDwvU2VjdGlvbj4KICAgICAgICApfQoKICAgICAgICB7LyogQm9keSArIEFjaWRpdHkgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImdyaWQgZ3JpZC1jb2xzLTIgZ2FwLTQiPgogICAgICAgICAge09iamVjdC5rZXlzKHN0YXRzLmJvZHlEaXN0KS5sZW5ndGggPiAwICYmICgKICAgICAgICAgICAgPFNlY3Rpb24gdGl0bGU9IkJvZHkiPgogICAgICAgICAgICAgIDxEaXN0QmFyIGRhdGE9e3N0YXRzLmJvZHlEaXN0fSB0b3RhbD17c3RhdHMudG90YWxTZXNzaW9uc30gLz4KICAgICAgICAgICAgPC9TZWN0aW9uPgogICAgICAgICAgKX0KICAgICAgICAgIHtPYmplY3Qua2V5cyhzdGF0cy5hY2lkaXR5RGlzdCkubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgICAgIDxTZWN0aW9uIHRpdGxlPSJBY2lkaXR5Ij4KICAgICAgICAgICAgICA8RGlzdEJhciBkYXRhPXtzdGF0cy5hY2lkaXR5RGlzdH0gdG90YWw9e3N0YXRzLnRvdGFsU2Vzc2lvbnN9IC8+CiAgICAgICAgICAgIDwvU2VjdGlvbj4KICAgICAgICAgICl9CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBUb3Agb3JpZ2lucyAqL30KICAgICAgICB7c3RhdHMudG9wT3JpZ2lucy5sZW5ndGggPiAwICYmICgKICAgICAgICAgIDxTZWN0aW9uIHRpdGxlPSJCZXN0IE9yaWdpbnMiPgogICAgICAgICAgICA8UmFua2VkTGlzdCBpdGVtcz17c3RhdHMudG9wT3JpZ2luc30gLz4KICAgICAgICAgIDwvU2VjdGlvbj4KICAgICAgICApfQoKICAgICAgICB7LyogVG9wIHByb2Nlc3NlcyAqL30KICAgICAgICB7c3RhdHMudG9wUHJvY2Vzc2VzLmxlbmd0aCA+IDAgJiYgKAogICAgICAgICAgPFNlY3Rpb24gdGl0bGU9IkJlc3QgUHJvY2Vzc2VzIj4KICAgICAgICAgICAgPFJhbmtlZExpc3QgaXRlbXM9e3N0YXRzLnRvcFByb2Nlc3Nlc30gLz4KICAgICAgICAgIDwvU2VjdGlvbj4KICAgICAgICApfQoKICAgICAgICB7LyogVG9wIG1ldGhvZHMgKi99CiAgICAgICAge3N0YXRzLnRvcE1ldGhvZHMubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgICA8U2VjdGlvbiB0aXRsZT0iQmVzdCBNZXRob2RzIj4KICAgICAgICAgICAgPFJhbmtlZExpc3QgaXRlbXM9e3N0YXRzLnRvcE1ldGhvZHN9IC8+CiAgICAgICAgICA8L1NlY3Rpb24+CiAgICAgICAgKX0KCiAgICAgICAgey8qIEV4cGxvcmUgTmV4dCAqL30KICAgICAgICB7c3VnZ2VzdGlvbnMubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgICA8U2VjdGlvbiB0aXRsZT0iRXhwbG9yZSBOZXh0Ij4KICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InNwYWNlLXktMyI+CiAgICAgICAgICAgICAge3N1Z2dlc3Rpb25zLm1hcCgocywgaSkgPT4gKAogICAgICAgICAgICAgICAgPGRpdiBrZXk9e2l9IGNsYXNzTmFtZT0iYmctYnJldy1zdXJmYWNlIHJvdW5kZWQtMnhsIHB4LTQgcHktMyBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyLzQwIj4KICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LWJyZXctYWNjZW50IHRleHQteHMgZm9udC1tb25vLW51bSB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZSBiZy1icmV3LWFjY2VudC8xMCBweC0yIHB5LTEgcm91bmRlZC1sZyBpbmxpbmUtYmxvY2sgbWItMiI+e3MudGFnfTwvc3Bhbj4KICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlLzcwIHRleHQtc20gbGVhZGluZy1yZWxheGVkIj57cy50ZXh0fTwvcD4KICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICkpfQogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDwvU2VjdGlvbj4KICAgICAgICApfQogICAgICA8L2Rpdj4KICAgIDwvZGl2PgogICk7Cn0KCmZ1bmN0aW9uIEhlYWRlcigpIHsKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9InB4LTUgcGItNCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4iIHN0eWxlPXt7IHBhZGRpbmdUb3A6ICdjYWxjKGVudihzYWZlLWFyZWEtaW5zZXQtdG9wKSArIDEuNXJlbSknIH19PgogICAgICA8ZGl2PgogICAgICAgIDxoMSBjbGFzc05hbWU9ImZvbnQtZGlzcGxheSB0ZXh0LTN4bCB0ZXh0LXdoaXRlIGxlYWRpbmctbm9uZSI+VGFzdGUgUHJvZmlsZTwvaDE+CiAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWJyZXctbXV0ZWQgdGV4dC1zbSI+V2hhdCB5b3UgbG92ZSwgb3ZlciB0aW1lPC9wPgogICAgICA8L2Rpdj4KICAgICAgCiAgICA8L2Rpdj4KICApOwp9CgpmdW5jdGlvbiBTZWN0aW9uKHsgdGl0bGUsIGNoaWxkcmVuIH06IHsgdGl0bGU6IHN0cmluZzsgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZSB9KSB7CiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTMiPgogICAgICA8aDMgY2xhc3NOYW1lPSJ0ZXh0LWJyZXctbXV0ZWQgdGV4dC14cyB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXN0Ij57dGl0bGV9PC9oMz4KICAgICAge2NoaWxkcmVufQogICAgPC9kaXY+CiAgKTsKfQoKZnVuY3Rpb24gRGlzdEJhcih7IGRhdGEsIHRvdGFsIH06IHsgZGF0YTogUmVjb3JkPHN0cmluZywgbnVtYmVyPjsgdG90YWw6IG51bWJlciB9KSB7CiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTEuNSI+CiAgICAgIHtPYmplY3QuZW50cmllcyhkYXRhKS5zb3J0KChhLCBiKSA9PiBiWzFdIC0gYVsxXSkubWFwKChbaywgdl0pID0+ICgKICAgICAgICA8ZGl2IGtleT17a30+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBqdXN0aWZ5LWJldHdlZW4gdGV4dC14cyBtYi0wLjUiPgogICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtd2hpdGUvNjAgY2FwaXRhbGl6ZSI+e2t9PC9zcGFuPgogICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCI+e01hdGgucm91bmQoKHYgLyB0b3RhbCkgKiAxMDApfSU8L3NwYW4+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJoLTEgYmctYnJldy1zdXJmYWNlIHJvdW5kZWQtZnVsbCBvdmVyZmxvdy1oaWRkZW4iPgogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC1mdWxsIGJnLWJyZXctYWNjZW50IHJvdW5kZWQtZnVsbCIgc3R5bGU9e3sgd2lkdGg6IGAkeyh2IC8gdG90YWwpICogMTAwfSVgIH19IC8+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L2Rpdj4KICAgICAgKSl9CiAgICA8L2Rpdj4KICApOwp9CgpmdW5jdGlvbiBSYW5rZWRMaXN0KHsgaXRlbXMgfTogeyBpdGVtczogeyBuYW1lOiBzdHJpbmc7IGF2ZzogbnVtYmVyOyBjb3VudDogbnVtYmVyIH1bXSB9KSB7CiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJzcGFjZS15LTIiPgogICAgICB7aXRlbXMubWFwKChpdGVtLCBpKSA9PiAoCiAgICAgICAgPGRpdiBrZXk9e2l0ZW0ubmFtZX0gY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyI+CiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9ImZvbnQtbW9uby1udW0gdGV4dC1icmV3LW11dGVkIHRleHQteHMgdy00Ij57aSArIDF9PC9zcGFuPgogICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlIHRleHQtc20gZmxleC0xIHRydW5jYXRlIj57aXRlbS5uYW1lfTwvc3Bhbj4KICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iZm9udC1tb25vLW51bSB0ZXh0LWJyZXctYWNjZW50IHRleHQtc20iPntpdGVtLmF2Z308L3NwYW4+CiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtYnJldy1zdWJ0bGUgdGV4dC14cyI+w5d7aXRlbS5jb3VudH08L3NwYW4+CiAgICAgICAgPC9kaXY+CiAgICAgICkpfQogICAgPC9kaXY+CiAgKTsKfQo="}
+"use client";
+import { useEffect, useState } from "react";
+import type { Session } from "@/lib/types/session";
+import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
+import FlavorWheel from "@/components/ui/FlavorWheel";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+
+interface TasteStats {
+  radarData: { label: string; value: number }[];
+  topFlavors: { name: string; count: number }[];
+  bodyDist: Record<string, number>;
+  acidityDist: Record<string, number>;
+  topOrigins: { name: string; avg: number; count: number }[];
+  topProcesses: { name: string; avg: number; count: number }[];
+  topMethods: { name: string; avg: number; count: number }[];
+  avgRating: number;
+  ratingTrend: { label: string; avg: number }[];
+  totalSessions: number;
+}
+
+function computeStats(sessions: Session[]): TasteStats {
+  const rated = sessions.filter(s => s.result?.rating);
+  const totalSessions = rated.length;
+
+  // Flavor category radar — keyed to 7 SCA top-level categories
+  const categoryCount: Record<string, number> = {};
+  const flavorCount: Record<string, number> = {};
+
+  rated.forEach(s => {
+    const notes = s.result?.flavorNotes || [];
+    notes.forEach(note => {
+      flavorCount[note] = (flavorCount[note] || 0) + 1;
+      const cat = flavorCategory(note);
+      if (cat) categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    });
+  });
+
+  const maxCat = Math.max(1, ...Object.values(categoryCount));
+  const radarData = SCA_CATEGORIES.map(cat => ({
+    label: cat,
+    value: Math.round(((categoryCount[cat] || 0) / maxCat) * 100),
+  }));
+
+  // Top flavors
+  const topFlavors = Object.entries(flavorCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, count]) => ({ name, count }));
+
+  // Body distribution
+  const bodyDist: Record<string, number> = {};
+  const acidityDist: Record<string, number> = {};
+  rated.forEach(s => {
+    if (s.result?.body) bodyDist[s.result.body] = (bodyDist[s.result.body] || 0) + 1;
+    if (s.result?.acidity) acidityDist[s.result.acidity] = (acidityDist[s.result.acidity] || 0) + 1;
+  });
+
+  // Top origins by avg rating
+  const originData: Record<string, { sum: number; count: number }> = {};
+  const processData: Record<string, { sum: number; count: number }> = {};
+  const methodData: Record<string, { sum: number; count: number }> = {};
+
+  rated.forEach(s => {
+    const r = s.result!.rating;
+    if (s.coffee?.origin) {
+      const k = s.coffee.origin;
+      originData[k] = originData[k] || { sum: 0, count: 0 };
+      originData[k].sum += r; originData[k].count += 1;
+    }
+    if (s.coffee?.process) {
+      const k = s.coffee.process;
+      processData[k] = processData[k] || { sum: 0, count: 0 };
+      processData[k].sum += r; processData[k].count += 1;
+    }
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
+    if (method) {
+      methodData[method] = methodData[method] || { sum: 0, count: 0 };
+      methodData[method].sum += r; methodData[method].count += 1;
+    }
+  });
+
+  const toRanked = (d: Record<string, { sum: number; count: number }>) =>
+    Object.entries(d)
+      .filter(([, v]) => v.count >= 1)
+      .map(([name, v]) => ({ name, avg: Math.round((v.sum / v.count) * 10) / 10, count: v.count }))
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 4);
+
+  const topOrigins = toRanked(originData);
+  const topProcesses = toRanked(processData);
+  const topMethods = toRanked(methodData);
+
+  // Overall avg rating
+  const avgRating = totalSessions > 0
+    ? Math.round((rated.reduce((sum, s) => sum + (s.result?.rating || 0), 0) / totalSessions) * 10) / 10
+    : 0;
+
+  // Rating trend by month (last 6 months)
+  const byMonth: Record<string, { sum: number; count: number }> = {};
+  rated.forEach(s => {
+    const d = (s as Session & { createdAtMs?: number }).createdAtMs
+      ? new Date((s as Session & { createdAtMs?: number }).createdAtMs!)
+      : new Date(s.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    byMonth[key] = byMonth[key] || { sum: 0, count: 0 };
+    byMonth[key].sum += s.result!.rating;
+    byMonth[key].count += 1;
+  });
+  const ratingTrend = Object.entries(byMonth)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-6)
+    .map(([key, v]) => ({
+      label: new Date(key + "-01").toLocaleDateString("en", { month: "short", year: "2-digit" }),
+      avg: Math.round((v.sum / v.count) * 10) / 10,
+    }));
+
+  return { radarData, topFlavors, bodyDist, acidityDist, topOrigins, topProcesses, topMethods, avgRating, ratingTrend, totalSessions };
+}
+
+export default function TastePage() {
+  const [stats, setStats] = useState<TasteStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{type: string; text: string; tag: string}>>([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+
+    fetch("/api/sessions?limit=300", { cache: "no-store", signal: controller.signal })
+      .then(r => r.json())
+      .then((sessions: Session[]) => {
+        const s = computeStats(Array.isArray(sessions) ? sessions : []);
+        setStats(s);
+        // Fetch AI narrative once we have stats
+        if (s.totalSessions >= 3) {
+          setSummaryLoading(true);
+          fetch("/api/taste-summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(s),
+          })
+            .then(r => r.json())
+            .then(d => { setSummary(d.summary ?? null); setSuggestions(d.suggestions ?? []); })
+            .catch(() => {})
+            .finally(() => setSummaryLoading(false));
+        }
+      })
+      .catch(() => setStats(computeStats([])))
+      .finally(() => { clearTimeout(timer); setLoading(false); });
+
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-full bg-brew-bg flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <CoffeeBeanGlow size={64} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats || stats.totalSessions === 0) {
+    return (
+      <div className="min-h-full bg-brew-bg flex flex-col">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
+          <svg className="w-12 h-12 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5V21M7.5 9V21M12 6v15M16.5 10.5V21M21 7.5V21" />
+          </svg>
+          <p className="font-display text-2xl text-white">No data yet</p>
+          <p className="text-brew-muted text-sm">Log and rate a few brews to see your taste profile.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const maxFlavor = stats.topFlavors[0]?.count || 1;
+  const trendMax = Math.max(5, ...stats.ratingTrend.map(t => t.avg));
+
+  return (
+    <div className="min-h-svh bg-brew-bg flex flex-col">
+      <Header />
+
+      <div className="px-5 pb-12 flex flex-col gap-8">
+        {/* Summary stat */}
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <p className="font-mono-num text-4xl text-white font-medium">{stats.avgRating}</p>
+            <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Avg Rating</p>
+          </div>
+          <div className="w-px h-10 bg-brew-border" />
+          <div className="text-center">
+            <p className="font-mono-num text-4xl text-white font-medium">{stats.totalSessions}</p>
+            <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Rated Brews</p>
+          </div>
+          <p className="text-white/20 text-xs ml-auto self-end">All time</p>
+        </div>
+
+        {/* AI narrative summary */}
+        {(summaryLoading || summary) && (
+          <div className="bg-brew-surface rounded-2xl px-4 py-4 border border-brew-border/40">
+            {summaryLoading && !summary ? (
+              <div className="space-y-2">
+                <div className="h-3 bg-brew-elevated rounded-full w-full animate-pulse" />
+                <div className="h-3 bg-brew-elevated rounded-full w-5/6 animate-pulse" />
+                <div className="h-3 bg-brew-elevated rounded-full w-4/6 animate-pulse" />
+              </div>
+            ) : (
+              <p className="text-white/80 text-sm leading-relaxed">{summary}</p>
+            )}
+          </div>
+        )}
+
+        {/* Flavor Profile — SCA wheel with radar overlay */}
+        <Section title="Flavor Profile">
+          <div className="w-full">
+            <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
+          </div>
+        </Section>
+
+        {/* Top flavors */}
+        {stats.topFlavors.length > 0 && (
+          <Section title="Top Flavors">
+            <div className="space-y-2">
+              {stats.topFlavors.map(f => (
+                <div key={f.name} className="flex items-center gap-3">
+                  <span className="text-white text-sm w-28 shrink-0">{f.name}</span>
+                  <div className="flex-1 h-1.5 bg-brew-surface rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-brew-accent rounded-full transition-all"
+                      style={{ width: `${(f.count / maxFlavor) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-brew-muted text-xs w-5 text-right">{f.count}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Rating trend */}
+        {stats.ratingTrend.length > 1 && (
+          <Section title="Rating Over Time">
+            <div className="flex items-end gap-2 h-24">
+              {stats.ratingTrend.map(t => (
+                <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-brew-muted text-xs">{t.avg}</span>
+                  <div className="w-full bg-brew-surface rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
+                    <div
+                      className="w-full bg-brew-accent rounded-t-lg transition-all"
+                      style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
+                    />
+                  </div>
+                  <span className="text-brew-muted text-xs">{t.label}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Body + Acidity */}
+        <div className="grid grid-cols-2 gap-4">
+          {Object.keys(stats.bodyDist).length > 0 && (
+            <Section title="Body">
+              <DistBar data={stats.bodyDist} total={stats.totalSessions} />
+            </Section>
+          )}
+          {Object.keys(stats.acidityDist).length > 0 && (
+            <Section title="Acidity">
+              <DistBar data={stats.acidityDist} total={stats.totalSessions} />
+            </Section>
+          )}
+        </div>
+
+        {/* Top origins */}
+        {stats.topOrigins.length > 0 && (
+          <Section title="Best Origins">
+            <RankedList items={stats.topOrigins} />
+          </Section>
+        )}
+
+        {/* Top processes */}
+        {stats.topProcesses.length > 0 && (
+          <Section title="Best Processes">
+            <RankedList items={stats.topProcesses} />
+          </Section>
+        )}
+
+        {/* Top methods */}
+        {stats.topMethods.length > 0 && (
+          <Section title="Best Methods">
+            <RankedList items={stats.topMethods} />
+          </Section>
+        )}
+
+        {/* Explore Next */}
+        {suggestions.length > 0 && (
+          <Section title="Explore Next">
+            <div className="space-y-3">
+              {suggestions.map((s, i) => (
+                <div key={i} className="bg-brew-surface rounded-2xl px-4 py-3 border border-brew-border/40">
+                  <span className="text-brew-accent text-xs font-mono-num uppercase tracking-wide bg-brew-accent/10 px-2 py-1 rounded-lg inline-block mb-2">{s.tag}</span>
+                  <p className="text-white/70 text-sm leading-relaxed">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Header() {
+  return (
+    <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+      <div>
+        <h1 className="font-display text-3xl text-white leading-none">Taste Profile</h1>
+        <p className="text-brew-muted text-sm">What you love, over time</p>
+      </div>
+      
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-brew-muted text-xs uppercase tracking-widest">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function DistBar({ data, total }: { data: Record<string, number>; total: number }) {
+  return (
+    <div className="space-y-1.5">
+      {Object.entries(data).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+        <div key={k}>
+          <div className="flex justify-between text-xs mb-0.5">
+            <span className="text-white/60 capitalize">{k}</span>
+            <span className="text-brew-muted">{Math.round((v / total) * 100)}%</span>
+          </div>
+          <div className="h-1 bg-brew-surface rounded-full overflow-hidden">
+            <div className="h-full bg-brew-accent rounded-full" style={{ width: `${(v / total) * 100}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RankedList({ items }: { items: { name: string; avg: number; count: number }[] }) {
+  return (
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div key={item.name} className="flex items-center gap-3">
+          <span className="font-mono-num text-brew-muted text-xs w-4">{i + 1}</span>
+          <span className="text-white text-sm flex-1 truncate">{item.name}</span>
+          <span className="font-mono-num text-brew-accent text-sm">{item.avg}</span>
+          <span className="text-brew-subtle text-xs">×{item.count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}

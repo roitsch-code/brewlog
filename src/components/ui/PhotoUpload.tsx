@@ -1,1 +1,111 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VSZWYgfSBmcm9tICJyZWFjdCI7CmltcG9ydCB7IGNuIH0gZnJvbSAiQC9saWIvdXRpbHMvY24iOwppbXBvcnQgSW1hZ2UgZnJvbSAibmV4dC9pbWFnZSI7CmltcG9ydCBDb2ZmZWVCZWFuR2xvdyBmcm9tICJAL2NvbXBvbmVudHMvdWkvQ29mZmVlQmVhbkdsb3ciOwoKaW50ZXJmYWNlIFBob3RvVXBsb2FkUHJvcHMgewogIG9uRmlsZTogKGZpbGU6IEZpbGUpID0+IHZvaWQ7CiAgcHJldmlldz86IHN0cmluZzsKICBsb2FkaW5nPzogYm9vbGVhbjsKICBjbGFzc05hbWU/OiBzdHJpbmc7Cn0KCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFBob3RvVXBsb2FkKHsgb25GaWxlLCBwcmV2aWV3LCBsb2FkaW5nLCBjbGFzc05hbWUgfTogUGhvdG9VcGxvYWRQcm9wcykgewogIGNvbnN0IGlucHV0UmVmID0gdXNlUmVmPEhUTUxJbnB1dEVsZW1lbnQ+KG51bGwpOwogIGNvbnN0IGNhbWVyYVJlZiA9IHVzZVJlZjxIVE1MSW5wdXRFbGVtZW50PihudWxsKTsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPXtjbigicmVsYXRpdmUiLCBjbGFzc05hbWUpfT4KICAgICAgey8qIExpYnJhcnkgcGlja2VyIOKAlCBubyBjYXB0dXJlIGF0dHJpYnV0ZSAqL30KICAgICAgPGlucHV0CiAgICAgICAgcmVmPXtpbnB1dFJlZn0KICAgICAgICB0eXBlPSJmaWxlIgogICAgICAgIGFjY2VwdD0iaW1hZ2UvKiIKICAgICAgICBjbGFzc05hbWU9ImhpZGRlbiIKICAgICAgICBvbkNoYW5nZT17KGUpID0+IHsKICAgICAgICAgIGNvbnN0IGZpbGUgPSBlLnRhcmdldC5maWxlcz8uWzBdOwogICAgICAgICAgaWYgKGZpbGUpIG9uRmlsZShmaWxlKTsKICAgICAgICAgIGUudGFyZ2V0LnZhbHVlID0gIiI7CiAgICAgICAgfX0KICAgICAgLz4KICAgICAgey8qIENhbWVyYSBkaXJlY3QgKi99CiAgICAgIDxpbnB1dAogICAgICAgIHJlZj17Y2FtZXJhUmVmfQogICAgICAgIHR5cGU9ImZpbGUiCiAgICAgICAgYWNjZXB0PSJpbWFnZS8qIgogICAgICAgIGNhcHR1cmU9ImVudmlyb25tZW50IgogICAgICAgIGNsYXNzTmFtZT0iaGlkZGVuIgogICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gewogICAgICAgICAgY29uc3QgZmlsZSA9IGUudGFyZ2V0LmZpbGVzPy5bMF07CiAgICAgICAgICBpZiAoZmlsZSkgb25GaWxlKGZpbGUpOwogICAgICAgICAgZS50YXJnZXQudmFsdWUgPSAiIjsKICAgICAgICB9fQogICAgICAvPgoKICAgICAge3ByZXZpZXcgPyAoCiAgICAgICAgLyogUHJldmlldyDigJQgd2l0aCBsb2FkaW5nIG92ZXJsYXkgd2hpbGUgYW5hbHlzaW5nICovCiAgICAgICAgPGRpdiBjbGFzc05hbWU9InJlbGF0aXZlIHctZnVsbCBoLTQ0IHJvdW5kZWQtMnhsIG92ZXJmbG93LWhpZGRlbiBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyIj4KICAgICAgICAgIHsvKiBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgQG5leHQvbmV4dC9uby1pbWctZWxlbWVudCAqL30KICAgICAgICAgIDxpbWcgc3JjPXtwcmV2aWV3fSBhbHQ9IkNvZmZlZSBiYWciIGNsYXNzTmFtZT17YHctZnVsbCBoLWZ1bGwgb2JqZWN0LWNvdmVyIHRyYW5zaXRpb24tb3BhY2l0eSBkdXJhdGlvbi0zMDAgJHtsb2FkaW5nID8gIm9wYWNpdHktNDAiIDogIm9wYWNpdHktMTAwIn1gfSAvPgogICAgICAgICAge2xvYWRpbmcgPyAoCiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJhYnNvbHV0ZSBpbnNldC0wIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC0zIj4KICAgICAgICAgICAgICA8Q29mZmVlQmVhbkdsb3cgc2l6ZT17NTZ9IC8+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlLzcwIHRleHQteHMgdHJhY2tpbmctd2lkZXN0IHVwcGVyY2FzZSI+UmVhZGluZyBsYWJlbOKApjwvc3Bhbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICApIDogKAogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iYWJzb2x1dGUgYm90dG9tLTAgbGVmdC0wIHJpZ2h0LTAgZmxleCBnYXAtMiBwLTMiPgogICAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGNhbWVyYVJlZi5jdXJyZW50Py5jbGljaygpfQogICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4LTEgcHktMiByb3VuZGVkLXhsIGJnLWJsYWNrLzYwIGJhY2tkcm9wLWJsdXIgdGV4dC13aGl0ZSB0ZXh0LXhzIGZvbnQtbWVkaXVtIgogICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgIFJldGFrZQogICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGlucHV0UmVmLmN1cnJlbnQ/LmNsaWNrKCl9CiAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXgtMSBweS0yIHJvdW5kZWQteGwgYmctYmxhY2svNjAgYmFja2Ryb3AtYmx1ciB0ZXh0LXdoaXRlIHRleHQteHMgZm9udC1tZWRpdW0iCiAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgQ2hvb3NlIG90aGVyCiAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgKX0KICAgICAgICA8L2Rpdj4KICAgICAgKSA6IGxvYWRpbmcgPyAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9InctZnVsbCBoLTQ0IHJvdW5kZWQtMnhsIGJnLWJyZXctc3VyZmFjZSBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC0yIj4KICAgICAgICAgIDxzdmcgY2xhc3NOYW1lPSJhbmltYXRlLXNwaW4gaC04IHctOCB0ZXh0LWJyZXctYWNjZW50IiBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgMjQgMjQiPgogICAgICAgICAgICA8Y2lyY2xlIGNsYXNzTmFtZT0ib3BhY2l0eS0yNSIgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlV2lkdGg9IjMiIC8+CiAgICAgICAgICAgIDxwYXRoIGNsYXNzTmFtZT0ib3BhY2l0eS03NSIgZmlsbD0iY3VycmVudENvbG9yIiBkPSJNNCAxMmE4IDggMCAwMTgtOFYwQzUuMzczIDAgMCA1LjM3MyAwIDEyaDR6IiAvPgogICAgICAgICAgPC9zdmc+CiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXNtIj5BbmFseXNpbmcgYmFn4oCmPC9zcGFuPgogICAgICAgIDwvZGl2PgogICAgICApIDogKAogICAgICAgIC8qIEVtcHR5IHN0YXRlIOKAlCB0d28gdGFwIHRhcmdldHMgKi8KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBnYXAtMyI+CiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgb25DbGljaz17KCkgPT4gY2FtZXJhUmVmLmN1cnJlbnQ/LmNsaWNrKCl9CiAgICAgICAgICAgIGNsYXNzTmFtZT0iZmxleC0xIGgtMzYgcm91bmRlZC0yeGwgYm9yZGVyIGJvcmRlci1icmV3LWJvcmRlciBiZy1icmV3LXN1cmZhY2UgZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZ2FwLTIgYWN0aXZlOnNjYWxlLTk1IHRyYW5zaXRpb24tYWxsIgogICAgICAgICAgPgogICAgICAgICAgICA8c3ZnIGNsYXNzTmFtZT0idy02IGgtNiB0ZXh0LWJyZXctbXV0ZWQiIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiPgogICAgICAgICAgICAgIDxwYXRoIHN0cm9rZUxpbmVjYXA9InJvdW5kIiBzdHJva2VMaW5lam9pbj0icm91bmQiIHN0cm9rZVdpZHRoPXsxLjV9IGQ9Ik0zIDlhMiAyIDAgMDEyLTJoLjkzYTIgMiAwIDAwMS42NjQtLjg5bC44MTItMS4yMkEyIDIgMCAwMTEwLjA3IDRoMy44NmEyIDIgMCAwMTEuNjY0Ljg5bC44MTIgMS4yMkEyIDIgMCAwMDE4LjA3IDdIMTlhMiAyIDAgMDEyIDJ2OWEyIDIgMCAwMS0yIDJINWEyIDIgMCAwMS0yLTJWOXoiIC8+CiAgICAgICAgICAgICAgPHBhdGggc3Ryb2tlTGluZWNhcD0icm91bmQiIHN0cm9rZUxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlV2lkdGg9ezEuNX0gZD0iTTE1IDEzYTMgMyAwIDExLTYgMCAzIDMgMCAwMTYgMHoiIC8+CiAgICAgICAgICAgIDwvc3ZnPgogICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InRleHQtd2hpdGUgdGV4dC1zbSBmb250LW1lZGl1bSI+Q2FtZXJhPC9zcGFuPgogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgb25DbGljaz17KCkgPT4gaW5wdXRSZWYuY3VycmVudD8uY2xpY2soKX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4LTEgaC0zNiByb3VuZGVkLTJ4bCBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyIGJnLWJyZXctc3VyZmFjZSBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiBhY3RpdmU6c2NhbGUtOTUgdHJhbnNpdGlvbi1hbGwiCiAgICAgICAgICA+CiAgICAgICAgICAgIDxzdmcgY2xhc3NOYW1lPSJ3LTYgaC02IHRleHQtYnJldy1tdXRlZCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2U9ImN1cnJlbnRDb2xvciI+CiAgICAgICAgICAgICAgPHBhdGggc3Ryb2tlTGluZWNhcD0icm91bmQiIHN0cm9rZUxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlV2lkdGg9ezEuNX0gZD0iTTQgMTZsNC41ODYtNC41ODZhMiAyIDAgMDEyLjgyOCAwTDE2IDE2bS0yLTJsMS41ODYtMS41ODZhMiAyIDAgMDEyLjgyOCAwTDIwIDE0bS02LTZoLjAxTTYgMjBoMTJhMiAyIDAgMDAyLTJWNmEyIDIgMCAwMC0yLTJINmEyIDIgMCAwMC0yIDJ2MTJhMiAyIDAgMDAyIDJ6IiAvPgogICAgICAgICAgICA8L3N2Zz4KICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlIHRleHQtc20gZm9udC1tZWRpdW0iPkxpYnJhcnk8L3NwYW4+CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0K"}
+"use client";
+import { useRef } from "react";
+import { cn } from "@/lib/utils/cn";
+import Image from "next/image";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+
+interface PhotoUploadProps {
+  onFile: (file: File) => void;
+  preview?: string;
+  loading?: boolean;
+  className?: string;
+}
+
+export default function PhotoUpload({ onFile, preview, loading, className }: PhotoUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className={cn("relative", className)}>
+      {/* Library picker — no capture attribute */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+      {/* Camera direct */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+
+      {preview ? (
+        /* Preview — with loading overlay while analysing */
+        <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-brew-border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="Coffee bag" className={`w-full h-full object-cover transition-opacity duration-300 ${loading ? "opacity-40" : "opacity-100"}`} />
+          {loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <CoffeeBeanGlow size={56} />
+              <span className="text-white/70 text-xs tracking-widest uppercase">Reading label…</span>
+            </div>
+          ) : (
+            <div className="absolute bottom-0 left-0 right-0 flex gap-2 p-3">
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
+              >
+                Retake
+              </button>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
+              >
+                Choose other
+              </button>
+            </div>
+          )}
+        </div>
+      ) : loading ? (
+        <div className="w-full h-44 rounded-2xl bg-brew-surface border border-brew-border flex flex-col items-center justify-center gap-2">
+          <svg className="animate-spin h-8 w-8 text-brew-accent" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-brew-muted text-sm">Analysing bag…</span>
+        </div>
+      ) : (
+        /* Empty state — two tap targets */
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => cameraRef.current?.click()}
+            className="flex-1 h-36 rounded-2xl border border-brew-border bg-brew-surface flex flex-col items-center justify-center gap-2 active:scale-95 transition-all"
+          >
+            <svg className="w-6 h-6 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-white text-sm font-medium">Camera</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="flex-1 h-36 rounded-2xl border border-brew-border bg-brew-surface flex flex-col items-center justify-center gap-2 active:scale-95 transition-all"
+          >
+            <svg className="w-6 h-6 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-white text-sm font-medium">Library</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

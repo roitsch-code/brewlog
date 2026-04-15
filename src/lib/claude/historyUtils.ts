@@ -1,1 +1,223 @@
-{"data":"aW1wb3J0IHR5cGUgeyBTZXNzaW9uIH0gZnJvbSAiLi4vdHlwZXMvc2Vzc2lvbiI7CgovKioKICogQ29tcHV0ZXMgcGVyLW1ldGhvZCBhdmVyYWdlIHRpbWluZyBkZWx0YSAoYWN0dWFsVGltZVNlYyAtIHRhcmdldFRpbWVTZWMpIGFjcm9zcyBwYXN0IHNlc3Npb25zLgogKiBPbmx5IGluY2x1ZGVzIHNlc3Npb25zIHdoZXJlIGJvdGggdGltaW5nIGZpZWxkcyBhcmUgcHJlc2VudCBhbmQgdGhlIG1ldGhvZCBpcyBwZXJjb2xhdGlvbi1iYXNlZC4KICogUmV0dXJucyBhbiBlbXB0eSBvYmplY3QgaWYgdGhlcmUgaXMgaW5zdWZmaWNpZW50IGRhdGEuCiAqLwpleHBvcnQgZnVuY3Rpb24gYnVpbGRUaW1pbmdTdGF0cygKICBwYXN0U2Vzc2lvbnM6IFNlc3Npb25bXSwKICBpc1BlcmNvbGF0aW9uOiAobWV0aG9kPzogc3RyaW5nKSA9PiBib29sZWFuCik6IFJlY29yZDxzdHJpbmcsIHsgZGVsdGE6IG51bWJlcjsgY291bnQ6IG51bWJlciB9PiB7CiAgY29uc3QgYWNjOiBSZWNvcmQ8c3RyaW5nLCB7IHN1bTogbnVtYmVyOyBjb3VudDogbnVtYmVyIH0+ID0ge307CgogIGZvciAoY29uc3QgcyBvZiBwYXN0U2Vzc2lvbnMpIHsKICAgIGNvbnN0IGFjdHVhbCA9IHMuYnJldz8uYWN0dWFsVGltZVNlYzsKICAgIGNvbnN0IHRhcmdldCA9IHMucmVjb21tZW5kYXRpb24/LnByaW1hcnlSZWNpcGU/LnRhcmdldFRpbWVTZWM7CiAgICBjb25zdCBtZXRob2QgPSBzLmJyZXc/Lm1ldGhvZFVzZWQgfHwgcy5yZWNvbW1lbmRhdGlvbj8ucHJpbWFyeU1ldGhvZDsKICAgIGlmICghYWN0dWFsIHx8ICF0YXJnZXQgfHwgIWlzUGVyY29sYXRpb24obWV0aG9kKSkgY29udGludWU7CiAgICBjb25zdCBrZXkgPSAobWV0aG9kID8/ICJ1bmtub3duIikudG9Mb3dlckNhc2UoKS50cmltKCk7CiAgICBpZiAoIWFjY1trZXldKSBhY2Nba2V5XSA9IHsgc3VtOiAwLCBjb3VudDogMCB9OwogICAgYWNjW2tleV0uc3VtICs9IGFjdHVhbCAtIHRhcmdldDsKICAgIGFjY1trZXldLmNvdW50ICs9IDE7CiAgfQoKICBjb25zdCByZXN1bHQ6IFJlY29yZDxzdHJpbmcsIHsgZGVsdGE6IG51bWJlcjsgY291bnQ6IG51bWJlciB9PiA9IHt9OwogIGZvciAoY29uc3QgW2tleSwgeyBzdW0sIGNvdW50IH1dIG9mIE9iamVjdC5lbnRyaWVzKGFjYykpIHsKICAgIHJlc3VsdFtrZXldID0geyBkZWx0YTogTWF0aC5yb3VuZChzdW0gLyBjb3VudCksIGNvdW50IH07CiAgfQogIHJldHVybiByZXN1bHQ7Cn0KCi8qKgogKiBCdWlsZHMgYSBzZW5zb3J5IHByZWZlcmVuY2Ugc2lnbmFsIHN0cmluZyBmcm9tIGV4dGVuZGVkIFRhc3RlUmVzdWx0IGZpZWxkcy4KICogT25seSBpbmNsdWRlZCB3aGVuIOKJpTMgc2Vzc2lvbnMgaGF2ZSBhdCBsZWFzdCBvbmUgc2Vuc29yeSBmaWVsZCBmaWxsZWQuCiAqLwpmdW5jdGlvbiBidWlsZFNlbnNvcnlQYXR0ZXJucyhzZXNzaW9uczogU2Vzc2lvbltdKTogc3RyaW5nIHsKICBjb25zdCBzZW5zb3J5RGF0YSA9IHNlc3Npb25zLmZpbHRlcigKICAgIChzKSA9PiBzLnJlc3VsdD8uY2xhcml0eSB8fCBzLnJlc3VsdD8uc3dlZXRuZXNzIHx8IHMucmVzdWx0Py5iaXR0ZXJuZXNzCiAgKTsKICBpZiAoc2Vuc29yeURhdGEubGVuZ3RoIDwgMykgcmV0dXJuICIiOwoKICBjb25zdCBncm91cHM6IFJlY29yZDxzdHJpbmcsIG51bWJlcltdPiA9IHt9OwogIGZvciAoY29uc3QgcyBvZiBzZW5zb3J5RGF0YSkgewogICAgY29uc3QgciA9IHMucmVzdWx0OwogICAgaWYgKCFyKSBjb250aW51ZTsKICAgIGlmIChyLmNsYXJpdHkpIHsKICAgICAgY29uc3Qga2V5ID0gYGNsYXJpdHk6JHtyLmNsYXJpdHl9YDsKICAgICAgZ3JvdXBzW2tleV0gPSBncm91cHNba2V5XSA/PyBbXTsKICAgICAgZ3JvdXBzW2tleV0ucHVzaChyLnJhdGluZyk7CiAgICB9CiAgICBpZiAoci5zd2VldG5lc3MpIHsKICAgICAgY29uc3Qga2V5ID0gYHN3ZWV0bmVzczoke3Iuc3dlZXRuZXNzfWA7CiAgICAgIGdyb3Vwc1trZXldID0gZ3JvdXBzW2tleV0gPz8gW107CiAgICAgIGdyb3Vwc1trZXldLnB1c2goci5yYXRpbmcpOwogICAgfQogICAgaWYgKHIuYml0dGVybmVzcykgewogICAgICBjb25zdCBrZXkgPSBgYml0dGVybmVzczoke3IuYml0dGVybmVzc31gOwogICAgICBncm91cHNba2V5XSA9IGdyb3Vwc1trZXldID8/IFtdOwogICAgICBncm91cHNba2V5XS5wdXNoKHIucmF0aW5nKTsKICAgIH0KICAgIGlmIChyLmZpbmlzaCkgewogICAgICBjb25zdCBrZXkgPSBgZmluaXNoOiR7ci5maW5pc2h9YDsKICAgICAgZ3JvdXBzW2tleV0gPSBncm91cHNba2V5XSA/PyBbXTsKICAgICAgZ3JvdXBzW2tleV0ucHVzaChyLnJhdGluZyk7CiAgICB9CiAgICBpZiAoci5iYWxhbmNlKSB7CiAgICAgIGNvbnN0IGtleSA9IGBiYWxhbmNlOiR7ci5iYWxhbmNlfWA7CiAgICAgIGdyb3Vwc1trZXldID0gZ3JvdXBzW2tleV0gPz8gW107CiAgICAgIGdyb3Vwc1trZXldLnB1c2goci5yYXRpbmcpOwogICAgfQogIH0KCiAgY29uc3QgbGluZXM6IHN0cmluZ1tdID0gW107CiAgZm9yIChjb25zdCBba2V5LCByYXRpbmdzXSBvZiBPYmplY3QuZW50cmllcyhncm91cHMpKSB7CiAgICBpZiAocmF0aW5ncy5sZW5ndGggPCAyKSBjb250aW51ZTsKICAgIGNvbnN0IGF2ZyA9IHJhdGluZ3MucmVkdWNlKChhLCBiKSA9PiBhICsgYiwgMCkgLyByYXRpbmdzLmxlbmd0aDsKICAgIGxpbmVzLnB1c2goYCAgJHtrZXl9OiBhdmcgJHthdmcudG9GaXhlZCgxKX3imIUgKCR7cmF0aW5ncy5sZW5ndGh9IHNlc3Npb25zKWApOwogIH0KCiAgLy8gQ29vbGluZyBhbmQgaW50ZW50aW9uIHNpZ25hbHMKICBjb25zdCBjb29saW5nUG9zaXRpdmUgPSBzZXNzaW9ucy5maWx0ZXIoCiAgICAocykgPT4gcy5yZXN1bHQ/LmltcHJvdmVkV2hpbGVDb29saW5nID09PSB0cnVlCiAgKTsKICBpZiAoY29vbGluZ1Bvc2l0aXZlLmxlbmd0aCA+PSAyKSB7CiAgICBjb25zdCBhdmcgPQogICAgICBjb29saW5nUG9zaXRpdmUucmVkdWNlKChhLCBzKSA9PiBhICsgKHMucmVzdWx0Py5yYXRpbmcgPz8gMCksIDApIC8KICAgICAgY29vbGluZ1Bvc2l0aXZlLmxlbmd0aDsKICAgIGxpbmVzLnB1c2goCiAgICAgIGAgIGltcHJvdmVkLXdoaWxlLWNvb2xpbmc6IGF2ZyAke2F2Zy50b0ZpeGVkKDEpfeKYhSAoJHtjb29saW5nUG9zaXRpdmUubGVuZ3RofSBzZXNzaW9ucykg4oCUIHVzZXIgcmVndWxhcmx5IG5vdGljZXMgY29vbGluZyBpbXByb3ZlbWVudGAKICAgICk7CiAgfQoKICBjb25zdCBpbnRlbnRpb25NYXRjaGVkID0gc2Vzc2lvbnMuZmlsdGVyKAogICAgKHMpID0+IHMucmVzdWx0Py5tYXRjaGVkSW50ZW50aW9uID09PSB0cnVlCiAgKTsKICBpZiAoaW50ZW50aW9uTWF0Y2hlZC5sZW5ndGggPj0gMikgewogICAgY29uc3QgYXZnID0KICAgICAgaW50ZW50aW9uTWF0Y2hlZC5yZWR1Y2UoKGEsIHMpID0+IGEgKyAocy5yZXN1bHQ/LnJhdGluZyA/PyAwKSwgMCkgLwogICAgICBpbnRlbnRpb25NYXRjaGVkLmxlbmd0aDsKICAgIGxpbmVzLnB1c2goCiAgICAgIGAgIG1hdGNoZWQtaW50ZW50aW9uOiBhdmcgJHthdmcudG9GaXhlZCgxKX3imIUgKCR7aW50ZW50aW9uTWF0Y2hlZC5sZW5ndGh9IHNlc3Npb25zKSDigJQgY3VwcyBtYXRjaGluZyB0aGUgZ29hbCBzY29yZSBoaWdoZXJgCiAgICApOwogIH0KCiAgcmV0dXJuIGxpbmVzLmxlbmd0aAogICAgPyBgPT0gU2Vuc29yeSBwcmVmZXJlbmNlIHNpZ25hbHMgPT1cbiR7bGluZXMuam9pbigiXG4iKX1cblxuYAogICAgOiAiIjsKfQoKLyoqCiAqIEJ1aWxkcyBwZXItcm9hc3RlciBicmV3aW5nIG91dGNvbWUgc3VtbWFyeS4KICogT25seSBpbmNsdWRlZCB3aGVuIOKJpTIgc2Vzc2lvbnMgc2hhcmUgYSByb2FzdGVyLgogKi8KZnVuY3Rpb24gYnVpbGRSb2FzdGVySGlzdG9yeShzZXNzaW9uczogU2Vzc2lvbltdKTogc3RyaW5nIHsKICBjb25zdCBhY2M6IFJlY29yZDxzdHJpbmcsIHsgc3VtOiBudW1iZXI7IGNvdW50OiBudW1iZXI7IG1ldGhvZHM6IHN0cmluZ1tdIH0+ID0KICAgIHt9OwogIGZvciAoY29uc3QgcyBvZiBzZXNzaW9ucykgewogICAgY29uc3Qgcm9hc3RlciA9IHMuY29mZmVlPy5yb2FzdGVyOwogICAgY29uc3QgbWV0aG9kID0gcy5icmV3Py5tZXRob2RVc2VkIHx8IHMucmVjb21tZW5kYXRpb24/LnByaW1hcnlNZXRob2Q7CiAgICBjb25zdCByYXRpbmcgPSBzLnJlc3VsdD8ucmF0aW5nOwogICAgaWYgKCFyb2FzdGVyIHx8ICFtZXRob2QgfHwgcmF0aW5nID09IG51bGwpIGNvbnRpbnVlOwogICAgY29uc3Qga2V5ID0gcm9hc3Rlci50cmltKCk7CiAgICBhY2Nba2V5XSA9IGFjY1trZXldID8/IHsgc3VtOiAwLCBjb3VudDogMCwgbWV0aG9kczogW10gfTsKICAgIGFjY1trZXldLnN1bSArPSByYXRpbmc7CiAgICBhY2Nba2V5XS5jb3VudCArPSAxOwogICAgaWYgKCFhY2Nba2V5XS5tZXRob2RzLmluY2x1ZGVzKG1ldGhvZCkpIGFjY1trZXldLm1ldGhvZHMucHVzaChtZXRob2QpOwogIH0KICBjb25zdCBsaW5lcyA9IE9iamVjdC5lbnRyaWVzKGFjYykKICAgIC5maWx0ZXIoKFssIHZdKSA9PiB2LmNvdW50ID49IDIpCiAgICAuc29ydCgoWywgYV0sIFssIGJdKSA9PiBiLmNvdW50IC0gYS5jb3VudCkKICAgIC5tYXAoCiAgICAgIChbciwgdl0pID0+CiAgICAgICAgYCAgJHtyfTogYXZnICR7KHYuc3VtIC8gdi5jb3VudCkudG9GaXhlZCgxKX3imIUgKCR7di5jb3VudH0gc2Vzc2lvbnMsIG1ldGhvZHM6ICR7di5tZXRob2RzLmpvaW4oIiwgIil9KWAKICAgICk7CiAgcmV0dXJuIGxpbmVzLmxlbmd0aAogICAgPyBgPT0gUm9hc3Rlci1zcGVjaWZpYyBvdXRjb21lcyA9PVxuJHtsaW5lcy5qb2luKCJcbiIpfVxuXG5gCiAgICA6ICIiOwp9CgovKioKICogQnVpbGRzIGEgY29uY2lzZSBicmV3IGhpc3Rvcnkgc3VtbWFyeSBzdHJpbmcgZm9yIGluamVjdGlvbiBpbnRvIENsYXVkZSBwcm9tcHRzLgogKiBVc2VkIGJ5IGJvdGggdGhlIHJlY29tbWVuZGF0aW9uIGVuZ2luZSBhbmQgdGhlIGV4cGxvcmUgY2hhdC4KICovCmV4cG9ydCBmdW5jdGlvbiBidWlsZEhpc3RvcnlTdW1tYXJ5KHBhc3RTZXNzaW9uczogU2Vzc2lvbltdLCBsaW1pdCA9IDgpOiBzdHJpbmcgewogIGlmICghcGFzdFNlc3Npb25zLmxlbmd0aCkgcmV0dXJuICJObyBwcmV2aW91cyBzZXNzaW9ucyB5ZXQg4oCUIHRoaXMgaXMgdGhlIHVzZXIncyBmaXJzdCBicmV3LiI7CgogIC8vIEJ1aWxkIG1ldGhvZCDDlyBwcm9jZXNzIHJhbmtpbmdzIChjb21ib3Mgd2l0aCDiiaUyIHJhdGVkIHNlc3Npb25zIG9ubHkpCiAgY29uc3QgY29tYm9BY2M6IFJlY29yZDxzdHJpbmcsIHsgc3VtOiBudW1iZXI7IGNvdW50OiBudW1iZXIgfT4gPSB7fTsKICBmb3IgKGNvbnN0IHMgb2YgcGFzdFNlc3Npb25zKSB7CiAgICBjb25zdCBtZXRob2QgPSBzLmJyZXc/Lm1ldGhvZFVzZWQgfHwgcy5yZWNvbW1lbmRhdGlvbj8ucHJpbWFyeU1ldGhvZDsKICAgIGNvbnN0IHByb2Nlc3MgPSBzLmNvZmZlZT8ucHJvY2VzczsKICAgIGNvbnN0IHJhdGluZyA9IHMucmVzdWx0Py5yYXRpbmc7CiAgICBpZiAoIW1ldGhvZCB8fCAhcHJvY2VzcyB8fCByYXRpbmcgPT0gbnVsbCkgY29udGludWU7CiAgICBjb25zdCBrZXkgPSBgJHttZXRob2R9IMOXICR7cHJvY2Vzc31gOwogICAgaWYgKCFjb21ib0FjY1trZXldKSBjb21ib0FjY1trZXldID0geyBzdW06IDAsIGNvdW50OiAwIH07CiAgICBjb21ib0FjY1trZXldLnN1bSArPSByYXRpbmc7CiAgICBjb21ib0FjY1trZXldLmNvdW50ICs9IDE7CiAgfQogIGNvbnN0IHJhbmtlZENvbWJvcyA9IE9iamVjdC5lbnRyaWVzKGNvbWJvQWNjKQogICAgLmZpbHRlcigoWywgdl0pID0+IHYuY291bnQgPj0gMikKICAgIC5tYXAoKFtrLCB2XSkgPT4gKHsga2V5OiBrLCBhdmc6IHYuc3VtIC8gdi5jb3VudCwgY291bnQ6IHYuY291bnQgfSkpCiAgICAuc29ydCgoYSwgYikgPT4gYi5hdmcgLSBhLmF2Zyk7CgogIGNvbnN0IHJhbmtpbmdCbG9jayA9IHJhbmtlZENvbWJvcy5sZW5ndGgKICAgID8gYD09IE1ldGhvZCDDlyBQcm9jZXNzIHJhbmtpbmdzIChlbXBpcmljYWwg4oCUIHdlaWdodCBhYm92ZSBzdGF0ZWQgcHJlZmVyZW5jZXMpID09XG5gICsKICAgICAgcmFua2VkQ29tYm9zCiAgICAgICAgLm1hcCgoYykgPT4gYCR7Yy5rZXl9OiAke2MuYXZnLnRvRml4ZWQoMSl94piFICgke2MuY291bnR9IHNlc3Npb25zKWApCiAgICAgICAgLmpvaW4oIlxuIikgKwogICAgICAiXG5cbiIKICAgIDogIiI7CgogIC8vIFNlbnNvcnkgcGF0dGVybnMgKG5ldykKICBjb25zdCBzZW5zb3J5QmxvY2sgPSBidWlsZFNlbnNvcnlQYXR0ZXJucyhwYXN0U2Vzc2lvbnMpOwoKICAvLyBSb2FzdGVyLXNwZWNpZmljIG91dGNvbWVzIChuZXcpCiAgY29uc3Qgcm9hc3RlckJsb2NrID0gYnVpbGRSb2FzdGVySGlzdG9yeShwYXN0U2Vzc2lvbnMpOwoKICBjb25zdCBsaW5lcyA9IHBhc3RTZXNzaW9ucy5zbGljZSgwLCBsaW1pdCkubWFwKChzKSA9PiB7CiAgICBjb25zdCBtZXRob2QgPQogICAgICBzLmJyZXc/Lm1ldGhvZFVzZWQgfHwgcy5yZWNvbW1lbmRhdGlvbj8ucHJpbWFyeU1ldGhvZCB8fCAidW5rbm93biI7CiAgICBjb25zdCByYXRpbmcgPQogICAgICBzLnJlc3VsdD8ucmF0aW5nICE9IG51bGwgPyBgJHtzLnJlc3VsdC5yYXRpbmd94piFYCA6ICJ1bnJhdGVkIjsKICAgIGNvbnN0IGNvZmZlZSA9IHMuY29mZmVlPy5uYW1lCiAgICAgID8gYCR7cy5jb2ZmZWUubmFtZX0gKCR7cy5jb2ZmZWUub3JpZ2luIHx8ICI/In0sICR7cy5jb2ZmZWUucHJvY2VzcyB8fCAiPyJ9KWAKICAgICAgOiAidW5rbm93biBjb2ZmZWUiOwogICAgY29uc3Qgbm90ZXMgPSBzLnJlc3VsdD8uZmxhdm9yTm90ZXM/LnNsaWNlKDAsIDQpLmpvaW4oIiwgIikgfHwgIiI7CiAgICBjb25zdCBib2R5ID0gcy5yZXN1bHQ/LmJvZHkgfHwgIiI7CiAgICBjb25zdCBhY2lkaXR5ID0gcy5yZXN1bHQ/LmFjaWRpdHkgfHwgIiI7CiAgICBjb25zdCBmcmVlTm90ZSA9IHMucmVzdWx0Py5mcmVlTm90ZXMgPyBgIMK3ICIke3MucmVzdWx0LmZyZWVOb3Rlc30iYCA6ICIiOwogICAgY29uc3Qgd291bGRSZXBlYXQgPQogICAgICBzLnJlc3VsdD8ud291bGRVc2VNZXRob2RBZ2FpbiA9PT0gZmFsc2UKICAgICAgICA/ICIgwrcgd291bGQgTk9UIHJlcGVhdCB0aGlzIG1ldGhvZCIKICAgICAgICA6ICIiOwogICAgY29uc3QgZmxvdyA9IHMuYnJldz8uZmxvdyA/IGAgwrcgZmxvdzogJHtzLmJyZXcuZmxvd31gIDogIiI7CiAgICBjb25zdCBtb2RzID0gcy5icmV3Py5tb2RpZmljYXRpb25zCiAgICAgID8gYCDCtyBtb2RpZmllZDogJHtzLmJyZXcubW9kaWZpY2F0aW9uc31gCiAgICAgIDogIiI7CiAgICBjb25zdCBhdHRyaWJ1dGlvbiA9IHMucmVzdWx0Py5hdHRyaWJ1dGlvbgogICAgICA/IGAgwrcgbG93LXJhdGVkIGR1ZSB0bzogJHtzLnJlc3VsdC5hdHRyaWJ1dGlvbn1gCiAgICAgIDogIiI7CiAgICBjb25zdCBjcmFmdCA9IHMucmVzdWx0Py5jcmFmdCA/IGAgwrcgY3JhZnQ6ICR7cy5yZXN1bHQuY3JhZnR9YCA6ICIiOwogICAgY29uc3QgZml0ID0gcy5yZXN1bHQ/LmZpdCA/IGAgwrcgZml0OiAke3MucmVzdWx0LmZpdH1gIDogIiI7CiAgICAvLyBFeHRlbmRlZCBzZW5zb3J5IHNpZ25hbHMKICAgIGNvbnN0IGNsYXJpdHkgPSBzLnJlc3VsdD8uY2xhcml0eSA/IGAgwrcgY2xhcml0eTogJHtzLnJlc3VsdC5jbGFyaXR5fWAgOiAiIjsKICAgIGNvbnN0IHN3ZWV0bmVzcyA9IHMucmVzdWx0Py5zd2VldG5lc3MKICAgICAgPyBgIMK3IHN3ZWV0bmVzczogJHtzLnJlc3VsdC5zd2VldG5lc3N9YAogICAgICA6ICIiOwogICAgY29uc3QgYml0dGVybmVzcyA9IHMucmVzdWx0Py5iaXR0ZXJuZXNzCiAgICAgID8gYCDCtyBiaXR0ZXJuZXNzOiAke3MucmVzdWx0LmJpdHRlcm5lc3N9YAogICAgICA6ICIiOwogICAgY29uc3QgZmluaXNoID0gcy5yZXN1bHQ/LmZpbmlzaCA/IGAgwrcgZmluaXNoOiAke3MucmVzdWx0LmZpbmlzaH1gIDogIiI7CiAgICAvLyBCYWctbm90ZXMgdnMgYWN0dWFsIGZsYXZvcnMgZHJpZnQgc2lnbmFsCiAgICBjb25zdCBiYWdOb3RlcyA9IHMuY29mZmVlPy50YXN0aW5nTm90ZXNGcm9tQmFnPy5zbGljZSgwLCA0KTsKICAgIGNvbnN0IGFjdHVhbE5vdGVzID0gcy5yZXN1bHQ/LmZsYXZvck5vdGVzPy5zbGljZSgwLCA0KTsKICAgIGNvbnN0IGRyaWZ0ID0KICAgICAgYmFnTm90ZXM/Lmxlbmd0aCAmJiBhY3R1YWxOb3Rlcz8ubGVuZ3RoCiAgICAgICAgPyBgIMK3IGJhZyBwcm9taXNlZDogWyR7YmFnTm90ZXMuam9pbigiLCAiKX1dIOKGkiBhY3R1YWxseSB0YXN0ZWQ6IFske2FjdHVhbE5vdGVzLmpvaW4oIiwgIil9XWAKICAgICAgICA6ICIiOwogICAgcmV0dXJuIGAke21ldGhvZH0gd2l0aCAke2NvZmZlZX06ICR7cmF0aW5nfSR7bm90ZXMgPyBgIFske25vdGVzfV1gIDogIiJ9JHtib2R5ID8gYCBib2R5OiR7Ym9keX1gIDogIiJ9JHthY2lkaXR5ID8gYCBhY2lkaXR5OiR7YWNpZGl0eX1gIDogIiJ9JHtjbGFyaXR5fSR7c3dlZXRuZXNzfSR7Yml0dGVybmVzc30ke2ZpbmlzaH0ke2Zsb3d9JHttb2RzfSR7d291bGRSZXBlYXR9JHtmcmVlTm90ZX0ke2F0dHJpYnV0aW9ufSR7Y3JhZnR9JHtmaXR9JHtkcmlmdH1gOwogIH0pOwoKICByZXR1cm4gcmFua2luZ0Jsb2NrICsgc2Vuc29yeUJsb2NrICsgcm9hc3RlckJsb2NrICsgbGluZXMuam9pbigiXG4iKTsKfQo="}
+import type { Session } from "../types/session";
+
+/**
+ * Computes per-method average timing delta (actualTimeSec - targetTimeSec) across past sessions.
+ * Only includes sessions where both timing fields are present and the method is percolation-based.
+ * Returns an empty object if there is insufficient data.
+ */
+export function buildTimingStats(
+  pastSessions: Session[],
+  isPercolation: (method?: string) => boolean
+): Record<string, { delta: number; count: number }> {
+  const acc: Record<string, { sum: number; count: number }> = {};
+
+  for (const s of pastSessions) {
+    const actual = s.brew?.actualTimeSec;
+    const target = s.recommendation?.primaryRecipe?.targetTimeSec;
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
+    if (!actual || !target || !isPercolation(method)) continue;
+    const key = (method ?? "unknown").toLowerCase().trim();
+    if (!acc[key]) acc[key] = { sum: 0, count: 0 };
+    acc[key].sum += actual - target;
+    acc[key].count += 1;
+  }
+
+  const result: Record<string, { delta: number; count: number }> = {};
+  for (const [key, { sum, count }] of Object.entries(acc)) {
+    result[key] = { delta: Math.round(sum / count), count };
+  }
+  return result;
+}
+
+/**
+ * Builds a sensory preference signal string from extended TasteResult fields.
+ * Only included when ≥3 sessions have at least one sensory field filled.
+ */
+function buildSensoryPatterns(sessions: Session[]): string {
+  const sensoryData = sessions.filter(
+    (s) => s.result?.clarity || s.result?.sweetness || s.result?.bitterness
+  );
+  if (sensoryData.length < 3) return "";
+
+  const groups: Record<string, number[]> = {};
+  for (const s of sensoryData) {
+    const r = s.result;
+    if (!r) continue;
+    if (r.clarity) {
+      const key = `clarity:${r.clarity}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+    if (r.sweetness) {
+      const key = `sweetness:${r.sweetness}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+    if (r.bitterness) {
+      const key = `bitterness:${r.bitterness}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+    if (r.finish) {
+      const key = `finish:${r.finish}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+    if (r.balance) {
+      const key = `balance:${r.balance}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+  }
+
+  const lines: string[] = [];
+  for (const [key, ratings] of Object.entries(groups)) {
+    if (ratings.length < 2) continue;
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    lines.push(`  ${key}: avg ${avg.toFixed(1)}★ (${ratings.length} sessions)`);
+  }
+
+  // Cooling and intention signals
+  const coolingPositive = sessions.filter(
+    (s) => s.result?.improvedWhileCooling === true
+  );
+  if (coolingPositive.length >= 2) {
+    const avg =
+      coolingPositive.reduce((a, s) => a + (s.result?.rating ?? 0), 0) /
+      coolingPositive.length;
+    lines.push(
+      `  improved-while-cooling: avg ${avg.toFixed(1)}★ (${coolingPositive.length} sessions) — user regularly notices cooling improvement`
+    );
+  }
+
+  const intentionMatched = sessions.filter(
+    (s) => s.result?.matchedIntention === true
+  );
+  if (intentionMatched.length >= 2) {
+    const avg =
+      intentionMatched.reduce((a, s) => a + (s.result?.rating ?? 0), 0) /
+      intentionMatched.length;
+    lines.push(
+      `  matched-intention: avg ${avg.toFixed(1)}★ (${intentionMatched.length} sessions) — cups matching the goal score higher`
+    );
+  }
+
+  return lines.length
+    ? `== Sensory preference signals ==\n${lines.join("\n")}\n\n`
+    : "";
+}
+
+/**
+ * Builds per-roaster brewing outcome summary.
+ * Only included when ≥2 sessions share a roaster.
+ */
+function buildRoasterHistory(sessions: Session[]): string {
+  const acc: Record<string, { sum: number; count: number; methods: string[] }> =
+    {};
+  for (const s of sessions) {
+    const roaster = s.coffee?.roaster;
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
+    const rating = s.result?.rating;
+    if (!roaster || !method || rating == null) continue;
+    const key = roaster.trim();
+    acc[key] = acc[key] ?? { sum: 0, count: 0, methods: [] };
+    acc[key].sum += rating;
+    acc[key].count += 1;
+    if (!acc[key].methods.includes(method)) acc[key].methods.push(method);
+  }
+  const lines = Object.entries(acc)
+    .filter(([, v]) => v.count >= 2)
+    .sort(([, a], [, b]) => b.count - a.count)
+    .map(
+      ([r, v]) =>
+        `  ${r}: avg ${(v.sum / v.count).toFixed(1)}★ (${v.count} sessions, methods: ${v.methods.join(", ")})`
+    );
+  return lines.length
+    ? `== Roaster-specific outcomes ==\n${lines.join("\n")}\n\n`
+    : "";
+}
+
+/**
+ * Builds a concise brew history summary string for injection into Claude prompts.
+ * Used by both the recommendation engine and the explore chat.
+ */
+export function buildHistorySummary(pastSessions: Session[], limit = 8): string {
+  if (!pastSessions.length) return "No previous sessions yet — this is the user's first brew.";
+
+  // Build method × process rankings (combos with ≥2 rated sessions only)
+  const comboAcc: Record<string, { sum: number; count: number }> = {};
+  for (const s of pastSessions) {
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
+    const process = s.coffee?.process;
+    const rating = s.result?.rating;
+    if (!method || !process || rating == null) continue;
+    const key = `${method} × ${process}`;
+    if (!comboAcc[key]) comboAcc[key] = { sum: 0, count: 0 };
+    comboAcc[key].sum += rating;
+    comboAcc[key].count += 1;
+  }
+  const rankedCombos = Object.entries(comboAcc)
+    .filter(([, v]) => v.count >= 2)
+    .map(([k, v]) => ({ key: k, avg: v.sum / v.count, count: v.count }))
+    .sort((a, b) => b.avg - a.avg);
+
+  const rankingBlock = rankedCombos.length
+    ? `== Method × Process rankings (empirical — weight above stated preferences) ==\n` +
+      rankedCombos
+        .map((c) => `${c.key}: ${c.avg.toFixed(1)}★ (${c.count} sessions)`)
+        .join("\n") +
+      "\n\n"
+    : "";
+
+  // Sensory patterns (new)
+  const sensoryBlock = buildSensoryPatterns(pastSessions);
+
+  // Roaster-specific outcomes (new)
+  const roasterBlock = buildRoasterHistory(pastSessions);
+
+  const lines = pastSessions.slice(0, limit).map((s) => {
+    const method =
+      s.brew?.methodUsed || s.recommendation?.primaryMethod || "unknown";
+    const rating =
+      s.result?.rating != null ? `${s.result.rating}★` : "unrated";
+    const coffee = s.coffee?.name
+      ? `${s.coffee.name} (${s.coffee.origin || "?"}, ${s.coffee.process || "?"})`
+      : "unknown coffee";
+    const notes = s.result?.flavorNotes?.slice(0, 4).join(", ") || "";
+    const body = s.result?.body || "";
+    const acidity = s.result?.acidity || "";
+    const freeNote = s.result?.freeNotes ? ` · "${s.result.freeNotes}"` : "";
+    const wouldRepeat =
+      s.result?.wouldUseMethodAgain === false
+        ? " · would NOT repeat this method"
+        : "";
+    const flow = s.brew?.flow ? ` · flow: ${s.brew.flow}` : "";
+    const mods = s.brew?.modifications
+      ? ` · modified: ${s.brew.modifications}`
+      : "";
+    const attribution = s.result?.attribution
+      ? ` · low-rated due to: ${s.result.attribution}`
+      : "";
+    const craft = s.result?.craft ? ` · craft: ${s.result.craft}` : "";
+    const fit = s.result?.fit ? ` · fit: ${s.result.fit}` : "";
+    // Extended sensory signals
+    const clarity = s.result?.clarity ? ` · clarity: ${s.result.clarity}` : "";
+    const sweetness = s.result?.sweetness
+      ? ` · sweetness: ${s.result.sweetness}`
+      : "";
+    const bitterness = s.result?.bitterness
+      ? ` · bitterness: ${s.result.bitterness}`
+      : "";
+    const finish = s.result?.finish ? ` · finish: ${s.result.finish}` : "";
+    // Bag-notes vs actual flavors drift signal
+    const bagNotes = s.coffee?.tastingNotesFromBag?.slice(0, 4);
+    const actualNotes = s.result?.flavorNotes?.slice(0, 4);
+    const drift =
+      bagNotes?.length && actualNotes?.length
+        ? ` · bag promised: [${bagNotes.join(", ")}] → actually tasted: [${actualNotes.join(", ")}]`
+        : "";
+    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldRepeat}${freeNote}${attribution}${craft}${fit}${drift}`;
+  });
+
+  return rankingBlock + sensoryBlock + roasterBlock + lines.join("\n");
+}

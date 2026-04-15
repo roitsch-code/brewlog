@@ -1,1 +1,29 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2V0QWRtaW5EYiB9IGZyb20gIkAvbGliL2ZpcmViYXNlL2FkbWluIjsKaW1wb3J0IHR5cGUgeyBVc2VyUHJlZmVyZW5jZXMgfSBmcm9tICJAL2xpYi90eXBlcy9wcmVmZXJlbmNlcyI7CgpleHBvcnQgY29uc3QgZHluYW1pYyA9ICJmb3JjZS1keW5hbWljIjsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7CiAgdHJ5IHsKICAgIGNvbnN0IGRiID0gZ2V0QWRtaW5EYigpOwogICAgY29uc3Qgc25hcCA9IGF3YWl0IGRiLmNvbGxlY3Rpb24oInByZWZlcmVuY2VzIikuZG9jKCJkZWZhdWx0IikuZ2V0KCk7CiAgICBpZiAoIXNuYXAuZXhpc3RzKSByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24obnVsbCk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oc25hcC5kYXRhKCkgYXMgVXNlclByZWZlcmVuY2VzKTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoInByZWZlcmVuY2VzIEdFVCBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKG51bGwpOwogIH0KfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCBwcmVmczogVXNlclByZWZlcmVuY2VzID0gYXdhaXQgcmVxLmpzb24oKTsKICAgIGNvbnN0IGRiID0gZ2V0QWRtaW5EYigpOwogICAgYXdhaXQgZGIuY29sbGVjdGlvbigicHJlZmVyZW5jZXMiKS5kb2MoImRlZmF1bHQiKS5zZXQocHJlZnMsIHsgbWVyZ2U6IHRydWUgfSk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogdHJ1ZSB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoInByZWZlcmVuY2VzIFBPU1QgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiRmFpbGVkIHRvIHNhdmUiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+import type { UserPreferences } from "@/lib/types/preferences";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const db = getAdminDb();
+    const snap = await db.collection("preferences").doc("default").get();
+    if (!snap.exists) return NextResponse.json(null);
+    return NextResponse.json(snap.data() as UserPreferences);
+  } catch (err) {
+    console.error("preferences GET error:", err);
+    return NextResponse.json(null);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const prefs: UserPreferences = await req.json();
+    const db = getAdminDb();
+    await db.collection("preferences").doc("default").set(prefs, { merge: true });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("preferences POST error:", err);
+    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+  }
+}

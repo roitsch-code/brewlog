@@ -1,1 +1,37 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgand0VmVyaWZ5IH0gZnJvbSAiam9zZSI7Cgpjb25zdCBQVUJMSUNfUEFUSFMgPSBbIi9sb2dpbiIsICIvYXBpL2F1dGgiXTsKY29uc3QgU1RBVElDX1BBVEhTID0gWyIvX25leHQiLCAiL2Zhdmljb24uaWNvIiwgIi9zdy5qcyIsICIvbWFuaWZlc3QuanNvbiIsICIvaWNvbnMiLCAiL3NjcmVlbnNob3RzIl07CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gbWlkZGxld2FyZShyZXE6IE5leHRSZXF1ZXN0KSB7CiAgY29uc3QgeyBwYXRobmFtZSB9ID0gcmVxLm5leHRVcmw7CgogIC8vIEFsbG93IHN0YXRpYyBhc3NldHMgYW5kIHB1YmxpYyBwYXRocyB0aHJvdWdoCiAgaWYgKFNUQVRJQ19QQVRIUy5zb21lKHAgPT4gcGF0aG5hbWUuc3RhcnRzV2l0aChwKSkpIHJldHVybiBOZXh0UmVzcG9uc2UubmV4dCgpOwogIGlmIChQVUJMSUNfUEFUSFMuc29tZShwID0+IHBhdGhuYW1lLnN0YXJ0c1dpdGgocCkpKSByZXR1cm4gTmV4dFJlc3BvbnNlLm5leHQoKTsKCiAgY29uc3QgdG9rZW4gPSByZXEuY29va2llcy5nZXQoImNmX3Nlc3Npb24iKT8udmFsdWU7CgogIGlmICghdG9rZW4pIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UucmVkaXJlY3QobmV3IFVSTCgiL2xvZ2luIiwgcmVxLnVybCkpOwogIH0KCiAgdHJ5IHsKICAgIGlmICghcHJvY2Vzcy5lbnYuQVVUSF9TRUNSRVQpIHsKICAgICAgY29uc29sZS5lcnJvcigiQVVUSF9TRUNSRVQgZW52aXJvbm1lbnQgdmFyaWFibGUgaXMgbm90IHNldCIpOwogICAgICByZXR1cm4gbmV3IE5leHRSZXNwb25zZSgiU2VydmVyIG1pc2NvbmZpZ3VyYXRpb24iLCB7IHN0YXR1czogNTAwIH0pOwogICAgfQogICAgY29uc3Qgc2VjcmV0ID0gbmV3IFRleHRFbmNvZGVyKCkuZW5jb2RlKHByb2Nlc3MuZW52LkFVVEhfU0VDUkVUKTsKICAgIGF3YWl0IGp3dFZlcmlmeSh0b2tlbiwgc2VjcmV0KTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UubmV4dCgpOwogIH0gY2F0Y2ggewogICAgY29uc3QgcmVzID0gTmV4dFJlc3BvbnNlLnJlZGlyZWN0KG5ldyBVUkwoIi9sb2dpbiIsIHJlcS51cmwpKTsKICAgIHJlcy5jb29raWVzLmRlbGV0ZSgiY2Zfc2Vzc2lvbiIpOwogICAgcmV0dXJuIHJlczsKICB9Cn0KCmV4cG9ydCBjb25zdCBjb25maWcgPSB7CiAgbWF0Y2hlcjogWyIvKCg/IV9uZXh0L3N0YXRpY3xfbmV4dC9pbWFnZXxmYXZpY29uLmljb3xzdy5qc3xtYW5pZmVzdC5qc29ufGljb25zfHNjcmVlbnNob3RzKS4qKSJdLAp9Owo="}
+import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+
+const PUBLIC_PATHS = ["/login", "/api/auth"];
+const STATIC_PATHS = ["/_next", "/favicon.ico", "/sw.js", "/manifest.json", "/icons", "/screenshots"];
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Allow static assets and public paths through
+  if (STATIC_PATHS.some(p => pathname.startsWith(p))) return NextResponse.next();
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) return NextResponse.next();
+
+  const token = req.cookies.get("cf_session")?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  try {
+    if (!process.env.AUTH_SECRET) {
+      console.error("AUTH_SECRET environment variable is not set");
+      return new NextResponse("Server misconfiguration", { status: 500 });
+    }
+    const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
+    await jwtVerify(token, secret);
+    return NextResponse.next();
+  } catch {
+    const res = NextResponse.redirect(new URL("/login", req.url));
+    res.cookies.delete("cf_session");
+    return res;
+  }
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|icons|screenshots).*)"],
+};

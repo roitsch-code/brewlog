@@ -1,1 +1,173 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IEFudGhyb3BpYyBmcm9tICJAYW50aHJvcGljLWFpL3NkayI7CmltcG9ydCB7IGdldEFkbWluRGIgfSBmcm9tICJAL2xpYi9maXJlYmFzZS9hZG1pbiI7CmltcG9ydCB0eXBlIHsgQ29mZmVlIH0gZnJvbSAiQC9saWIvdHlwZXMvY29mZmVlIjsKaW1wb3J0IHR5cGUgeyBTZXNzaW9uIH0gZnJvbSAiQC9saWIvdHlwZXMvc2Vzc2lvbiI7CgpleHBvcnQgY29uc3QgZHluYW1pYyA9ICJmb3JjZS1keW5hbWljIjsKZXhwb3J0IGNvbnN0IG1heER1cmF0aW9uID0gMTIwOwoKY29uc3QgY2xpZW50ID0gbmV3IEFudGhyb3BpYyh7IGFwaUtleTogcHJvY2Vzcy5lbnYuQU5USFJPUElDX0FQSV9LRVkgfSk7Cgpjb25zdCBTWVNURU1fUFJPTVBUID0gYFlvdSBhcmUgZ2VuZXJhdGluZyBhIHBlcnNvbmFsIGJyZXcgbWVtb3J5IGZvciBhIHNwZWNpYWx0eSBjb2ZmZWUgZW50aHVzaWFzdC4KR2l2ZW4gYWxsIGJyZXcgc2Vzc2lvbnMgZm9yIG9uZSBjb2ZmZWUsIHdyaXRlIDLigJM0IHNlbnRlbmNlcyB0aGF0IGNhcHR1cmU6Ci0gb3ZlcmFsbCBxdWFsaXR5IGltcHJlc3Npb24gYW5kIHJhdGluZyBwYXR0ZXJuCi0gd2hpY2ggbWV0aG9kKHMpIHdvcmtlZCBiZXN0Ci0gcmVjdXJyaW5nIGZsYXZvciBub3RlcyBvciBzZW5zb3J5IGhpZ2hsaWdodHMKLSBhbnkgdHJlbmQgb3ZlciB0aW1lIChpbXByb3ZpbmcsIGNvbnNpc3RlbnQsIG9uZS1vZmYpCgpCZSBkaXJlY3QsIHNwZWNpZmljLCBhbmQgcGVyc29uYWwuIE5vIGdlbmVyaWMgcGhyYXNlcy4gTm8gZW1vamlzLgpSZWZlcmVuY2UgYWN0dWFsIG51bWJlcnMgKGUuZy4gIjQgb2YgNiBicmV3cyByYXRlZCA04piFKyIpLgpNZXRyaWMgdW5pdHMgb25seS5gOwoKZnVuY3Rpb24gdG9wTm90ZXMoc2Vzc2lvbnM6IFNlc3Npb25bXSwgbiA9IDUpOiBzdHJpbmdbXSB7CiAgY29uc3QgY291bnRzOiBSZWNvcmQ8c3RyaW5nLCBudW1iZXI+ID0ge307CiAgZm9yIChjb25zdCBzIG9mIHNlc3Npb25zKSB7CiAgICBmb3IgKGNvbnN0IG5vdGUgb2Ygcy5yZXN1bHQ/LmZsYXZvck5vdGVzIHx8IFtdKSB7CiAgICAgIGNvdW50c1tub3RlXSA9IChjb3VudHNbbm90ZV0gfHwgMCkgKyAxOwogICAgfQogIH0KICByZXR1cm4gT2JqZWN0LmVudHJpZXMoY291bnRzKQogICAgLnNvcnQoKGEsIGIpID0+IGJbMV0gLSBhWzFdKQogICAgLnNsaWNlKDAsIG4pCiAgICAubWFwKChbbm90ZV0pID0+IG5vdGUpOwp9CgpmdW5jdGlvbiBiZXN0TWV0aG9kKHNlc3Npb25zOiBTZXNzaW9uW10pOiBzdHJpbmcgfCBudWxsIHsKICBjb25zdCBkYXRhOiBSZWNvcmQ8c3RyaW5nLCB7IHN1bTogbnVtYmVyOyBjb3VudDogbnVtYmVyIH0+ID0ge307CiAgZm9yIChjb25zdCBzIG9mIHNlc3Npb25zKSB7CiAgICBjb25zdCBtZXRob2QgPSAocy5icmV3IGFzIHsgbWV0aG9kVXNlZD86IHN0cmluZyB9IHwgdW5kZWZpbmVkKT8ubWV0aG9kVXNlZAogICAgICB8fCAocy5yZWNvbW1lbmRhdGlvbiBhcyB7IHByaW1hcnlNZXRob2Q/OiBzdHJpbmcgfSB8IHVuZGVmaW5lZCk/LnByaW1hcnlNZXRob2Q7CiAgICBjb25zdCByYXRpbmcgPSBzLnJlc3VsdD8ucmF0aW5nOwogICAgaWYgKG1ldGhvZCAmJiB0eXBlb2YgcmF0aW5nID09PSAibnVtYmVyIikgewogICAgICBkYXRhW21ldGhvZF0gPSBkYXRhW21ldGhvZF0gfHwgeyBzdW06IDAsIGNvdW50OiAwIH07CiAgICAgIGRhdGFbbWV0aG9kXS5zdW0gKz0gcmF0aW5nOwogICAgICBkYXRhW21ldGhvZF0uY291bnQgKz0gMTsKICAgIH0KICB9CiAgY29uc3QgcmFua2VkID0gT2JqZWN0LmVudHJpZXMoZGF0YSkuc29ydCgoYSwgYikgPT4gYlsxXS5zdW0gLyBiWzFdLmNvdW50IC0gYVsxXS5zdW0gLyBhWzFdLmNvdW50KTsKICByZXR1cm4gcmFua2VkWzBdPy5bMF0gPz8gbnVsbDsKfQoKZnVuY3Rpb24gYnVpbGRVc2VyTWVzc2FnZShjb2ZmZWU6IENvZmZlZSwgc2Vzc2lvbnM6IFNlc3Npb25bXSk6IHN0cmluZyB7CiAgY29uc3QgcmF0ZWQgPSBzZXNzaW9ucy5maWx0ZXIocyA9PiBzLnJlc3VsdD8ucmF0aW5nICE9IG51bGwpOwogIGNvbnN0IGF2Z1JhdGluZyA9IHJhdGVkLmxlbmd0aCA+IDAKICAgID8gTWF0aC5yb3VuZCgocmF0ZWQucmVkdWNlKChzLCBzZXNzKSA9PiBzICsgc2Vzcy5yZXN1bHQhLnJhdGluZywgMCkgLyByYXRlZC5sZW5ndGgpICogMTApIC8gMTAKICAgIDogbnVsbDsKICBjb25zdCBiZXN0ID0gYmVzdE1ldGhvZChzZXNzaW9ucyk7CiAgY29uc3Qgbm90ZXMgPSB0b3BOb3RlcyhzZXNzaW9ucywgNSk7CgogIGNvbnN0IGxpbmVzID0gc2Vzc2lvbnMKICAgIC5zbGljZSgpCiAgICAuc29ydCgoYSwgYikgPT4gewogICAgICBjb25zdCBhTXMgPSAoYSBhcyBTZXNzaW9uICYgeyBjcmVhdGVkQXRNcz86IG51bWJlciB9KS5jcmVhdGVkQXRNcyA/PyBuZXcgRGF0ZShhLmNyZWF0ZWRBdCkuZ2V0VGltZSgpOwogICAgICBjb25zdCBiTXMgPSAoYiBhcyBTZXNzaW9uICYgeyBjcmVhdGVkQXRNcz86IG51bWJlciB9KS5jcmVhdGVkQXRNcyA/PyBuZXcgRGF0ZShiLmNyZWF0ZWRBdCkuZ2V0VGltZSgpOwogICAgICByZXR1cm4gYU1zIC0gYk1zOwogICAgfSkKICAgIC5tYXAocyA9PiB7CiAgICAgIGNvbnN0IGQgPSAocyBhcyBTZXNzaW9uICYgeyBjcmVhdGVkQXRNcz86IG51bWJlciB9KS5jcmVhdGVkQXRNcwogICAgICAgID8gbmV3IERhdGUoKHMgYXMgU2Vzc2lvbiAmIHsgY3JlYXRlZEF0TXM/OiBudW1iZXIgfSkuY3JlYXRlZEF0TXMhKQogICAgICAgIDogbmV3IERhdGUocy5jcmVhdGVkQXQpOwogICAgICBjb25zdCBkYXRlID0gZC50b0xvY2FsZURhdGVTdHJpbmcoImVuIiwgeyBtb250aDogInNob3J0IiwgZGF5OiAibnVtZXJpYyIsIHllYXI6ICJudW1lcmljIiB9KTsKICAgICAgY29uc3QgbWV0aG9kID0gKHMuYnJldyBhcyB7IG1ldGhvZFVzZWQ/OiBzdHJpbmcgfSB8IHVuZGVmaW5lZCk/Lm1ldGhvZFVzZWQKICAgICAgICB8fCAocy5yZWNvbW1lbmRhdGlvbiBhcyB7IHByaW1hcnlNZXRob2Q/OiBzdHJpbmcgfSB8IHVuZGVmaW5lZCk/LnByaW1hcnlNZXRob2QKICAgICAgICB8fCAidW5rbm93biI7CiAgICAgIGNvbnN0IHJhdGluZyA9IHMucmVzdWx0Py5yYXRpbmcgPz8gIuKAkyI7CiAgICAgIGNvbnN0IHRvcFRocmVlID0gKHMucmVzdWx0Py5mbGF2b3JOb3RlcyB8fCBbXSkuc2xpY2UoMCwgMykuam9pbigiLCAiKSB8fCAibm8gbm90ZXMiOwogICAgICByZXR1cm4gYC0gJHtkYXRlfTogJHttZXRob2R9IMK3ICR7cmF0aW5nfeKYhSDCtyAke3RvcFRocmVlfWA7CiAgICB9KTsKCiAgcmV0dXJuIGBDb2ZmZWU6ICR7Y29mZmVlLm5hbWV9IGJ5ICR7Y29mZmVlLnJvYXN0ZXJ9Ck9yaWdpbjogJHtjb2ZmZWUub3JpZ2luIHx8ICJ1bmtub3duIn0gfCBQcm9jZXNzOiAke2NvZmZlZS5wcm9jZXNzIHx8ICJ1bmtub3duIn0KU2Vzc2lvbnMgKCR7c2Vzc2lvbnMubGVuZ3RofSB0b3RhbCk6CiR7bGluZXMuam9pbigiXG4iKX0KJHthdmdSYXRpbmcgIT0gbnVsbCA/IGBBdmcgcmF0aW5nOiAke2F2Z1JhdGluZ31gIDogIiJ9JHtiZXN0ID8gYCB8IEJlc3QgbWV0aG9kOiAke2Jlc3R9YCA6ICIifSR7bm90ZXMubGVuZ3RoID4gMCA/IGAgfCBNb3N0IGNvbW1vbiBub3RlczogJHtub3Rlcy5qb2luKCIsICIpfWAgOiAiIn1gOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgLy8gQXV0aCBjaGVjayDigJQgVmVyY2VsIGNyb24gc2VuZHMgdGhpcyBoZWFkZXIgYXV0b21hdGljYWxseTsgbWFudWFsIGNhbGxzIG5lZWQgaXQgdG9vCiAgY29uc3Qgc2VjcmV0ID0gcHJvY2Vzcy5lbnYuQ1JPTl9TRUNSRVQ7CiAgY29uc3QgYXV0aCA9IHJlcS5oZWFkZXJzLmdldCgiYXV0aG9yaXphdGlvbiIpOwogIGlmICghc2VjcmV0IHx8IGF1dGggIT09IGBCZWFyZXIgJHtzZWNyZXR9YCkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJVbmF1dGhvcml6ZWQiIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgfQoKICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICBsZXQgcHJvY2Vzc2VkID0gMDsKICBsZXQgc2tpcHBlZCA9IDA7CiAgbGV0IGVycm9ycyA9IDA7CgogIHRyeSB7CiAgICBjb25zdCBjb2ZmZWVzU25hcCA9IGF3YWl0IGRiLmNvbGxlY3Rpb24oImNvZmZlZXMiKS5nZXQoKTsKICAgIGNvbnN0IG5vdyA9IERhdGUubm93KCk7CiAgICBjb25zdCB0d2VudHlFaWdodERheXNNcyA9IDI4ICogMjQgKiA2MCAqIDYwICogMTAwMDsKCiAgICBmb3IgKGNvbnN0IGRvYyBvZiBjb2ZmZWVzU25hcC5kb2NzKSB7CiAgICAgIGNvbnN0IGNvZmZlZSA9IHsgaWQ6IGRvYy5pZCwgLi4uZG9jLmRhdGEoKSB9IGFzIENvZmZlZTsKCiAgICAgIC8vIFNraXAgaWYgZmV3ZXIgdGhhbiAyIHNlc3Npb25zCiAgICAgIGlmICghY29mZmVlLnNlc3Npb25JZHMgfHwgY29mZmVlLnNlc3Npb25JZHMubGVuZ3RoIDwgMikgewogICAgICAgIHNraXBwZWQrKzsKICAgICAgICBjb250aW51ZTsKICAgICAgfQoKICAgICAgLy8gU2tpcCBpZiBzdW1tYXJpemVkIHdpdGhpbiB0aGUgbGFzdCAyOCBkYXlzCiAgICAgIGlmIChjb2ZmZWUubGFzdFN1bW1hcml6ZWRBdCkgewogICAgICAgIGNvbnN0IGxhc3RNcyA9IG5ldyBEYXRlKGNvZmZlZS5sYXN0U3VtbWFyaXplZEF0KS5nZXRUaW1lKCk7CiAgICAgICAgaWYgKG5vdyAtIGxhc3RNcyA8IHR3ZW50eUVpZ2h0RGF5c01zKSB7CiAgICAgICAgICBza2lwcGVkKys7CiAgICAgICAgICBjb250aW51ZTsKICAgICAgICB9CiAgICAgIH0KCiAgICAgIHRyeSB7CiAgICAgICAgLy8gRmV0Y2ggYWxsIHNlc3Npb25zIGZvciB0aGlzIGNvZmZlZSBieSBJRAogICAgICAgIGNvbnN0IHNlc3Npb25Eb2NzID0gYXdhaXQgUHJvbWlzZS5hbGwoCiAgICAgICAgICBjb2ZmZWUuc2Vzc2lvbklkcy5tYXAoaWQgPT4gZGIuY29sbGVjdGlvbigic2Vzc2lvbnMiKS5kb2MoaWQpLmdldCgpKQogICAgICAgICk7CiAgICAgICAgY29uc3Qgc2Vzc2lvbnM6IFNlc3Npb25bXSA9IHNlc3Npb25Eb2NzCiAgICAgICAgICAuZmlsdGVyKGQgPT4gZC5leGlzdHMpCiAgICAgICAgICAubWFwKGQgPT4gKHsgaWQ6IGQuaWQsIC4uLmQuZGF0YSgpIH0gYXMgU2Vzc2lvbikpOwoKICAgICAgICBpZiAoc2Vzc2lvbnMubGVuZ3RoIDwgMikgewogICAgICAgICAgc2tpcHBlZCsrOwogICAgICAgICAgY29udGludWU7CiAgICAgICAgfQoKICAgICAgICBjb25zdCB1c2VyTWVzc2FnZSA9IGJ1aWxkVXNlck1lc3NhZ2UoY29mZmVlLCBzZXNzaW9ucyk7CgogICAgICAgIGNvbnN0IG1zZyA9IGF3YWl0IGNsaWVudC5tZXNzYWdlcy5jcmVhdGUoewogICAgICAgICAgbW9kZWw6ICJjbGF1ZGUtaGFpa3UtNC01IiwKICAgICAgICAgIG1heF90b2tlbnM6IDIwMCwKICAgICAgICAgIHN5c3RlbTogU1lTVEVNX1BST01QVCwKICAgICAgICAgIG1lc3NhZ2VzOiBbeyByb2xlOiAidXNlciIsIGNvbnRlbnQ6IHVzZXJNZXNzYWdlIH1dLAogICAgICAgIH0pOwoKICAgICAgICBjb25zdCB3cml0dGVuU3VtbWFyeSA9IChtc2cuY29udGVudFswXSBhcyB7IHR5cGU6IHN0cmluZzsgdGV4dDogc3RyaW5nIH0pPy50ZXh0Py50cmltKCk7CiAgICAgICAgaWYgKCF3cml0dGVuU3VtbWFyeSkgewogICAgICAgICAgZXJyb3JzKys7CiAgICAgICAgICBjb250aW51ZTsKICAgICAgICB9CgogICAgICAgIGNvbnN0IGNvbW1vbk5vdGVzID0gdG9wTm90ZXMoc2Vzc2lvbnMsIDUpOwogICAgICAgIGNvbnN0IGxhc3RTdW1tYXJpemVkQXQgPSBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCk7CgogICAgICAgIGF3YWl0IGRiLmNvbGxlY3Rpb24oImNvZmZlZXMiKS5kb2MoY29mZmVlLmlkKS51cGRhdGUoewogICAgICAgICAgd3JpdHRlblN1bW1hcnksCiAgICAgICAgICBsYXN0U3VtbWFyaXplZEF0LAogICAgICAgICAgY29tbW9uTm90ZXMsCiAgICAgICAgfSk7CgogICAgICAgIHByb2Nlc3NlZCsrOwogICAgICB9IGNhdGNoIChlcnIpIHsKICAgICAgICBjb25zb2xlLmVycm9yKGBjb21wYWN0IGVycm9yIGZvciBjb2ZmZWUgJHtjb2ZmZWUuaWR9OmAsIGVycik7CiAgICAgICAgZXJyb3JzKys7CiAgICAgIH0KICAgIH0KCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBwcm9jZXNzZWQsIHNraXBwZWQsIGVycm9ycyB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoImNvbXBhY3Qgcm91dGUgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiSW50ZXJuYWwgZXJyb3IiLCBwcm9jZXNzZWQsIHNraXBwZWQsIGVycm9ycyB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+import { getAdminDb } from "@/lib/firebase/admin";
+import type { Coffee } from "@/lib/types/coffee";
+import type { Session } from "@/lib/types/session";
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 120;
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const SYSTEM_PROMPT = `You are generating a personal brew memory for a specialty coffee enthusiast.
+Given all brew sessions for one coffee, write 2–4 sentences that capture:
+- overall quality impression and rating pattern
+- which method(s) worked best
+- recurring flavor notes or sensory highlights
+- any trend over time (improving, consistent, one-off)
+
+Be direct, specific, and personal. No generic phrases. No emojis.
+Reference actual numbers (e.g. "4 of 6 brews rated 4★+").
+Metric units only.`;
+
+function topNotes(sessions: Session[], n = 5): string[] {
+  const counts: Record<string, number> = {};
+  for (const s of sessions) {
+    for (const note of s.result?.flavorNotes || []) {
+      counts[note] = (counts[note] || 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([note]) => note);
+}
+
+function bestMethod(sessions: Session[]): string | null {
+  const data: Record<string, { sum: number; count: number }> = {};
+  for (const s of sessions) {
+    const method = (s.brew as { methodUsed?: string } | undefined)?.methodUsed
+      || (s.recommendation as { primaryMethod?: string } | undefined)?.primaryMethod;
+    const rating = s.result?.rating;
+    if (method && typeof rating === "number") {
+      data[method] = data[method] || { sum: 0, count: 0 };
+      data[method].sum += rating;
+      data[method].count += 1;
+    }
+  }
+  const ranked = Object.entries(data).sort((a, b) => b[1].sum / b[1].count - a[1].sum / a[1].count);
+  return ranked[0]?.[0] ?? null;
+}
+
+function buildUserMessage(coffee: Coffee, sessions: Session[]): string {
+  const rated = sessions.filter(s => s.result?.rating != null);
+  const avgRating = rated.length > 0
+    ? Math.round((rated.reduce((s, sess) => s + sess.result!.rating, 0) / rated.length) * 10) / 10
+    : null;
+  const best = bestMethod(sessions);
+  const notes = topNotes(sessions, 5);
+
+  const lines = sessions
+    .slice()
+    .sort((a, b) => {
+      const aMs = (a as Session & { createdAtMs?: number }).createdAtMs ?? new Date(a.createdAt).getTime();
+      const bMs = (b as Session & { createdAtMs?: number }).createdAtMs ?? new Date(b.createdAt).getTime();
+      return aMs - bMs;
+    })
+    .map(s => {
+      const d = (s as Session & { createdAtMs?: number }).createdAtMs
+        ? new Date((s as Session & { createdAtMs?: number }).createdAtMs!)
+        : new Date(s.createdAt);
+      const date = d.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
+      const method = (s.brew as { methodUsed?: string } | undefined)?.methodUsed
+        || (s.recommendation as { primaryMethod?: string } | undefined)?.primaryMethod
+        || "unknown";
+      const rating = s.result?.rating ?? "–";
+      const topThree = (s.result?.flavorNotes || []).slice(0, 3).join(", ") || "no notes";
+      return `- ${date}: ${method} · ${rating}★ · ${topThree}`;
+    });
+
+  return `Coffee: ${coffee.name} by ${coffee.roaster}
+Origin: ${coffee.origin || "unknown"} | Process: ${coffee.process || "unknown"}
+Sessions (${sessions.length} total):
+${lines.join("\n")}
+${avgRating != null ? `Avg rating: ${avgRating}` : ""}${best ? ` | Best method: ${best}` : ""}${notes.length > 0 ? ` | Most common notes: ${notes.join(", ")}` : ""}`;
+}
+
+export async function POST(req: NextRequest) {
+  // Auth check — Vercel cron sends this header automatically; manual calls need it too
+  const secret = process.env.CRON_SECRET;
+  const auth = req.headers.get("authorization");
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const db = getAdminDb();
+  let processed = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  try {
+    const coffeesSnap = await db.collection("coffees").get();
+    const now = Date.now();
+    const twentyEightDaysMs = 28 * 24 * 60 * 60 * 1000;
+
+    for (const doc of coffeesSnap.docs) {
+      const coffee = { id: doc.id, ...doc.data() } as Coffee;
+
+      // Skip if fewer than 2 sessions
+      if (!coffee.sessionIds || coffee.sessionIds.length < 2) {
+        skipped++;
+        continue;
+      }
+
+      // Skip if summarized within the last 28 days
+      if (coffee.lastSummarizedAt) {
+        const lastMs = new Date(coffee.lastSummarizedAt).getTime();
+        if (now - lastMs < twentyEightDaysMs) {
+          skipped++;
+          continue;
+        }
+      }
+
+      try {
+        // Fetch all sessions for this coffee by ID
+        const sessionDocs = await Promise.all(
+          coffee.sessionIds.map(id => db.collection("sessions").doc(id).get())
+        );
+        const sessions: Session[] = sessionDocs
+          .filter(d => d.exists)
+          .map(d => ({ id: d.id, ...d.data() } as Session));
+
+        if (sessions.length < 2) {
+          skipped++;
+          continue;
+        }
+
+        const userMessage = buildUserMessage(coffee, sessions);
+
+        const msg = await client.messages.create({
+          model: "claude-haiku-4-5",
+          max_tokens: 200,
+          system: SYSTEM_PROMPT,
+          messages: [{ role: "user", content: userMessage }],
+        });
+
+        const writtenSummary = (msg.content[0] as { type: string; text: string })?.text?.trim();
+        if (!writtenSummary) {
+          errors++;
+          continue;
+        }
+
+        const commonNotes = topNotes(sessions, 5);
+        const lastSummarizedAt = new Date().toISOString();
+
+        await db.collection("coffees").doc(coffee.id).update({
+          writtenSummary,
+          lastSummarizedAt,
+          commonNotes,
+        });
+
+        processed++;
+      } catch (err) {
+        console.error(`compact error for coffee ${coffee.id}:`, err);
+        errors++;
+      }
+    }
+
+    return NextResponse.json({ processed, skipped, errors });
+  } catch (err) {
+    console.error("compact route error:", err);
+    return NextResponse.json({ error: "Internal error", processed, skipped, errors }, { status: 500 });
+  }
+}

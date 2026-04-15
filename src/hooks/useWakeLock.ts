@@ -1,1 +1,111 @@
-{"data":"aW1wb3J0IHsgdXNlUmVmLCB1c2VFZmZlY3QsIHVzZUNhbGxiYWNrIH0gZnJvbSAicmVhY3QiOwoKLyoqCiAqIHVzZVdha2VMb2NrIOKAlCBrZWVwcyB0aGUgaVBob25lL2lQYWQgc2NyZWVuIGF3YWtlIGR1cmluZyBhbiBhY3RpdmUgYnJldyBzZXNzaW9uLgogKgogKiBXaHk6IGlPUyBhZ2dyZXNzaXZlbHkgZGltcyBhbmQgbG9ja3MgdGhlIHNjcmVlbiBhZnRlciB+MzBzIG9mIG5vIHRvdWNoIGlucHV0LgogKiBEdXJpbmcgYSBwb3VyLW92ZXIgdGhlIGJyZXdlciB3YXRjaGVzIHRoZSB0aW1lciB3aXRob3V0IHRvdWNoaW5nIHRoZSBwaG9uZSwKICogd2hpY2ggY2F1c2VzIHRoZSBzY3JlZW4gdG8gZ28gZGFyayBhdCBleGFjdGx5IHRoZSB3cm9uZyBtb21lbnQuCiAqCiAqIEhvdzogVGhlIFNjcmVlbiBXYWtlIExvY2sgQVBJIChuYXZpZ2F0b3Iud2FrZUxvY2spIHJlcXVlc3RzIGFuIE9TLWxldmVsIGhpbnQKICogdG8gc3VwcHJlc3MgYXV0by1sb2NrLiBJdCBpcyBhdXRvbWF0aWNhbGx5IHJlbGVhc2VkIGJ5IHRoZSBicm93c2VyIHdoZW5ldmVyCiAqIHRoZSBkb2N1bWVudCBiZWNvbWVzIGhpZGRlbiAoZS5nLiB1c2VyIHN3aXRjaGVzIGFwcHMpLCBzbyB3ZSByZS1hY3F1aXJlIGl0CiAqIG9uIHZpc2liaWxpdHljaGFuZ2UuCiAqCiAqIExpbWl0YXRpb25zOgogKiAtIE9ubHkgd29ya3Mgd2hpbGUgdGhlIHBhZ2UgaXMgaW4gdGhlIGZvcmVncm91bmQgKGRvY3VtZW50LnZpc2liaWxpdHlTdGF0ZSA9PT0gInZpc2libGUiKQogKiAtIFRoZSBPUyBtYXkgc3RpbGwgcmVsZWFzZSB0aGUgbG9jayB1bmRlciBsb3ctYmF0dGVyeSBvciBwb3dlci1zYXZpbmcgY29uZGl0aW9ucwogKiAtIE5vdCBzdXBwb3J0ZWQgaW4gYWxsIGJyb3dzZXJzIChncmFjZWZ1bGx5IG5vLW9wcyBpZiB1bmF2YWlsYWJsZSkKICogLSBSZXF1aXJlcyBhIHNlY3VyZSBjb250ZXh0IChIVFRQUyBvciBsb2NhbGhvc3QpIOKAlCBzYXRpc2ZpZWQgYnkgdGhlIFBXQQogKgogKiBVc2FnZToKICogICBjb25zdCB7IGVuYWJsZVdha2VMb2NrLCBkaXNhYmxlV2FrZUxvY2sgfSA9IHVzZVdha2VMb2NrKCk7CiAqICAgZW5hYmxlV2FrZUxvY2soKTsgICAvLyBjYWxsIHdoZW4gYnJldyBzdGFydHMKICogICBkaXNhYmxlV2FrZUxvY2soKTsgIC8vIGNhbGwgd2hlbiBicmV3IGVuZHMgKHVubW91bnQgY2xlYW51cCBhbHNvIGhhbmRsZXMgdGhpcykKICovCmV4cG9ydCBmdW5jdGlvbiB1c2VXYWtlTG9jaygpIHsKICAvLyBUaGUgV2FrZUxvY2tTZW50aW5lbCByZXR1cm5lZCBieSB0aGUgQVBJIOKAlCBudWxsIHdoZW4gd2UgZG9uJ3QgaG9sZCB0aGUgbG9jawogIGNvbnN0IGxvY2tSZWYgPSB1c2VSZWY8V2FrZUxvY2tTZW50aW5lbCB8IG51bGw+KG51bGwpOwoKICAvLyBXaGV0aGVyIHRoZSBjYWxsZXIgaGFzIHJlcXVlc3RlZCB0aGUgbG9jayAoc2VwYXJhdGUgZnJvbSB3aGV0aGVyIHdlIGN1cnJlbnRseQogIC8vIGhvbGQgaXQg4oCUIHRoZSBPUyBjYW4gcmVsZWFzZSBpdCB3aGlsZSB0aGUgdGFiIGlzIGhpZGRlbiwgc28gd2UgdHJhY2sgaW50ZW50CiAgLy8gaW5kZXBlbmRlbnRseSBzbyB0aGUgdmlzaWJpbGl0eWNoYW5nZSBoYW5kbGVyIGtub3dzIHdoZXRoZXIgdG8gcmUtYWNxdWlyZSkKICBjb25zdCB3YW50TG9ja1JlZiA9IHVzZVJlZihmYWxzZSk7CgogIC8vIOKUgOKUgCBJbnRlcm5hbCBhY3F1aXJlIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogIGNvbnN0IGFjcXVpcmUgPSB1c2VDYWxsYmFjayhhc3luYyAoKSA9PiB7CiAgICBpZiAodHlwZW9mIG5hdmlnYXRvciA9PT0gInVuZGVmaW5lZCIgfHwgISgid2FrZUxvY2siIGluIG5hdmlnYXRvcikpIHJldHVybjsKICAgIHRyeSB7CiAgICAgIGxvY2tSZWYuY3VycmVudCA9IGF3YWl0IG5hdmlnYXRvci53YWtlTG9jay5yZXF1ZXN0KCJzY3JlZW4iKTsKICAgICAgbG9ja1JlZi5jdXJyZW50LmFkZEV2ZW50TGlzdGVuZXIoInJlbGVhc2UiLCAoKSA9PiB7CiAgICAgICAgLy8gU3lzdGVtIHJlbGVhc2VkIHRoZSBsb2NrICh0YWIgaGlkZGVuLCBsb3cgYmF0dGVyeSwgZXRjLikKICAgICAgICAvLyBXZSBsZWF2ZSB3YW50TG9ja1JlZi5jdXJyZW50IHVuY2hhbmdlZCBzbyB2aXNpYmlsaXR5Y2hhbmdlIGNhbiByZS1hY3F1aXJlLgogICAgICAgIGNvbnNvbGUubG9nKCJbdXNlV2FrZUxvY2tdIFNjcmVlbiB3YWtlIGxvY2sgcmVsZWFzZWQgYnkgc3lzdGVtLiIpOwogICAgICAgIGxvY2tSZWYuY3VycmVudCA9IG51bGw7CiAgICAgIH0pOwogICAgfSBjYXRjaCAoZXJyKSB7CiAgICAgIC8vIERPTUV4Y2VwdGlvbjogcGVybWlzc2lvbiBkZW5pZWQgb3Igbm90IHN1cHBvcnRlZCBpbiB0aGlzIGNvbnRleHQKICAgICAgY29uc29sZS53YXJuKCJbdXNlV2FrZUxvY2tdIENvdWxkIG5vdCBhY3F1aXJlIHdha2UgbG9jazoiLCBlcnIpOwogICAgfQogIH0sIFtdKTsKCiAgLy8g4pSA4pSAIFB1YmxpYyBBUEkg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgogIC8qKgogICAqIFJlcXVlc3QgdGhlIHNjcmVlbiB3YWtlIGxvY2suIENhbGwgdGhpcyB3aGVuIHRoZSBicmV3IHRpbWVyIHN0YXJ0cy4KICAgKiBTYWZlIHRvIGNhbGwgbXVsdGlwbGUgdGltZXMg4oCUIG5vLW9wcyBpZiBhbHJlYWR5IGhlbGQuCiAgICovCiAgY29uc3QgZW5hYmxlV2FrZUxvY2sgPSB1c2VDYWxsYmFjaygoKSA9PiB7CiAgICBpZiAoISgid2FrZUxvY2siIGluIG5hdmlnYXRvcikpIHsKICAgICAgY29uc29sZS53YXJuKCJbdXNlV2FrZUxvY2tdIFNjcmVlbiBXYWtlIExvY2sgQVBJIGlzIG5vdCBzdXBwb3J0ZWQgaW4gdGhpcyBicm93c2VyLiIpOwogICAgICByZXR1cm47CiAgICB9CiAgICBpZiAod2FudExvY2tSZWYuY3VycmVudCkgcmV0dXJuOyAvLyBhbHJlYWR5IHJlcXVlc3RlZAogICAgd2FudExvY2tSZWYuY3VycmVudCA9IHRydWU7CiAgICB2b2lkIGFjcXVpcmUoKTsKICB9LCBbYWNxdWlyZV0pOwoKICAvKioKICAgKiBSZWxlYXNlIHRoZSBzY3JlZW4gd2FrZSBsb2NrLiBDYWxsIHRoaXMgd2hlbiBicmV3aW5nIGVuZHMuCiAgICogQWxzbyBjYWxsZWQgYXV0b21hdGljYWxseSBvbiBjb21wb25lbnQgdW5tb3VudC4KICAgKi8KICBjb25zdCBkaXNhYmxlV2FrZUxvY2sgPSB1c2VDYWxsYmFjaygoKSA9PiB7CiAgICB3YW50TG9ja1JlZi5jdXJyZW50ID0gZmFsc2U7CiAgICBpZiAobG9ja1JlZi5jdXJyZW50KSB7CiAgICAgIGxvY2tSZWYuY3VycmVudC5yZWxlYXNlKCkuY2F0Y2goKCkgPT4ge30pOwogICAgICBsb2NrUmVmLmN1cnJlbnQgPSBudWxsOwogICAgfQogIH0sIFtdKTsKCiAgLy8g4pSA4pSAIFJlLWFjcXVpcmUgb24gdGFiIGZvY3VzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogIC8vIFRoZSBBUEkgcmVsZWFzZXMgbG9ja3Mgd2hlbiB0aGUgZG9jdW1lbnQgaXMgaGlkZGVuIChhcHAgc3dpdGNoLCBzbGVlcCBidXR0b24pLgogIC8vIFJlLXJlcXVlc3QgYXMgc29vbiBhcyB0aGUgcGFnZSBiZWNvbWVzIHZpc2libGUgYWdhaW4g4oCUIGJ1dCBvbmx5IGlmIHRoZSBjYWxsZXIKICAvLyBzdGlsbCB3YW50cyBpdCAod2FudExvY2tSZWYuY3VycmVudCA9PT0gdHJ1ZSkuCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGNvbnN0IG9uVmlzaWJpbGl0eUNoYW5nZSA9ICgpID0+IHsKICAgICAgaWYgKAogICAgICAgIGRvY3VtZW50LnZpc2liaWxpdHlTdGF0ZSA9PT0gInZpc2libGUiICYmCiAgICAgICAgd2FudExvY2tSZWYuY3VycmVudCAmJgogICAgICAgICFsb2NrUmVmLmN1cnJlbnQgJiYgLy8gbm90IGFscmVhZHkgaGVsZAogICAgICAgICJ3YWtlTG9jayIgaW4gbmF2aWdhdG9yCiAgICAgICkgewogICAgICAgIHZvaWQgYWNxdWlyZSgpOwogICAgICB9CiAgICB9OwoKICAgIGRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoInZpc2liaWxpdHljaGFuZ2UiLCBvblZpc2liaWxpdHlDaGFuZ2UpOwogICAgcmV0dXJuICgpID0+IGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoInZpc2liaWxpdHljaGFuZ2UiLCBvblZpc2liaWxpdHlDaGFuZ2UpOwogIH0sIFthY3F1aXJlXSk7IC8vIGFjcXVpcmUgaXMgc3RhYmxlIChubyBkZXBzKSwgc28gdGhpcyBlZmZlY3QgcnVucyBvbmNlCgogIC8vIOKUgOKUgCBVbm1vdW50IGNsZWFudXAg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgLy8gQ292ZXJzIGFsbCBleGl0IHBhdGhzOiAiRG9uZSBCcmV3aW5nIOKGkiIsIGJhY2sgbmF2aWdhdGlvbiwgaG90IHJlbG9hZCwgZXRjLgogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICByZXR1cm4gKCkgPT4gewogICAgICB3YW50TG9ja1JlZi5jdXJyZW50ID0gZmFsc2U7CiAgICAgIGxvY2tSZWYuY3VycmVudD8ucmVsZWFzZSgpLmNhdGNoKCgpID0+IHt9KTsKICAgICAgbG9ja1JlZi5jdXJyZW50ID0gbnVsbDsKICAgIH07CiAgfSwgW10pOyAvLyBpbnRlbnRpb25hbGx5IGVtcHR5IOKAlCBjbGVhbnVwIG9ubHksIG5vIHJlYWN0aXZlIGRlcHMKCiAgcmV0dXJuIHsgZW5hYmxlV2FrZUxvY2ssIGRpc2FibGVXYWtlTG9jayB9Owp9Cg=="}
+import { useRef, useEffect, useCallback } from "react";
+
+/**
+ * useWakeLock — keeps the iPhone/iPad screen awake during an active brew session.
+ *
+ * Why: iOS aggressively dims and locks the screen after ~30s of no touch input.
+ * During a pour-over the brewer watches the timer without touching the phone,
+ * which causes the screen to go dark at exactly the wrong moment.
+ *
+ * How: The Screen Wake Lock API (navigator.wakeLock) requests an OS-level hint
+ * to suppress auto-lock. It is automatically released by the browser whenever
+ * the document becomes hidden (e.g. user switches apps), so we re-acquire it
+ * on visibilitychange.
+ *
+ * Limitations:
+ * - Only works while the page is in the foreground (document.visibilityState === "visible")
+ * - The OS may still release the lock under low-battery or power-saving conditions
+ * - Not supported in all browsers (gracefully no-ops if unavailable)
+ * - Requires a secure context (HTTPS or localhost) — satisfied by the PWA
+ *
+ * Usage:
+ *   const { enableWakeLock, disableWakeLock } = useWakeLock();
+ *   enableWakeLock();   // call when brew starts
+ *   disableWakeLock();  // call when brew ends (unmount cleanup also handles this)
+ */
+export function useWakeLock() {
+  // The WakeLockSentinel returned by the API — null when we don't hold the lock
+  const lockRef = useRef<WakeLockSentinel | null>(null);
+
+  // Whether the caller has requested the lock (separate from whether we currently
+  // hold it — the OS can release it while the tab is hidden, so we track intent
+  // independently so the visibilitychange handler knows whether to re-acquire)
+  const wantLockRef = useRef(false);
+
+  // ── Internal acquire ────────────────────────────────────────────────────
+  const acquire = useCallback(async () => {
+    if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
+    try {
+      lockRef.current = await navigator.wakeLock.request("screen");
+      lockRef.current.addEventListener("release", () => {
+        // System released the lock (tab hidden, low battery, etc.)
+        // We leave wantLockRef.current unchanged so visibilitychange can re-acquire.
+        console.log("[useWakeLock] Screen wake lock released by system.");
+        lockRef.current = null;
+      });
+    } catch (err) {
+      // DOMException: permission denied or not supported in this context
+      console.warn("[useWakeLock] Could not acquire wake lock:", err);
+    }
+  }, []);
+
+  // ── Public API ──────────────────────────────────────────────────────────
+
+  /**
+   * Request the screen wake lock. Call this when the brew timer starts.
+   * Safe to call multiple times — no-ops if already held.
+   */
+  const enableWakeLock = useCallback(() => {
+    if (!("wakeLock" in navigator)) {
+      console.warn("[useWakeLock] Screen Wake Lock API is not supported in this browser.");
+      return;
+    }
+    if (wantLockRef.current) return; // already requested
+    wantLockRef.current = true;
+    void acquire();
+  }, [acquire]);
+
+  /**
+   * Release the screen wake lock. Call this when brewing ends.
+   * Also called automatically on component unmount.
+   */
+  const disableWakeLock = useCallback(() => {
+    wantLockRef.current = false;
+    if (lockRef.current) {
+      lockRef.current.release().catch(() => {});
+      lockRef.current = null;
+    }
+  }, []);
+
+  // ── Re-acquire on tab focus ─────────────────────────────────────────────
+  // The API releases locks when the document is hidden (app switch, sleep button).
+  // Re-request as soon as the page becomes visible again — but only if the caller
+  // still wants it (wantLockRef.current === true).
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (
+        document.visibilityState === "visible" &&
+        wantLockRef.current &&
+        !lockRef.current && // not already held
+        "wakeLock" in navigator
+      ) {
+        void acquire();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [acquire]); // acquire is stable (no deps), so this effect runs once
+
+  // ── Unmount cleanup ─────────────────────────────────────────────────────
+  // Covers all exit paths: "Done Brewing →", back navigation, hot reload, etc.
+  useEffect(() => {
+    return () => {
+      wantLockRef.current = false;
+      lockRef.current?.release().catch(() => {});
+      lockRef.current = null;
+    };
+  }, []); // intentionally empty — cleanup only, no reactive deps
+
+  return { enableWakeLock, disableWakeLock };
+}

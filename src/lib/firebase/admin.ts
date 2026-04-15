@@ -1,1 +1,54 @@
-{"data":"aW1wb3J0IHsgaW5pdGlhbGl6ZUFwcCwgZ2V0QXBwcywgY2VydCB9IGZyb20gImZpcmViYXNlLWFkbWluL2FwcCI7CmltcG9ydCB7IGdldEZpcmVzdG9yZSB9IGZyb20gImZpcmViYXNlLWFkbWluL2ZpcmVzdG9yZSI7CmltcG9ydCB7IGdldFN0b3JhZ2UgfSBmcm9tICJmaXJlYmFzZS1hZG1pbi9zdG9yYWdlIjsKCmZ1bmN0aW9uIGdldEFkbWluQXBwKCkgewogIGlmIChnZXRBcHBzKCkubGVuZ3RoID4gMCkgcmV0dXJuIGdldEFwcHMoKVswXTsKCiAgLy8gUHJlZmVyIGJhc2U2NC1lbmNvZGVkIHZhciAoYXZvaWRzIGFsbCBKU09OIGVzY2FwaW5nIGlzc3VlcyBvbiBWZXJjZWwpCiAgbGV0IHJhdzogc3RyaW5nIHwgdW5kZWZpbmVkOwogIGNvbnN0IGI2NCA9IHByb2Nlc3MuZW52LkZJUkVCQVNFX1NFUlZJQ0VfQUNDT1VOVF9CNjQ7CiAgaWYgKGI2NCkgewogICAgdHJ5IHsKICAgICAgcmF3ID0gQnVmZmVyLmZyb20oYjY0LnRyaW0oKSwgImJhc2U2NCIpLnRvU3RyaW5nKCJ1dGY4Iik7CiAgICB9IGNhdGNoIHsKICAgICAgY29uc29sZS5lcnJvcigiRmlyZWJhc2UgQWRtaW46IGZhaWxlZCB0byBkZWNvZGUgQjY0IGVudiB2YXIiKTsKICAgIH0KICB9CiAgaWYgKCFyYXcpIHsKICAgIHJhdyA9IHByb2Nlc3MuZW52LkZJUkVCQVNFX1NFUlZJQ0VfQUNDT1VOVF9KU09OOwogIH0KCiAgaWYgKCFyYXcgfHwgcmF3LnN0YXJ0c1dpdGgoJ3sidHlwZSI6InNlcnZpY2VfYWNjb3VudCIsLi4uJykpIHsKICAgIC8vIFBsYWNlaG9sZGVyIG9yIG1pc3Npbmcg4oCUIHNraXAgaW5pdCBkdXJpbmcgYnVpbGQKICAgIHJldHVybiBudWxsOwogIH0KICB0cnkgewogICAgY29uc3Qgc2VydmljZUFjY291bnQgPSBKU09OLnBhcnNlKHJhdyk7CiAgICAvLyBOb3JtYWxpemUgYW55IGRvdWJsZS1lc2NhcGVkIG5ld2xpbmVzIGluIHByaXZhdGUga2V5CiAgICBpZiAoc2VydmljZUFjY291bnQucHJpdmF0ZV9rZXkpIHsKICAgICAgc2VydmljZUFjY291bnQucHJpdmF0ZV9rZXkgPSBzZXJ2aWNlQWNjb3VudC5wcml2YXRlX2tleS5yZXBsYWNlKC9cXG4vZywgIlxuIik7CiAgICB9CiAgICByZXR1cm4gaW5pdGlhbGl6ZUFwcCh7CiAgICAgIGNyZWRlbnRpYWw6IGNlcnQoc2VydmljZUFjY291bnQpLAogICAgICBzdG9yYWdlQnVja2V0OiBwcm9jZXNzLmVudi5ORVhUX1BVQkxJQ19GSVJFQkFTRV9TVE9SQUdFX0JVQ0tFVCwKICAgIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigiRmlyZWJhc2UgQWRtaW4gaW5pdCBmYWlsZWQ6IiwgZXJyKTsKICAgIHJldHVybiBudWxsOwogIH0KfQoKZXhwb3J0IGZ1bmN0aW9uIGdldEFkbWluRGIoKSB7CiAgY29uc3QgYXBwID0gZ2V0QWRtaW5BcHAoKTsKICBjb25zdCBkYklkID0gKHByb2Nlc3MuZW52LkZJUkVTVE9SRV9EQVRBQkFTRV9JRCB8fCAiKGRlZmF1bHQpIikudHJpbSgpOwogIHJldHVybiBhcHAgPyBnZXRGaXJlc3RvcmUoYXBwLCBkYklkKSA6IGdldEZpcmVzdG9yZSgpOwp9CgpleHBvcnQgZnVuY3Rpb24gZ2V0QWRtaW5TdG9yYWdlKCkgewogIGdldEFkbWluQXBwKCk7CiAgcmV0dXJuIGdldFN0b3JhZ2UoKTsKfQoKLy8gS2VlcCBuYW1lZCBleHBvcnQgZm9yIGJhY2t3YXJkcyBjb21wYXQKZXhwb3J0IGNvbnN0IGFkbWluRGIgPSB7IF9sYXp5OiB0cnVlIH07Cg=="}
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+
+function getAdminApp() {
+  if (getApps().length > 0) return getApps()[0];
+
+  // Prefer base64-encoded var (avoids all JSON escaping issues on Vercel)
+  let raw: string | undefined;
+  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
+  if (b64) {
+    try {
+      raw = Buffer.from(b64.trim(), "base64").toString("utf8");
+    } catch {
+      console.error("Firebase Admin: failed to decode B64 env var");
+    }
+  }
+  if (!raw) {
+    raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  }
+
+  if (!raw || raw.startsWith('{"type":"service_account",...')) {
+    // Placeholder or missing — skip init during build
+    return null;
+  }
+  try {
+    const serviceAccount = JSON.parse(raw);
+    // Normalize any double-escaped newlines in private key
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+    }
+    return initializeApp({
+      credential: cert(serviceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    });
+  } catch (err) {
+    console.error("Firebase Admin init failed:", err);
+    return null;
+  }
+}
+
+export function getAdminDb() {
+  const app = getAdminApp();
+  const dbId = (process.env.FIRESTORE_DATABASE_ID || "(default)").trim();
+  return app ? getFirestore(app, dbId) : getFirestore();
+}
+
+export function getAdminStorage() {
+  getAdminApp();
+  return getStorage();
+}
+
+// Keep named export for backwards compat
+export const adminDb = { _lazy: true };

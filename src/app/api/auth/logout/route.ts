@@ -1,1 +1,9 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBjbGVhclNlc3Npb25Db29raWUgfSBmcm9tICJAL2xpYi9hdXRoL3Nlc3Npb24iOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVCgpIHsKICBjbGVhclNlc3Npb25Db29raWUoKTsKICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogdHJ1ZSB9KTsKfQo="}
+import { NextResponse } from "next/server";
+import { clearSessionCookie } from "@/lib/auth/session";
+
+export const dynamic = "force-dynamic";
+
+export async function POST() {
+  clearSessionCookie();
+  return NextResponse.json({ ok: true });
+}

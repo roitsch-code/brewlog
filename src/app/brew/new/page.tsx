@@ -1,1 +1,27 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VGbG93U3RvcmUgfSBmcm9tICJAL3N0b3JlL2Zsb3dTdG9yZSI7CmltcG9ydCBTdGVwTW9kZSBmcm9tICJAL2NvbXBvbmVudHMvZmxvdy9TdGVwTW9kZSI7CmltcG9ydCBTdGVwU2NhbiBmcm9tICJAL2NvbXBvbmVudHMvZmxvdy9TdGVwU2NhbiI7CmltcG9ydCBTdGVwQ29udGV4dCBmcm9tICJAL2NvbXBvbmVudHMvZmxvdy9TdGVwQ29udGV4dCI7CmltcG9ydCBTdGVwUmVjb21tZW5kIGZyb20gIkAvY29tcG9uZW50cy9mbG93L1N0ZXBSZWNvbW1lbmQiOwppbXBvcnQgU3RlcEJyZXcgZnJvbSAiQC9jb21wb25lbnRzL2Zsb3cvU3RlcEJyZXciOwppbXBvcnQgU3RlcExvZyBmcm9tICJAL2NvbXBvbmVudHMvZmxvdy9TdGVwTG9nIjsKaW1wb3J0IFN0ZXBTdW1tYXJ5IGZyb20gIkAvY29tcG9uZW50cy9mbG93L1N0ZXBTdW1tYXJ5IjsKaW1wb3J0IFN0ZXBNYXRjaFJlc3VsdCBmcm9tICJAL2NvbXBvbmVudHMvZmxvdy9TdGVwTWF0Y2hSZXN1bHQiOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTmV3QnJld1BhZ2UoKSB7CiAgY29uc3QgeyBzdGVwIH0gPSB1c2VGbG93U3RvcmUoKTsKCiAgcmV0dXJuICgKICAgIDw+CiAgICAgIHtzdGVwID09PSAic2NhbiIgJiYgPFN0ZXBTY2FuIC8+fQogICAgICB7c3RlcCA9PT0gIm1vZGUiICYmIDxTdGVwTW9kZSAvPn0KICAgICAge3N0ZXAgPT09ICJjb250ZXh0IiAmJiA8U3RlcENvbnRleHQgLz59CiAgICAgIHtzdGVwID09PSAicmVjb21tZW5kIiAmJiA8U3RlcFJlY29tbWVuZCAvPn0KICAgICAge3N0ZXAgPT09ICJicmV3IiAmJiA8U3RlcEJyZXcgLz59CiAgICAgIHtzdGVwID09PSAibG9nIiAmJiA8U3RlcExvZyAvPn0KICAgICAge3N0ZXAgPT09ICJzdW1tYXJ5IiAmJiA8U3RlcFN1bW1hcnkgLz59CiAgICAgIHtzdGVwID09PSAibWF0Y2hfcmVzdWx0IiAmJiA8U3RlcE1hdGNoUmVzdWx0IC8+fQogICAgPC8+CiAgKTsKfQo="}
+"use client";
+import { useFlowStore } from "@/store/flowStore";
+import StepMode from "@/components/flow/StepMode";
+import StepScan from "@/components/flow/StepScan";
+import StepContext from "@/components/flow/StepContext";
+import StepRecommend from "@/components/flow/StepRecommend";
+import StepBrew from "@/components/flow/StepBrew";
+import StepLog from "@/components/flow/StepLog";
+import StepSummary from "@/components/flow/StepSummary";
+import StepMatchResult from "@/components/flow/StepMatchResult";
+
+export default function NewBrewPage() {
+  const { step } = useFlowStore();
+
+  return (
+    <>
+      {step === "scan" && <StepScan />}
+      {step === "mode" && <StepMode />}
+      {step === "context" && <StepContext />}
+      {step === "recommend" && <StepRecommend />}
+      {step === "brew" && <StepBrew />}
+      {step === "log" && <StepLog />}
+      {step === "summary" && <StepSummary />}
+      {step === "match_result" && <StepMatchResult />}
+    </>
+  );
+}

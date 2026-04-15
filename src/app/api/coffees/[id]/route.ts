@@ -1,1 +1,17 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2V0QWRtaW5EYiB9IGZyb20gIkAvbGliL2ZpcmViYXNlL2FkbWluIjsKaW1wb3J0IHR5cGUgeyBDb2ZmZWUgfSBmcm9tICJAL2xpYi90eXBlcy9jb2ZmZWUiOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKF9yZXE6IE5leHRSZXF1ZXN0LCB7IHBhcmFtcyB9OiB7IHBhcmFtczogeyBpZDogc3RyaW5nIH0gfSkgewogIHRyeSB7CiAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgIGNvbnN0IGRvYyA9IGF3YWl0IGRiLmNvbGxlY3Rpb24oImNvZmZlZXMiKS5kb2MocGFyYW1zLmlkKS5nZXQoKTsKICAgIGlmICghZG9jLmV4aXN0cykgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKG51bGwsIHsgc3RhdHVzOiA0MDQgfSk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBpZDogZG9jLmlkLCAuLi5kb2MuZGF0YSgpIH0gYXMgQ29mZmVlKTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoImNvZmZlZSBHRVQgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbihudWxsLCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+import type { Coffee } from "@/lib/types/coffee";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getAdminDb();
+    const doc = await db.collection("coffees").doc(params.id).get();
+    if (!doc.exists) return NextResponse.json(null, { status: 404 });
+    return NextResponse.json({ id: doc.id, ...doc.data() } as Coffee);
+  } catch (err) {
+    console.error("coffee GET error:", err);
+    return NextResponse.json(null, { status: 500 });
+  }
+}

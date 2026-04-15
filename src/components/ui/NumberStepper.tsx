@@ -1,1 +1,49 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyBjbiB9IGZyb20gIkAvbGliL3V0aWxzL2NuIjsKCmludGVyZmFjZSBOdW1iZXJTdGVwcGVyUHJvcHMgewogIHZhbHVlOiBudW1iZXI7CiAgb25DaGFuZ2U6ICh2OiBudW1iZXIpID0+IHZvaWQ7CiAgc3RlcD86IG51bWJlcjsKICBtaW4/OiBudW1iZXI7CiAgbWF4PzogbnVtYmVyOwogIHVuaXQ/OiBzdHJpbmc7CiAgbGFiZWw/OiBzdHJpbmc7CiAgZGVjaW1hbHM/OiBudW1iZXI7CiAgY2xhc3NOYW1lPzogc3RyaW5nOwp9CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBOdW1iZXJTdGVwcGVyKHsKICB2YWx1ZSwgb25DaGFuZ2UsIHN0ZXAgPSAxLCBtaW4gPSAwLCBtYXggPSA5OTk5LAogIHVuaXQgPSAiIiwgbGFiZWwsIGRlY2ltYWxzID0gMCwgY2xhc3NOYW1lCn06IE51bWJlclN0ZXBwZXJQcm9wcykgewogIGNvbnN0IGRpc3BsYXkgPSBkZWNpbWFscyA+IDAgPyB2YWx1ZS50b0ZpeGVkKGRlY2ltYWxzKSA6IFN0cmluZyh2YWx1ZSk7CgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT17Y24oImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC0yIiwgY2xhc3NOYW1lKX0+CiAgICAgIHtsYWJlbCAmJiA8c3BhbiBjbGFzc05hbWU9InRleHQteHMgdGV4dC1icmV3LW11dGVkIHVwcGVyY2FzZSB0cmFja2luZy13aWRlc3QiPntsYWJlbH08L3NwYW4+fQogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMiPgogICAgICAgIDxidXR0b24KICAgICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uQ2hhbmdlKE1hdGgubWF4KG1pbiwgdmFsdWUgLSBzdGVwKSl9CiAgICAgICAgICBjbGFzc05hbWU9InctMTQgaC0xNCByb3VuZGVkLWZ1bGwgYmctYnJldy1zdXJmYWNlIGJvcmRlciBib3JkZXItYnJldy1ib3JkZXIgdGV4dC13aGl0ZSB0ZXh0LTJ4bCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBhY3RpdmU6c2NhbGUtOTUgdHJhbnNpdGlvbi10cmFuc2Zvcm0iCiAgICAgICAgICBhcmlhLWxhYmVsPSJEZWNyZWFzZSIKICAgICAgICA+CiAgICAgICAgICDiiJIKICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLXctWzgwcHhdIHRleHQtY2VudGVyIj4KICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iZm9udC1tb25vLW51bSB0ZXh0LTN4bCBmb250LW1lZGl1bSB0ZXh0LXdoaXRlIj57ZGlzcGxheX08L3NwYW4+CiAgICAgICAgICB7dW5pdCAmJiA8c3BhbiBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXNtIG1sLTEiPnt1bml0fTwvc3Bhbj59CiAgICAgICAgPC9kaXY+CiAgICAgICAgPGJ1dHRvbgogICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgb25DbGljaz17KCkgPT4gb25DaGFuZ2UoTWF0aC5taW4obWF4LCB2YWx1ZSArIHN0ZXApKX0KICAgICAgICAgIGNsYXNzTmFtZT0idy0xNCBoLTE0IHJvdW5kZWQtZnVsbCBiZy1icmV3LXN1cmZhY2UgYm9yZGVyIGJvcmRlci1icmV3LWJvcmRlciB0ZXh0LXdoaXRlIHRleHQtMnhsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGFjdGl2ZTpzY2FsZS05NSB0cmFuc2l0aW9uLXRyYW5zZm9ybSIKICAgICAgICAgIGFyaWEtbGFiZWw9IkluY3JlYXNlIgogICAgICAgID4KICAgICAgICAgICsKICAgICAgICA8L2J1dHRvbj4KICAgICAgPC9kaXY+CiAgICA8L2Rpdj4KICApOwp9Cg=="}
+"use client";
+import { cn } from "@/lib/utils/cn";
+
+interface NumberStepperProps {
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  min?: number;
+  max?: number;
+  unit?: string;
+  label?: string;
+  decimals?: number;
+  className?: string;
+}
+
+export default function NumberStepper({
+  value, onChange, step = 1, min = 0, max = 9999,
+  unit = "", label, decimals = 0, className
+}: NumberStepperProps) {
+  const display = decimals > 0 ? value.toFixed(decimals) : String(value);
+
+  return (
+    <div className={cn("flex flex-col items-center gap-2", className)}>
+      {label && <span className="text-xs text-brew-muted uppercase tracking-widest">{label}</span>}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, value - step))}
+          className="w-14 h-14 rounded-full bg-brew-surface border border-brew-border text-white text-2xl flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Decrease"
+        >
+          −
+        </button>
+        <div className="min-w-[80px] text-center">
+          <span className="font-mono-num text-3xl font-medium text-white">{display}</span>
+          {unit && <span className="text-brew-muted text-sm ml-1">{unit}</span>}
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, value + step))}
+          className="w-14 h-14 rounded-full bg-brew-surface border border-brew-border text-white text-2xl flex items-center justify-center active:scale-95 transition-transform"
+          aria-label="Increase"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}

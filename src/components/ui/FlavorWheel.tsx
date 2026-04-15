@@ -1,1 +1,382 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyBTQ0FfV0hFRUwsIFNDQV9DQVRFR09SSUVTIH0gZnJvbSAiQC9saWIvY29uc3RhbnRzL3NjYUZsYXZvcldoZWVsIjsKCi8vIOKUgOKUgOKUgCBnZW9tZXRyeSBoZWxwZXJzIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKZnVuY3Rpb24gcG9sYXIoY3g6IG51bWJlciwgY3k6IG51bWJlciwgcjogbnVtYmVyLCBhbmdsZTogbnVtYmVyKSB7CiAgcmV0dXJuIHsgeDogY3ggKyByICogTWF0aC5jb3MoYW5nbGUpLCB5OiBjeSArIHIgKiBNYXRoLnNpbihhbmdsZSkgfTsKfQoKLyoqIFNWRyBwYXRoIGZvciBhbiBhbm51bGFyIChyaW5nKSBzZWN0b3IuIHIxID0gb3V0ZXIgcmFkaXVzLCByMiA9IGlubmVyIHJhZGl1cy4gKi8KZnVuY3Rpb24gYW5udWxhclNlY3RvcigKICBjeDogbnVtYmVyLCBjeTogbnVtYmVyLAogIHIxOiBudW1iZXIsIHIyOiBudW1iZXIsCiAgc3RhcnRBbmdsZTogbnVtYmVyLCBlbmRBbmdsZTogbnVtYmVyLAopOiBzdHJpbmcgewogIGNvbnN0IGxhcmdlID0gZW5kQW5nbGUgLSBzdGFydEFuZ2xlID4gTWF0aC5QSSA/IDEgOiAwOwogIGNvbnN0IG8xID0gcG9sYXIoY3gsIGN5LCByMSwgc3RhcnRBbmdsZSk7CiAgY29uc3QgbzIgPSBwb2xhcihjeCwgY3ksIHIxLCBlbmRBbmdsZSk7CiAgY29uc3QgaTEgPSBwb2xhcihjeCwgY3ksIHIyLCBzdGFydEFuZ2xlKTsKICBjb25zdCBpMiA9IHBvbGFyKGN4LCBjeSwgcjIsIGVuZEFuZ2xlKTsKICByZXR1cm4gWwogICAgYE0gJHtvMS54fSAke28xLnl9YCwKICAgIGBBICR7cjF9ICR7cjF9IDAgJHtsYXJnZX0gMSAke28yLnh9ICR7bzIueX1gLAogICAgYEwgJHtpMi54fSAke2kyLnl9YCwKICAgIGBBICR7cjJ9ICR7cjJ9IDAgJHtsYXJnZX0gMCAke2kxLnh9ICR7aTEueX1gLAogICAgIloiLAogIF0uam9pbigiICIpOwp9CgovKiogQ29ycmVjdCByYWRpYWwgdGV4dCByb3RhdGlvbjogdGV4dCByZWFkcyBmcm9tIGNlbnRlciBvdXR3YXJkLCBzdGF5cyBsZWdpYmxlIGluIGJvdGggaGFsdmVzLiAqLwpmdW5jdGlvbiByYWRpYWxSb3RhdGlvbihtaWRBbmdsZVJhZDogbnVtYmVyKTogbnVtYmVyIHsKICBjb25zdCBkZWcgPSAobWlkQW5nbGVSYWQgKiAxODApIC8gTWF0aC5QSTsKICAvLyBMZWZ0IGhhbGYgKGJldHdlZW4gc3RyYWlnaHQtZG93biBhbmQgc3RyYWlnaHQtdXAgZ29pbmcgdGhlIGxvbmcgd2F5IHJvdW5kKTogZmxpcCAxODDCsAogIGNvbnN0IGlzTGVmdEhhbGYgPSBtaWRBbmdsZVJhZCA+IE1hdGguUEkgLyAyICYmIG1pZEFuZ2xlUmFkIDwgKDMgKiBNYXRoLlBJKSAvIDI7CiAgcmV0dXJuIGlzTGVmdEhhbGYgPyBkZWcgKyAxODAgOiBkZWc7Cn0KCi8vIOKUgOKUgOKUgCB0aW55IGNhdGVnb3J5IGljb25zIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAovLyBFYWNoIGljb24gaXMgYSBzbWFsbCBTVkcgZ3JvdXAgY2VudGVyZWQgYXQgKDAsMCkgaW4gYSDCsTMuNSB1bml0IGNvb3JkaW5hdGUKLy8gc3BhY2UuIFJlbmRlcmVkIGF0IHRoZSBpY29uIHBvc2l0aW9uIGluc2lkZSBlYWNoIGlubmVyLXJpbmcgc2VnbWVudC4KCmNvbnN0IElDT05TOiBSZWNvcmQ8c3RyaW5nLCBSZWFjdC5SZWFjdE5vZGU+ID0gewogICJGcnVpdHkiOiAoCiAgICA8ZyBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT17MC41NX0+CiAgICAgIDxjaXJjbGUgY3g9ey0xLjd9IGN5PXswLjZ9ICByPXsxLjF9IC8+CiAgICAgIDxjaXJjbGUgY3g9ezEuN30gIGN5PXswLjZ9ICByPXsxLjF9IC8+CiAgICAgIDxjaXJjbGUgY3g9ezB9ICAgIGN5PXstMS43fSByPXsxLjF9IC8+CiAgICA8L2c+CiAgKSwKICAiRmxvcmFsIjogKAogICAgPGcgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlV2lkdGg9ezAuNjV9IGZpbGw9Im5vbmUiIG9wYWNpdHk9ezAuNTV9PgogICAgICA8bGluZSB4MT17MH0geTE9ey0zLjJ9IHgyPXswfSB5Mj17My4yfSAvPgogICAgICA8bGluZSB4MT17LTIuOH0geTE9ey0xLjZ9IHgyPXsyLjh9IHkyPXsxLjZ9IC8+CiAgICAgIDxsaW5lIHgxPXstMi44fSB5MT17MS42fSAgeDI9ezIuOH0geTI9ey0xLjZ9IC8+CiAgICAgIDxjaXJjbGUgY3g9ezB9IGN5PXswfSByPXswLjg1fSBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSJub25lIiAvPgogICAgPC9nPgogICksCiAgIlN3ZWV0IjogKAogICAgPGcgZmlsbD0id2hpdGUiIG9wYWNpdHk9ezAuNTV9PgogICAgICA8cGF0aCBkPSJNMCwtMy4yIEMxLjksLTAuNSAyLDEuNSAwLDMuMiBDLTIsMS41LTEuOSwtMC41IDAsLTMuMloiIC8+CiAgICA8L2c+CiAgKSwKICAiTnV0dHkgJiBDb2NvYSI6ICgKICAgIDxnIHN0cm9rZT0id2hpdGUiIHN0cm9rZVdpZHRoPXswLjd9IGZpbGw9Im5vbmUiIG9wYWNpdHk9ezAuNTV9PgogICAgICA8ZWxsaXBzZSBjeD17MH0gY3k9ezB9IHJ4PXsxLjh9IHJ5PXszfSAvPgogICAgICA8cGF0aCBkPSJNMCwtMyBDMC45LC0xIDAuOSwxIDAsMyBNMCwtMyBDLTAuOSwtMS0wLjksMSAwLDMiIC8+CiAgICA8L2c+CiAgKSwKICAiU3BpY2VzIjogKAogICAgPGcgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlV2lkdGg9ezAuNjV9IGZpbGw9Im5vbmUiIG9wYWNpdHk9ezAuNTV9PgogICAgICA8bGluZSB4MT17MH0geTE9ey0zLjJ9IHgyPXswfSB5Mj17My4yfSAvPgogICAgICA8bGluZSB4MT17LTMuMn0geTE9ezB9IHgyPXszLjJ9IHkyPXswfSAvPgogICAgICA8bGluZSB4MT17LTIuM30geTE9ey0yLjN9IHgyPXsyLjN9IHkyPXsyLjN9IC8+CiAgICAgIDxsaW5lIHgxPXstMi4zfSB5MT17Mi4zfSAgeDI9ezIuM30geTI9ey0yLjN9IC8+CiAgICA8L2c+CiAgKSwKICAiUm9hc3RlZCI6ICgKICAgIDxnIGZpbGw9IndoaXRlIiBvcGFjaXR5PXswLjU1fT4KICAgICAgPHJlY3QgeD17LTMuMn0geT17MC41fSAgIHdpZHRoPXsxLjV9IGhlaWdodD17Mi44fSByeD17MC4zfSAvPgogICAgICA8cmVjdCB4PXstMC44fSB5PXstMX0gICAgd2lkdGg9ezEuNX0gaGVpZ2h0PXs0LjN9IHJ4PXswLjN9IC8+CiAgICAgIDxyZWN0IHg9ezEuN30gIHk9ey0yLjh9ICB3aWR0aD17MS41fSBoZWlnaHQ9ezYuMX0gcng9ezAuM30gLz4KICAgIDwvZz4KICApLAogICJTb3VyICYgRmVybWVudGVkIjogKAogICAgPGcgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlV2lkdGg9ezAuN30gZmlsbD0ibm9uZSIgb3BhY2l0eT17MC41NX0+CiAgICAgIDxwYXRoIGQ9Ik0tMy4yLDAgQy0xLjUsLTIuNSAxLjUsLTIuNSAzLjIsMCIgLz4KICAgICAgPHBhdGggZD0iTS0zLjIsMCBDLTEuNSwyLjUgMS41LDIuNSAzLjIsMCIgLz4KICAgICAgPGNpcmNsZSBjeD17MH0gY3k9ezB9IHI9ezAuN30gZmlsbD0id2hpdGUiIHN0cm9rZT0ibm9uZSIgLz4KICAgIDwvZz4KICApLAogICJIZXJiYWwgJiBHcmVlbiI6ICgKICAgIDxnIHN0cm9rZT0id2hpdGUiIHN0cm9rZVdpZHRoPXswLjd9IGZpbGw9Im5vbmUiIG9wYWNpdHk9ezAuNTV9PgogICAgICA8cGF0aCBkPSJNMCwzLjIgQzIuMiwwLjUgMi41LC0yIDAsLTMuMiBDLTIuNSwtMi0yLjIsMC41IDAsMy4yWiIgLz4KICAgICAgPGxpbmUgeDE9ezB9IHkxPXstMi44fSB4Mj17MH0geTI9ezMuMn0gLz4KICAgIDwvZz4KICApLAogICJTYXZvcnkiOiAoCiAgICA8ZyBzdHJva2U9IndoaXRlIiBzdHJva2VXaWR0aD17MC43fSBmaWxsPSJub25lIiBvcGFjaXR5PXswLjU1fT4KICAgICAgPHBhdGggZD0iTS0zLDAuNiBDLTIuNSwtMi40IDIuNSwtMi40IDMsMC42WiIgLz4KICAgICAgPHJlY3QgeD17LTAuOX0geT17MC42fSB3aWR0aD17MS44fSBoZWlnaHQ9ezIuOH0gLz4KICAgIDwvZz4KICApLAp9OwoKLy8g4pSA4pSA4pSAIGNvbXBvbmVudCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCmludGVyZmFjZSBGbGF2b3JXaGVlbFByb3BzIHsKICBtb2RlOiAic2VsZWN0IiB8ICJwcm9maWxlIjsKICAvLyBzZWxlY3QgbW9kZQogIGFjdGl2ZUNhdGVnb3J5Pzogc3RyaW5nIHwgbnVsbDsKICBvbkNhdGVnb3J5U2VsZWN0PzogKGNhdDogc3RyaW5nIHwgbnVsbCkgPT4gdm9pZDsKICBzZWxlY3RlZEZsYXZvcnM/OiBzdHJpbmdbXTsKICAvLyBwcm9maWxlIG1vZGUKICBwcm9maWxlRGF0YT86IHsgbGFiZWw6IHN0cmluZzsgdmFsdWU6IG51bWJlciB9W107CiAgLy8gc2hhcmVkCiAgc2l6ZT86IG51bWJlcjsKfQoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gRmxhdm9yV2hlZWwoewogIG1vZGUsCiAgYWN0aXZlQ2F0ZWdvcnkgPSBudWxsLAogIG9uQ2F0ZWdvcnlTZWxlY3QsCiAgc2VsZWN0ZWRGbGF2b3JzID0gW10sCiAgcHJvZmlsZURhdGEsCiAgc2l6ZSA9IDI4MCwKfTogRmxhdm9yV2hlZWxQcm9wcykgewogIGNvbnN0IGN4ID0gc2l6ZSAvIDI7CiAgY29uc3QgY3kgPSBzaXplIC8gMjsKICBjb25zdCBzICA9IHNpemUgLyAyODA7IC8vIHNjYWxlIGZhY3RvcgoKICAvLyBSaW5nIHJhZGlpCiAgY29uc3QgckNlbnRlciA9IDI0ICogczsgICAvLyBjZW50ZXIgZGVhZC16b25lCiAgY29uc3QgcklubmVyICA9IDk0ICogczsgICAvLyBvdXRlciBlZGdlIG9mIGNhdGVnb3J5IHJpbmcKICBjb25zdCByT3V0ZXIgID0gMTM1ICogczsgIC8vIG91dGVyIGVkZ2Ugb2Ygc3ViLWNhdGVnb3J5IHJpbmcKCiAgLy8gTm8gYW5ndWxhciBnYXAg4oCUIGV2ZW4td2lkdGggZ2FwcyBhcmUgcmVuZGVyZWQgYXMgcmFkaWFsIG92ZXJsYXkgbGluZXMKICBjb25zdCBuICAgICA9IFNDQV9DQVRFR09SSUVTLmxlbmd0aDsgICAgICAvLyA5CiAgY29uc3Qgc2xpY2UgPSAoMiAqIE1hdGguUEkpIC8gbjsKCiAgY29uc3QgaXNTZWxlY3QgPSBtb2RlID09PSAic2VsZWN0IjsKCiAgLy8gSWNvbiBwb3NpdGlvbjogaW5uZXIgNDAlIG9mIGNhdGVnb3J5IHJpbmcKICBjb25zdCBpY29uUiA9IHJDZW50ZXIgKyAocklubmVyIC0gckNlbnRlcikgKiAwLjM2OwogIC8vIFRleHQgcG9zaXRpb246IG91dGVyIDY4JSBvZiBjYXRlZ29yeSByaW5nIOKAlCB1c2VkIGZvciBBTEwgbGFiZWxzIChzaW5nbGUgYW5kIG11bHRpLWxpbmUpCiAgY29uc3QgdGV4dFIgPSByQ2VudGVyICsgKHJJbm5lciAtIHJDZW50ZXIpICogMC43MDsKICAvLyBTdWItY2F0ZWdvcnkgdGV4dCByYWRpdXM6IG1pZGRsZSBvZiBvdXRlciByaW5nCiAgY29uc3Qgc3ViVGV4dFIgPSBySW5uZXIgKyAock91dGVyIC0gcklubmVyKSAqIDAuNTA7CgogIGNvbnN0IGJhc2VGb250U2l6ZSA9IE1hdGgubWF4KDYuNSAqIHMsIDUuOCk7CiAgY29uc3Qgc3ViRm9udFNpemUgID0gTWF0aC5tYXgoNS41ICogcywgNS4wKTsKCiAgLy8gR2FwIGxpbmUgd2lkdGhzIChpbiB2aWV3Qm94IHVuaXRzKQogIGNvbnN0IGNhdExpbmVXID0gMS44ICogczsKICBjb25zdCBzdWJMaW5lVyA9IDEuMiAqIHM7CgogIHJldHVybiAoCiAgICA8c3ZnCiAgICAgIHdpZHRoPSIxMDAlIgogICAgICB2aWV3Qm94PXtgMCAwICR7c2l6ZX0gJHtzaXplfWB9CiAgICAgIGFyaWEtbGFiZWw9IlNDQSBDb2ZmZWUgRmxhdm9yIFdoZWVsIgogICAgICBzdHlsZT17eyBkaXNwbGF5OiAiYmxvY2siIH19CiAgICA+CiAgICAgIHsvKiDilIDilIAgYmFja2dyb3VuZCDilIDilIAgKi99CiAgICAgIDxjaXJjbGUgY3g9e2N4fSBjeT17Y3l9IHI9e3JPdXRlciArIDJ9IGZpbGw9IiMxMTEiIC8+CgogICAgICB7U0NBX0NBVEVHT1JJRVMubWFwKChjYXQsIGkpID0+IHsKICAgICAgICBjb25zdCB7IHNoYWRlLCBzdWJjYXRlZ29yaWVzIH0gPSBTQ0FfV0hFRUxbY2F0XTsKICAgICAgICBjb25zdCBpc0FjdGl2ZSA9IGFjdGl2ZUNhdGVnb3J5ID09PSBjYXQ7CiAgICAgICAgY29uc3QgaGFzU2VsICAgPSBzZWxlY3RlZEZsYXZvcnMuc29tZShmID0+CiAgICAgICAgICBPYmplY3QudmFsdWVzKHN1YmNhdGVnb3JpZXMpLmZsYXQoKS5pbmNsdWRlcyhmKQogICAgICAgICk7CgogICAgICAgIC8vIENhdGVnb3J5IGFuZ3VsYXIgc3BhbiAoZnVsbCBzbGljZSwgbm8gZ2FwIOKAlCBnYXBzIHJlbmRlcmVkIGFzIG92ZXJsYXkgbGluZXMpCiAgICAgICAgY29uc3QgY2F0U3RhcnQgPSBzbGljZSAqIGkgLSBNYXRoLlBJIC8gMjsKICAgICAgICBjb25zdCBjYXRFbmQgICA9IHNsaWNlICogKGkgKyAxKSAtIE1hdGguUEkgLyAyOwogICAgICAgIGNvbnN0IG1pZEFuZ2xlID0gKGNhdFN0YXJ0ICsgY2F0RW5kKSAvIDI7CgogICAgICAgIC8vIEZpbGw6IHNsaWdodGx5IGJyaWdodGVyIHdoZW4gYWN0aXZlIG9yIGhhcyBzZWxlY3Rpb25zCiAgICAgICAgY29uc3QgZmlsbCA9IGlzQWN0aXZlID8gIiM0ODQ4NDgiCiAgICAgICAgICA6IGhhc1NlbCAgID8gIiMzNjM2MzYiCiAgICAgICAgICA6IHNoYWRlOwoKICAgICAgICAvLyDilIDilIAgSW5uZXIgcmluZzogY2F0ZWdvcnkgc2VnbWVudCDilIDilIAKICAgICAgICBjb25zdCBjYXRQYXRoID0gYW5udWxhclNlY3RvcihjeCwgY3ksIHJJbm5lciwgckNlbnRlciwgY2F0U3RhcnQsIGNhdEVuZCk7CgogICAgICAgIC8vIFRleHQgcm90YXRpb24gKHJhZGlhbCwgY29ycmVjdGVkIOKAlCBubyArOTDCsCBidWcpCiAgICAgICAgY29uc3QgdGV4dFJvdERlZyA9IHJhZGlhbFJvdGF0aW9uKG1pZEFuZ2xlKTsKCiAgICAgICAgLy8gSWNvbiBwb3NpdGlvbiAodXByaWdodCwganVzdCB0cmFuc2xhdGVkKQogICAgICAgIGNvbnN0IGljb25Qb3MgPSBwb2xhcihjeCwgY3ksIGljb25SLCBtaWRBbmdsZSk7CiAgICAgICAgY29uc3QgaWNvblNjYWxlID0gMC44OCAqIHM7CgogICAgICAgIC8vIEFsbCBsYWJlbHMgKHNpbmdsZS13b3JkIGFuZCBtdWx0aS1saW5lKSBzaXQgYXQgdGV4dFIsIGFib3ZlIHRoZSBpY29uCiAgICAgICAgY29uc3QgbGFiZWxQYXJ0cyA9IGNhdC5pbmNsdWRlcygiICYgIikgPyBjYXQuc3BsaXQoIiAmICIpIDogbnVsbDsKICAgICAgICBjb25zdCBsYWJlbFBvcyA9IHBvbGFyKGN4LCBjeSwgdGV4dFIsIG1pZEFuZ2xlKTsKCiAgICAgICAgLy8gU3ViLWNhdGVnb3JpZXMKICAgICAgICBjb25zdCBzdWJLZXlzICA9IE9iamVjdC5rZXlzKHN1YmNhdGVnb3JpZXMpOwogICAgICAgIGNvbnN0IHN1YlNsaWNlID0gKGNhdEVuZCAtIGNhdFN0YXJ0KSAvIHN1YktleXMubGVuZ3RoOwoKICAgICAgICByZXR1cm4gKAogICAgICAgICAgPGcga2V5PXtjYXR9PgogICAgICAgICAgICB7LyogQ2F0ZWdvcnkgc2VnbWVudCAqL30KICAgICAgICAgICAgPHBhdGgKICAgICAgICAgICAgICBkPXtjYXRQYXRofQogICAgICAgICAgICAgIGZpbGw9e2ZpbGx9CiAgICAgICAgICAgICAgc3Ryb2tlPSJub25lIgogICAgICAgICAgICAgIHN0eWxlPXtpc1NlbGVjdCA/IHsgY3Vyc29yOiAicG9pbnRlciIgfSA6IHVuZGVmaW5lZH0KICAgICAgICAgICAgICBvbkNsaWNrPXtpc1NlbGVjdCA/ICgpID0+IG9uQ2F0ZWdvcnlTZWxlY3Q/Lihpc0FjdGl2ZSA/IG51bGwgOiBjYXQpIDogdW5kZWZpbmVkfQogICAgICAgICAgICAvPgoKICAgICAgICAgICAgey8qIFRpbnkgaWNvbiAodXByaWdodCwgbm90IHJvdGF0ZWQpICovfQogICAgICAgICAgICA8ZwogICAgICAgICAgICAgIHRyYW5zZm9ybT17YHRyYW5zbGF0ZSgke2ljb25Qb3MueH0sJHtpY29uUG9zLnl9KSBzY2FsZSgke2ljb25TY2FsZX0pYH0KICAgICAgICAgICAgICBzdHlsZT17eyBwb2ludGVyRXZlbnRzOiAibm9uZSIgfX0KICAgICAgICAgICAgPgogICAgICAgICAgICAgIHtJQ09OU1tjYXRdfQogICAgICAgICAgICA8L2c+CgogICAgICAgICAgICB7LyogQ2F0ZWdvcnkgbGFiZWwg4oCUIHJvdGF0ZWQgcmFkaWFsbHksIGFsd2F5cyBhdCB0ZXh0Ui4KICAgICAgICAgICAgICAgIE11bHRpLXdvcmQgY2F0ZWdvcmllcyBzcGxpdCBpbnRvIHR3byB0c3BhbiBsaW5lcy4gKi99CiAgICAgICAgICAgIHtsYWJlbFBhcnRzID8gKAogICAgICAgICAgICAgIDx0ZXh0CiAgICAgICAgICAgICAgICB4PXtsYWJlbFBvcy54fQogICAgICAgICAgICAgICAgeT17bGFiZWxQb3MueX0KICAgICAgICAgICAgICAgIGZvbnRTaXplPXtiYXNlRm9udFNpemUgKiAwLjg4fQogICAgICAgICAgICAgICAgZm9udEZhbWlseT0ic2Fucy1zZXJpZiIKICAgICAgICAgICAgICAgIGZvbnRXZWlnaHQ9e2lzQWN0aXZlID8gIjcwMCIgOiAiNTAwIn0KICAgICAgICAgICAgICAgIGZpbGw9IndoaXRlIgogICAgICAgICAgICAgICAgZmlsbE9wYWNpdHk9e2lzQWN0aXZlID8gMC45NSA6IGhhc1NlbCA/IDAuODUgOiAwLjY1fQogICAgICAgICAgICAgICAgdGV4dEFuY2hvcj0ibWlkZGxlIgogICAgICAgICAgICAgICAgZG9taW5hbnRCYXNlbGluZT0ibWlkZGxlIgogICAgICAgICAgICAgICAgdHJhbnNmb3JtPXtgcm90YXRlKCR7dGV4dFJvdERlZ30sJHtsYWJlbFBvcy54fSwke2xhYmVsUG9zLnl9KWB9CiAgICAgICAgICAgICAgICBzdHlsZT17eyBwb2ludGVyRXZlbnRzOiAibm9uZSIgfX0KICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICA8dHNwYW4geD17bGFiZWxQb3MueH0gZHk9Ii0wLjY1ZW0iPntsYWJlbFBhcnRzWzBdfSAmYW1wOzwvdHNwYW4+CiAgICAgICAgICAgICAgICA8dHNwYW4geD17bGFiZWxQb3MueH0gZHk9IjEuM2VtIj57bGFiZWxQYXJ0c1sxXX08L3RzcGFuPgogICAgICAgICAgICAgIDwvdGV4dD4KICAgICAgICAgICAgKSA6ICgKICAgICAgICAgICAgICA8dGV4dAogICAgICAgICAgICAgICAgeD17bGFiZWxQb3MueH0KICAgICAgICAgICAgICAgIHk9e2xhYmVsUG9zLnl9CiAgICAgICAgICAgICAgICBmb250U2l6ZT17YmFzZUZvbnRTaXplfQogICAgICAgICAgICAgICAgZm9udEZhbWlseT0ic2Fucy1zZXJpZiIKICAgICAgICAgICAgICAgIGZvbnRXZWlnaHQ9e2lzQWN0aXZlID8gIjcwMCIgOiAiNTAwIn0KICAgICAgICAgICAgICAgIGZpbGw9IndoaXRlIgogICAgICAgICAgICAgICAgZmlsbE9wYWNpdHk9e2lzQWN0aXZlID8gMC45NSA6IGhhc1NlbCA/IDAuODUgOiAwLjY1fQogICAgICAgICAgICAgICAgdGV4dEFuY2hvcj0ibWlkZGxlIgogICAgICAgICAgICAgICAgZG9taW5hbnRCYXNlbGluZT0ibWlkZGxlIgogICAgICAgICAgICAgICAgdHJhbnNmb3JtPXtgcm90YXRlKCR7dGV4dFJvdERlZ30sJHtsYWJlbFBvcy54fSwke2xhYmVsUG9zLnl9KWB9CiAgICAgICAgICAgICAgICBzdHlsZT17eyBwb2ludGVyRXZlbnRzOiAibm9uZSIgfX0KICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICB7Y2F0fQogICAgICAgICAgICAgIDwvdGV4dD4KICAgICAgICAgICAgKX0KCiAgICAgICAgICAgIHsvKiBTdWItY2F0ZWdvcnkgcmluZyAqL30KICAgICAgICAgICAge3N1YktleXMubWFwKChzdWIsIHNpKSA9PiB7CiAgICAgICAgICAgICAgY29uc3Qgc3ViU3RhcnQgPSBjYXRTdGFydCArIHN1YlNsaWNlICogc2k7CiAgICAgICAgICAgICAgY29uc3Qgc3ViRW5kICAgPSBjYXRTdGFydCArIHN1YlNsaWNlICogKHNpICsgMSk7CiAgICAgICAgICAgICAgY29uc3Qgc3ViTWlkICAgPSAoc3ViU3RhcnQgKyBzdWJFbmQpIC8gMjsKCiAgICAgICAgICAgICAgY29uc3Qgc3ViUGF0aCAgPSBhbm51bGFyU2VjdG9yKGN4LCBjeSwgck91dGVyLCBySW5uZXIsIHN1YlN0YXJ0LCBzdWJFbmQpOwogICAgICAgICAgICAgIGNvbnN0IHN1YkZpbGwgID0gaXNBY3RpdmUgPyAiIzMyMzIzMiIgOiAiIzFhMWExYSI7CiAgICAgICAgICAgICAgY29uc3Qgc3ViUG9zICAgPSBwb2xhcihjeCwgY3ksIHN1YlRleHRSLCBzdWJNaWQpOwogICAgICAgICAgICAgIGNvbnN0IHN1YlJvdCAgID0gcmFkaWFsUm90YXRpb24oc3ViTWlkKTsKCiAgICAgICAgICAgICAgcmV0dXJuICgKICAgICAgICAgICAgICAgIDxnIGtleT17c3VifT4KICAgICAgICAgICAgICAgICAgPHBhdGgKICAgICAgICAgICAgICAgICAgICBkPXtzdWJQYXRofQogICAgICAgICAgICAgICAgICAgIGZpbGw9e3N1YkZpbGx9CiAgICAgICAgICAgICAgICAgICAgZmlsbE9wYWNpdHk9e2lzQWN0aXZlID8gMC45NSA6IDAuOH0KICAgICAgICAgICAgICAgICAgICBzdHJva2U9Im5vbmUiCiAgICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICAgIDx0ZXh0CiAgICAgICAgICAgICAgICAgICAgeD17c3ViUG9zLnh9CiAgICAgICAgICAgICAgICAgICAgeT17c3ViUG9zLnl9CiAgICAgICAgICAgICAgICAgICAgZm9udFNpemU9e3N1YkZvbnRTaXplfQogICAgICAgICAgICAgICAgICAgIGZvbnRGYW1pbHk9InNhbnMtc2VyaWYiCiAgICAgICAgICAgICAgICAgICAgZmlsbD0id2hpdGUiCiAgICAgICAgICAgICAgICAgICAgZmlsbE9wYWNpdHk9e2lzQWN0aXZlID8gMC43NSA6IDAuMzh9CiAgICAgICAgICAgICAgICAgICAgdGV4dEFuY2hvcj0ibWlkZGxlIgogICAgICAgICAgICAgICAgICAgIGRvbWluYW50QmFzZWxpbmU9Im1pZGRsZSIKICAgICAgICAgICAgICAgICAgICB0cmFuc2Zvcm09e2Byb3RhdGUoJHtzdWJSb3R9LCR7c3ViUG9zLnh9LCR7c3ViUG9zLnl9KWB9CiAgICAgICAgICAgICAgICAgICAgc3R5bGU9e3sgcG9pbnRlckV2ZW50czogIm5vbmUiIH19CiAgICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgICB7c3VifQogICAgICAgICAgICAgICAgICA8L3RleHQ+CiAgICAgICAgICAgICAgICA8L2c+CiAgICAgICAgICAgICAgKTsKICAgICAgICAgICAgfSl9CiAgICAgICAgICA8L2c+CiAgICAgICAgKTsKICAgICAgfSl9CgogICAgICB7Lyog4pSA4pSAIEV2ZW4td2lkdGggcmFkaWFsIGRpdmlkZXJzIOKAlCBkcmF3biBvbiB0b3Agb2Ygc2VnbWVudHMg4pSA4pSAICovfQogICAgICB7LyogQ2F0ZWdvcnkgYm91bmRhcmllczogZnVsbCBoZWlnaHQgckNlbnRlciDihpIgck91dGVyICovfQogICAgICB7U0NBX0NBVEVHT1JJRVMubWFwKChfLCBpKSA9PiB7CiAgICAgICAgY29uc3QgYW5nbGUgPSBzbGljZSAqIGkgLSBNYXRoLlBJIC8gMjsKICAgICAgICBjb25zdCBwMSA9IHBvbGFyKGN4LCBjeSwgckNlbnRlciwgYW5nbGUpOwogICAgICAgIGNvbnN0IHAyID0gcG9sYXIoY3gsIGN5LCByT3V0ZXIgKyAyLCBhbmdsZSk7CiAgICAgICAgcmV0dXJuICgKICAgICAgICAgIDxsaW5lIGtleT17YGNkaXYtJHtpfWB9CiAgICAgICAgICAgIHgxPXtwMS54fSB5MT17cDEueX0geDI9e3AyLnh9IHkyPXtwMi55fQogICAgICAgICAgICBzdHJva2U9IiMxMTEiIHN0cm9rZVdpZHRoPXtjYXRMaW5lV30KICAgICAgICAgIC8+CiAgICAgICAgKTsKICAgICAgfSl9CiAgICAgIHsvKiBTdWJjYXRlZ29yeSBib3VuZGFyaWVzOiBvdXRlciByaW5nIG9ubHkgcklubmVyIOKGkiByT3V0ZXIgKi99CiAgICAgIHtTQ0FfQ0FURUdPUklFUy5tYXAoKGNhdCwgaSkgPT4gewogICAgICAgIGNvbnN0IHsgc3ViY2F0ZWdvcmllcyB9ID0gU0NBX1dIRUVMW2NhdF07CiAgICAgICAgY29uc3Qgc3ViS2V5cyA9IE9iamVjdC5rZXlzKHN1YmNhdGVnb3JpZXMpOwogICAgICAgIGNvbnN0IGNhdFN0YXJ0ID0gc2xpY2UgKiBpIC0gTWF0aC5QSSAvIDI7CiAgICAgICAgY29uc3Qgc3ViU2xpY2UgPSBzbGljZSAvIHN1YktleXMubGVuZ3RoOwogICAgICAgIHJldHVybiBzdWJLZXlzLnNsaWNlKDEpLm1hcCgoXywgc2kpID0+IHsKICAgICAgICAgIGNvbnN0IGFuZ2xlID0gY2F0U3RhcnQgKyBzdWJTbGljZSAqIChzaSArIDEpOwogICAgICAgICAgY29uc3QgcDEgPSBwb2xhcihjeCwgY3ksIHJJbm5lciwgYW5nbGUpOwogICAgICAgICAgY29uc3QgcDIgPSBwb2xhcihjeCwgY3ksIHJPdXRlciArIDIsIGFuZ2xlKTsKICAgICAgICAgIHJldHVybiAoCiAgICAgICAgICAgIDxsaW5lIGtleT17YHNkaXYtJHtjYXR9LSR7c2l9YH0KICAgICAgICAgICAgICB4MT17cDEueH0geTE9e3AxLnl9IHgyPXtwMi54fSB5Mj17cDIueX0KICAgICAgICAgICAgICBzdHJva2U9IiMxMTEiIHN0cm9rZVdpZHRoPXtzdWJMaW5lV30KICAgICAgICAgICAgLz4KICAgICAgICAgICk7CiAgICAgICAgfSk7CiAgICAgIH0pfQoKICAgICAgey8qIOKUgOKUgCBjZW50ZXIgY2lyY2xlIOKUgOKUgCAqL30KICAgICAgPGNpcmNsZQogICAgICAgIGN4PXtjeH0gY3k9e2N5fSByPXtyQ2VudGVyIC0gMX0KICAgICAgICBmaWxsPSIjMGUwZTBlIgogICAgICAgIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEyKSIKICAgICAgICBzdHJva2VXaWR0aD0iMC44IgogICAgICAgIHN0eWxlPXtpc1NlbGVjdCAmJiBhY3RpdmVDYXRlZ29yeSA/IHsgY3Vyc29yOiAicG9pbnRlciIgfSA6IHVuZGVmaW5lZH0KICAgICAgICBvbkNsaWNrPXtpc1NlbGVjdCAmJiBhY3RpdmVDYXRlZ29yeSA/ICgpID0+IG9uQ2F0ZWdvcnlTZWxlY3Q/LihudWxsKSA6IHVuZGVmaW5lZH0KICAgICAgLz4KICAgICAgPHRleHQKICAgICAgICB4PXtjeH0geT17Y3l9CiAgICAgICAgZm9udFNpemU9e01hdGgubWF4KDcuNSAqIHMsIDYuNSl9CiAgICAgICAgZm9udEZhbWlseT0ic2Fucy1zZXJpZiIKICAgICAgICBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMzUpIgogICAgICAgIHRleHRBbmNob3I9Im1pZGRsZSIKICAgICAgICBkb21pbmFudEJhc2VsaW5lPSJtaWRkbGUiCiAgICAgICAgc3R5bGU9e3sgcG9pbnRlckV2ZW50czogIm5vbmUiLCBsZXR0ZXJTcGFjaW5nOiAiMC4wNWVtIiB9fQogICAgICA+CiAgICAgICAge2lzU2VsZWN0ICYmIGFjdGl2ZUNhdGVnb3J5ID8gIsOXIiA6ICJTQ0EifQogICAgICA8L3RleHQ+CgogICAgICB7Lyog4pSA4pSAIHByb2ZpbGUgbW9kZTogcmFkYXIgcG9seWdvbiDilIDilIAgKi99CiAgICAgIHttb2RlID09PSAicHJvZmlsZSIgJiYgcHJvZmlsZURhdGEgJiYgcHJvZmlsZURhdGEubGVuZ3RoID09PSBuICYmICgoKSA9PiB7CiAgICAgICAgLy8gUmFkYXIgcG9seWdvbiBkcmF3biBpbnNpZGUgdGhlIGlubmVyIHJpbmcKICAgICAgICBjb25zdCByYWRhck1heFIgPSByQ2VudGVyICsgKHJJbm5lciAtIHJDZW50ZXIpICogMC44NTsKICAgICAgICBjb25zdCB2ZXJ0aWNlcyAgPSBTQ0FfQ0FURUdPUklFUy5tYXAoKGNhdCwgaSkgPT4gewogICAgICAgICAgY29uc3QgY2F0U3RhcnQgPSBzbGljZSAqIGkgLSBNYXRoLlBJIC8gMjsKICAgICAgICAgIGNvbnN0IGNhdEVuZCAgID0gc2xpY2UgKiAoaSArIDEpIC0gTWF0aC5QSSAvIDI7CiAgICAgICAgICBjb25zdCBtaWQgICAgICA9IChjYXRTdGFydCArIGNhdEVuZCkgLyAyOwogICAgICAgICAgY29uc3QgdmFsICAgICAgPSBwcm9maWxlRGF0YS5maW5kKGQgPT4gZC5sYWJlbCA9PT0gY2F0KT8udmFsdWUgPz8gMDsKICAgICAgICAgIHJldHVybiBwb2xhcihjeCwgY3ksICh2YWwgLyAxMDApICogcmFkYXJNYXhSICsgckNlbnRlciAqIDAuMywgbWlkKTsKICAgICAgICB9KTsKICAgICAgICBjb25zdCBwb2ludFN0ciA9IHZlcnRpY2VzLm1hcCh2ID0+IGAke3YueH0sJHt2Lnl9YCkuam9pbigiICIpOwoKICAgICAgICByZXR1cm4gKAogICAgICAgICAgPGc+CiAgICAgICAgICAgIDxwb2x5Z29uCiAgICAgICAgICAgICAgcG9pbnRzPXtwb2ludFN0cn0KICAgICAgICAgICAgICBmaWxsPSJyZ2JhKDI0MCwyMzcsMjMyLDAuMTMpIgogICAgICAgICAgICAgIHN0cm9rZT0iI0YwRURFOCIKICAgICAgICAgICAgICBzdHJva2VXaWR0aD0iMS40IgogICAgICAgICAgICAgIHN0cm9rZU9wYWNpdHk9IjAuNzIiCiAgICAgICAgICAgIC8+CiAgICAgICAgICAgIHt2ZXJ0aWNlcy5tYXAoKHYsIGkpID0+IHsKICAgICAgICAgICAgICBjb25zdCB2YWwgPSBwcm9maWxlRGF0YS5maW5kKGQgPT4gZC5sYWJlbCA9PT0gU0NBX0NBVEVHT1JJRVNbaV0pPy52YWx1ZSA/PyAwOwogICAgICAgICAgICAgIGlmICh2YWwgPCA1KSByZXR1cm4gbnVsbDsKICAgICAgICAgICAgICByZXR1cm4gPGNpcmNsZSBrZXk9e1NDQV9DQVRFR09SSUVTW2ldfSBjeD17di54fSBjeT17di55fSByPXsyLjUgKiBzfSBmaWxsPSIjRjBFREU4IiAvPjsKICAgICAgICAgICAgfSl9CiAgICAgICAgICA8L2c+CiAgICAgICAgKTsKICAgICAgfSkoKX0KICAgIDwvc3ZnPgogICk7Cn0K"}
+"use client";
+import { SCA_WHEEL, SCA_CATEGORIES } from "@/lib/constants/scaFlavorWheel";
+
+// ─── geometry helpers ─────────────────────────────────────────────────────────
+
+function polar(cx: number, cy: number, r: number, angle: number) {
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+}
+
+/** SVG path for an annular (ring) sector. r1 = outer radius, r2 = inner radius. */
+function annularSector(
+  cx: number, cy: number,
+  r1: number, r2: number,
+  startAngle: number, endAngle: number,
+): string {
+  const large = endAngle - startAngle > Math.PI ? 1 : 0;
+  const o1 = polar(cx, cy, r1, startAngle);
+  const o2 = polar(cx, cy, r1, endAngle);
+  const i1 = polar(cx, cy, r2, startAngle);
+  const i2 = polar(cx, cy, r2, endAngle);
+  return [
+    `M ${o1.x} ${o1.y}`,
+    `A ${r1} ${r1} 0 ${large} 1 ${o2.x} ${o2.y}`,
+    `L ${i2.x} ${i2.y}`,
+    `A ${r2} ${r2} 0 ${large} 0 ${i1.x} ${i1.y}`,
+    "Z",
+  ].join(" ");
+}
+
+/** Correct radial text rotation: text reads from center outward, stays legible in both halves. */
+function radialRotation(midAngleRad: number): number {
+  const deg = (midAngleRad * 180) / Math.PI;
+  // Left half (between straight-down and straight-up going the long way round): flip 180°
+  const isLeftHalf = midAngleRad > Math.PI / 2 && midAngleRad < (3 * Math.PI) / 2;
+  return isLeftHalf ? deg + 180 : deg;
+}
+
+// ─── tiny category icons ──────────────────────────────────────────────────────
+// Each icon is a small SVG group centered at (0,0) in a ±3.5 unit coordinate
+// space. Rendered at the icon position inside each inner-ring segment.
+
+const ICONS: Record<string, React.ReactNode> = {
+  "Fruity": (
+    <g fill="white" opacity={0.55}>
+      <circle cx={-1.7} cy={0.6}  r={1.1} />
+      <circle cx={1.7}  cy={0.6}  r={1.1} />
+      <circle cx={0}    cy={-1.7} r={1.1} />
+    </g>
+  ),
+  "Floral": (
+    <g stroke="white" strokeWidth={0.65} fill="none" opacity={0.55}>
+      <line x1={0} y1={-3.2} x2={0} y2={3.2} />
+      <line x1={-2.8} y1={-1.6} x2={2.8} y2={1.6} />
+      <line x1={-2.8} y1={1.6}  x2={2.8} y2={-1.6} />
+      <circle cx={0} cy={0} r={0.85} fill="white" stroke="none" />
+    </g>
+  ),
+  "Sweet": (
+    <g fill="white" opacity={0.55}>
+      <path d="M0,-3.2 C1.9,-0.5 2,1.5 0,3.2 C-2,1.5-1.9,-0.5 0,-3.2Z" />
+    </g>
+  ),
+  "Nutty & Cocoa": (
+    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+      <ellipse cx={0} cy={0} rx={1.8} ry={3} />
+      <path d="M0,-3 C0.9,-1 0.9,1 0,3 M0,-3 C-0.9,-1-0.9,1 0,3" />
+    </g>
+  ),
+  "Spices": (
+    <g stroke="white" strokeWidth={0.65} fill="none" opacity={0.55}>
+      <line x1={0} y1={-3.2} x2={0} y2={3.2} />
+      <line x1={-3.2} y1={0} x2={3.2} y2={0} />
+      <line x1={-2.3} y1={-2.3} x2={2.3} y2={2.3} />
+      <line x1={-2.3} y1={2.3}  x2={2.3} y2={-2.3} />
+    </g>
+  ),
+  "Roasted": (
+    <g fill="white" opacity={0.55}>
+      <rect x={-3.2} y={0.5}   width={1.5} height={2.8} rx={0.3} />
+      <rect x={-0.8} y={-1}    width={1.5} height={4.3} rx={0.3} />
+      <rect x={1.7}  y={-2.8}  width={1.5} height={6.1} rx={0.3} />
+    </g>
+  ),
+  "Sour & Fermented": (
+    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+      <path d="M-3.2,0 C-1.5,-2.5 1.5,-2.5 3.2,0" />
+      <path d="M-3.2,0 C-1.5,2.5 1.5,2.5 3.2,0" />
+      <circle cx={0} cy={0} r={0.7} fill="white" stroke="none" />
+    </g>
+  ),
+  "Herbal & Green": (
+    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+      <path d="M0,3.2 C2.2,0.5 2.5,-2 0,-3.2 C-2.5,-2-2.2,0.5 0,3.2Z" />
+      <line x1={0} y1={-2.8} x2={0} y2={3.2} />
+    </g>
+  ),
+  "Savory": (
+    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+      <path d="M-3,0.6 C-2.5,-2.4 2.5,-2.4 3,0.6Z" />
+      <rect x={-0.9} y={0.6} width={1.8} height={2.8} />
+    </g>
+  ),
+};
+
+// ─── component ────────────────────────────────────────────────────────────────
+
+interface FlavorWheelProps {
+  mode: "select" | "profile";
+  // select mode
+  activeCategory?: string | null;
+  onCategorySelect?: (cat: string | null) => void;
+  selectedFlavors?: string[];
+  // profile mode
+  profileData?: { label: string; value: number }[];
+  // shared
+  size?: number;
+}
+
+export default function FlavorWheel({
+  mode,
+  activeCategory = null,
+  onCategorySelect,
+  selectedFlavors = [],
+  profileData,
+  size = 280,
+}: FlavorWheelProps) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const s  = size / 280; // scale factor
+
+  // Ring radii
+  const rCenter = 24 * s;   // center dead-zone
+  const rInner  = 94 * s;   // outer edge of category ring
+  const rOuter  = 135 * s;  // outer edge of sub-category ring
+
+  // No angular gap — even-width gaps are rendered as radial overlay lines
+  const n     = SCA_CATEGORIES.length;      // 9
+  const slice = (2 * Math.PI) / n;
+
+  const isSelect = mode === "select";
+
+  // Icon position: inner 40% of category ring
+  const iconR = rCenter + (rInner - rCenter) * 0.36;
+  // Text position: outer 68% of category ring — used for ALL labels (single and multi-line)
+  const textR = rCenter + (rInner - rCenter) * 0.70;
+  // Sub-category text radius: middle of outer ring
+  const subTextR = rInner + (rOuter - rInner) * 0.50;
+
+  const baseFontSize = Math.max(6.5 * s, 5.8);
+  const subFontSize  = Math.max(5.5 * s, 5.0);
+
+  // Gap line widths (in viewBox units)
+  const catLineW = 1.8 * s;
+  const subLineW = 1.2 * s;
+
+  return (
+    <svg
+      width="100%"
+      viewBox={`0 0 ${size} ${size}`}
+      aria-label="SCA Coffee Flavor Wheel"
+      style={{ display: "block" }}
+    >
+      {/* ── background ── */}
+      <circle cx={cx} cy={cy} r={rOuter + 2} fill="#111" />
+
+      {SCA_CATEGORIES.map((cat, i) => {
+        const { shade, subcategories } = SCA_WHEEL[cat];
+        const isActive = activeCategory === cat;
+        const hasSel   = selectedFlavors.some(f =>
+          Object.values(subcategories).flat().includes(f)
+        );
+
+        // Category angular span (full slice, no gap — gaps rendered as overlay lines)
+        const catStart = slice * i - Math.PI / 2;
+        const catEnd   = slice * (i + 1) - Math.PI / 2;
+        const midAngle = (catStart + catEnd) / 2;
+
+        // Fill: slightly brighter when active or has selections
+        const fill = isActive ? "#484848"
+          : hasSel   ? "#363636"
+          : shade;
+
+        // ── Inner ring: category segment ──
+        const catPath = annularSector(cx, cy, rInner, rCenter, catStart, catEnd);
+
+        // Text rotation (radial, corrected — no +90° bug)
+        const textRotDeg = radialRotation(midAngle);
+
+        // Icon position (upright, just translated)
+        const iconPos = polar(cx, cy, iconR, midAngle);
+        const iconScale = 0.88 * s;
+
+        // All labels (single-word and multi-line) sit at textR, above the icon
+        const labelParts = cat.includes(" & ") ? cat.split(" & ") : null;
+        const labelPos = polar(cx, cy, textR, midAngle);
+
+        // Sub-categories
+        const subKeys  = Object.keys(subcategories);
+        const subSlice = (catEnd - catStart) / subKeys.length;
+
+        return (
+          <g key={cat}>
+            {/* Category segment */}
+            <path
+              d={catPath}
+              fill={fill}
+              stroke="none"
+              style={isSelect ? { cursor: "pointer" } : undefined}
+              onClick={isSelect ? () => onCategorySelect?.(isActive ? null : cat) : undefined}
+            />
+
+            {/* Tiny icon (upright, not rotated) */}
+            <g
+              transform={`translate(${iconPos.x},${iconPos.y}) scale(${iconScale})`}
+              style={{ pointerEvents: "none" }}
+            >
+              {ICONS[cat]}
+            </g>
+
+            {/* Category label — rotated radially, always at textR.
+                Multi-word categories split into two tspan lines. */}
+            {labelParts ? (
+              <text
+                x={labelPos.x}
+                y={labelPos.y}
+                fontSize={baseFontSize * 0.88}
+                fontFamily="sans-serif"
+                fontWeight={isActive ? "700" : "500"}
+                fill="white"
+                fillOpacity={isActive ? 0.95 : hasSel ? 0.85 : 0.65}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                transform={`rotate(${textRotDeg},${labelPos.x},${labelPos.y})`}
+                style={{ pointerEvents: "none" }}
+              >
+                <tspan x={labelPos.x} dy="-0.65em">{labelParts[0]} &amp;</tspan>
+                <tspan x={labelPos.x} dy="1.3em">{labelParts[1]}</tspan>
+              </text>
+            ) : (
+              <text
+                x={labelPos.x}
+                y={labelPos.y}
+                fontSize={baseFontSize}
+                fontFamily="sans-serif"
+                fontWeight={isActive ? "700" : "500"}
+                fill="white"
+                fillOpacity={isActive ? 0.95 : hasSel ? 0.85 : 0.65}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                transform={`rotate(${textRotDeg},${labelPos.x},${labelPos.y})`}
+                style={{ pointerEvents: "none" }}
+              >
+                {cat}
+              </text>
+            )}
+
+            {/* Sub-category ring */}
+            {subKeys.map((sub, si) => {
+              const subStart = catStart + subSlice * si;
+              const subEnd   = catStart + subSlice * (si + 1);
+              const subMid   = (subStart + subEnd) / 2;
+
+              const subPath  = annularSector(cx, cy, rOuter, rInner, subStart, subEnd);
+              const subFill  = isActive ? "#323232" : "#1a1a1a";
+              const subPos   = polar(cx, cy, subTextR, subMid);
+              const subRot   = radialRotation(subMid);
+
+              return (
+                <g key={sub}>
+                  <path
+                    d={subPath}
+                    fill={subFill}
+                    fillOpacity={isActive ? 0.95 : 0.8}
+                    stroke="none"
+                  />
+                  <text
+                    x={subPos.x}
+                    y={subPos.y}
+                    fontSize={subFontSize}
+                    fontFamily="sans-serif"
+                    fill="white"
+                    fillOpacity={isActive ? 0.75 : 0.38}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    transform={`rotate(${subRot},${subPos.x},${subPos.y})`}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {sub}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+
+      {/* ── Even-width radial dividers — drawn on top of segments ── */}
+      {/* Category boundaries: full height rCenter → rOuter */}
+      {SCA_CATEGORIES.map((_, i) => {
+        const angle = slice * i - Math.PI / 2;
+        const p1 = polar(cx, cy, rCenter, angle);
+        const p2 = polar(cx, cy, rOuter + 2, angle);
+        return (
+          <line key={`cdiv-${i}`}
+            x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+            stroke="#111" strokeWidth={catLineW}
+          />
+        );
+      })}
+      {/* Subcategory boundaries: outer ring only rInner → rOuter */}
+      {SCA_CATEGORIES.map((cat, i) => {
+        const { subcategories } = SCA_WHEEL[cat];
+        const subKeys = Object.keys(subcategories);
+        const catStart = slice * i - Math.PI / 2;
+        const subSlice = slice / subKeys.length;
+        return subKeys.slice(1).map((_, si) => {
+          const angle = catStart + subSlice * (si + 1);
+          const p1 = polar(cx, cy, rInner, angle);
+          const p2 = polar(cx, cy, rOuter + 2, angle);
+          return (
+            <line key={`sdiv-${cat}-${si}`}
+              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke="#111" strokeWidth={subLineW}
+            />
+          );
+        });
+      })}
+
+      {/* ── center circle ── */}
+      <circle
+        cx={cx} cy={cy} r={rCenter - 1}
+        fill="#0e0e0e"
+        stroke="rgba(255,255,255,0.12)"
+        strokeWidth="0.8"
+        style={isSelect && activeCategory ? { cursor: "pointer" } : undefined}
+        onClick={isSelect && activeCategory ? () => onCategorySelect?.(null) : undefined}
+      />
+      <text
+        x={cx} y={cy}
+        fontSize={Math.max(7.5 * s, 6.5)}
+        fontFamily="sans-serif"
+        fill="rgba(255,255,255,0.35)"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        style={{ pointerEvents: "none", letterSpacing: "0.05em" }}
+      >
+        {isSelect && activeCategory ? "×" : "SCA"}
+      </text>
+
+      {/* ── profile mode: radar polygon ── */}
+      {mode === "profile" && profileData && profileData.length === n && (() => {
+        // Radar polygon drawn inside the inner ring
+        const radarMaxR = rCenter + (rInner - rCenter) * 0.85;
+        const vertices  = SCA_CATEGORIES.map((cat, i) => {
+          const catStart = slice * i - Math.PI / 2;
+          const catEnd   = slice * (i + 1) - Math.PI / 2;
+          const mid      = (catStart + catEnd) / 2;
+          const val      = profileData.find(d => d.label === cat)?.value ?? 0;
+          return polar(cx, cy, (val / 100) * radarMaxR + rCenter * 0.3, mid);
+        });
+        const pointStr = vertices.map(v => `${v.x},${v.y}`).join(" ");
+
+        return (
+          <g>
+            <polygon
+              points={pointStr}
+              fill="rgba(240,237,232,0.13)"
+              stroke="#F0EDE8"
+              strokeWidth="1.4"
+              strokeOpacity="0.72"
+            />
+            {vertices.map((v, i) => {
+              const val = profileData.find(d => d.label === SCA_CATEGORIES[i])?.value ?? 0;
+              if (val < 5) return null;
+              return <circle key={SCA_CATEGORIES[i]} cx={v.x} cy={v.y} r={2.5 * s} fill="#F0EDE8" />;
+            })}
+          </g>
+        );
+      })()}
+    </svg>
+  );
+}

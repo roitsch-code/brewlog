@@ -1,1 +1,36 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyBjbiB9IGZyb20gIkAvbGliL3V0aWxzL2NuIjsKCmludGVyZmFjZSBDaGlwUHJvcHMgewogIGxhYmVsOiBzdHJpbmc7CiAgc2VsZWN0ZWQ/OiBib29sZWFuOwogIG9uQ2xpY2s/OiAoKSA9PiB2b2lkOwogIHNpemU/OiAic20iIHwgIm1kIjsKICBhY2NlbnQ/OiBib29sZWFuOyAvLyBhbWJlciBhY2NlbnQgY2hpcCAoZm9yIGxhYmVscykKICBjbGFzc05hbWU/OiBzdHJpbmc7Cn0KCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIENoaXAoeyBsYWJlbCwgc2VsZWN0ZWQsIG9uQ2xpY2ssIHNpemUgPSAibWQiLCBhY2NlbnQsIGNsYXNzTmFtZSB9OiBDaGlwUHJvcHMpIHsKICByZXR1cm4gKAogICAgPGJ1dHRvbgogICAgICB0eXBlPSJidXR0b24iCiAgICAgIG9uQ2xpY2s9e29uQ2xpY2t9CiAgICAgIGNsYXNzTmFtZT17Y24oCiAgICAgICAgImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciByb3VuZGVkLWZ1bGwgYm9yZGVyIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTE1MCBhY3RpdmU6c2NhbGUtOTUgc2VsZWN0LW5vbmUgd2hpdGVzcGFjZS1ub3dyYXAgZm9udC1tZWRpdW0iLAogICAgICAgIHsKICAgICAgICAgICJweC0zIHB5LTEuNSB0ZXh0LXNtIjogc2l6ZSA9PT0gInNtIiwKICAgICAgICAgICJweC00IHB5LTIgdGV4dC1zbSI6IHNpemUgPT09ICJtZCIsCiAgICAgICAgICAvLyBVbnNlbGVjdGVkCiAgICAgICAgICAiYm9yZGVyLXdoaXRlLzIwIHRleHQtd2hpdGUvNjAgYmctdHJhbnNwYXJlbnQgaG92ZXI6Ym9yZGVyLXdoaXRlLzQwIGhvdmVyOnRleHQtd2hpdGUiOiAhc2VsZWN0ZWQgJiYgIWFjY2VudCwKICAgICAgICAgIC8vIFNlbGVjdGVkCiAgICAgICAgICAiYm9yZGVyLWJyZXctYWNjZW50IGJnLWJyZXctYWNjZW50LzIwIHRleHQtYnJldy1hY2NlbnQiOiBzZWxlY3RlZCAmJiAhYWNjZW50LAogICAgICAgICAgLy8gQWNjZW50IGxhYmVsIChub24taW50ZXJhY3RpdmUpCiAgICAgICAgICAiYm9yZGVyLWJyZXctYWNjZW50LzMwIGJnLWJyZXctYWNjZW50LzEwIHRleHQtYnJldy1hY2NlbnQgdGV4dC14cyB0cmFja2luZy13aWRlc3QgdXBwZXJjYXNlIGZvbnQtbWVkaXVtIGN1cnNvci1kZWZhdWx0IjogYWNjZW50LAogICAgICAgIH0sCiAgICAgICAgY2xhc3NOYW1lCiAgICAgICl9CiAgICA+CiAgICAgIHtsYWJlbH0KICAgIDwvYnV0dG9uPgogICk7Cn0K"}
+"use client";
+import { cn } from "@/lib/utils/cn";
+
+interface ChipProps {
+  label: string;
+  selected?: boolean;
+  onClick?: () => void;
+  size?: "sm" | "md";
+  accent?: boolean; // amber accent chip (for labels)
+  className?: string;
+}
+
+export default function Chip({ label, selected, onClick, size = "md", accent, className }: ChipProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center rounded-full border transition-all duration-150 active:scale-95 select-none whitespace-nowrap font-medium",
+        {
+          "px-3 py-1.5 text-sm": size === "sm",
+          "px-4 py-2 text-sm": size === "md",
+          // Unselected
+          "border-white/20 text-white/60 bg-transparent hover:border-white/40 hover:text-white": !selected && !accent,
+          // Selected
+          "border-brew-accent bg-brew-accent/20 text-brew-accent": selected && !accent,
+          // Accent label (non-interactive)
+          "border-brew-accent/30 bg-brew-accent/10 text-brew-accent text-xs tracking-widest uppercase font-medium cursor-default": accent,
+        },
+        className
+      )}
+    >
+      {label}
+    </button>
+  );
+}

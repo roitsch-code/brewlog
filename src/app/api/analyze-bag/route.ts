@@ -1,1 +1,67 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgYW5hbHl6ZUJhZ0ltYWdlIH0gZnJvbSAiQC9saWIvY2xhdWRlL2FuYWx5emVCYWciOwppbXBvcnQgeyBnZXRSb2FzdGVyUHJpb3IgfSBmcm9tICJAL2xpYi9yb2FzdGVycy9wcmlvcnMiOwppbXBvcnQgeyBnZXRBZG1pbkRiIH0gZnJvbSAiQC9saWIvZmlyZWJhc2UvYWRtaW4iOwppbXBvcnQgdHlwZSB7IFJvYXN0ZXJQcmlvciB9IGZyb20gIkAvbGliL3JvYXN0ZXJzL3ByaW9ycyI7CgpmdW5jdGlvbiB0b1NsdWcobmFtZTogc3RyaW5nKTogc3RyaW5nIHsKICByZXR1cm4gbmFtZS50b0xvd2VyQ2FzZSgpLnRyaW0oKS5yZXBsYWNlKC9ccysvZywgIi0iKTsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCBmb3JtRGF0YSA9IGF3YWl0IHJlcS5mb3JtRGF0YSgpOwogICAgY29uc3QgZmlsZSA9IGZvcm1EYXRhLmdldCgiaW1hZ2UiKSBhcyBGaWxlIHwgbnVsbDsKCiAgICBpZiAoIWZpbGUpIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJObyBpbWFnZSBwcm92aWRlZCIgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICAgIH0KCiAgICBjb25zdCBieXRlcyA9IGF3YWl0IGZpbGUuYXJyYXlCdWZmZXIoKTsKICAgIGNvbnN0IGJhc2U2NCA9IEJ1ZmZlci5mcm9tKGJ5dGVzKS50b1N0cmluZygiYmFzZTY0Iik7CiAgICBjb25zdCBtaW1lVHlwZSA9IGZpbGUudHlwZSB8fCAiaW1hZ2UvanBlZyI7CgogICAgY29uc3QgeyByZXN1bHQgfSA9IGF3YWl0IGFuYWx5emVCYWdJbWFnZShiYXNlNjQsIG1pbWVUeXBlKTsKCiAgICAvLyBSb2FzdGVyIHByaW9yIGxvb2t1cDogdXNlci1zYXZlZCBGaXJlc3RvcmUgcmVjb3JkIHRha2VzIHByaW9yaXR5IG92ZXIgYnVpbHQtaW4gbGlzdC4KICAgIC8vIEZhbGxiYWNrIHByaW9ycyBjYXJyeSBubyByZWFsIHNpZ25hbCBhbmQgYXJlIG9taXR0ZWQgdG8gYXZvaWQgbm9pc2UuCiAgICBjb25zdCByb2FzdGVyTmFtZSA9IHJlc3VsdC5leHRyYWN0ZWQucm9hc3RlcjsKICAgIGxldCByb2FzdGVyUHJpb3IgPSB1bmRlZmluZWQ7CiAgICBpZiAocm9hc3Rlck5hbWUpIHsKICAgICAgLy8gMS4gQ2hlY2sgdXNlci1zYXZlZCByb2FzdGVycyBpbiBGaXJlc3RvcmUKICAgICAgbGV0IHByaW9yOiBSb2FzdGVyUHJpb3IgfCBudWxsID0gbnVsbDsKICAgICAgdHJ5IHsKICAgICAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgICAgICBjb25zdCBzbmFwID0gYXdhaXQgZGIuY29sbGVjdGlvbigicm9hc3RlcnMiKS5kb2ModG9TbHVnKHJvYXN0ZXJOYW1lKSkuZ2V0KCk7CiAgICAgICAgaWYgKHNuYXAuZXhpc3RzKSBwcmlvciA9IHNuYXAuZGF0YSgpIGFzIFJvYXN0ZXJQcmlvcjsKICAgICAgfSBjYXRjaCB7fQoKICAgICAgLy8gMi4gRmFsbCBiYWNrIHRvIGJ1aWx0LWluIGxpc3QKICAgICAgaWYgKCFwcmlvcikgewogICAgICAgIGNvbnN0IGJ1aWx0SW4gPSBnZXRSb2FzdGVyUHJpb3Iocm9hc3Rlck5hbWUpOwogICAgICAgIGlmIChidWlsdEluLmNvbmZpZGVuY2UgIT09ICJmYWxsYmFjayIpIHByaW9yID0gYnVpbHRJbjsKICAgICAgfQoKICAgICAgaWYgKHByaW9yKSB7CiAgICAgICAgcm9hc3RlclByaW9yID0gewogICAgICAgICAgbmFtZTogcHJpb3IubmFtZSwKICAgICAgICAgIHJlZ2lvbjogcHJpb3IucmVnaW9uLAogICAgICAgICAgc3R5bGVTdW1tYXJ5OiBwcmlvci5zdHlsZVN1bW1hcnksCiAgICAgICAgICByb2FzdFRlbmRlbmN5OiBwcmlvci5yb2FzdFRlbmRlbmN5LAogICAgICAgICAgY2xhcml0eVZzU3dlZXRuZXNzQmlhczogcHJpb3IuY2xhcml0eVZzU3dlZXRuZXNzQmlhcywKICAgICAgICAgIHRlbXBCaWFzOiBwcmlvci50ZW1wQmlhcywKICAgICAgICAgIHJhdGlvQmlhczogcHJpb3IucmF0aW9CaWFzLAogICAgICAgICAgbWV0aG9kQWZmaW5pdGllczogcHJpb3IubWV0aG9kQWZmaW5pdGllcywKICAgICAgICAgIGV4dHJhY3Rpb25SaXNrczogcHJpb3IuZXh0cmFjdGlvblJpc2tzLAogICAgICAgICAgbm90ZXM6IHByaW9yLm5vdGVzLAogICAgICAgICAgY29uZmlkZW5jZTogcHJpb3IuY29uZmlkZW5jZSwKICAgICAgICB9OwogICAgICB9CiAgICB9CgogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgLi4ucmVzdWx0LCByb2FzdGVyUHJpb3IgfSk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJhbmFseXplLWJhZyBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJBbmFseXNpcyBmYWlsZWQiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextRequest, NextResponse } from "next/server";
+import { analyzeBagImage } from "@/lib/claude/analyzeBag";
+import { getRoasterPrior } from "@/lib/roasters/priors";
+import { getAdminDb } from "@/lib/firebase/admin";
+import type { RoasterPrior } from "@/lib/roasters/priors";
+
+function toSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get("image") as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: "No image provided" }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const base64 = Buffer.from(bytes).toString("base64");
+    const mimeType = file.type || "image/jpeg";
+
+    const { result } = await analyzeBagImage(base64, mimeType);
+
+    // Roaster prior lookup: user-saved Firestore record takes priority over built-in list.
+    // Fallback priors carry no real signal and are omitted to avoid noise.
+    const roasterName = result.extracted.roaster;
+    let roasterPrior = undefined;
+    if (roasterName) {
+      // 1. Check user-saved roasters in Firestore
+      let prior: RoasterPrior | null = null;
+      try {
+        const db = getAdminDb();
+        const snap = await db.collection("roasters").doc(toSlug(roasterName)).get();
+        if (snap.exists) prior = snap.data() as RoasterPrior;
+      } catch {}
+
+      // 2. Fall back to built-in list
+      if (!prior) {
+        const builtIn = getRoasterPrior(roasterName);
+        if (builtIn.confidence !== "fallback") prior = builtIn;
+      }
+
+      if (prior) {
+        roasterPrior = {
+          name: prior.name,
+          region: prior.region,
+          styleSummary: prior.styleSummary,
+          roastTendency: prior.roastTendency,
+          clarityVsSweetnessBias: prior.clarityVsSweetnessBias,
+          tempBias: prior.tempBias,
+          ratioBias: prior.ratioBias,
+          methodAffinities: prior.methodAffinities,
+          extractionRisks: prior.extractionRisks,
+          notes: prior.notes,
+          confidence: prior.confidence,
+        };
+      }
+    }
+
+    return NextResponse.json({ ...result, roasterPrior });
+  } catch (err) {
+    console.error("analyze-bag error:", err);
+    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+  }
+}

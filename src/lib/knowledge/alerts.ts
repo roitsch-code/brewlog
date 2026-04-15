@@ -1,1 +1,46 @@
-{"data":"aW1wb3J0IHsgZ2V0QWRtaW5EYiB9IGZyb20gIkAvbGliL2ZpcmViYXNlL2FkbWluIjsKCmNvbnN0IENPTExFQ1RJT04gPSAiY29mZmVlQWxlcnRzIjsKCmV4cG9ydCBpbnRlcmZhY2UgQ29mZmVlQWxlcnQgewogIGlkOiBzdHJpbmc7CiAgcm9hc3Rlcjogc3RyaW5nOwogIGNvZmZlZU5hbWU6IHN0cmluZzsKICBvcmlnaW46IHN0cmluZzsKICBwcm9jZXNzPzogc3RyaW5nOwogIHNjb3JlOiBudW1iZXI7CiAgc3VtbWFyeTogc3RyaW5nOwogIHVybD86IHN0cmluZzsKICBhbGVydGVkQXQ6IHN0cmluZzsKICByZWFkOiBib29sZWFuOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2V0QWxlcnRzKGxpbWl0PzogbnVtYmVyKTogUHJvbWlzZTxDb2ZmZWVBbGVydFtdPiB7CiAgdHJ5IHsKICAgIGNvbnN0IGRiID0gZ2V0QWRtaW5EYigpOwogICAgbGV0IHF1ZXJ5ID0gZGIKICAgICAgLmNvbGxlY3Rpb24oQ09MTEVDVElPTikKICAgICAgLm9yZGVyQnkoImFsZXJ0ZWRBdCIsICJkZXNjIikgYXMgRmlyZWJhc2VGaXJlc3RvcmUuUXVlcnk7CiAgICBpZiAobGltaXQpIHsKICAgICAgcXVlcnkgPSBxdWVyeS5saW1pdChsaW1pdCk7CiAgICB9CiAgICBjb25zdCBzbmFwID0gYXdhaXQgcXVlcnkuZ2V0KCk7CiAgICByZXR1cm4gc25hcC5kb2NzLm1hcChkID0+ICh7IGlkOiBkLmlkLCAuLi5kLmRhdGEoKSB9IGFzIENvZmZlZUFsZXJ0KSk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJnZXRBbGVydHM6IEZpcmVzdG9yZSBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIFtdOwogIH0KfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHNhdmVBbGVydCgKICBhbGVydDogT21pdDxDb2ZmZWVBbGVydCwgImlkIj4KKTogUHJvbWlzZTxzdHJpbmc+IHsKICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICBjb25zdCByZWYgPSBhd2FpdCBkYi5jb2xsZWN0aW9uKENPTExFQ1RJT04pLmFkZChhbGVydCk7CiAgcmV0dXJuIHJlZi5pZDsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIG1hcmtSZWFkKGlkOiBzdHJpbmcpOiBQcm9taXNlPHZvaWQ+IHsKICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICBhd2FpdCBkYi5jb2xsZWN0aW9uKENPTExFQ1RJT04pLmRvYyhpZCkudXBkYXRlKHsgcmVhZDogdHJ1ZSB9KTsKfQo="}
+import { getAdminDb } from "@/lib/firebase/admin";
+
+const COLLECTION = "coffeeAlerts";
+
+export interface CoffeeAlert {
+  id: string;
+  roaster: string;
+  coffeeName: string;
+  origin: string;
+  process?: string;
+  score: number;
+  summary: string;
+  url?: string;
+  alertedAt: string;
+  read: boolean;
+}
+
+export async function getAlerts(limit?: number): Promise<CoffeeAlert[]> {
+  try {
+    const db = getAdminDb();
+    let query = db
+      .collection(COLLECTION)
+      .orderBy("alertedAt", "desc") as FirebaseFirestore.Query;
+    if (limit) {
+      query = query.limit(limit);
+    }
+    const snap = await query.get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as CoffeeAlert));
+  } catch (err) {
+    console.error("getAlerts: Firestore error:", err);
+    return [];
+  }
+}
+
+export async function saveAlert(
+  alert: Omit<CoffeeAlert, "id">
+): Promise<string> {
+  const db = getAdminDb();
+  const ref = await db.collection(COLLECTION).add(alert);
+  return ref.id;
+}
+
+export async function markRead(id: string): Promise<void> {
+  const db = getAdminDb();
+  await db.collection(COLLECTION).doc(id).update({ read: true });
+}

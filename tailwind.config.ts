@@ -1,1 +1,41 @@
-{"data":"aW1wb3J0IHR5cGUgeyBDb25maWcgfSBmcm9tICJ0YWlsd2luZGNzcyI7Cgpjb25zdCBjb25maWc6IENvbmZpZyA9IHsKICBjb250ZW50OiBbCiAgICAiLi9zcmMvcGFnZXMvKiovKi57anMsdHMsanN4LHRzeCxtZHh9IiwKICAgICIuL3NyYy9jb21wb25lbnRzLyoqLyoue2pzLHRzLGpzeCx0c3gsbWR4fSIsCiAgICAiLi9zcmMvYXBwLyoqLyoue2pzLHRzLGpzeCx0c3gsbWR4fSIsCiAgXSwKICB0aGVtZTogewogICAgZXh0ZW5kOiB7CiAgICAgIGNvbG9yczogewogICAgICAgIGJyZXc6IHsKICAgICAgICAgIGJnOiAiIzExMTExMSIsCiAgICAgICAgICBzdXJmYWNlOiAiIzFBMUExQSIsCiAgICAgICAgICBlbGV2YXRlZDogIiMyQTJBMkEiLAogICAgICAgICAgYWNjZW50OiAiI0Q0Qjg5NiIsCiAgICAgICAgICAiYWNjZW50LWZnIjogIiMxQTEwMDgiLAogICAgICAgICAgbXV0ZWQ6ICIjQjhCOUI2IiwKICAgICAgICAgIHN1YnRsZTogIiM2NjY2NjYiLAogICAgICAgICAgYm9yZGVyOiAiIzJFMkUyRSIsCiAgICAgICAgICBzdWNjZXNzOiAiIzVBOUU1QSIsCiAgICAgICAgfSwKICAgICAgfSwKICAgICAgZm9udEZhbWlseTogewogICAgICAgIHNlcmlmOiBbInZhcigtLWZvbnQtZ2Vpc3Qtc2FucykiLCAic3lzdGVtLXVpIiwgInNhbnMtc2VyaWYiXSwKICAgICAgICBzYW5zOiBbInZhcigtLWZvbnQtZ2Vpc3Qtc2FucykiLCAiSW50ZXIiLCAic3lzdGVtLXVpIiwgInNhbnMtc2VyaWYiXSwKICAgICAgICBtb25vOiBbInZhcigtLWZvbnQtZ2Vpc3QtbW9ubykiLCAidmFyKC0tZm9udC1qZXRicmFpbnMtbW9ubykiLCAiRmlyYSBDb2RlIiwgIm1vbm9zcGFjZSJdLAogICAgICB9LAogICAgICBib3JkZXJSYWRpdXM6IHsKICAgICAgICAiNHhsIjogIjJyZW0iLAogICAgICB9LAogICAgICBzcGFjaW5nOiB7CiAgICAgICAgInNhZmUtYm90dG9tIjogImVudihzYWZlLWFyZWEtaW5zZXQtYm90dG9tKSIsCiAgICAgICAgInNhZmUtdG9wIjogImVudihzYWZlLWFyZWEtaW5zZXQtdG9wKSIsCiAgICAgIH0sCiAgICB9LAogIH0sCiAgcGx1Z2luczogW3JlcXVpcmUoIkB0YWlsd2luZGNzcy9mb3JtcyIpXSwKfTsKCmV4cG9ydCBkZWZhdWx0IGNvbmZpZzsK"}
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        brew: {
+          bg: "#111111",
+          surface: "#1A1A1A",
+          elevated: "#2A2A2A",
+          accent: "#D4B896",
+          "accent-fg": "#1A1008",
+          muted: "#B8B9B6",
+          subtle: "#666666",
+          border: "#2E2E2E",
+          success: "#5A9E5A",
+        },
+      },
+      fontFamily: {
+        serif: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "var(--font-jetbrains-mono)", "Fira Code", "monospace"],
+      },
+      borderRadius: {
+        "4xl": "2rem",
+      },
+      spacing: {
+        "safe-bottom": "env(safe-area-inset-bottom)",
+        "safe-top": "env(safe-area-inset-top)",
+      },
+    },
+  },
+  plugins: [require("@tailwindcss/forms")],
+};
+
+export default config;

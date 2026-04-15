@@ -1,1 +1,154 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VFZmZlY3QsIHVzZVN0YXRlIH0gZnJvbSAicmVhY3QiOwppbXBvcnQgeyB1c2VSb3V0ZXIgfSBmcm9tICJuZXh0L25hdmlnYXRpb24iOwppbXBvcnQgdHlwZSB7IFNlc3Npb24gfSBmcm9tICJAL2xpYi90eXBlcy9zZXNzaW9uIjsKaW1wb3J0IHR5cGUgeyBDb2ZmZWVJZGVudGl0eSB9IGZyb20gIkAvbGliL3R5cGVzL3Nlc3Npb24iOwppbXBvcnQgU2Vzc2lvbkNhcmQgZnJvbSAiQC9jb21wb25lbnRzL3Nlc3Npb24vU2Vzc2lvbkNhcmQiOwppbXBvcnQgeyB1c2VGbG93U3RvcmUgfSBmcm9tICJAL3N0b3JlL2Zsb3dTdG9yZSI7CmltcG9ydCBDb2ZmZWVCZWFuR2xvdyBmcm9tICJAL2NvbXBvbmVudHMvdWkvQ29mZmVlQmVhbkdsb3ciOwoKZnVuY3Rpb24gZ2V0UmVjZW50VW5pcXVlQ29mZmVlcyhzZXNzaW9uczogU2Vzc2lvbltdLCBsaW1pdCA9IDYpOiBDb2ZmZWVJZGVudGl0eVtdIHsKICBjb25zdCBzZWVuID0gbmV3IFNldDxzdHJpbmc+KCk7CiAgY29uc3QgcmVzdWx0OiBDb2ZmZWVJZGVudGl0eVtdID0gW107CiAgZm9yIChjb25zdCBzIG9mIHNlc3Npb25zKSB7CiAgICBpZiAoIXMuY29mZmVlPy5uYW1lKSBjb250aW51ZTsKICAgIGNvbnN0IGtleSA9IGAke3MuY29mZmVlLnJvYXN0ZXJ9X18ke3MuY29mZmVlLm5hbWV9YDsKICAgIGlmICghc2Vlbi5oYXMoa2V5KSkgewogICAgICBzZWVuLmFkZChrZXkpOwogICAgICByZXN1bHQucHVzaChzLmNvZmZlZSk7CiAgICB9CiAgICBpZiAocmVzdWx0Lmxlbmd0aCA+PSBsaW1pdCkgYnJlYWs7CiAgfQogIHJldHVybiByZXN1bHQ7Cn0KCmZ1bmN0aW9uIGdldEdyZWV0aW5nKCk6IHN0cmluZyB7CiAgY29uc3QgaCA9IG5ldyBEYXRlKCkuZ2V0SG91cnMoKTsKICBpZiAoaCA8IDEyKSByZXR1cm4gIkdvb2QgbW9ybmluZyI7CiAgaWYgKGggPCAxOCkgcmV0dXJuICJHb29kIGFmdGVybm9vbiI7CiAgcmV0dXJuICJHb29kIGV2ZW5pbmciOwp9CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBIb21lUGFnZSgpIHsKICBjb25zdCBbc2Vzc2lvbnMsIHNldFNlc3Npb25zXSA9IHVzZVN0YXRlPFNlc3Npb25bXT4oW10pOwogIGNvbnN0IFt0b3RhbFNlc3Npb25zLCBzZXRUb3RhbFNlc3Npb25zXSA9IHVzZVN0YXRlPG51bWJlciB8IG51bGw+KG51bGwpOwogIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlKHRydWUpOwogIGNvbnN0IHsgcmVzZXQsIHNldENvZmZlZSwgc2V0U3RlcCwgc2V0TW9kZSwgc2V0U2tpcFNjYW4gfSA9IHVzZUZsb3dTdG9yZSgpOwogIGNvbnN0IHJvdXRlciA9IHVzZVJvdXRlcigpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY29uc3QgY29udHJvbGxlciA9IG5ldyBBYm9ydENvbnRyb2xsZXIoKTsKICAgIGNvbnN0IHRpbWVyID0gc2V0VGltZW91dCgoKSA9PiBjb250cm9sbGVyLmFib3J0KCksIDEwMDAwKTsKICAgIFByb21pc2UuYWxsKFsKICAgICAgZmV0Y2goIi9hcGkvc2Vzc2lvbnM/bGltaXQ9MTUiLCB7IGNhY2hlOiAibm8tc3RvcmUiLCBzaWduYWw6IGNvbnRyb2xsZXIuc2lnbmFsIH0pCiAgICAgICAgLnRoZW4ociA9PiByLmpzb24oKSkKICAgICAgICAudGhlbigoZGF0YTogU2Vzc2lvbltdKSA9PiBzZXRTZXNzaW9ucyhBcnJheS5pc0FycmF5KGRhdGEpID8gZGF0YSA6IFtdKSkKICAgICAgICAuY2F0Y2goKCkgPT4gc2V0U2Vzc2lvbnMoW10pKSwKICAgICAgZmV0Y2goIi9hcGkvc2Vzc2lvbnM/Y291bnQ9dHJ1ZSIsIHsgY2FjaGU6ICJuby1zdG9yZSIsIHNpZ25hbDogY29udHJvbGxlci5zaWduYWwgfSkKICAgICAgICAudGhlbihyID0+IHIub2sgPyByLmpzb24oKSA6IG51bGwpCiAgICAgICAgLnRoZW4oKGRhdGE6IHsgdG90YWw6IG51bWJlciB9IHwgbnVsbCkgPT4geyBpZiAoZGF0YT8udG90YWwgIT0gbnVsbCkgc2V0VG90YWxTZXNzaW9ucyhkYXRhLnRvdGFsKTsgfSkKICAgICAgICAuY2F0Y2goKCkgPT4ge30pLAogICAgXSkuZmluYWxseSgoKSA9PiB7IGNsZWFyVGltZW91dCh0aW1lcik7IHNldExvYWRpbmcoZmFsc2UpOyB9KTsKICAgIHJldHVybiAoKSA9PiB7IGNsZWFyVGltZW91dCh0aW1lcik7IGNvbnRyb2xsZXIuYWJvcnQoKTsgfTsKICB9LCBbXSk7CgogIGNvbnN0IHJlY2VudENvZmZlZXMgPSBnZXRSZWNlbnRVbmlxdWVDb2ZmZWVzKHNlc3Npb25zLCA2KTsKCiAgY29uc3QgYnJld0FnYWluID0gKGNvZmZlZTogQ29mZmVlSWRlbnRpdHkpID0+IHsKICAgIHJlc2V0KCk7CiAgICBzZXRDb2ZmZWUoY29mZmVlKTsKICAgIHNldE1vZGUoImhvbWUiKTsKICAgIHNldFNraXBTY2FuKHRydWUpOwogICAgc2V0U3RlcCgiY29udGV4dCIpOwogICAgcm91dGVyLnB1c2goIi9icmV3L25ldyIpOwogIH07CgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtZnVsbCBiZy1icmV3LWJnIGZsZXggZmxleC1jb2wgcGItOCI+CgogICAgICB7LyogSGVhZGVyICovfQogICAgICA8ZGl2IGNsYXNzTmFtZT0icHgtNSBwYi01IiBzdHlsZT17eyBwYWRkaW5nVG9wOiAiY2FsYyhlbnYoc2FmZS1hcmVhLWluc2V0LXRvcCkgKyAxLjI1cmVtKSIgfX0+CiAgICAgICAgPGRpdj4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQtc20gbWItMC41Ij57Z2V0R3JlZXRpbmcoKX08L3A+CiAgICAgICAgICA8aDEgY2xhc3NOYW1lPSJmb250LWRpc3BsYXkgdGV4dC0zeGwgdGV4dC13aGl0ZSBsZWFkaW5nLW5vbmUiPgogICAgICAgICAgICBXZWxjb21lIHRvIDxzcGFuIHN0eWxlPXt7IGNvbG9yOiAidmFyKC0tcHJpbWFyeSkiIH19PkJyZXdMb2c8L3NwYW4+CiAgICAgICAgICA8L2gxPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWJyZXctbXV0ZWQgdGV4dC1zbSBtdC0xLjUiPgogICAgICAgICAgICB7bG9hZGluZyA/ICJcdTAwQTAiIDogKHRvdGFsU2Vzc2lvbnMgPz8gc2Vzc2lvbnMubGVuZ3RoKSA+IDAKICAgICAgICAgICAgICA/IGAke3RvdGFsU2Vzc2lvbnMgPz8gc2Vzc2lvbnMubGVuZ3RofSBzZXNzaW9uJHsodG90YWxTZXNzaW9ucyA/PyBzZXNzaW9ucy5sZW5ndGgpICE9PSAxID8gInMiIDogIiJ9IGxvZ2dlZGAKICAgICAgICAgICAgICA6ICJZb3VyIGNvZmZlZSBkaWFyeSJ9CiAgICAgICAgICA8L3A+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgoKICAgICAgey8qIEJyZXcgQWdhaW4g4oCUIGhvcml6b250YWwgc2Nyb2xsIGNhcm91c2VsICovfQogICAgICB7IWxvYWRpbmcgJiYgcmVjZW50Q29mZmVlcy5sZW5ndGggPiAwICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWItNiI+CiAgICAgICAgICA8cCBjbGFzc05hbWU9ImxhYmVsLW1vbm8gdGV4dC1icmV3LW11dGVkIHB4LTUgbWItMyI+QnJldyBBZ2FpbjwvcD4KICAgICAgICAgIDxkaXYKICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4IGdhcC0zIG92ZXJmbG93LXgtYXV0byIKICAgICAgICAgICAgc3R5bGU9e3sgcGFkZGluZ0xlZnQ6ICIxLjI1cmVtIiwgcGFkZGluZ1JpZ2h0OiAiMS4yNXJlbSIsIHNjcm9sbGJhcldpZHRoOiAibm9uZSIgfX0KICAgICAgICAgID4KICAgICAgICAgICAge3JlY2VudENvZmZlZXMubWFwKChjLCBpKSA9PiAoCiAgICAgICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICAgICAga2V5PXtpfQogICAgICAgICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gYnJld0FnYWluKGMpfQogICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJzaHJpbmstMCB3LTM2IGJnLWJyZXctc3VyZmFjZSBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyIHJvdW5kZWQtMnhsIHB4LTMgcHktMyB0ZXh0LWxlZnQgYWN0aXZlOnNjYWxlLTk1IHRyYW5zaXRpb24tdHJhbnNmb3JtIgogICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgIHtjLnJvYXN0ZXIgJiYgKAogICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXhzIG1iLTEgdHJ1bmNhdGUiPntjLnJvYXN0ZXJ9PC9wPgogICAgICAgICAgICAgICAgKX0KICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC13aGl0ZSB0ZXh0LXNtIGZvbnQtbWVkaXVtIGxlYWRpbmctdGlnaHQgbGluZS1jbGFtcC0yIj57Yy5uYW1lfTwvcD4KICAgICAgICAgICAgICAgIHtjLm9yaWdpbiAmJiAoCiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQteHMgbXQtMSB0cnVuY2F0ZSI+e2Mub3JpZ2lufTwvcD4KICAgICAgICAgICAgICAgICl9CiAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICkpfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgICl9CgogICAgICB7LyogUmVjZW50IEJyZXdzICovfQogICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleC0xIHB4LTUiPgogICAgICAgIHshbG9hZGluZyAmJiBzZXNzaW9ucy5sZW5ndGggPiAwICYmICgKICAgICAgICAgIDxwIGNsYXNzTmFtZT0ibGFiZWwtbW9ubyB0ZXh0LWJyZXctbXV0ZWQgbWItMyI+UmVjZW50IEJyZXdzPC9wPgogICAgICAgICl9CiAgICAgICAge2xvYWRpbmcgPyAoCiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBmbGV4LWNvbCBnYXAtMyI+CiAgICAgICAgICAgIHtbMSwgMiwgM10ubWFwKGkgPT4gKAogICAgICAgICAgICAgIDxkaXYga2V5PXtpfSBjbGFzc05hbWU9ImgtNDQgcm91bmRlZC0yeGwgYmctYnJldy1zdXJmYWNlIGFuaW1hdGUtcHVsc2UiIC8+CiAgICAgICAgICAgICkpfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgKSA6IHNlc3Npb25zLmxlbmd0aCA9PT0gMCA/ICgKICAgICAgICAgIDxFbXB0eVN0YXRlIC8+CiAgICAgICAgKSA6ICgKICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGZsZXgtY29sIGdhcC00Ij4KICAgICAgICAgICAge3Nlc3Npb25zLnNsaWNlKDAsIDUpLm1hcChzID0+IDxTZXNzaW9uQ2FyZCBrZXk9e3MuaWR9IHNlc3Npb249e3N9IC8+KX0KICAgICAgICAgIDwvZGl2PgogICAgICAgICl9CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKTsKfQoKZnVuY3Rpb24gRW1wdHlTdGF0ZSgpIHsKICBjb25zdCByb3V0ZXIgPSB1c2VSb3V0ZXIoKTsKICBjb25zdCByZXNldCA9IHVzZUZsb3dTdG9yZShzID0+IHMucmVzZXQpOwogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgaC1bNjB2aF0gdGV4dC1jZW50ZXIgZ2FwLTYiPgogICAgICA8Q29mZmVlQmVhbkdsb3cgc2l6ZT17ODB9IC8+CiAgICAgIDxkaXY+CiAgICAgICAgPGgyIGNsYXNzTmFtZT0iZm9udC1kaXNwbGF5IHRleHQtMnhsIHRleHQtd2hpdGUgbWItMiI+U3RhcnQgeW91ciBmaXJzdCBicmV3PC9oMj4KICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXNtIG1heC13LVsyNjBweF0iPlNjYW4gYSBjb2ZmZWUgYmFnLCBnZXQgYSByZWNpcGUgcmVjb21tZW5kYXRpb24sIGFuZCBkb2N1bWVudCB5b3VyIHJlc3VsdHMuPC9wPgogICAgICA8L2Rpdj4KICAgICAgPGJ1dHRvbgogICAgICAgIHR5cGU9ImJ1dHRvbiIKICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IHJlc2V0KCk7IHJvdXRlci5wdXNoKCIvYnJldy9uZXciKTsgfX0KICAgICAgICBjbGFzc05hbWU9ImgtWzUycHhdIHB4LTggcm91bmRlZC14bCBiZy1icmV3LWFjY2VudCB0ZXh0LWJyZXctYWNjZW50LWZnIGZvbnQtc2VtaWJvbGQgdGV4dC1iYXNlIGFjdGl2ZTpzY2FsZS05NSB0cmFuc2l0aW9uLXRyYW5zZm9ybSIKICAgICAgPgogICAgICAgIEJyZXcgeW91ciBmaXJzdCBjdXAKICAgICAgPC9idXR0b24+CiAgICA8L2Rpdj4KICApOwp9Cg=="}
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Session } from "@/lib/types/session";
+import type { CoffeeIdentity } from "@/lib/types/session";
+import SessionCard from "@/components/session/SessionCard";
+import { useFlowStore } from "@/store/flowStore";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+
+function getRecentUniqueCoffees(sessions: Session[], limit = 6): CoffeeIdentity[] {
+  const seen = new Set<string>();
+  const result: CoffeeIdentity[] = [];
+  for (const s of sessions) {
+    if (!s.coffee?.name) continue;
+    const key = `${s.coffee.roaster}__${s.coffee.name}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(s.coffee);
+    }
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+export default function HomePage() {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [totalSessions, setTotalSessions] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { reset, setCoffee, setStep, setMode, setSkipScan } = useFlowStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    Promise.all([
+      fetch("/api/sessions?limit=15", { cache: "no-store", signal: controller.signal })
+        .then(r => r.json())
+        .then((data: Session[]) => setSessions(Array.isArray(data) ? data : []))
+        .catch(() => setSessions([])),
+      fetch("/api/sessions?count=true", { cache: "no-store", signal: controller.signal })
+        .then(r => r.ok ? r.json() : null)
+        .then((data: { total: number } | null) => { if (data?.total != null) setTotalSessions(data.total); })
+        .catch(() => {}),
+    ]).finally(() => { clearTimeout(timer); setLoading(false); });
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, []);
+
+  const recentCoffees = getRecentUniqueCoffees(sessions, 6);
+
+  const brewAgain = (coffee: CoffeeIdentity) => {
+    reset();
+    setCoffee(coffee);
+    setMode("home");
+    setSkipScan(true);
+    setStep("context");
+    router.push("/brew/new");
+  };
+
+  return (
+    <div className="min-h-full bg-brew-bg flex flex-col pb-8">
+
+      {/* Header */}
+      <div className="px-5 pb-5" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <div>
+          <p className="text-brew-muted text-sm mb-0.5">{getGreeting()}</p>
+          <h1 className="font-display text-3xl text-white leading-none">
+            Welcome to <span style={{ color: "var(--primary)" }}>BrewLog</span>
+          </h1>
+          <p className="text-brew-muted text-sm mt-1.5">
+            {loading ? "\u00A0" : (totalSessions ?? sessions.length) > 0
+              ? `${totalSessions ?? sessions.length} session${(totalSessions ?? sessions.length) !== 1 ? "s" : ""} logged`
+              : "Your coffee diary"}
+          </p>
+        </div>
+      </div>
+
+      {/* Brew Again — horizontal scroll carousel */}
+      {!loading && recentCoffees.length > 0 && (
+        <div className="mb-6">
+          <p className="label-mono text-brew-muted px-5 mb-3">Brew Again</p>
+          <div
+            className="flex gap-3 overflow-x-auto"
+            style={{ paddingLeft: "1.25rem", paddingRight: "1.25rem", scrollbarWidth: "none" }}
+          >
+            {recentCoffees.map((c, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => brewAgain(c)}
+                className="shrink-0 w-36 bg-brew-surface border border-brew-border rounded-2xl px-3 py-3 text-left active:scale-95 transition-transform"
+              >
+                {c.roaster && (
+                  <p className="text-brew-muted text-xs mb-1 truncate">{c.roaster}</p>
+                )}
+                <p className="text-white text-sm font-medium leading-tight line-clamp-2">{c.name}</p>
+                {c.origin && (
+                  <p className="text-brew-muted text-xs mt-1 truncate">{c.origin}</p>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Brews */}
+      <div className="flex-1 px-5">
+        {!loading && sessions.length > 0 && (
+          <p className="label-mono text-brew-muted mb-3">Recent Brews</p>
+        )}
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-44 rounded-2xl bg-brew-surface animate-pulse" />
+            ))}
+          </div>
+        ) : sessions.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="flex flex-col gap-4">
+            {sessions.slice(0, 5).map(s => <SessionCard key={s.id} session={s} />)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  const router = useRouter();
+  const reset = useFlowStore(s => s.reset);
+  return (
+    <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-6">
+      <CoffeeBeanGlow size={80} />
+      <div>
+        <h2 className="font-display text-2xl text-white mb-2">Start your first brew</h2>
+        <p className="text-brew-muted text-sm max-w-[260px]">Scan a coffee bag, get a recipe recommendation, and document your results.</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => { reset(); router.push("/brew/new"); }}
+        className="h-[52px] px-8 rounded-xl bg-brew-accent text-brew-accent-fg font-semibold text-base active:scale-95 transition-transform"
+      >
+        Brew your first cup
+      </button>
+    </div>
+  );
+}

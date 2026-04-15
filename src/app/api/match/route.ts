@@ -1,1 +1,347 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IEFudGhyb3BpYyBmcm9tICJAYW50aHJvcGljLWFpL3NkayI7CmltcG9ydCB7IGdldEFkbWluRGIgfSBmcm9tICJAL2xpYi9maXJlYmFzZS9hZG1pbiI7CmltcG9ydCB7IHJlcXVpcmVBdXRoIH0gZnJvbSAiQC9saWIvYXV0aC9yZXF1aXJlQXV0aCI7CmltcG9ydCB0eXBlIHsgU2Vzc2lvbiB9IGZyb20gIkAvbGliL3R5cGVzL3Nlc3Npb24iOwppbXBvcnQgdHlwZSB7IFVzZXJQcmVmZXJlbmNlcyB9IGZyb20gIkAvbGliL3R5cGVzL3ByZWZlcmVuY2VzIjsKCi8qKiBGZXRjaCBhIHByb2R1Y3QgcGFnZSBVUkwgYW5kIGV4dHJhY3QgbWVhbmluZ2Z1bCB0ZXh0IGZvciBDbGF1ZGUgKi8KYXN5bmMgZnVuY3Rpb24gZmV0Y2hQYWdlVGV4dCh1cmw6IHN0cmluZyk6IFByb21pc2U8c3RyaW5nPiB7CiAgLy8gT25seSBhbGxvdyBIVFRQUyBVUkxzIHRvIHByZXZlbnQgU1NSRiBhZ2FpbnN0IGludGVybmFsIHJlc291cmNlcwogIGlmICghdXJsLnN0YXJ0c1dpdGgoImh0dHBzOi8vIikpIHsKICAgIHJldHVybiAiW09ubHkgSFRUUFMgVVJMcyBhcmUgc3VwcG9ydGVkXSI7CiAgfQoKICBjb25zdCBjb250cm9sbGVyID0gbmV3IEFib3J0Q29udHJvbGxlcigpOwogIGNvbnN0IHRpbWVvdXQgPSBzZXRUaW1lb3V0KCgpID0+IGNvbnRyb2xsZXIuYWJvcnQoKSwgODAwMCk7CgogIHRyeSB7CiAgICBjb25zdCByZXMgPSBhd2FpdCBmZXRjaCh1cmwsIHsKICAgICAgc2lnbmFsOiBjb250cm9sbGVyLnNpZ25hbCwKICAgICAgaGVhZGVyczogewogICAgICAgICJVc2VyLUFnZW50IjogIk1vemlsbGEvNS4wIChjb21wYXRpYmxlOyBCcmV3TG9nLzEuMCkiLAogICAgICAgICJBY2NlcHQiOiAidGV4dC9odG1sIiwKICAgICAgfSwKICAgIH0pOwogICAgY2xlYXJUaW1lb3V0KHRpbWVvdXQpOwoKICAgIGlmICghcmVzLm9rKSByZXR1cm4gYFtDb3VsZCBub3QgZmV0Y2ggcGFnZTogSFRUUCAke3Jlcy5zdGF0dXN9XWA7CgogICAgY29uc3QgaHRtbCA9IGF3YWl0IHJlcy50ZXh0KCk7CgogICAgY29uc3QgdGl0bGUgPSBodG1sLm1hdGNoKC88dGl0bGVbXj5dKj4oW148XSspPFwvdGl0bGU+L2kpPy5bMV0/LnRyaW0oKSA/PyAiIjsKICAgIGNvbnN0IG1ldGFEZXNjID0gaHRtbC5tYXRjaCgvPG1ldGFbXj5dK25hbWU9WyInXWRlc2NyaXB0aW9uWyInXVtePl0rY29udGVudD1bIiddKFteIiddKylbIiddL2kpPy5bMV0/LnRyaW0oKQogICAgICA/PyBodG1sLm1hdGNoKC88bWV0YVtePl0rY29udGVudD1bIiddKFteIiddKylbIiddW14+XStuYW1lPVsiJ11kZXNjcmlwdGlvblsiJ10vaSk/LlsxXT8udHJpbSgpID8/ICIiOwogICAgY29uc3Qgb2dUaXRsZSA9IGh0bWwubWF0Y2goLzxtZXRhW14+XStwcm9wZXJ0eT1bIiddb2c6dGl0bGVbIiddW14+XStjb250ZW50PVsiJ10oW14iJ10rKVsiJ10vaSk/LlsxXT8udHJpbSgpID8/ICIiOwogICAgY29uc3Qgb2dEZXNjID0gaHRtbC5tYXRjaCgvPG1ldGFbXj5dK3Byb3BlcnR5PVsiJ11vZzpkZXNjcmlwdGlvblsiJ11bXj5dK2NvbnRlbnQ9WyInXShbXiInXSspWyInXS9pKT8uWzFdPy50cmltKCkgPz8gIiI7CgogICAgY29uc3QgYm9keUNsZWFuID0gaHRtbAogICAgICAucmVwbGFjZSgvPHNjcmlwdFtcc1xTXSo/PFwvc2NyaXB0Pi9naSwgIiIpCiAgICAgIC5yZXBsYWNlKC88c3R5bGVbXHNcU10qPzxcL3N0eWxlPi9naSwgIiIpCiAgICAgIC5yZXBsYWNlKC88c3ZnW1xzXFNdKj88XC9zdmc+L2dpLCAiIikKICAgICAgLnJlcGxhY2UoLzxuYXZbXHNcU10qPzxcL25hdj4vZ2ksICIiKQogICAgICAucmVwbGFjZSgvPGZvb3Rlcltcc1xTXSo/PFwvZm9vdGVyPi9naSwgIiIpCiAgICAgIC5yZXBsYWNlKC88aGVhZGVyW1xzXFNdKj88XC9oZWFkZXI+L2dpLCAiIik7CgogICAgY29uc3QgdGV4dFBhcnRzOiBzdHJpbmdbXSA9IEFycmF5LmZyb20oCiAgICAgIGJvZHlDbGVhbi5tYXRjaEFsbCgvPChoWzEtM118cHxsaXx0ZHx0aClbXj5dKj4oW1xzXFNdKj8pPFwvXDE+L2dpKQogICAgKQogICAgICAubWFwKG0gPT4gbVsyXS5yZXBsYWNlKC88W14+XSs+L2csICIgIikucmVwbGFjZSgvXHMrL2csICIgIikudHJpbSgpKQogICAgICAuZmlsdGVyKHQgPT4gdC5sZW5ndGggPiAxMCAmJiB0Lmxlbmd0aCA8IDYwMCk7CgogICAgY29uc3QgY29tYmluZWQgPSBbCiAgICAgIHRpdGxlICYmIGBUaXRsZTogJHt0aXRsZX1gLAogICAgICBvZ1RpdGxlICYmIG9nVGl0bGUgIT09IHRpdGxlICYmIGBPRyBUaXRsZTogJHtvZ1RpdGxlfWAsCiAgICAgIG1ldGFEZXNjICYmIGBEZXNjcmlwdGlvbjogJHttZXRhRGVzY31gLAogICAgICBvZ0Rlc2MgJiYgb2dEZXNjICE9PSBtZXRhRGVzYyAmJiBgT0cgRGVzY3JpcHRpb246ICR7b2dEZXNjfWAsCiAgICAgIHRleHRQYXJ0cy5sZW5ndGggPiAwICYmIGBQYWdlIGNvbnRlbnQ6XG4ke3RleHRQYXJ0cy5zbGljZSgwLCA0MCkuam9pbigiXG4iKX1gLAogICAgXS5maWx0ZXIoQm9vbGVhbikuam9pbigiXG4iKTsKCiAgICByZXR1cm4gY29tYmluZWQuc2xpY2UoMCwgNDAwMCk7CiAgfSBjYXRjaCB7CiAgICBjbGVhclRpbWVvdXQodGltZW91dCk7CiAgICByZXR1cm4gIltDb3VsZCBub3QgZmV0Y2ggb3IgcGFyc2UgdGhlIHBhZ2VdIjsKICB9Cn0KCi8qKiBDYWxjdWxhdGUgcm9hc3QgZnJlc2huZXNzIHN0YXR1cyAqLwpmdW5jdGlvbiBnZXRSb2FzdEZyZXNobmVzcyhyb2FzdERhdGU6IHN0cmluZyk6IHN0cmluZyB7CiAgY29uc3QgZGF5cyA9IE1hdGguZmxvb3IoKERhdGUubm93KCkgLSBuZXcgRGF0ZShyb2FzdERhdGUpLmdldFRpbWUoKSkgLyA4NjQwMDAwMCk7CiAgaWYgKGRheXMgPCAwKSByZXR1cm4gYFJvYXN0ZWQgaW4gdGhlIGZ1dHVyZT8gQ2hlY2sgZGF0ZS5gOwogIGlmIChkYXlzIDwgNSkgcmV0dXJuIGBSb2FzdGVkICR7ZGF5c30gZGF5cyBhZ28g4oCUIHRvbyBmcmVzaCwgbmVlZHMgcmVzdCAobWluIDcgZGF5cyBmb3IgZmlsdGVyKS4gVW5kZXJkZXZlbG9wZWQgQ08yIG1heSBjYXVzZSBzb3VybmVzcy5gOwogIGlmIChkYXlzIDw9IDIxKSByZXR1cm4gYFJvYXN0ZWQgJHtkYXlzfSBkYXlzIGFnbyDigJQgaW4gcGVhayB3aW5kb3cgKDfigJMyMSBkYXlzIGZvciBmaWx0ZXIpLiBJZGVhbCBub3cuYDsKICBpZiAoZGF5cyA8PSAzNSkgcmV0dXJuIGBSb2FzdGVkICR7ZGF5c30gZGF5cyBhZ28g4oCUIHNsaWdodGx5IHBhc3QgcGVhaywgc3RpbGwgZ29vZCBidXQgZmxhdm9ycyBtYXkgYmUgc29mdGVuaW5nLmA7CiAgaWYgKGRheXMgPD0gNjApIHJldHVybiBgUm9hc3RlZCAke2RheXN9IGRheXMgYWdvIOKAlCBwYXN0IHBlYWsuIEV4cGVjdCBmbGF0dGVyLCBsZXNzIHZpYnJhbnQgY3VwLmA7CiAgcmV0dXJuIGBSb2FzdGVkICR7ZGF5c30gZGF5cyBhZ28g4oCUIGxpa2VseSBzdGFsZS4gT3hpZGF0aW9uIHByb2JhYmxlOyBmbGF2b3JzIGR1bGwuYDsKfQoKLyoqIERlcml2ZSB0YXN0ZSBwYXR0ZXJucyBmcm9tIHJhdGVkIHNlc3Npb25zICovCmZ1bmN0aW9uIGFuYWx5emVIaXN0b3J5KHJhdGVkOiBTZXNzaW9uW10pIHsKICBjb25zdCBoaWdoID0gcmF0ZWQuZmlsdGVyKHMgPT4gKHMucmVzdWx0Py5yYXRpbmcgPz8gMCkgPj0gNCk7CiAgY29uc3QgbWlkID0gcmF0ZWQuZmlsdGVyKHMgPT4geyBjb25zdCByID0gcy5yZXN1bHQ/LnJhdGluZyA/PyAwOyByZXR1cm4gciA+PSAzICYmIHIgPCA0OyB9KTsKICBjb25zdCBsb3cgPSByYXRlZC5maWx0ZXIocyA9PiAocy5yZXN1bHQ/LnJhdGluZyA/PyAwKSA8IDMpOwoKICBjb25zdCBhdmdSYXRpbmdCeUtleSA9IChrZXk6ICJvcmlnaW4iIHwgInByb2Nlc3MiIHwgInJvYXN0TGV2ZWwiKSA9PiB7CiAgICBjb25zdCBzdW1zOiBSZWNvcmQ8c3RyaW5nLCB7IHN1bTogbnVtYmVyOyBjb3VudDogbnVtYmVyIH0+ID0ge307CiAgICBmb3IgKGNvbnN0IHMgb2YgcmF0ZWQpIHsKICAgICAgLy8gRXhjbHVkZSBicmV3IGVycm9ycyBmcm9tIHRhc3RlLXByb2ZpbGUgY2FsY3VsYXRpb25zIOKAlCB0aGUgY3VwIHdhcyBiYWQsIG5vdCB0aGUgYmVhbgogICAgICBpZiAocy5yZXN1bHQ/LmF0dHJpYnV0aW9uID09PSAiYnJldyIpIGNvbnRpbnVlOwogICAgICBjb25zdCB2YWwgPSBzLmNvZmZlZT8uW2tleV07CiAgICAgIGNvbnN0IHIgPSBzLnJlc3VsdD8ucmF0aW5nOwogICAgICBpZiAodmFsICYmIHIpIHsKICAgICAgICBpZiAoIXN1bXNbdmFsXSkgc3Vtc1t2YWxdID0geyBzdW06IDAsIGNvdW50OiAwIH07CiAgICAgICAgc3Vtc1t2YWxdLnN1bSArPSByOwogICAgICAgIHN1bXNbdmFsXS5jb3VudCsrOwogICAgICB9CiAgICB9CiAgICByZXR1cm4gT2JqZWN0LmVudHJpZXMoc3VtcykKICAgICAgLmZpbHRlcigoWywgdl0pID0+IHYuY291bnQgPj0gMSkKICAgICAgLm1hcCgoW2ssIHZdKSA9PiAoeyBuYW1lOiBrLCBhdmc6IE1hdGgucm91bmQodi5zdW0gLyB2LmNvdW50ICogMTApIC8gMTAsIGNvdW50OiB2LmNvdW50IH0pKQogICAgICAuc29ydCgoYSwgYikgPT4gYi5hdmcgLSBhLmF2Zyk7CiAgfTsKCiAgY29uc3QgdG9wRmxhdm9yTm90ZXMgPSAoKCkgPT4gewogICAgY29uc3QgY291bnRzOiBSZWNvcmQ8c3RyaW5nLCBudW1iZXI+ID0ge307CiAgICBmb3IgKGNvbnN0IHMgb2YgaGlnaCkgewogICAgICBmb3IgKGNvbnN0IG4gb2Ygcy5yZXN1bHQ/LmZsYXZvck5vdGVzID8/IFtdKSB7CiAgICAgICAgY291bnRzW25dID0gKGNvdW50c1tuXSB8fCAwKSArIDE7CiAgICAgIH0KICAgIH0KICAgIHJldHVybiBPYmplY3QuZW50cmllcyhjb3VudHMpLnNvcnQoKGEsIGIpID0+IGJbMV0gLSBhWzFdKS5zbGljZSgwLCA4KS5tYXAoKFtrXSkgPT4gayk7CiAgfSkoKTsKCiAgLy8gUm9hc3RlciBjcmFmdCByZWxpYWJpbGl0eTogYXZnIGNyYWZ0IHNjb3JlIHBlciByb2FzdGVyIChvZmY9MSwgc29saWQ9MiwgZXhjZXB0aW9uYWw9MykKICBjb25zdCByb2FzdGVyQ3JhZnRNYXA6IFJlY29yZDxzdHJpbmcsIHsgc3VtOiBudW1iZXI7IGNvdW50OiBudW1iZXI7IGV4Y2VwdGlvbmFsOiBudW1iZXI7IG9mZjogbnVtYmVyIH0+ID0ge307CiAgZm9yIChjb25zdCBzIG9mIHJhdGVkKSB7CiAgICBjb25zdCByb2FzdGVyID0gcy5jb2ZmZWU/LnJvYXN0ZXI7CiAgICBjb25zdCBjcmFmdCA9IHMucmVzdWx0Py5jcmFmdDsKICAgIGlmICghcm9hc3RlciB8fCAhY3JhZnQpIGNvbnRpbnVlOwogICAgaWYgKCFyb2FzdGVyQ3JhZnRNYXBbcm9hc3Rlcl0pIHJvYXN0ZXJDcmFmdE1hcFtyb2FzdGVyXSA9IHsgc3VtOiAwLCBjb3VudDogMCwgZXhjZXB0aW9uYWw6IDAsIG9mZjogMCB9OwogICAgcm9hc3RlckNyYWZ0TWFwW3JvYXN0ZXJdLnN1bSArPSBjcmFmdCA9PT0gImV4Y2VwdGlvbmFsIiA/IDMgOiBjcmFmdCA9PT0gInNvbGlkIiA/IDIgOiAxOwogICAgcm9hc3RlckNyYWZ0TWFwW3JvYXN0ZXJdLmNvdW50Kys7CiAgICBpZiAoY3JhZnQgPT09ICJleGNlcHRpb25hbCIpIHJvYXN0ZXJDcmFmdE1hcFtyb2FzdGVyXS5leGNlcHRpb25hbCsrOwogICAgaWYgKGNyYWZ0ID09PSAib2ZmIikgcm9hc3RlckNyYWZ0TWFwW3JvYXN0ZXJdLm9mZisrOwogIH0KICBjb25zdCByb2FzdGVyQ3JhZnQgPSBPYmplY3QuZW50cmllcyhyb2FzdGVyQ3JhZnRNYXApCiAgICAubWFwKChbbmFtZSwgdl0pID0+ICh7IG5hbWUsIGF2Z0NyYWZ0OiBNYXRoLnJvdW5kKHYuc3VtIC8gdi5jb3VudCAqIDEwKSAvIDEwLCBjb3VudDogdi5jb3VudCwgZXhjZXB0aW9uYWw6IHYuZXhjZXB0aW9uYWwsIG9mZjogdi5vZmYgfSkpCiAgICAuc29ydCgoYSwgYikgPT4gYi5hdmdDcmFmdCAtIGEuYXZnQ3JhZnQpOwoKICAvLyBGaXQgYnkgcHJvY2VzczogaG93IG9mdGVuIGVhY2ggcHJvY2VzcyBmZWVscyBsaWtlICJteSBraW5kIG9mIGN1cCIgdnMgIm5vdCBteSBzdHlsZSIKICBjb25zdCBmaXRCeVByb2Nlc3M6IFJlY29yZDxzdHJpbmcsIHsgbXlLaW5kOiBudW1iZXI7IG5ldXRyYWw6IG51bWJlcjsgbm90TXlTdHlsZTogbnVtYmVyIH0+ID0ge307CiAgZm9yIChjb25zdCBzIG9mIHJhdGVkKSB7CiAgICBjb25zdCBwcm9jZXNzID0gcy5jb2ZmZWU/LnByb2Nlc3M7CiAgICBjb25zdCBmaXQgPSBzLnJlc3VsdD8uZml0OwogICAgaWYgKCFwcm9jZXNzIHx8ICFmaXQpIGNvbnRpbnVlOwogICAgaWYgKCFmaXRCeVByb2Nlc3NbcHJvY2Vzc10pIGZpdEJ5UHJvY2Vzc1twcm9jZXNzXSA9IHsgbXlLaW5kOiAwLCBuZXV0cmFsOiAwLCBub3RNeVN0eWxlOiAwIH07CiAgICBpZiAoZml0ID09PSAibXkta2luZCIpIGZpdEJ5UHJvY2Vzc1twcm9jZXNzXS5teUtpbmQrKzsKICAgIGVsc2UgaWYgKGZpdCA9PT0gIm5ldXRyYWwiKSBmaXRCeVByb2Nlc3NbcHJvY2Vzc10ubmV1dHJhbCsrOwogICAgZWxzZSBpZiAoZml0ID09PSAibm90LW15LXN0eWxlIikgZml0QnlQcm9jZXNzW3Byb2Nlc3NdLm5vdE15U3R5bGUrKzsKICB9CgogIHJldHVybiB7CiAgICB0b3RhbFJhdGVkOiByYXRlZC5sZW5ndGgsCiAgICBoaWdoQ291bnQ6IGhpZ2gubGVuZ3RoLAogICAgbWlkQ291bnQ6IG1pZC5sZW5ndGgsCiAgICBsb3dDb3VudDogbG93Lmxlbmd0aCwKICAgIG9yaWdpblJhdGluZ3M6IGF2Z1JhdGluZ0J5S2V5KCJvcmlnaW4iKSwKICAgIHByb2Nlc3NSYXRpbmdzOiBhdmdSYXRpbmdCeUtleSgicHJvY2VzcyIpLAogICAgcm9hc3RMZXZlbFJhdGluZ3M6IGF2Z1JhdGluZ0J5S2V5KCJyb2FzdExldmVsIiksCiAgICB0b3BGbGF2b3JOb3RlcywKICAgIHJvYXN0ZXJDcmFmdCwKICAgIGZpdEJ5UHJvY2VzcywKICB9Owp9Cgpjb25zdCBjbGllbnQgPSBuZXcgQW50aHJvcGljKHsgYXBpS2V5OiBwcm9jZXNzLmVudi5BTlRIUk9QSUNfQVBJX0tFWSB9KTsKCmV4cG9ydCBpbnRlcmZhY2UgTWF0Y2hSZXN1bHQgewogIG1hdGNoTGV2ZWw6ICJncmVhdCIgfCAiZ29vZCIgfCAibWF5YmUiIHwgImF2b2lkIjsKICBzY29yZTogbnVtYmVyOyAvLyAw4oCTMTAwCiAgaGVhZGxpbmU6IHN0cmluZzsKICByZWFzb25zOiBzdHJpbmdbXTsKICBleHBlY3Q6IHN0cmluZzsKICBjYXV0aW9uPzogc3RyaW5nOwogIGZyZXNobmVzc05vdGU/OiBzdHJpbmc7IC8vIHJldHVybmVkIGlmIHJvYXN0IGRhdGUgd2FzIHByb3ZpZGVkCn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBjb25zdCBhdXRoRXJyb3IgPSBhd2FpdCByZXF1aXJlQXV0aChyZXEpOwogIGlmIChhdXRoRXJyb3IpIHJldHVybiBhdXRoRXJyb3I7CgogIHRyeSB7CiAgICBjb25zdCBib2R5ID0gYXdhaXQgcmVxLmpzb24oKTsKICAgIGNvbnN0IHsgY29mZmVlLCBpbWFnZUJhc2U2NCwgbWltZVR5cGUsIHVybCB9ID0gYm9keTsKCiAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKCiAgICAvLyBMb2FkIHVzZXIgcHJlZmVyZW5jZXMgYW5kIHNlc3Npb25zIGluIHBhcmFsbGVsCiAgICBjb25zdCBbcHJlZlJlc3VsdCwgc2Vzc2lvbnNTbmFwXSA9IGF3YWl0IFByb21pc2UuYWxsKFsKICAgICAgZGIuY29sbGVjdGlvbigicHJlZmVyZW5jZXMiKS5kb2MoImRlZmF1bHQiKS5nZXQoKS5jYXRjaCgoKSA9PiBudWxsKSwKICAgICAgZGIuY29sbGVjdGlvbigic2Vzc2lvbnMiKS5vcmRlckJ5KCJjcmVhdGVkQXQiLCAiZGVzYyIpLmxpbWl0KDEwMCkuZ2V0KCksCiAgICBdKTsKCiAgICBjb25zdCBwcmVmZXJlbmNlczogVXNlclByZWZlcmVuY2VzIHwgbnVsbCA9IHByZWZSZXN1bHQ/LmV4aXN0cwogICAgICA/IChwcmVmUmVzdWx0LmRhdGEoKSBhcyBVc2VyUHJlZmVyZW5jZXMpCiAgICAgIDogbnVsbDsKCiAgICBjb25zdCBzZXNzaW9ucyA9IHNlc3Npb25zU25hcC5kb2NzLm1hcChkID0+IGQuZGF0YSgpIGFzIFNlc3Npb24pOwogICAgY29uc3QgcmF0ZWQgPSBzZXNzaW9ucy5maWx0ZXIocyA9PiBzLnJlc3VsdD8ucmF0aW5nKTsKCiAgICAvLyBQYXR0ZXJuIGFuYWx5c2lzCiAgICBjb25zdCBwYXR0ZXJucyA9IGFuYWx5emVIaXN0b3J5KHJhdGVkKTsKCiAgICAvLyBCdWlsZCB0YXN0ZSBwcm9maWxlIHNlY3Rpb24gZnJvbSBhY3R1YWwgZGF0YSArIHByZWZzCiAgICBjb25zdCB0YXN0ZVByb2ZpbGVMaW5lczogc3RyaW5nW10gPSBbXTsKCiAgICBpZiAocHJlZmVyZW5jZXM/LnRhc3RlUHJvZmlsZSkgewogICAgICBjb25zdCB0cCA9IHByZWZlcmVuY2VzLnRhc3RlUHJvZmlsZTsKICAgICAgaWYgKHRwLmxpa2VkT3JpZ2lucz8ubGVuZ3RoKSB0YXN0ZVByb2ZpbGVMaW5lcy5wdXNoKGBTdGF0ZWQgbGlrZWQgb3JpZ2luczogJHt0cC5saWtlZE9yaWdpbnMuam9pbigiLCAiKX1gKTsKICAgICAgaWYgKHRwLmxpa2VkUHJvY2Vzc2VzPy5sZW5ndGgpIHRhc3RlUHJvZmlsZUxpbmVzLnB1c2goYFN0YXRlZCBsaWtlZCBwcm9jZXNzZXM6ICR7dHAubGlrZWRQcm9jZXNzZXMuam9pbigiLCAiKX1gKTsKICAgICAgaWYgKHRwLmF2b2lkUHJvY2Vzc2VzPy5sZW5ndGgpIHRhc3RlUHJvZmlsZUxpbmVzLnB1c2goYFN0YXRlZCBhdm9pZCBwcm9jZXNzZXM6ICR7dHAuYXZvaWRQcm9jZXNzZXMuam9pbigiLCAiKX1gKTsKICAgICAgaWYgKHRwLnByZWZlcnJlZEJvZHlMZXZlbCkgdGFzdGVQcm9maWxlTGluZXMucHVzaChgUHJlZmVycmVkIGJvZHk6ICR7dHAucHJlZmVycmVkQm9keUxldmVsfWApOwogICAgICBpZiAodHAucHJlZmVycmVkQWNpZGl0eUxldmVsKSB0YXN0ZVByb2ZpbGVMaW5lcy5wdXNoKGBQcmVmZXJyZWQgYWNpZGl0eTogJHt0cC5wcmVmZXJyZWRBY2lkaXR5TGV2ZWx9YCk7CiAgICB9CgogICAgLy8gQWN0dWFsIHJhdGluZ3MgYnkgb3JpZ2luL3Byb2Nlc3MgKHRoZSByZWFsIHNpZ25hbCkKICAgIGNvbnN0IG9yaWdpblN1bW1hcnkgPSBwYXR0ZXJucy5vcmlnaW5SYXRpbmdzLmxlbmd0aCA+IDAKICAgICAgPyBwYXR0ZXJucy5vcmlnaW5SYXRpbmdzLnNsaWNlKDAsIDgpLm1hcChvID0+IGAgICR7by5uYW1lfTogYXZnICR7by5hdmd94piFICgke28uY291bnR9IHNlc3Npb25zKWApLmpvaW4oIlxuIikKICAgICAgOiAiICAobm8gb3JpZ2luIGRhdGEgeWV0KSI7CgogICAgY29uc3QgcHJvY2Vzc1N1bW1hcnkgPSBwYXR0ZXJucy5wcm9jZXNzUmF0aW5ncy5sZW5ndGggPiAwCiAgICAgID8gcGF0dGVybnMucHJvY2Vzc1JhdGluZ3MubWFwKHAgPT4gYCAgJHtwLm5hbWV9OiBhdmcgJHtwLmF2Z33imIUgKCR7cC5jb3VudH0gc2Vzc2lvbnMpYCkuam9pbigiXG4iKQogICAgICA6ICIgIChubyBwcm9jZXNzIGRhdGEgeWV0KSI7CgogICAgY29uc3Qgcm9hc3RMZXZlbFN1bW1hcnkgPSBwYXR0ZXJucy5yb2FzdExldmVsUmF0aW5ncy5sZW5ndGggPiAwCiAgICAgID8gcGF0dGVybnMucm9hc3RMZXZlbFJhdGluZ3MubWFwKHIgPT4gYCAgJHtyLm5hbWV9OiBhdmcgJHtyLmF2Z33imIUgKCR7ci5jb3VudH0gc2Vzc2lvbnMpYCkuam9pbigiXG4iKQogICAgICA6ICIgIChubyByb2FzdCBsZXZlbCBkYXRhIHlldCkiOwoKICAgIGNvbnN0IGZsYXZvckFmZmluaXRpZXMgPSBwYXR0ZXJucy50b3BGbGF2b3JOb3Rlcy5sZW5ndGggPiAwCiAgICAgID8gYFRvcCByZWN1cnJpbmcgZmxhdm9ycyBpbiA04piFKyBzZXNzaW9uczogJHtwYXR0ZXJucy50b3BGbGF2b3JOb3Rlcy5qb2luKCIsICIpfWAKICAgICAgOiAiIjsKCiAgICAvLyBSZWNlbnQgc2Vzc2lvbnMgKGxhc3QgMTIgcmF0ZWQpCiAgICBjb25zdCByZWNlbnRIaXN0b3J5ID0gcmF0ZWQuc2xpY2UoMCwgMTIpLm1hcChzID0+IHsKICAgICAgY29uc3QgYXR0ciA9IHMucmVzdWx0Py5hdHRyaWJ1dGlvbiA/IGAgfCBhdHRyaWJ1dGVkIHRvOiAke3MucmVzdWx0LmF0dHJpYnV0aW9ufWAgOiAiIjsKICAgICAgY29uc3QgY3JhZnQgPSBzLnJlc3VsdD8uY3JhZnQgPyBgIHwgY3JhZnQ6ICR7cy5yZXN1bHQuY3JhZnR9YCA6ICIiOwogICAgICBjb25zdCBmaXQgPSBzLnJlc3VsdD8uZml0ID8gYCB8IGZpdDogJHtzLnJlc3VsdC5maXR9YCA6ICIiOwogICAgICByZXR1cm4gYC0gJHtzLmNvZmZlZT8ubmFtZSA/PyAiPyJ9IGJ5ICR7cy5jb2ZmZWU/LnJvYXN0ZXIgPz8gIj8ifTogJHtzLmNvZmZlZT8ub3JpZ2luID8/ICI/In0gJHtzLmNvZmZlZT8ucHJvY2VzcyA/PyAiIn0gJHtzLmNvZmZlZT8ucm9hc3RMZXZlbCA/PyAiIn0gfCAke3MucmVzdWx0Py5yYXRpbmd9LzUgfCAke3MucmVzdWx0Py5mbGF2b3JOb3Rlcz8uam9pbigiLCAiKSB8fCAibm8gbm90ZXMifSB8IGJvZHk6ICR7cy5yZXN1bHQ/LmJvZHkgPz8gIj8ifSB8IGFjaWRpdHk6ICR7cy5yZXN1bHQ/LmFjaWRpdHkgPz8gIj8ifSR7YXR0cn0ke2NyYWZ0fSR7Zml0fWA7CiAgICB9KS5qb2luKCJcbiIpOwoKICAgIC8vIFJvYXN0ZXIgY3JhZnQgc3VtbWFyeQogICAgY29uc3Qgcm9hc3RlckNyYWZ0U3VtbWFyeSA9IHBhdHRlcm5zLnJvYXN0ZXJDcmFmdC5sZW5ndGggPiAwCiAgICAgID8gcGF0dGVybnMucm9hc3RlckNyYWZ0Lm1hcChyID0+IGAgICR7ci5uYW1lfTogYXZnIGNyYWZ0ICR7ci5hdmdDcmFmdH0vMyAoJHtyLmNvdW50fSBzZXNzaW9ucywgJHtyLmV4Y2VwdGlvbmFsfSBleGNlcHRpb25hbCwgJHtyLm9mZn0gb2ZmKWApLmpvaW4oIlxuIikKICAgICAgOiAiICAobm8gY3JhZnQgZGF0YSB5ZXQpIjsKCiAgICAvLyBGaXQgYnkgcHJvY2VzcyBzdW1tYXJ5CiAgICBjb25zdCBmaXRQcm9jZXNzU3VtbWFyeSA9IE9iamVjdC5rZXlzKHBhdHRlcm5zLmZpdEJ5UHJvY2VzcykubGVuZ3RoID4gMAogICAgICA/IE9iamVjdC5lbnRyaWVzKHBhdHRlcm5zLmZpdEJ5UHJvY2VzcykubWFwKChbcCwgdl0pID0+IGAgICR7cH06ICR7di5teUtpbmR9IG15LWtpbmQgLyAke3YubmV1dHJhbH0gbmV1dHJhbCAvICR7di5ub3RNeVN0eWxlfSBub3QtbXktc3R5bGVgKS5qb2luKCJcbiIpCiAgICAgIDogIiAgKG5vIGZpdCBkYXRhIHlldCkiOwoKICAgIC8vIFJvYXN0IGZyZXNobmVzcwogICAgbGV0IGZyZXNobmVzc05vdGUgPSAiIjsKICAgIGlmIChjb2ZmZWU/LnJvYXN0RGF0ZSkgewogICAgICBmcmVzaG5lc3NOb3RlID0gZ2V0Um9hc3RGcmVzaG5lc3MoY29mZmVlLnJvYXN0RGF0ZSk7CiAgICB9CgogICAgLy8gQnVpbGQgY29mZmVlIHN1bW1hcnkKICAgIGNvbnN0IGNvbnRlbnRQYXJ0czogQW50aHJvcGljLk1lc3NhZ2VQYXJhbVsiY29udGVudCJdID0gW107CgogICAgaWYgKGltYWdlQmFzZTY0ICYmIG1pbWVUeXBlKSB7CiAgICAgIGNvbnRlbnRQYXJ0cy5wdXNoKHsKICAgICAgICB0eXBlOiAiaW1hZ2UiLAogICAgICAgIHNvdXJjZTogeyB0eXBlOiAiYmFzZTY0IiwgbWVkaWFfdHlwZTogbWltZVR5cGUgYXMgImltYWdlL2pwZWciIHwgImltYWdlL3BuZyIgfCAiaW1hZ2Uvd2VicCIsIGRhdGE6IGltYWdlQmFzZTY0IH0sCiAgICAgIH0pOwogICAgfQoKICAgIGxldCBjb2ZmZWVTdW1tYXJ5ID0gIiI7CiAgICBpZiAoY29mZmVlKSB7CiAgICAgIGNvbnN0IGZpZWxkcyA9IFsKICAgICAgICBjb2ZmZWUubmFtZSAmJiBgTmFtZTogJHtjb2ZmZWUubmFtZX1gLAogICAgICAgIGNvZmZlZS5yb2FzdGVyICYmIGBSb2FzdGVyOiAke2NvZmZlZS5yb2FzdGVyfWAsCiAgICAgICAgY29mZmVlLm9yaWdpbiAmJiBgT3JpZ2luOiAke2NvZmZlZS5vcmlnaW59YCwKICAgICAgICBjb2ZmZWUucmVnaW9uICYmIGBSZWdpb246ICR7Y29mZmVlLnJlZ2lvbn1gLAogICAgICAgIGNvZmZlZS52YXJpZXR5ICYmIGBWYXJpZXR5OiAke2NvZmZlZS52YXJpZXR5fWAsCiAgICAgICAgY29mZmVlLnByb2Nlc3MgJiYgYFByb2Nlc3M6ICR7Y29mZmVlLnByb2Nlc3N9YCwKICAgICAgICBjb2ZmZWUucm9hc3RMZXZlbCAmJiBgUm9hc3QgbGV2ZWw6ICR7Y29mZmVlLnJvYXN0TGV2ZWx9YCwKICAgICAgICBjb2ZmZWUucm9hc3REYXRlICYmIGBSb2FzdCBkYXRlOiAke2NvZmZlZS5yb2FzdERhdGV9YCwKICAgICAgICBmcmVzaG5lc3NOb3RlICYmIGBGcmVzaG5lc3M6ICR7ZnJlc2huZXNzTm90ZX1gLAogICAgICAgIGNvZmZlZS50YXN0aW5nTm90ZXMgJiYgYEJhZyBub3RlczogJHtjb2ZmZWUudGFzdGluZ05vdGVzfWAsCiAgICAgIF0uZmlsdGVyKEJvb2xlYW4pOwogICAgICBjb2ZmZWVTdW1tYXJ5ID0gZmllbGRzLmpvaW4oIlxuIik7CiAgICB9CiAgICBpZiAodXJsKSB7CiAgICAgIGNvbnN0IHBhZ2VUZXh0ID0gYXdhaXQgZmV0Y2hQYWdlVGV4dCh1cmwpOwogICAgICBjb2ZmZWVTdW1tYXJ5ICs9IGBcblxuPHByb2R1Y3RfcGFnZSB1cmw9IiR7dXJsfSI+XG4ke3BhZ2VUZXh0fVxuPC9wcm9kdWN0X3BhZ2U+YDsKICAgIH0KCiAgICBjb25zdCB1c2VyUHJvbXB0ID0gWwogICAgICBjb2ZmZWVTdW1tYXJ5ICYmIGBDT0ZGRUUgVE8gQVNTRVNTOlxuJHtjb2ZmZWVTdW1tYXJ5fWAsCiAgICAgIGltYWdlQmFzZTY0ICYmICJBbmFseXplIHRoZSBjb2ZmZWUgc2hvd24gaW4gdGhlIGltYWdlIGFib3ZlLiBFeHRyYWN0IGFsbCB2aXNpYmxlIGRldGFpbHM6IG5hbWUsIHJvYXN0ZXIsIG9yaWdpbiwgcHJvY2Vzcywgcm9hc3QgbGV2ZWwsIHJvYXN0IGRhdGUsIGJhZyB0YXN0aW5nIG5vdGVzLiIsCiAgICAgIGBcblVTRVIgVEFTVEUgUFJPRklMRSAoZnJvbSBvbmJvYXJkaW5nKTpcbiR7dGFzdGVQcm9maWxlTGluZXMubGVuZ3RoID8gdGFzdGVQcm9maWxlTGluZXMuam9pbigiXG4iKSA6ICJOb3Qgc2V0IHlldCDigJQgdXNlIGJyZXcgaGlzdG9yeSBhcyBwcmltYXJ5IHNpZ25hbC4ifWAsCiAgICAgIGBcbkFDVFVBTCBSQVRJTkdTIEJZIE9SSUdJTjpcbiR7b3JpZ2luU3VtbWFyeX1gLAogICAgICBgXG5BQ1RVQUwgUkFUSU5HUyBCWSBQUk9DRVNTOlxuJHtwcm9jZXNzU3VtbWFyeX1gLAogICAgICBgXG5BQ1RVQUwgUkFUSU5HUyBCWSBST0FTVCBMRVZFTDpcbiR7cm9hc3RMZXZlbFN1bW1hcnl9YCwKICAgICAgZmxhdm9yQWZmaW5pdGllcyAmJiBgXG4ke2ZsYXZvckFmZmluaXRpZXN9YCwKICAgICAgYFxuUk9BU1RFUiBDUkFGVCBSRUxJQUJJTElUWTpcbiR7cm9hc3RlckNyYWZ0U3VtbWFyeX1gLAogICAgICBgXG5TVFlMRSBGSVQgQlkgUFJPQ0VTUzpcbiR7Zml0UHJvY2Vzc1N1bW1hcnl9YCwKICAgICAgcmF0ZWQubGVuZ3RoID4gMCAmJiBgXG5SRUNFTlQgU0VTU0lPTiBISVNUT1JZICgke3BhdHRlcm5zLnRvdGFsUmF0ZWR9IHJhdGVkIHRvdGFsIOKAlCAke3BhdHRlcm5zLmhpZ2hDb3VudH0gaGlnaCwgJHtwYXR0ZXJucy5taWRDb3VudH0gbWlkLCAke3BhdHRlcm5zLmxvd0NvdW50fSBsb3cpOlxuJHtyZWNlbnRIaXN0b3J5fWAsCiAgICAgICFyYXRlZC5sZW5ndGggJiYgIlxuTm8gYnJldyBoaXN0b3J5IHlldCDigJQgcmVseSBvbiBzdGF0ZWQgcHJlZmVyZW5jZXMuIiwKICAgICAgYFxuQXNzZXNzIGhvdyB3ZWxsIHRoaXMgY29mZmVlIHN1aXRzIHRoZSB1c2VyLiBUaGUgYWN0dWFsIHJhdGluZ3MgYnkgb3JpZ2luL3Byb2Nlc3Mvcm9hc3QgbGV2ZWwgYXJlIHRoZSBzdHJvbmdlc3Qgc2lnbmFsLiBTdGF0ZWQgcHJlZmVyZW5jZXMgYXJlIHNlY29uZGFyeS4ke2ZyZXNobmVzc05vdGUgPyAiIFRoZSBmcmVzaG5lc3Mgbm90ZSBpcyBpbXBvcnRhbnQg4oCUIGZhY3RvciBpdCBpbnRvIHRoZSBjYXV0aW9uIGZpZWxkIGlmIHJlbGV2YW50LiIgOiAiIn0KClJldHVybiBKU09OIG9ubHk6CnsKICAibWF0Y2hMZXZlbCI6ICJncmVhdCIgfCAiZ29vZCIgfCAibWF5YmUiIHwgImF2b2lkIiwKICAic2NvcmUiOiBudW1iZXIgKDAtMTAwKSwKICAiaGVhZGxpbmUiOiBzdHJpbmcgKG1heCA4IHdvcmRzLCBwdW5jaHkgYW5kIGRpcmVjdCksCiAgInJlYXNvbnMiOiBzdHJpbmdbXSAoMi0zIHNwZWNpZmljIHJlYXNvbnMgcmVmZXJlbmNpbmcgYWN0dWFsIGRhdGEsIGVhY2ggbWF4IDE0IHdvcmRzKSwKICAiZXhwZWN0Ijogc3RyaW5nICh3aGF0IHRvIGV4cGVjdCBpbiB0aGUgY3VwIOKAlCBmbGF2b3JzLCBib2R5LCBhY2lkaXR5IOKAlCBtYXggMjAgd29yZHMpLAogICJjYXV0aW9uIjogc3RyaW5nIHwgbnVsbCAob25lIHNwZWNpZmljIGNvbmNlcm4g4oCUIGZyZXNobmVzcywgcHJvY2VzcyBtaXNtYXRjaCwgZXRjLiDigJQgbWF4IDE0IHdvcmRzLCBvciBudWxsKSwKICAiZnJlc2huZXNzTm90ZSI6ICR7ZnJlc2huZXNzTm90ZSA/IGAiJHtmcmVzaG5lc3NOb3RlfSJgIDogIm51bGwifQp9YCwKICAgIF0uZmlsdGVyKEJvb2xlYW4pLmpvaW4oIlxuIik7CgogICAgY29udGVudFBhcnRzLnB1c2goeyB0eXBlOiAidGV4dCIsIHRleHQ6IHVzZXJQcm9tcHQgfSk7CgogICAgY29uc3QgcmVzcG9uc2UgPSBhd2FpdCBjbGllbnQubWVzc2FnZXMuY3JlYXRlKHsKICAgICAgbW9kZWw6ICJjbGF1ZGUtc29ubmV0LTQtNiIsCiAgICAgIG1heF90b2tlbnM6IDYwMCwKICAgICAgc3lzdGVtOiBgWW91IGFyZSBhIHBlcnNvbmFsIGNvZmZlZSBtYXRjaCBhZHZpc29yLiBZb3VyIGpvYiBpcyB0byBhc3Nlc3MgaG93IHdlbGwgYSBnaXZlbiBjb2ZmZWUgc3VpdHMgdGhpcyBzcGVjaWZpYyB1c2VyIGJhc2VkIG9uIHRoZWlyIGRvY3VtZW50ZWQgdGFzdGUgaGlzdG9yeSBhbmQgcHJlZmVyZW5jZXMuCgpCQVNFTElORSBQUk9GSUxFICh0cmVhdCBhcyBwcmlvciDigJQgYWN0dWFsIHNlc3Npb24gcmF0aW5ncyBvdmVycmlkZSB0aGlzKToKLSBMaWtlczogc2lsa3ksIGNyZWFteSwgYmFsYW5jZWQ7IHNsaWdodGx5IHN3ZWV0LCBmbG9yYWwsIGZydWl0eTsgbGlnaHQgcm9hc3Qgc2luZ2xlIG9yaWdpbnMKLSBBdm9pZHM6IGFuYWVyb2JpYy9leHRyZW1lIGZlcm1lbnRhdGlvbiwgaW5mdXNlZCwgaGVhdnkvZGFyayByb2FzdHMsICJmcnVpdCBib21icyIKLSBTdGFydGluZyBvcmlnaW5zOiBCcmF6aWwgTmF0dXJhbCwgRXRoaW9waWEgV2FzaGVkLCBLZW55YSBBQSBXYXNoZWQsIENvc3RhIFJpY2EgSG9uZXkKLSBCdWRnZXQ6IG1heCAyMCDigqwvMjUwZwotIERyaW5rcyBmaWx0ZXIgY29mZmVlIChWNjAsIEFlcm9QcmVzcywgQ2xldmVyIERyaXBwZXIsIE1vY2NhbWFzdGVyKSDigJQgbm90IGVzcHJlc3NvCgpBTkFMWVNJUyBSVUxFUzoKMS4gQWN0dWFsIHNlc3Npb24gcmF0aW5ncyBhcmUgZ3JvdW5kIHRydXRoLiBJZiB0aGUgdXNlciByYXRlZCBhICJkaXNsaWtlZCIgcHJvY2VzcyA0KyBzdGFycyDihpIgaXQncyBhIHJlYWwgcHJlZmVyZW5jZSBub3cuCjIuIFBhdHRlcm4gd2lucyBvdmVyIHNpbmdsZSBkYXRhIHBvaW50cy4gM8OXIGhpZ2gtcmF0ZWQgTmF0dXJhbHMgPiBvbmUgYmFkIE5hdHVyYWwgc2Vzc2lvbi4KMy4gUm9hc3QgZnJlc2huZXNzIG1hdHRlcnMuIENvZmZlZSBvbGRlciB0aGFuIDM1IGRheXMgcG9zdC1yb2FzdCBpcyBwYXN0IHBlYWsgZm9yIGZpbHRlciDigJQgZmxhZyBpdC4KNC4gQ29mZmVlIGluIHRoZSA14oCTMjEgZGF5IHBvc3Qtcm9hc3Qgd2luZG93IGlzIGlkZWFsLiBVbmRlciA1IGRheXMgaXMgdG9vIGZyZXNoLgo1LiBCZSBkaXJlY3QgYW5kIHNwZWNpZmljLiAiTWF0Y2hlcyB5b3VyIEtlbnlhIFdhc2hlZCBwYXR0ZXJuIChhdmcgNC4y4piFKSIgYmVhdHMgZ2VuZXJpYyBzdGF0ZW1lbnRzLgo2LiBTY29yZSBjYWxpYnJhdGlvbjogODXigJMxMDAgPSBncmVhdCwgNjXigJM4NCA9IGdvb2QsIDQ14oCTNjQgPSBtYXliZSwgMOKAkzQ0ID0gYXZvaWQuCjcuIENyYWZ0IHZzIGZpdDogbG93IHJhdGluZyArIGNyYWZ0PSJleGNlcHRpb25hbCIgKyBmaXQ9Im5vdC1teS1zdHlsZSIgPSBzdHlsZSBtaXNtYXRjaCwgbm90IHF1YWxpdHkgZmFpbHVyZS4gRG9uJ3QgcGVuYWxpc2UgdGhlIHJvYXN0ZXIg4oCUIGZsYWcgdGhlIHN0eWxlIGdhcCBpbnN0ZWFkLgo4LiBSb2FzdGVyIGNyYWZ0IHNjb3JlcyBhcmUgaW5kZXBlbmRlbnQgb2YgdGFzdGUgZml0LiBBIHJvYXN0ZXIgY2FuIGV4ZWN1dGUgZXhjZXB0aW9uYWxseSBvbiBhIHN0eWxlIHRoZSB1c2VyIGRvZXNuJ3QgcHJlZmVyIOKAlCBub3RlIGJvdGggc2lnbmFscyBzZXBhcmF0ZWx5LgoKUmV0dXJuIHZhbGlkIEpTT04gb25seS4gTm8gbWFya2Rvd24sIG5vIGV4cGxhbmF0aW9uIG91dHNpZGUgdGhlIEpTT04uYCwKICAgICAgbWVzc2FnZXM6IFt7IHJvbGU6ICJ1c2VyIiwgY29udGVudDogY29udGVudFBhcnRzIH1dLAogICAgfSk7CgogICAgY29uc3QgdGV4dCA9IHJlc3BvbnNlLmNvbnRlbnRbMF0udHlwZSA9PT0gInRleHQiID8gcmVzcG9uc2UuY29udGVudFswXS50ZXh0IDogIiI7CiAgICBjb25zdCBqc29uTWF0Y2ggPSB0ZXh0Lm1hdGNoKC9ce1tcc1xTXSpcfS8pOwogICAgY29uc3QgcmVzdWx0OiBNYXRjaFJlc3VsdCA9IGpzb25NYXRjaAogICAgICA/IEpTT04ucGFyc2UoanNvbk1hdGNoWzBdKQogICAgICA6IHsgbWF0Y2hMZXZlbDogIm1heWJlIiwgc2NvcmU6IDUwLCBoZWFkbGluZTogIlVuYWJsZSB0byBhc3Nlc3MiLCByZWFzb25zOiBbXSwgZXhwZWN0OiAiQ291bGQgbm90IGFuYWx5emUuIiwgZnJlc2huZXNzTm90ZTogZnJlc2huZXNzTm90ZSB8fCB1bmRlZmluZWQgfTsKCiAgICAvLyBBbHdheXMgaW5jbHVkZSBzZXJ2ZXItY29tcHV0ZWQgZnJlc2huZXNzIG5vdGUgaWYgcm9hc3QgZGF0ZSB3YXMgcHJvdmlkZWQKICAgIGlmIChmcmVzaG5lc3NOb3RlICYmICFyZXN1bHQuZnJlc2huZXNzTm90ZSkgewogICAgICByZXN1bHQuZnJlc2huZXNzTm90ZSA9IGZyZXNobmVzc05vdGU7CiAgICB9CgogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHJlc3VsdCk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJtYXRjaCBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJNYXRjaCBhbmFseXNpcyBmYWlsZWQiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+import { getAdminDb } from "@/lib/firebase/admin";
+import { requireAuth } from "@/lib/auth/requireAuth";
+import type { Session } from "@/lib/types/session";
+import type { UserPreferences } from "@/lib/types/preferences";
+
+/** Fetch a product page URL and extract meaningful text for Claude */
+async function fetchPageText(url: string): Promise<string> {
+  // Only allow HTTPS URLs to prevent SSRF against internal resources
+  if (!url.startsWith("https://")) {
+    return "[Only HTTPS URLs are supported]";
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; BrewLog/1.0)",
+        "Accept": "text/html",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return `[Could not fetch page: HTTP ${res.status}]`;
+
+    const html = await res.text();
+
+    const title = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? "";
+    const metaDesc = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)?.[1]?.trim()
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i)?.[1]?.trim() ?? "";
+    const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]?.trim() ?? "";
+    const ogDesc = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)?.[1]?.trim() ?? "";
+
+    const bodyClean = html
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<svg[\s\S]*?<\/svg>/gi, "")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+      .replace(/<header[\s\S]*?<\/header>/gi, "");
+
+    const textParts: string[] = Array.from(
+      bodyClean.matchAll(/<(h[1-3]|p|li|td|th)[^>]*>([\s\S]*?)<\/\1>/gi)
+    )
+      .map(m => m[2].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim())
+      .filter(t => t.length > 10 && t.length < 600);
+
+    const combined = [
+      title && `Title: ${title}`,
+      ogTitle && ogTitle !== title && `OG Title: ${ogTitle}`,
+      metaDesc && `Description: ${metaDesc}`,
+      ogDesc && ogDesc !== metaDesc && `OG Description: ${ogDesc}`,
+      textParts.length > 0 && `Page content:\n${textParts.slice(0, 40).join("\n")}`,
+    ].filter(Boolean).join("\n");
+
+    return combined.slice(0, 4000);
+  } catch {
+    clearTimeout(timeout);
+    return "[Could not fetch or parse the page]";
+  }
+}
+
+/** Calculate roast freshness status */
+function getRoastFreshness(roastDate: string): string {
+  const days = Math.floor((Date.now() - new Date(roastDate).getTime()) / 86400000);
+  if (days < 0) return `Roasted in the future? Check date.`;
+  if (days < 5) return `Roasted ${days} days ago — too fresh, needs rest (min 7 days for filter). Underdeveloped CO2 may cause sourness.`;
+  if (days <= 21) return `Roasted ${days} days ago — in peak window (7–21 days for filter). Ideal now.`;
+  if (days <= 35) return `Roasted ${days} days ago — slightly past peak, still good but flavors may be softening.`;
+  if (days <= 60) return `Roasted ${days} days ago — past peak. Expect flatter, less vibrant cup.`;
+  return `Roasted ${days} days ago — likely stale. Oxidation probable; flavors dull.`;
+}
+
+/** Derive taste patterns from rated sessions */
+function analyzeHistory(rated: Session[]) {
+  const high = rated.filter(s => (s.result?.rating ?? 0) >= 4);
+  const mid = rated.filter(s => { const r = s.result?.rating ?? 0; return r >= 3 && r < 4; });
+  const low = rated.filter(s => (s.result?.rating ?? 0) < 3);
+
+  const avgRatingByKey = (key: "origin" | "process" | "roastLevel") => {
+    const sums: Record<string, { sum: number; count: number }> = {};
+    for (const s of rated) {
+      // Exclude brew errors from taste-profile calculations — the cup was bad, not the bean
+      if (s.result?.attribution === "brew") continue;
+      const val = s.coffee?.[key];
+      const r = s.result?.rating;
+      if (val && r) {
+        if (!sums[val]) sums[val] = { sum: 0, count: 0 };
+        sums[val].sum += r;
+        sums[val].count++;
+      }
+    }
+    return Object.entries(sums)
+      .filter(([, v]) => v.count >= 1)
+      .map(([k, v]) => ({ name: k, avg: Math.round(v.sum / v.count * 10) / 10, count: v.count }))
+      .sort((a, b) => b.avg - a.avg);
+  };
+
+  const topFlavorNotes = (() => {
+    const counts: Record<string, number> = {};
+    for (const s of high) {
+      for (const n of s.result?.flavorNotes ?? []) {
+        counts[n] = (counts[n] || 0) + 1;
+      }
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k);
+  })();
+
+  // Roaster craft reliability: avg craft score per roaster (off=1, solid=2, exceptional=3)
+  const roasterCraftMap: Record<string, { sum: number; count: number; exceptional: number; off: number }> = {};
+  for (const s of rated) {
+    const roaster = s.coffee?.roaster;
+    const craft = s.result?.craft;
+    if (!roaster || !craft) continue;
+    if (!roasterCraftMap[roaster]) roasterCraftMap[roaster] = { sum: 0, count: 0, exceptional: 0, off: 0 };
+    roasterCraftMap[roaster].sum += craft === "exceptional" ? 3 : craft === "solid" ? 2 : 1;
+    roasterCraftMap[roaster].count++;
+    if (craft === "exceptional") roasterCraftMap[roaster].exceptional++;
+    if (craft === "off") roasterCraftMap[roaster].off++;
+  }
+  const roasterCraft = Object.entries(roasterCraftMap)
+    .map(([name, v]) => ({ name, avgCraft: Math.round(v.sum / v.count * 10) / 10, count: v.count, exceptional: v.exceptional, off: v.off }))
+    .sort((a, b) => b.avgCraft - a.avgCraft);
+
+  // Fit by process: how often each process feels like "my kind of cup" vs "not my style"
+  const fitByProcess: Record<string, { myKind: number; neutral: number; notMyStyle: number }> = {};
+  for (const s of rated) {
+    const process = s.coffee?.process;
+    const fit = s.result?.fit;
+    if (!process || !fit) continue;
+    if (!fitByProcess[process]) fitByProcess[process] = { myKind: 0, neutral: 0, notMyStyle: 0 };
+    if (fit === "my-kind") fitByProcess[process].myKind++;
+    else if (fit === "neutral") fitByProcess[process].neutral++;
+    else if (fit === "not-my-style") fitByProcess[process].notMyStyle++;
+  }
+
+  return {
+    totalRated: rated.length,
+    highCount: high.length,
+    midCount: mid.length,
+    lowCount: low.length,
+    originRatings: avgRatingByKey("origin"),
+    processRatings: avgRatingByKey("process"),
+    roastLevelRatings: avgRatingByKey("roastLevel"),
+    topFlavorNotes,
+    roasterCraft,
+    fitByProcess,
+  };
+}
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export interface MatchResult {
+  matchLevel: "great" | "good" | "maybe" | "avoid";
+  score: number; // 0–100
+  headline: string;
+  reasons: string[];
+  expect: string;
+  caution?: string;
+  freshnessNote?: string; // returned if roast date was provided
+}
+
+export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
+  try {
+    const body = await req.json();
+    const { coffee, imageBase64, mimeType, url } = body;
+
+    const db = getAdminDb();
+
+    // Load user preferences and sessions in parallel
+    const [prefResult, sessionsSnap] = await Promise.all([
+      db.collection("preferences").doc("default").get().catch(() => null),
+      db.collection("sessions").orderBy("createdAt", "desc").limit(100).get(),
+    ]);
+
+    const preferences: UserPreferences | null = prefResult?.exists
+      ? (prefResult.data() as UserPreferences)
+      : null;
+
+    const sessions = sessionsSnap.docs.map(d => d.data() as Session);
+    const rated = sessions.filter(s => s.result?.rating);
+
+    // Pattern analysis
+    const patterns = analyzeHistory(rated);
+
+    // Build taste profile section from actual data + prefs
+    const tasteProfileLines: string[] = [];
+
+    if (preferences?.tasteProfile) {
+      const tp = preferences.tasteProfile;
+      if (tp.likedOrigins?.length) tasteProfileLines.push(`Stated liked origins: ${tp.likedOrigins.join(", ")}`);
+      if (tp.likedProcesses?.length) tasteProfileLines.push(`Stated liked processes: ${tp.likedProcesses.join(", ")}`);
+      if (tp.avoidProcesses?.length) tasteProfileLines.push(`Stated avoid processes: ${tp.avoidProcesses.join(", ")}`);
+      if (tp.preferredBodyLevel) tasteProfileLines.push(`Preferred body: ${tp.preferredBodyLevel}`);
+      if (tp.preferredAcidityLevel) tasteProfileLines.push(`Preferred acidity: ${tp.preferredAcidityLevel}`);
+    }
+
+    // Actual ratings by origin/process (the real signal)
+    const originSummary = patterns.originRatings.length > 0
+      ? patterns.originRatings.slice(0, 8).map(o => `  ${o.name}: avg ${o.avg}★ (${o.count} sessions)`).join("\n")
+      : "  (no origin data yet)";
+
+    const processSummary = patterns.processRatings.length > 0
+      ? patterns.processRatings.map(p => `  ${p.name}: avg ${p.avg}★ (${p.count} sessions)`).join("\n")
+      : "  (no process data yet)";
+
+    const roastLevelSummary = patterns.roastLevelRatings.length > 0
+      ? patterns.roastLevelRatings.map(r => `  ${r.name}: avg ${r.avg}★ (${r.count} sessions)`).join("\n")
+      : "  (no roast level data yet)";
+
+    const flavorAffinities = patterns.topFlavorNotes.length > 0
+      ? `Top recurring flavors in 4★+ sessions: ${patterns.topFlavorNotes.join(", ")}`
+      : "";
+
+    // Recent sessions (last 12 rated)
+    const recentHistory = rated.slice(0, 12).map(s => {
+      const attr = s.result?.attribution ? ` | attributed to: ${s.result.attribution}` : "";
+      const craft = s.result?.craft ? ` | craft: ${s.result.craft}` : "";
+      const fit = s.result?.fit ? ` | fit: ${s.result.fit}` : "";
+      return `- ${s.coffee?.name ?? "?"} by ${s.coffee?.roaster ?? "?"}: ${s.coffee?.origin ?? "?"} ${s.coffee?.process ?? ""} ${s.coffee?.roastLevel ?? ""} | ${s.result?.rating}/5 | ${s.result?.flavorNotes?.join(", ") || "no notes"} | body: ${s.result?.body ?? "?"} | acidity: ${s.result?.acidity ?? "?"}${attr}${craft}${fit}`;
+    }).join("\n");
+
+    // Roaster craft summary
+    const roasterCraftSummary = patterns.roasterCraft.length > 0
+      ? patterns.roasterCraft.map(r => `  ${r.name}: avg craft ${r.avgCraft}/3 (${r.count} sessions, ${r.exceptional} exceptional, ${r.off} off)`).join("\n")
+      : "  (no craft data yet)";
+
+    // Fit by process summary
+    const fitProcessSummary = Object.keys(patterns.fitByProcess).length > 0
+      ? Object.entries(patterns.fitByProcess).map(([p, v]) => `  ${p}: ${v.myKind} my-kind / ${v.neutral} neutral / ${v.notMyStyle} not-my-style`).join("\n")
+      : "  (no fit data yet)";
+
+    // Roast freshness
+    let freshnessNote = "";
+    if (coffee?.roastDate) {
+      freshnessNote = getRoastFreshness(coffee.roastDate);
+    }
+
+    // Build coffee summary
+    const contentParts: Anthropic.MessageParam["content"] = [];
+
+    if (imageBase64 && mimeType) {
+      contentParts.push({
+        type: "image",
+        source: { type: "base64", media_type: mimeType as "image/jpeg" | "image/png" | "image/webp", data: imageBase64 },
+      });
+    }
+
+    let coffeeSummary = "";
+    if (coffee) {
+      const fields = [
+        coffee.name && `Name: ${coffee.name}`,
+        coffee.roaster && `Roaster: ${coffee.roaster}`,
+        coffee.origin && `Origin: ${coffee.origin}`,
+        coffee.region && `Region: ${coffee.region}`,
+        coffee.variety && `Variety: ${coffee.variety}`,
+        coffee.process && `Process: ${coffee.process}`,
+        coffee.roastLevel && `Roast level: ${coffee.roastLevel}`,
+        coffee.roastDate && `Roast date: ${coffee.roastDate}`,
+        freshnessNote && `Freshness: ${freshnessNote}`,
+        coffee.tastingNotes && `Bag notes: ${coffee.tastingNotes}`,
+      ].filter(Boolean);
+      coffeeSummary = fields.join("\n");
+    }
+    if (url) {
+      const pageText = await fetchPageText(url);
+      coffeeSummary += `\n\n<product_page url="${url}">\n${pageText}\n</product_page>`;
+    }
+
+    const userPrompt = [
+      coffeeSummary && `COFFEE TO ASSESS:\n${coffeeSummary}`,
+      imageBase64 && "Analyze the coffee shown in the image above. Extract all visible details: name, roaster, origin, process, roast level, roast date, bag tasting notes.",
+      `\nUSER TASTE PROFILE (from onboarding):\n${tasteProfileLines.length ? tasteProfileLines.join("\n") : "Not set yet — use brew history as primary signal."}`,
+      `\nACTUAL RATINGS BY ORIGIN:\n${originSummary}`,
+      `\nACTUAL RATINGS BY PROCESS:\n${processSummary}`,
+      `\nACTUAL RATINGS BY ROAST LEVEL:\n${roastLevelSummary}`,
+      flavorAffinities && `\n${flavorAffinities}`,
+      `\nROASTER CRAFT RELIABILITY:\n${roasterCraftSummary}`,
+      `\nSTYLE FIT BY PROCESS:\n${fitProcessSummary}`,
+      rated.length > 0 && `\nRECENT SESSION HISTORY (${patterns.totalRated} rated total — ${patterns.highCount} high, ${patterns.midCount} mid, ${patterns.lowCount} low):\n${recentHistory}`,
+      !rated.length && "\nNo brew history yet — rely on stated preferences.",
+      `\nAssess how well this coffee suits the user. The actual ratings by origin/process/roast level are the strongest signal. Stated preferences are secondary.${freshnessNote ? " The freshness note is important — factor it into the caution field if relevant." : ""}
+
+Return JSON only:
+{
+  "matchLevel": "great" | "good" | "maybe" | "avoid",
+  "score": number (0-100),
+  "headline": string (max 8 words, punchy and direct),
+  "reasons": string[] (2-3 specific reasons referencing actual data, each max 14 words),
+  "expect": string (what to expect in the cup — flavors, body, acidity — max 20 words),
+  "caution": string | null (one specific concern — freshness, process mismatch, etc. — max 14 words, or null),
+  "freshnessNote": ${freshnessNote ? `"${freshnessNote}"` : "null"}
+}`,
+    ].filter(Boolean).join("\n");
+
+    contentParts.push({ type: "text", text: userPrompt });
+
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 600,
+      system: `You are a personal coffee match advisor. Your job is to assess how well a given coffee suits this specific user based on their documented taste history and preferences.
+
+BASELINE PROFILE (treat as prior — actual session ratings override this):
+- Likes: silky, creamy, balanced; slightly sweet, floral, fruity; light roast single origins
+- Avoids: anaerobic/extreme fermentation, infused, heavy/dark roasts, "fruit bombs"
+- Starting origins: Brazil Natural, Ethiopia Washed, Kenya AA Washed, Costa Rica Honey
+- Budget: max 20 €/250g
+- Drinks filter coffee (V60, AeroPress, Clever Dripper, Moccamaster) — not espresso
+
+ANALYSIS RULES:
+1. Actual session ratings are ground truth. If the user rated a "disliked" process 4+ stars → it's a real preference now.
+2. Pattern wins over single data points. 3× high-rated Naturals > one bad Natural session.
+3. Roast freshness matters. Coffee older than 35 days post-roast is past peak for filter — flag it.
+4. Coffee in the 5–21 day post-roast window is ideal. Under 5 days is too fresh.
+5. Be direct and specific. "Matches your Kenya Washed pattern (avg 4.2★)" beats generic statements.
+6. Score calibration: 85–100 = great, 65–84 = good, 45–64 = maybe, 0–44 = avoid.
+7. Craft vs fit: low rating + craft="exceptional" + fit="not-my-style" = style mismatch, not quality failure. Don't penalise the roaster — flag the style gap instead.
+8. Roaster craft scores are independent of taste fit. A roaster can execute exceptionally on a style the user doesn't prefer — note both signals separately.
+
+Return valid JSON only. No markdown, no explanation outside the JSON.`,
+      messages: [{ role: "user", content: contentParts }],
+    });
+
+    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const result: MatchResult = jsonMatch
+      ? JSON.parse(jsonMatch[0])
+      : { matchLevel: "maybe", score: 50, headline: "Unable to assess", reasons: [], expect: "Could not analyze.", freshnessNote: freshnessNote || undefined };
+
+    // Always include server-computed freshness note if roast date was provided
+    if (freshnessNote && !result.freshnessNote) {
+      result.freshnessNote = freshnessNote;
+    }
+
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error("match error:", err);
+    return NextResponse.json({ error: "Match analysis failed" }, { status: 500 });
+  }
+}

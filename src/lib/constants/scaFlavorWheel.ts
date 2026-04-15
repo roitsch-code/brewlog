@@ -1,1 +1,103 @@
-{"data":"Ly8gU0NBIENvZmZlZSBGbGF2b3IgV2hlZWwg4oCUIGJhc2VkIG9uIHRoZSBTQ0FBL1dvcmxkIENvZmZlZSBSZXNlYXJjaCBTZW5zb3J5IExleGljb24gKDIwMTYpCi8vIDkgdG9wLWxldmVsIGNhdGVnb3JpZXMg4oaSIHN1Yi1jYXRlZ29yaWVzIOKGkiBpbmRpdmlkdWFsIGZsYXZvciBub3RlcwoKZXhwb3J0IGludGVyZmFjZSBXaGVlbENhdGVnb3J5IHsKICAvKiogRGFyay1ncmF5IHNoYWRlIGZvciBCJlcgcmVuZGVyaW5nIChubyBjb2xvciBpbiB0aGlzIGFwcCkgKi8KICBzaGFkZTogc3RyaW5nOwogIHN1YmNhdGVnb3JpZXM6IFJlY29yZDxzdHJpbmcsIHN0cmluZ1tdPjsKfQoKZXhwb3J0IGNvbnN0IFNDQV9XSEVFTDogUmVjb3JkPHN0cmluZywgV2hlZWxDYXRlZ29yeT4gPSB7CiAgIkZydWl0eSI6IHsKICAgIHNoYWRlOiAiIzJkMmQyZCIsCiAgICBzdWJjYXRlZ29yaWVzOiB7CiAgICAgICJCZXJyeSI6ICAgICAgICBbIlN0cmF3YmVycnkiLCAiUmFzcGJlcnJ5IiwgIkJsdWViZXJyeSIsICJCbGFja2JlcnJ5IiwgIkJsYWNrY3VycmFudCIsICJDcmFuYmVycnkiXSwKICAgICAgIkNpdHJ1cyI6ICAgICAgIFsiTGVtb24iLCAiTGltZSIsICJPcmFuZ2UiLCAiR3JhcGVmcnVpdCIsICJCZXJnYW1vdCIsICJZdXp1Il0sCiAgICAgICJTdG9uZSBGcnVpdCI6ICBbIlBlYWNoIiwgIkFwcmljb3QiLCAiQ2hlcnJ5IiwgIlBsdW0iLCAiTmVjdGFyaW5lIl0sCiAgICAgICJUcm9waWNhbCI6ICAgICBbIk1hbmdvIiwgIlBpbmVhcHBsZSIsICJQYXNzaW9uIEZydWl0IiwgIlBhcGF5YSIsICJDb2NvbnV0IiwgIkx5Y2hlZSIsICJHdWF2YSJdLAogICAgICAiT3RoZXIgRnJ1aXQiOiAgWyJBcHBsZSIsICJQZWFyIiwgIkdyYXBlIiwgIlBvbWVncmFuYXRlIl0sCiAgICAgICJEcmllZCBGcnVpdCI6ICBbIlJhaXNpbiIsICJQcnVuZSIsICJEYXRlIiwgIkZpZyJdLAogICAgfSwKICB9LAogICJGbG9yYWwiOiB7CiAgICBzaGFkZTogIiMyYTJhMmEiLAogICAgc3ViY2F0ZWdvcmllczogewogICAgICAiRmxvcmFsIjogWyJKYXNtaW5lIiwgIlJvc2UiLCAiTGF2ZW5kZXIiLCAiT3JhbmdlIEJsb3Nzb20iLCAiQ2hhbW9taWxlIiwgIkVsZGVyZmxvd2VyIiwgIkxpbGFjIl0sCiAgICAgICJUZWEiOiAgICBbIkJsYWNrIFRlYSIsICJHcmVlbiBUZWEiLCAiV2hpdGUgVGVhIl0sCiAgICB9LAogIH0sCiAgIlN3ZWV0IjogewogICAgc2hhZGU6ICIjMzAzMDMwIiwKICAgIHN1YmNhdGVnb3JpZXM6IHsKICAgICAgIlN3ZWV0IjogWyJDYXJhbWVsIiwgIkhvbmV5IiwgIkJyb3duIFN1Z2FyIiwgIk1hcGxlIiwgIk1vbGFzc2VzIiwgIlZhbmlsbGEiLCAiTWFyemlwYW4iLCAiVG9mZmVlIiwgIkJ1dHRlcnNjb3RjaCJdLAogICAgfSwKICB9LAogICJOdXR0eSAmIENvY29hIjogewogICAgc2hhZGU6ICIjMjcyNzI3IiwKICAgIHN1YmNhdGVnb3JpZXM6IHsKICAgICAgIk51dHR5IjogWyJBbG1vbmQiLCAiSGF6ZWxudXQiLCAiUGVhbnV0IiwgIldhbG51dCIsICJQcmFsaW5lIiwgIlBlY2FuIiwgIk1hY2FkYW1pYSJdLAogICAgICAiQ29jb2EiOiBbIkRhcmsgQ2hvY29sYXRlIiwgIk1pbGsgQ2hvY29sYXRlIiwgIldoaXRlIENob2NvbGF0ZSIsICJDb2NvYSIsICJNb2NoYSJdLAogICAgfSwKICB9LAogICJTcGljZXMiOiB7CiAgICBzaGFkZTogIiMyZTJlMmUiLAogICAgc3ViY2F0ZWdvcmllczogewogICAgICAiU3BpY2VzIjogWyJDaW5uYW1vbiIsICJDYXJkYW1vbSIsICJCbGFjayBQZXBwZXIiLCAiQ2xvdmUiLCAiR2luZ2VyIiwgIkFuaXNlIiwgIk51dG1lZyIsICJMaWNvcmljZSIsICJTdGFyIEFuaXNlIl0sCiAgICB9LAogIH0sCiAgIlJvYXN0ZWQiOiB7CiAgICBzaGFkZTogIiMyNTI1MjUiLAogICAgc3ViY2F0ZWdvcmllczogewogICAgICAiQ2VyZWFsIjogIFsiVG9hc3QiLCAiTWFsdCIsICJCaXNjdWl0IiwgIkdyYWluIiwgIkdyYWhhbSBDcmFja2VyIiwgIk9hdHMiXSwKICAgICAgIlRvYmFjY28iOiBbIlRvYmFjY28iLCAiQ2VkYXIiLCAiUGlwZSBUb2JhY2NvIiwgIlNtb2t5IiwgIkFzaHkiXSwKICAgIH0sCiAgfSwKICAiU291ciAmIEZlcm1lbnRlZCI6IHsKICAgIHNoYWRlOiAiIzJiMmIyYiIsCiAgICBzdWJjYXRlZ29yaWVzOiB7CiAgICAgICJGZXJtZW50ZWQiOiBbIldpbmV5IiwgIkZlcm1lbnRlZCIsICJPdmVycmlwZSIsICJLb21idWNoYSIsICJCb296eSIsICJWaW5lZ2FyIl0sCiAgICAgICJTb3VyIjogICAgICBbIkNpdHJpYyBBY2lkIiwgIk1hbGljIEFjaWQiLCAiTGFjdGljIiwgIlNvdXIgQXJvbWF0aWNzIl0sCiAgICB9LAogIH0sCiAgIkhlcmJhbCAmIEdyZWVuIjogewogICAgc2hhZGU6ICIjMjkyOTI5IiwKICAgIHN1YmNhdGVnb3JpZXM6IHsKICAgICAgIkhlcmJhbCI6ICBbIkhlcmJhbCIsICJNaW50IiwgIkV1Y2FseXB0dXMiLCAiVGFycmFnb24iLCAiU2FnZSJdLAogICAgICAiVmVnZXRhbCI6IFsiR3Jhc3N5IiwgIkhheSIsICJPbGl2ZSBPaWwiLCAiR3JlZW4gQmVsbCBQZXBwZXIiLCAiQ3VjdW1iZXIiLCAiR3JlZW4gVGVhIl0sCiAgICB9LAogIH0sCiAgIlNhdm9yeSI6IHsKICAgIHNoYWRlOiAiIzJjMmMyYyIsCiAgICBzdWJjYXRlZ29yaWVzOiB7CiAgICAgICJTYXZvcnkiOiBbIkVhcnRoeSIsICJNdXNocm9vbSIsICJVbWFtaSIsICJNZWF0eSIsICJTbW9reSBTcGljZSJdLAogICAgICAiT3RoZXIiOiAgWyJXb29keSIsICJSZXNpbm91cyIsICJNaW5lcmFsIl0sCiAgICB9LAogIH0sCn07CgpleHBvcnQgY29uc3QgU0NBX0NBVEVHT1JJRVMgPSBPYmplY3Qua2V5cyhTQ0FfV0hFRUwpIGFzIEFycmF5PGtleW9mIHR5cGVvZiBTQ0FfV0hFRUw+OwoKLy8gOC1pdGVtIHF1aWNrLWFjY2VzcyBzaG9ydGxpc3QKZXhwb3J0IGNvbnN0IFFVSUNLX0ZMQVZPUlMgPSBbCiAgIkNhcmFtZWwiLCAiRGFyayBDaG9jb2xhdGUiLCAiQ2hlcnJ5IiwgIlBlYWNoIiwKICAiSmFzbWluZSIsICJIb25leSIsICJTdHJhd2JlcnJ5IiwgIkJyb3duIFN1Z2FyIiwKXTsKCi8vIEZsYXQgc3ViLWNhdGVnb3J5IOKGkiBmbGF2b3JzIG1hcCAoYmFja3dhcmQgY29tcGF0aWJsZSB3aXRoIG9sZCBGTEFWT1JfVEFYT05PTVkgc2hhcGUpCmV4cG9ydCBjb25zdCBGTEFWT1JfVEFYT05PTVk6IFJlY29yZDxzdHJpbmcsIHN0cmluZ1tdPiA9IE9iamVjdC5mcm9tRW50cmllcygKICBPYmplY3QudmFsdWVzKFNDQV9XSEVFTCkuZmxhdE1hcChjYXQgPT4gT2JqZWN0LmVudHJpZXMoY2F0LnN1YmNhdGVnb3JpZXMpKQopOwoKZXhwb3J0IGNvbnN0IEFMTF9GTEFWT1JfTk9URVM6IHN0cmluZ1tdID0gT2JqZWN0LnZhbHVlcyhTQ0FfV0hFRUwpLmZsYXRNYXAoY2F0ID0+CiAgT2JqZWN0LnZhbHVlcyhjYXQuc3ViY2F0ZWdvcmllcykuZmxhdCgpCik7CgovKiogR2l2ZW4gYSBmbGF2b3Igbm90ZSBzdHJpbmcsIHJldHVybiBpdHMgdG9wLWxldmVsIFNDQSBjYXRlZ29yeSBrZXkgKG9yIHVuZGVmaW5lZCkuICovCmV4cG9ydCBmdW5jdGlvbiBmbGF2b3JDYXRlZ29yeShmbGF2b3I6IHN0cmluZyk6IHN0cmluZyB8IHVuZGVmaW5lZCB7CiAgZm9yIChjb25zdCBbY2F0LCB7IHN1YmNhdGVnb3JpZXMgfV0gb2YgT2JqZWN0LmVudHJpZXMoU0NBX1dIRUVMKSkgewogICAgZm9yIChjb25zdCBmbGF2b3JzIG9mIE9iamVjdC52YWx1ZXMoc3ViY2F0ZWdvcmllcykpIHsKICAgICAgaWYgKGZsYXZvcnMuaW5jbHVkZXMoZmxhdm9yKSkgcmV0dXJuIGNhdDsKICAgIH0KICB9CiAgcmV0dXJuIHVuZGVmaW5lZDsKfQo="}
+// SCA Coffee Flavor Wheel — based on the SCAA/World Coffee Research Sensory Lexicon (2016)
+// 9 top-level categories → sub-categories → individual flavor notes
+
+export interface WheelCategory {
+  /** Dark-gray shade for B&W rendering (no color in this app) */
+  shade: string;
+  subcategories: Record<string, string[]>;
+}
+
+export const SCA_WHEEL: Record<string, WheelCategory> = {
+  "Fruity": {
+    shade: "#2d2d2d",
+    subcategories: {
+      "Berry":        ["Strawberry", "Raspberry", "Blueberry", "Blackberry", "Blackcurrant", "Cranberry"],
+      "Citrus":       ["Lemon", "Lime", "Orange", "Grapefruit", "Bergamot", "Yuzu"],
+      "Stone Fruit":  ["Peach", "Apricot", "Cherry", "Plum", "Nectarine"],
+      "Tropical":     ["Mango", "Pineapple", "Passion Fruit", "Papaya", "Coconut", "Lychee", "Guava"],
+      "Other Fruit":  ["Apple", "Pear", "Grape", "Pomegranate"],
+      "Dried Fruit":  ["Raisin", "Prune", "Date", "Fig"],
+    },
+  },
+  "Floral": {
+    shade: "#2a2a2a",
+    subcategories: {
+      "Floral": ["Jasmine", "Rose", "Lavender", "Orange Blossom", "Chamomile", "Elderflower", "Lilac"],
+      "Tea":    ["Black Tea", "Green Tea", "White Tea"],
+    },
+  },
+  "Sweet": {
+    shade: "#303030",
+    subcategories: {
+      "Sweet": ["Caramel", "Honey", "Brown Sugar", "Maple", "Molasses", "Vanilla", "Marzipan", "Toffee", "Butterscotch"],
+    },
+  },
+  "Nutty & Cocoa": {
+    shade: "#272727",
+    subcategories: {
+      "Nutty": ["Almond", "Hazelnut", "Peanut", "Walnut", "Praline", "Pecan", "Macadamia"],
+      "Cocoa": ["Dark Chocolate", "Milk Chocolate", "White Chocolate", "Cocoa", "Mocha"],
+    },
+  },
+  "Spices": {
+    shade: "#2e2e2e",
+    subcategories: {
+      "Spices": ["Cinnamon", "Cardamom", "Black Pepper", "Clove", "Ginger", "Anise", "Nutmeg", "Licorice", "Star Anise"],
+    },
+  },
+  "Roasted": {
+    shade: "#252525",
+    subcategories: {
+      "Cereal":  ["Toast", "Malt", "Biscuit", "Grain", "Graham Cracker", "Oats"],
+      "Tobacco": ["Tobacco", "Cedar", "Pipe Tobacco", "Smoky", "Ashy"],
+    },
+  },
+  "Sour & Fermented": {
+    shade: "#2b2b2b",
+    subcategories: {
+      "Fermented": ["Winey", "Fermented", "Overripe", "Kombucha", "Boozy", "Vinegar"],
+      "Sour":      ["Citric Acid", "Malic Acid", "Lactic", "Sour Aromatics"],
+    },
+  },
+  "Herbal & Green": {
+    shade: "#292929",
+    subcategories: {
+      "Herbal":  ["Herbal", "Mint", "Eucalyptus", "Tarragon", "Sage"],
+      "Vegetal": ["Grassy", "Hay", "Olive Oil", "Green Bell Pepper", "Cucumber", "Green Tea"],
+    },
+  },
+  "Savory": {
+    shade: "#2c2c2c",
+    subcategories: {
+      "Savory": ["Earthy", "Mushroom", "Umami", "Meaty", "Smoky Spice"],
+      "Other":  ["Woody", "Resinous", "Mineral"],
+    },
+  },
+};
+
+export const SCA_CATEGORIES = Object.keys(SCA_WHEEL) as Array<keyof typeof SCA_WHEEL>;
+
+// 8-item quick-access shortlist
+export const QUICK_FLAVORS = [
+  "Caramel", "Dark Chocolate", "Cherry", "Peach",
+  "Jasmine", "Honey", "Strawberry", "Brown Sugar",
+];
+
+// Flat sub-category → flavors map (backward compatible with old FLAVOR_TAXONOMY shape)
+export const FLAVOR_TAXONOMY: Record<string, string[]> = Object.fromEntries(
+  Object.values(SCA_WHEEL).flatMap(cat => Object.entries(cat.subcategories))
+);
+
+export const ALL_FLAVOR_NOTES: string[] = Object.values(SCA_WHEEL).flatMap(cat =>
+  Object.values(cat.subcategories).flat()
+);
+
+/** Given a flavor note string, return its top-level SCA category key (or undefined). */
+export function flavorCategory(flavor: string): string | undefined {
+  for (const [cat, { subcategories }] of Object.entries(SCA_WHEEL)) {
+    for (const flavors of Object.values(subcategories)) {
+      if (flavors.includes(flavor)) return cat;
+    }
+  }
+  return undefined;
+}

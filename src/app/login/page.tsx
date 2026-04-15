@@ -1,1 +1,240 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VFZmZlY3QsIHVzZVN0YXRlIH0gZnJvbSAicmVhY3QiOwppbXBvcnQgeyB1c2VSb3V0ZXIgfSBmcm9tICJuZXh0L25hdmlnYXRpb24iOwppbXBvcnQgeyBzdGFydFJlZ2lzdHJhdGlvbiwgc3RhcnRBdXRoZW50aWNhdGlvbiB9IGZyb20gIkBzaW1wbGV3ZWJhdXRobi9icm93c2VyIjsKaW1wb3J0IENvZmZlZUJlYW5HbG93IGZyb20gIkAvY29tcG9uZW50cy91aS9Db2ZmZWVCZWFuR2xvdyI7Cgp0eXBlIE1vZGUgPSAibG9hZGluZyIgfCAibG9naW4iIHwgInJlZ2lzdGVyIiB8ICJwaW4iOwoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTG9naW5QYWdlKCkgewogIGNvbnN0IHJvdXRlciA9IHVzZVJvdXRlcigpOwogIGNvbnN0IFttb2RlLCBzZXRNb2RlXSA9IHVzZVN0YXRlPE1vZGU+KCJsb2FkaW5nIik7CiAgY29uc3QgW3Bpbiwgc2V0UGluXSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbcGluRXJyb3IsIHNldFBpbkVycm9yXSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbZXJyb3IsIHNldEVycm9yXSA9IHVzZVN0YXRlKCIiKTsKICBjb25zdCBbd29ya2luZywgc2V0V29ya2luZ10gPSB1c2VTdGF0ZShmYWxzZSk7CgogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBhc3luYyBmdW5jdGlvbiBpbml0KCkgewogICAgICB0cnkgewogICAgICAgIGNvbnN0IHJlcyA9IGF3YWl0IGZldGNoKCIvYXBpL2F1dGgvc3RhdHVzIik7CiAgICAgICAgY29uc3QgeyByZWdpc3RlcmVkIH0gPSBhd2FpdCByZXMuanNvbigpOwogICAgICAgIGlmIChyZWdpc3RlcmVkKSB7CiAgICAgICAgICBzZXRNb2RlKCJsb2dpbiIpOwogICAgICAgICAgYXdhaXQgdHJpZ2dlckZhY2VJRCgpOwogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICBzZXRNb2RlKCJyZWdpc3RlciIpOwogICAgICAgIH0KICAgICAgfSBjYXRjaCB7CiAgICAgICAgc2V0TW9kZSgicmVnaXN0ZXIiKTsKICAgICAgfQogICAgfQogICAgaW5pdCgpOwogIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSByZWFjdC1ob29rcy9leGhhdXN0aXZlLWRlcHMKICB9LCBbXSk7CgogIGFzeW5jIGZ1bmN0aW9uIHRyaWdnZXJGYWNlSUQoKSB7CiAgICBzZXRFcnJvcigiIik7CiAgICBzZXRXb3JraW5nKHRydWUpOwogICAgdHJ5IHsKICAgICAgY29uc3QgY2hhbGxlbmdlUmVzID0gYXdhaXQgZmV0Y2goIi9hcGkvYXV0aC9sb2dpbi1jaGFsbGVuZ2UiLCB7IG1ldGhvZDogIlBPU1QiIH0pOwogICAgICBpZiAoIWNoYWxsZW5nZVJlcy5vaykgdGhyb3cgbmV3IEVycm9yKCJDaGFsbGVuZ2UgZmFpbGVkIik7CiAgICAgIGNvbnN0IG9wdGlvbnMgPSBhd2FpdCBjaGFsbGVuZ2VSZXMuanNvbigpOwoKICAgICAgY29uc3QgY3JlZGVudGlhbCA9IGF3YWl0IHN0YXJ0QXV0aGVudGljYXRpb24oeyBvcHRpb25zSlNPTjogb3B0aW9ucyB9KTsKCiAgICAgIGNvbnN0IHZlcmlmeVJlcyA9IGF3YWl0IGZldGNoKCIvYXBpL2F1dGgvbG9naW4iLCB7CiAgICAgICAgbWV0aG9kOiAiUE9TVCIsCiAgICAgICAgaGVhZGVyczogeyAiQ29udGVudC1UeXBlIjogImFwcGxpY2F0aW9uL2pzb24iIH0sCiAgICAgICAgYm9keTogSlNPTi5zdHJpbmdpZnkoY3JlZGVudGlhbCksCiAgICAgIH0pOwoKICAgICAgaWYgKHZlcmlmeVJlcy5vaykgewogICAgICAgIHJvdXRlci5yZXBsYWNlKCIvIik7CiAgICAgIH0gZWxzZSB7CiAgICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IHZlcmlmeVJlcy5qc29uKCkuY2F0Y2goKCkgPT4gKHt9KSk7CiAgICAgICAgc2V0RXJyb3IoZGF0YS5lcnJvciB8fCAiRmFjZSBJRCBmYWlsZWQg4oCUIHRyeSBhZ2FpbiIpOwogICAgICB9CiAgICB9IGNhdGNoIChlcnI6IHVua25vd24pIHsKICAgICAgY29uc3QgbmFtZSA9IGVyciBpbnN0YW5jZW9mIEVycm9yID8gZXJyLm5hbWUgOiAiIjsKICAgICAgY29uc3QgbXNnICA9IGVyciBpbnN0YW5jZW9mIEVycm9yID8gZXJyLm1lc3NhZ2UgOiAiIjsKICAgICAgaWYgKG5hbWUgPT09ICJOb3RBbGxvd2VkRXJyb3IiKSB7CiAgICAgICAgc2V0RXJyb3IoIiIpOyAvLyB1c2VyIGNhbmNlbGxlZCDigJQgc3RheSBxdWlldAogICAgICB9IGVsc2UgewogICAgICAgIHNldEVycm9yKGBGYWNlIElEIHVuYXZhaWxhYmxlJHttc2cgPyBgOiAke21zZ31gIDogIiJ9IOKAlCB1c2UgUElOIGJlbG93YCk7CiAgICAgIH0KICAgIH0gZmluYWxseSB7CiAgICAgIHNldFdvcmtpbmcoZmFsc2UpOwogICAgICBzZXRNb2RlKCJsb2dpbiIpOwogICAgfQogIH0KCiAgYXN5bmMgZnVuY3Rpb24gaGFuZGxlUmVnaXN0ZXIoKSB7CiAgICBzZXRFcnJvcigiIik7CiAgICBzZXRXb3JraW5nKHRydWUpOwogICAgdHJ5IHsKICAgICAgY29uc3QgY2hhbGxlbmdlUmVzID0gYXdhaXQgZmV0Y2goIi9hcGkvYXV0aC9yZWdpc3Rlci1jaGFsbGVuZ2UiLCB7IG1ldGhvZDogIlBPU1QiIH0pOwogICAgICBpZiAoIWNoYWxsZW5nZVJlcy5vaykgdGhyb3cgbmV3IEVycm9yKCJDaGFsbGVuZ2UgcmVxdWVzdCBmYWlsZWQiKTsKICAgICAgY29uc3Qgb3B0aW9ucyA9IGF3YWl0IGNoYWxsZW5nZVJlcy5qc29uKCk7CgogICAgICBjb25zdCBjcmVkZW50aWFsID0gYXdhaXQgc3RhcnRSZWdpc3RyYXRpb24oeyBvcHRpb25zSlNPTjogb3B0aW9ucyB9KTsKCiAgICAgIGNvbnN0IHZlcmlmeVJlcyA9IGF3YWl0IGZldGNoKCIvYXBpL2F1dGgvcmVnaXN0ZXIiLCB7CiAgICAgICAgbWV0aG9kOiAiUE9TVCIsCiAgICAgICAgaGVhZGVyczogeyAiQ29udGVudC1UeXBlIjogImFwcGxpY2F0aW9uL2pzb24iIH0sCiAgICAgICAgYm9keTogSlNPTi5zdHJpbmdpZnkoY3JlZGVudGlhbCksCiAgICAgIH0pOwoKICAgICAgaWYgKHZlcmlmeVJlcy5vaykgewogICAgICAgIHJvdXRlci5yZXBsYWNlKCIvIik7CiAgICAgIH0gZWxzZSB7CiAgICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IHZlcmlmeVJlcy5qc29uKCkuY2F0Y2goKCkgPT4gKHt9KSk7CiAgICAgICAgc2V0RXJyb3IoZGF0YS5lcnJvciB8fCAiU2V0dXAgZmFpbGVkIOKAlCB0cnkgYWdhaW4iKTsKICAgICAgfQogICAgfSBjYXRjaCAoZXJyOiB1bmtub3duKSB7CiAgICAgIGNvbnN0IG5hbWUgPSBlcnIgaW5zdGFuY2VvZiBFcnJvciA/IGVyci5uYW1lIDogIiI7CiAgICAgIGNvbnN0IG1zZyAgPSBlcnIgaW5zdGFuY2VvZiBFcnJvciA/IGVyci5tZXNzYWdlIDogIiI7CiAgICAgIGlmIChuYW1lID09PSAiSW52YWxpZFN0YXRlRXJyb3IiKSB7CiAgICAgICAgc2V0TW9kZSgibG9naW4iKTsKICAgICAgICBzZXRFcnJvcigiQWxyZWFkeSBzZXQgdXAg4oCUIHRhcCBVc2UgRmFjZSBJRCIpOwogICAgICB9IGVsc2UgewogICAgICAgIHNldEVycm9yKGBTZXR1cCBmYWlsZWQke21zZyA/IGA6ICR7bXNnfWAgOiAiIn1gKTsKICAgICAgfQogICAgfSBmaW5hbGx5IHsKICAgICAgc2V0V29ya2luZyhmYWxzZSk7CiAgICB9CiAgfQoKICBhc3luYyBmdW5jdGlvbiBoYW5kbGVQaW4oKSB7CiAgICBzZXRQaW5FcnJvcigiIik7CiAgICBzZXRXb3JraW5nKHRydWUpOwogICAgdHJ5IHsKICAgICAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2goIi9hcGkvYXV0aC9sb2dpbiIsIHsKICAgICAgICBtZXRob2Q6ICJQT1NUIiwKICAgICAgICBoZWFkZXJzOiB7ICJDb250ZW50LVR5cGUiOiAiYXBwbGljYXRpb24vanNvbiIgfSwKICAgICAgICBib2R5OiBKU09OLnN0cmluZ2lmeSh7IHR5cGU6ICJwaW4iLCBwaW4gfSksCiAgICAgIH0pOwogICAgICBpZiAocmVzLm9rKSB7CiAgICAgICAgcm91dGVyLnJlcGxhY2UoIi8iKTsKICAgICAgfSBlbHNlIHsKICAgICAgICBzZXRQaW5FcnJvcigiV3JvbmcgUElOIik7CiAgICAgICAgc2V0UGluKCIiKTsKICAgICAgfQogICAgfSBmaW5hbGx5IHsKICAgICAgc2V0V29ya2luZyhmYWxzZSk7CiAgICB9CiAgfQoKICAvLyDilIDilIAgTG9hZGluZyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICBpZiAobW9kZSA9PT0gImxvYWRpbmciKSB7CiAgICByZXR1cm4gKAogICAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtc3ZoIGJnLWJyZXctYmcgZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZ2FwLTYiPgogICAgICAgIDxDb2ZmZWVCZWFuR2xvdyBzaXplPXs3Mn0gLz4KICAgICAgICA8cCBjbGFzc05hbWU9ImZvbnQtZGlzcGxheSB0ZXh0LXdoaXRlLzQwIHRleHQtc20gdHJhY2tpbmctd2lkZXN0IHVwcGVyY2FzZSI+QnJld0xvZzwvcD4KICAgICAgPC9kaXY+CiAgICApOwogIH0KCiAgLy8g4pSA4pSAIFBJTiBlbnRyeSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICBpZiAobW9kZSA9PT0gInBpbiIpIHsKICAgIHJldHVybiAoCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4taC1zdmggYmctYnJldy1iZyBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBweC04IGdhcC0xMCI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGdhcC00Ij4KICAgICAgICAgIDxDb2ZmZWVCZWFuR2xvdyBzaXplPXs1Nn0gLz4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0iZm9udC1kaXNwbGF5IHRleHQtd2hpdGUvNDAgdGV4dC1zbSB0cmFja2luZy13aWRlc3QgdXBwZXJjYXNlIj5CcmV3TG9nPC9wPgogICAgICAgIDwvZGl2PgoKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy1mdWxsIG1heC13LXhzIGZsZXggZmxleC1jb2wgZ2FwLTQiPgogICAgICAgICAgPGlucHV0CiAgICAgICAgICAgIHR5cGU9Im51bWJlciIKICAgICAgICAgICAgaW5wdXRNb2RlPSJudW1lcmljIgogICAgICAgICAgICBwYXR0ZXJuPSJbMC05XSoiCiAgICAgICAgICAgIHBsYWNlaG9sZGVyPSJQSU4iCiAgICAgICAgICAgIHZhbHVlPXtwaW59CiAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IHNldFBpbihlLnRhcmdldC52YWx1ZSl9CiAgICAgICAgICAgIGNsYXNzTmFtZT0idy1mdWxsIGJnLWJyZXctc3VyZmFjZSBib3JkZXIgYm9yZGVyLWJyZXctYm9yZGVyIHJvdW5kZWQtMnhsIHB4LTQgcHktNCB0ZXh0LXdoaXRlIHRleHQtY2VudGVyIHRleHQtMnhsIHRyYWNraW5nLXdpZGVzdCBwbGFjZWhvbGRlcjp0ZXh0LWJyZXctbXV0ZWQgZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci13aGl0ZS8zMCIKICAgICAgICAgICAgYXV0b0ZvY3VzCiAgICAgICAgICAvPgogICAgICAgICAge3BpbkVycm9yICYmIDxwIGNsYXNzTmFtZT0idGV4dC1yZWQtNDAwIHRleHQtc20gdGV4dC1jZW50ZXIiPntwaW5FcnJvcn08L3A+fQogICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVQaW59CiAgICAgICAgICAgIGRpc2FibGVkPXtwaW4ubGVuZ3RoIDwgNCB8fCB3b3JraW5nfQogICAgICAgICAgICBjbGFzc05hbWU9InctZnVsbCBweS00IHJvdW5kZWQtMnhsIGJnLWJyZXctYWNjZW50IHRleHQtYmxhY2sgZm9udC1zZW1pYm9sZCB0ZXh0LWJhc2UgZGlzYWJsZWQ6b3BhY2l0eS00MCBhY3RpdmU6c2NhbGUtOTUgdHJhbnNpdGlvbi1hbGwiCiAgICAgICAgICA+CiAgICAgICAgICAgIHt3b3JraW5nID8gIkNoZWNraW5n4oCmIiA6ICJVbmxvY2sifQogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsgc2V0TW9kZSgibG9naW4iKTsgc2V0UGluKCIiKTsgc2V0UGluRXJyb3IoIiIpOyB9fQogICAgICAgICAgICBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXNtIHRleHQtY2VudGVyIHB5LTIiCiAgICAgICAgICA+CiAgICAgICAgICAgIOKGkCBVc2UgRmFjZSBJRAogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgKTsKICB9CgogIC8vIOKUgOKUgCBGYWNlIElEIChsb2dpbiBvciByZWdpc3Rlcikg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4taC1zdmggYmctYnJldy1iZyBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBweC04IGdhcC0xMCI+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtNCI+CiAgICAgICAgPENvZmZlZUJlYW5HbG93IHNpemU9ezcyfSAvPgogICAgICAgIDxwIGNsYXNzTmFtZT0iZm9udC1kaXNwbGF5IHRleHQtd2hpdGUvNDAgdGV4dC1zbSB0cmFja2luZy13aWRlc3QgdXBwZXJjYXNlIj5CcmV3TG9nPC9wPgogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJ3LWZ1bGwgbWF4LXcteHMgZmxleCBmbGV4LWNvbCBnYXAtNCI+CiAgICAgICAge2Vycm9yICYmICgKICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1hbWJlci00MDAgdGV4dC1zbSB0ZXh0LWNlbnRlciBsZWFkaW5nLXJlbGF4ZWQiPntlcnJvcn08L3A+CiAgICAgICAgKX0KCiAgICAgICAge21vZGUgPT09ICJyZWdpc3RlciIgPyAoCiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVJlZ2lzdGVyfQogICAgICAgICAgICBkaXNhYmxlZD17d29ya2luZ30KICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LWZ1bGwgcHktNSByb3VuZGVkLTJ4bCBiZy1icmV3LWFjY2VudCB0ZXh0LWJsYWNrIGZvbnQtc2VtaWJvbGQgdGV4dC1iYXNlIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC0zIGFjdGl2ZTpzY2FsZS05NSB0cmFuc2l0aW9uLWFsbCBkaXNhYmxlZDpvcGFjaXR5LTYwIgogICAgICAgICAgPgogICAgICAgICAgICB7d29ya2luZyA/IDxTcGlubmVyIC8+IDogPEZhY2VJREljb24gLz59CiAgICAgICAgICAgIHt3b3JraW5nID8gIlNldHRpbmcgdXDigKYiIDogIlNldCB1cCBGYWNlIElEIn0KICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICkgOiAoCiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIG9uQ2xpY2s9e3RyaWdnZXJGYWNlSUR9CiAgICAgICAgICAgIGRpc2FibGVkPXt3b3JraW5nfQogICAgICAgICAgICBjbGFzc05hbWU9InctZnVsbCBweS01IHJvdW5kZWQtMnhsIGJnLWJyZXctYWNjZW50IHRleHQtYmxhY2sgZm9udC1zZW1pYm9sZCB0ZXh0LWJhc2UgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZ2FwLTMgYWN0aXZlOnNjYWxlLTk1IHRyYW5zaXRpb24tYWxsIGRpc2FibGVkOm9wYWNpdHktNjAiCiAgICAgICAgICA+CiAgICAgICAgICAgIHt3b3JraW5nID8gPFNwaW5uZXIgLz4gOiA8RmFjZUlESWNvbiAvPn0KICAgICAgICAgICAge3dvcmtpbmcgPyAiVmVyaWZ5aW5n4oCmIiA6ICJVc2UgRmFjZSBJRCJ9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICApfQoKICAgICAgICA8YnV0dG9uCiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRNb2RlKCJwaW4iKX0KICAgICAgICAgIGNsYXNzTmFtZT0idGV4dC1icmV3LW11dGVkIHRleHQtc20gdGV4dC1jZW50ZXIgcHktMiIKICAgICAgICA+CiAgICAgICAgICBVc2UgUElOIGluc3RlYWQKICAgICAgICA8L2J1dHRvbj4KICAgICAgPC9kaXY+CiAgICA8L2Rpdj4KICApOwp9CgpmdW5jdGlvbiBGYWNlSURJY29uKCkgewogIHJldHVybiAoCiAgICA8c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIKICAgICAgc3Ryb2tlV2lkdGg9IjEuNzUiIHN0cm9rZUxpbmVjYXA9InJvdW5kIiBzdHJva2VMaW5lam9pbj0icm91bmQiPgogICAgICA8cGF0aCBkPSJNMiA3VjRhMiAyIDAgMCAxIDItMmgzIiAvPgogICAgICA8cGF0aCBkPSJNMTcgMmgzYTIgMiAwIDAgMSAyIDJ2MyIgLz4KICAgICAgPHBhdGggZD0iTTIyIDE3djNhMiAyIDAgMCAxLTIgMmgtMyIgLz4KICAgICAgPHBhdGggZD0iTTcgMjJINGEyIDIgMCAwIDEtMi0ydi0zIiAvPgogICAgICA8cGF0aCBkPSJNOSA5aC4wMSIgLz4KICAgICAgPHBhdGggZD0iTTE1IDloLjAxIiAvPgogICAgICA8cGF0aCBkPSJNOSAxNWEzIDMgMCAwIDAgNiAwIiAvPgogICAgPC9zdmc+CiAgKTsKfQoKZnVuY3Rpb24gU3Bpbm5lcigpIHsKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9InctNSBoLTUgcm91bmRlZC1mdWxsIGJvcmRlci0yIGJvcmRlci1ibGFjay8zMCBib3JkZXItdC1ibGFjayBhbmltYXRlLXNwaW4iIC8+CiAgKTsKfQo="}
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+
+type Mode = "loading" | "login" | "register" | "pin";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>("loading");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [error, setError] = useState("");
+  const [working, setWorking] = useState(false);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const res = await fetch("/api/auth/status");
+        const { registered } = await res.json();
+        if (registered) {
+          setMode("login");
+          await triggerFaceID();
+        } else {
+          setMode("register");
+        }
+      } catch {
+        setMode("register");
+      }
+    }
+    init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function triggerFaceID() {
+    setError("");
+    setWorking(true);
+    try {
+      const challengeRes = await fetch("/api/auth/login-challenge", { method: "POST" });
+      if (!challengeRes.ok) throw new Error("Challenge failed");
+      const options = await challengeRes.json();
+
+      const credential = await startAuthentication({ optionsJSON: options });
+
+      const verifyRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credential),
+      });
+
+      if (verifyRes.ok) {
+        router.replace("/");
+      } else {
+        const data = await verifyRes.json().catch(() => ({}));
+        setError(data.error || "Face ID failed — try again");
+      }
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const msg  = err instanceof Error ? err.message : "";
+      if (name === "NotAllowedError") {
+        setError(""); // user cancelled — stay quiet
+      } else {
+        setError(`Face ID unavailable${msg ? `: ${msg}` : ""} — use PIN below`);
+      }
+    } finally {
+      setWorking(false);
+      setMode("login");
+    }
+  }
+
+  async function handleRegister() {
+    setError("");
+    setWorking(true);
+    try {
+      const challengeRes = await fetch("/api/auth/register-challenge", { method: "POST" });
+      if (!challengeRes.ok) throw new Error("Challenge request failed");
+      const options = await challengeRes.json();
+
+      const credential = await startRegistration({ optionsJSON: options });
+
+      const verifyRes = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credential),
+      });
+
+      if (verifyRes.ok) {
+        router.replace("/");
+      } else {
+        const data = await verifyRes.json().catch(() => ({}));
+        setError(data.error || "Setup failed — try again");
+      }
+    } catch (err: unknown) {
+      const name = err instanceof Error ? err.name : "";
+      const msg  = err instanceof Error ? err.message : "";
+      if (name === "InvalidStateError") {
+        setMode("login");
+        setError("Already set up — tap Use Face ID");
+      } else {
+        setError(`Setup failed${msg ? `: ${msg}` : ""}`);
+      }
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function handlePin() {
+    setPinError("");
+    setWorking(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pin", pin }),
+      });
+      if (res.ok) {
+        router.replace("/");
+      } else {
+        setPinError("Wrong PIN");
+        setPin("");
+      }
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (mode === "loading") {
+    return (
+      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center gap-6">
+        <CoffeeBeanGlow size={72} />
+        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+      </div>
+    );
+  }
+
+  // ── PIN entry ────────────────────────────────────────────────────────────
+  if (mode === "pin") {
+    return (
+      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+        <div className="flex flex-col items-center gap-4">
+          <CoffeeBeanGlow size={56} />
+          <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+        </div>
+
+        <div className="w-full max-w-xs flex flex-col gap-4">
+          <input
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="PIN"
+            value={pin}
+            onChange={e => setPin(e.target.value)}
+            className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-4 text-white text-center text-2xl tracking-widest placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+            autoFocus
+          />
+          {pinError && <p className="text-red-400 text-sm text-center">{pinError}</p>}
+          <button
+            onClick={handlePin}
+            disabled={pin.length < 4 || working}
+            className="w-full py-4 rounded-2xl bg-brew-accent text-black font-semibold text-base disabled:opacity-40 active:scale-95 transition-all"
+          >
+            {working ? "Checking…" : "Unlock"}
+          </button>
+          <button
+            onClick={() => { setMode("login"); setPin(""); setPinError(""); }}
+            className="text-brew-muted text-sm text-center py-2"
+          >
+            ← Use Face ID
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Face ID (login or register) ──────────────────────────────────────────
+  return (
+    <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+      <div className="flex flex-col items-center gap-4">
+        <CoffeeBeanGlow size={72} />
+        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+      </div>
+
+      <div className="w-full max-w-xs flex flex-col gap-4">
+        {error && (
+          <p className="text-amber-400 text-sm text-center leading-relaxed">{error}</p>
+        )}
+
+        {mode === "register" ? (
+          <button
+            onClick={handleRegister}
+            disabled={working}
+            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+          >
+            {working ? <Spinner /> : <FaceIDIcon />}
+            {working ? "Setting up…" : "Set up Face ID"}
+          </button>
+        ) : (
+          <button
+            onClick={triggerFaceID}
+            disabled={working}
+            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+          >
+            {working ? <Spinner /> : <FaceIDIcon />}
+            {working ? "Verifying…" : "Use Face ID"}
+          </button>
+        )}
+
+        <button
+          onClick={() => setMode("pin")}
+          className="text-brew-muted text-sm text-center py-2"
+        >
+          Use PIN instead
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FaceIDIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 7V4a2 2 0 0 1 2-2h3" />
+      <path d="M17 2h3a2 2 0 0 1 2 2v3" />
+      <path d="M22 17v3a2 2 0 0 1-2 2h-3" />
+      <path d="M7 22H4a2 2 0 0 1-2-2v-3" />
+      <path d="M9 9h.01" />
+      <path d="M15 9h.01" />
+      <path d="M9 15a3 3 0 0 0 6 0" />
+    </svg>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="w-5 h-5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+  );
+}

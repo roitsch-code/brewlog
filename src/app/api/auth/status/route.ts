@@ -1,1 +1,14 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRBZG1pbkRiIH0gZnJvbSAiQC9saWIvZmlyZWJhc2UvYWRtaW4iOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKCkgewogIHRyeSB7CiAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgIGNvbnN0IHNuYXAgPSBhd2FpdCBkYi5jb2xsZWN0aW9uKCJhdXRoIikuZG9jKCJjcmVkZW50aWFsIikuZ2V0KCk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyByZWdpc3RlcmVkOiBzbmFwLmV4aXN0cyB9KTsKICB9IGNhdGNoIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IHJlZ2lzdGVyZWQ6IGZhbHNlIH0pOwogIH0KfQo="}
+import { NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const db = getAdminDb();
+    const snap = await db.collection("auth").doc("credential").get();
+    return NextResponse.json({ registered: snap.exists });
+  } catch {
+    return NextResponse.json({ registered: false });
+  }
+}

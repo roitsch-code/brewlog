@@ -1,1 +1,23 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgdmVyaWZ5U2Vzc2lvbiB9IGZyb20gIi4vc2Vzc2lvbiI7CgovKioKICogQmVsdC1hbmQtc3VzcGVuZGVycyBhdXRoIGNoZWNrIGZvciByb3V0ZSBoYW5kbGVycy4KICogTWlkZGxld2FyZSBhbHJlYWR5IGNvdmVycyBtb3N0IGNhc2VzLCBidXQgdGhpcyBwcm90ZWN0cyBleHBlbnNpdmUKICogQ2xhdWRlIEFQSSByb3V0ZXMgaWYgbWlkZGxld2FyZSBpcyBldmVyIG1pc2NvbmZpZ3VyZWQgb3IgYnlwYXNzZWQuCiAqCiAqIFVzYWdlOgogKiAgIGNvbnN0IGF1dGhFcnJvciA9IGF3YWl0IHJlcXVpcmVBdXRoKHJlcSk7CiAqICAgaWYgKGF1dGhFcnJvcikgcmV0dXJuIGF1dGhFcnJvcjsKICovCmV4cG9ydCBhc3luYyBmdW5jdGlvbiByZXF1aXJlQXV0aChyZXE6IE5leHRSZXF1ZXN0KTogUHJvbWlzZTxOZXh0UmVzcG9uc2UgfCBudWxsPiB7CiAgY29uc3QgdG9rZW4gPSByZXEuY29va2llcy5nZXQoImNmX3Nlc3Npb24iKT8udmFsdWU7CiAgaWYgKCF0b2tlbikgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJVbmF1dGhvcml6ZWQiIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgfQogIGNvbnN0IHZhbGlkID0gYXdhaXQgdmVyaWZ5U2Vzc2lvbih0b2tlbik7CiAgaWYgKCF2YWxpZCkgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJVbmF1dGhvcml6ZWQiIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgfQogIHJldHVybiBudWxsOwp9Cg=="}
+import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "./session";
+
+/**
+ * Belt-and-suspenders auth check for route handlers.
+ * Middleware already covers most cases, but this protects expensive
+ * Claude API routes if middleware is ever misconfigured or bypassed.
+ *
+ * Usage:
+ *   const authError = await requireAuth(req);
+ *   if (authError) return authError;
+ */
+export async function requireAuth(req: NextRequest): Promise<NextResponse | null> {
+  const token = req.cookies.get("cf_session")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const valid = await verifySession(token);
+  if (!valid) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
+}

@@ -1,1 +1,67 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IEFudGhyb3BpYyBmcm9tICJAYW50aHJvcGljLWFpL3NkayI7CgpleHBvcnQgY29uc3QgZHluYW1pYyA9ICJmb3JjZS1keW5hbWljIjsKCmNvbnN0IGNsaWVudCA9IG5ldyBBbnRocm9waWMoeyBhcGlLZXk6IHByb2Nlc3MuZW52LkFOVEhST1BJQ19BUElfS0VZIH0pOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCBzdGF0cyA9IGF3YWl0IHJlcS5qc29uKCk7CgogICAgaWYgKCFzdGF0cyB8fCBzdGF0cy50b3RhbFNlc3Npb25zIDwgMykgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBzdW1tYXJ5OiBudWxsIH0pOwogICAgfQoKICAgIGNvbnN0IHByb21wdCA9IGBZb3UgYXJlIGFuYWx5c2luZyBhIHNwZWNpYWx0eSBjb2ZmZWUgYnJldyBsb2cuIFJlc3BvbmQgd2l0aCBPTkxZIGEgcmF3IEpTT04gb2JqZWN0IOKAlCBubyBtYXJrZG93biwgbm8gY29kZSBmZW5jZXMsIG5vIGV4cGxhbmF0aW9uIGJlZm9yZSBvciBhZnRlci4gU3RhcnQgeW91ciByZXNwb25zZSB3aXRoIHsgYW5kIGVuZCB3aXRoIH0uCgpCUkVXIERBVEE6Ci0gVG90YWwgcmF0ZWQgYnJld3M6ICR7c3RhdHMudG90YWxTZXNzaW9uc30KLSBPdmVyYWxsIGF2ZXJhZ2UgcmF0aW5nOiAke3N0YXRzLmF2Z1JhdGluZ33imIUKLSBUb3Agb3JpZ2luczogJHtzdGF0cy50b3BPcmlnaW5zLm1hcCgobzoge25hbWU6c3RyaW5nO2F2ZzpudW1iZXI7Y291bnQ6bnVtYmVyfSkgPT4gYCR7by5uYW1lfSAoJHtvLmF2Z33imIUsICR7by5jb3VudH0gYnJld3MpYCkuam9pbigiLCAiKSB8fCAibm9uZSB5ZXQifQotIFRvcCBwcm9jZXNzZXM6ICR7c3RhdHMudG9wUHJvY2Vzc2VzLm1hcCgocDoge25hbWU6c3RyaW5nO2F2ZzpudW1iZXI7Y291bnQ6bnVtYmVyfSkgPT4gYCR7cC5uYW1lfSAoJHtwLmF2Z33imIUsICR7cC5jb3VudH0gYnJld3MpYCkuam9pbigiLCAiKSB8fCAibm9uZSB5ZXQifQotIFRvcCBmbGF2b3JzOiAke3N0YXRzLnRvcEZsYXZvcnMuc2xpY2UoMCwgNSkubWFwKChmOiB7bmFtZTpzdHJpbmc7Y291bnQ6bnVtYmVyfSkgPT4gZi5uYW1lKS5qb2luKCIsICIpIHx8ICJub25lIHlldCJ9Ci0gVG9wIG1ldGhvZHM6ICR7c3RhdHMudG9wTWV0aG9kcy5tYXAoKG06IHtuYW1lOnN0cmluZzthdmc6bnVtYmVyO2NvdW50Om51bWJlcn0pID0+IGAke20ubmFtZX0gKCR7bS5hdmd94piFKWApLmpvaW4oIiwgIikgfHwgIm5vbmUgeWV0In0KLSBCb2R5OiAke0pTT04uc3RyaW5naWZ5KHN0YXRzLmJvZHlEaXN0KX0KLSBBY2lkaXR5OiAke0pTT04uc3RyaW5naWZ5KHN0YXRzLmFjaWRpdHlEaXN0KX0KLSBSYXRpbmcgdHJlbmQ6ICR7c3RhdHMucmF0aW5nVHJlbmQubWFwKCh0OiB7bGFiZWw6c3RyaW5nO2F2ZzpudW1iZXJ9KSA9PiBgJHt0LmxhYmVsfTogJHt0LmF2Z33imIVgKS5qb2luKCIsICIpIHx8ICJub3QgZW5vdWdoIGRhdGEifQoKUmVxdWlyZWQgSlNPTiBzdHJ1Y3R1cmU6CnsKICAic3VtbWFyeSI6ICIzLTQgc2VudGVuY2UgcGxhaW4gdGV4dCBwYXJhZ3JhcGguIERpcmVjdCBhbmQgcGVyc29uYWwgdG9uZS4gUmVmZXJlbmNlIGFjdHVhbCBudW1iZXJzLiBObyBpbnRybyBwaHJhc2UgbGlrZSBCYXNlZCBvbiB5b3VyIGRhdGEuIE5vIGJ1bGxldCBwb2ludHMuIE5vIG1hcmtkb3duLiIsCiAgInN1Z2dlc3Rpb25zIjogWwogICAgeyAidHlwZSI6ICJvcmlnaW4iLCAidGV4dCI6ICIxLTIgc2VudGVuY2UgcGxhaW4gdGV4dCBleHBsYW5hdGlvbi4iLCAidGFnIjogIlRyeTogRXRoaW9waWEiIH0KICBdCn0KClJ1bGVzOgotIHN1bW1hcnkgbXVzdCBiZSBwbGFpbiBwcm9zZSB0ZXh0LCBub3RoaW5nIGVsc2UKLSBzdWdnZXN0aW9ucyBhcnJheSBtdXN0IGhhdmUgMi0zIGl0ZW1zCi0gdHlwZSBpcyBlaXRoZXIgb3JpZ2luIG9yIHByb2Nlc3MKLSB0YWcgaXMgYSBzaG9ydCBsYWJlbCBsaWtlIFRyeTogS2VueWEgb3IgRXhwbG9yZTogV2FzaGVkCi0gTk8gbWFya2Rvd24gYW55d2hlcmUgaW4gdGhlIHZhbHVlcwotIFN0YXJ0IHJlc3BvbnNlIHdpdGggeyBpbW1lZGlhdGVseWA7CgogICAgY29uc3QgcmVzcG9uc2UgPSBhd2FpdCBjbGllbnQubWVzc2FnZXMuY3JlYXRlKHsKICAgICAgbW9kZWw6ICJjbGF1ZGUtaGFpa3UtNC01IiwKICAgICAgbWF4X3Rva2VuczogNjAwLAogICAgICBtZXNzYWdlczogWwogICAgICAgIHsgcm9sZTogInVzZXIiLCBjb250ZW50OiBwcm9tcHQgfSwKICAgICAgICB7IHJvbGU6ICJhc3Npc3RhbnQiLCBjb250ZW50OiAieyIgfSwKICAgICAgXSwKICAgIH0pOwoKICAgIGNvbnN0IHRleHQgPSByZXNwb25zZS5jb250ZW50WzBdLnR5cGUgPT09ICJ0ZXh0IiA/ICJ7IiArIHJlc3BvbnNlLmNvbnRlbnRbMF0udGV4dC50cmltKCkgOiBudWxsOwogICAgLy8gdjMKICAgIHRyeSB7CiAgICAgIGNvbnN0IGpzb25TdHIgPSB0ZXh0Py5tYXRjaCgvXHtbXHNcU10qXH0vKT8uWzBdID8/ICJ7fSI7CiAgICAgIGNvbnN0IHBhcnNlZCA9IEpTT04ucGFyc2UoanNvblN0cik7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IHN1bW1hcnk6IHBhcnNlZC5zdW1tYXJ5ID8/IG51bGwsIHN1Z2dlc3Rpb25zOiBwYXJzZWQuc3VnZ2VzdGlvbnMgPz8gW10gfSk7CiAgICB9IGNhdGNoIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgc3VtbWFyeTogbnVsbCwgc3VnZ2VzdGlvbnM6IFtdIH0pOwogICAgfQogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigidGFzdGUtc3VtbWFyeSBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgc3VtbWFyeTogbnVsbCwgc3VnZ2VzdGlvbnM6IFtdIH0pOwogIH0KfQo="}
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+
+export const dynamic = "force-dynamic";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export async function POST(req: NextRequest) {
+  try {
+    const stats = await req.json();
+
+    if (!stats || stats.totalSessions < 3) {
+      return NextResponse.json({ summary: null });
+    }
+
+    const prompt = `You are analysing a specialty coffee brew log. Respond with ONLY a raw JSON object — no markdown, no code fences, no explanation before or after. Start your response with { and end with }.
+
+BREW DATA:
+- Total rated brews: ${stats.totalSessions}
+- Overall average rating: ${stats.avgRating}★
+- Top origins: ${stats.topOrigins.map((o: {name:string;avg:number;count:number}) => `${o.name} (${o.avg}★, ${o.count} brews)`).join(", ") || "none yet"}
+- Top processes: ${stats.topProcesses.map((p: {name:string;avg:number;count:number}) => `${p.name} (${p.avg}★, ${p.count} brews)`).join(", ") || "none yet"}
+- Top flavors: ${stats.topFlavors.slice(0, 5).map((f: {name:string;count:number}) => f.name).join(", ") || "none yet"}
+- Top methods: ${stats.topMethods.map((m: {name:string;avg:number;count:number}) => `${m.name} (${m.avg}★)`).join(", ") || "none yet"}
+- Body: ${JSON.stringify(stats.bodyDist)}
+- Acidity: ${JSON.stringify(stats.acidityDist)}
+- Rating trend: ${stats.ratingTrend.map((t: {label:string;avg:number}) => `${t.label}: ${t.avg}★`).join(", ") || "not enough data"}
+
+Required JSON structure:
+{
+  "summary": "3-4 sentence plain text paragraph. Direct and personal tone. Reference actual numbers. No intro phrase like Based on your data. No bullet points. No markdown.",
+  "suggestions": [
+    { "type": "origin", "text": "1-2 sentence plain text explanation.", "tag": "Try: Ethiopia" }
+  ]
+}
+
+Rules:
+- summary must be plain prose text, nothing else
+- suggestions array must have 2-3 items
+- type is either origin or process
+- tag is a short label like Try: Kenya or Explore: Washed
+- NO markdown anywhere in the values
+- Start response with { immediately`;
+
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 600,
+      messages: [
+        { role: "user", content: prompt },
+        { role: "assistant", content: "{" },
+      ],
+    });
+
+    const text = response.content[0].type === "text" ? "{" + response.content[0].text.trim() : null;
+    // v3
+    try {
+      const jsonStr = text?.match(/\{[\s\S]*\}/)?.[0] ?? "{}";
+      const parsed = JSON.parse(jsonStr);
+      return NextResponse.json({ summary: parsed.summary ?? null, suggestions: parsed.suggestions ?? [] });
+    } catch {
+      return NextResponse.json({ summary: null, suggestions: [] });
+    }
+  } catch (err) {
+    console.error("taste-summary error:", err);
+    return NextResponse.json({ summary: null, suggestions: [] });
+  }
+}

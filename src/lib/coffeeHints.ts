@@ -1,1 +1,129 @@
-{"data":"Ly8gQ29mZmVlIGtub3dsZWRnZSBoaW50cyDigJQgc2hvd24gd2hpbGUgQ2xhdWRlIGdlbmVyYXRlcyB5b3VyIGJyZXcgcmVjaXBlCi8vIH4xMDAgaGludHMgY292ZXJpbmcgb3JpZ2lucywgcHJvY2Vzc2luZywgYnJld2luZyBzY2llbmNlLCBlcXVpcG1lbnQsIGhpc3RvcnkKCmV4cG9ydCBjb25zdCBDT0ZGRUVfSElOVFM6IHN0cmluZ1tdID0gWwogIC8vIE9yaWdpbnMgJiB0ZXJyb2lyCiAgIkV0aGlvcGlhIGlzIGNvbnNpZGVyZWQgdGhlIGJpcnRocGxhY2Ugb2YgY29mZmVlIOKAlCB3aWxkIGNvZmZlZSBwbGFudHMgc3RpbGwgZ3JvdyBpbiB0aGUgS2FmZmEgZm9yZXN0LiIsCiAgIllpcmdhY2hlZmZlJ3MgYWx0aXR1ZGUgb2YgMSw3MDDigJMyLDIwMCBtIGNyZWF0ZXMgdGhlIHNsb3cgY2hlcnJ5IHJpcGVuaW5nIHRoYXQgYnVpbGRzIGl0cyBmYW1vdXMgZmxvcmFsIG5vdGVzLiIsCiAgIktlbnlhbiBBQSBncmFkZSByZWZlcnMgdG8gYmVhbiBzY3JlZW4gc2l6ZSAoMTgrKSwgbm90IHF1YWxpdHkg4oCUIGJ1dCBoaWdoIGFsdGl0dWRlIHRlbmRzIHRvIGNvcnJlbGF0ZSB3aXRoIGJvdGguIiwKICAiR2VzaGEgdmFyaWV0eSB3YXMgZGlzY292ZXJlZCBpbiB0aGUgR2VzaGEgZm9yZXN0IG9mIEV0aGlvcGlhIGFuZCBicm91Z2h0IHRvIFBhbmFtYSwgd2hlcmUgaXQgYmVjYW1lIGxlZ2VuZGFyeS4iLAogICJCcmF6aWwgaXMgdGhlIHdvcmxkJ3MgbGFyZ2VzdCBjb2ZmZWUgcHJvZHVjZXIsIGJ1dCBpdHMgZmxhdCB0ZXJyYWluIG1lYW5zIG1vc3QgY29mZmVlIGlzIGRyaWVkIG5hdHVyYWxseS4iLAogICJDb2xvbWJpYSdzIGdlb2dyYXBoeSDigJQgdHdvIEFuZGVzIHJhbmdlcyDigJQgY3JlYXRlcyBtaWNyby1jbGltYXRlcyB0aGF0IGFsbG93IGhhcnZlc3RpbmcgbmVhcmx5IHllYXItcm91bmQuIiwKICAiU3VtYXRyYSdzICd3ZXQtaHVsbGVkJyBHaWxpbmcgQmFzYWggcHJvY2VzcyBjcmVhdGVzIHRoZSBkaXN0aW5jdGl2ZSBlYXJ0aHksIGxvdy1hY2lkIHByb2ZpbGUgb2YgTWFuZGhlbGluZyBjb2ZmZWVzLiIsCiAgIlJ3YW5kYSdzIHZvbGNhbmljIExha2UgS2l2dSBzb2lscyBwcm9kdWNlIGNvZmZlZXMgd2l0aCBhIGRpc3RpbmN0aXZlIHdpbmV5IGNvbXBsZXhpdHkuIiwKICAiQnVydW5kaSBhbmQgUndhbmRhIHNoYXJlIG5lYXJseSBpZGVudGljYWwgYWx0aXR1ZGUgYW5kIHRlcnJvaXIg4oCUIHRpbnkgcmVnaW9uYWwgdmFyaWF0aW9ucyBkZWZpbmUgdGhlaXIgY2hhcmFjdGVyLiIsCiAgIlllbWVuJ3MgYW5jaWVudCBtb2NoYSBwb3J0IGdhdmUgZXNwcmVzc28gaXRzIGZpcnN0IG5hbWUg4oCUICdtb2NoYScgcmVmZXJyZWQgdG8gdGhlIGNvZmZlZSwgbm90IHRoZSBkcmluay4iLAogICJDb3N0YSBSaWNhbiAnaG9uZXknIHByb2Nlc3Npbmcgd2FzIHBpb25lZXJlZCBwYXJ0bHkgYmVjYXVzZSB3YXRlciBmb3Igd2FzaGVkIHByb2Nlc3NpbmcgaXMgc2NhcmNlIGluIGRyeSBzZWFzb24uIiwKICAiUGFuYW1hJ3MgQm9xdWV0ZSByZWdpb24gYmVuZWZpdHMgZnJvbSBjb2xkICdCYWphcmVxdWUnIG1pc3QgdGhhdCBzbG93cyByaXBlbmluZywgY29uY2VudHJhdGluZyBzdWdhcnMuIiwKICAiR3VhdGVtYWxhJ3MgQW50aWd1YSBjb2ZmZWVzIGNvbWUgZnJvbSB2b2xjYW5pYyBzb2lsIGVucmljaGVkIGJ5IHRocmVlIG5lYXJieSB2b2xjYW5vZXMuIiwKCiAgLy8gUHJvY2Vzc2luZwogICJOYXR1cmFsIChkcnkpIHByb2Nlc3Npbmc6IHRoZSB3aG9sZSBjaGVycnkgaXMgZHJpZWQgb24gcmFpc2VkIGJlZHMgZm9yIDPigJM2IHdlZWtzIGJlZm9yZSBtaWxsaW5nLiIsCiAgIldhc2hlZCAod2V0KSBwcm9jZXNzaW5nIHJlbW92ZXMgdGhlIGZydWl0IGJlZm9yZSBkcnlpbmcg4oCUIHRoaXMgaGlnaGxpZ2h0cyB0ZXJyb2lyIGFuZCB2YXJpZXR5IGNsYXJpdHkuIiwKICAiSG9uZXkgcHJvY2Vzc2luZyBpcyBhIGh5YnJpZDogc29tZSBtdWNpbGFnZSByZW1haW5zIG9uIHRoZSBiZWFuLiBZZWxsb3cgPCBSZWQgPCBCbGFjayA9IG1vcmUgc3dlZXRuZXNzLiIsCiAgIkFuYWVyb2JpYyBmZXJtZW50YXRpb24gaGFwcGVucyBpbiBzZWFsZWQgdGFua3Mg4oCUIENP4oKCIGJ1aWxkcyBwcmVzc3VyZSwgYWx0ZXJpbmcgZmxhdm9yIGRyYW1hdGljYWxseS4iLAogICJFeHRlbmRlZCBmZXJtZW50YXRpb24gaXMgdGhlIGRyaXZlciBiZWhpbmQgJ3dpbnknIGZsYXZvciBub3RlcyDigJQgbm90IHRoZSBjaGVycnkgaXRzZWxmLiIsCiAgIlRoZXJtYWwgc2hvY2sgZHJ5aW5nIChyYXBpZCB0ZW1wIGNoYW5nZSkgY2FuIHN0cmVzcyB0aGUgYmVhbiBhbmQgcmVkdWNlIHNoZWxmIGxpZmUuIiwKICAiUmFpc2VkIGRyeWluZyBiZWRzIGFsbG93IGFpcmZsb3cgdW5kZXIgdGhlIGNvZmZlZSDigJQgZ3JvdW5kIGRyeWluZyByYWlzZXMgY29udGFtaW5hdGlvbiByaXNrLiIsCiAgIlNvcnRpbmcgYWZ0ZXIgZHJ5aW5nIGlzIGNyaXRpY2FsOiBvbmUgZmVybWVudGVkIGJlYW4gaW4gYSBzYWNrIGNhbiB0YWludCBhbiBlbnRpcmUgbG90LiIsCiAgIlRoZSBsb25nZXIgYSBjb2ZmZWUgZHJpZXMsIHRoZSBtb3JlIHN1Z2FycyBjYXJhbWVsaXplIGludG8gdGhlIGJlYW4g4oCUIHVwIHRvIGEgcG9pbnQuIiwKCiAgLy8gUm9hc3RpbmcKICAiRmlyc3QgY3JhY2sgaXMgd2hlbiB3YXRlciB2YXBvciBhbmQgQ0/igoIgZXNjYXBlIHRoZSBiZWFuIOKAlCB0aGUgc291bmQgcmVzZW1ibGVzIHBvcGNvcm4uIiwKICAiU2Vjb25kIGNyYWNrIGJyZWFrcyBkb3duIHRoZSBiZWFuJ3MgY2VsbCBzdHJ1Y3R1cmUg4oCUIG1vc3Qgc3BlY2lhbHR5IHJvYXN0ZXJzIHN0b3Agd2VsbCBiZWZvcmUgdGhpcy4iLAogICJMaWdodCByb2FzdCBwcmVzZXJ2ZXMgdGhlIG1vc3Qgb3JpZ2luIGNoYXJhY3RlciBidXQgZGVtYW5kcyBwcmVjaXNpb24gYnJld2luZyDigJQgbG93IHJvb20gZm9yIGVycm9yLiIsCiAgIlJvYXN0IGRhdGUgbWF0dGVycyBtb3JlIHRoYW4gbW9zdCBicmV3aW5nIHZhcmlhYmxlcy4gUGVhayBmbGF2b3Igd2luZG93OiA14oCTMjEgZGF5cyBwb3N0LXJvYXN0IGZvciBtb3N0IG1ldGhvZHMuIiwKICAiRGVnYXNzaW5nOiBmcmVzaGx5IHJvYXN0ZWQgY29mZmVlIHJlbGVhc2VzIENP4oKCIGZvciBkYXlzLiBUaGlzIGlzIHdoeSBpbW1lZGlhdGUgYnJld2luZyBvZnRlbiB0YXN0ZXMgZmxhdC4iLAogICJEZXZlbG9wbWVudCB0aW1lIHJhdGlvIChEVFIpIOKAlCB0aW1lIGFmdGVyIGZpcnN0IGNyYWNrIGFzICUgb2YgdG90YWwgcm9hc3Qg4oCUIHNoYXBlcyBzd2VldG5lc3MgdnMuIGFjaWRpdHkuIiwKICAiRGFyayByb2FzdCBoaWRlcyBvcmlnaW4gY2hhcmFjdGVyIHVuZGVyIHJvYXN0IGZsYXZvci4gVGhlIGNvZmZlZSdzIHNvdXJjZSBtYXR0ZXJzIG11Y2ggbGVzcy4iLAogICJOb3JkaWMtc3R5bGUgbGlnaHQgcm9hc3RzIG9mdGVuIHRhc3RlICdzb3VyJyB0byB0aG9zZSBleHBlY3RpbmcgZGFya2VyIHByb2ZpbGVzIOKAlCBpdCdzIGV4dHJhY3Rpb24sIG5vdCBkZWZlY3QuIiwKCiAgLy8gV2F0ZXIgY2hlbWlzdHJ5CiAgIk1hZ25lc2l1bSBpb25zIGV4dHJhY3QgZmxhdm9yIGNvbXBvdW5kcyBtb3JlIGVmZmljaWVudGx5IHRoYW4gY2FsY2l1bSDigJQgdGhlIGtleSBtaW5lcmFsIGZvciB0YXN0ZS4iLAogICJUb3RhbCBEaXNzb2x2ZWQgU29saWRzIChURFMpIG9mIDc14oCTMTUwIHBwbSBpcyB0aGUgU0NBLXJlY29tbWVuZGVkIHJhbmdlIGZvciBicmV3aW5nIHdhdGVyLiIsCiAgIkNobG9yaW5lIGluIHRhcCB3YXRlciBraWxscyBzdWJ0bGUgYXJvbWF0aWNzLiBFdmVuIGEgc21hbGwgYW1vdW50IGRlZ3JhZGVzIHNwZWNpYWx0eSBjb2ZmZWUuIiwKICAiRGlzdGlsbGVkIHdhdGVyIHByb2R1Y2VzIGZsYXQsIGxpZmVsZXNzIGNvZmZlZSDigJQgaXQgbmVlZHMgc29tZSBtaW5lcmFscyB0byBjb25kdWN0IGV4dHJhY3Rpb24gcHJvcGVybHkuIiwKICAiQmljYXJib25hdGUgKEtIKSBhY3RzIGFzIGEgYnVmZmVyLCBuZXV0cmFsaXppbmcgYWNpZHMg4oCUIHRvbyBtdWNoIG1ha2VzIGNvZmZlZSB0YXN0ZSBmbGF0IGFuZCBkdWxsLiIsCiAgIkhhcmQgd2F0ZXIgZm9ybXMgbGltZXNjYWxlIGluIGtldHRsZXMuIEEgQnJpdGEgKyByZW1pbmVyYWxpemluZyBhcHByb2FjaCBwcmVzZXJ2ZXMgYm90aCBlcXVpcG1lbnQgYW5kIHRhc3RlLiIsCiAgIkNoYW1waW9uc2hpcCB3YXRlciBvZnRlbiB0YXJnZXRzIDQ04oCTNTUgcHBtIOKAlCBsb3cgZW5vdWdoIGZvciBjbGFyaXR5LCBoaWdoIGVub3VnaCBmb3IgZXh0cmFjdGlvbi4iLAogICJUaGUgU0NBICdpZGVhbCcgd2F0ZXIgcmVjaXBlOiA3NeKAkzE1MCBwcG0gVERTLCBtYWduZXNpdW0gfjEwIHBwbSwgYmljYXJib25hdGUgfjQwIHBwbS4iLAoKICAvLyBFeHRyYWN0aW9uIHNjaWVuY2UKICAiQ29mZmVlIGlzIGFib3V0IDMwJSBzb2x1YmxlIOKAlCBvbmx5IDIw4oCTMjIlIHNob3VsZCBlbmQgdXAgaW4geW91ciBjdXAgZm9yIGJhbGFuY2VkIGV4dHJhY3Rpb24uIiwKICAiVW5kZXItZXh0cmFjdGVkIGNvZmZlZSB0YXN0ZXMgc291ciBhbmQgdGhpbi4gT3Zlci1leHRyYWN0ZWQgdGFzdGVzIGJpdHRlciBhbmQgZHJ5aW5nLiIsCiAgIlRoZSBibG9vbSAocHJlLWluZnVzaW9uKSBhbGxvd3MgQ0/igoIgdG8gZXNjYXBlLCBwcmV2ZW50aW5nIHVuZXZlbiBleHRyYWN0aW9uIGNoYW5uZWxzLiIsCiAgIkdyaW5kIHNpemUgYWZmZWN0cyBzdXJmYWNlIGFyZWE6IGZpbmVyID0gbW9yZSBzdXJmYWNlID0gZmFzdGVyIGV4dHJhY3Rpb24gPSByaXNrIG9mIG92ZXItZXh0cmFjdGlvbi4iLAogICJXYXRlciB0ZW1wZXJhdHVyZSBhZmZlY3RzIGV4dHJhY3Rpb24gc3BlZWQg4oCUIGxvd2VyIHRlbXBzIGNhbiBoaWdobGlnaHQgYWNpZGl0eSwgaGlnaGVyIHRlbXBzIGV4dHJhY3QgbW9yZS4iLAogICJQb3VyIHNwZWVkIGNyZWF0ZXMgYWdpdGF0aW9uIOKAlCBmYXN0ZXIgcG91cnMgc3RpciB0aGUgYmVkLCBib29zdGluZyBleHRyYWN0aW9uIGJ1dCByaXNraW5nIGNoYW5uZWxpbmcuIiwKICAiQ2hhbm5lbGluZyBvY2N1cnMgd2hlbiB3YXRlciBmaW5kcyBhIHBhdGggb2YgbGVhc3QgcmVzaXN0YW5jZSB0aHJvdWdoIHRoZSBjb2ZmZWUgYmVkIOKAlCByaW5zZSBhbmQgcmVzZXQuIiwKICAiVHVyYnVsZW5jZSBkdXJpbmcgYmxvb20gaGVscHMgc2F0dXJhdGUgYWxsIGdyb3VuZHMgZXZlbmx5IOKAlCBhIGdlbnRsZSBzdGlyIGF0IDEwIHNlY29uZHMgaXMgcHJvdmVuLiIsCiAgIlRvdGFsIGJyZXcgeWllbGQgd2VpZ2h0IChub3QganVzdCByZWNpcGUgdm9sdW1lKSBkZXRlcm1pbmVzIHlvdXIgYWN0dWFsIFREUy4iLAogICJBIGxvd2VyIGJyZXcgcmF0aW8gKDE6MTIpIG1ha2VzIGEgc3Ryb25nZXIgYnV0IG5vdCBuZWNlc3NhcmlseSBiZXR0ZXIgY3VwIOKAlCBiYWxhbmNlIG1hdHRlcnMgbW9yZS4iLAoKICAvLyBFcXVpcG1lbnQKICAiVGhlIFY2MCdzIGxhcmdlIG9wZW5pbmcgYW5kIGFuZ2xlZCByaWJzIGVuY291cmFnZSBmYXN0LCBldmVuIGRyYXdkb3duIOKAlCBpdCByZXdhcmRzIHRlY2huaXF1ZS4iLAogICJIYXJpbydzICdEcmlwIEFzc2lzdCcgZGl2aWRlcyB0aGUgcG91ciBpbnRvIDggc2xvdyBzdHJlYW1zIOKAlCBpdCBtaW1pY3MgbWFjaGluZSBjb25zaXN0ZW5jeS4iLAogICJUaGUgT3JlYSBWNCdzIG1vZHVsYXIgYmFzZSBzeXN0ZW0gY2hhbmdlcyBmbG93IHJhdGUgZHJhbWF0aWNhbGx5IOKAlCBBcGV4IGJvdHRvbSBpcyB0aGUgbW9zdCByZXN0cmljdGl2ZS4iLAogICJBZXJvUHJlc3MgdXNlcyBwcmVzc3VyZSArIGltbWVyc2lvbiDigJQgaXQncyB0aGUgbW9zdCBmb3JnaXZpbmcgYnJld2VyIGZvciBpbXBlcmZlY3QgZ3JpbmQgb3Igd2F0ZXIuIiwKICAiQWVyb1ByZXNzIGludmVydGVkIG1ldGhvZCBlbGltaW5hdGVzIGRyaXBwaW5nIGR1cmluZyBzdGVlcCDigJQgc2FtZSByZXN1bHQsIG1vcmUgY29udHJvbC4iLAogICJUaGUgQ2xldmVyIERyaXBwZXIgY29tYmluZXMgaW1tZXJzaW9uIHN0ZWVwIHdpdGggYSBWNjAtc3R5bGUgZmlsdGVyIOKAlCBKYW1lcyBIb2ZmbWFubidzIG1ldGhvZCBpcyBkZWZpbml0aXZlLiIsCiAgIkthbGl0YSBXYXZlJ3MgZmxhdCBiZWQgYW5kIHRocmVlIGhvbGVzIHByb21vdGUgZXZlbiBleHRyYWN0aW9uIOKAlCBpdCdzIG1vcmUgZm9yZ2l2aW5nIHRoYW4gVjYwLiIsCiAgIk1vY2NhbWFzdGVyJ3MgZ29sZCBzdGFuZGFyZDogZml4ZWQgOTLigJM5NsKwQyB3YXRlciwgNi1taW51dGUgYnJldyBjeWNsZSwgU0NBQSBjZXJ0aWZpZWQuIiwKICAiVGhlIE5pY2hlIFplcm8gaXMgYSB6ZXJvLXJldGVudGlvbiBjb25pY2FsIGdyaW5kZXIg4oCUIHdoYXQgeW91IGdyaW5kIGluIGNvbWVzIG91dCwgaW5zdGFudGx5LiIsCiAgIkNvbWFuZGFudGUgQzQwIHVzZXMgaGlnaC1uaXRyb2dlbiBoYXJkZW5lZCBzdGVlbCBidXJycyDigJQgcmVtYXJrYWJseSBjb25zaXN0ZW50IGZvciBhIGhhbmQgZ3JpbmRlci4iLAogICJGZWxsb3cgQ29ydm8gRUtHJ3MgUElEIGhvbGRzIHRlbXBlcmF0dXJlIHdpdGhpbiDCsTAuNcKwQyDigJQgY3JpdGljYWwgZm9yIHdhc2hlZCBoaWdoLWFjaWRpdHkgY29mZmVlcy4iLAogICJTY2FsZSBwcmVjaXNpb24gbWF0dGVyczogMC4xZyByZXNvbHV0aW9uIGlzIGltcG9ydGFudCBmb3IgZXNwcmVzc287IDFnIGlzIGZpbmUgZm9yIHBvdXItb3Zlci4iLAoKICAvLyBCcmV3IG1ldGhvZHMgZGVlcC1kaXZlcwogICJUZXRzdSBLYXN1eWEncyA0OjYgTWV0aG9kIHNlcGFyYXRlcyBmbGF2b3IgZnJvbSBzdHJlbmd0aCDigJQgdGhlIGZpcnN0IDQwJSBjb250cm9scyBhY2lkaXR5L3N3ZWV0bmVzcy4iLAogICJUaGUgNDo2IE1ldGhvZCdzIGdlbml1czogeW91IGNhbiBhZGp1c3QgdHdvIHZhcmlhYmxlcyBpbmRlcGVuZGVudGx5IHdpdGhvdXQgY2hhbmdpbmcgZG9zZSBvciByYXRpby4iLAogICJQZW5nIEppYWp1bidzIDIwMjUgV0JDIHJlY2lwZSB1c2VzIHRlbXBlcmF0dXJlIHN0YWdpbmcg4oCUIDk2wrBDIGJsb29tLCB0aGVuIDgwwrBDIGZpbmFsIHBvdXIuIiwKICAiVGVtcGVyYXR1cmUgc3RhZ2luZyByZWR1Y2VzIGxhdGUtZXh0cmFjdGlvbiBiaXR0ZXJuZXNzIHdoaWxlIHByZXNlcnZpbmcgZWFybHkgYmxvb20gYXJvbWF0aWNzLiIsCiAgIkphbWVzIEhvZmZtYW5uJ3MgVjYwIHRlY2huaXF1ZTogb25lIGNvbnRpbnVvdXMgcG91ciBhZnRlciBibG9vbSDigJQgc2ltcGxpY2l0eSBlbmFibGVzIGNvbnNpc3RlbmN5LiIsCiAgIlRpbSBXZW5kZWxib2UncyBtZXRob2QgdXNlcyBhIHJlbGF0aXZlbHkgY29hcnNlIGdyaW5kIGFuZCBoaWdoIHRlbXAg4oCUIG1heGltaXppbmcgY2xhcml0eSBhbmQgYnJpZ2h0bmVzcy4iLAogICJUaGUgJ3JhbyBhbGxvbmdlJyBpcyBhIGhpZ2gtcmF0aW8gKDE6OCspIGVzcHJlc3NvIHZhcmlhbnQgdXNlZCBhcyBhIGJhc2UgZm9yIHBvdXItb3Zlci1saWtlIGNsYXJpdHkuIiwKICAiQ29sZCBicmV3IHVzZXMgdGltZSBpbnN0ZWFkIG9mIGhlYXQg4oCUIGV4dHJhY3Rpb24gaGFwcGVucyBvdmVyIDEy4oCTMjQgaG91cnMgYXQgcm9vbSB0ZW1wZXJhdHVyZS4iLAogICJGbGFzaC1jaGlsbGVkIGljZWQgY29mZmVlIChob3QgYnJldyBvdmVyIGljZSkgcHJlc2VydmVzIGFjaWRpdHkgYW5kIGFyb21hdGljcyBiZXR0ZXIgdGhhbiBjb2xkIGJyZXcuIiwKCiAgLy8gU2Vuc29yeSAmIHRhc3RpbmcKICAiVGhlIFNwZWNpYWx0eSBDb2ZmZWUgQXNzb2NpYXRpb24gZmxhdm9yIHdoZWVsIGhhcyAxMTAgZmxhdm9yIGRlc2NyaXB0b3JzIGFjcm9zcyA5IGNhdGVnb3JpZXMuIiwKICAiUmV0cm9uYXNhbCBvbGZhY3Rpb24gKGFyb21hdGljcyByZWFjaGluZyB5b3VyIG5vc2Ugd2hpbGUgZHJpbmtpbmcpIGRyaXZlcyA4MCUrIG9mIGZsYXZvciBwZXJjZXB0aW9uLiIsCiAgIkJyaWdodG5lc3MgYW5kIGFjaWRpdHkgYXJlIG9mdGVuIHRoZSBzYW1lIHRoaW5nIOKAlCBwZXJjZWl2ZWQgZGlmZmVyZW50bHkgZGVwZW5kaW5nIG9uIGNvbnRleHQgYW5kIGN1bHR1cmUuIiwKICAiQm9keSBpcyBkZXRlcm1pbmVkIGJ5IHRoZSBvaWxzIGFuZCBmaW5lIHBhcnRpY2xlcyByZW1haW5pbmcgaW4gdGhlIGN1cCDigJQgbWV0YWwgZmlsdGVycyBhbGxvdyBtb3JlIHRocm91Z2guIiwKICAiU3dlZXRuZXNzIGluIGNvZmZlZSBpc24ndCBhZGRlZCBzdWdhciDigJQgaXQncyBzdWNyb3NlIGFuZCBvdGhlciBjb21wb3VuZHMgc3Vydml2aW5nIHRoZSByb2FzdC4iLAogICJBICdjbGVhbiBjdXAnIGluIFNDQSB0ZXJtcyBtZWFucyBubyBmbGF2b3IgZGVmZWN0cyDigJQgaXQncyBhIHF1YWxpdHkgYmFzZWxpbmUsIG5vdCBhIHN0eWxlIHByZWZlcmVuY2UuIiwKICAiQml0dGVybmVzcyBpc24ndCBpbmhlcmVudGx5IGJhZCDigJQgY2FmZmVpbmUgYW5kIGNobG9yb2dlbmljIGFjaWRzIGluIGJhbGFuY2UgYWRkIGRlcHRoIGFuZCBsZW5ndGguIiwKICAiJ0ZpbmlzaCcgb3IgJ2FmdGVydGFzdGUnIGR1cmF0aW9uIGluZGljYXRlcyBjb2ZmZWUgcXVhbGl0eSDigJQgbG9uZ2VyIHBsZWFzYW50IGZpbmlzaCA9IGJldHRlciBleHRyYWN0aW9uLiIsCiAgIkN1cHBpbmcgcHJvdG9jb2wgdXNlcyA5M8KwQyB3YXRlciwgOC4yNWcgcGVyIDE1MG1sLCA0LW1pbnV0ZSBzdGVlcCDigJQgc3RhbmRhcmRpemVkIGZvciBmYWlyIGNvbXBhcmlzb24uIiwKICAiQSBjdXBwaW5nIHNjb3JlIG9mIDgwKyBxdWFsaWZpZXMgYXMgJ3NwZWNpYWx0eSBncmFkZScgYnkgU0NBIHN0YW5kYXJkcy4iLAoKICAvLyBIaXN0b3J5ICYgY3VsdHVyZQogICJDb2ZmZWUgd2FzIGZpcnN0IGNvbnN1bWVkIGFzIGEgZm9vZCBpbiBFdGhpb3BpYSDigJQgdGhlIGJlYW5zIHdlcmUgbWl4ZWQgd2l0aCBhbmltYWwgZmF0IGZvciBlbmVyZ3kuIiwKICAiVGhlIGZpcnN0IEV1cm9wZWFuIGNvZmZlZWhvdXNlIG9wZW5lZCBpbiBPeGZvcmQgaW4gMTY1MC4gVGhleSB3ZXJlIGNhbGxlZCAncGVubnkgdW5pdmVyc2l0aWVzJy4iLAogICJUaGUgRnJlbmNoIHByZXNzIHdhcyBwYXRlbnRlZCBpbiAxOTI5IGJ5IE1pbGFuZXNlIGRlc2lnbmVyIEF0dGlsaW8gQ2FsaW1hbmkuIiwKICAiRXNwcmVzc28gbWFjaGluZXMgdXNlIHByZXNzdXJlLCBub3QgaGlnaCBoZWF0IOKAlCB0aGUgZ29hbCBpcyA5IGJhciwgbm90IGJvaWxpbmcgd2F0ZXIuIiwKICAiVGhlIFZpZW5uYSBQaGlsaGFybW9uaWMgZ2lmdCBzaG9wIHJlcG9ydGVkbHkgaW5zcGlyZWQgSmFtZXMgSG9mZm1hbm4gdG8gZW50ZXIgdGhlIGNvZmZlZSB3b3JsZC4iLAogICJXb3JsZCBCYXJpc3RhIENoYW1waW9uc2hpcCB3YXMgZmlyc3QgaGVsZCBpbiBNb250ZSBDYXJsbyBpbiAyMDAwLiBUaGUgZm9ybWF0OiA0IGVzcHJlc3NvLCA0IG1pbGssIDQgc2lnbmF0dXJlLiIsCiAgIkJsdWUgQm90dGxlIENvZmZlZSAoZm91bmRlZCAyMDAyKSBwaW9uZWVyZWQgdGhlIHRoaXJkLXdhdmUgbW9kZWwgb2YgdHJhbnNwYXJlbnQgc291cmNpbmcgaW4gdGhlIFVTLiIsCiAgIlNwZWNpYWx0eSBjb2ZmZWUncyAndGhpcmQgd2F2ZScgYmVnYW4gYXMgYSBjb25zdW1lciBtb3ZlbWVudCBjYXJpbmcgYWJvdXQgb3JpZ2luLCBwcm9jZXNzLCBhbmQgcm9hc3RlciBjcmFmdC4iLAogICJTdHVtcHRvd24sIEludGVsbGlnZW50c2lhLCBhbmQgQ291bnRlciBDdWx0dXJlIHdlcmUgaW5zdHJ1bWVudGFsIGluIGJyaW5naW5nIGRpcmVjdC10cmFkZSBzb3VyY2luZyB0byBzY2FsZS4iLAogICJUaGUgY29mZmVlIGNoZXJyeSBpcyBhY3R1YWxseSBhIGZydWl0IOKAlCBlYWNoIGNoZXJyeSB0eXBpY2FsbHkgY29udGFpbnMgdHdvIGJlYW5zIChzZWVkcykgZmFjaW5nIGVhY2ggb3RoZXIuIiwKCiAgLy8gUHJhY3RpY2FsIHRpcHMKICAiRnJlZXppbmcgd2hvbGUgYmVhbnMgaW4gYW4gYWlydGlnaHQgYmFnIGFuZCBncmluZGluZyBmcm9tIGZyb3plbiBpcyBhIHByb3ZlbiB3YXkgdG8gZXh0ZW5kIHBlYWsgZnJlc2huZXNzLiIsCiAgIkNvZmZlZSBnb2VzIHN0YWxlIGZyb20gb3h5Z2VuLCBtb2lzdHVyZSwgbGlnaHQsIGFuZCBoZWF0IOKAlCBpbiB0aGF0IG9yZGVyIG9mIGltcGFjdC4iLAogICJTdG9yaW5nIGNvZmZlZSBpbiBpdHMgb3JpZ2luYWwgYmFnICh3aXRoIG9uZS13YXkgdmFsdmUpIGluIGEgY29vbCwgZGFyayBjdXBib2FyZCB3b3JrcyB3ZWxsIGZvciAy4oCTMyB3ZWVrcy4iLAogICJBIG9uZS13YXkgdmFsdmUgbGV0cyBDT+KCgiBvdXQgYnV0IGtlZXBzIG94eWdlbiBmcm9tIGVudGVyaW5nIOKAlCBlc3NlbnRpYWwgZm9yIGZyZXNoLXJvYXN0IHBhY2thZ2luZy4iLAogICJQcmUtd2V0dGluZyB5b3VyIHBhcGVyIGZpbHRlciByZW1vdmVzIHBhcGVyeSB0YXN0ZSBhbmQgcHJlaGVhdHMgeW91ciBicmV3ZXIuIiwKICAiV2VpZ2hpbmcgd2F0ZXIgaW5zdGVhZCBvZiBtZWFzdXJpbmcgYnkgdm9sdW1lIGFjY291bnRzIGZvciBkZW5zaXR5IGFuZCB0ZW1wZXJhdHVyZSB2YXJpYW5jZS4iLAogICJZb3VyIGtldHRsZSBjb29scyByb3VnaGx5IDHCsEMgZXZlcnkgMzAgc2Vjb25kcyBpbiBvcGVuIGFpciDigJQgdHJhY2sgdGhpcyBmb3IgbXVsdGktcG91ciByZWNpcGVzLiIsCiAgIlRoZSBOaWNoZSBaZXJvJ3MgZ3JpbmQgcmV0ZW50aW9uIG9mIDwwLjFnIG1lYW5zIHZpcnR1YWxseSBubyBvbGQgZ3JvdW5kcyBtaXhlZCBpbnRvIHlvdXIgZG9zZS4iLAogICJMaWdodGx5IHRhcHBpbmcgdGhlIHBvcnRhZmlsdGVyIG9yIGJyZXdlciBtaWQtcG91ciBjYW4gaGVscCByZXNldCBhIGNoYW5uZWxpbmcgYmVkLiIsCiAgIklmIHlvdXIgVjYwIGRyYWlucyB0b28gZmFzdCwgY2hlY2sgZ3JpbmQgc2l6ZSBmaXJzdCDigJQgdGhlbiBsb29rIGF0IGJsb29tIHRlY2huaXF1ZSBhbmQgcG91ciByYXRlLiIsCl07CgovKiogUmV0dXJucyBhIHNodWZmbGVkIHN1YnNldCBvZiBoaW50cyBmb3IgYSBzaW5nbGUgbG9hZGluZyBzZXNzaW9uICovCmV4cG9ydCBmdW5jdGlvbiBnZXRMb2FkaW5nSGludHMoY291bnQgPSA2KTogc3RyaW5nW10gewogIGNvbnN0IHNodWZmbGVkID0gWy4uLkNPRkZFRV9ISU5UU10uc29ydCgoKSA9PiBNYXRoLnJhbmRvbSgpIC0gMC41KTsKICByZXR1cm4gc2h1ZmZsZWQuc2xpY2UoMCwgY291bnQpOwp9Cg=="}
+// Coffee knowledge hints — shown while Claude generates your brew recipe
+// ~100 hints covering origins, processing, brewing science, equipment, history
+
+export const COFFEE_HINTS: string[] = [
+  // Origins & terroir
+  "Ethiopia is considered the birthplace of coffee — wild coffee plants still grow in the Kaffa forest.",
+  "Yirgacheffe's altitude of 1,700–2,200 m creates the slow cherry ripening that builds its famous floral notes.",
+  "Kenyan AA grade refers to bean screen size (18+), not quality — but high altitude tends to correlate with both.",
+  "Gesha variety was discovered in the Gesha forest of Ethiopia and brought to Panama, where it became legendary.",
+  "Brazil is the world's largest coffee producer, but its flat terrain means most coffee is dried naturally.",
+  "Colombia's geography — two Andes ranges — creates micro-climates that allow harvesting nearly year-round.",
+  "Sumatra's 'wet-hulled' Giling Basah process creates the distinctive earthy, low-acid profile of Mandheling coffees.",
+  "Rwanda's volcanic Lake Kivu soils produce coffees with a distinctive winey complexity.",
+  "Burundi and Rwanda share nearly identical altitude and terroir — tiny regional variations define their character.",
+  "Yemen's ancient mocha port gave espresso its first name — 'mocha' referred to the coffee, not the drink.",
+  "Costa Rican 'honey' processing was pioneered partly because water for washed processing is scarce in dry season.",
+  "Panama's Boquete region benefits from cold 'Bajareque' mist that slows ripening, concentrating sugars.",
+  "Guatemala's Antigua coffees come from volcanic soil enriched by three nearby volcanoes.",
+
+  // Processing
+  "Natural (dry) processing: the whole cherry is dried on raised beds for 3–6 weeks before milling.",
+  "Washed (wet) processing removes the fruit before drying — this highlights terroir and variety clarity.",
+  "Honey processing is a hybrid: some mucilage remains on the bean. Yellow < Red < Black = more sweetness.",
+  "Anaerobic fermentation happens in sealed tanks — CO₂ builds pressure, altering flavor dramatically.",
+  "Extended fermentation is the driver behind 'winy' flavor notes — not the cherry itself.",
+  "Thermal shock drying (rapid temp change) can stress the bean and reduce shelf life.",
+  "Raised drying beds allow airflow under the coffee — ground drying raises contamination risk.",
+  "Sorting after drying is critical: one fermented bean in a sack can taint an entire lot.",
+  "The longer a coffee dries, the more sugars caramelize into the bean — up to a point.",
+
+  // Roasting
+  "First crack is when water vapor and CO₂ escape the bean — the sound resembles popcorn.",
+  "Second crack breaks down the bean's cell structure — most specialty roasters stop well before this.",
+  "Light roast preserves the most origin character but demands precision brewing — low room for error.",
+  "Roast date matters more than most brewing variables. Peak flavor window: 5–21 days post-roast for most methods.",
+  "Degassing: freshly roasted coffee releases CO₂ for days. This is why immediate brewing often tastes flat.",
+  "Development time ratio (DTR) — time after first crack as % of total roast — shapes sweetness vs. acidity.",
+  "Dark roast hides origin character under roast flavor. The coffee's source matters much less.",
+  "Nordic-style light roasts often taste 'sour' to those expecting darker profiles — it's extraction, not defect.",
+
+  // Water chemistry
+  "Magnesium ions extract flavor compounds more efficiently than calcium — the key mineral for taste.",
+  "Total Dissolved Solids (TDS) of 75–150 ppm is the SCA-recommended range for brewing water.",
+  "Chlorine in tap water kills subtle aromatics. Even a small amount degrades specialty coffee.",
+  "Distilled water produces flat, lifeless coffee — it needs some minerals to conduct extraction properly.",
+  "Bicarbonate (KH) acts as a buffer, neutralizing acids — too much makes coffee taste flat and dull.",
+  "Hard water forms limescale in kettles. A Brita + remineralizing approach preserves both equipment and taste.",
+  "Championship water often targets 44–55 ppm — low enough for clarity, high enough for extraction.",
+  "The SCA 'ideal' water recipe: 75–150 ppm TDS, magnesium ~10 ppm, bicarbonate ~40 ppm.",
+
+  // Extraction science
+  "Coffee is about 30% soluble — only 20–22% should end up in your cup for balanced extraction.",
+  "Under-extracted coffee tastes sour and thin. Over-extracted tastes bitter and drying.",
+  "The bloom (pre-infusion) allows CO₂ to escape, preventing uneven extraction channels.",
+  "Grind size affects surface area: finer = more surface = faster extraction = risk of over-extraction.",
+  "Water temperature affects extraction speed — lower temps can highlight acidity, higher temps extract more.",
+  "Pour speed creates agitation — faster pours stir the bed, boosting extraction but risking channeling.",
+  "Channeling occurs when water finds a path of least resistance through the coffee bed — rinse and reset.",
+  "Turbulence during bloom helps saturate all grounds evenly — a gentle stir at 10 seconds is proven.",
+  "Total brew yield weight (not just recipe volume) determines your actual TDS.",
+  "A lower brew ratio (1:12) makes a stronger but not necessarily better cup — balance matters more.",
+
+  // Equipment
+  "The V60's large opening and angled ribs encourage fast, even drawdown — it rewards technique.",
+  "Hario's 'Drip Assist' divides the pour into 8 slow streams — it mimics machine consistency.",
+  "The Orea V4's modular base system changes flow rate dramatically — Apex bottom is the most restrictive.",
+  "AeroPress uses pressure + immersion — it's the most forgiving brewer for imperfect grind or water.",
+  "AeroPress inverted method eliminates dripping during steep — same result, more control.",
+  "The Clever Dripper combines immersion steep with a V60-style filter — James Hoffmann's method is definitive.",
+  "Kalita Wave's flat bed and three holes promote even extraction — it's more forgiving than V60.",
+  "Moccamaster's gold standard: fixed 92–96°C water, 6-minute brew cycle, SCAA certified.",
+  "The Niche Zero is a zero-retention conical grinder — what you grind in comes out, instantly.",
+  "Comandante C40 uses high-nitrogen hardened steel burrs — remarkably consistent for a hand grinder.",
+  "Fellow Corvo EKG's PID holds temperature within ±0.5°C — critical for washed high-acidity coffees.",
+  "Scale precision matters: 0.1g resolution is important for espresso; 1g is fine for pour-over.",
+
+  // Brew methods deep-dives
+  "Tetsu Kasuya's 4:6 Method separates flavor from strength — the first 40% controls acidity/sweetness.",
+  "The 4:6 Method's genius: you can adjust two variables independently without changing dose or ratio.",
+  "Peng Jiajun's 2025 WBC recipe uses temperature staging — 96°C bloom, then 80°C final pour.",
+  "Temperature staging reduces late-extraction bitterness while preserving early bloom aromatics.",
+  "James Hoffmann's V60 technique: one continuous pour after bloom — simplicity enables consistency.",
+  "Tim Wendelboe's method uses a relatively coarse grind and high temp — maximizing clarity and brightness.",
+  "The 'rao allonge' is a high-ratio (1:8+) espresso variant used as a base for pour-over-like clarity.",
+  "Cold brew uses time instead of heat — extraction happens over 12–24 hours at room temperature.",
+  "Flash-chilled iced coffee (hot brew over ice) preserves acidity and aromatics better than cold brew.",
+
+  // Sensory & tasting
+  "The Specialty Coffee Association flavor wheel has 110 flavor descriptors across 9 categories.",
+  "Retronasal olfaction (aromatics reaching your nose while drinking) drives 80%+ of flavor perception.",
+  "Brightness and acidity are often the same thing — perceived differently depending on context and culture.",
+  "Body is determined by the oils and fine particles remaining in the cup — metal filters allow more through.",
+  "Sweetness in coffee isn't added sugar — it's sucrose and other compounds surviving the roast.",
+  "A 'clean cup' in SCA terms means no flavor defects — it's a quality baseline, not a style preference.",
+  "Bitterness isn't inherently bad — caffeine and chlorogenic acids in balance add depth and length.",
+  "'Finish' or 'aftertaste' duration indicates coffee quality — longer pleasant finish = better extraction.",
+  "Cupping protocol uses 93°C water, 8.25g per 150ml, 4-minute steep — standardized for fair comparison.",
+  "A cupping score of 80+ qualifies as 'specialty grade' by SCA standards.",
+
+  // History & culture
+  "Coffee was first consumed as a food in Ethiopia — the beans were mixed with animal fat for energy.",
+  "The first European coffeehouse opened in Oxford in 1650. They were called 'penny universities'.",
+  "The French press was patented in 1929 by Milanese designer Attilio Calimani.",
+  "Espresso machines use pressure, not high heat — the goal is 9 bar, not boiling water.",
+  "The Vienna Philharmonic gift shop reportedly inspired James Hoffmann to enter the coffee world.",
+  "World Barista Championship was first held in Monte Carlo in 2000. The format: 4 espresso, 4 milk, 4 signature.",
+  "Blue Bottle Coffee (founded 2002) pioneered the third-wave model of transparent sourcing in the US.",
+  "Specialty coffee's 'third wave' began as a consumer movement caring about origin, process, and roaster craft.",
+  "Stumptown, Intelligentsia, and Counter Culture were instrumental in bringing direct-trade sourcing to scale.",
+  "The coffee cherry is actually a fruit — each cherry typically contains two beans (seeds) facing each other.",
+
+  // Practical tips
+  "Freezing whole beans in an airtight bag and grinding from frozen is a proven way to extend peak freshness.",
+  "Coffee goes stale from oxygen, moisture, light, and heat — in that order of impact.",
+  "Storing coffee in its original bag (with one-way valve) in a cool, dark cupboard works well for 2–3 weeks.",
+  "A one-way valve lets CO₂ out but keeps oxygen from entering — essential for fresh-roast packaging.",
+  "Pre-wetting your paper filter removes papery taste and preheats your brewer.",
+  "Weighing water instead of measuring by volume accounts for density and temperature variance.",
+  "Your kettle cools roughly 1°C every 30 seconds in open air — track this for multi-pour recipes.",
+  "The Niche Zero's grind retention of <0.1g means virtually no old grounds mixed into your dose.",
+  "Lightly tapping the portafilter or brewer mid-pour can help reset a channeling bed.",
+  "If your V60 drains too fast, check grind size first — then look at bloom technique and pour rate.",
+];
+
+/** Returns a shuffled subset of hints for a single loading session */
+export function getLoadingHints(count = 6): string[] {
+  const shuffled = [...COFFEE_HINTS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}

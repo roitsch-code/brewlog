@@ -1,1 +1,21 @@
-{"data":"ewogICJjcm9ucyI6IFsKICAgIHsKICAgICAgInBhdGgiOiAiL2FwaS9yZXNlYXJjaCIsCiAgICAgICJzY2hlZHVsZSI6ICIwIDYgKi8yICogKiIKICAgIH0sCiAgICB7CiAgICAgICJwYXRoIjogIi9hcGkvY29mZmVlcy9jb21wYWN0IiwKICAgICAgInNjaGVkdWxlIjogIjAgMyAxICogKiIKICAgIH0KICBdLAogICJmdW5jdGlvbnMiOiB7CiAgICAic3JjL2FwcC9hcGkvbWF0Y2gvcm91dGUudHMiOiB7ICJtYXhEdXJhdGlvbiI6IDMwIH0sCiAgICAic3JjL2FwcC9hcGkvZXhwbG9yZS9yb3V0ZS50cyI6IHsgIm1heER1cmF0aW9uIjogMzAgfSwKICAgICJzcmMvYXBwL2FwaS9yZWNvbW1lbmQvcm91dGUudHMiOiB7ICJtYXhEdXJhdGlvbiI6IDYwIH0sCiAgICAic3JjL2FwcC9hcGkvYW5hbHl6ZS1iYWcvcm91dGUudHMiOiB7ICJtYXhEdXJhdGlvbiI6IDIwIH0sCiAgICAic3JjL2FwcC9hcGkvcm9hc3RlcnMvcm91dGUudHMiOiB7ICJtYXhEdXJhdGlvbiI6IDEwIH0sCiAgICAic3JjL2FwcC9hcGkvcm9hc3RlcnMvZ2VuZXJhdGUvcm91dGUudHMiOiB7ICJtYXhEdXJhdGlvbiI6IDIwIH0sCiAgICAic3JjL2FwcC9hcGkvY29mZmVlcy9jb21wYWN0L3JvdXRlLnRzIjogeyAibWF4RHVyYXRpb24iOiAxMjAgfQogIH0KfQo="}
+{
+  "crons": [
+    {
+      "path": "/api/research",
+      "schedule": "0 6 */2 * *"
+    },
+    {
+      "path": "/api/coffees/compact",
+      "schedule": "0 3 1 * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/match/route.ts": { "maxDuration": 30 },
+    "src/app/api/explore/route.ts": { "maxDuration": 30 },
+    "src/app/api/recommend/route.ts": { "maxDuration": 60 },
+    "src/app/api/analyze-bag/route.ts": { "maxDuration": 20 },
+    "src/app/api/roasters/route.ts": { "maxDuration": 10 },
+    "src/app/api/roasters/generate/route.ts": { "maxDuration": 20 },
+    "src/app/api/coffees/compact/route.ts": { "maxDuration": 120 }
+  }
+}

@@ -1,1 +1,49 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2VuZXJhdGVSZWNvbW1lbmRhdGlvbiB9IGZyb20gIkAvbGliL2NsYXVkZS9yZWNvbW1lbmQiOwppbXBvcnQgeyBnZXRBZG1pbkRiIH0gZnJvbSAiQC9saWIvZmlyZWJhc2UvYWRtaW4iOwppbXBvcnQgeyByZXF1aXJlQXV0aCB9IGZyb20gIkAvbGliL2F1dGgvcmVxdWlyZUF1dGgiOwppbXBvcnQgdHlwZSB7IFVzZXJQcmVmZXJlbmNlcyB9IGZyb20gIkAvbGliL3R5cGVzL3ByZWZlcmVuY2VzIjsKaW1wb3J0IHR5cGUgeyBSb2FzdGVyUHJpb3IgfSBmcm9tICJAL2xpYi9yb2FzdGVycy9wcmlvcnMiOwoKZnVuY3Rpb24gdG9TbHVnKG5hbWU6IHN0cmluZyk6IHN0cmluZyB7CiAgcmV0dXJuIG5hbWUudG9Mb3dlckNhc2UoKS50cmltKCkucmVwbGFjZSgvXHMrL2csICItIik7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICBjb25zdCBhdXRoRXJyb3IgPSBhd2FpdCByZXF1aXJlQXV0aChyZXEpOwogIGlmIChhdXRoRXJyb3IpIHJldHVybiBhdXRoRXJyb3I7CgogIHRyeSB7CiAgICBjb25zdCB7IGNvZmZlZSwgY29udGV4dCwgcGFzdFNlc3Npb25zIH0gPSBhd2FpdCByZXEuanNvbigpOwoKICAgIGxldCBwcmVmZXJlbmNlczogVXNlclByZWZlcmVuY2VzIHwgbnVsbCA9IG51bGw7CiAgICB0cnkgewogICAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgICAgY29uc3Qgc25hcCA9IGF3YWl0IGRiLmNvbGxlY3Rpb24oInByZWZlcmVuY2VzIikuZG9jKCJkZWZhdWx0IikuZ2V0KCk7CiAgICAgIGlmIChzbmFwLmV4aXN0cykgcHJlZmVyZW5jZXMgPSBzbmFwLmRhdGEoKSBhcyBVc2VyUHJlZmVyZW5jZXM7CiAgICB9IGNhdGNoIHt9CiAgICBjb25zdCBwcmVmcyA9IHByZWZlcmVuY2VzIHx8IHsKICAgICAgZXF1aXBtZW50OiBbIlY2MCIsICJWNjAgKyBEcmlwIEFzc2lzdCIsICJPcmVhVjQiLCAiS2FsaXRhIiwgIkNsZXZlckRyaXBwZXIiLCAiQWVyb1ByZXNzIiwgIk1vY2NhbWFzdGVyIl0sCiAgICAgIGdyaW5kZXI6ICJOaWNoZSBaZXJvIiwKICAgICAgdGFzdGVQcm9maWxlOiB7IHByZWZlcnJlZEJvZHlMZXZlbDogIm1lZGl1bSIsIHByZWZlcnJlZEFjaWRpdHlMZXZlbDogIm1lZGl1bS1oaWdoIiwgbGlrZWRPcmlnaW5zOiBbIkV0aGlvcGlhIiwgIkJyYXppbCIsICJLZW55YSIsICJDb3N0YSBSaWNhIl0sIGxpa2VkUHJvY2Vzc2VzOiBbIk5hdHVyYWwiLCAiV2FzaGVkIiwgIkhvbmV5Il0sIGF2b2lkUHJvY2Vzc2VzOiBbIkFuYWVyb2JpYyJdIH0sCiAgICAgIGRlZmF1bHRBbW91bnQ6ICJzbWFsbCIsCiAgICAgIG9uYm9hcmRpbmdDb21wbGV0ZTogdHJ1ZSwKICAgIH07CgogICAgLy8gQ2hlY2sgRmlyZXN0b3JlIGZvciBhIHVzZXItc2F2ZWQgcm9hc3RlciBwcm9maWxlIOKAlCB0YWtlcyBwcmlvcml0eSBvdmVyIGJ1aWx0LWluIGxpc3QKICAgIGxldCB1c2VyUm9hc3RlclByaW9yOiBSb2FzdGVyUHJpb3IgfCBudWxsID0gbnVsbDsKICAgIGlmIChjb2ZmZWU/LnJvYXN0ZXIpIHsKICAgICAgdHJ5IHsKICAgICAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgICAgICBjb25zdCBzbmFwID0gYXdhaXQgZGIuY29sbGVjdGlvbigicm9hc3RlcnMiKS5kb2ModG9TbHVnKGNvZmZlZS5yb2FzdGVyKSkuZ2V0KCk7CiAgICAgICAgaWYgKHNuYXAuZXhpc3RzKSB1c2VyUm9hc3RlclByaW9yID0gc25hcC5kYXRhKCkgYXMgUm9hc3RlclByaW9yOwogICAgICB9IGNhdGNoIHt9CiAgICB9CgogICAgY29uc3QgeyByZWNvbW1lbmRhdGlvbiB9ID0gYXdhaXQgZ2VuZXJhdGVSZWNvbW1lbmRhdGlvbihjb2ZmZWUsIGNvbnRleHQsIHByZWZzLCBwYXN0U2Vzc2lvbnMgfHwgW10sIHVzZXJSb2FzdGVyUHJpb3IgPz8gdW5kZWZpbmVkKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbihyZWNvbW1lbmRhdGlvbik7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJyZWNvbW1lbmQgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiUmVjb21tZW5kYXRpb24gZmFpbGVkIiB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}
+import { NextRequest, NextResponse } from "next/server";
+import { generateRecommendation } from "@/lib/claude/recommend";
+import { getAdminDb } from "@/lib/firebase/admin";
+import { requireAuth } from "@/lib/auth/requireAuth";
+import type { UserPreferences } from "@/lib/types/preferences";
+import type { RoasterPrior } from "@/lib/roasters/priors";
+
+function toSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
+export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
+  try {
+    const { coffee, context, pastSessions } = await req.json();
+
+    let preferences: UserPreferences | null = null;
+    try {
+      const db = getAdminDb();
+      const snap = await db.collection("preferences").doc("default").get();
+      if (snap.exists) preferences = snap.data() as UserPreferences;
+    } catch {}
+    const prefs = preferences || {
+      equipment: ["V60", "V60 + Drip Assist", "OreaV4", "Kalita", "CleverDripper", "AeroPress", "Moccamaster"],
+      grinder: "Niche Zero",
+      tasteProfile: { preferredBodyLevel: "medium", preferredAcidityLevel: "medium-high", likedOrigins: ["Ethiopia", "Brazil", "Kenya", "Costa Rica"], likedProcesses: ["Natural", "Washed", "Honey"], avoidProcesses: ["Anaerobic"] },
+      defaultAmount: "small",
+      onboardingComplete: true,
+    };
+
+    // Check Firestore for a user-saved roaster profile — takes priority over built-in list
+    let userRoasterPrior: RoasterPrior | null = null;
+    if (coffee?.roaster) {
+      try {
+        const db = getAdminDb();
+        const snap = await db.collection("roasters").doc(toSlug(coffee.roaster)).get();
+        if (snap.exists) userRoasterPrior = snap.data() as RoasterPrior;
+      } catch {}
+    }
+
+    const { recommendation } = await generateRecommendation(coffee, context, prefs, pastSessions || [], userRoasterPrior ?? undefined);
+    return NextResponse.json(recommendation);
+  } catch (err) {
+    console.error("recommend error:", err);
+    return NextResponse.json({ error: "Recommendation failed" }, { status: 500 });
+  }
+}

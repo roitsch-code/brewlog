@@ -1,1 +1,99 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgQW50aHJvcGljIGZyb20gIkBhbnRocm9waWMtYWkvc2RrIjsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogUmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCB7IHVybCB9ID0gYXdhaXQgcmVxLmpzb24oKSBhcyB7IHVybDogc3RyaW5nIH07CgogICAgaWYgKCF1cmwgfHwgIXVybC5zdGFydHNXaXRoKCJodHRwIikpIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJJbnZhbGlkIFVSTCIgfSwgeyBzdGF0dXM6IDQwMCB9KTsKICAgIH0KCiAgICAvLyBGZXRjaCB0aGUgcGFnZQogICAgbGV0IGh0bWwgPSAiIjsKICAgIHRyeSB7CiAgICAgIGNvbnN0IHBhZ2VSZXMgPSBhd2FpdCBmZXRjaCh1cmwsIHsKICAgICAgICBoZWFkZXJzOiB7CiAgICAgICAgICAiVXNlci1BZ2VudCI6CiAgICAgICAgICAgICJNb3ppbGxhLzUuMCAoaVBob25lOyBDUFUgaVBob25lIE9TIDE3XzAgbGlrZSBNYWMgT1MgWCkgQXBwbGVXZWJLaXQvNjA1LjEuMTUgKEtIVE1MLCBsaWtlIEdlY2tvKSBWZXJzaW9uLzE3LjAgTW9iaWxlLzE1RTE0OCBTYWZhcmkvNjA0LjEiLAogICAgICAgICAgQWNjZXB0OiAidGV4dC9odG1sLGFwcGxpY2F0aW9uL3hodG1sK3htbCIsCiAgICAgICAgICAiQWNjZXB0LUxhbmd1YWdlIjogImVuLVVTLGVuO3E9MC45IiwKICAgICAgICB9LAogICAgICAgIHNpZ25hbDogQWJvcnRTaWduYWwudGltZW91dCgxMDAwMCksCiAgICAgIH0pOwogICAgICBpZiAoIXBhZ2VSZXMub2spIHsKICAgICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgICB7IGVycm9yOiBgQ291bGQgbm90IGZldGNoIFVSTCAoSFRUUCAke3BhZ2VSZXMuc3RhdHVzfSlgIH0sCiAgICAgICAgICB7IHN0YXR1czogNDAwIH0KICAgICAgICApOwogICAgICB9CiAgICAgIGh0bWwgPSBhd2FpdCBwYWdlUmVzLnRleHQoKTsKICAgIH0gY2F0Y2ggewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgeyBlcnJvcjogIkNvdWxkIG5vdCByZWFjaCB0aGF0IFVSTC4gQ2hlY2sgdGhlIGFkZHJlc3MgYW5kIHRyeSBhZ2Fpbi4iIH0sCiAgICAgICAgeyBzdGF0dXM6IDQwMCB9CiAgICAgICk7CiAgICB9CgogICAgLy8gU3RyaXAgc2NyaXB0cywgc3R5bGVzLCBhbmQgSFRNTCB0YWdzIOKAlCBrZWVwIHJlYWRhYmxlIHRleHQKICAgIGNvbnN0IHRleHQgPSBodG1sCiAgICAgIC5yZXBsYWNlKC88c2NyaXB0W1xzXFNdKj88XC9zY3JpcHQ+L2dpLCAiICIpCiAgICAgIC5yZXBsYWNlKC88c3R5bGVbXHNcU10qPzxcL3N0eWxlPi9naSwgIiAiKQogICAgICAucmVwbGFjZSgvPFtePl0rPi9nLCAiICIpCiAgICAgIC5yZXBsYWNlKC9ccysvZywgIiAiKQogICAgICAudHJpbSgpCiAgICAgIC5zbGljZSgwLCA3MDAwKTsKCiAgICBpZiAodGV4dC5sZW5ndGggPCA1MCkgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgeyBlcnJvcjogIlBhZ2UgaGFzIG5vIHJlYWRhYmxlIHRleHQuIFRyeSBlbnRlcmluZyBkZXRhaWxzIG1hbnVhbGx5LiIgfSwKICAgICAgICB7IHN0YXR1czogNDAwIH0KICAgICAgKTsKICAgIH0KCiAgICBjb25zdCBjbGllbnQgPSBuZXcgQW50aHJvcGljKCk7CiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGNsaWVudC5tZXNzYWdlcy5jcmVhdGUoewogICAgICBtb2RlbDogImNsYXVkZS1oYWlrdS00LTUiLAogICAgICBtYXhfdG9rZW5zOiA1MTIsCiAgICAgIG1lc3NhZ2VzOiBbCiAgICAgICAgewogICAgICAgICAgcm9sZTogInVzZXIiLAogICAgICAgICAgY29udGVudDogYEV4dHJhY3QgY29mZmVlIHByb2R1Y3QgZGV0YWlscyBmcm9tIHRoaXMgd2VicGFnZSB0ZXh0LiBSZXR1cm4gT05MWSBhIHZhbGlkIEpTT04gb2JqZWN0IHdpdGggdGhlc2UgZmllbGRzIChvbWl0IGFueSBmaWVsZHMgeW91IGNhbm5vdCBmaW5kIHdpdGggY29uZmlkZW5jZSk6IHJvYXN0ZXIgKHN0cmluZyksIG5hbWUgKHN0cmluZyksIG9yaWdpbiAoc3RyaW5nKSwgcmVnaW9uIChzdHJpbmcpLCB2YXJpZXR5IChzdHJpbmcpLCBwcm9jZXNzIChzdHJpbmcg4oCUIE5hdHVyYWwvV2FzaGVkL0hvbmV5L0FuYWVyb2JpYyksIHJvYXN0TGV2ZWwgKHN0cmluZyDigJQgTGlnaHQvTWVkaXVtLUxpZ2h0L01lZGl1bS9EYXJrKSwgcm9hc3REYXRlIChJU08gZGF0ZSBzdHJpbmcgWVlZWS1NTS1ERCBpZiBmb3VuZCksIHRhc3RpbmdOb3Rlc0Zyb21CYWcgKGFycmF5IG9mIHNob3J0IGZsYXZvciBub3RlIHN0cmluZ3MpLlxuXG5XZWJwYWdlIHRleHQ6XG4ke3RleHR9YCwKICAgICAgICB9LAogICAgICBdLAogICAgfSk7CgogICAgY29uc3QgY29udGVudCA9IHJlc3BvbnNlLmNvbnRlbnRbMF07CiAgICBpZiAoY29udGVudC50eXBlICE9PSAidGV4dCIpIHsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJBSSBkaWQgbm90IHJldHVybiB0ZXh0IiB9LCB7IHN0YXR1czogNTAwIH0pOwogICAgfQoKICAgIGNvbnN0IGpzb25NYXRjaCA9IGNvbnRlbnQudGV4dC5tYXRjaCgvXHtbXHNcU10qXH0vKTsKICAgIGlmICghanNvbk1hdGNoKSB7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbigKICAgICAgICB7IGVycm9yOiAiQ291bGQgbm90IGV4dHJhY3QgY29mZmVlIGRldGFpbHMgZnJvbSB0aGF0IHBhZ2UuIFRyeSBlbnRlcmluZyBtYW51YWxseS4iIH0sCiAgICAgICAgeyBzdGF0dXM6IDQyMiB9CiAgICAgICk7CiAgICB9CgogICAgbGV0IGV4dHJhY3RlZDogUmVjb3JkPHN0cmluZywgdW5rbm93bj4gPSB7fTsKICAgIHRyeSB7CiAgICAgIGV4dHJhY3RlZCA9IEpTT04ucGFyc2UoanNvbk1hdGNoWzBdKTsKICAgIH0gY2F0Y2ggewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgeyBlcnJvcjogIkNvdWxkIG5vdCBwYXJzZSBjb2ZmZWUgZGV0YWlscy4gVHJ5IGVudGVyaW5nIG1hbnVhbGx5LiIgfSwKICAgICAgICB7IHN0YXR1czogNDIyIH0KICAgICAgKTsKICAgIH0KCiAgICAvLyBSZXR1cm4gc2FtZSBzaGFwZSBhcyBhbmFseXplLWJhZwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsKICAgICAgZXh0cmFjdGVkLAogICAgICBjbGFyaWZpY2F0aW9uczogW10sCiAgICAgIHJvYXN0ZXJQcmlvcjogbnVsbCwKICAgIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigiW2FuYWx5emUtdXJsXSIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIlVuZXhwZWN0ZWQgZXJyb3IiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+
+export async function POST(req: Request) {
+  try {
+    const { url } = await req.json() as { url: string };
+
+    if (!url || !url.startsWith("http")) {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+
+    // Fetch the page
+    let html = "";
+    try {
+      const pageRes = await fetch(url, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!pageRes.ok) {
+        return NextResponse.json(
+          { error: `Could not fetch URL (HTTP ${pageRes.status})` },
+          { status: 400 }
+        );
+      }
+      html = await pageRes.text();
+    } catch {
+      return NextResponse.json(
+        { error: "Could not reach that URL. Check the address and try again." },
+        { status: 400 }
+      );
+    }
+
+    // Strip scripts, styles, and HTML tags — keep readable text
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 7000);
+
+    if (text.length < 50) {
+      return NextResponse.json(
+        { error: "Page has no readable text. Try entering details manually." },
+        { status: 400 }
+      );
+    }
+
+    const client = new Anthropic();
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 512,
+      messages: [
+        {
+          role: "user",
+          content: `Extract coffee product details from this webpage text. Return ONLY a valid JSON object with these fields (omit any fields you cannot find with confidence): roaster (string), name (string), origin (string), region (string), variety (string), process (string — Natural/Washed/Honey/Anaerobic), roastLevel (string — Light/Medium-Light/Medium/Dark), roastDate (ISO date string YYYY-MM-DD if found), tastingNotesFromBag (array of short flavor note strings).\n\nWebpage text:\n${text}`,
+        },
+      ],
+    });
+
+    const content = response.content[0];
+    if (content.type !== "text") {
+      return NextResponse.json({ error: "AI did not return text" }, { status: 500 });
+    }
+
+    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return NextResponse.json(
+        { error: "Could not extract coffee details from that page. Try entering manually." },
+        { status: 422 }
+      );
+    }
+
+    let extracted: Record<string, unknown> = {};
+    try {
+      extracted = JSON.parse(jsonMatch[0]);
+    } catch {
+      return NextResponse.json(
+        { error: "Could not parse coffee details. Try entering manually." },
+        { status: 422 }
+      );
+    }
+
+    // Return same shape as analyze-bag
+    return NextResponse.json({
+      extracted,
+      clarifications: [],
+      roasterPrior: null,
+    });
+  } catch (err) {
+    console.error("[analyze-url]", err);
+    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  }
+}

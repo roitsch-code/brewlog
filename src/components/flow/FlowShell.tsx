@@ -1,1 +1,101 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VGbG93U3RvcmUsIEZsb3dTdGVwIH0gZnJvbSAiQC9zdG9yZS9mbG93U3RvcmUiOwppbXBvcnQgeyBjbiB9IGZyb20gIkAvbGliL3V0aWxzL2NuIjsKaW1wb3J0IFByb2dyZXNzRG90cyBmcm9tICJAL2NvbXBvbmVudHMvdWkvUHJvZ3Jlc3NEb3RzIjsKaW1wb3J0IENvZmZlZUJlYW5HbG93IGZyb20gIkAvY29tcG9uZW50cy91aS9Db2ZmZWVCZWFuR2xvdyI7CmltcG9ydCB7IHVzZVJvdXRlciB9IGZyb20gIm5leHQvbmF2aWdhdGlvbiI7CgovLyAibW9kZSIgaXMgaW50ZW50aW9uYWxseSBleGNsdWRlZCDigJQgaXQncyBhIHN1Yi1zdGVwIG9mIHNjYW4sIG5vdCBhIHZpc2libGUgZG90CmNvbnN0IEhPTUVfU1RFUFM6ICAgIEZsb3dTdGVwW10gPSBbInNjYW4iLCAiY29udGV4dCIsICJyZWNvbW1lbmQiLCAiYnJldyIsICJsb2ciLCAic3VtbWFyeSJdOwpjb25zdCBCUkVXX0FHQUlOX1NURVBTOiBGbG93U3RlcFtdID0gWyJjb250ZXh0IiwgInJlY29tbWVuZCIsICJicmV3IiwgImxvZyIsICJzdW1tYXJ5Il07CmNvbnN0IEVYVEVSTkFMX1NURVBTOiBGbG93U3RlcFtdID0gWyJzY2FuIiwgImxvZyIsICJzdW1tYXJ5Il07CmNvbnN0IE1BVENIX1NURVBTOiAgIEZsb3dTdGVwW10gPSBbInNjYW4iLCAibWF0Y2hfcmVzdWx0Il07CgppbnRlcmZhY2UgRmxvd1NoZWxsUHJvcHMgewogIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7CiAgb25CYWNrPzogKCkgPT4gdm9pZDsKICBvbk5leHQ/OiAoKSA9PiB2b2lkOwogIG5leHRMYWJlbD86IHN0cmluZzsKICBuZXh0RGlzYWJsZWQ/OiBib29sZWFuOwogIG5leHRMb2FkaW5nPzogYm9vbGVhbjsKICBoaWRlTmF2PzogYm9vbGVhbjsKfQoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gRmxvd1NoZWxsKHsKICBjaGlsZHJlbiwgb25CYWNrLCBvbk5leHQsIG5leHRMYWJlbCA9ICJOZXh0IiwgbmV4dERpc2FibGVkLCBuZXh0TG9hZGluZywgaGlkZU5hdgp9OiBGbG93U2hlbGxQcm9wcykgewogIGNvbnN0IHsgc3RlcCwgZHJhZnQsIHNraXBTY2FuIH0gPSB1c2VGbG93U3RvcmUoKTsKICBjb25zdCByb3V0ZXIgPSB1c2VSb3V0ZXIoKTsKCiAgY29uc3Qgc3RlcHMgPQogICAgZHJhZnQubW9kZSA9PT0gIm1hdGNoIiAgICA/IE1BVENIX1NURVBTIDoKICAgIGRyYWZ0Lm1vZGUgPT09ICJleHRlcm5hbCIgPyBFWFRFUk5BTF9TVEVQUyA6CiAgICBza2lwU2NhbiAgICAgICAgICAgICAgICAgID8gQlJFV19BR0FJTl9TVEVQUyA6CiAgICBIT01FX1NURVBTOwoKICBjb25zdCBjdXJyZW50SW5kZXggPSBzdGVwcy5pbmRleE9mKHN0ZXAgYXMgRmxvd1N0ZXApOwoKICBjb25zdCBoYW5kbGVCYWNrID0gKCkgPT4gewogICAgaWYgKG9uQmFjaykgewogICAgICBvbkJhY2soKTsKICAgICAgcmV0dXJuOwogICAgfQogICAgLy8gSWYgZW50ZXJpbmcgZnJvbSBicmV3LWFnYWluLCBiYWNrIGF0IGZpcnN0IHN0ZXAg4oaSIGdvIGhvbWUKICAgIGlmIChza2lwU2NhbiAmJiBzdGVwID09PSAiY29udGV4dCIpIHsKICAgICAgcm91dGVyLnB1c2goIi8iKTsKICAgICAgcmV0dXJuOwogICAgfQogICAgaWYgKGN1cnJlbnRJbmRleCA+IDApIHsKICAgICAgdXNlRmxvd1N0b3JlLmdldFN0YXRlKCkuc2V0U3RlcChzdGVwc1tjdXJyZW50SW5kZXggLSAxXSk7CiAgICB9IGVsc2UgewogICAgICByb3V0ZXIucHVzaCgiLyIpOwogICAgfQogIH07CgogIHJldHVybiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0ibWluLWgtc3ZoIGZsZXggZmxleC1jb2wgYmctYnJldy1iZyI+CiAgICAgIHsvKiBIZWFkZXIgKi99CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcHgtNSBwYi0yIiBzdHlsZT17eyBwYWRkaW5nVG9wOiAiY2FsYyhlbnYoc2FmZS1hcmVhLWluc2V0LXRvcCkgKyAxcmVtKSIgfX0+CiAgICAgICAgPGJ1dHRvbgogICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgb25DbGljaz17aGFuZGxlQmFja30KICAgICAgICAgIGNsYXNzTmFtZT0idy0xMCBoLTEwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRleHQtd2hpdGUvNjAgaG92ZXI6dGV4dC13aGl0ZSB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICA+CiAgICAgICAgICA8c3ZnIGNsYXNzTmFtZT0idy02IGgtNiIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2U9ImN1cnJlbnRDb2xvciI+CiAgICAgICAgICAgIDxwYXRoIHN0cm9rZUxpbmVjYXA9InJvdW5kIiBzdHJva2VMaW5lam9pbj0icm91bmQiIHN0cm9rZVdpZHRoPXsyfSBkPSJNMTUgMTlsLTctNyA3LTciIC8+CiAgICAgICAgICA8L3N2Zz4KICAgICAgICA8L2J1dHRvbj4KICAgICAgICB7Y3VycmVudEluZGV4ID49IDAgJiYgKAogICAgICAgICAgPFByb2dyZXNzRG90cyB0b3RhbD17c3RlcHMubGVuZ3RofSBjdXJyZW50PXtjdXJyZW50SW5kZXh9IC8+CiAgICAgICAgKX0KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idy0xMCIgLz4KICAgICAgPC9kaXY+CgogICAgICB7LyogQ29udGVudCAqL30KICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXgtMSBmbGV4IGZsZXgtY29sIG92ZXJmbG93LXktYXV0byI+CiAgICAgICAge2NoaWxkcmVufQogICAgICA8L2Rpdj4KCiAgICAgIHsvKiBCb3R0b20gQ1RBICovfQogICAgICB7IWhpZGVOYXYgJiYgb25OZXh0ICYmICgKICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icHgtNSBweS00IHBiLXNhZmUiPgogICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICB0eXBlPSJidXR0b24iCiAgICAgICAgICAgIG9uQ2xpY2s9e29uTmV4dH0KICAgICAgICAgICAgZGlzYWJsZWQ9e25leHREaXNhYmxlZCB8fCBuZXh0TG9hZGluZ30KICAgICAgICAgICAgY2xhc3NOYW1lPXtjbigKICAgICAgICAgICAgICAidy1mdWxsIGgtWzUycHhdIHJvdW5kZWQtZnVsbCBmb250LXNlbWlib2xkIHRleHQtYmFzZSB0cmFuc2l0aW9uLWFsbCBhY3RpdmU6c2NhbGUtOTUgZGlzYWJsZWQ6b3BhY2l0eS00MCIsCiAgICAgICAgICAgICAgImJnLWJyZXctYWNjZW50IHRleHQtYnJldy1hY2NlbnQtZmciCiAgICAgICAgICAgICl9CiAgICAgICAgICA+CiAgICAgICAgICAgIHtuZXh0TG9hZGluZyA/ICgKICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIj4KICAgICAgICAgICAgICAgIDxDb2ZmZWVCZWFuR2xvdyBzaXplPXsyMn0gLz4KICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICkgOiBuZXh0TGFiZWx9CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0K"}
+"use client";
+import { useFlowStore, FlowStep } from "@/store/flowStore";
+import { cn } from "@/lib/utils/cn";
+import ProgressDots from "@/components/ui/ProgressDots";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import { useRouter } from "next/navigation";
+
+// "mode" is intentionally excluded — it's a sub-step of scan, not a visible dot
+const HOME_STEPS:    FlowStep[] = ["scan", "context", "recommend", "brew", "log", "summary"];
+const BREW_AGAIN_STEPS: FlowStep[] = ["context", "recommend", "brew", "log", "summary"];
+const EXTERNAL_STEPS: FlowStep[] = ["scan", "log", "summary"];
+const MATCH_STEPS:   FlowStep[] = ["scan", "match_result"];
+
+interface FlowShellProps {
+  children: React.ReactNode;
+  onBack?: () => void;
+  onNext?: () => void;
+  nextLabel?: string;
+  nextDisabled?: boolean;
+  nextLoading?: boolean;
+  hideNav?: boolean;
+}
+
+export default function FlowShell({
+  children, onBack, onNext, nextLabel = "Next", nextDisabled, nextLoading, hideNav
+}: FlowShellProps) {
+  const { step, draft, skipScan } = useFlowStore();
+  const router = useRouter();
+
+  const steps =
+    draft.mode === "match"    ? MATCH_STEPS :
+    draft.mode === "external" ? EXTERNAL_STEPS :
+    skipScan                  ? BREW_AGAIN_STEPS :
+    HOME_STEPS;
+
+  const currentIndex = steps.indexOf(step as FlowStep);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    // If entering from brew-again, back at first step → go home
+    if (skipScan && step === "context") {
+      router.push("/");
+      return;
+    }
+    if (currentIndex > 0) {
+      useFlowStore.getState().setStep(steps[currentIndex - 1]);
+    } else {
+      router.push("/");
+    }
+  };
+
+  return (
+    <div className="min-h-svh flex flex-col bg-brew-bg">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pb-2" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          className="w-10 h-10 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        {currentIndex >= 0 && (
+          <ProgressDots total={steps.length} current={currentIndex} />
+        )}
+        <div className="w-10" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {children}
+      </div>
+
+      {/* Bottom CTA */}
+      {!hideNav && onNext && (
+        <div className="px-5 py-4 pb-safe">
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={nextDisabled || nextLoading}
+            className={cn(
+              "w-full h-[52px] rounded-full font-semibold text-base transition-all active:scale-95 disabled:opacity-40",
+              "bg-brew-accent text-brew-accent-fg"
+            )}
+          >
+            {nextLoading ? (
+              <span className="flex items-center justify-center">
+                <CoffeeBeanGlow size={22} />
+              </span>
+            ) : nextLabel}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

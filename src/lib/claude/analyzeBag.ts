@@ -1,1 +1,109 @@
-{"data":"aW1wb3J0IEFudGhyb3BpYyBmcm9tICJAYW50aHJvcGljLWFpL3NkayI7Cgpjb25zdCBjbGllbnQgPSBuZXcgQW50aHJvcGljKHsgYXBpS2V5OiBwcm9jZXNzLmVudi5BTlRIUk9QSUNfQVBJX0tFWSB9KTsKCmNvbnN0IFNZU1RFTV9QUk9NUFQgPSBgWW91IGFyZSBhbiBleHBlcnQgc3BlY2lhbHR5IGNvZmZlZSBhbmFseXN0IHdpdGggZGVlcCBrbm93bGVkZ2Ugb2YgY29mZmVlIHByb2R1Y2Vycywgb3JpZ2lucywgcHJvY2Vzc2luZyBtZXRob2RzLCBhbmQgcm9hc3RlcnMgd29ybGR3aWRlLiBXaGVuIGdpdmVuIGEgcGhvdG8gb2YgYSBjb2ZmZWUgYmFnIG9yIGxhYmVsLCBleHRyYWN0IGFsbCB2aXNpYmxlIGluZm9ybWF0aW9uIEFORCBzdXBwbGVtZW50IHdpdGggeW91ciBrbm93bGVkZ2UgdG8gZmlsbCBpbiBnYXBzIHRoZSBiYWcgZG9lc24ndCBleHBsaWNpdGx5IHN0YXRlLiBSZXR1cm4gc3RydWN0dXJlZCBKU09OIG9ubHkuYDsKCmNvbnN0IFVTRVJfUFJPTVBUID0gYEFuYWx5emUgdGhpcyBjb2ZmZWUgYmFnIHBob3RvIGFuZCByZXR1cm4gYSBKU09OIG9iamVjdC4gRXh0cmFjdCB3aGF0J3MgdmlzaWJsZSBvbiB0aGUgYmFnLCB0aGVuIHVzZSB5b3VyIGtub3dsZWRnZSB0byBzdXBwbGVtZW50IG1pc3NpbmcgZGV0YWlscyAobWFyayB0aGVzZSBhcyAicmVzZWFyY2hlZCIpLiBGb3IgY29tcGxldGVseSB1bmtub3duIGZpZWxkcywgdXNlIG51bGwuCgpSZXR1cm4gdGhpcyBleGFjdCBKU09OIHN0cnVjdHVyZToKewogICJleHRyYWN0ZWQiOiB7CiAgICAicm9hc3RlciI6IHN0cmluZyB8IG51bGwsCiAgICAibmFtZSI6IHN0cmluZyB8IG51bGwsCiAgICAib3JpZ2luIjogc3RyaW5nIHwgbnVsbCwKICAgICJyZWdpb24iOiBzdHJpbmcgfCBudWxsLAogICAgImZhcm0iOiBzdHJpbmcgfCBudWxsLAogICAgInZhcmlldHkiOiBzdHJpbmcgfCBudWxsLAogICAgInByb2Nlc3MiOiAiTmF0dXJhbCIgfCAiV2FzaGVkIiB8ICJIb25leSIgfCAiQW5hZXJvYmljIiB8ICJPdGhlciIgfCBudWxsLAogICAgInJvYXN0TGV2ZWwiOiAiTGlnaHQiIHwgIk1lZGl1bS1MaWdodCIgfCAiTWVkaXVtIiB8ICJEYXJrIiB8IG51bGwsCiAgICAicm9hc3REYXRlIjogc3RyaW5nIHwgbnVsbCwKICAgICJhbHRpdHVkZU1ldGVycyI6IG51bWJlciB8IG51bGwsCiAgICAidGFzdGluZ05vdGVzRnJvbUJhZyI6IHN0cmluZ1tdCiAgfSwKICAiY29uZmlkZW5jZSI6IHsKICAgICJyb2FzdGVyIjogImJhZyIgfCAicmVzZWFyY2hlZCIgfCAidW5rbm93biIsCiAgICAibmFtZSI6ICJiYWciIHwgInJlc2VhcmNoZWQiIHwgInVua25vd24iLAogICAgIm9yaWdpbiI6ICJiYWciIHwgInJlc2VhcmNoZWQiIHwgInVua25vd24iLAogICAgInJlZ2lvbiI6ICJiYWciIHwgInJlc2VhcmNoZWQiIHwgInVua25vd24iLAogICAgInByb2Nlc3MiOiAiYmFnIiB8ICJyZXNlYXJjaGVkIiB8ICJ1bmtub3duIiwKICAgICJyb2FzdExldmVsIjogImJhZyIgfCAicmVzZWFyY2hlZCIgfCAidW5rbm93biIKICB9LAogICJjbGFyaWZpY2F0aW9ucyI6IHN0cmluZ1tdLAogICJpc0NvZmZlZUJhZyI6IGJvb2xlYW4KfQoKY2xhcmlmaWNhdGlvbnM6IGxpc3QgdXAgdG8gMiBuYXR1cmFsLWxhbmd1YWdlIHF1ZXN0aW9ucyBhYm91dCB0aGUgbW9zdCBpbXBvcnRhbnQgcmVtYWluaW5nIHVua25vd25zLCBwcmlvcml0aXNpbmcgaW4gdGhpcyBvcmRlcjogKDEpIHJvYXN0IGRhdGUgaWYgdW5rbm93biwgKDIpIHZhcmlldHkgaWYgdW5rbm93biwgKDMpIHRhc3Rpbmcgbm90ZXMgaWYgdGhlIGFycmF5IGlzIGVtcHR5LCAoNCkgcmVnaW9uL3Byb2Nlc3MgaWYgdW5jbGVhci4gRXhhbXBsZXM6Ci0gIkkgY2FuIHNlZSBpdCdzIGZyb20gRXRoaW9waWEgYnV0IGNvdWxkbid0IHJlYWQgdGhlIHJlZ2lvbiDigJQgWWlyZ2FjaGVmZmUsIEd1amksIG9yIFNpZGFtYT8iCi0gIk5vIHJvYXN0IGRhdGUgdmlzaWJsZSDigJQgZG8geW91IHJlbWVtYmVyIHJvdWdobHkgd2hlbiB5b3UgYm91Z2h0IGl0PyIKLSAiSSBkaWRuJ3Qgc3BvdCBhIHZhcmlldHkg4oCUIGlzIGl0IGxpc3RlZCBhbnl3aGVyZSBvbiB0aGUgYmFnLCBvciBkbyB5b3Uga25vdyBpdD8iCi0gIk5vIHRhc3Rpbmcgbm90ZXMgd2VyZSB2aXNpYmxlIOKAlCB3aGF0IGZsYXZvdXIgZGVzY3JpcHRvcnMgZG9lcyB0aGUgcm9hc3RlciB1c2U/IgoKUmV0dXJuIE9OTFkgdmFsaWQgSlNPTiB3aXRoIG5vIG1hcmtkb3duIG9yIGV4cGxhbmF0aW9uLmA7CgpleHBvcnQgaW50ZXJmYWNlIFJvYXN0ZXJQcmlvclN1bW1hcnkgewogIG5hbWU6IHN0cmluZzsKICByZWdpb24/OiBzdHJpbmc7CiAgc3R5bGVTdW1tYXJ5OiBzdHJpbmc7CiAgcm9hc3RUZW5kZW5jeTogc3RyaW5nOwogIGNsYXJpdHlWc1N3ZWV0bmVzc0JpYXM6IHN0cmluZzsKICB0ZW1wQmlhczogc3RyaW5nOwogIHJhdGlvQmlhczogc3RyaW5nOwogIG1ldGhvZEFmZmluaXRpZXM6IHN0cmluZ1tdOwogIGV4dHJhY3Rpb25SaXNrczogc3RyaW5nW107CiAgbm90ZXM6IHN0cmluZzsKICBjb25maWRlbmNlOiAiY3VyYXRlZCIgfCAiaW5mZXJyZWQiIHwgImZhbGxiYWNrIiB8ICJ1c2VyIjsKfQoKZXhwb3J0IGludGVyZmFjZSBCYWdBbmFseXNpc1Jlc3VsdCB7CiAgZXh0cmFjdGVkOiB7CiAgICByb2FzdGVyPzogc3RyaW5nOwogICAgbmFtZT86IHN0cmluZzsKICAgIG9yaWdpbj86IHN0cmluZzsKICAgIHJlZ2lvbj86IHN0cmluZzsKICAgIGZhcm0/OiBzdHJpbmc7CiAgICB2YXJpZXR5Pzogc3RyaW5nOwogICAgcHJvY2Vzcz86IHN0cmluZzsKICAgIHJvYXN0TGV2ZWw/OiBzdHJpbmc7CiAgICByb2FzdERhdGU/OiBzdHJpbmc7CiAgICBhbHRpdHVkZU1ldGVycz86IG51bWJlcjsKICAgIHRhc3RpbmdOb3Rlc0Zyb21CYWc/OiBzdHJpbmdbXTsKICB9OwogIGNvbmZpZGVuY2U6IFJlY29yZDxzdHJpbmcsICJiYWciIHwgInJlc2VhcmNoZWQiIHwgInVua25vd24iPjsKICBjbGFyaWZpY2F0aW9uczogc3RyaW5nW107CiAgaXNDb2ZmZWVCYWc6IGJvb2xlYW47CiAgcm9hc3RlclByaW9yPzogUm9hc3RlclByaW9yU3VtbWFyeTsgLy8gcG9wdWxhdGVkIHNlcnZlci1zaWRlIGFmdGVyIHJvYXN0ZXIgbG9va3VwCn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBhbmFseXplQmFnSW1hZ2UoaW1hZ2VCYXNlNjQ6IHN0cmluZywgbWltZVR5cGU6IHN0cmluZyk6IFByb21pc2U8eyByZXN1bHQ6IEJhZ0FuYWx5c2lzUmVzdWx0OyB1c2FnZTogeyBpbnB1dF90b2tlbnM6IG51bWJlcjsgb3V0cHV0X3Rva2VuczogbnVtYmVyIH0gfT4gewogIGNvbnN0IHJlc3BvbnNlID0gYXdhaXQgY2xpZW50Lm1lc3NhZ2VzLmNyZWF0ZSh7CiAgICBtb2RlbDogImNsYXVkZS1zb25uZXQtNC02IiwKICAgIG1heF90b2tlbnM6IDEwMjQsCiAgICBzeXN0ZW06IFNZU1RFTV9QUk9NUFQsCiAgICBtZXNzYWdlczogWwogICAgICB7CiAgICAgICAgcm9sZTogInVzZXIiLAogICAgICAgIGNvbnRlbnQ6IFsKICAgICAgICAgIHsKICAgICAgICAgICAgdHlwZTogImltYWdlIiwKICAgICAgICAgICAgc291cmNlOiB7IHR5cGU6ICJiYXNlNjQiLCBtZWRpYV90eXBlOiBtaW1lVHlwZSBhcyAiaW1hZ2UvanBlZyIgfCAiaW1hZ2UvcG5nIiB8ICJpbWFnZS93ZWJwIiwgZGF0YTogaW1hZ2VCYXNlNjQgfSwKICAgICAgICAgIH0sCiAgICAgICAgICB7IHR5cGU6ICJ0ZXh0IiwgdGV4dDogVVNFUl9QUk9NUFQgfSwKICAgICAgICBdLAogICAgICB9LAogICAgXSwKICB9KTsKCiAgY29uc3QgdGV4dCA9IHJlc3BvbnNlLmNvbnRlbnRbMF0udHlwZSA9PT0gInRleHQiID8gcmVzcG9uc2UuY29udGVudFswXS50ZXh0IDogIiI7CiAgdHJ5IHsKICAgIHJldHVybiB7IHJlc3VsdDogSlNPTi5wYXJzZSh0ZXh0KSBhcyBCYWdBbmFseXNpc1Jlc3VsdCwgdXNhZ2U6IHJlc3BvbnNlLnVzYWdlIH07CiAgfSBjYXRjaCB7CiAgICAvLyBUcnkgdG8gZXh0cmFjdCBKU09OIGZyb20gdGV4dAogICAgY29uc3QgbWF0Y2ggPSB0ZXh0Lm1hdGNoKC9ce1tcc1xTXSpcfS8pOwogICAgaWYgKG1hdGNoKSByZXR1cm4geyByZXN1bHQ6IEpTT04ucGFyc2UobWF0Y2hbMF0pIGFzIEJhZ0FuYWx5c2lzUmVzdWx0LCB1c2FnZTogcmVzcG9uc2UudXNhZ2UgfTsKICAgIHJldHVybiB7CiAgICAgIHJlc3VsdDogeyBleHRyYWN0ZWQ6IHt9LCBjb25maWRlbmNlOiB7fSwgY2xhcmlmaWNhdGlvbnM6IFtdLCBpc0NvZmZlZUJhZzogZmFsc2UgfSwKICAgICAgdXNhZ2U6IHJlc3BvbnNlLnVzYWdlLAogICAgfTsKICB9Cn0K"}
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const SYSTEM_PROMPT = `You are an expert specialty coffee analyst with deep knowledge of coffee producers, origins, processing methods, and roasters worldwide. When given a photo of a coffee bag or label, extract all visible information AND supplement with your knowledge to fill in gaps the bag doesn't explicitly state. Return structured JSON only.`;
+
+const USER_PROMPT = `Analyze this coffee bag photo and return a JSON object. Extract what's visible on the bag, then use your knowledge to supplement missing details (mark these as "researched"). For completely unknown fields, use null.
+
+Return this exact JSON structure:
+{
+  "extracted": {
+    "roaster": string | null,
+    "name": string | null,
+    "origin": string | null,
+    "region": string | null,
+    "farm": string | null,
+    "variety": string | null,
+    "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other" | null,
+    "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark" | null,
+    "roastDate": string | null,
+    "altitudeMeters": number | null,
+    "tastingNotesFromBag": string[]
+  },
+  "confidence": {
+    "roaster": "bag" | "researched" | "unknown",
+    "name": "bag" | "researched" | "unknown",
+    "origin": "bag" | "researched" | "unknown",
+    "region": "bag" | "researched" | "unknown",
+    "process": "bag" | "researched" | "unknown",
+    "roastLevel": "bag" | "researched" | "unknown"
+  },
+  "clarifications": string[],
+  "isCoffeeBag": boolean
+}
+
+clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) roast date if unknown, (2) variety if unknown, (3) tasting notes if the array is empty, (4) region/process if unclear. Examples:
+- "I can see it's from Ethiopia but couldn't read the region — Yirgacheffe, Guji, or Sidama?"
+- "No roast date visible — do you remember roughly when you bought it?"
+- "I didn't spot a variety — is it listed anywhere on the bag, or do you know it?"
+- "No tasting notes were visible — what flavour descriptors does the roaster use?"
+
+Return ONLY valid JSON with no markdown or explanation.`;
+
+export interface RoasterPriorSummary {
+  name: string;
+  region?: string;
+  styleSummary: string;
+  roastTendency: string;
+  clarityVsSweetnessBias: string;
+  tempBias: string;
+  ratioBias: string;
+  methodAffinities: string[];
+  extractionRisks: string[];
+  notes: string;
+  confidence: "curated" | "inferred" | "fallback" | "user";
+}
+
+export interface BagAnalysisResult {
+  extracted: {
+    roaster?: string;
+    name?: string;
+    origin?: string;
+    region?: string;
+    farm?: string;
+    variety?: string;
+    process?: string;
+    roastLevel?: string;
+    roastDate?: string;
+    altitudeMeters?: number;
+    tastingNotesFromBag?: string[];
+  };
+  confidence: Record<string, "bag" | "researched" | "unknown">;
+  clarifications: string[];
+  isCoffeeBag: boolean;
+  roasterPrior?: RoasterPriorSummary; // populated server-side after roaster lookup
+}
+
+export async function analyzeBagImage(imageBase64: string, mimeType: string): Promise<{ result: BagAnalysisResult; usage: { input_tokens: number; output_tokens: number } }> {
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1024,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mimeType as "image/jpeg" | "image/png" | "image/webp", data: imageBase64 },
+          },
+          { type: "text", text: USER_PROMPT },
+        ],
+      },
+    ],
+  });
+
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  try {
+    return { result: JSON.parse(text) as BagAnalysisResult, usage: response.usage };
+  } catch {
+    // Try to extract JSON from text
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) return { result: JSON.parse(match[0]) as BagAnalysisResult, usage: response.usage };
+    return {
+      result: { extracted: {}, confidence: {}, clarifications: [], isCoffeeBag: false },
+      usage: response.usage,
+    };
+  }
+}

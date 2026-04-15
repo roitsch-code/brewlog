@@ -1,1 +1,72 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgZ2V0QWRtaW5EYiB9IGZyb20gIkAvbGliL2ZpcmViYXNlL2FkbWluIjsKaW1wb3J0IHsgcmVxdWlyZUF1dGggfSBmcm9tICJAL2xpYi9hdXRoL3JlcXVpcmVBdXRoIjsKaW1wb3J0IHsgZ2V0Um9hc3RlclByaW9yIH0gZnJvbSAiQC9saWIvcm9hc3RlcnMvcHJpb3JzIjsKaW1wb3J0IHR5cGUgeyBSb2FzdGVyUHJpb3IgfSBmcm9tICJAL2xpYi9yb2FzdGVycy9wcmlvcnMiOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7CgpmdW5jdGlvbiB0b1NsdWcobmFtZTogc3RyaW5nKTogc3RyaW5nIHsKICByZXR1cm4gbmFtZS50b0xvd2VyQ2FzZSgpLnRyaW0oKS5yZXBsYWNlKC9ccysvZywgIi0iKTsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgY29uc3QgYXV0aEVycm9yID0gYXdhaXQgcmVxdWlyZUF1dGgocmVxKTsKICBpZiAoYXV0aEVycm9yKSByZXR1cm4gYXV0aEVycm9yOwoKICBjb25zdCBuYW1lID0gcmVxLm5leHRVcmwuc2VhcmNoUGFyYW1zLmdldCgibmFtZSIpOwogIGlmICghbmFtZSkgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKG51bGwsIHsgc3RhdHVzOiA0MDAgfSk7CgogIHRyeSB7CiAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgIGNvbnN0IHNuYXAgPSBhd2FpdCBkYi5jb2xsZWN0aW9uKCJyb2FzdGVycyIpLmRvYyh0b1NsdWcobmFtZSkpLmdldCgpOwogICAgaWYgKHNuYXAuZXhpc3RzKSByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oc25hcC5kYXRhKCkgYXMgUm9hc3RlclByaW9yKTsKCiAgICAvLyBGYWxsIGJhY2sgdG8gY3VyYXRlZCBzdGF0aWMgcHJpb3IgKGZ1enp5OiAiRnJpZWRoYXRzIENvZmZlZSBSb2FzdGVycyIg4oaSICJGcmllZGhhdHMiKQogICAgY29uc3QgcHJpb3IgPSBnZXRSb2FzdGVyUHJpb3IobmFtZSk7CiAgICBpZiAocHJpb3IuY29uZmlkZW5jZSAhPT0gImZhbGxiYWNrIikgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHByaW9yKTsKCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24obnVsbCwgeyBzdGF0dXM6IDQwNCB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoInJvYXN0ZXJzIEdFVCBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKG51bGwsIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gREVMRVRFKHJlcTogTmV4dFJlcXVlc3QpIHsKICBjb25zdCBhdXRoRXJyb3IgPSBhd2FpdCByZXF1aXJlQXV0aChyZXEpOwogIGlmIChhdXRoRXJyb3IpIHJldHVybiBhdXRoRXJyb3I7CgogIGNvbnN0IG5hbWUgPSByZXEubmV4dFVybC5zZWFyY2hQYXJhbXMuZ2V0KCJuYW1lIik7CiAgaWYgKCFuYW1lKSByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIm5hbWUgcmVxdWlyZWQiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CgogIHRyeSB7CiAgICBjb25zdCBkYiA9IGdldEFkbWluRGIoKTsKICAgIGF3YWl0IGRiLmNvbGxlY3Rpb24oInJvYXN0ZXJzIikuZG9jKHRvU2x1ZyhuYW1lKSkuZGVsZXRlKCk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogdHJ1ZSB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoInJvYXN0ZXJzIERFTEVURSBlcnJvcjoiLCBlcnIpOwogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJGYWlsZWQgdG8gZGVsZXRlIiB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIGNvbnN0IGF1dGhFcnJvciA9IGF3YWl0IHJlcXVpcmVBdXRoKHJlcSk7CiAgaWYgKGF1dGhFcnJvcikgcmV0dXJuIGF1dGhFcnJvcjsKCiAgdHJ5IHsKICAgIGNvbnN0IHByaW9yOiBSb2FzdGVyUHJpb3IgPSBhd2FpdCByZXEuanNvbigpOwogICAgaWYgKCFwcmlvci5uYW1lKSByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIm5hbWUgcmVxdWlyZWQiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CgogICAgY29uc3Qgc2x1ZyA9IHRvU2x1Zyhwcmlvci5uYW1lKTsKICAgIGNvbnN0IGRiID0gZ2V0QWRtaW5EYigpOwogICAgYXdhaXQgZGIuY29sbGVjdGlvbigicm9hc3RlcnMiKS5kb2Moc2x1Zykuc2V0KAogICAgICB7IC4uLnByaW9yLCBjb25maWRlbmNlOiAidXNlciIsIHNhdmVkQXQ6IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKSB9LAogICAgICB7IG1lcmdlOiB0cnVlIH0KICAgICk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBvazogdHJ1ZSwgc2x1ZyB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoInJvYXN0ZXJzIFBPU1QgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiRmFpbGVkIHRvIHNhdmUiIH0sIHsgc3RhdHVzOiA1MDAgfSk7CiAgfQp9Cg=="}
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+import { requireAuth } from "@/lib/auth/requireAuth";
+import { getRoasterPrior } from "@/lib/roasters/priors";
+import type { RoasterPrior } from "@/lib/roasters/priors";
+
+export const dynamic = "force-dynamic";
+
+function toSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
+}
+
+export async function GET(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
+  const name = req.nextUrl.searchParams.get("name");
+  if (!name) return NextResponse.json(null, { status: 400 });
+
+  try {
+    const db = getAdminDb();
+    const snap = await db.collection("roasters").doc(toSlug(name)).get();
+    if (snap.exists) return NextResponse.json(snap.data() as RoasterPrior);
+
+    // Fall back to curated static prior (fuzzy: "Friedhats Coffee Roasters" → "Friedhats")
+    const prior = getRoasterPrior(name);
+    if (prior.confidence !== "fallback") return NextResponse.json(prior);
+
+    return NextResponse.json(null, { status: 404 });
+  } catch (err) {
+    console.error("roasters GET error:", err);
+    return NextResponse.json(null, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
+  const name = req.nextUrl.searchParams.get("name");
+  if (!name) return NextResponse.json({ error: "name required" }, { status: 400 });
+
+  try {
+    const db = getAdminDb();
+    await db.collection("roasters").doc(toSlug(name)).delete();
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("roasters DELETE error:", err);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const authError = await requireAuth(req);
+  if (authError) return authError;
+
+  try {
+    const prior: RoasterPrior = await req.json();
+    if (!prior.name) return NextResponse.json({ error: "name required" }, { status: 400 });
+
+    const slug = toSlug(prior.name);
+    const db = getAdminDb();
+    await db.collection("roasters").doc(slug).set(
+      { ...prior, confidence: "user", savedAt: new Date().toISOString() },
+      { merge: true }
+    );
+    return NextResponse.json({ ok: true, slug });
+  } catch (err) {
+    console.error("roasters POST error:", err);
+    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+  }
+}

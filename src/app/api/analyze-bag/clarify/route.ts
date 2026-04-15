@@ -1,1 +1,36 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IEFudGhyb3BpYyBmcm9tICJAYW50aHJvcGljLWFpL3NkayI7Cgpjb25zdCBjbGllbnQgPSBuZXcgQW50aHJvcGljKHsgYXBpS2V5OiBwcm9jZXNzLmVudi5BTlRIUk9QSUNfQVBJX0tFWSB9KTsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBQT1NUKHJlcTogTmV4dFJlcXVlc3QpIHsKICB0cnkgewogICAgY29uc3QgeyBjdXJyZW50Q29mZmVlRGF0YSwgcXVlc3Rpb24sIGFuc3dlciB9ID0gYXdhaXQgcmVxLmpzb24oKTsKCiAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGNsaWVudC5tZXNzYWdlcy5jcmVhdGUoewogICAgICBtb2RlbDogImNsYXVkZS1oYWlrdS00LTUiLAogICAgICBtYXhfdG9rZW5zOiA1MTIsCiAgICAgIG1lc3NhZ2VzOiBbCiAgICAgICAgewogICAgICAgICAgcm9sZTogInVzZXIiLAogICAgICAgICAgY29udGVudDogYEknbSBkb2N1bWVudGluZyBhIGNvZmZlZS4gSGVyZSdzIHdoYXQgd2Uga25vdyBzbyBmYXI6Cjxjb2ZmZWVfZGF0YT4ke0pTT04uc3RyaW5naWZ5KGN1cnJlbnRDb2ZmZWVEYXRhKX08L2NvZmZlZV9kYXRhPgoKWW91IGFza2VkOiA8cXVlc3Rpb24+JHtxdWVzdGlvbn08L3F1ZXN0aW9uPgpJIGFuc3dlcmVkOiA8dXNlcl9hbnN3ZXI+JHthbnN3ZXJ9PC91c2VyX2Fuc3dlcj4KClVwZGF0ZSB0aGUgY29mZmVlIGRhdGEgd2l0aCB0aGlzIG5ldyBpbmZvcm1hdGlvbiBhbmQgcmV0dXJuIHRoZSB1cGRhdGVkIEpTT04gb2JqZWN0IHdpdGggdGhlIHNhbWUgc3RydWN0dXJlLiBSZXR1cm4gb25seSB2YWxpZCBKU09OLmAsCiAgICAgICAgfSwKICAgICAgXSwKICAgIH0pOwoKICAgIGNvbnN0IHRleHQgPSByZXNwb25zZS5jb250ZW50WzBdLnR5cGUgPT09ICJ0ZXh0IiA/IHJlc3BvbnNlLmNvbnRlbnRbMF0udGV4dCA6ICJ7fSI7CiAgICBjb25zdCBtYXRjaCA9IHRleHQubWF0Y2goL1x7W1xzXFNdKlx9Lyk7CiAgICBjb25zdCB1cGRhdGVkID0gbWF0Y2ggPyBKU09OLnBhcnNlKG1hdGNoWzBdKSA6IGN1cnJlbnRDb2ZmZWVEYXRhOwoKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IHVwZGF0ZWQgfSk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJjbGFyaWZ5IGVycm9yOiIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkNsYXJpZmljYXRpb24gZmFpbGVkIiB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export async function POST(req: NextRequest) {
+  try {
+    const { currentCoffeeData, question, answer } = await req.json();
+
+    const response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 512,
+      messages: [
+        {
+          role: "user",
+          content: `I'm documenting a coffee. Here's what we know so far:
+<coffee_data>${JSON.stringify(currentCoffeeData)}</coffee_data>
+
+You asked: <question>${question}</question>
+I answered: <user_answer>${answer}</user_answer>
+
+Update the coffee data with this new information and return the updated JSON object with the same structure. Return only valid JSON.`,
+        },
+      ],
+    });
+
+    const text = response.content[0].type === "text" ? response.content[0].text : "{}";
+    const match = text.match(/\{[\s\S]*\}/);
+    const updated = match ? JSON.parse(match[0]) : currentCoffeeData;
+
+    return NextResponse.json({ updated });
+  } catch (err) {
+    console.error("clarify error:", err);
+    return NextResponse.json({ error: "Clarification failed" }, { status: 500 });
+  }
+}

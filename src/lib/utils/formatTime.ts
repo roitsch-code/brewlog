@@ -1,1 +1,13 @@
-{"data":"ZXhwb3J0IGZ1bmN0aW9uIGZvcm1hdFNlY29uZHMoc2Vjb25kczogbnVtYmVyKTogc3RyaW5nIHsKICBjb25zdCBtID0gTWF0aC5mbG9vcihzZWNvbmRzIC8gNjApOwogIGNvbnN0IHMgPSBzZWNvbmRzICUgNjA7CiAgcmV0dXJuIGAke219OiR7cy50b1N0cmluZygpLnBhZFN0YXJ0KDIsICIwIil9YDsKfQoKZXhwb3J0IGZ1bmN0aW9uIGZvcm1hdERhdGUoaXNvOiBzdHJpbmcpOiBzdHJpbmcgewogIHJldHVybiBuZXcgRGF0ZShpc28pLnRvTG9jYWxlRGF0ZVN0cmluZygiZW4tVVMiLCB7CiAgICBtb250aDogInNob3J0IiwKICAgIGRheTogIm51bWVyaWMiLAogICAgeWVhcjogIm51bWVyaWMiLAogIH0pOwp9Cg=="}
+export function formatSeconds(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}

@@ -1,1 +1,25 @@
-{"data":"aW50ZXJmYWNlIEJyZXdNZXRob2RJY29uUHJvcHMgewogIG1ldGhvZD86IHN0cmluZzsKICBjbGFzc05hbWU/OiBzdHJpbmc7Cn0KCmV4cG9ydCBmdW5jdGlvbiBicmV3SWNvblNyYyhtZXRob2Q/OiBzdHJpbmcpOiBzdHJpbmcgewogIGNvbnN0IG0gPSAobWV0aG9kID8/ICIiKS50b0xvd2VyQ2FzZSgpOwogIGlmIChtLmluY2x1ZGVzKCJkcmlwIGFzc2lzdCIpIHx8IG0uaW5jbHVkZXMoImRyaXAtYXNzaXN0IikpIHJldHVybiAiL2JyZXctaWNvbnMvdjYwLWRyaXAtYXNzaXN0LnBuZyI7CiAgaWYgKG0uaW5jbHVkZXMoImFlcm9wcmVzcyIpKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gIi9icmV3LWljb25zL2Flcm9wcmVzcy5wbmciOwogIGlmIChtLmluY2x1ZGVzKCJrYWxpdGEiKSkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuICIvYnJldy1pY29ucy9rYWxpdGEucG5nIjsKICBpZiAobS5pbmNsdWRlcygiY2xldmVyIikpICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAiL2JyZXctaWNvbnMvY2xldmVyLWRyaXBwZXIucG5nIjsKICBpZiAobS5pbmNsdWRlcygib3JlYSIpKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAiL2JyZXctaWNvbnMvb3JlYS12NC5wbmciOwogIGlmIChtLmluY2x1ZGVzKCJtb2NjYW1hc3RlciIpIHx8IG0uaW5jbHVkZXMoIm1vY2NhIikpICAgICAgICAgcmV0dXJuICIvYnJldy1pY29ucy9tb2NjYW1hc3Rlci5wbmciOwogIHJldHVybiAiL2JyZXctaWNvbnMvdjYwLnBuZyI7Cn0KCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEJyZXdNZXRob2RJY29uKHsgbWV0aG9kLCBjbGFzc05hbWUgPSAidy02IGgtNiIgfTogQnJld01ldGhvZEljb25Qcm9wcykgewogIHJldHVybiAoCiAgICA8aW1nCiAgICAgIHNyYz17YnJld0ljb25TcmMobWV0aG9kKX0KICAgICAgYWx0PXttZXRob2QgPz8gIkJyZXcgZGV2aWNlIn0KICAgICAgY2xhc3NOYW1lPXtgb2JqZWN0LWNvbnRhaW4gb3BhY2l0eS04MCAke2NsYXNzTmFtZX1gfQogICAgLz4KICApOwp9Cg=="}
+interface BrewMethodIconProps {
+  method?: string;
+  className?: string;
+}
+
+export function brewIconSrc(method?: string): string {
+  const m = (method ?? "").toLowerCase();
+  if (m.includes("drip assist") || m.includes("drip-assist")) return "/brew-icons/v60-drip-assist.png";
+  if (m.includes("aeropress"))                                  return "/brew-icons/aeropress.png";
+  if (m.includes("kalita"))                                     return "/brew-icons/kalita.png";
+  if (m.includes("clever"))                                     return "/brew-icons/clever-dripper.png";
+  if (m.includes("orea"))                                       return "/brew-icons/orea-v4.png";
+  if (m.includes("moccamaster") || m.includes("mocca"))         return "/brew-icons/moccamaster.png";
+  return "/brew-icons/v60.png";
+}
+
+export default function BrewMethodIcon({ method, className = "w-6 h-6" }: BrewMethodIconProps) {
+  return (
+    <img
+      src={brewIconSrc(method)}
+      alt={method ?? "Brew device"}
+      className={`object-contain opacity-80 ${className}`}
+    />
+  );
+}

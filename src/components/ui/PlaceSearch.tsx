@@ -1,1 +1,126 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0LCB1c2VSZWYgfSBmcm9tICJyZWFjdCI7CgppbnRlcmZhY2UgUGxhY2VSZXN1bHQgewogIG5hbWU6IHN0cmluZzsKICBjaXR5OiBzdHJpbmc7CiAgY291bnRyeTogc3RyaW5nOwogIGRpc3BsYXlMaW5lOiBzdHJpbmc7Cn0KCmludGVyZmFjZSBQcm9wcyB7CiAgdmFsdWU6IHN0cmluZzsKICBvbkNoYW5nZTogKHZhbHVlOiBzdHJpbmcpID0+IHZvaWQ7CiAgb25TZWxlY3Q6IChwbGFjZTogUGxhY2VSZXN1bHQpID0+IHZvaWQ7Cn0KCmFzeW5jIGZ1bmN0aW9uIHNlYXJjaFBsYWNlcyhxdWVyeTogc3RyaW5nKTogUHJvbWlzZTxQbGFjZVJlc3VsdFtdPiB7CiAgaWYgKHF1ZXJ5Lmxlbmd0aCA8IDIpIHJldHVybiBbXTsKICBjb25zdCB1cmwgPSBgaHR0cHM6Ly9ub21pbmF0aW0ub3BlbnN0cmVldG1hcC5vcmcvc2VhcmNoP3E9JHtlbmNvZGVVUklDb21wb25lbnQocXVlcnkpfSZmb3JtYXQ9anNvbiZhZGRyZXNzZGV0YWlscz0xJmxpbWl0PTYmZmVhdHVyZXR5cGU9YW1lbml0eWA7CiAgY29uc3QgcmVzID0gYXdhaXQgZmV0Y2godXJsLCB7CiAgICBoZWFkZXJzOiB7ICJBY2NlcHQtTGFuZ3VhZ2UiOiAiZW4iLCAiVXNlci1BZ2VudCI6ICJCcmV3TG9nLzEuMCIgfSwKICB9KTsKICBjb25zdCBkYXRhID0gYXdhaXQgcmVzLmpzb24oKTsKICByZXR1cm4gZGF0YQogICAgLmZpbHRlcigocjogUmVjb3JkPHN0cmluZywgdW5rbm93bj4pID0+IHsKICAgICAgY29uc3QgdHlwZSA9IChyLnR5cGUgYXMgc3RyaW5nKSB8fCAiIjsKICAgICAgY29uc3QgY2xzID0gKHIuY2xhc3MgYXMgc3RyaW5nKSB8fCAiIjsKICAgICAgcmV0dXJuIGNscyA9PT0gImFtZW5pdHkiIHx8IHR5cGUgPT09ICJjYWZlIiB8fCB0eXBlID09PSAiY29mZmVlX3Nob3AiIHx8IHR5cGUgPT09ICJyZXN0YXVyYW50IiB8fCB0eXBlID09PSAiYmFyIjsKICAgIH0pCiAgICAubWFwKChyOiBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPikgPT4gewogICAgICBjb25zdCBhZGRyID0gKHIuYWRkcmVzcyB8fCB7fSkgYXMgUmVjb3JkPHN0cmluZywgc3RyaW5nPjsKICAgICAgY29uc3QgbmFtZSA9IChyLm5hbWUgYXMgc3RyaW5nKSB8fCAoci5kaXNwbGF5X25hbWUgYXMgc3RyaW5nKS5zcGxpdCgiLCIpWzBdOwogICAgICBjb25zdCBjaXR5ID0gYWRkci5jaXR5IHx8IGFkZHIudG93biB8fCBhZGRyLnZpbGxhZ2UgfHwgYWRkci5tdW5pY2lwYWxpdHkgfHwgIiI7CiAgICAgIGNvbnN0IGNvdW50cnkgPSBhZGRyLmNvdW50cnkgfHwgIiI7CiAgICAgIHJldHVybiB7CiAgICAgICAgbmFtZSwKICAgICAgICBjaXR5LAogICAgICAgIGNvdW50cnksCiAgICAgICAgZGlzcGxheUxpbmU6IFtjaXR5LCBjb3VudHJ5XS5maWx0ZXIoQm9vbGVhbikuam9pbigiLCAiKSwKICAgICAgfTsKICAgIH0pCiAgICAuZmlsdGVyKChyOiBQbGFjZVJlc3VsdCkgPT4gci5uYW1lKTsKfQoKZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUGxhY2VTZWFyY2goeyB2YWx1ZSwgb25DaGFuZ2UsIG9uU2VsZWN0IH06IFByb3BzKSB7CiAgY29uc3QgW3Jlc3VsdHMsIHNldFJlc3VsdHNdID0gdXNlU3RhdGU8UGxhY2VSZXN1bHRbXT4oW10pOwogIGNvbnN0IFtvcGVuLCBzZXRPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTsKICBjb25zdCBbbG9hZGluZywgc2V0TG9hZGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgZGVib3VuY2VSZWYgPSB1c2VSZWY8UmV0dXJuVHlwZTx0eXBlb2Ygc2V0VGltZW91dD4gfCBudWxsPihudWxsKTsKICBjb25zdCBjb250YWluZXJSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgaWYgKGRlYm91bmNlUmVmLmN1cnJlbnQpIGNsZWFyVGltZW91dChkZWJvdW5jZVJlZi5jdXJyZW50KTsKICAgIGlmICh2YWx1ZS5sZW5ndGggPCAyKSB7IHNldFJlc3VsdHMoW10pOyBzZXRPcGVuKGZhbHNlKTsgcmV0dXJuOyB9CgogICAgZGVib3VuY2VSZWYuY3VycmVudCA9IHNldFRpbWVvdXQoYXN5bmMgKCkgPT4gewogICAgICBzZXRMb2FkaW5nKHRydWUpOwogICAgICB0cnkgewogICAgICAgIGNvbnN0IHJlcyA9IGF3YWl0IHNlYXJjaFBsYWNlcyh2YWx1ZSk7CiAgICAgICAgc2V0UmVzdWx0cyhyZXMpOwogICAgICAgIHNldE9wZW4ocmVzLmxlbmd0aCA+IDApOwogICAgICB9IGNhdGNoIHsKICAgICAgICBzZXRSZXN1bHRzKFtdKTsKICAgICAgfSBmaW5hbGx5IHsKICAgICAgICBzZXRMb2FkaW5nKGZhbHNlKTsKICAgICAgfQogICAgfSwgNDAwKTsKCiAgICByZXR1cm4gKCkgPT4geyBpZiAoZGVib3VuY2VSZWYuY3VycmVudCkgY2xlYXJUaW1lb3V0KGRlYm91bmNlUmVmLmN1cnJlbnQpOyB9OwogIH0sIFt2YWx1ZV0pOwoKICAvLyBDbG9zZSBvbiBvdXRzaWRlIGNsaWNrCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGNvbnN0IGhhbmRsZXIgPSAoZTogTW91c2VFdmVudCkgPT4gewogICAgICBpZiAoY29udGFpbmVyUmVmLmN1cnJlbnQgJiYgIWNvbnRhaW5lclJlZi5jdXJyZW50LmNvbnRhaW5zKGUudGFyZ2V0IGFzIE5vZGUpKSB7CiAgICAgICAgc2V0T3BlbihmYWxzZSk7CiAgICAgIH0KICAgIH07CiAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCJtb3VzZWRvd24iLCBoYW5kbGVyKTsKICAgIHJldHVybiAoKSA9PiBkb2N1bWVudC5yZW1vdmVFdmVudExpc3RlbmVyKCJtb3VzZWRvd24iLCBoYW5kbGVyKTsKICB9LCBbXSk7CgogIHJldHVybiAoCiAgICA8ZGl2IHJlZj17Y29udGFpbmVyUmVmfSBjbGFzc05hbWU9InJlbGF0aXZlIj4KICAgICAgPGRpdiBjbGFzc05hbWU9InJlbGF0aXZlIj4KICAgICAgICA8aW5wdXQKICAgICAgICAgIHR5cGU9InRleHQiCiAgICAgICAgICB2YWx1ZT17dmFsdWV9CiAgICAgICAgICBvbkNoYW5nZT17ZSA9PiB7IG9uQ2hhbmdlKGUudGFyZ2V0LnZhbHVlKTsgfX0KICAgICAgICAgIG9uRm9jdXM9eygpID0+IHJlc3VsdHMubGVuZ3RoID4gMCAmJiBzZXRPcGVuKHRydWUpfQogICAgICAgICAgcGxhY2Vob2xkZXI9ImUuZy4gRml2ZSBFbGVwaGFudCwgVGhlIEJhcm4uLi4iCiAgICAgICAgICBjbGFzc05hbWU9InctZnVsbCBiZy1icmV3LXN1cmZhY2UgYm9yZGVyIGJvcmRlci1icmV3LWJvcmRlciByb3VuZGVkLTJ4bCBweC00IHB5LTMgdGV4dC13aGl0ZSB0ZXh0LWJhc2UgcGxhY2Vob2xkZXI6dGV4dC1icmV3LW11dGVkIGZvY3VzOm91dGxpbmUtbm9uZSBmb2N1czpib3JkZXItd2hpdGUvMzAgcHItMTAiCiAgICAgICAgLz4KICAgICAgICB7bG9hZGluZyAmJiAoCiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iYWJzb2x1dGUgcmlnaHQtNCB0b3AtMS8yIC10cmFuc2xhdGUteS0xLzIiPgogICAgICAgICAgICA8c3ZnIGNsYXNzTmFtZT0iYW5pbWF0ZS1zcGluIGgtNCB3LTQgdGV4dC1icmV3LW11dGVkIiBmaWxsPSJub25lIiB2aWV3Qm94PSIwIDAgMjQgMjQiPgogICAgICAgICAgICAgIDxjaXJjbGUgY2xhc3NOYW1lPSJvcGFjaXR5LTI1IiBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2VXaWR0aD0iMyIgLz4KICAgICAgICAgICAgICA8cGF0aCBjbGFzc05hbWU9Im9wYWNpdHktNzUiIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTQgMTJhOCA4IDAgMDE4LThWMEM1LjM3MyAwIDAgNS4zNzMgMCAxMmg0eiIgLz4KICAgICAgICAgICAgPC9zdmc+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICApfQogICAgICA8L2Rpdj4KCiAgICAgIHtvcGVuICYmIHJlc3VsdHMubGVuZ3RoID4gMCAmJiAoCiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImFic29sdXRlIHotNTAgbGVmdC0wIHJpZ2h0LTAgbXQtMSBiZy1icmV3LWVsZXZhdGVkIGJvcmRlciBib3JkZXItYnJldy1ib3JkZXIgcm91bmRlZC0yeGwgb3ZlcmZsb3ctaGlkZGVuIHNoYWRvdy14bCI+CiAgICAgICAgICB7cmVzdWx0cy5tYXAoKHIsIGkpID0+ICgKICAgICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICAgIGtleT17aX0KICAgICAgICAgICAgICB0eXBlPSJidXR0b24iCiAgICAgICAgICAgICAgb25Nb3VzZURvd249e2UgPT4gZS5wcmV2ZW50RGVmYXVsdCgpfQogICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHsKICAgICAgICAgICAgICAgIG9uU2VsZWN0KHIpOwogICAgICAgICAgICAgICAgb25DaGFuZ2Uoci5uYW1lKTsKICAgICAgICAgICAgICAgIHNldE9wZW4oZmFsc2UpOwogICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LWZ1bGwgcHgtNCBweS0zIHRleHQtbGVmdCBob3ZlcjpiZy1icmV3LXN1cmZhY2UgdHJhbnNpdGlvbi1jb2xvcnMgZmxleCBmbGV4LWNvbCBib3JkZXItYiBib3JkZXItYnJldy1ib3JkZXIgbGFzdDpib3JkZXItMCIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idGV4dC13aGl0ZSB0ZXh0LXNtIGZvbnQtbWVkaXVtIj57ci5uYW1lfTwvc3Bhbj4KICAgICAgICAgICAgICB7ci5kaXNwbGF5TGluZSAmJiA8c3BhbiBjbGFzc05hbWU9InRleHQtYnJldy1tdXRlZCB0ZXh0LXhzIG10LTAuNSI+e3IuZGlzcGxheUxpbmV9PC9zcGFuPn0KICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICApKX0KICAgICAgICA8L2Rpdj4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0K"}
+"use client";
+import { useState, useEffect, useRef } from "react";
+
+interface PlaceResult {
+  name: string;
+  city: string;
+  country: string;
+  displayLine: string;
+}
+
+interface Props {
+  value: string;
+  onChange: (value: string) => void;
+  onSelect: (place: PlaceResult) => void;
+}
+
+async function searchPlaces(query: string): Promise<PlaceResult[]> {
+  if (query.length < 2) return [];
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6&featuretype=amenity`;
+  const res = await fetch(url, {
+    headers: { "Accept-Language": "en", "User-Agent": "BrewLog/1.0" },
+  });
+  const data = await res.json();
+  return data
+    .filter((r: Record<string, unknown>) => {
+      const type = (r.type as string) || "";
+      const cls = (r.class as string) || "";
+      return cls === "amenity" || type === "cafe" || type === "coffee_shop" || type === "restaurant" || type === "bar";
+    })
+    .map((r: Record<string, unknown>) => {
+      const addr = (r.address || {}) as Record<string, string>;
+      const name = (r.name as string) || (r.display_name as string).split(",")[0];
+      const city = addr.city || addr.town || addr.village || addr.municipality || "";
+      const country = addr.country || "";
+      return {
+        name,
+        city,
+        country,
+        displayLine: [city, country].filter(Boolean).join(", "),
+      };
+    })
+    .filter((r: PlaceResult) => r.name);
+}
+
+export default function PlaceSearch({ value, onChange, onSelect }: Props) {
+  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.length < 2) { setResults([]); setOpen(false); return; }
+
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await searchPlaces(value);
+        setResults(res);
+        setOpen(res.length > 0);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 400);
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={value}
+          onChange={e => { onChange(e.target.value); }}
+          onFocus={() => results.length > 0 && setOpen(true)}
+          placeholder="e.g. Five Elephant, The Barn..."
+          className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-white text-base placeholder:text-brew-muted focus:outline-none focus:border-white/30 pr-10"
+        />
+        {loading && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <svg className="animate-spin h-4 w-4 text-brew-muted" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {open && results.length > 0 && (
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-brew-elevated border border-brew-border rounded-2xl overflow-hidden shadow-xl">
+          {results.map((r, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => {
+                onSelect(r);
+                onChange(r.name);
+                setOpen(false);
+              }}
+              className="w-full px-4 py-3 text-left hover:bg-brew-surface transition-colors flex flex-col border-b border-brew-border last:border-0"
+            >
+              <span className="text-white text-sm font-medium">{r.name}</span>
+              {r.displayLine && <span className="text-brew-muted text-xs mt-0.5">{r.displayLine}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

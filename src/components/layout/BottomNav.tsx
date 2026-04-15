@@ -1,1 +1,79 @@
-{"data":"InVzZSBjbGllbnQiOwppbXBvcnQgTGluayBmcm9tICJuZXh0L2xpbmsiOwppbXBvcnQgeyB1c2VQYXRobmFtZSB9IGZyb20gIm5leHQvbmF2aWdhdGlvbiI7CmltcG9ydCB7IHVzZUZsb3dTdG9yZSB9IGZyb20gIkAvc3RvcmUvZmxvd1N0b3JlIjsKaW1wb3J0IHsgSG91c2UsIEJvb2tPcGVuLCBQbHVzLCBSYWRhciwgQ29tcGFzcyB9IGZyb20gImx1Y2lkZS1yZWFjdCI7Cgpjb25zdCB0YWJzID0gWwogIHsgaHJlZjogIi8iLCBsYWJlbDogIkhPTUUiLCBJY29uOiBIb3VzZSB9LAogIHsgaHJlZjogIi9jb2ZmZWVzIiwgbGFiZWw6ICJMSUJSQVJZIiwgSWNvbjogQm9va09wZW4gfSwKICB7IGhyZWY6ICIvYnJldy9uZXciLCBsYWJlbDogIkJSRVciLCBJY29uOiBQbHVzLCBpc0JyZXc6IHRydWUgfSwKICB7IGhyZWY6ICIvdGFzdGUiLCBsYWJlbDogIlRBU1RFIiwgSWNvbjogUmFkYXIgfSwKICB7IGhyZWY6ICIvZXhwbG9yZSIsIGxhYmVsOiAiRVhQTE9SRSIsIEljb246IENvbXBhc3MgfSwKXTsKCmNvbnN0IFNIT1dfT04gPSBbIi8iLCAiL2NvZmZlZXMiLCAiL2V4cGxvcmUiLCAiL3Rhc3RlIl07CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBCb3R0b21OYXYoKSB7CiAgY29uc3QgcGF0aG5hbWUgPSB1c2VQYXRobmFtZSgpOwogIGNvbnN0IHJlc2V0ID0gdXNlRmxvd1N0b3JlKHMgPT4gcy5yZXNldCk7CgogIGlmICghU0hPV19PTi5pbmNsdWRlcyhwYXRobmFtZSkpIHJldHVybiBudWxsOwoKICByZXR1cm4gKAogICAgPGRpdgogICAgICBzdHlsZT17ewogICAgICAgIHBvc2l0aW9uOiAiZml4ZWQiLAogICAgICAgIGJvdHRvbTogMCwKICAgICAgICBsZWZ0OiAwLAogICAgICAgIHJpZ2h0OiAwLAogICAgICAgIHpJbmRleDogNTAsCiAgICAgICAgcGFkZGluZ1RvcDogIjRweCIsCiAgICAgICAgcGFkZGluZ0xlZnQ6ICIxNnB4IiwKICAgICAgICBwYWRkaW5nUmlnaHQ6ICIxNnB4IiwKICAgICAgICBwYWRkaW5nQm90dG9tOiAiZW52KHNhZmUtYXJlYS1pbnNldC1ib3R0b20pIiwKICAgICAgICBiYWNrZ3JvdW5kOiAiIzExMTExMSIsCiAgICAgIH19CiAgICA+CiAgICAgIDxkaXYKICAgICAgICBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIHctZnVsbCBtYXgtdy1zbSBteC1hdXRvIGJvcmRlciBzaGFkb3ctMnhsIgogICAgICAgIHN0eWxlPXt7CiAgICAgICAgICBiYWNrZ3JvdW5kOiAidmFyKC0tY2FyZCkiLAogICAgICAgICAgYm9yZGVyQ29sb3I6ICJ2YXIoLS1ib3JkZXIpIiwKICAgICAgICAgIGJvcmRlclJhZGl1czogIjM2cHgiLAogICAgICAgICAgaGVpZ2h0OiAiNjJweCIsCiAgICAgICAgICBwYWRkaW5nOiAiNHB4IiwKICAgICAgICAgIGdhcDogIjJweCIsCiAgICAgICAgfX0KICAgICAgPgogICAgICAgIHt0YWJzLm1hcCh0YWIgPT4gewogICAgICAgICAgY29uc3QgYWN0aXZlID0gcGF0aG5hbWUgPT09IHRhYi5ocmVmOwogICAgICAgICAgY29uc3QgeyBJY29uIH0gPSB0YWI7CgogICAgICAgICAgcmV0dXJuICgKICAgICAgICAgICAgPExpbmsKICAgICAgICAgICAgICBrZXk9e3RhYi5ocmVmfQogICAgICAgICAgICAgIGhyZWY9e3RhYi5ocmVmfQogICAgICAgICAgICAgIG9uQ2xpY2s9eyJpc0JyZXciIGluIHRhYiAmJiB0YWIuaXNCcmV3ID8gcmVzZXQgOiB1bmRlZmluZWR9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciIKICAgICAgICAgICAgICBzdHlsZT17ewogICAgICAgICAgICAgICAgZmxleDogMSwKICAgICAgICAgICAgICAgIGJvcmRlclJhZGl1czogIjI2cHgiLAogICAgICAgICAgICAgICAgcGFkZGluZ1RvcDogIjZweCIsCiAgICAgICAgICAgICAgICBwYWRkaW5nQm90dG9tOiAiNnB4IiwKICAgICAgICAgICAgICAgIGhlaWdodDogIjEwMCUiLAogICAgICAgICAgICAgICAgYmFja2dyb3VuZDogYWN0aXZlID8gInZhcigtLXByaW1hcnkpIiA6ICJ0cmFuc3BhcmVudCIsCiAgICAgICAgICAgICAgICBjb2xvcjogYWN0aXZlID8gInZhcigtLXByaW1hcnktZm9yZWdyb3VuZCkiIDogInZhcigtLW11dGVkLWZvcmVncm91bmQpIiwKICAgICAgICAgICAgICB9fQogICAgICAgICAgICA+CiAgICAgICAgICAgICAgPEljb24gc2l6ZT17MTh9IHN0cm9rZVdpZHRoPXthY3RpdmUgPyAyIDogMS41fSAvPgogICAgICAgICAgICAgIDxzcGFuIHN0eWxlPXt7IGZvbnRGYW1pbHk6ICJ2YXIoLS1mb250LXNlY29uZGFyeSkiLCBmb250U2l6ZTogIjEwcHgiLCBmb250V2VpZ2h0OiA1MDAsIG1hcmdpblRvcDogIjJweCIsIGxpbmVIZWlnaHQ6IDEgfX0+CiAgICAgICAgICAgICAgICB7dGFiLmxhYmVsfQogICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgPC9MaW5rPgogICAgICAgICAgKTsKICAgICAgICB9KX0KICAgICAgPC9kaXY+CiAgICA8L2Rpdj4KICApOwp9Cg=="}
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useFlowStore } from "@/store/flowStore";
+import { House, BookOpen, Plus, Radar, Compass } from "lucide-react";
+
+const tabs = [
+  { href: "/", label: "HOME", Icon: House },
+  { href: "/coffees", label: "LIBRARY", Icon: BookOpen },
+  { href: "/brew/new", label: "BREW", Icon: Plus, isBrew: true },
+  { href: "/taste", label: "TASTE", Icon: Radar },
+  { href: "/explore", label: "EXPLORE", Icon: Compass },
+];
+
+const SHOW_ON = ["/", "/coffees", "/explore", "/taste"];
+
+export default function BottomNav() {
+  const pathname = usePathname();
+  const reset = useFlowStore(s => s.reset);
+
+  if (!SHOW_ON.includes(pathname)) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        paddingTop: "4px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        background: "#111111",
+      }}
+    >
+      <div
+        className="flex items-center w-full max-w-sm mx-auto border shadow-2xl"
+        style={{
+          background: "var(--card)",
+          borderColor: "var(--border)",
+          borderRadius: "36px",
+          height: "62px",
+          padding: "4px",
+          gap: "2px",
+        }}
+      >
+        {tabs.map(tab => {
+          const active = pathname === tab.href;
+          const { Icon } = tab;
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              onClick={"isBrew" in tab && tab.isBrew ? reset : undefined}
+              className="flex flex-col items-center justify-center"
+              style={{
+                flex: 1,
+                borderRadius: "26px",
+                paddingTop: "6px",
+                paddingBottom: "6px",
+                height: "100%",
+                background: active ? "var(--primary)" : "transparent",
+                color: active ? "var(--primary-foreground)" : "var(--muted-foreground)",
+              }}
+            >
+              <Icon size={18} strokeWidth={active ? 2 : 1.5} />
+              <span style={{ fontFamily: "var(--font-secondary)", fontSize: "10px", fontWeight: 500, marginTop: "2px", lineHeight: 1 }}>
+                {tab.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

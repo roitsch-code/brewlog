@@ -1,1 +1,113 @@
-{"data":"InVzZSBjbGllbnQiOwoKLyoqCiAqIEFuaW1hdGVkIGNvZmZlZSBiZWFuIOKAlCBhIHNpbmdsZSB3YXJtIGdsb3cgdHJhdmVscyBpbiBhIGZpZ3VyZS04OgogKiAgIGJvdHRvbSDihpIgdXAgdGhlIGxlZnQgb3V0c2lkZSBlZGdlIOKGkiB0b3Ag4oaSCiAqICAgZG93biB0aGUgUy1jdXJ2ZWQgY3JlYXNlIOKGkiBib3R0b20g4oaSCiAqICAgdXAgdGhlIHJpZ2h0IG91dHNpZGUgZWRnZSDihpIgdG9wIOKGkgogKiAgIGRvd24gdGhlIFMtY3VydmVkIGNyZWFzZSDihpIgYm90dG9tIOKGkiByZXBlYXQKICoKICogUGF0aCBpcyBvbmUgY29udGludW91cyBzdHJva2UgdGhhdCBjb3ZlcnMgYm90aCBoYWx2ZXMgb2YgdGhlIGJlYW4KICogcGx1cyB0d28gY3JlYXNlIHBhc3NlcywgZ2l2aW5nIHRoZSBnbG93IGEgbmF0dXJhbCBpbnNpZGUvb3V0c2lkZSByaHl0aG0uCiAqLwpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBDb2ZmZWVCZWFuR2xvdyh7CiAgc2l6ZSA9IDgwLAogIGNsYXNzTmFtZSA9ICIiLAp9OiB7CiAgc2l6ZT86IG51bWJlcjsKICBjbGFzc05hbWU/OiBzdHJpbmc7Cn0pIHsKICAvLyDilIDilIAgZmlndXJlLTggcGF0aCDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKICAvLyBTdGFydCBhdCBib3R0b20tY2VudGVyICg1MCw5MyksIGdvIHVwIHRoZSBMRUZUIG91dHNpZGUgZWRnZSB0byB0b3AgKDUwLDcpLAogIC8vIHRoZW4gdHJhY2UgdGhlIFMtY3JlYXNlIERPV04gKHNhbWUgYmV6aWVyIGFzIHN0YXRpY0NyZWFzZSwgcmV2ZXJzZWQgc3RhcnQpLAogIC8vIHRoZW4gdXAgdGhlIFJJR0hUIG91dHNpZGUgZWRnZSB0byB0b3AgKDUwLDcpLAogIC8vIHRoZW4gdHJhY2UgdGhlIFMtY3JlYXNlIERPV04gYWdhaW4g4oCUIGZ1bGwgbG9vcC4KICAvLwogIC8vIFRoZSBjcmVhc2UgdXNlcyB0aGUgRVhBQ1Qgc2FtZSBjb250cm9sIHBvaW50cyBhcyBzdGF0aWNDcmVhc2Ugc28gdGhlIGdsb3cKICAvLyBmb2xsb3dzIHRoZSBkcmF3biBsaW5lIHByZWNpc2VseSBhdCBldmVyeSBwb2ludC4KICAvLwogIC8vIENyZWFzZSAoNTAsNyDihpIgNTAsOTMpOiBDIDU4LDI4IDQyLDUyIDUwLDcyICBDIDU2LDg0IDUwLDkzIDUwLDkzCiAgLy8gRXN0aW1hdGVkIHRvdGFsIHBhdGggbGVuZ3RoIOKJiCA0NDAgcHgKICBjb25zdCBmaWd1cmVQYXRoID0KICAgICJNIDUwLDkzIEMgMjYsOTMgMTQsNzQgMTQsNTAgQyAxNCwyNiAyNiw3IDUwLDciICsKICAgICIgQyA1OCwyOCA0Miw1MiA1MCw3MiBDIDU2LDg0IDUwLDkzIDUwLDkzIiArCiAgICAiIEMgNzQsOTMgODYsNzQgODYsNTAgQyA4NiwyNiA3NCw3IDUwLDciICsKICAgICIgQyA1OCwyOCA0Miw1MiA1MCw3MiBDIDU2LDg0IDUwLDkzIDUwLDkzIjsKCiAgY29uc3QgcGF0aExlbiA9IDQ0MDsKICBjb25zdCBnbG93TGVuID0gNjU7IC8vIHZpc2libGUgc3dlZXAg4oCUIH4xNSUgb2YgdG90YWwgcGF0aAoKICAvLyBTdGF0aWMgY3JlYXNlIOKAlCBpZGVudGljYWwgY29udHJvbCBwb2ludHMgdXNlZCBpbiBmaWd1cmVQYXRoIGNyZWFzZSBzZWdtZW50cwogIGNvbnN0IHN0YXRpY0NyZWFzZSA9ICJNIDUwLDcgQyA1OCwyOCA0Miw1MiA1MCw3MiBDIDU2LDg0IDUwLDkzIDUwLDkzIjsKCiAgcmV0dXJuICgKICAgIDxzdmcKICAgICAgd2lkdGg9e3NpemV9CiAgICAgIGhlaWdodD17c2l6ZX0KICAgICAgdmlld0JveD0iMCAwIDEwMCAxMDAiCiAgICAgIGZpbGw9Im5vbmUiCiAgICAgIGNsYXNzTmFtZT17Y2xhc3NOYW1lfQogICAgICBhcmlhLWhpZGRlbj0idHJ1ZSIKICAgID4KICAgICAgPGRlZnM+CiAgICAgICAgPGZpbHRlciBpZD0iY2JnLWdsb3ciIHg9Ii02MCUiIHk9Ii02MCUiIHdpZHRoPSIyMjAlIiBoZWlnaHQ9IjIyMCUiPgogICAgICAgICAgPGZlR2F1c3NpYW5CbHVyIGluPSJTb3VyY2VHcmFwaGljIiBzdGREZXZpYXRpb249IjMuNSIgcmVzdWx0PSJibHVyIiAvPgogICAgICAgICAgPGZlTWVyZ2U+CiAgICAgICAgICAgIDxmZU1lcmdlTm9kZSBpbj0iYmx1ciIgLz4KICAgICAgICAgICAgPGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIiAvPgogICAgICAgICAgPC9mZU1lcmdlPgogICAgICAgIDwvZmlsdGVyPgogICAgICA8L2RlZnM+CgogICAgICB7LyogRGltIHN0YXRpYyBiZWFuIG91dGxpbmUgKi99CiAgICAgIDxwYXRoCiAgICAgICAgZD0iTSAxNCw1MCBDIDE0LDI2IDI2LDcgNTAsNyBDIDc0LDcgODYsMjYgODYsNTAgQyA4Niw3NCA3NCw5MyA1MCw5MyBDIDI2LDkzIDE0LDc0IDE0LDUwIFoiCiAgICAgICAgc3Ryb2tlPSIjRDRCODk2IiBzdHJva2VPcGFjaXR5PXswLjJ9IHN0cm9rZVdpZHRoPXsxLjV9CiAgICAgIC8+CgogICAgICB7LyogRGltIHN0YXRpYyBTLWNyZWFzZSAqL30KICAgICAgPHBhdGgKICAgICAgICBkPXtzdGF0aWNDcmVhc2V9CiAgICAgICAgc3Ryb2tlPSIjRDRCODk2IiBzdHJva2VPcGFjaXR5PXswLjE1fSBzdHJva2VXaWR0aD17MS41fQogICAgICAgIHN0cm9rZUxpbmVjYXA9InJvdW5kIgogICAgICAvPgoKICAgICAgey8qIEhhbG8gbGF5ZXIg4oCUIGJsdXJyZWQsIHdpZGVyICovfQogICAgICA8cGF0aAogICAgICAgIGQ9e2ZpZ3VyZVBhdGh9CiAgICAgICAgc3Ryb2tlPSIjRDRCODk2IgogICAgICAgIHN0cm9rZU9wYWNpdHk9ezAuNX0KICAgICAgICBzdHJva2VXaWR0aD17NC41fQogICAgICAgIHN0cm9rZUxpbmVjYXA9InJvdW5kIgogICAgICAgIHN0cm9rZURhc2hhcnJheT17YCR7Z2xvd0xlbn0gJHtwYXRoTGVuIC0gZ2xvd0xlbn1gfQogICAgICAgIGZpbHRlcj0idXJsKCNjYmctZ2xvdykiCiAgICAgID4KICAgICAgICA8YW5pbWF0ZQogICAgICAgICAgYXR0cmlidXRlTmFtZT0ic3Ryb2tlLWRhc2hvZmZzZXQiCiAgICAgICAgICBmcm9tPSIwIgogICAgICAgICAgdG89e1N0cmluZygtcGF0aExlbil9CiAgICAgICAgICBkdXI9IjRzIgogICAgICAgICAgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiCiAgICAgICAgLz4KICAgICAgPC9wYXRoPgoKICAgICAgey8qIENvcmUgbGF5ZXIg4oCUIGNyaXNwLCBicmlnaHQgKi99CiAgICAgIDxwYXRoCiAgICAgICAgZD17ZmlndXJlUGF0aH0KICAgICAgICBzdHJva2U9IiNENEI4OTYiCiAgICAgICAgc3Ryb2tlT3BhY2l0eT17MC45Mn0KICAgICAgICBzdHJva2VXaWR0aD17Mn0KICAgICAgICBzdHJva2VMaW5lY2FwPSJyb3VuZCIKICAgICAgICBzdHJva2VEYXNoYXJyYXk9e2Ake2dsb3dMZW59ICR7cGF0aExlbiAtIGdsb3dMZW59YH0KICAgICAgPgogICAgICAgIDxhbmltYXRlCiAgICAgICAgICBhdHRyaWJ1dGVOYW1lPSJzdHJva2UtZGFzaG9mZnNldCIKICAgICAgICAgIGZyb209IjAiCiAgICAgICAgICB0bz17U3RyaW5nKC1wYXRoTGVuKX0KICAgICAgICAgIGR1cj0iNHMiCiAgICAgICAgICByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIKICAgICAgICAvPgogICAgICA8L3BhdGg+CiAgICA8L3N2Zz4KICApOwp9Cg=="}
+"use client";
+
+/**
+ * Animated coffee bean — a single warm glow travels in a figure-8:
+ *   bottom → up the left outside edge → top →
+ *   down the S-curved crease → bottom →
+ *   up the right outside edge → top →
+ *   down the S-curved crease → bottom → repeat
+ *
+ * Path is one continuous stroke that covers both halves of the bean
+ * plus two crease passes, giving the glow a natural inside/outside rhythm.
+ */
+export default function CoffeeBeanGlow({
+  size = 80,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  // ── figure-8 path ──────────────────────────────────────────────────────
+  // Start at bottom-center (50,93), go up the LEFT outside edge to top (50,7),
+  // then trace the S-crease DOWN (same bezier as staticCrease, reversed start),
+  // then up the RIGHT outside edge to top (50,7),
+  // then trace the S-crease DOWN again — full loop.
+  //
+  // The crease uses the EXACT same control points as staticCrease so the glow
+  // follows the drawn line precisely at every point.
+  //
+  // Crease (50,7 → 50,93): C 58,28 42,52 50,72  C 56,84 50,93 50,93
+  // Estimated total path length ≈ 440 px
+  const figurePath =
+    "M 50,93 C 26,93 14,74 14,50 C 14,26 26,7 50,7" +
+    " C 58,28 42,52 50,72 C 56,84 50,93 50,93" +
+    " C 74,93 86,74 86,50 C 86,26 74,7 50,7" +
+    " C 58,28 42,52 50,72 C 56,84 50,93 50,93";
+
+  const pathLen = 440;
+  const glowLen = 65; // visible sweep — ~15% of total path
+
+  // Static crease — identical control points used in figurePath crease segments
+  const staticCrease = "M 50,7 C 58,28 42,52 50,72 C 56,84 50,93 50,93";
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <defs>
+        <filter id="cbg-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* Dim static bean outline */}
+      <path
+        d="M 14,50 C 14,26 26,7 50,7 C 74,7 86,26 86,50 C 86,74 74,93 50,93 C 26,93 14,74 14,50 Z"
+        stroke="#D4B896" strokeOpacity={0.2} strokeWidth={1.5}
+      />
+
+      {/* Dim static S-crease */}
+      <path
+        d={staticCrease}
+        stroke="#D4B896" strokeOpacity={0.15} strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+
+      {/* Halo layer — blurred, wider */}
+      <path
+        d={figurePath}
+        stroke="#D4B896"
+        strokeOpacity={0.5}
+        strokeWidth={4.5}
+        strokeLinecap="round"
+        strokeDasharray={`${glowLen} ${pathLen - glowLen}`}
+        filter="url(#cbg-glow)"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          from="0"
+          to={String(-pathLen)}
+          dur="4s"
+          repeatCount="indefinite"
+        />
+      </path>
+
+      {/* Core layer — crisp, bright */}
+      <path
+        d={figurePath}
+        stroke="#D4B896"
+        strokeOpacity={0.92}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeDasharray={`${glowLen} ${pathLen - glowLen}`}
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          from="0"
+          to={String(-pathLen)}
+          dur="4s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </svg>
+  );
+}

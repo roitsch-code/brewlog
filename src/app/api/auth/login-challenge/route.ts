@@ -1,1 +1,32 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZW5lcmF0ZUF1dGhlbnRpY2F0aW9uT3B0aW9ucyB9IGZyb20gIkBzaW1wbGV3ZWJhdXRobi9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRBZG1pbkRiIH0gZnJvbSAiQC9saWIvZmlyZWJhc2UvYWRtaW4iOwoKZXhwb3J0IGNvbnN0IGR5bmFtaWMgPSAiZm9yY2UtZHluYW1pYyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVCgpIHsKICB0cnkgewogICAgY29uc3QgZGIgPSBnZXRBZG1pbkRiKCk7CgogICAgLy8gTG9hZCBzdG9yZWQgY3JlZGVudGlhbAogICAgY29uc3QgY3JlZFNuYXAgPSBhd2FpdCBkYi5jb2xsZWN0aW9uKCJhdXRoIikuZG9jKCJjcmVkZW50aWFsIikuZ2V0KCk7CiAgICBjb25zdCBjcmVkZW50aWFsID0gY3JlZFNuYXAuZXhpc3RzID8gY3JlZFNuYXAuZGF0YSgpIDogbnVsbDsKCiAgICBjb25zdCBvcHRpb25zID0gYXdhaXQgZ2VuZXJhdGVBdXRoZW50aWNhdGlvbk9wdGlvbnMoewogICAgICBycElEOiBwcm9jZXNzLmVudi5XRUJBVVRITl9SUF9JRCB8fCAibG9jYWxob3N0IiwKICAgICAgdXNlclZlcmlmaWNhdGlvbjogInJlcXVpcmVkIiwKICAgICAgYWxsb3dDcmVkZW50aWFsczogY3JlZGVudGlhbD8uaWQgPyBbeyBpZDogY3JlZGVudGlhbC5pZCwgdHJhbnNwb3J0czogY3JlZGVudGlhbC50cmFuc3BvcnRzIH1dIDogW10sCiAgICB9KTsKCiAgICAvLyBTdG9yZSBjaGFsbGVuZ2UgdGVtcG9yYXJpbHkKICAgIGF3YWl0IGRiLmNvbGxlY3Rpb24oImF1dGgiKS5kb2MoImNoYWxsZW5nZSIpLnNldCh7CiAgICAgIHZhbHVlOiBvcHRpb25zLmNoYWxsZW5nZSwKICAgICAgY3JlYXRlZEF0OiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgICB9KTsKCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24ob3B0aW9ucyk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJsb2dpbi1jaGFsbGVuZ2UgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiRmFpbGVkIHRvIGdlbmVyYXRlIGNoYWxsZW5nZSIgfSwgeyBzdGF0dXM6IDUwMCB9KTsKICB9Cn0K"}
+import { NextResponse } from "next/server";
+import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+
+export const dynamic = "force-dynamic";
+
+export async function POST() {
+  try {
+    const db = getAdminDb();
+
+    // Load stored credential
+    const credSnap = await db.collection("auth").doc("credential").get();
+    const credential = credSnap.exists ? credSnap.data() : null;
+
+    const options = await generateAuthenticationOptions({
+      rpID: process.env.WEBAUTHN_RP_ID || "localhost",
+      userVerification: "required",
+      allowCredentials: credential?.id ? [{ id: credential.id, transports: credential.transports }] : [],
+    });
+
+    // Store challenge temporarily
+    await db.collection("auth").doc("challenge").set({
+      value: options.challenge,
+      createdAt: new Date().toISOString(),
+    });
+
+    return NextResponse.json(options);
+  } catch (err) {
+    console.error("login-challenge error:", err);
+    return NextResponse.json({ error: "Failed to generate challenge" }, { status: 500 });
+  }
+}

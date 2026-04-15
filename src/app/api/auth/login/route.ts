@@ -1,1 +1,103 @@
-{"data":"aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHsgdmVyaWZ5QXV0aGVudGljYXRpb25SZXNwb25zZSB9IGZyb20gIkBzaW1wbGV3ZWJhdXRobi9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRBZG1pbkRiIH0gZnJvbSAiQC9saWIvZmlyZWJhc2UvYWRtaW4iOwppbXBvcnQgeyBjcmVhdGVTZXNzaW9uLCBzZXRTZXNzaW9uQ29va2llIH0gZnJvbSAiQC9saWIvYXV0aC9zZXNzaW9uIjsKCmV4cG9ydCBjb25zdCBkeW5hbWljID0gImZvcmNlLWR5bmFtaWMiOwoKLy8gSW4tbWVtb3J5IFBJTiByYXRlIGxpbWl0aW5nOiBpcCDihpIgeyBjb3VudCwgbG9ja2VkVW50aWwgfQpjb25zdCBwaW5BdHRlbXB0cyA9IG5ldyBNYXA8c3RyaW5nLCB7IGNvdW50OiBudW1iZXI7IGxvY2tlZFVudGlsOiBudW1iZXIgfT4oKTsKY29uc3QgUElOX01BWF9BVFRFTVBUUyA9IDU7CmNvbnN0IFBJTl9MT0NLT1VUX01TID0gNjBfMDAwOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIFBPU1QocmVxOiBOZXh0UmVxdWVzdCkgewogIHRyeSB7CiAgICBjb25zdCBib2R5ID0gYXdhaXQgcmVxLmpzb24oKTsKCiAgICAvLyDilIDilIAgUElOIGZhbGxiYWNrIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgaWYgKGJvZHkudHlwZSA9PT0gInBpbiIpIHsKICAgICAgY29uc3QgaXAgPSByZXEuaGVhZGVycy5nZXQoIngtZm9yd2FyZGVkLWZvciIpID8/IHJlcS5oZWFkZXJzLmdldCgieC1yZWFsLWlwIikgPz8gInVua25vd24iOwogICAgICBjb25zdCBub3cgPSBEYXRlLm5vdygpOwogICAgICBjb25zdCByZWNvcmQgPSBwaW5BdHRlbXB0cy5nZXQoaXApOwoKICAgICAgaWYgKHJlY29yZCAmJiByZWNvcmQubG9ja2VkVW50aWwgPiBub3cpIHsKICAgICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIlRvbyBtYW55IGF0dGVtcHRzLiBUcnkgYWdhaW4gaW4gNjAgc2Vjb25kcy4iIH0sIHsgc3RhdHVzOiA0MjkgfSk7CiAgICAgIH0KCiAgICAgIGNvbnN0IGV4cGVjdGVkID0gcHJvY2Vzcy5lbnYuQVVUSF9QSU47CiAgICAgIGlmICghZXhwZWN0ZWQpIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiUElOIG5vdCBjb25maWd1cmVkIiB9LCB7IHN0YXR1czogNDAwIH0pOwoKICAgICAgaWYgKGJvZHkucGluICE9PSBleHBlY3RlZCkgewogICAgICAgIGNvbnN0IGF0dGVtcHRzID0gcmVjb3JkICYmIHJlY29yZC5sb2NrZWRVbnRpbCA8PSBub3cgPyByZWNvcmQuY291bnQgKyAxIDogMTsKICAgICAgICBpZiAoYXR0ZW1wdHMgPj0gUElOX01BWF9BVFRFTVBUUykgewogICAgICAgICAgcGluQXR0ZW1wdHMuc2V0KGlwLCB7IGNvdW50OiBhdHRlbXB0cywgbG9ja2VkVW50aWw6IG5vdyArIFBJTl9MT0NLT1VUX01TIH0pOwogICAgICAgIH0gZWxzZSB7CiAgICAgICAgICBwaW5BdHRlbXB0cy5zZXQoaXAsIHsgY291bnQ6IGF0dGVtcHRzLCBsb2NrZWRVbnRpbDogMCB9KTsKICAgICAgICB9CiAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJXcm9uZyBQSU4iIH0sIHsgc3RhdHVzOiA0MDEgfSk7CiAgICAgIH0KCiAgICAgIHBpbkF0dGVtcHRzLmRlbGV0ZShpcCk7CiAgICAgIGNvbnN0IHRva2VuID0gYXdhaXQgY3JlYXRlU2Vzc2lvbigpOwogICAgICBzZXRTZXNzaW9uQ29va2llKHRva2VuKTsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgdmVyaWZpZWQ6IHRydWUgfSk7CiAgICB9CgogICAgLy8g4pSA4pSAIFBhc3NrZXkgLyBGYWNlIElEIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAogICAgY29uc3QgZGIgPSBnZXRBZG1pbkRiKCk7CgogICAgY29uc3QgW2NoYWxsZW5nZVNuYXAsIGNyZWRTbmFwXSA9IGF3YWl0IFByb21pc2UuYWxsKFsKICAgICAgZGIuY29sbGVjdGlvbigiYXV0aCIpLmRvYygiY2hhbGxlbmdlIikuZ2V0KCksCiAgICAgIGRiLmNvbGxlY3Rpb24oImF1dGgiKS5kb2MoImNyZWRlbnRpYWwiKS5nZXQoKSwKICAgIF0pOwoKICAgIGlmICghY2hhbGxlbmdlU25hcC5leGlzdHMgfHwgIWNyZWRTbmFwLmV4aXN0cykgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIk1pc3NpbmcgY2hhbGxlbmdlIG9yIGNyZWRlbnRpYWwiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CiAgICB9CgogICAgY29uc3QgY2hhbGxlbmdlRGF0YSA9IGNoYWxsZW5nZVNuYXAuZGF0YSgpITsKICAgIGNvbnN0IGV4cGVjdGVkQ2hhbGxlbmdlID0gY2hhbGxlbmdlRGF0YS52YWx1ZSBhcyBzdHJpbmc7CgogICAgLy8gRW5mb3JjZSAyLW1pbnV0ZSBUVEwgb24gV2ViQXV0aG4gY2hhbGxlbmdlcwogICAgY29uc3QgQ0hBTExFTkdFX1RUTF9NUyA9IDIgKiA2MCAqIDEwMDA7CiAgICBpZiAoY2hhbGxlbmdlRGF0YS5jcmVhdGVkQXQgJiYgRGF0ZS5ub3coKSAtIGNoYWxsZW5nZURhdGEuY3JlYXRlZEF0ID4gQ0hBTExFTkdFX1RUTF9NUykgewogICAgICBhd2FpdCBkYi5jb2xsZWN0aW9uKCJhdXRoIikuZG9jKCJjaGFsbGVuZ2UiKS5kZWxldGUoKTsKICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJDaGFsbGVuZ2UgZXhwaXJlZC4gUGxlYXNlIHRyeSBhZ2Fpbi4iIH0sIHsgc3RhdHVzOiA0MDAgfSk7CiAgICB9CgogICAgY29uc3Qgc3RvcmVkID0gY3JlZFNuYXAuZGF0YSgpITsKCiAgICBjb25zdCB2ZXJpZmljYXRpb24gPSBhd2FpdCB2ZXJpZnlBdXRoZW50aWNhdGlvblJlc3BvbnNlKHsKICAgICAgcmVzcG9uc2U6IGJvZHksCiAgICAgIGV4cGVjdGVkQ2hhbGxlbmdlLAogICAgICBleHBlY3RlZE9yaWdpbjogcHJvY2Vzcy5lbnYuV0VCQVVUSE5fT1JJR0lOIHx8ICJodHRwOi8vbG9jYWxob3N0OjMwMDAiLAogICAgICBleHBlY3RlZFJQSUQ6IHByb2Nlc3MuZW52LldFQkFVVEhOX1JQX0lEIHx8ICJsb2NhbGhvc3QiLAogICAgICBjcmVkZW50aWFsOiB7CiAgICAgICAgaWQ6IHN0b3JlZC5pZCwKICAgICAgICBwdWJsaWNLZXk6IEJ1ZmZlci5mcm9tKHN0b3JlZC5wdWJsaWNLZXksICJiYXNlNjR1cmwiKSwKICAgICAgICBjb3VudGVyOiBzdG9yZWQuY291bnRlciwKICAgICAgICB0cmFuc3BvcnRzOiBzdG9yZWQudHJhbnNwb3J0cywKICAgICAgfSwKICAgIH0pOwoKICAgIGlmICghdmVyaWZpY2F0aW9uLnZlcmlmaWVkKSB7CiAgICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiVmVyaWZpY2F0aW9uIGZhaWxlZCIgfSwgeyBzdGF0dXM6IDQwMSB9KTsKICAgIH0KCiAgICAvLyBVcGRhdGUgY291bnRlciAocmVwbGF5IGF0dGFjayBwcmV2ZW50aW9uKQogICAgYXdhaXQgZGIuY29sbGVjdGlvbigiYXV0aCIpLmRvYygiY3JlZGVudGlhbCIpLnVwZGF0ZSh7CiAgICAgIGNvdW50ZXI6IHZlcmlmaWNhdGlvbi5hdXRoZW50aWNhdGlvbkluZm8ubmV3Q291bnRlciwKICAgIH0pOwoKICAgIC8vIENsZWFuIHVwIGNoYWxsZW5nZQogICAgYXdhaXQgZGIuY29sbGVjdGlvbigiYXV0aCIpLmRvYygiY2hhbGxlbmdlIikuZGVsZXRlKCk7CgogICAgY29uc3QgdG9rZW4gPSBhd2FpdCBjcmVhdGVTZXNzaW9uKCk7CiAgICBzZXRTZXNzaW9uQ29va2llKHRva2VuKTsKCiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyB2ZXJpZmllZDogdHJ1ZSB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoImxvZ2luIGVycm9yOiIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkxvZ2luIGZhaWxlZCIgfSwgeyBzdGF0dXM6IDUwMCB9KTsKICB9Cn0K"}
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuthenticationResponse } from "@simplewebauthn/server";
+import { getAdminDb } from "@/lib/firebase/admin";
+import { createSession, setSessionCookie } from "@/lib/auth/session";
+
+export const dynamic = "force-dynamic";
+
+// In-memory PIN rate limiting: ip → { count, lockedUntil }
+const pinAttempts = new Map<string, { count: number; lockedUntil: number }>();
+const PIN_MAX_ATTEMPTS = 5;
+const PIN_LOCKOUT_MS = 60_000;
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    // ── PIN fallback ──────────────────────────────────────────────────────
+    if (body.type === "pin") {
+      const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
+      const now = Date.now();
+      const record = pinAttempts.get(ip);
+
+      if (record && record.lockedUntil > now) {
+        return NextResponse.json({ error: "Too many attempts. Try again in 60 seconds." }, { status: 429 });
+      }
+
+      const expected = process.env.AUTH_PIN;
+      if (!expected) return NextResponse.json({ error: "PIN not configured" }, { status: 400 });
+
+      if (body.pin !== expected) {
+        const attempts = record && record.lockedUntil <= now ? record.count + 1 : 1;
+        if (attempts >= PIN_MAX_ATTEMPTS) {
+          pinAttempts.set(ip, { count: attempts, lockedUntil: now + PIN_LOCKOUT_MS });
+        } else {
+          pinAttempts.set(ip, { count: attempts, lockedUntil: 0 });
+        }
+        return NextResponse.json({ error: "Wrong PIN" }, { status: 401 });
+      }
+
+      pinAttempts.delete(ip);
+      const token = await createSession();
+      setSessionCookie(token);
+      return NextResponse.json({ verified: true });
+    }
+
+    // ── Passkey / Face ID ─────────────────────────────────────────────────
+    const db = getAdminDb();
+
+    const [challengeSnap, credSnap] = await Promise.all([
+      db.collection("auth").doc("challenge").get(),
+      db.collection("auth").doc("credential").get(),
+    ]);
+
+    if (!challengeSnap.exists || !credSnap.exists) {
+      return NextResponse.json({ error: "Missing challenge or credential" }, { status: 400 });
+    }
+
+    const challengeData = challengeSnap.data()!;
+    const expectedChallenge = challengeData.value as string;
+
+    // Enforce 2-minute TTL on WebAuthn challenges
+    const CHALLENGE_TTL_MS = 2 * 60 * 1000;
+    if (challengeData.createdAt && Date.now() - challengeData.createdAt > CHALLENGE_TTL_MS) {
+      await db.collection("auth").doc("challenge").delete();
+      return NextResponse.json({ error: "Challenge expired. Please try again." }, { status: 400 });
+    }
+
+    const stored = credSnap.data()!;
+
+    const verification = await verifyAuthenticationResponse({
+      response: body,
+      expectedChallenge,
+      expectedOrigin: process.env.WEBAUTHN_ORIGIN || "http://localhost:3000",
+      expectedRPID: process.env.WEBAUTHN_RP_ID || "localhost",
+      credential: {
+        id: stored.id,
+        publicKey: Buffer.from(stored.publicKey, "base64url"),
+        counter: stored.counter,
+        transports: stored.transports,
+      },
+    });
+
+    if (!verification.verified) {
+      return NextResponse.json({ error: "Verification failed" }, { status: 401 });
+    }
+
+    // Update counter (replay attack prevention)
+    await db.collection("auth").doc("credential").update({
+      counter: verification.authenticationInfo.newCounter,
+    });
+
+    // Clean up challenge
+    await db.collection("auth").doc("challenge").delete();
+
+    const token = await createSession();
+    setSessionCookie(token);
+
+    return NextResponse.json({ verified: true });
+  } catch (err) {
+    console.error("login error:", err);
+    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+  }
+}
