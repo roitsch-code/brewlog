@@ -20,6 +20,7 @@ export default function CoffeeDetailPage() {
   const [coffee, setCoffee] = useState<Coffee | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [roasterInfo, setRoasterInfo] = useState<RoasterInfo | null>(null);
+  const [roasterGenerating, setRoasterGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -40,10 +41,38 @@ export default function CoffeeDetailPage() {
         // Fetch roaster info and sessions in parallel
         await Promise.all([
           found.roaster
-            ? fetch(`/api/roasters?name=${encodeURIComponent(found.roaster)}`, { cache: "no-store" })
-                .then(r => r.ok ? r.json() : null)
-                .then((r: RoasterInfo | null) => { if (r?.styleSummary) setRoasterInfo(r); })
-                .catch(() => {})
+            ? (async () => {
+                try {
+                  const r = await fetch(`/api/roasters?name=${encodeURIComponent(found.roaster)}`, { cache: "no-store" });
+                  if (r.ok) {
+                    const data: RoasterInfo = await r.json();
+                    if (data?.styleSummary) { setRoasterInfo(data); return; }
+                  }
+                  // Not in static list or Firestore — generate on-demand
+                  setRoasterGenerating(true);
+                  const gen = await fetch("/api/roasters/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name: found.roaster }),
+                  });
+                  if (gen.ok) {
+                    const generated: RoasterInfo = await gen.json();
+                    if (generated?.styleSummary) {
+                      setRoasterInfo(generated);
+                      // Save to Firestore so next visit is instant
+                      fetch("/api/roasters", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...generated, name: found.roaster }),
+                      }).catch(() => {});
+                    }
+                  }
+                } catch {
+                  // fail silently
+                } finally {
+                  setRoasterGenerating(false);
+                }
+              })()
             : Promise.resolve(),
           found?.sessionIds?.length
             ? fetch(`/api/sessions?ids=${found.sessionIds.join(",")}`, { cache: "no-store" })
@@ -194,16 +223,22 @@ export default function CoffeeDetailPage() {
       )}
 
       {/* Roaster info */}
-      {roasterInfo && (
+      {(roasterInfo || roasterGenerating) && (
         <div className="px-5 py-4 border-b border-brew-border">
           <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Roaster</p>
-          {roasterInfo.region && (
-            <p className="text-brew-muted text-xs mb-1.5">{roasterInfo.region}</p>
-          )}
-          <p className="text-white/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
-          {roasterInfo.notes && (
-            <p className="text-white/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
-          )}
+          {roasterGenerating ? (
+            <p className="text-brew-muted text-sm italic">Researching roaster…</p>
+          ) : roasterInfo ? (
+            <>
+              {roasterInfo.region && (
+                <p className="text-brew-muted text-xs mb-1.5">{roasterInfo.region}</p>
+              )}
+              <p className="text-white/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
+              {roasterInfo.notes && (
+                <p className="text-white/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
+              )}
+            </>
+          ) : null}
         </div>
       )}
 
