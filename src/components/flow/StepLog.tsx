@@ -51,7 +51,7 @@ export default function StepLog() {
       body,
       acidity,
       freeNotes,
-      wouldUseMethodAgain: wouldAgain ?? true,
+      ...(wouldAgain !== null ? { wouldBrewAgain: wouldAgain } : {}),
       ...(rating <= 3 && attribution ? { attribution } : {}),
       ...(craft ? { craft } : {}),
       ...(fit ? { fit } : {}),
@@ -233,7 +233,7 @@ export default function StepLog() {
         </Section>
 
         {/* Would brew/drink again */}
-        <Section title={isExternal ? "Would you drink this again?" : "Would you brew this again?"}>
+        <Section title={isExternal ? "Would you have this again?" : "Would you brew this exact setup again?"}>
           <div className="flex gap-3">
             <button
               type="button"

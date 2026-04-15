@@ -94,7 +94,7 @@ export interface TasteResult {
   body: string; // light | medium | full
   acidity: string; // low | medium | high | bright
   freeNotes?: string;
-  wouldUseMethodAgain: boolean;
+  wouldBrewAgain?: boolean; // full combination: this coffee + roaster + recipe + occasion
   attribution?: "brew" | "bean" | "roaster"; // only set for low-rated sessions (≤3★)
   craft?: "off" | "solid" | "exceptional";   // execution quality, independent of taste
   fit?: "not-my-style" | "neutral" | "my-kind"; // style alignment, independent of craft
