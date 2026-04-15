@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { logTokenUsage } from "@/lib/claude/logUsage";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +43,8 @@ ${historyLines || "No history yet"}
 
 Write 1–2 sentences (max 35 words) of personal, specific insight about this session.
 Ideas: a notable pattern vs history, what the rating suggests, one concrete next-time tweak, or what's interesting about this coffee+method combo.
-Be direct. No generic praise. No "great choice". No emojis. Speak like a knowledgeable coffee friend.`;
+Be direct. No generic praise. No "great choice". No emojis. Speak like a knowledgeable coffee friend.
+If you suggest a specific tweak, you may name the expert behind it when genuinely relevant and credible (e.g. "Rao recommends..." or "this follows Perger's logic"). Only when it adds value — don't force attribution.`;
 
     const msg = await client.messages.create({
       model: "claude-haiku-4-5",
@@ -52,7 +52,6 @@ Be direct. No generic praise. No "great choice". No emojis. Speak like a knowled
       messages: [{ role: "user", content: prompt }],
     });
 
-    void logTokenUsage({ endpoint: "brew-insight", model: "claude-haiku-4-5", usage: msg.usage, userId: "user" });
     const insight = (msg.content[0] as { type: string; text: string })?.text?.trim() || null;
     return NextResponse.json({ insight });
   } catch (err) {

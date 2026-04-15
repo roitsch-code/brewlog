@@ -18,14 +18,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           "inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none select-none",
           {
             // Variants
-            "bg-white text-black hover:bg-white/90": variant === "primary",
+            "bg-brew-accent text-brew-accent-fg hover:bg-brew-accent/90": variant === "primary",
             "bg-brew-surface border border-brew-border text-white hover:bg-brew-elevated": variant === "secondary",
             "text-white hover:bg-white/10": variant === "ghost",
             "bg-red-900/50 border border-red-800 text-red-300 hover:bg-red-900/70": variant === "destructive",
             // Sizes
             "px-4 py-2 text-sm h-9": size === "sm",
             "px-6 py-3 text-base h-12": size === "md",
-            "px-8 py-4 text-lg h-14 w-full": size === "lg",
+            "px-8 py-4 text-base h-[52px] w-full": size === "lg",
           },
           className
         )}

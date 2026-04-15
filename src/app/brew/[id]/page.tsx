@@ -6,6 +6,7 @@ import type { Session } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
 import Chip from "@/components/ui/Chip";
 import { formatDate, formatSeconds } from "@/lib/utils/formatTime";
+import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -76,19 +77,19 @@ export default function SessionDetailPage() {
         {/* Overlay info */}
         {coffee?.bagPhotoUrl && (
           <div className="absolute bottom-0 left-0 right-0 p-5">
-            <p className="text-brew-accent text-xs tracking-widest uppercase font-medium mb-1">
-              {mode === "external" ? place?.name : (brew?.methodUsed || recommendation?.primaryMethod)}
-            </p>
+            {mode === "external" && place?.name && (
+              <p className="text-brew-accent text-xs tracking-widest uppercase font-medium mb-1">{place.name}</p>
+            )}
             <h1 className="font-display text-3xl text-white">{coffee?.name || "Coffee Session"}</h1>
             <p className="text-white/60 text-sm mt-1">{coffee?.roaster} · {formatDate(session.createdAt)}</p>
           </div>
         )}
       </div>
 
-      <div className="px-5 py-5 flex flex-col gap-6">
+      <div className="px-5 py-5 pb-8 flex flex-col gap-6">
         {!coffee?.bagPhotoUrl && (
           <div>
-            <Chip label={mode === "external" ? (place?.name || "Coffee Shop") : (brew?.methodUsed || "")} accent />
+            {mode === "external" && <Chip label={place?.name || "Coffee Shop"} accent />}
             <h1 className="font-display text-3xl text-white mt-2">{coffee?.name || "Coffee Session"}</h1>
             <p className="text-brew-muted text-sm mt-1">{coffee?.roaster} · {formatDate(session.createdAt)}</p>
           </div>
@@ -115,7 +116,10 @@ export default function SessionDetailPage() {
         {recommendation && (
           <Section title="Recipe">
             <div className="bg-brew-surface rounded-2xl p-4">
-              <p className="text-brew-accent text-xs uppercase tracking-widest mb-3">{brew?.methodUsed || recommendation.primaryMethod}</p>
+              <div className="flex items-center gap-2 mb-3">
+                <BrewMethodIcon method={brew?.methodUsed || recommendation.primaryMethod} className="w-5 h-5" />
+                <p className="text-brew-accent text-xs uppercase tracking-widest">{brew?.methodUsed || recommendation.primaryMethod}</p>
+              </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <RecipeStat label="Dose" value={`${recommendation.primaryRecipe.doseGrams}g`} />
                 <RecipeStat label="Water" value={`${recommendation.primaryRecipe.waterGrams}g`} />
@@ -125,8 +129,10 @@ export default function SessionDetailPage() {
                 <p className="text-brew-muted text-xs mt-3 leading-relaxed">{recommendation.primaryRecipe.pourSequence}</p>
               )}
             </div>
-            {brew?.actualTimeSec && (
-              <p className="text-brew-muted text-sm">Actual time: {formatSeconds(brew.actualTimeSec)}</p>
+            {brew && (
+              <p className="text-brew-muted text-sm">
+                {brew.actualTimeSec ? `Actual time: ${formatSeconds(brew.actualTimeSec)}` : "No timer used"}
+              </p>
             )}
           </Section>
         )}

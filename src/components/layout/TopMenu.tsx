@@ -46,7 +46,6 @@ const MENU_ITEMS: { label: string; href: string; iconKey: string }[] = [
   { label: "Home",           href: "/",         iconKey: "home" },
   { label: "Add Coffee",     href: "/brew/new", iconKey: "add" },
   { label: "Coffee Library", href: "/coffees",  iconKey: "library" },
-  { label: "Match Finder",   href: "/match",    iconKey: "match" },
   { label: "Explore",        href: "/explore",  iconKey: "bean" },
   { label: "Taste Profile",  href: "/taste",    iconKey: "taste" },
 ];

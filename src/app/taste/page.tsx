@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Session } from "@/lib/types/session";
-import { FLAVOR_TAXONOMY } from "@/lib/constants/flavorTaxonomy";
-import RadarChart from "@/components/ui/RadarChart";
-import TopMenu from "@/components/layout/TopMenu";
+import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
+import FlavorWheel from "@/components/ui/FlavorWheel";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 
 interface TasteStats {
@@ -23,7 +22,7 @@ function computeStats(sessions: Session[]): TasteStats {
   const rated = sessions.filter(s => s.result?.rating);
   const totalSessions = rated.length;
 
-  // Flavor category radar
+  // Flavor category radar — keyed to 7 SCA top-level categories
   const categoryCount: Record<string, number> = {};
   const flavorCount: Record<string, number> = {};
 
@@ -31,16 +30,13 @@ function computeStats(sessions: Session[]): TasteStats {
     const notes = s.result?.flavorNotes || [];
     notes.forEach(note => {
       flavorCount[note] = (flavorCount[note] || 0) + 1;
-      for (const [cat, tags] of Object.entries(FLAVOR_TAXONOMY)) {
-        if (tags.includes(note)) {
-          categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-        }
-      }
+      const cat = flavorCategory(note);
+      if (cat) categoryCount[cat] = (categoryCount[cat] || 0) + 1;
     });
   });
 
   const maxCat = Math.max(1, ...Object.values(categoryCount));
-  const radarData = Object.keys(FLAVOR_TAXONOMY).map(cat => ({
+  const radarData = SCA_CATEGORIES.map(cat => ({
     label: cat,
     value: Math.round(((categoryCount[cat] || 0) / maxCat) * 100),
   }));
@@ -102,7 +98,9 @@ function computeStats(sessions: Session[]): TasteStats {
   // Rating trend by month (last 6 months)
   const byMonth: Record<string, { sum: number; count: number }> = {};
   rated.forEach(s => {
-    const d = new Date(s.createdAt);
+    const d = (s as Session & { createdAtMs?: number }).createdAtMs
+      ? new Date((s as Session & { createdAtMs?: number }).createdAtMs!)
+      : new Date(s.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     byMonth[key] = byMonth[key] || { sum: 0, count: 0 };
     byMonth[key].sum += s.result!.rating;
@@ -130,7 +128,7 @@ export default function TastePage() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
 
-    fetch("/api/sessions?limit=100", { cache: "no-store", signal: controller.signal })
+    fetch("/api/sessions?limit=300", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
       .then((sessions: Session[]) => {
         const s = computeStats(Array.isArray(sessions) ? sessions : []);
@@ -157,7 +155,7 @@ export default function TastePage() {
 
   if (loading) {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col">
+      <div className="min-h-full bg-brew-bg flex flex-col">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <CoffeeBeanGlow size={64} />
@@ -168,7 +166,7 @@ export default function TastePage() {
 
   if (!stats || stats.totalSessions === 0) {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col">
+      <div className="min-h-full bg-brew-bg flex flex-col">
         <Header />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
           <svg className="w-12 h-12 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
@@ -188,7 +186,7 @@ export default function TastePage() {
     <div className="min-h-svh bg-brew-bg flex flex-col">
       <Header />
 
-      <div className="px-5 pb-safe pb-12 flex flex-col gap-8">
+      <div className="px-5 pb-12 flex flex-col gap-8">
         {/* Summary stat */}
         <div className="flex items-center gap-4">
           <div className="text-center">
@@ -200,6 +198,7 @@ export default function TastePage() {
             <p className="font-mono-num text-4xl text-white font-medium">{stats.totalSessions}</p>
             <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Rated Brews</p>
           </div>
+          <p className="text-white/20 text-xs ml-auto self-end">All time</p>
         </div>
 
         {/* AI narrative summary */}
@@ -217,10 +216,10 @@ export default function TastePage() {
           </div>
         )}
 
-        {/* Flavor radar */}
+        {/* Flavor Profile — SCA wheel with radar overlay */}
         <Section title="Flavor Profile">
-          <div className="flex justify-center">
-            <RadarChart data={stats.radarData} size={280} />
+          <div className="w-full">
+            <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
           </div>
         </Section>
 
@@ -304,8 +303,8 @@ export default function TastePage() {
           <Section title="Explore Next">
             <div className="space-y-3">
               {suggestions.map((s, i) => (
-                <div key={i} className="bg-brew-surface rounded-2xl px-4 py-3 border border-brew-border/40 flex items-start gap-3">
-                  <span className="text-brew-accent text-xs font-mono-num uppercase tracking-wide shrink-0 mt-0.5 bg-brew-accent/10 px-2 py-1 rounded-lg">{s.tag}</span>
+                <div key={i} className="bg-brew-surface rounded-2xl px-4 py-3 border border-brew-border/40">
+                  <span className="text-brew-accent text-xs font-mono-num uppercase tracking-wide bg-brew-accent/10 px-2 py-1 rounded-lg inline-block mb-2">{s.tag}</span>
                   <p className="text-white/70 text-sm leading-relaxed">{s.text}</p>
                 </div>
               ))}
@@ -321,10 +320,10 @@ function Header() {
   return (
     <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
       <div>
-        <h1 className="font-display text-2xl text-white">Taste Profile</h1>
+        <h1 className="font-display text-3xl text-white leading-none">Taste Profile</h1>
         <p className="text-brew-muted text-sm">What you love, over time</p>
       </div>
-      <TopMenu />
+      
     </div>
   );
 }

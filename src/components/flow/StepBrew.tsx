@@ -4,6 +4,7 @@ import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import CircularTimer from "@/components/ui/CircularTimer";
 import { formatSeconds } from "@/lib/utils/formatTime";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -18,15 +19,31 @@ interface PourStep {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function parsePourSteps(sequence: string, targetTimeSec: number): PourStep[] | null {
+// Hoffmann/Rao consensus: 45s for peak-window coffee; shorter for old, slightly longer for very fresh
+function getBloomDuration(roastDate?: string): number {
+  if (roastDate) {
+    const daysOld = Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000);
+    if (daysOld < 7)  return 50; // very fresh: slight extension for heavy CO2
+    if (daysOld < 22) return 45; // peak window: Hoffmann/Rao standard
+    return 30;                    // older: minimal CO2, move on
+  }
+  return 45; // default: expert standard
+}
+
+function parsePourSteps(sequence: string, targetTimeSec: number, roastDate?: string): PourStep[] | null {
   const parts = sequence.split(/\s*[–—\-]\s*/).map(s => s.trim());
   if (parts.length < 2 || !parts.every(p => /^\d+$/.test(p))) return null;
 
   const milestones = parts.map(Number);
   const n = milestones.length;
-  const bloomDur = Math.max(30, Math.min(50, Math.round(targetTimeSec * 0.22)));
-  const remaining = targetTimeSec - bloomDur;
-  const interval = n > 1 ? remaining / (n - 1) : 0;
+  const bloomDur = getBloomDuration(roastDate);
+  // Reserve 33% of brew time after last pour for pouring + drawdown.
+  // Calibrated for Drip Assist (disc bottleneck): ~89s at 270s, ~69s at 210s.
+  const drawdownReserve = Math.round(targetTimeSec * 0.33);
+  const remaining = targetTimeSec - bloomDur - drawdownReserve;
+  // n-2: there are (n-2) intervals between pour 1 and the final pour,
+  // so the last pour lands exactly at (targetTimeSec - drawdownReserve).
+  const interval = n > 2 ? remaining / (n - 2) : 0;
 
   return milestones.map((grams, i) => ({
     index: i,
@@ -51,28 +68,37 @@ function getActiveIdx(elapsed: number, steps: PourStep[]): number {
 export default function StepBrew() {
   const { draft, setBrew, setStep } = useFlowStore();
   const rec = draft.recommendation;
-  const recipe = rec?.primaryRecipe;
   const method = draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
+  const recipe = rec?.candidates?.find(c => c.method === method)?.recipe ?? rec?.primaryRecipe;
 
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
 
+  // Prevent the iPhone screen from dimming/locking during an active pour-over.
+  // enableWakeLock is called on the first timer tick; disableWakeLock on exit.
+  // The hook's unmount cleanup handles all other exit paths automatically.
+  const { enableWakeLock, disableWakeLock } = useWakeLock();
+
   const handleTick = useCallback((e: number) => {
     setElapsed(e);
-    if (e === 1) setStarted(true);
-  }, []);
+    if (e === 1) {
+      setStarted(true);
+      enableWakeLock(); // screen must stay on while the timer runs
+    }
+  }, [enableWakeLock]);
 
   const handleDone = useCallback((actualSec?: number) => {
+    disableWakeLock(); // brewing complete — screen can sleep normally again
     setBrew({ ...draft.brew, methodUsed: method, followedRecipe: true, actualTimeSec: actualSec ?? elapsed });
     setStep("log");
-  }, [draft.brew, method, elapsed, setBrew, setStep]);
+  }, [draft.brew, method, elapsed, setBrew, setStep, disableWakeLock]);
 
   const handleTimerComplete = useCallback((e: number) => {
     setBrew({ ...draft.brew, methodUsed: method, followedRecipe: true, actualTimeSec: e });
   }, [draft.brew, method, setBrew]);
 
   const steps = recipe?.pourSequence && recipe.targetTimeSec
-    ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec)
+    ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, draft.coffee?.roastDate)
     : null;
 
   // Detect prose-based methods (AeroPress, Clever Dripper, Moccamaster, French Press)
@@ -144,12 +170,17 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep  = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const isWashed = process?.toLowerCase() === "washed";
-  // Bloom cue: highlight from t=5s until t=15s into the brew
-  const bloomCueActive = started && activeStep?.action === "bloom" && elapsed >= 5 && elapsed < 15;
-  // Final pour cue: highlight for the first 10s after the final pour starts
+  // Bloom cue: highlight from t=20s–40s.
+  // Pouring 70 ml through the Drip Assist at 3.5–5 g/s takes ~14–20 s, so t=5 was
+  // firing while the pour was still in progress. Start at 20 s (pour complete) and
+  // keep visible for 20 s so there's ample time to stir/swirl.
+  const bloomCueActive = started && activeStep?.action === "bloom" && elapsed >= 20 && elapsed < 40;
+  // Final pour cue: delay 28 s after the pour starts, then show for 27 s.
+  // The final pour is 120–150 ml; at 5 g/s that takes 24–30 s to pour completely.
+  // Firing at t=0 of the final pour (old behaviour) prompted the swirl while still pouring.
   const finalStep = steps[steps.length - 1];
   const finalCueActive = started && activeStep?.action === "final" &&
-    elapsed >= finalStep.startTimeSec && elapsed < finalStep.startTimeSec + 10;
+    elapsed >= finalStep.startTimeSec + 28 && elapsed < finalStep.startTimeSec + 55;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
   const lastPourStart = steps[steps.length - 1].startTimeSec;
   const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastPourStart) * 0.35));
@@ -162,40 +193,51 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
 
   // ── Pre-brew: vertical timeline plan ──────────────────────────────────
   if (!started) {
+    const bloomAgitation = isWashed ? "Stir 3–5×" : "Gentle swirl";
+    const finalAgitation = "Gentle swirl";
+
     return (
       <div className="bg-brew-surface rounded-2xl p-4">
-        <p className="text-brew-muted text-xs uppercase tracking-widest mb-4">Pour plan</p>
+        <p className="text-brew-muted text-xs uppercase tracking-widest mb-4">Pour Sequence</p>
 
         {/* Vertical timeline: time | dot+line | content */}
         <div className="space-y-0">
-          {/* START anchor */}
+          {/* Ready anchor */}
           <TimelineRow
             time=""
-            dotStyle="start"
-            label={<span className="text-brew-muted text-xs tracking-widest uppercase">Start</span>}
+            isFirst
+            label={<span className="text-white/30 text-sm">Ready</span>}
             isLast={false}
           />
 
-          {steps.map((step, i) => (
-            <TimelineRow
-              key={i}
-              time={step.startTimeSec === 0 ? "0:00" : formatSeconds(step.startTimeSec)}
-              dotStyle={i === 0 ? "accent" : "default"}
-              label={
-                <div>
-                  <span className="text-white text-sm font-medium">{step.label}</span>
-                  <span className="text-brew-accent font-mono-num text-xs ml-2">+{step.pourGrams}g</span>
-                  <span className="text-white/30 font-mono-num text-xs ml-1">→ {step.cumulativeGrams}g</span>
-                </div>
-              }
-              isLast={i === steps.length - 1}
-            />
-          ))}
+          {steps.map((step, i) => {
+            const agitation = step.action === "bloom"
+              ? bloomAgitation
+              : step.action === "final"
+                ? finalAgitation
+                : null;
+            return (
+              <TimelineRow
+                key={i}
+                time={step.startTimeSec === 0 ? "0:00" : formatSeconds(step.startTimeSec)}
+                label={
+                  <div>
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="text-white text-sm font-medium">{step.label}</span>
+                      <span className="text-brew-accent font-mono-num text-xs">+{step.pourGrams}g</span>
+                      <span className="text-white/30 font-mono-num text-xs">→ {step.cumulativeGrams}g</span>
+                    </div>
+                    {agitation && <span className="text-white/30 text-xs block mt-0.5">{agitation}</span>}
+                  </div>
+                }
+                isLast={i === steps.length - 1}
+              />
+            );
+          })}
 
           {/* Drawdown */}
           <TimelineRow
             time={formatSeconds(targetTimeSec)}
-            dotStyle="empty"
             label={<span className="text-white/30 text-sm">Drawdown complete</span>}
             isLast={true}
           />
@@ -284,12 +326,12 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
 // ── TimelineRow ────────────────────────────────────────────────────────────
 
 function TimelineRow({
-  time, dotStyle, label, isLast
+  time, label, isLast, isFirst = false
 }: {
   time: string;
-  dotStyle: "start" | "accent" | "default" | "empty";
   label: React.ReactNode;
   isLast: boolean;
+  isFirst?: boolean;
 }) {
   return (
     <div className="flex items-center gap-0 min-h-[44px]">
@@ -300,23 +342,12 @@ function TimelineRow({
 
       {/* Dot + vertical connector — relative wrapper spans full row height */}
       <div className="relative flex flex-col items-center w-4 shrink-0 self-stretch">
-        {/* Dot centered vertically */}
-        <div className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-4">
-          {dotStyle === "start" ? (
-            <div className="w-1.5 h-1.5 rounded-full border border-white/25" />
-          ) : dotStyle === "accent" ? (
-            <div className="w-3 h-3 rounded-full bg-brew-accent/85" />
-          ) : dotStyle === "empty" ? (
-            <div className="w-1.5 h-1.5 rounded-full border border-white/20" />
-          ) : (
-            <div className="w-2 h-2 rounded-full bg-white/40" />
-          )}
-        </div>
-        {/* Connector lines — bottom half of current row to top half of next */}
-        {!isLast && (
-          <div className="absolute top-1/2 bottom-0 left-1/2 -translate-x-px w-px bg-brew-border" />
-        )}
-        <div className="absolute top-0 bottom-1/2 left-1/2 -translate-x-px w-px bg-brew-border" style={{ display: dotStyle === "start" ? "none" : "block" }} />
+        {/* Dot — always uniform, rendered above lines via z-10 */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-2.5 h-2.5 rounded-full bg-white/25" />
+        {/* Bottom-half connector */}
+        {!isLast && <div className="absolute top-1/2 bottom-0 left-1/2 -translate-x-1/2 w-px bg-brew-border" />}
+        {/* Top-half connector — skip for first row */}
+        {!isFirst && <div className="absolute top-0 bottom-1/2 left-1/2 -translate-x-1/2 w-px bg-brew-border" />}
       </div>
 
       {/* Content — vertically centered */}
@@ -348,31 +379,26 @@ function StepDots({ steps, activeIdx, allDone }: {
   return (
     <div className="px-1">
       <div className="relative flex items-start justify-between">
-        {/* Connecting line behind dots */}
-        <div className="absolute top-[9px] left-[9px] right-[9px] h-px bg-brew-border" />
+        {/* Connecting line behind dots — centered on the 20px container */}
+        <div className="absolute top-[10px] left-[10px] right-[10px] h-px bg-brew-border" />
         {/* Progress fill */}
         <div
-          className="absolute top-[9px] left-[9px] h-px bg-brew-accent/50 transition-all duration-500"
+          className="absolute top-[10px] left-[10px] h-px bg-brew-accent transition-all duration-500"
           style={{ width: `${fillPct}%` }}
         />
 
         {labels.map((label, pos) => {
-          const isDone   = pos < currentPos;
           const isActive = pos === currentPos;
           return (
             <div key={pos} className="relative flex flex-col items-center gap-1.5 z-10">
-              <div className={`w-[18px] h-[18px] rounded-full flex items-center justify-center transition-all duration-300 ${
-                isDone
-                  ? "bg-brew-accent/20 border border-brew-accent/50"
-                  : isActive
-                    ? "bg-brew-accent/20 border-2 border-brew-accent"
-                    : "bg-brew-bg border border-white/20"
-              }`}>
-                {isDone   && <div className="w-1.5 h-1.5 rounded-full bg-brew-accent/70" />}
-                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-brew-accent" />}
+              {/* 20px transparent wrapper keeps line alignment consistent */}
+              <div className="w-5 h-5 flex items-center justify-center">
+                <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  isActive ? "bg-brew-accent scale-[1.3]" : "bg-white"
+                }`} />
               </div>
               <span className={`text-[10px] font-mono-num leading-none text-center ${
-                isActive ? "text-brew-accent" : isDone ? "text-white/30" : "text-white/30"
+                isActive ? "text-brew-accent font-medium" : "text-white/30"
               }`}>
                 {label}
               </span>

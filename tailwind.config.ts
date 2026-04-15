@@ -10,20 +10,21 @@ const config: Config = {
     extend: {
       colors: {
         brew: {
-          bg: "#0A0A0A",
-          surface: "#141414",
-          elevated: "#1E1E1E",
-          accent: "#F0EDE8",
-          muted: "#888888",
-          subtle: "#555555",
-          border: "#2A2A2A",
+          bg: "#111111",
+          surface: "#1A1A1A",
+          elevated: "#2A2A2A",
+          accent: "#D4B896",
+          "accent-fg": "#1A1008",
+          muted: "#B8B9B6",
+          subtle: "#666666",
+          border: "#2E2E2E",
           success: "#5A9E5A",
         },
       },
       fontFamily: {
-        serif: ["DM Serif Display", "Georgia", "serif"],
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        serif: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "var(--font-jetbrains-mono)", "Fira Code", "monospace"],
       },
       borderRadius: {
         "4xl": "2rem",

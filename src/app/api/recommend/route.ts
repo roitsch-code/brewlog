@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateRecommendation } from "@/lib/claude/recommend";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { logTokenUsage } from "@/lib/claude/logUsage";
 import type { UserPreferences } from "@/lib/types/preferences";
+import type { RoasterPrior } from "@/lib/roasters/priors";
+
+function toSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
+}
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
@@ -26,8 +30,17 @@ export async function POST(req: NextRequest) {
       onboardingComplete: true,
     };
 
-    const { recommendation, usage } = await generateRecommendation(coffee, context, prefs, pastSessions || []);
-    void logTokenUsage({ endpoint: "recommend", model: "claude-sonnet-4-6", usage, userId: "user" });
+    // Check Firestore for a user-saved roaster profile — takes priority over built-in list
+    let userRoasterPrior: RoasterPrior | null = null;
+    if (coffee?.roaster) {
+      try {
+        const db = getAdminDb();
+        const snap = await db.collection("roasters").doc(toSlug(coffee.roaster)).get();
+        if (snap.exists) userRoasterPrior = snap.data() as RoasterPrior;
+      } catch {}
+    }
+
+    const { recommendation } = await generateRecommendation(coffee, context, prefs, pastSessions || [], userRoasterPrior ?? undefined);
     return NextResponse.json(recommendation);
   } catch (err) {
     console.error("recommend error:", err);

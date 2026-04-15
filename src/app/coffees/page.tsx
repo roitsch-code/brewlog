@@ -1,49 +1,138 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Coffee } from "@/lib/types/coffee";
 import StarRating from "@/components/ui/StarRating";
-import TopMenu from "@/components/layout/TopMenu";
+
+type Filter = "recent" | "favorites" | "roaster";
 
 export default function CoffeesPage() {
   const [coffees, setCoffees] = useState<Coffee[]>([]);
+  const [totalSessions, setTotalSessions] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("recent");
   const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
     setError(false);
-    fetch("/api/coffees", { cache: "no-store" })
-      .then(r => {
-        if (!r.ok) throw new Error("Failed to load coffees");
-        return r.json();
-      })
-      .then((data: Coffee[]) => {
-        const sorted = [...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || ""));
-        setCoffees(sorted);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/coffees", { cache: "no-store" })
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then((data: Coffee[]) => {
+          const sorted = [...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || ""));
+          setCoffees(sorted);
+        })
+        .catch(() => setError(true)),
+      fetch("/api/sessions?count=true", { cache: "no-store" })
+        .then(r => r.ok ? r.json() : null)
+        .then((d: { total: number } | null) => { if (d?.total != null) setTotalSessions(d.total); })
+        .catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, [retryCount]);
 
+  const sessionTotal = totalSessions ?? coffees.reduce((s, c) => s + c.sessionCount, 0);
+  const roasterCount = useMemo(() => new Set(coffees.map(c => c.roaster).filter(Boolean)).size, [coffees]);
+
+  const filteredCoffees = useMemo(() => {
+    let list = coffees;
+    // Search filter
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        c.roaster?.toLowerCase().includes(q) ||
+        c.origin?.toLowerCase().includes(q)
+      );
+    }
+    // Category filter
+    if (filter === "favorites") {
+      list = [...list].sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0));
+    } else if (filter === "roaster") {
+      list = [...list].sort((a, b) => (a.roaster ?? "").localeCompare(b.roaster ?? ""));
+    }
+    // "recent" stays as-is — already sorted by firstSeenAt desc
+    return list;
+  }, [coffees, search, filter]);
+
+  const FILTERS: { id: Filter; label: string }[] = [
+    { id: "recent", label: "Recent" },
+    { id: "favorites", label: "Favorites" },
+    { id: "roaster", label: "Roaster" },
+  ];
+
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col">
+    <div className="min-h-full bg-brew-bg flex flex-col pb-8">
+
       {/* Header */}
-      <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
-        <div>
-          <h1 className="font-display text-2xl text-white">Coffee Library</h1>
-          <p className="text-brew-muted text-sm">{coffees.length} coffee{coffees.length !== 1 ? "s" : ""} tracked</p>
-        </div>
-        <TopMenu />
+      <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <h1 className="font-display text-3xl text-white leading-none">Coffee Library</h1>
+        {loading ? (
+          <div className="h-4 w-48 bg-brew-surface rounded-full animate-pulse mt-2" />
+        ) : !error && coffees.length > 0 ? (
+          <p className="text-brew-muted text-sm mt-1.5">
+            <span className="text-white">{sessionTotal.toLocaleString()}</span> sessions ·{" "}
+            <span className="text-white">{coffees.length.toLocaleString()}</span> coffees ·{" "}
+            <span className="text-white">{roasterCount.toLocaleString()}</span> roasters
+          </p>
+        ) : null}
       </div>
 
+      {/* Search bar */}
+      {!loading && !error && coffees.length > 0 && (
+        <div className="px-5 mb-3">
+          <div className="flex items-center gap-2 px-1 py-2">
+            <svg className="w-4 h-4 text-brew-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search coffees..."
+              className="flex-1 bg-transparent text-white placeholder:text-brew-muted outline-none border-0 appearance-none"
+              style={{ fontSize: "16px", WebkitAppearance: "none", boxShadow: "none" }}
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="text-brew-muted">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Filter row */}
+      {!loading && !error && coffees.length > 0 && (
+        <div className="px-5 mb-4 flex gap-2">
+          {FILTERS.map(f => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                filter === f.id
+                  ? "bg-brew-accent text-brew-accent-fg"
+                  : "bg-brew-surface border border-brew-border text-brew-muted"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* List */}
       <div className="flex-1 px-5">
-{loading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-brew-surface animate-pulse" />
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-20 rounded-2xl bg-brew-surface animate-pulse" />
             ))}
           </div>
         ) : error ? (
@@ -60,43 +149,64 @@ export default function CoffeesPage() {
             <p className="font-display text-xl text-white">No coffees yet</p>
             <p className="text-brew-muted text-sm">Coffees you scan will appear here.</p>
           </div>
+        ) : filteredCoffees.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-center gap-2">
+            <p className="text-brew-muted text-sm">No results for &ldquo;{search}&rdquo;</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
-            {coffees.map(coffee => {
-              const originProcess = [coffee.origin, coffee.process].filter(Boolean).join(" – ");
+          <div className="flex flex-col gap-2">
+            {filteredCoffees.map(coffee => {
+              const sub = [coffee.origin, coffee.process].filter(Boolean).join(" · ");
               return (
                 <button
                   key={coffee.id}
                   type="button"
                   onClick={() => router.push(`/coffees/${coffee.id}`)}
-                  className="bg-brew-surface rounded-2xl overflow-hidden border border-brew-border text-left active:scale-95 transition-transform"
+                  className="flex items-center gap-3 bg-brew-surface border border-brew-border rounded-2xl p-3 text-left active:scale-[0.98] transition-transform w-full"
                 >
-                  {/* Photo or blank */}
-                  <div className="relative aspect-square w-full bg-brew-elevated">
-                    {coffee.bagPhotoUrl && (
+                  {/* Thumbnail */}
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-brew-elevated shrink-0">
+                    {coffee.bagPhotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={coffee.bagPhotoUrl} alt={coffee.name} className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
+                        </svg>
+                      </div>
                     )}
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 z-10">
-                      <span className="text-white text-xs font-medium">{coffee.sessionCount}×</span>
+                    {/* Session count badge */}
+                    <div className="absolute top-0.5 right-0.5 bg-black/70 rounded-full w-4 h-4 flex items-center justify-center">
+                      <span className="text-white font-mono-num" style={{ fontSize: "8px" }}>{coffee.sessionCount}</span>
                     </div>
                   </div>
 
-                  {/* Info */}
-                  <div className="p-3">
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
                     {coffee.roaster && (
-                      <p className="text-brew-muted text-xs mb-0.5 truncate">{coffee.roaster}</p>
+                      <p className="text-brew-muted text-xs truncate mb-0.5">{coffee.roaster}</p>
                     )}
-                    <h3 className="text-white font-medium text-sm leading-tight truncate">{coffee.name}</h3>
-                    {originProcess && (
-                      <p className="text-brew-muted text-xs mt-0.5 truncate">{originProcess}</p>
+                    <p className="text-white text-sm font-medium leading-snug truncate">{coffee.name}</p>
+                    {sub && (
+                      <p className="text-brew-muted text-xs truncate mt-0.5">{sub}</p>
+                    )}
+                    {coffee.latestRoastDate && (
+                      <p className="text-brew-muted text-xs truncate mt-0.5">
+                        Roasted {new Date(coffee.latestRoastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
                     )}
                     {coffee.avgRating != null && coffee.avgRating > 0 && (
-                      <div className="mt-2">
+                      <div className="mt-1.5">
                         <StarRating value={coffee.avgRating} readonly size="sm" />
                       </div>
                     )}
                   </div>
+
+                  {/* Chevron */}
+                  <svg className="w-4 h-4 text-brew-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </button>
               );
             })}

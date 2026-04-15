@@ -2,13 +2,20 @@
   "crons": [
     {
       "path": "/api/research",
-      "schedule": "0 6 * * 1"
+      "schedule": "0 6 */2 * *"
+    },
+    {
+      "path": "/api/coffees/compact",
+      "schedule": "0 3 1 * *"
     }
   ],
   "functions": {
     "src/app/api/match/route.ts": { "maxDuration": 30 },
-    "src/app/api/explore/route.ts": { "maxDuration": 20 },
-    "src/app/api/recommend/route.ts": { "maxDuration": 20 },
-    "src/app/api/analyze-bag/route.ts": { "maxDuration": 20 }
+    "src/app/api/explore/route.ts": { "maxDuration": 30 },
+    "src/app/api/recommend/route.ts": { "maxDuration": 60 },
+    "src/app/api/analyze-bag/route.ts": { "maxDuration": 20 },
+    "src/app/api/roasters/route.ts": { "maxDuration": 10 },
+    "src/app/api/roasters/generate/route.ts": { "maxDuration": 20 },
+    "src/app/api/coffees/compact/route.ts": { "maxDuration": 120 }
   }
 }

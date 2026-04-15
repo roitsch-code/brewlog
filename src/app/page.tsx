@@ -5,10 +5,9 @@ import type { Session } from "@/lib/types/session";
 import type { CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
 import { useFlowStore } from "@/store/flowStore";
-import TopMenu from "@/components/layout/TopMenu";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 
-function getRecentUniqueCoffees(sessions: Session[], limit = 3): CoffeeIdentity[] {
+function getRecentUniqueCoffees(sessions: Session[], limit = 6): CoffeeIdentity[] {
   const seen = new Set<string>();
   const result: CoffeeIdentity[] = [];
   for (const s of sessions) {
@@ -23,68 +22,86 @@ function getRecentUniqueCoffees(sessions: Session[], limit = 3): CoffeeIdentity[
   return result;
 }
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function HomePage() {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [totalSessions, setTotalSessions] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const { reset, setCoffee, setMode, setStep } = useFlowStore();
+  const { reset, setCoffee, setStep, setMode, setSkipScan } = useFlowStore();
   const router = useRouter();
 
   useEffect(() => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
-    fetch("/api/sessions?limit=20", { cache: "no-store", signal: controller.signal })
-      .then(r => r.json())
-      .then((data: Session[]) => setSessions(Array.isArray(data) ? data : []))
-      .catch(() => setSessions([]))
-      .finally(() => { clearTimeout(timer); setLoading(false); });
+    Promise.all([
+      fetch("/api/sessions?limit=15", { cache: "no-store", signal: controller.signal })
+        .then(r => r.json())
+        .then((data: Session[]) => setSessions(Array.isArray(data) ? data : []))
+        .catch(() => setSessions([])),
+      fetch("/api/sessions?count=true", { cache: "no-store", signal: controller.signal })
+        .then(r => r.ok ? r.json() : null)
+        .then((data: { total: number } | null) => { if (data?.total != null) setTotalSessions(data.total); })
+        .catch(() => {}),
+    ]).finally(() => { clearTimeout(timer); setLoading(false); });
     return () => { clearTimeout(timer); controller.abort(); };
   }, []);
 
-  const recentCoffees = getRecentUniqueCoffees(sessions, 4);
+  const recentCoffees = getRecentUniqueCoffees(sessions, 6);
 
   const brewAgain = (coffee: CoffeeIdentity) => {
     reset();
-    setMode("home");
     setCoffee(coffee);
+    setMode("home");
+    setSkipScan(true);
     setStep("context");
     router.push("/brew/new");
   };
 
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col">
+    <div className="min-h-full bg-brew-bg flex flex-col pb-8">
+
       {/* Header */}
-      <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+      <div className="px-5 pb-5" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-3xl text-white leading-none">BrewLog</h1>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/BrewLog.png" alt="" aria-hidden="true" width={25} height={30} style={{ objectFit: "contain" }} />
-          </div>
-          <p className="text-brew-muted text-sm mt-1">
-            {sessions.length > 0 ? `${sessions.length} session${sessions.length !== 1 ? "s" : ""}` : "Your coffee diary"}
+          <p className="text-brew-muted text-sm mb-0.5">{getGreeting()}</p>
+          <h1 className="font-display text-3xl text-white leading-none">
+            Welcome to <span style={{ color: "var(--primary)" }}>BrewLog</span>
+          </h1>
+          <p className="text-brew-muted text-sm mt-1.5">
+            {loading ? "\u00A0" : (totalSessions ?? sessions.length) > 0
+              ? `${totalSessions ?? sessions.length} session${(totalSessions ?? sessions.length) !== 1 ? "s" : ""} logged`
+              : "Your coffee diary"}
           </p>
         </div>
-        <TopMenu />
       </div>
 
-      {/* Recent coffees — quick brew (2×2 grid) */}
+      {/* Brew Again — horizontal scroll carousel */}
       {!loading && recentCoffees.length > 0 && (
-        <div className="px-5 mb-5">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">Brew again</p>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="mb-6">
+          <p className="label-mono text-brew-muted px-5 mb-3">Brew Again</p>
+          <div
+            className="flex gap-3 overflow-x-auto"
+            style={{ paddingLeft: "1.25rem", paddingRight: "1.25rem", scrollbarWidth: "none" }}
+          >
             {recentCoffees.map((c, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => brewAgain(c)}
-                className="bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-left active:scale-95 transition-all"
+                className="shrink-0 w-36 bg-brew-surface border border-brew-border rounded-2xl px-3 py-3 text-left active:scale-95 transition-transform"
               >
-                {c.roaster && <p className="text-brew-muted text-xs mb-1 truncate">{c.roaster}</p>}
+                {c.roaster && (
+                  <p className="text-brew-muted text-xs mb-1 truncate">{c.roaster}</p>
+                )}
                 <p className="text-white text-sm font-medium leading-tight line-clamp-2">{c.name}</p>
-                {(c.origin || c.process) && (
-                  <p className="text-brew-muted text-xs mt-0.5 truncate">
-                    {[c.origin, c.process].filter(Boolean).join(" – ")}
-                  </p>
+                {c.origin && (
+                  <p className="text-brew-muted text-xs mt-1 truncate">{c.origin}</p>
                 )}
               </button>
             ))}
@@ -92,28 +109,32 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Session feed — last 3 */}
+      {/* Recent Brews */}
       <div className="flex-1 px-5">
+        {!loading && sessions.length > 0 && (
+          <p className="label-mono text-brew-muted mb-3">Recent Brews</p>
+        )}
         {loading ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-48 rounded-2xl bg-brew-surface animate-pulse" />
+              <div key={i} className="h-44 rounded-2xl bg-brew-surface animate-pulse" />
             ))}
           </div>
         ) : sessions.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="flex flex-col gap-4">
-            {sessions.slice(0, 3).map(s => <SessionCard key={s.id} session={s} />)}
+            {sessions.slice(0, 5).map(s => <SessionCard key={s.id} session={s} />)}
           </div>
         )}
       </div>
-
     </div>
   );
 }
 
 function EmptyState() {
+  const router = useRouter();
+  const reset = useFlowStore(s => s.reset);
   return (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-6">
       <CoffeeBeanGlow size={80} />
@@ -121,6 +142,13 @@ function EmptyState() {
         <h2 className="font-display text-2xl text-white mb-2">Start your first brew</h2>
         <p className="text-brew-muted text-sm max-w-[260px]">Scan a coffee bag, get a recipe recommendation, and document your results.</p>
       </div>
+      <button
+        type="button"
+        onClick={() => { reset(); router.push("/brew/new"); }}
+        className="h-[52px] px-8 rounded-xl bg-brew-accent text-brew-accent-fg font-semibold text-base active:scale-95 transition-transform"
+      >
+        Brew your first cup
+      </button>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils/cn";
 import Image from "next/image";
+import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 
 interface PhotoUploadProps {
   onFile: (file: File) => void;
@@ -43,26 +44,33 @@ export default function PhotoUpload({ onFile, preview, loading, className }: Pho
       />
 
       {preview ? (
-        /* Preview with change options */
+        /* Preview — with loading overlay while analysing */
         <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-brew-border">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="Coffee bag" className="w-full h-full object-cover" />
-          <div className="absolute bottom-0 left-0 right-0 flex gap-2 p-3">
-            <button
-              type="button"
-              onClick={() => cameraRef.current?.click()}
-              className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
-            >
-              Retake
-            </button>
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
-            >
-              Choose other
-            </button>
-          </div>
+          <img src={preview} alt="Coffee bag" className={`w-full h-full object-cover transition-opacity duration-300 ${loading ? "opacity-40" : "opacity-100"}`} />
+          {loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <CoffeeBeanGlow size={56} />
+              <span className="text-white/70 text-xs tracking-widest uppercase">Reading label…</span>
+            </div>
+          ) : (
+            <div className="absolute bottom-0 left-0 right-0 flex gap-2 p-3">
+              <button
+                type="button"
+                onClick={() => cameraRef.current?.click()}
+                className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
+              >
+                Retake
+              </button>
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="flex-1 py-2 rounded-xl bg-black/60 backdrop-blur text-white text-xs font-medium"
+              >
+                Choose other
+              </button>
+            </div>
+          )}
         </div>
       ) : loading ? (
         <div className="w-full h-44 rounded-2xl bg-brew-surface border border-brew-border flex flex-col items-center justify-center gap-2">

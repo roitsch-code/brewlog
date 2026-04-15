@@ -12,4 +12,8 @@ export interface Coffee {
   ratingSum?: number;
   ratingCount?: number;
   bagPhotoUrl?: string;
+  latestRoastDate?: string;
+  writtenSummary?: string;
+  lastSummarizedAt?: string;
+  commonNotes?: string[];
 }

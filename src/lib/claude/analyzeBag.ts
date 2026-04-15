@@ -33,11 +33,27 @@ Return this exact JSON structure:
   "isCoffeeBag": boolean
 }
 
-clarifications: list up to 2 natural-language questions about remaining unknowns. Examples:
+clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) roast date if unknown, (2) variety if unknown, (3) tasting notes if the array is empty, (4) region/process if unclear. Examples:
 - "I can see it's from Ethiopia but couldn't read the region — Yirgacheffe, Guji, or Sidama?"
 - "No roast date visible — do you remember roughly when you bought it?"
+- "I didn't spot a variety — is it listed anywhere on the bag, or do you know it?"
+- "No tasting notes were visible — what flavour descriptors does the roaster use?"
 
 Return ONLY valid JSON with no markdown or explanation.`;
+
+export interface RoasterPriorSummary {
+  name: string;
+  region?: string;
+  styleSummary: string;
+  roastTendency: string;
+  clarityVsSweetnessBias: string;
+  tempBias: string;
+  ratioBias: string;
+  methodAffinities: string[];
+  extractionRisks: string[];
+  notes: string;
+  confidence: "curated" | "inferred" | "fallback" | "user";
+}
 
 export interface BagAnalysisResult {
   extracted: {
@@ -56,6 +72,7 @@ export interface BagAnalysisResult {
   confidence: Record<string, "bag" | "researched" | "unknown">;
   clarifications: string[];
   isCoffeeBag: boolean;
+  roasterPrior?: RoasterPriorSummary; // populated server-side after roaster lookup
 }
 
 export async function analyzeBagImage(imageBase64: string, mimeType: string): Promise<{ result: BagAnalysisResult; usage: { input_tokens: number; output_tokens: number } }> {

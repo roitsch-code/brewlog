@@ -3,17 +3,19 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { DraftSession, SessionMode, CoffeeIdentity, SessionContext, Recommendation, BrewLog, TasteResult, ExternalPlace } from "@/lib/types/session";
 
 export type FlowStep =
-  | "mode"       // Home vs External toggle
-  | "scan"       // Photo + AI extraction + clarification
-  | "context"    // Occasion, amount, time, mood (home only)
-  | "recommend"  // AI recommendation (home only)
-  | "brew"       // Recipe card + timer
-  | "log"        // Taste documentation
-  | "summary";   // Save
+  | "scan"         // Photo + AI extraction + clarification (always first)
+  | "mode"         // Home Brew / Coffee Shop / Check Match (after scan)
+  | "context"      // Occasion, amount, time, mood (home only)
+  | "recommend"    // AI recommendation (home only)
+  | "brew"         // Recipe card + timer
+  | "log"          // Taste documentation
+  | "summary"      // Save
+  | "match_result"; // Taste-match result (match mode only)
 
 interface FlowState {
   step: FlowStep;
   draft: DraftSession;
+  skipScan: boolean;         // true when entering via "brew again" (no scan step)
   isAnalyzing: boolean;
   isRecommending: boolean;
   recommendError: string | null;
@@ -22,6 +24,7 @@ interface FlowState {
   // Actions
   setStep: (step: FlowStep) => void;
   setMode: (mode: SessionMode) => void;
+  setSkipScan: (v: boolean) => void;
   setCoffee: (coffee: Partial<CoffeeIdentity>) => void;
   setPlace: (place: ExternalPlace) => void;
   setContext: (context: SessionContext) => void;
@@ -50,8 +53,9 @@ const initialDraft: DraftSession = {
 export const useFlowStore = create<FlowState>()(
   persist(
     (set) => ({
-      step: "mode",
+      step: "scan",
       draft: initialDraft,
+      skipScan: false,
       isAnalyzing: false,
       isRecommending: false,
       recommendError: null,
@@ -59,6 +63,7 @@ export const useFlowStore = create<FlowState>()(
 
       setStep: (step) => set({ step }),
       setMode: (mode) => set((s) => ({ draft: { ...s.draft, mode } })),
+      setSkipScan: (v) => set({ skipScan: v }),
       setCoffee: (coffee) =>
         set((s) => ({ draft: { ...s.draft, coffee: { ...s.draft.coffee, ...coffee } as CoffeeIdentity } })),
       setPlace: (place) => set((s) => ({ draft: { ...s.draft, place } })),
@@ -73,7 +78,7 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "mode", draft: initialDraft, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, skipScan: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
       name: "brew-flow",

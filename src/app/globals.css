@@ -2,7 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  /* Dark theme */
+  --background: #111111;
+  --foreground: #FFFFFF;
+  --card: #1A1A1A;
+  --card-foreground: #FFFFFF;
+  --border: #2E2E2E;
+  --primary: #D4B896;
+  --primary-foreground: #1A1008;
+  --secondary: #2E2E2E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2E2E2E;
+  --muted-foreground: #B8B9B6;
+  --destructive: #FF5C33;
+  --ring: #666666;
+  --input: #2E2E2E;
+  /* Semantic */
+  --color-success: #222924;
+  --color-success-foreground: #B6FFCE;
+  --color-warning: #291C0F;
+  --color-warning-foreground: #FF8400;
+  --color-error: #24100B;
+  --color-error-foreground: #FF5C33;
+  --color-info: #222229;
+  --color-info-foreground: #B2B2FF;
+  /* Radii */
+  --radius-m: 16px;
+  --radius-pill: 999px;
+  /* Font stacks */
+  --font-primary: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+  --font-secondary: var(--font-geist-sans), 'Geist', sans-serif;
+  /* Nav safe area — browser/Safari uses full env() which includes phantom toolbar in PWA */
+  --nav-bottom-padding: env(safe-area-inset-bottom);
+}
+
+/* In PWA standalone mode, env(safe-area-inset-bottom) includes the phantom Safari
+   URL bar (~49px) that doesn't exist. Override to just the home indicator (34px). */
+@media (display-mode: standalone) {
+  :root {
+    --nav-bottom-padding: 8px;
+  }
+}
 
 @layer base {
   * {
@@ -12,15 +53,17 @@
   }
 
   html {
-    background-color: #0A0A0A;
+    height: 100%;
+    background-color: #111111;
   }
 
   body {
-    background-color: #0A0A0A;
+    height: 100%;
+    overflow: hidden;
+    background-color: #111111;
     color: #FFFFFF;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
     overscroll-behavior: none;
-    min-height: 100svh;
   }
 }
 
@@ -35,13 +78,21 @@
     margin-bottom: env(safe-area-inset-bottom);
   }
   .font-display {
-    font-family: 'DM Serif Display', Georgia, serif;
+    font-family: var(--font-geist-sans), system-ui, sans-serif;
+    font-weight: 600;
   }
   .font-mono-num {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-geist-mono), var(--font-jetbrains-mono), 'Fira Code', monospace;
+  }
+  .label-mono {
+    font-family: var(--font-geist-mono), var(--font-jetbrains-mono), monospace;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
   .text-gradient-amber {
-    background: linear-gradient(135deg, #F0EDE8, #ffffff);
+    background: linear-gradient(135deg, #D4B896, #ffffff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -57,9 +108,10 @@
  * ─────────────────────────────────────────────────────────────────────────────
  *
  *  TYPEFACES
- *  .font-display   DM Serif Display — page titles, active brew step hero
- *  .font-mono-num  JetBrains Mono   — every number, time, gram value
- *  (default)       Inter            — all other text
+ *  .font-display   Geist (semibold) — page titles, active brew step hero
+ *  .font-mono-num  Geist Mono       — every number, time, gram value
+ *  .label-mono     Geist Mono       — section headers (ALL CAPS, 11px, tracked)
+ *  (default)       Geist            — all other text
  *
  *  SCALE
  *  text-3xl  font-display   — H1: page title (BrewLog, Taste Profile…)

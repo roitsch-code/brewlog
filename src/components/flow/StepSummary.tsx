@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import StarRating from "@/components/ui/StarRating";
 import Chip from "@/components/ui/Chip";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 
 export default function StepSummary() {
   const { draft, reset } = useFlowStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [insight, setInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const router = useRouter();
@@ -32,8 +34,9 @@ export default function StepSummary() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      await fetch("/api/sessions", {
+      const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,10 +45,15 @@ export default function StepSummary() {
           createdAt: new Date().toISOString(),
         }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || `Save failed (${res.status})`);
+      }
       setSaved(true);
       setTimeout(() => { reset(); router.push("/"); }, 1500);
     } catch (err) {
-      console.error(err);
+      console.error("Session save error:", err);
+      setSaveError(err instanceof Error ? err.message : "Failed to save — please try again");
     } finally {
       setSaving(false);
     }
@@ -89,15 +97,13 @@ export default function StepSummary() {
                 <img src={coffee.bagPhotoUrl} alt="Coffee bag" className="absolute inset-0 w-full h-full object-cover" />
                 <div className="absolute inset-0 card-scrim" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <Chip label={brew?.methodUsed || rec?.primaryMethod || "Coffee"} accent />
-                  <h2 className="font-display text-3xl text-white mt-2">{coffee.name || "Unknown Coffee"}</h2>
+                  <h2 className="font-display text-3xl text-white">{coffee.name || "Unknown Coffee"}</h2>
                   <p className="text-white/60 text-sm mt-1">{coffee.roaster}</p>
                 </div>
               </div>
             ) : (
               <div className="bg-brew-surface px-5 py-8">
-                <Chip label={brew?.methodUsed || "Coffee"} accent />
-                <h2 className="font-display text-3xl text-white mt-2">{coffee?.name || "Coffee Session"}</h2>
+                <h2 className="font-display text-3xl text-white">{coffee?.name || "Coffee Session"}</h2>
                 <p className="text-white/60 text-sm mt-1">{coffee?.roaster}</p>
               </div>
             )}
@@ -148,9 +154,12 @@ export default function StepSummary() {
             {rec && brew?.methodUsed && (
               <div className="bg-brew-surface rounded-2xl p-4">
                 <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Recipe</p>
-                <p className="text-white text-sm">
-                  {brew.methodUsed} · {rec.primaryRecipe.doseGrams}g / {rec.primaryRecipe.waterGrams}g · {rec.primaryRecipe.waterTempC}°C
-                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <BrewMethodIcon method={brew.methodUsed} className="w-4 h-4 shrink-0" />
+                  <p className="text-white text-sm">
+                    {brew.methodUsed} · {rec.primaryRecipe.doseGrams}g / {rec.primaryRecipe.waterGrams}g · {rec.primaryRecipe.waterTempC}°C
+                  </p>
+                </div>
               </div>
             )}
 
@@ -168,14 +177,17 @@ export default function StepSummary() {
           </div>
 
           {/* Save button */}
-          <div className="px-5 py-4 pb-safe">
+          <div className="px-5 py-4 pb-safe flex flex-col gap-3">
+            {saveError && (
+              <p className="text-red-400 text-sm text-center leading-snug">{saveError}</p>
+            )}
             <button
               type="button"
               onClick={handleSave}
               disabled={saving}
               className="w-full h-14 rounded-full bg-white text-black font-semibold text-base active:scale-95 transition-all disabled:opacity-60"
             >
-              {saving ? "Saving…" : "Save Brew"}
+              {saving ? "Saving…" : saveError ? "Retry" : "Save Brew"}
             </button>
           </div>
         </>

@@ -4,7 +4,8 @@ import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import Chip from "@/components/ui/Chip";
 import StarRating from "@/components/ui/StarRating";
-import { QUICK_FLAVORS, FLAVOR_TAXONOMY } from "@/lib/constants/flavorTaxonomy";
+import FlavorWheel from "@/components/ui/FlavorWheel";
+import { SCA_WHEEL, QUICK_FLAVORS } from "@/lib/constants/scaFlavorWheel";
 
 const FLOW_OPTIONS = ["too-fast", "perfect", "too-slow", "na"] as const;
 const FLOW_LABELS: Record<string, string> = { "too-fast": "Too Fast", "perfect": "Perfect", "too-slow": "Too Slow", "na": "N/A" };
@@ -24,10 +25,18 @@ export default function StepLog() {
   const [wouldAgain, setWouldAgain] = useState<boolean | null>(null);
   const [flow, setFlow] = useState<string>("");
   const [timing, setTiming] = useState<string>("");
-  const [showAllFlavors, setShowAllFlavors] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [attribution, setAttribution] = useState<"brew" | "bean" | "roaster" | null>(null);
   const [craft, setCraft] = useState<"off" | "solid" | "exceptional" | null>(null);
   const [fit, setFit] = useState<"not-my-style" | "neutral" | "my-kind" | null>(null);
+  // Extended sensory fields (optional)
+  const [showSensory, setShowSensory] = useState(false);
+  const [sweetness, setSweetness] = useState<"low" | "medium" | "high" | "">("");
+  const [clarity, setClarity] = useState<"muddy" | "cloudy" | "clean" | "crystal" | "">("");
+  const [bitterness, setBitterness] = useState<"none" | "pleasant" | "harsh" | "">("");
+  const [finish, setFinish] = useState<"short" | "medium" | "long" | "">("");
+  const [improvedWhileCooling, setImprovedWhileCooling] = useState<boolean | null>(null);
+  const [matchedIntention, setMatchedIntention] = useState<boolean | null>(null);
 
   const toggleFlavor = (f: string) =>
     setSelectedFlavors(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
@@ -46,11 +55,15 @@ export default function StepLog() {
       ...(rating <= 3 && attribution ? { attribution } : {}),
       ...(craft ? { craft } : {}),
       ...(fit ? { fit } : {}),
+      ...(sweetness ? { sweetness } : {}),
+      ...(clarity ? { clarity } : {}),
+      ...(bitterness ? { bitterness } : {}),
+      ...(finish ? { finish } : {}),
+      ...(improvedWhileCooling !== null ? { improvedWhileCooling } : {}),
+      ...(matchedIntention !== null ? { matchedIntention } : {}),
     });
     setStep("summary");
   };
-
-  const allFlavors = Object.entries(FLAVOR_TAXONOMY);
 
   return (
     <FlowShell onNext={handleNext} nextDisabled={!canProceed} nextLabel="Save →">
@@ -93,7 +106,7 @@ export default function StepLog() {
 
         {/* Craft — how well was it executed */}
         {rating > 0 && (
-          <Section title="Craft">
+          <Section title="Your Craft">
             <div className="flex gap-2">
               {(["off", "solid", "exceptional"] as const).map(opt => (
                 <Chip
@@ -144,26 +157,62 @@ export default function StepLog() {
           </>
         )}
 
-        {/* Flavor notes */}
+        {/* Flavor notes — SCA wheel navigation */}
         <Section title="Flavor Notes">
-          <div className="flex flex-wrap gap-2">
-            {QUICK_FLAVORS.map(f => (
-              <Chip key={f} label={f} selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)} size="sm" />
-            ))}
+          {/* Visual wheel: tap a category to filter chips below */}
+          <div className="w-full">
+            <FlavorWheel
+              mode="select"
+              activeCategory={activeCategory}
+              onCategorySelect={setActiveCategory}
+              selectedFlavors={selectedFlavors}
+              size={320}
+            />
           </div>
-          {showAllFlavors && allFlavors.map(([cat, tags]) => (
-            <div key={cat} className="mt-3">
-              <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">{cat}</p>
+
+          {/* Chips panel */}
+          {activeCategory ? (
+            <div className="space-y-3 mt-1">
+              <p className="text-brew-muted text-xs uppercase tracking-widest">{activeCategory}</p>
+              {Object.entries(SCA_WHEEL[activeCategory].subcategories).map(([sub, flavors]) => (
+                <div key={sub}>
+                  {Object.keys(SCA_WHEEL[activeCategory].subcategories).length > 1 && (
+                    <p className="text-brew-subtle text-xs mb-1.5">{sub}</p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {flavors.map(f => (
+                      <Chip key={f} label={f} selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)} size="sm" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2 mt-1">
               <div className="flex flex-wrap gap-2">
-                {tags.filter(t => !QUICK_FLAVORS.includes(t)).map(f => (
+                {QUICK_FLAVORS.map(f => (
                   <Chip key={f} label={f} selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)} size="sm" />
                 ))}
               </div>
+              <p className="text-brew-muted text-xs">Tap the wheel to explore by category</p>
             </div>
-          ))}
-          <button type="button" onClick={() => setShowAllFlavors(v => !v)} className="text-brew-muted text-sm mt-2 hover:text-white transition-colors">
-            {showAllFlavors ? "Show less" : "Show all flavors →"}
-          </button>
+          )}
+
+          {/* Selected flavors summary */}
+          {selectedFlavors.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1 border-t border-brew-border/30">
+              {selectedFlavors.map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => toggleFlavor(f)}
+                  className="text-brew-accent text-xs border border-brew-accent/30 bg-brew-accent/10 px-2 py-0.5 rounded-lg"
+                >
+                  {f} ×
+                </button>
+              ))}
+            </div>
+          )}
         </Section>
 
         {/* Body + Acidity */}
@@ -203,6 +252,60 @@ export default function StepLog() {
           </div>
         </Section>
 
+        {/* Extended sensory — optional, collapsible */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowSensory(v => !v)}
+            className="flex items-center gap-2 text-brew-muted text-xs uppercase tracking-widest hover:text-white transition-colors"
+          >
+            <span>Sensory Detail — optional</span>
+            <span className="text-white/30">{showSensory ? "▲" : "▼"}</span>
+          </button>
+
+          <div className={`overflow-hidden transition-all duration-300 ${showSensory ? "max-h-[600px] opacity-100 mt-4" : "max-h-0 opacity-0"}`}>
+            <div className="space-y-5">
+              <SensoryRow
+                label="Sweetness"
+                options={[{ id: "low", label: "Low" }, { id: "medium", label: "Medium" }, { id: "high", label: "High" }]}
+                value={sweetness}
+                onChange={v => setSweetness(v as typeof sweetness)}
+              />
+              <SensoryRow
+                label="Clarity"
+                options={[{ id: "muddy", label: "Muddy" }, { id: "cloudy", label: "Cloudy" }, { id: "clean", label: "Clean" }, { id: "crystal", label: "Crystal" }]}
+                value={clarity}
+                onChange={v => setClarity(v as typeof clarity)}
+              />
+              <SensoryRow
+                label="Bitterness"
+                options={[{ id: "none", label: "None" }, { id: "pleasant", label: "Pleasant" }, { id: "harsh", label: "Harsh" }]}
+                value={bitterness}
+                onChange={v => setBitterness(v as typeof bitterness)}
+              />
+              <SensoryRow
+                label="Finish"
+                options={[{ id: "short", label: "Short" }, { id: "medium", label: "Medium" }, { id: "long", label: "Long" }]}
+                value={finish}
+                onChange={v => setFinish(v as typeof finish)}
+              />
+              {/* Toggles */}
+              <div className="space-y-3">
+                <SensoryToggle
+                  label="Improved while cooling"
+                  value={improvedWhileCooling}
+                  onChange={setImprovedWhileCooling}
+                />
+                <SensoryToggle
+                  label="Matched your intention"
+                  value={matchedIntention}
+                  onChange={setMatchedIntention}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Notes */}
         <Section title="Notes (optional)">
           <textarea
@@ -215,6 +318,76 @@ export default function StepLog() {
         </Section>
       </div>
     </FlowShell>
+  );
+}
+
+function SensoryRow({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { id: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-brew-muted text-xs uppercase tracking-widest">{label}</p>
+      <div className="flex gap-2 flex-wrap">
+        {options.map(o => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(value === o.id ? "" : o.id)}
+            className={`px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95 ${
+              value === o.id
+                ? "border-brew-accent bg-brew-accent/10 text-brew-accent"
+                : "border-brew-border text-brew-muted"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SensoryToggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean | null;
+  onChange: (v: boolean | null) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-white/60 text-sm">{label}</span>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(value === true ? null : true)}
+          className={`px-3 py-1.5 rounded-full border text-xs transition-all active:scale-95 ${
+            value === true ? "border-brew-accent bg-brew-accent/10 text-brew-accent" : "border-brew-border text-brew-muted"
+          }`}
+        >
+          Yes
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(value === false ? null : false)}
+          className={`px-3 py-1.5 rounded-full border text-xs transition-all active:scale-95 ${
+            value === false ? "border-white/30 bg-white/5 text-white/60" : "border-brew-border text-brew-muted"
+          }`}
+        >
+          No
+        </button>
+      </div>
+    </div>
   );
 }
 

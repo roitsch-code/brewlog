@@ -5,8 +5,11 @@ import ProgressDots from "@/components/ui/ProgressDots";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import { useRouter } from "next/navigation";
 
-const HOME_STEPS: FlowStep[] = ["scan", "context", "recommend", "brew", "log", "summary"];
-const EXTERNAL_STEPS: FlowStep[] = ["scan", "brew", "log", "summary"];
+// "mode" is intentionally excluded — it's a sub-step of scan, not a visible dot
+const HOME_STEPS:    FlowStep[] = ["scan", "context", "recommend", "brew", "log", "summary"];
+const BREW_AGAIN_STEPS: FlowStep[] = ["context", "recommend", "brew", "log", "summary"];
+const EXTERNAL_STEPS: FlowStep[] = ["scan", "log", "summary"];
+const MATCH_STEPS:   FlowStep[] = ["scan", "match_result"];
 
 interface FlowShellProps {
   children: React.ReactNode;
@@ -21,16 +24,28 @@ interface FlowShellProps {
 export default function FlowShell({
   children, onBack, onNext, nextLabel = "Next", nextDisabled, nextLoading, hideNav
 }: FlowShellProps) {
-  const { step, draft } = useFlowStore();
+  const { step, draft, skipScan } = useFlowStore();
   const router = useRouter();
 
-  const steps = draft.mode === "external" ? EXTERNAL_STEPS : HOME_STEPS;
+  const steps =
+    draft.mode === "match"    ? MATCH_STEPS :
+    draft.mode === "external" ? EXTERNAL_STEPS :
+    skipScan                  ? BREW_AGAIN_STEPS :
+    HOME_STEPS;
+
   const currentIndex = steps.indexOf(step as FlowStep);
 
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else if (currentIndex > 0) {
+      return;
+    }
+    // If entering from brew-again, back at first step → go home
+    if (skipScan && step === "context") {
+      router.push("/");
+      return;
+    }
+    if (currentIndex > 0) {
       useFlowStore.getState().setStep(steps[currentIndex - 1]);
     } else {
       router.push("/");
@@ -40,7 +55,7 @@ export default function FlowShell({
   return (
     <div className="min-h-svh flex flex-col bg-brew-bg">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1rem)' }}>
+      <div className="flex items-center justify-between px-5 pb-2" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}>
         <button
           type="button"
           onClick={handleBack}
@@ -53,7 +68,7 @@ export default function FlowShell({
         {currentIndex >= 0 && (
           <ProgressDots total={steps.length} current={currentIndex} />
         )}
-        <div className="w-10" /> {/* spacer */}
+        <div className="w-10" />
       </div>
 
       {/* Content */}
@@ -61,7 +76,7 @@ export default function FlowShell({
         {children}
       </div>
 
-      {/* Bottom nav */}
+      {/* Bottom CTA */}
       {!hideNav && onNext && (
         <div className="px-5 py-4 pb-safe">
           <button
@@ -69,8 +84,8 @@ export default function FlowShell({
             onClick={onNext}
             disabled={nextDisabled || nextLoading}
             className={cn(
-              "w-full h-14 rounded-full font-semibold text-base transition-all active:scale-95 disabled:opacity-40",
-              "bg-white text-black"
+              "w-full h-[52px] rounded-full font-semibold text-base transition-all active:scale-95 disabled:opacity-40",
+              "bg-brew-accent text-brew-accent-fg"
             )}
           >
             {nextLoading ? (

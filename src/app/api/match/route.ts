@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { logTokenUsage } from "@/lib/claude/logUsage";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
 
@@ -178,7 +177,7 @@ export async function POST(req: NextRequest) {
     // Load user preferences and sessions in parallel
     const [prefResult, sessionsSnap] = await Promise.all([
       db.collection("preferences").doc("default").get().catch(() => null),
-      db.collection("sessions").orderBy("createdAt", "desc").limit(40).get(),
+      db.collection("sessions").orderBy("createdAt", "desc").limit(100).get(),
     ]);
 
     const preferences: UserPreferences | null = prefResult?.exists
@@ -329,7 +328,6 @@ Return valid JSON only. No markdown, no explanation outside the JSON.`,
       messages: [{ role: "user", content: contentParts }],
     });
 
-    void logTokenUsage({ endpoint: "match", model: "claude-sonnet-4-6", usage: response.usage, userId: "user" });
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const result: MatchResult = jsonMatch

@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import TopMenu from "@/components/layout/TopMenu";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import type { Session } from "@/lib/types/session";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen } from "lucide-react";
+
+const SUGGESTION_ICONS = [FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, FlaskConical];
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -48,12 +50,10 @@ interface CoffeeAlert {
 // ── Fallback starter questions (shown before API responds) ─────────────────
 
 const DEFAULT_STARTER_QUESTIONS = [
-  "What makes Kenyan AA so distinctive?",
-  "Explain the 4:6 method",
-  "How does terroir affect taste?",
-  "Best temp for light roasts?",
-  "Natural vs Washed: key differences?",
-  "Why does grind distribution matter?",
+  "What's the ideal V60 pour-over ratio for light roast Ethiopian beans?",
+  "How does water temperature affect extraction for different roast levels?",
+  "Why does bloom time matter and how long should I bloom for fresh beans?",
+  "What are the key differences between Ethiopian and Kenyan single origins?",
 ];
 
 // ── Main page ──────────────────────────────────────────────────────────────
@@ -62,44 +62,32 @@ export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState<"ask" | "insights">("ask");
 
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col">
-      {/* Header — atmospheric */}
-      <div
-        className="relative px-5 pb-3"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}
-      >
-        {/* Warm radial glow from top-left */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 140% at 10% 0%, rgba(240,237,232,0.07) 0%, transparent 60%)" }}
-        />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-white leading-none mb-2">Explore</h1>
-            <p className="text-white/25 text-xs uppercase pl-1" style={{ letterSpacing: "0.18em" }}>
-              Origins · Extraction · Science · Championships
-            </p>
-          </div>
-          <TopMenu />
+    <div className="min-h-full bg-brew-bg flex flex-col">
+      {/* Header */}
+      <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <div className="mb-4">
+          <h1 className="font-display text-3xl text-white leading-none">Ask anything</h1>
+          <p className="text-brew-muted text-sm mt-1">about coffee</p>
         </div>
-      </div>
 
-      {/* Tabs — underline style */}
-      <div className="flex border-b border-brew-border/40 px-5 mt-1">
-        {(["ask", "insights"] as const).map(tab => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`py-3 px-4 text-sm font-medium transition-all border-b-2 -mb-px ${
-              activeTab === tab
-                ? "border-white text-white"
-                : "border-transparent text-white/30"
-            }`}
-          >
-            {tab === "ask" ? "Ask" : "Insights"}
-          </button>
-        ))}
+        {/* Tabs — pill style */}
+        <div className="flex gap-2">
+          {(["ask", "insights"] as const).map(tab => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className="px-5 py-1.5 rounded-full text-sm font-medium transition-all"
+              style={{
+                background: activeTab === tab ? "var(--primary)" : "var(--card)",
+                color: activeTab === tab ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                border: activeTab === tab ? "none" : "1px solid var(--border)",
+              }}
+            >
+              {tab === "ask" ? "Chat" : "Insights"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab content */}
@@ -203,8 +191,8 @@ function AskTab() {
       {/* Message area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-5 py-4"
-        style={{ paddingBottom: "8rem" }}
+        className="flex-1 min-h-0 overflow-y-auto px-5 py-4"
+        style={{ paddingBottom: "1rem" }}
       >
         {isEmpty ? (
           <div className="flex flex-col gap-5 mt-4">
@@ -225,20 +213,25 @@ function AskTab() {
                 Ask anything — methods, origins, science, championships, or your next brew.
               </p>
             </div>
-            {/* Starter questions — 2-column grid */}
+            {/* Starter questions — full-width list with icons */}
             <div>
-              <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">Start with a question</p>
-              <div className="grid grid-cols-2 gap-2">
-                {starterQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sendMessage(q)}
-                    className="text-left bg-brew-surface border border-brew-border/60 rounded-2xl px-3 py-3 text-white/55 text-xs leading-snug active:scale-95 transition-all hover:border-white/20 hover:text-white/80"
-                  >
-                    {q}
-                  </button>
-                ))}
+              <p className="label-mono mb-3" style={{ color: "var(--muted-foreground)" }}>Suggested</p>
+              <div className="flex flex-col gap-2">
+                {starterQuestions.slice(0, 4).map((q, i) => {
+                  const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => sendMessage(q)}
+                      className="flex items-center gap-3 text-left rounded-2xl px-4 py-3 active:scale-[0.98] transition-all w-full"
+                      style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                    >
+                      <Icon size={16} style={{ color: "var(--primary)" }} className="shrink-0" />
+                      <span className="text-sm leading-snug" style={{ color: "var(--foreground)" }}>{q}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -313,39 +306,46 @@ function AskTab() {
         )}
       </div>
 
-      {/* Input area — gradient fade instead of hard border */}
-      <div className="fixed bottom-0 left-0 right-0">
-        {/* Soft fade from transparent to page bg */}
+      {/* Input area — in normal flow, sits at bottom of flex column */}
+      <div className="shrink-0">
         <div
-          className="h-8 pointer-events-none"
-          style={{ background: "linear-gradient(to top, #0A0A0A 0%, transparent 100%)" }}
+          className="h-6 pointer-events-none"
+          style={{ background: "linear-gradient(to top, #111111 0%, transparent 100%)" }}
         />
         <div
           className="px-4 bg-brew-bg"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)", paddingTop: "0.5rem" }}
+          style={{ paddingBottom: "0.75rem", paddingTop: "0.25rem" }}
         >
-        <div className="flex gap-3 items-end">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask anything about coffee..."
-            rows={1}
-            className="flex-1 text-base bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-white placeholder:text-white/30 resize-none focus:outline-none focus:border-white/30 transition-colors"
-            style={{ minHeight: "48px", maxHeight: "120px" }}
-          />
-          <button
-            type="button"
-            onClick={() => sendMessage(input)}
-            disabled={!input.trim() || loading}
-            className="w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-30"
-          >
-            <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
-            </svg>
-          </button>
-        </div>
+          <div className="flex gap-2 items-end">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about brewing, beans, gear..."
+              rows={1}
+              className="flex-1 text-sm resize-none focus:outline-none transition-colors"
+              style={{
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "999px",
+                padding: "10px 16px",
+                color: "var(--foreground)",
+                minHeight: "44px",
+                maxHeight: "120px",
+                fontSize: "16px",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || loading}
+              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-30"
+              style={{ background: "var(--primary)" }}
+            >
+              <ArrowUp size={18} style={{ color: "var(--primary-foreground)" }} />
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -434,7 +434,7 @@ function InsightsTab() {
       fetch("/api/alerts",   { signal: controller.signal }).then(r => r.ok ? r.json() : { alerts: [] }).catch(() => ({ alerts: [] })),
       fetch("/api/news",     { signal: controller.signal }).then(r => r.ok ? r.json() : { items: [] }).catch(() => ({ items: [] })),
     ]).then(([insightData, alertData, newsData]) => {
-      setInsights(Array.isArray(insightData?.items) ? insightData.items : []);
+      setInsights(Array.isArray(insightData?.items) ? insightData.items.slice(0, 10) : []);
       setAlerts(Array.isArray(alertData?.alerts) ? alertData.alerts : []);
       setNews(Array.isArray(newsData?.items) ? newsData.items : []);
     }).finally(() => setLoading(false));
@@ -452,13 +452,12 @@ function InsightsTab() {
 
   return (
     <div
-      className="flex-1 overflow-y-auto flex flex-col gap-0"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 5rem)" }}
+      className="flex-1 overflow-y-auto flex flex-col gap-0 pb-8"
     >
       {/* ── News Ticker ─────────────────────────────────────── */}
       {news.length > 0 && (
         <div className="pt-4 pb-2">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3 px-5">
+          <p className="label-mono text-brew-muted mb-3 px-5">
             Coffee feed
           </p>
           {/* Horizontal scroll — no scrollbar */}
@@ -476,7 +475,7 @@ function InsightsTab() {
       {/* ── Coffee Alerts ────────────────────────────────────── */}
       {unreadAlerts.length > 0 && (
         <div className="px-5 pt-4 pb-2">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">
+          <p className="label-mono text-brew-muted mb-3">
             New coffees spotted
           </p>
           <div className="flex flex-col gap-3">
@@ -490,7 +489,7 @@ function InsightsTab() {
       {/* ── Research Insights ────────────────────────────────── */}
       <div className="px-5 pt-4">
         {(news.length > 0 || unreadAlerts.length > 0) && (
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">
+          <p className="label-mono text-brew-muted mb-3">
             Research insights
           </p>
         )}
@@ -499,11 +498,11 @@ function InsightsTab() {
             <CoffeeBeanGlow size={48} />
             <div>
               <p className="text-white/60 text-sm">No content yet</p>
-              <p className="text-white/30 text-xs mt-1">Research runs every Monday</p>
+              <p className="text-white/30 text-xs mt-1">Research updates every 2 days</p>
             </div>
           </div>
         ) : insights.length === 0 ? (
-          <p className="text-white/30 text-xs text-center py-8">No research insights yet — check back Monday</p>
+          <p className="text-white/30 text-xs text-center py-8">No research insights yet — check back soon</p>
         ) : (
           <div className="flex flex-col gap-3">
             {insights.map(insight => (

@@ -1,4 +1,4 @@
-export type SessionMode = "home" | "external";
+export type SessionMode = "home" | "external" | "match";
 export type SessionType = "coffee" | "wine";
 
 export interface CoffeeIdentity {
@@ -25,6 +25,10 @@ export interface SessionContext {
   moodPreference: string; // strong | balanced | light | sweet | curious
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
   waterSource?: string; // "tap" | "diluted" — tap = ~300ppm, diluted = 1:1 tap+distilled = ~150ppm
+  preferredMethod?: string; // optional method lock-in: "V60 + Drip Assist" | "Orea Fast" | etc.
+  intent?: string;
+  // "explore" | "safest" | "high-clarity" | "sweetness-forward"
+  // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
 }
 
 export interface BrewRecipe {
@@ -36,11 +40,41 @@ export interface BrewRecipe {
   pourSequence?: string;
 }
 
+export type CandidateRole =
+  | "anchor"
+  | "adjacent"
+  | "contrast"
+  | "sweetness-probe"
+  | "clarity-probe"
+  | "body-probe"
+  | "wildcard";
+
+export type CandidateConfidence = "high" | "moderate" | "low" | "exploratory";
+
+export interface RecommendationCandidate {
+  method: string;
+  recipe: BrewRecipe;
+  role: CandidateRole;
+  title: string;
+  whyChosen: string;
+  hypothesis: string;
+  predictedCupProfile: string;
+  primaryVariable: string;
+  whatToObserve: string;
+  confidence: CandidateConfidence;
+  confidenceReason: string;
+  nextIfWeak: string;
+  nextIfBitter: string;
+  nextIfSour: string;
+  learningValue: string;
+}
+
 export interface Recommendation {
-  primaryMethod: string;
-  primaryRecipe: BrewRecipe;
-  alternativeMethod?: string;
-  alternativeRecipe?: BrewRecipe;
+  candidates: RecommendationCandidate[]; // 2–4 entries
+  primaryMethod: string;                 // = candidates[0].method (backward compat)
+  primaryRecipe: BrewRecipe;             // = candidates[0].recipe (backward compat)
+  alternativeMethod?: string;            // = candidates[1]?.method (backward compat)
+  alternativeRecipe?: BrewRecipe;        // = candidates[1]?.recipe (backward compat)
   reasoning: string;
   generatedAt: string; // ISO timestamp
 }
@@ -64,6 +98,15 @@ export interface TasteResult {
   attribution?: "brew" | "bean" | "roaster"; // only set for low-rated sessions (≤3★)
   craft?: "off" | "solid" | "exceptional";   // execution quality, independent of taste
   fit?: "not-my-style" | "neutral" | "my-kind"; // style alignment, independent of craft
+  // Extended sensory fields (all optional — backward compatible)
+  sweetness?: "low" | "medium" | "high";
+  clarity?: "muddy" | "cloudy" | "clean" | "crystal";
+  bitterness?: "none" | "pleasant" | "harsh";
+  astringency?: "none" | "light" | "notable";
+  finish?: "short" | "medium" | "long";
+  balance?: "unbalanced" | "decent" | "harmonious";
+  improvedWhileCooling?: boolean;
+  matchedIntention?: boolean;
 }
 
 export interface ExternalPlace {

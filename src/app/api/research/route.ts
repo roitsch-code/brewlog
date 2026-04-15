@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { logTokenUsage } from "@/lib/claude/logUsage";
 import { getInsights, saveInsights } from "@/lib/knowledge/insights";
 import { getHints, saveHints, FALLBACK_HINTS } from "@/lib/knowledge/hints";
 import { addNewsItems } from "@/lib/knowledge/news";
@@ -10,16 +9,18 @@ import type { NewsItemType } from "@/lib/knowledge/news";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const RESEARCH_SYSTEM = `You are a specialty coffee research assistant. Your task is to find and summarize the latest developments in the specialty coffee world.
+const RESEARCH_SYSTEM = `You are a specialty coffee research assistant for a filter-coffee-focused home brewer.
 
 Focus on:
-1. Recent specialty coffee news and discoveries (last 7 days)
-2. New brewing methods or techniques from championships (WBC, WAC, WCCE)
-3. Expert insights from James Hoffmann, Matt Perger, Tim Wendelboe, Scott Rao, Lance Hedrick, Ben Put, Emi Fukahori
-4. New coffee science research (water chemistry, extraction theory, processing innovations)
-5. Notable new coffees, varietals, or origins gaining attention
+1. Recent specialty coffee news (last 7 days): filter brewing, processing, origin, green coffee, water science
+2. Championship techniques: WBC filter recipes, World Brewers Cup, WAC — cite competitor + year
+3. Insights from: Jonathan Gagné, Christopher Hendon, Emma Sage, Samo Smrke, Chahan Yeretzian, Matt Perger, Scott Rao, Patrik Rolf, Tetsu Kasuya, Lance Hedrick, Matt Winton, Tim Wendelboe, George Howell, Lucia Solis, Saša Šestić, James Hoffmann, Erin McCarthy, Denis Basaric, Rob Hoos
+4. Coffee science: water chemistry, extraction physics, processing microbiology, aroma compounds
+5. Notable new varietals, origins, or producers gaining attention
 
-Always provide factual, sourced information. Note the source of each insight.`;
+EXCLUDE: espresso machines, portafilter, tamping, 9-bar pressure, milk steaming, latte art, commercial café equipment.
+
+Always attribute insights to the relevant expert or source.`;
 
 const HINTS_SYSTEM = `You are a specialty coffee expert generating educational coffee hints. Generate 5 unique, interesting coffee facts or tips suitable for display to a semi-expert home brewer during a loading screen.
 
@@ -28,6 +29,7 @@ Each hint should be:
 - Specific and actionable or genuinely interesting
 - About brewing science, origin terroir, processing, equipment, or history
 - Different from common generic tips
+- Do NOT include espresso machine, portafilter, tamping, pressure profiling, milk steaming, or latte art content.
 
 Return a JSON array of exactly 5 strings. No other text.`;
 
@@ -50,9 +52,9 @@ interface ResearchResult {
 
 async function runResearchWithWebSearch(): Promise<ResearchResult> {
   const queries = [
-    "specialty coffee news 2025 site:jameshoffmann.co.uk OR site:worldaeropresschampionship.com OR site:worldcoffeeevents.org",
-    "filter coffee brewing technique championship 2025",
-    "coffee science research extraction TDS 2025",
+    "specialty coffee filter brewing technique 2025 site:jameshoffmann.co.uk OR site:baristaHustle.com OR site:worldaeropresschampionship.com",
+    "coffee processing fermentation origin 2025 specialty",
+    "coffee water chemistry extraction science research 2025",
   ];
 
   const toolInput = { query: queries[0] };
@@ -106,7 +108,6 @@ Return only valid JSON.`,
     ],
   });
 
-  void logTokenUsage({ endpoint: "research-web", model: "claude-haiku-4-5", usage: response.usage, userId: null });
   // Extract the final text response
   const textContent = response.content.find(
     (c: { type: string }) => c.type === "text"
@@ -133,10 +134,12 @@ async function runResearchWithoutWebSearch(): Promise<ResearchResult> {
       {
         role: "user",
         content: `Based on your knowledge of specialty coffee up to your training cutoff, generate 3–5 valuable insights about:
-1. Recent championship brewing techniques (WBC 2024/2025, WAC)
-2. Notable brewing method innovations (V60, AeroPress, filter)
-3. Coffee science: water chemistry, extraction, processing
-4. Expert recommendations from known figures in specialty coffee
+1. Recent championship brewing techniques (WBC 2024/2025, WAC, World Brewers Cup)
+2. Notable filter brewing method innovations (V60, AeroPress, Clever, Orea)
+3. Coffee science: water chemistry, extraction physics, processing microbiology, aroma compounds
+4. Expert insights from: Jonathan Gagné, Christopher Hendon, Matt Perger, Scott Rao, Patrik Rolf, Tetsu Kasuya, Tim Wendelboe, Lucia Solis, James Hoffmann, Erin McCarthy
+
+Exclude espresso machine content. Focus only on filter brewing, processing, water chemistry, and origin.
 
 Return a JSON object:
 {
@@ -156,7 +159,6 @@ Return only valid JSON.`,
     ],
   });
 
-  void logTokenUsage({ endpoint: "research-fallback", model: "claude-haiku-4-5", usage: response.usage, userId: null });
   const text =
     response.content[0].type === "text" ? response.content[0].text : "";
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -172,11 +174,10 @@ async function generateNewQuestions(): Promise<string[]> {
       messages: [
         {
           role: "user",
-          content: `Generate 5 diverse, specific starter questions a specialty coffee enthusiast might ask an AI coffee advisor. Cover a mix of: brewing technique, origin/terroir, processing, water science, equipment, or championship methods. Keep each under 10 words. Return a JSON array of 5 strings only.`,
+          content: `Generate 5 diverse, specific starter questions a specialty coffee enthusiast might ask an AI coffee advisor. Cover a mix of: filter brewing technique, origin/terroir, processing, water science, equipment, or championship methods. Keep each under 10 words. Exclude espresso machine questions. Focus on filter brewing, processing, origin, water, and equipment for home filter brewers. Return a JSON array of 5 strings only.`,
         },
       ],
     });
-    void logTokenUsage({ endpoint: "research-questions", model: "claude-haiku-4-5", usage: response.usage, userId: null });
     const text = response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) return [];
@@ -203,7 +204,6 @@ async function generateNewHints(): Promise<string[]> {
       ],
     });
 
-    void logTokenUsage({ endpoint: "research-hints", model: "claude-haiku-4-5", usage: response.usage, userId: null });
     const text =
       response.content[0].type === "text" ? response.content[0].text : "";
     const jsonMatch = text.match(/\[[\s\S]*\]/);

@@ -6,11 +6,20 @@ import type { Session } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
 import StarRating from "@/components/ui/StarRating";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
+
+interface RoasterInfo {
+  region?: string;
+  styleSummary?: string;
+  notes?: string;
+  confidence?: string;
+}
 
 export default function CoffeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [coffee, setCoffee] = useState<Coffee | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [roasterInfo, setRoasterInfo] = useState<RoasterInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -22,13 +31,27 @@ export default function CoffeeDetailPage() {
         const found: Coffee = await coffeeRes.json();
         setCoffee(found);
 
-        if (found?.sessionIds?.length) {
-          // Fetch all sessions and filter by IDs (avoids needing a separate endpoint)
-          const sessRes = await fetch(`/api/sessions?limit=200`, { cache: "no-store" });
-          const allSessions: Session[] = sessRes.ok ? await sessRes.json() : [];
-          const idSet = new Set(found.sessionIds);
-          setSessions(allSessions.filter(s => idSet.has(s.id)));
-        }
+        // Fetch roaster info and sessions in parallel
+        await Promise.all([
+          found.roaster
+            ? fetch(`/api/roasters?name=${encodeURIComponent(found.roaster)}`, { cache: "no-store" })
+                .then(r => r.ok ? r.json() : null)
+                .then((r: RoasterInfo | null) => { if (r?.styleSummary) setRoasterInfo(r); })
+                .catch(() => {})
+            : Promise.resolve(),
+          found?.sessionIds?.length
+            ? fetch(`/api/sessions?ids=${found.sessionIds.join(",")}`, { cache: "no-store" })
+                .then(r => r.ok ? r.json() : [])
+                .then((coffeeSessions: Session[]) => {
+                  setSessions(coffeeSessions.sort((a, b) => {
+                    const aMs = (a as Session & { createdAtMs?: number }).createdAtMs ?? new Date(a.createdAt).getTime();
+                    const bMs = (b as Session & { createdAtMs?: number }).createdAtMs ?? new Date(b.createdAt).getTime();
+                    return bMs - aMs;
+                  }));
+                })
+                .catch(() => {})
+            : Promise.resolve(),
+        ]);
       } catch {
         // fail silently — show "not found"
       } finally {
@@ -59,6 +82,15 @@ export default function CoffeeDetailPage() {
       </div>
     );
   }
+
+  // Derive scan details from most recent session — works for all existing data
+  const latestCoffee = sessions[0]?.coffee;
+  const roastDate = coffee.latestRoastDate ?? latestCoffee?.roastDate;
+  const variety = latestCoffee?.variety;
+  const roastLevel = latestCoffee?.roastLevel;
+  const region = latestCoffee?.region;
+  const tastingNotes = latestCoffee?.tastingNotesFromBag ?? [];
+  const origin = latestCoffee?.origin || coffee.origin;
 
   return (
     <div className="min-h-svh bg-brew-bg flex flex-col">
@@ -92,10 +124,15 @@ export default function CoffeeDetailPage() {
         {/* Title overlay */}
         <div className={`${coffee.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
           {coffee.process && (
-            <p className="text-brew-muted text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+            <p className="text-white/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
           )}
           <h1 className="font-display text-3xl text-white">{coffee.name}</h1>
-          <p className="text-white/60 text-sm mt-1">{coffee.roaster}{coffee.origin ? ` · ${coffee.origin}` : ""}</p>
+          <p className="text-white/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
+          {roastDate && (
+            <p className="text-white/40 text-xs mt-0.5">
+              Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            </p>
+          )}
         </div>
       </div>
 
@@ -112,12 +149,70 @@ export default function CoffeeDetailPage() {
           </div>
         )}
         {coffee.bestMethod && (
-          <div className="text-center">
-            <p className="text-white text-sm font-medium">{coffee.bestMethod}</p>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-1.5">
+              <BrewMethodIcon method={coffee.bestMethod} className="w-5 h-5" />
+              <p className="text-white text-sm font-medium">{coffee.bestMethod}</p>
+            </div>
             <p className="text-brew-muted text-xs uppercase tracking-widest mt-0.5">Best Method</p>
           </div>
         )}
       </div>
+
+      {/* Coffee scan details */}
+      {(roastDate || variety || roastLevel || region || tastingNotes.length > 0) && (
+        <div className="px-5 py-4 border-b border-brew-border space-y-2">
+          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">Coffee Details</p>
+          {variety && <DetailRow label="Variety" value={variety} />}
+          {roastLevel && <DetailRow label="Roast" value={roastLevel} />}
+          {region && <DetailRow label="Region" value={region} />}
+          {roastDate && (
+            <DetailRow
+              label="Roast date"
+              value={new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+            />
+          )}
+          {tastingNotes.length > 0 && (
+            <div className="flex items-baseline gap-3 pt-0.5">
+              <span className="text-brew-muted text-sm shrink-0 w-24">Bag notes</span>
+              <div className="flex flex-wrap gap-1.5">
+                {tastingNotes.map(note => (
+                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full border border-brew-border text-white/60">
+                    {note}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Roaster info */}
+      {roasterInfo && (
+        <div className="px-5 py-4 border-b border-brew-border">
+          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Roaster</p>
+          {roasterInfo.region && (
+            <p className="text-brew-muted text-xs mb-1.5">{roasterInfo.region}</p>
+          )}
+          <p className="text-white/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
+          {roasterInfo.notes && (
+            <p className="text-white/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
+          )}
+        </div>
+      )}
+
+      {/* Brew memory */}
+      {coffee.writtenSummary && (
+        <div className="px-5 py-4 border-b border-brew-border">
+          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Brew memory</p>
+          <p className="text-white/80 text-sm leading-relaxed">{coffee.writtenSummary}</p>
+          {coffee.lastSummarizedAt && (
+            <p className="text-white/20 text-xs mt-2">
+              Updated {new Date(coffee.lastSummarizedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Sessions */}
       <div className="px-5 py-5 flex flex-col gap-4 pb-safe pb-8">
@@ -134,6 +229,15 @@ export default function CoffeeDetailPage() {
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="text-brew-muted text-sm shrink-0">{label}</span>
+      <span className="text-white/80 text-sm text-right">{value}</span>
     </div>
   );
 }

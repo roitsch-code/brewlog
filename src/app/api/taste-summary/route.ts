@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { logTokenUsage } from "@/lib/claude/logUsage";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +51,6 @@ Rules:
       ],
     });
 
-    void logTokenUsage({ endpoint: "taste-summary", model: "claude-haiku-4-5", usage: response.usage, userId: "user" });
     const text = response.content[0].type === "text" ? "{" + response.content[0].text.trim() : null;
     // v3
     try {
