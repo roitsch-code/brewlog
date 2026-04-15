@@ -1,12 +1,1 @@
-import { NextResponse } from "next/server";
-import { getNews } from "@/lib/knowledge/news";
-
-export async function GET() {
-  try {
-    const items = await getNews(30);
-    return NextResponse.json({ items });
-  } catch (err) {
-    console.error("news GET error:", err);
-    return NextResponse.json({ items: [] });
-  }
-}
+{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZXROZXdzIH0gZnJvbSAiQC9saWIva25vd2xlZGdlL25ld3MiOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIEdFVCgpIHsKICB0cnkgewogICAgY29uc3QgaXRlbXMgPSBhd2FpdCBnZXROZXdzKDMwKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGl0ZW1zIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigibmV3cyBHRVQgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGl0ZW1zOiBbXSB9KTsKICB9Cn0K"}

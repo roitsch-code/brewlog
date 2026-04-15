@@ -1,12 +1,1 @@
-import { NextResponse } from "next/server";
-import { getHints } from "@/lib/knowledge/hints";
-
-export async function GET() {
-  try {
-    const hints = await getHints();
-    return NextResponse.json({ hints });
-  } catch (err) {
-    console.error("hints/route error:", err);
-    return NextResponse.json({ hints: [] }, { status: 500 });
-  }
-}
+{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRIaW50cyB9IGZyb20gIkAvbGliL2tub3dsZWRnZS9oaW50cyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKCkgewogIHRyeSB7CiAgICBjb25zdCBoaW50cyA9IGF3YWl0IGdldEhpbnRzKCk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBoaW50cyB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoImhpbnRzL3JvdXRlIGVycm9yOiIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBoaW50czogW10gfSwgeyBzdGF0dXM6IDUwMCB9KTsKICB9Cn0K"}

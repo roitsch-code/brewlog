@@ -1,12 +1,1 @@
-import { NextResponse } from "next/server";
-import { getInsights } from "@/lib/knowledge/insights";
-
-export async function GET() {
-  try {
-    const items = await getInsights(20);
-    return NextResponse.json({ items });
-  } catch (err) {
-    console.error("insights/route error:", err);
-    return NextResponse.json({ items: [] }, { status: 500 });
-  }
-}
+{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRJbnNpZ2h0cyB9IGZyb20gIkAvbGliL2tub3dsZWRnZS9pbnNpZ2h0cyI7CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gR0VUKCkgewogIHRyeSB7CiAgICBjb25zdCBpdGVtcyA9IGF3YWl0IGdldEluc2lnaHRzKDIwKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGl0ZW1zIH0pOwogIH0gY2F0Y2ggKGVycikgewogICAgY29uc29sZS5lcnJvcigiaW5zaWdodHMvcm91dGUgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGl0ZW1zOiBbXSB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}

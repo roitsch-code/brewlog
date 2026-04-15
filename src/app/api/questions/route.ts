@@ -1,14 +1,1 @@
-import { NextResponse } from "next/server";
-import { getQuestions } from "@/lib/knowledge/questions";
-
-export async function GET() {
-  try {
-    const questions = await getQuestions();
-    // Shuffle and return a random subset of 6
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    return NextResponse.json({ items: shuffled.slice(0, 6) });
-  } catch (err) {
-    console.error("questions/route error:", err);
-    return NextResponse.json({ items: [] }, { status: 500 });
-  }
-}
+{"data":"aW1wb3J0IHsgTmV4dFJlc3BvbnNlIH0gZnJvbSAibmV4dC9zZXJ2ZXIiOwppbXBvcnQgeyBnZXRRdWVzdGlvbnMgfSBmcm9tICJAL2xpYi9rbm93bGVkZ2UvcXVlc3Rpb25zIjsKCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBHRVQoKSB7CiAgdHJ5IHsKICAgIGNvbnN0IHF1ZXN0aW9ucyA9IGF3YWl0IGdldFF1ZXN0aW9ucygpOwogICAgLy8gU2h1ZmZsZSBhbmQgcmV0dXJuIGEgcmFuZG9tIHN1YnNldCBvZiA2CiAgICBjb25zdCBzaHVmZmxlZCA9IFsuLi5xdWVzdGlvbnNdLnNvcnQoKCkgPT4gTWF0aC5yYW5kb20oKSAtIDAuNSk7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBpdGVtczogc2h1ZmZsZWQuc2xpY2UoMCwgNikgfSk7CiAgfSBjYXRjaCAoZXJyKSB7CiAgICBjb25zb2xlLmVycm9yKCJxdWVzdGlvbnMvcm91dGUgZXJyb3I6IiwgZXJyKTsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGl0ZW1zOiBbXSB9LCB7IHN0YXR1czogNTAwIH0pOwogIH0KfQo="}

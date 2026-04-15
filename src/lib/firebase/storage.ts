@@ -1,15 +1,1 @@
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import app from "./config";
-
-export const storage = getStorage(app);
-
-export async function uploadImage(file: File, path: string): Promise<{ url: string; storagePath: string }> {
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-  return { url, storagePath: path };
-}
-
-export async function deleteImage(storagePath: string): Promise<void> {
-  await deleteObject(ref(storage, storagePath));
-}
+{"data":"aW1wb3J0IHsgZ2V0U3RvcmFnZSwgcmVmLCB1cGxvYWRCeXRlcywgZ2V0RG93bmxvYWRVUkwsIGRlbGV0ZU9iamVjdCB9IGZyb20gImZpcmViYXNlL3N0b3JhZ2UiOwppbXBvcnQgYXBwIGZyb20gIi4vY29uZmlnIjsKCmV4cG9ydCBjb25zdCBzdG9yYWdlID0gZ2V0U3RvcmFnZShhcHApOwoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIHVwbG9hZEltYWdlKGZpbGU6IEZpbGUsIHBhdGg6IHN0cmluZyk6IFByb21pc2U8eyB1cmw6IHN0cmluZzsgc3RvcmFnZVBhdGg6IHN0cmluZyB9PiB7CiAgY29uc3Qgc3RvcmFnZVJlZiA9IHJlZihzdG9yYWdlLCBwYXRoKTsKICBhd2FpdCB1cGxvYWRCeXRlcyhzdG9yYWdlUmVmLCBmaWxlKTsKICBjb25zdCB1cmwgPSBhd2FpdCBnZXREb3dubG9hZFVSTChzdG9yYWdlUmVmKTsKICByZXR1cm4geyB1cmwsIHN0b3JhZ2VQYXRoOiBwYXRoIH07Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBkZWxldGVJbWFnZShzdG9yYWdlUGF0aDogc3RyaW5nKTogUHJvbWlzZTx2b2lkPiB7CiAgYXdhaXQgZGVsZXRlT2JqZWN0KHJlZihzdG9yYWdlLCBzdG9yYWdlUGF0aCkpOwp9Cg=="}

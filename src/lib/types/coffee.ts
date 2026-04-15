@@ -1,15 +1,1 @@
-export interface Coffee {
-  id: string;
-  roaster: string;
-  name: string;
-  origin: string;
-  process: string;
-  firstSeenAt: string;
-  sessionCount: number;
-  sessionIds: string[];
-  bestMethod?: string;
-  avgRating?: number;
-  ratingSum?: number;
-  ratingCount?: number;
-  bagPhotoUrl?: string;
-}
+{"data":"ZXhwb3J0IGludGVyZmFjZSBDb2ZmZWUgewogIGlkOiBzdHJpbmc7CiAgcm9hc3Rlcjogc3RyaW5nOwogIG5hbWU6IHN0cmluZzsKICBvcmlnaW46IHN0cmluZzsKICBwcm9jZXNzOiBzdHJpbmc7CiAgZmlyc3RTZWVuQXQ6IHN0cmluZzsKICBzZXNzaW9uQ291bnQ6IG51bWJlcjsKICBzZXNzaW9uSWRzOiBzdHJpbmdbXTsKICBiZXN0TWV0aG9kPzogc3RyaW5nOwogIGF2Z1JhdGluZz86IG51bWJlcjsKICByYXRpbmdTdW0/OiBudW1iZXI7CiAgcmF0aW5nQ291bnQ/OiBudW1iZXI7CiAgYmFnUGhvdG9Vcmw/OiBzdHJpbmc7CiAgbGF0ZXN0Um9hc3REYXRlPzogc3RyaW5nOwogIHdyaXR0ZW5TdW1tYXJ5Pzogc3RyaW5nOwogIGxhc3RTdW1tYXJpemVkQXQ/OiBzdHJpbmc7CiAgY29tbW9uTm90ZXM/OiBzdHJpbmdbXTsKfQo="}

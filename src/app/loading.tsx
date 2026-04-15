@@ -1,10 +1,1 @@
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
-
-export default function RootLoading() {
-  return (
-    <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center gap-6">
-      <CoffeeBeanGlow size={72} />
-      <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
-    </div>
-  );
-}
+{"data":"aW1wb3J0IENvZmZlZUJlYW5HbG93IGZyb20gIkAvY29tcG9uZW50cy91aS9Db2ZmZWVCZWFuR2xvdyI7CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBSb290TG9hZGluZygpIHsKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9Im1pbi1oLXN2aCBiZy1icmV3LWJnIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC02Ij4KICAgICAgPENvZmZlZUJlYW5HbG93IHNpemU9ezcyfSAvPgogICAgICA8cCBjbGFzc05hbWU9ImZvbnQtZGlzcGxheSB0ZXh0LXdoaXRlLzQwIHRleHQtc20gdHJhY2tpbmctd2lkZXN0IHVwcGVyY2FzZSI+QnJld0xvZzwvcD4KICAgIDwvZGl2PgogICk7Cn0K"}

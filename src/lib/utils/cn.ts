@@ -1,6 +1,1 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+{"data":"aW1wb3J0IHsgY2xzeCwgdHlwZSBDbGFzc1ZhbHVlIH0gZnJvbSAiY2xzeCI7CmltcG9ydCB7IHR3TWVyZ2UgfSBmcm9tICJ0YWlsd2luZC1tZXJnZSI7CgpleHBvcnQgZnVuY3Rpb24gY24oLi4uaW5wdXRzOiBDbGFzc1ZhbHVlW10pIHsKICByZXR1cm4gdHdNZXJnZShjbHN4KGlucHV0cykpOwp9Cg=="}
