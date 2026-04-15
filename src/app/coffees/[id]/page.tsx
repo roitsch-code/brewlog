@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Coffee } from "@/lib/types/coffee";
 import type { Session } from "@/lib/types/session";
@@ -22,6 +22,12 @@ export default function CoffeeDetailPage() {
   const [roasterInfo, setRoasterInfo] = useState<RoasterInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Personal notes state
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesSaving, setNotesSaving] = useState(false);
+  const notesRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -200,6 +206,69 @@ export default function CoffeeDetailPage() {
           )}
         </div>
       )}
+
+      {/* Personal notes */}
+      <div className="px-5 py-4 border-b border-brew-border">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-brew-muted text-xs uppercase tracking-widest">Your Notes</p>
+          {!editingNotes && (
+            <button
+              onClick={() => {
+                setNotesDraft(coffee.personalNotes ?? "");
+                setEditingNotes(true);
+                setTimeout(() => notesRef.current?.focus(), 50);
+              }}
+              className="text-brew-muted text-xs hover:text-white transition-colors"
+            >
+              {coffee.personalNotes ? "Edit" : "+ Add"}
+            </button>
+          )}
+        </div>
+        {editingNotes ? (
+          <div className="space-y-2">
+            <textarea
+              ref={notesRef}
+              value={notesDraft}
+              onChange={e => setNotesDraft(e.target.value)}
+              placeholder="Would you buy this again? Anything worth remembering…"
+              rows={4}
+              className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-white text-sm resize-none placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+            />
+            <div className="flex gap-2">
+              <button
+                disabled={notesSaving}
+                onClick={async () => {
+                  setNotesSaving(true);
+                  try {
+                    await fetch(`/api/coffees/${id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ personalNotes: notesDraft.trim() }),
+                    });
+                    setCoffee(prev => prev ? { ...prev, personalNotes: notesDraft.trim() || undefined } : prev);
+                    setEditingNotes(false);
+                  } finally {
+                    setNotesSaving(false);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-2xl text-sm font-medium bg-brew-accent/20 text-brew-accent border border-brew-accent/30 disabled:opacity-50"
+              >
+                {notesSaving ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => setEditingNotes(false)}
+                className="flex-1 py-2.5 rounded-2xl text-sm border border-brew-border text-brew-muted"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : coffee.personalNotes ? (
+          <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{coffee.personalNotes}</p>
+        ) : (
+          <p className="text-brew-muted text-sm italic">No notes yet.</p>
+        )}
+      </div>
 
       {/* Brew memory */}
       {coffee.writtenSummary && (
