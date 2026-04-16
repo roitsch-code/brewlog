@@ -20,10 +20,8 @@ export async function getInsights(limit?: number): Promise<InsightItem[]> {
     if (doc.exists) {
       const data = doc.data() as { items: InsightItem[]; updatedAt: string };
       if (Array.isArray(data.items)) {
-        const sorted = [...data.items].sort(
-          (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
-        );
-        return limit ? sorted.slice(0, limit) : sorted;
+        const shuffled = [...data.items].sort(() => Math.random() - 0.5);
+        return limit ? shuffled.slice(0, limit) : shuffled;
       }
     }
   } catch (err) {
