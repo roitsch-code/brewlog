@@ -216,7 +216,7 @@ async function generateNewHints(): Promise<string[]> {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function runResearch(req: NextRequest) {
   // Verify CRON_SECRET
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
@@ -319,3 +319,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET(req: NextRequest) { return runResearch(req); }
+export async function POST(req: NextRequest) { return runResearch(req); }

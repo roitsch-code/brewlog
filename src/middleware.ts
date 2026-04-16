@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_PATHS = ["/login", "/api/auth"];
+const PUBLIC_PATHS = ["/login", "/api/auth", "/api/research", "/api/admin"];
 const STATIC_PATHS = ["/_next", "/favicon.ico", "/sw.js", "/manifest.json", "/icons", "/screenshots"];
 
 export async function middleware(req: NextRequest) {
