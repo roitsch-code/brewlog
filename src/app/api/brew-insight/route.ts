@@ -130,8 +130,7 @@ export async function POST(req: NextRequest) {
     // If terrain is empty and we have a session, generate a minimal one-liner via Haiku
     let finalTerrain = terrain;
     if (!finalTerrain) {
-      const userName = process.env.USER_DISPLAY_NAME || "the user";
-      const prompt = `You are reviewing a brew session for ${userName}, a specialty coffee enthusiast.
+      const prompt = `You are reviewing a brew session with the person who just brewed it. Speak directly to them as "you" — never refer to them in the third person.
 
 This session:
 - Coffee: ${coffee.name} by ${coffee.roaster || "?"}

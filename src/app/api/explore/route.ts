@@ -9,10 +9,9 @@ import type { Session } from "@/lib/types/session";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const USER_NAME = process.env.USER_DISPLAY_NAME || "the user";
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
-const SYSTEM_PROMPT = `You are a world-class specialty coffee expert and personal advisor to ${USER_NAME}, a semi-expert coffee enthusiast based in ${USER_LOCATION}.
+const SYSTEM_PROMPT = `You are a world-class specialty coffee expert. You are speaking directly with a semi-expert coffee enthusiast based in ${USER_LOCATION}. Address them as "you" throughout — never refer to them in the third person.
 
 ## Your Knowledge Base
 
@@ -53,7 +52,7 @@ Competitions: WBC, WAC, WCCE — cite by competitor name and year.
 - Retronasal vs. orthonasal olfaction
 - Body (mouthfeel), acidity (brightness), sweetness, finish, clarity
 
-## About ${USER_NAME} (your user)
+## About you
 
 **Equipment:**
 - Primary grinder: Niche Zero (Niche DEGREES, never clicks!)
@@ -140,21 +139,21 @@ export async function POST(req: NextRequest) {
           const terrain = await buildEscherTerrain(recentSessions);
           if (terrain) {
             contextParts.push(
-              `\n## ${USER_NAME}'s Brew Pattern Context (use as background — do not repeat verbatim)\n` + terrain
+              `\n## Your Brew Pattern Context (use as background — do not repeat verbatim)\n` + terrain
             );
           } else {
             contextParts.push(
-              `\n## ${USER_NAME}'s Recent Brews\n` + buildHistorySummary(recentSessions, 5)
+              `\n## Your Recent Brews\n` + buildHistorySummary(recentSessions, 5)
             );
           }
         } catch {
           contextParts.push(
-            `\n## ${USER_NAME}'s Recent Brews\n` + buildHistorySummary(recentSessions, 5)
+            `\n## Your Recent Brews\n` + buildHistorySummary(recentSessions, 5)
           );
         }
       } else {
         contextParts.push(
-          `\n## ${USER_NAME}'s Recent Brews (use this as context for personal questions)\n` +
+          `\n## Your Recent Brews (use this as context for personal questions)\n` +
             buildHistorySummary(recentSessions, 5)
         );
       }
@@ -175,7 +174,7 @@ export async function POST(req: NextRequest) {
 
     if (alerts.length > 0) {
       contextParts.push(
-        `\n## Recent Coffee Alerts (coffees spotted for ${USER_NAME})\n` +
+        `\n## Recent Coffee Alerts\n` +
           alerts
             .map(
               a =>
