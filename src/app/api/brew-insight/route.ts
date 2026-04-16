@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       sessions.length >= 3
         ? buildEscherTerrain(sessions, {
             name: coffee.name ?? "",
-            roaster: coffee.roaster,
+            roaster: coffee.roaster ?? "",
             origin: coffee.origin ?? "",
             process: coffee.process ?? "",
           }).catch(() => null)
