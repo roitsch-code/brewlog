@@ -87,8 +87,8 @@ export default function StepContext() {
   const ctx = draft.context || {} as Partial<SessionContext>;
   const [customMl, setCustomMl] = useState<string>("");
   const [grinders, setGrinders] = useState<string[]>(DEFAULT_GRINDERS);
-  // "ai" = Claude picks freely; "manual" = user selects method, Claude dials in the recipe
-  const [brewMode, setBrewMode] = useState<"ai" | "manual">("ai");
+  // null = nothing selected yet (like all other sections); "ai" = Claude picks; "manual" = user picks
+  const [brewMode, setBrewMode] = useState<"ai" | "manual" | null>(null);
 
   useEffect(() => {
     fetch("/api/preferences", { cache: "no-store" })
@@ -300,7 +300,7 @@ export default function StepContext() {
                 brewMode === "ai" ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
               }`}
             >
-              <p className={`font-semibold text-sm leading-tight ${brewMode === "ai" ? "text-brew-accent" : "text-white"}`}>
+              <p className={`font-semibold text-sm leading-tight ${brewMode === "ai" ? "text-brew-accent" : "text-brew-muted"}`}>
                 Claude picks
               </p>
               <p className="text-brew-muted text-xs mt-1 leading-tight">Best method for this coffee</p>
@@ -312,7 +312,7 @@ export default function StepContext() {
                 brewMode === "manual" ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
               }`}
             >
-              <p className={`font-semibold text-sm leading-tight ${brewMode === "manual" ? "text-brew-accent" : "text-white"}`}>
+              <p className={`font-semibold text-sm leading-tight ${brewMode === "manual" ? "text-brew-accent" : "text-brew-muted"}`}>
                 I&apos;ll choose
               </p>
               <p className="text-brew-muted text-xs mt-1 leading-tight">Claude dials in the recipe</p>
@@ -322,7 +322,7 @@ export default function StepContext() {
           {/* Method list — expands when user chooses manual mode */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
-              brewMode === "manual" ? "max-h-[600px] opacity-100 mt-3" : "max-h-0 opacity-0"
+              brewMode === "manual" ? "max-h-[900px] opacity-100 mt-3" : "max-h-0 opacity-0"
             }`}
           >
             <div className="flex flex-col gap-1.5">
@@ -356,9 +356,11 @@ export default function StepContext() {
             )}
           </div>
 
-          {brewMode === "ai" && (
+          {(brewMode === "ai" || brewMode === null) && (
             <p className="text-brew-muted text-xs px-1">
-              Claude picks the best method for this coffee &amp; context — and explains why.
+              {brewMode === "ai"
+                ? "Claude picks the best method for this coffee \u0026 context — and explains why."
+                : "Pick a method above, or let Claude decide."}
             </p>
           )}
         </Section>

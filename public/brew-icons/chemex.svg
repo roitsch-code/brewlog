@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Funnel top -->
+  <path d="M18 8 L82 8 L58 44 L42 44 Z" />
+  <!-- Wooden collar band -->
+  <rect x="38" y="44" width="24" height="6" rx="2" />
+  <!-- Left tie string -->
+  <path d="M40 50 Q36 54 34 58 Q33 61 36 63 Q33 62 32 66" />
+  <!-- Right tie string -->
+  <path d="M60 50 Q64 54 66 58 Q67 61 64 63 Q67 62 68 66" />
+  <!-- Flask body -->
+  <path d="M42 50 Q40 56 34 62 Q24 70 22 80 Q20 90 50 92 Q80 90 78 80 Q76 70 66 62 Q60 56 58 50" />
+  <!-- Flask base ring -->
+  <path d="M30 90 Q50 94 70 90" />
+</svg>
