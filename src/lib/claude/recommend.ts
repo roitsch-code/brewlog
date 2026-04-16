@@ -171,15 +171,29 @@ PERCOLATION:
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
 - Turbo V60: stir 2–3× at bloom. Turbulence from fast pours, not extra stirs.
 IMMERSION:
+- Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
 - Clever Dripper (Hoffmann): swirl at 0:10, swirl again at ~2:00. NEVER stir.
 - Clever Extended: swirl at 0:10, 2:00, 4:00, before drain. Never stir.
 - AeroPress (all modes): stir 2–3× at 0:10, stir again at 1:30. Both required.
 - AeroPress Bypass: stir at 0:10. Swirl cup after adding bypass water.
 - Moccamaster: no user agitation. Do not include stir/swirl.
 
+CHEMEX — dedicated rules:
+1. Thick bonded paper filter removes oils + fines → very clean, bright, tea-like cup. Cleaner than bare V60.
+   Best for: washed light/light-medium, Ethiopian florals, Kenyan brightness, clarity-forward goals.
+   Trade-off: strips body from naturals/anaerobic — note this when recommending for body-forward intent.
+2. Agitation: gentle swirl at bloom ONLY. NEVER stir — thick filter collapses against ribs → channeling.
+3. Temperature: Washed light 93–96°C | Natural/Honey light 91–94°C | Medium-light 91–94°C
+   (Slightly lower than bare V60 — thick filter slows flow, adding contact time)
+4. Ratio: 1:15–1:16 standard | 1:16–1:17 for lean/clarity focus
+5. Niche° for Chemex: Light washed 396–408° | Natural/Honey 398–410° (slightly coarser than Kalita — thick filter adds resistance)
+6. Small (350ml): 23g:350ml | Bloom 46g → 150g → 250g → 350g | ~4:30 (targetTimeSec: 270)
+   Big (520ml): 34g:520ml | Bloom 68g → 220g → 370g → 520g | ~5:00 (targetTimeSec: 300)
+7. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
+
 NICHE° GRIND REFERENCE:
 V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411°
-Kalita: 396–406° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
+Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
 Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
 
@@ -187,7 +201,7 @@ COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
 Start 2–3 clicks coarser than expected. ONE specific click value, never a range.
 Starting clicks: V60+Assist Washed 25 | Natural/Honey 27 | V60 no Assist 23
-Orea Fast/Apex 26 | Orea Classic 27 | AeroPress 19 | Clever 31
+Orea Fast/Apex 26 | Orea Classic 27 | Chemex Washed 24 | Chemex Natural/Honey 26 | AeroPress 19 | Clever 31
 
 ICED COFFEE RECIPES — use when occasion is "summer-time":
 Ratio rule: brew at ~1:10–1:12 hot-water concentration; ice (40% of final drink weight) dilutes to effective 1:15–1:16.
@@ -195,6 +209,8 @@ pourSequence = cumulative hot-water grams only (exclude ice weight). Ice goes in
 Grind finer than hot equivalent (shorter brew time, higher concentration).
 - Japanese Iced V60 (small ~350g): 22g : 210g hot + 140g ice | Washed 97°C / Natural 95°C | 393–398° | Bloom 30g → 110g → 210g | ~2:20 (targetTimeSec: 140)
 - Japanese Iced V60 (big ~520g): 33g : 310g hot + 210g ice | Washed 97°C / Natural 95°C | 393–398° | Bloom 45g → 160g → 310g | ~3:00 (targetTimeSec: 180)
+- Japanese Iced Chemex (small ~350g): 22g : 210g hot + 140g ice | 94°C | 396–404° | Bloom 40g → 110g → 210g | gentle swirl at bloom only | ~3:00 (targetTimeSec: 180)
+- Japanese Iced Chemex (big ~520g): 33g : 310g hot + 210g ice | 94°C | 396–404° | Bloom 60g → 155g → 310g | gentle swirl at bloom only | ~3:30 (targetTimeSec: 210)
 - Japanese Iced Kalita (small): 22g : 210g hot + 140g ice | 95°C | 393–398° | Bloom 30g → 110g → 210g | ~2:30 (targetTimeSec: 150)
 - AeroPress Iced: 14g : 120g hot concentrate onto 180–200g ice | 88°C | 372–377° | inverted · add 120g water · stir 2–3× at 0:10 · steep 90s · stir at 1:30 · press onto ice · ~2:30 (targetTimeSec: 150); waterGrams = 120 (concentrate only)
 - Hoffmann Immersion Iced (Clever Dripper): 20g : 250g water | 95°C | 421–431° | add water · swirl at 0:10 · steep 4min · swirl at 2:00 · drain onto 120g ice | ~5:00 (targetTimeSec: 300); waterGrams = 250
@@ -307,9 +323,9 @@ export async function generateRecommendation(
 
   const amountGuide: Record<string, string> = {
     small:
-      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60 + Drip Assist, Orea, Kalita. NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water / 34g dose (1:15.3). Suitable: V60 + Drip Assist, Orea, Kalita, Chemex. NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl

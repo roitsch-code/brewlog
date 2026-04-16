@@ -76,6 +76,7 @@ const METHODS = [
   { id: "Orea Classic",      label: "Orea Classic",         sub: "sweetness focus" },
   { id: "Orea Open",         label: "Orea Open",            sub: "open bed, max flow, max ~500 ml" },
   { id: "Kalita Wave",       label: "Kalita Wave",          sub: "even bed, max ~500 ml" },
+  { id: "Chemex",            label: "Chemex",               sub: "clean & bright, max ~600 ml" },
   { id: "AeroPress",         label: "AeroPress",            sub: "max 230 ml · or concentrate" },
   { id: "Clever Dripper",    label: "Clever Dripper",       sub: "immersion, max 400 ml" },
   { id: "Moccamaster",       label: "Moccamaster",          sub: "batch brewer, ≥ 500 ml" },
