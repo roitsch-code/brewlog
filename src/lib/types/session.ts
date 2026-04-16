@@ -63,10 +63,11 @@ export interface RecommendationCandidate {
   whatToObserve: string;
   confidence: CandidateConfidence;
   confidenceReason: string;
-  nextIfWeak: string;
-  nextIfBitter: string;
-  nextIfSour: string;
   learningValue: string;
+  // Deprecated — moved to post-brew adaptive feedback in brew-insight
+  nextIfWeak?: string;
+  nextIfBitter?: string;
+  nextIfSour?: string;
 }
 
 export interface Recommendation {
@@ -86,6 +87,10 @@ export interface BrewLog {
   actualTimeSec?: number;
   flow?: "too-fast" | "perfect" | "too-slow" | "na";
   timing?: "as-expected" | "faster" | "slower";
+  grindSettingUsed?: string;         // actual grind used (pre-filled from recommendation)
+  actualTempC?: number;              // actual temp used (pre-filled, editable)
+  followedAgitation?: "yes" | "partially" | "no";
+  agitationNote?: string;            // free text: what I actually did
 }
 
 export interface TasteResult {
@@ -98,6 +103,7 @@ export interface TasteResult {
   attribution?: "brew" | "bean" | "roaster"; // only set for low-rated sessions (≤3★)
   craft?: "off" | "solid" | "exceptional";   // execution quality, independent of taste
   fit?: "not-my-style" | "neutral" | "my-kind"; // style alignment, independent of craft
+  roastQuality?: "poor" | "fine" | "exceptional"; // assessment of the raw material
   // Extended sensory fields (all optional — backward compatible)
   sweetness?: "low" | "medium" | "high";
   clarity?: "muddy" | "cloudy" | "clean" | "crystal";

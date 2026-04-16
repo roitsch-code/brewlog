@@ -146,6 +146,13 @@ export default function StepRecommend() {
           )}
         </div>
 
+        {/* Overall reasoning — at the top so the brewer knows WHY before choosing */}
+        {rec.reasoning && (
+          <div className="px-1">
+            <p className="text-white/60 text-sm italic leading-relaxed">{rec.reasoning}</p>
+          </div>
+        )}
+
         {/* Candidate tabs */}
         {candidates.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -211,7 +218,7 @@ export default function StepRecommend() {
           </div>
         )}
 
-        {/* Why / Hypothesis / Predicted cup / Observe / If it misses */}
+        {/* Why / Hypothesis / Predicted cup / Observe */}
         {active && (
           <div className="bg-brew-surface rounded-2xl p-4 space-y-3">
             <InfoRow label="Why" value={active.whyChosen} />
@@ -224,16 +231,8 @@ export default function StepRecommend() {
             <div className="border-t border-brew-border pt-3">
               <InfoRow label="Observe" value={active.whatToObserve} />
             </div>
-            <div className="border-t border-brew-border pt-3">
-              <InfoRow label="If it misses" value={`Weak: ${active.nextIfWeak} · Bitter: ${active.nextIfBitter} · Sour: ${active.nextIfSour}`} />
-            </div>
           </div>
         )}
-
-        {/* Overall reasoning */}
-        <div className="px-1">
-          <p className="text-brew-muted text-sm italic leading-relaxed">{rec.reasoning}</p>
-        </div>
 
         {/* CTA */}
         <div className="mt-auto pb-safe pt-2">

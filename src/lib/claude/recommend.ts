@@ -10,9 +10,8 @@ import type {
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
-import { buildHistorySummary, buildTimingStats } from "./historyUtils";
+import { buildTimingStats } from "./historyUtils";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
-import { detectPatterns } from "./patterns";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -98,40 +97,48 @@ Time constraints:
 - "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
 
 LAYER 5 — HISTORY & LEARNING
-The brew history is ground truth. It overrides all stated preferences and priors.
-- Method × Process rankings are empirical — use them as the strongest signal
-- Sensory preference signals show what cup qualities score highest for this user
-- Roaster-specific outcomes show method success per roaster
-- Timing calibration data shows grind direction per method (GRIND ONLY — never temperature)
-- If a method × process combo has failed ≥3 times (≤3★) → exclude from portfolio; state why
-- If a combo is proven (≥4★, ≥3 sessions) → can use as anchor with "high" confidence
-- If no relevant history → use roaster prior + coffee properties + moderate confidence
+A terrain narrative will appear in the user message describing what keeps happening in this person's log.
+This is the strongest signal — it overrides stated preferences and priors.
+- Read the terrain as a case history, not as rules
+- If the terrain names a recurring limiter (e.g. fast draw-down in weak cups), let it inform your hypothesis
+- If the terrain says a variable shows no distinguishing pattern, don't build the portfolio around that variable
+- If the terrain is absent or says "cold start", rely on coffee properties + roaster prior only
+- Timing calibration data (grind direction per method) is separate from the terrain — use it for grind adjustment only, never temperature
 
 LAYER 6 — PORTFOLIO COMPOSITION
-Generate 2–4 candidates with DISTINCT purposes. Never two candidates that differ only in ratio.
-Each candidate must answer: what is this testing? what will we learn?
+You have access to everything written about specialty coffee — Gagné's extraction physics, Hendon's water chemistry,
+Perger's agitation theory, Rao's control framework, Solis on fermentation science, plus every championship recipe
+from WBC/WAC/WCCE. Your job is NOT to apply the correct rule for this method + process combination.
+Your job is to form an interesting, specific hypothesis for THIS coffee, brewed by THIS person, THIS morning.
 
-Role definitions:
-- anchor: safest, most evidence-backed option. The baseline everyone can trust.
-- adjacent: similar method to anchor but one meaningful change (different brewer, or different agitation strategy).
-- contrast: genuinely different method class (percolation vs immersion, or very different extraction physics). Teaches by comparison.
-- clarity-probe: method chosen specifically to maximize clarity and isolate origin character (Orea Apex, bare V60, minimal agitation).
-- sweetness-probe: method chosen to maximize sweetness development (Orea Classic, Clever Dripper, extra pour, gentle agitation, slightly richer ratio).
-- body-probe: method or recipe variation specifically testing body enhancement (Clever Dripper, shorter ratio, reduced agitation).
-- wildcard: intentionally unusual or underexplored approach with high educational value.
+Be a coach, not a rulebook. Surprise them occasionally. If a championship technique might reveal something
+about this coffee, suggest it. If Gagné and Perger would disagree about agitation for this natural at this temp,
+name the tension, pick a side, explain why. If the terrain says a variable hasn't mattered, don't waste a candidate
+testing it — find something more interesting.
 
-Intent → typical portfolio composition (adapt based on coffee + history):
-- safest → anchor + 1 adjacent
-- explore → anchor + clarity-probe + sweetness-probe
-- high-clarity → clarity-probe as primary + anchor as fallback
-- sweetness-forward → sweetness-probe as primary + anchor as fallback
-- educational → anchor + wildcard (explain the technique clearly)
-- repeat-best → anchor only (reproduce what worked)
-- compare → anchor + contrast
-- troubleshoot → anchor (safe reset) + explain likely cause in hypothesis
-- no intent provided → anchor + 1 exploration candidate appropriate to coffee character
+What makes a strong portfolio:
+- Candidates that answer genuinely different questions — not just different methods
+- At least one unexpected option when the history and coffee character suggest it could work
+- The anchor should have a specific hypothesis, not just "safest choice"
+- If the terrain shows a recurring setup underperforming, propose something different — not the same thing with minor adjustments
+- The reasoning field is the overview: tell them WHY this portfolio was assembled, then let the candidates speak
 
-Portfolio rules:
+What to avoid:
+- Category rules disguised as hypotheses: "AeroPress is always good for X" is wrong framing — say instead what THIS AeroPress recipe tests for THIS coffee
+- Generic role-filling: don't add an adjacent candidate just to fill a slot
+- Citing a rule when you mean a hypothesis: instead of "Perger says more agitation", say "Perger's turbulence thesis suggests the flat cups in the terrain may be losing contact time to channeling — two deliberate stirs could test whether uniformity is the lever"
+- Restating the terrain verbatim — use it as background, not as content
+
+Role definitions (use flexibly, not as a checklist):
+- anchor: most evidence-backed option — can be a bold hypothesis if the terrain supports it
+- adjacent: same class of method, one meaningful variable changed
+- contrast: genuinely different extraction physics (percolation vs immersion, or very different agitation)
+- clarity-probe: specifically tests maximum origin clarity (Orea Apex, bare V60, minimal agitation)
+- sweetness-probe: specifically tests sweetness development (Orea Classic, Clever, gentle agitation, richer ratio)
+- body-probe: tests body enhancement
+- wildcard: high educational or experimental value — explain the science, not just the novelty
+
+Portfolio rules (non-negotiable):
 - Never two candidates using the same brewer
 - First candidate is always the most evidence-backed option
 - Max 4 candidates; min 2
@@ -275,9 +282,6 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "whatToObserve": "1 short sentence: what to notice in the cup",
       "confidence": "high | moderate | low | exploratory",
       "confidenceReason": "1 short sentence: why this confidence",
-      "nextIfWeak": "one specific adjustment if flat",
-      "nextIfBitter": "one specific adjustment if bitter",
-      "nextIfSour": "one specific adjustment if sour",
       "learningValue": "1 short sentence: what this teaches"
     }
   ],
@@ -295,7 +299,8 @@ export async function generateRecommendation(
   context: SessionContext,
   preferences: UserPreferences,
   pastSessions: Session[] = [],
-  userRoasterPrior?: import("../roasters/priors").RoasterPrior
+  userRoasterPrior?: import("../roasters/priors").RoasterPrior,
+  escherTerrain?: string
 ): Promise<{
   recommendation: Recommendation;
   usage: { input_tokens: number; output_tokens: number };
@@ -303,9 +308,6 @@ export async function generateRecommendation(
   const equipment = preferences.equipment.length
     ? preferences.equipment.join(", ")
     : "V60, AeroPress, Bialetti";
-
-  const historyStr = buildHistorySummary(pastSessions);
-  const patternAnalysis = detectPatterns(pastSessions);
 
   const PERCOLATION_METHODS = new Set([
     "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
@@ -420,8 +422,12 @@ Equipment available: ${equipment}
 ${grinderNote}
 Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=${preferences.tasteProfile.preferredAcidityLevel}
 
-User's brew history (empirical — override stated preferences and priors when relevant):
-${historyStr}
+${escherTerrain
+  ? `Brew pattern terrain (use as case history — informs your hypothesis, does not override recipe physics):\n${escherTerrain}`
+  : pastSessions.length === 0
+    ? "No previous sessions — cold start. Reason from coffee properties and roaster prior only."
+    : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
+}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +
@@ -437,27 +443,6 @@ ${
         })
         .join("\n") +
       "\nApply the relevant row only when recommending that specific method."
-    : ""
-}
-
-${
-  patternAnalysis.hasEnoughData
-    ? (() => {
-        const lines: string[] = ["\nDetected behavioral patterns (inform portfolio reasoning — do not override recipe physics):"];
-        for (const o of patternAnalysis.oscillation) {
-          lines.push(`  Oscillation — ${o.coffee}: ${o.parameter} ${o.direction}`);
-        }
-        for (const m of patternAnalysis.ratingBehaviorMismatch) {
-          lines.push(`  Rating mismatch — ${m.description}: ${m.evidence}`);
-        }
-        for (const c of patternAnalysis.craftVsFitDivergence) {
-          lines.push(`  Craft-vs-fit — ${c.coffeeName}: craft=${c.craft}, fit=${c.fit}, rated ${c.rating}★`);
-        }
-        for (const op of patternAnalysis.occasionDependentPreference) {
-          lines.push(`  Occasion split — ${op.coffee}: ${op.occasionA} avg ${op.avgA}★ vs ${op.occasionB} avg ${op.avgB}★`);
-        }
-        return lines.length > 1 ? lines.join("\n") : "";
-      })()
     : ""
 }
 
@@ -492,9 +477,6 @@ Return valid JSON only.`;
         whatToObserve: string;
         confidence: string;
         confidenceReason: string;
-        nextIfWeak: string;
-        nextIfBitter: string;
-        nextIfSour: string;
         learningValue: string;
       }>
     ).map((c) => ({
@@ -509,9 +491,6 @@ Return valid JSON only.`;
       whatToObserve: c.whatToObserve,
       confidence: c.confidence as CandidateConfidence,
       confidenceReason: c.confidenceReason,
-      nextIfWeak: c.nextIfWeak,
-      nextIfBitter: c.nextIfBitter,
-      nextIfSour: c.nextIfSour,
       learningValue: c.learningValue,
     }));
 

@@ -12,7 +12,8 @@ export default function StepSummary() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [insight, setInsight] = useState<string | null>(null);
+  const [terrain, setTerrain] = useState<string | null>(null);
+  const [adjustment, setAdjustment] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const router = useRouter();
 
@@ -26,7 +27,7 @@ export default function StepSummary() {
       body: JSON.stringify({ draft, recentSessions: [] }),
     })
       .then(r => r.json())
-      .then(d => setInsight(d.insight || null))
+      .then(d => { setTerrain(d.terrain || null); setAdjustment(d.adjustment || null); })
       .catch(() => {})
       .finally(() => setInsightLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,26 +119,36 @@ export default function StepSummary() {
               </div>
             )}
 
-            {/* Claude insight card */}
-            {(insightLoading || insight) && (
-              <div className="bg-brew-elevated rounded-2xl p-4 border border-brew-border/50">
-                <div className="flex items-start gap-3">
-                  {insightLoading ? (
-                    <>
-                      <CoffeeBeanGlow size={24} className="shrink-0 mt-0.5" />
-                      <p className="text-brew-muted text-sm italic">Thinking…</p>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4 shrink-0 mt-0.5 text-brew-accent/70" fill="none" viewBox="0 0 100 100">
-                        <path d="M14,50 C14,26 26,7 50,7 C74,7 86,26 86,50 C86,74 74,93 50,93 C26,93 14,74 14,50 Z"
-                          stroke="currentColor" strokeWidth="8" />
-                        <path d="M50,7 C43,29 57,61 50,93" stroke="currentColor" strokeWidth="6" />
-                      </svg>
-                      <p className="text-white text-sm leading-relaxed italic">{insight}</p>
-                    </>
-                  )}
-                </div>
+            {/* Escher insight card — teaching moment after the brew */}
+            {(insightLoading || terrain || adjustment) && (
+              <div className="bg-brew-elevated rounded-2xl p-4 border border-brew-border/50 space-y-3">
+                {insightLoading ? (
+                  <div className="flex items-start gap-3">
+                    <CoffeeBeanGlow size={24} className="shrink-0 mt-0.5" />
+                    <p className="text-brew-muted text-sm italic">Reading the session…</p>
+                  </div>
+                ) : (
+                  <>
+                    {terrain && (
+                      <div className="flex items-start gap-3">
+                        <svg className="w-4 h-4 shrink-0 mt-0.5 text-brew-accent/70" fill="none" viewBox="0 0 100 100">
+                          <path d="M14,50 C14,26 26,7 50,7 C74,7 86,26 86,50 C86,74 74,93 50,93 C26,93 14,74 14,50 Z"
+                            stroke="currentColor" strokeWidth="8" />
+                          <path d="M50,7 C43,29 57,61 50,93" stroke="currentColor" strokeWidth="6" />
+                        </svg>
+                        <p className="text-white text-sm leading-relaxed italic">{terrain}</p>
+                      </div>
+                    )}
+                    {adjustment && (
+                      <div className={`${terrain ? "border-t border-brew-border/40 pt-3" : ""} flex items-start gap-3`}>
+                        <div className="w-4 h-4 shrink-0 mt-0.5 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-brew-accent/50" />
+                        </div>
+                        <p className="text-white/70 text-sm leading-relaxed">{adjustment}</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 

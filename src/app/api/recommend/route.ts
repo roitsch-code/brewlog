@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateRecommendation } from "@/lib/claude/recommend";
+import { buildEscherTerrain } from "@/lib/claude/escher";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import type { UserPreferences } from "@/lib/types/preferences";
@@ -40,7 +41,16 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    const { recommendation } = await generateRecommendation(coffee, context, prefs, pastSessions || [], userRoasterPrior ?? undefined);
+    // Build Escher terrain in parallel with nothing (it's the first async call)
+    // Only run when there are enough sessions to have something meaningful
+    const sessions = pastSessions || [];
+    const terrain = sessions.length >= 3
+      ? await buildEscherTerrain(sessions, coffee).catch(() => "")
+      : "";
+
+    const { recommendation } = await generateRecommendation(
+      coffee, context, prefs, sessions, userRoasterPrior ?? undefined, terrain || undefined
+    );
     return NextResponse.json(recommendation);
   } catch (err) {
     console.error("recommend error:", err);

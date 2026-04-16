@@ -13,10 +13,14 @@ const TIMING_OPTIONS = ["as-expected", "faster", "slower"] as const;
 const TIMING_LABELS: Record<string, string> = { "as-expected": "As Expected", "faster": "Faster", "slower": "Slower" };
 const BODY_OPTIONS = ["light", "medium", "full"];
 const ACIDITY_OPTIONS = ["low", "medium", "high", "bright"];
+const AGITATION_OPTIONS = ["yes", "partially", "no"] as const;
+const AGITATION_LABELS: Record<string, string> = { yes: "Followed", partially: "Partially", no: "Skipped" };
 
 export default function StepLog() {
   const { draft, setBrew, setResult, setStep } = useFlowStore();
   const isExternal = draft.mode === "external";
+  const rec = draft.recommendation;
+
   const [rating, setRating] = useState(0);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [body, setBody] = useState("");
@@ -26,9 +30,23 @@ export default function StepLog() {
   const [flow, setFlow] = useState<string>("");
   const [timing, setTiming] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Attribution — legacy (≤3★ only)
   const [attribution, setAttribution] = useState<"brew" | "bean" | "roaster" | null>(null);
+
+  // Three quality dimensions — all sessions
   const [craft, setCraft] = useState<"off" | "solid" | "exceptional" | null>(null);
   const [fit, setFit] = useState<"not-my-style" | "neutral" | "my-kind" | null>(null);
+  const [roastQuality, setRoastQuality] = useState<"poor" | "fine" | "exceptional" | null>(null);
+
+  // Recipe check (home mode) — pre-filled from recommendation
+  const [grindUsed, setGrindUsed] = useState(rec?.primaryRecipe?.grindSize ?? "");
+  const [tempUsed, setTempUsed] = useState(rec?.primaryRecipe?.waterTempC?.toString() ?? "");
+
+  // Agitation confirmation (home mode)
+  const [followedAgitation, setFollowedAgitation] = useState<"yes" | "partially" | "no" | "">("");
+  const [agitationNote, setAgitationNote] = useState("");
+
   // Extended sensory fields (optional)
   const [showSensory, setShowSensory] = useState(false);
   const [sweetness, setSweetness] = useState<"low" | "medium" | "high" | "">("");
@@ -44,7 +62,15 @@ export default function StepLog() {
   const canProceed = rating > 0;
 
   const handleNext = () => {
-    setBrew({ ...draft.brew, flow: flow as "too-fast" | "perfect" | "too-slow" | "na", timing: timing as "as-expected" | "faster" | "slower" });
+    setBrew({
+      ...draft.brew,
+      flow: flow as "too-fast" | "perfect" | "too-slow" | "na",
+      timing: timing as "as-expected" | "faster" | "slower",
+      ...(grindUsed ? { grindSettingUsed: grindUsed } : {}),
+      ...(tempUsed ? { actualTempC: parseFloat(tempUsed) } : {}),
+      ...(followedAgitation ? { followedAgitation } : {}),
+      ...(agitationNote.trim() ? { agitationNote: agitationNote.trim() } : {}),
+    });
     setResult({
       rating,
       flavorNotes: selectedFlavors,
@@ -55,6 +81,7 @@ export default function StepLog() {
       ...(rating <= 3 && attribution ? { attribution } : {}),
       ...(craft ? { craft } : {}),
       ...(fit ? { fit } : {}),
+      ...(roastQuality ? { roastQuality } : {}),
       ...(sweetness ? { sweetness } : {}),
       ...(clarity ? { clarity } : {}),
       ...(bitterness ? { bitterness } : {}),
@@ -81,59 +108,70 @@ export default function StepLog() {
           </p>
         </div>
 
-        {/* Attribution — only shown for low ratings */}
-        {rating > 0 && rating <= 3 && (
-          <div className="space-y-3">
-            <h3 className="text-brew-muted text-xs uppercase tracking-widest">What held it back?</h3>
-            <div className="flex gap-2">
-              {(["brew", "bean", "roaster"] as const).map(opt => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setAttribution(prev => prev === opt ? null : opt)}
-                  className={`flex-1 py-3 rounded-2xl border text-sm font-medium transition-all active:scale-95 ${
-                    attribution === opt
-                      ? "border-brew-accent/60 bg-brew-accent/10 text-white"
-                      : "border-brew-border text-brew-muted"
-                  }`}
-                >
-                  {opt === "brew" ? "My brew" : opt === "bean" ? "The bean" : "The roaster"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Craft — how well was it executed */}
+        {/* Three quality dimensions — shown once rating is set */}
         {rating > 0 && (
-          <Section title="Your Craft">
-            <div className="flex gap-2">
-              {(["off", "solid", "exceptional"] as const).map(opt => (
-                <Chip
-                  key={opt}
-                  label={opt === "off" ? "Off" : opt === "solid" ? "Solid" : "Exceptional"}
-                  selected={craft === opt}
-                  onClick={() => setCraft(prev => prev === opt ? null : opt)}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
+          <>
+            <Section title="Your Brew">
+              <div className="flex gap-2">
+                {(["off", "solid", "exceptional"] as const).map(opt => (
+                  <Chip
+                    key={opt}
+                    label={opt === "off" ? "Off day" : opt === "solid" ? "Solid" : "Exceptional"}
+                    selected={craft === opt}
+                    onClick={() => setCraft(prev => prev === opt ? null : opt)}
+                  />
+                ))}
+              </div>
+            </Section>
 
-        {/* Fit — does it suit your taste */}
-        {rating > 0 && (
-          <Section title="Fit">
-            <div className="flex gap-2 flex-wrap">
-              {(["not-my-style", "neutral", "my-kind"] as const).map(opt => (
-                <Chip
-                  key={opt}
-                  label={opt === "not-my-style" ? "Not my style" : opt === "neutral" ? "Neutral" : "My kind of cup"}
-                  selected={fit === opt}
-                  onClick={() => setFit(prev => prev === opt ? null : opt)}
-                />
-              ))}
-            </div>
-          </Section>
+            <Section title="The Bean">
+              <div className="flex gap-2 flex-wrap">
+                {(["not-my-style", "neutral", "my-kind"] as const).map(opt => (
+                  <Chip
+                    key={opt}
+                    label={opt === "not-my-style" ? "Not my style" : opt === "neutral" ? "Neutral" : "My kind"}
+                    selected={fit === opt}
+                    onClick={() => setFit(prev => prev === opt ? null : opt)}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            <Section title="The Roast">
+              <div className="flex gap-2">
+                {(["poor", "fine", "exceptional"] as const).map(opt => (
+                  <Chip
+                    key={opt}
+                    label={opt === "poor" ? "Poor" : opt === "fine" ? "Fine" : "Exceptional"}
+                    selected={roastQuality === opt}
+                    onClick={() => setRoastQuality(prev => prev === opt ? null : opt)}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            {/* Attribution — visible only for low ratings */}
+            {rating <= 3 && (
+              <Section title="What held it back most?">
+                <div className="flex gap-2">
+                  {(["brew", "bean", "roaster"] as const).map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setAttribution(prev => prev === opt ? null : opt)}
+                      className={`flex-1 py-3 rounded-2xl border text-sm font-medium transition-all active:scale-95 ${
+                        attribution === opt
+                          ? "border-brew-accent/60 bg-brew-accent/10 text-white"
+                          : "border-brew-border text-brew-muted"
+                      }`}
+                    >
+                      {opt === "brew" ? "My brew" : opt === "bean" ? "The bean" : "The roaster"}
+                    </button>
+                  ))}
+                </div>
+              </Section>
+            )}
+          </>
         )}
 
         {/* Flow + Timing — home mode only */}
@@ -157,9 +195,62 @@ export default function StepLog() {
           </>
         )}
 
+        {/* Recipe check — home mode only */}
+        {!isExternal && (
+          <Section title="Recipe Check">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-brew-muted text-xs mb-1.5">Grind used</p>
+                <input
+                  type="text"
+                  value={grindUsed}
+                  onChange={e => setGrindUsed(e.target.value)}
+                  placeholder={rec?.primaryRecipe?.grindSize ?? "e.g. 406°"}
+                  className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+                />
+              </div>
+              <div>
+                <p className="text-brew-muted text-xs mb-1.5">Temp (°C)</p>
+                <input
+                  type="number"
+                  value={tempUsed}
+                  onChange={e => setTempUsed(e.target.value)}
+                  placeholder={rec?.primaryRecipe?.waterTempC?.toString() ?? "°C"}
+                  className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+                />
+              </div>
+            </div>
+          </Section>
+        )}
+
+        {/* Agitation confirmation — home mode only */}
+        {!isExternal && (
+          <Section title="Agitation">
+            <div className="flex gap-2 mb-2">
+              {AGITATION_OPTIONS.map(o => (
+                <Chip
+                  key={o}
+                  label={AGITATION_LABELS[o]}
+                  selected={followedAgitation === o}
+                  onClick={() => setFollowedAgitation(prev => prev === o ? "" : o)}
+                  size="sm"
+                />
+              ))}
+            </div>
+            {followedAgitation && followedAgitation !== "yes" && (
+              <input
+                type="text"
+                value={agitationNote}
+                onChange={e => setAgitationNote(e.target.value)}
+                placeholder="What did you actually do?"
+                className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+              />
+            )}
+          </Section>
+        )}
+
         {/* Flavor notes — SCA wheel navigation */}
         <Section title="Flavor Notes">
-          {/* Visual wheel: tap a category to filter chips below */}
           <div className="w-full">
             <FlavorWheel
               mode="select"
@@ -170,7 +261,6 @@ export default function StepLog() {
             />
           </div>
 
-          {/* Chips panel */}
           {activeCategory ? (
             <div className="space-y-3 mt-1">
               <p className="text-brew-muted text-xs uppercase tracking-widest">{activeCategory}</p>
@@ -198,7 +288,6 @@ export default function StepLog() {
             </div>
           )}
 
-          {/* Selected flavors summary */}
           {selectedFlavors.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1 border-t border-brew-border/30">
               {selectedFlavors.map(f => (
@@ -232,7 +321,7 @@ export default function StepLog() {
           </div>
         </Section>
 
-        {/* Would brew/drink again */}
+        {/* Would brew again */}
         <Section title={isExternal ? "Would you have this again?" : "Would you brew this exact setup again?"}>
           <div className="flex gap-3">
             <button
@@ -289,7 +378,6 @@ export default function StepLog() {
                 value={finish}
                 onChange={v => setFinish(v as typeof finish)}
               />
-              {/* Toggles */}
               <div className="space-y-3">
                 <SensoryToggle
                   label="Improved while cooling"
