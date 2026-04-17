@@ -153,25 +153,84 @@ function AskTab() {
         }),
       });
 
-      if (!res.ok) throw new Error("Request failed");
+      if (!res.ok || !res.body) throw new Error("Request failed");
 
-      const data = await res.json() as { reply: string; sources?: { title: string; url: string }[] };
+      // Seed an empty assistant bubble we progressively fill
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
-      const assistantMsg: ChatMessage = {
-        role: "assistant",
-        content: data.reply,
-        sources: data.sources,
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let carry = "";
+
+      const applyEvent = (event: string, data: string) => {
+        try {
+          const payload = JSON.parse(data) as { text?: string; sources?: { title: string; url: string }[]; error?: string };
+          if (event === "delta" && payload.text) {
+            setMessages(prev => {
+              const copy = prev.slice();
+              const last = copy[copy.length - 1];
+              if (last?.role === "assistant") {
+                copy[copy.length - 1] = { ...last, content: last.content + payload.text };
+              }
+              return copy;
+            });
+          } else if (event === "done") {
+            if (payload.sources) {
+              setMessages(prev => {
+                const copy = prev.slice();
+                const last = copy[copy.length - 1];
+                if (last?.role === "assistant") {
+                  copy[copy.length - 1] = { ...last, sources: payload.sources };
+                }
+                return copy;
+              });
+            }
+          } else if (event === "error") {
+            throw new Error(payload.error ?? "Stream error");
+          }
+        } catch {
+          // Malformed event — skip
+        }
       };
-      setMessages(prev => [...prev, assistantMsg]);
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        carry += decoder.decode(value, { stream: true });
+
+        let boundary = carry.indexOf("\n\n");
+        while (boundary !== -1) {
+          const frame = carry.slice(0, boundary);
+          carry = carry.slice(boundary + 2);
+          let eventName = "message";
+          let dataLine = "";
+          for (const line of frame.split("\n")) {
+            if (line.startsWith("event:")) eventName = line.slice(6).trim();
+            else if (line.startsWith("data:")) dataLine += line.slice(5).trim();
+          }
+          if (dataLine) applyEvent(eventName, dataLine);
+          boundary = carry.indexOf("\n\n");
+        }
+      }
     } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, I couldn't get a response right now. Please try again.",
-        },
-      ]);
+      setMessages(prev => {
+        const copy = prev.slice();
+        const last = copy[copy.length - 1];
+        if (last?.role === "assistant" && last.content === "") {
+          copy[copy.length - 1] = {
+            role: "assistant",
+            content: "Sorry, I couldn't get a response right now. Please try again.",
+          };
+          return copy;
+        }
+        return [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Sorry, I couldn't get a response right now. Please try again.",
+          },
+        ];
+      });
     } finally {
       setLoading(false);
     }

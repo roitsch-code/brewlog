@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
 
     const dynamicContext = contextParts.length > 0 ? contextParts.join("") : "";
 
-    const response = await client.messages.create({
+    const stream = client.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 900,
       system: [
@@ -199,33 +199,86 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    const replyContent = response.content[0];
-    const rawReply =
-      replyContent.type === "text" ? replyContent.text : "Unable to respond.";
+    const encoder = new TextEncoder();
+    const sse = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (event: string, data: unknown) => {
+          controller.enqueue(
+            encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+          );
+        };
 
-    // Extract cited insight IDs from reply (e.g. [I1], [I3])
-    const citedIds: string[] = [];
-    const idRegex = /\[I(\d+)\]/g;
-    let idMatch: RegExpExecArray | null;
-    while ((idMatch = idRegex.exec(rawReply)) !== null) {
-      citedIds.push(`I${idMatch[1]}`);
-    }
-    // Strip the ID tags from the reply before returning to client
-    const reply = rawReply.replace(/\s*\[I\d+\]/g, "").trim();
+        let buffer = "";
+        // Emit visible text in chunks, withholding any unclosed "[Ix]" tag so it
+        // never flashes to the client before we strip it at the end.
+        const flushVisible = (incoming: string) => {
+          buffer += incoming;
+          const openIdx = buffer.lastIndexOf("[");
+          let emit = buffer;
+          let hold = "";
+          if (openIdx !== -1 && buffer.indexOf("]", openIdx) === -1) {
+            emit = buffer.slice(0, openIdx);
+            hold = buffer.slice(openIdx);
+          }
+          if (emit) {
+            const cleaned = emit.replace(/\s*\[I\d+\]/g, "");
+            if (cleaned) send("delta", { text: cleaned });
+          }
+          buffer = hold;
+        };
 
-    // Map cited IDs back to source objects
-    const sources: { title: string; url: string }[] = [];
-    for (const id of citedIds) {
-      const insight = insightMap.get(id);
-      if (insight?.url && /^https?:\/\/.+/.test(insight.url)) {
-        // Deduplicate
-        if (!sources.some(s => s.url === insight.url)) {
-          sources.push({ title: insight.title, url: insight.url });
+        try {
+          let full = "";
+          for await (const event of stream) {
+            if (
+              event.type === "content_block_delta" &&
+              event.delta.type === "text_delta"
+            ) {
+              full += event.delta.text;
+              flushVisible(event.delta.text);
+            }
+          }
+          // Flush anything still held back (usually a stray "[")
+          if (buffer) {
+            const cleaned = buffer.replace(/\s*\[I\d+\]/g, "");
+            if (cleaned) send("delta", { text: cleaned });
+            buffer = "";
+          }
+
+          const citedIds: string[] = [];
+          const idRegex = /\[I(\d+)\]/g;
+          let idMatch: RegExpExecArray | null;
+          while ((idMatch = idRegex.exec(full)) !== null) {
+            citedIds.push(`I${idMatch[1]}`);
+          }
+          const sources: { title: string; url: string }[] = [];
+          for (const id of citedIds) {
+            const insight = insightMap.get(id);
+            if (insight?.url && /^https?:\/\/.+/.test(insight.url)) {
+              if (!sources.some(s => s.url === insight.url)) {
+                sources.push({ title: insight.title, url: insight.url });
+              }
+            }
+          }
+
+          send("done", { sources: sources.length > 0 ? sources : undefined });
+        } catch (err) {
+          console.error("explore stream error:", err);
+          send("error", { error: "Stream failed" });
+        } finally {
+          controller.close();
         }
-      }
-    }
+      },
+    });
 
-    return NextResponse.json({ reply, sources: sources.length > 0 ? sources : undefined });
+    return new Response(sse, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch (err) {
     console.error("explore/route error:", err);
     return NextResponse.json({ error: "Failed to get response" }, { status: 500 });
