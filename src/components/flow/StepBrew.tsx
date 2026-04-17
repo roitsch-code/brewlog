@@ -5,63 +5,7 @@ import FlowShell from "./FlowShell";
 import CircularTimer from "@/components/ui/CircularTimer";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import { useWakeLock } from "@/hooks/useWakeLock";
-
-// ── Types ──────────────────────────────────────────────────────────────────
-
-interface PourStep {
-  index: number;
-  label: string;
-  cumulativeGrams: number;
-  pourGrams: number;
-  startTimeSec: number;
-  action: "bloom" | "pour" | "final";
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-// Hoffmann/Rao consensus: 45s for peak-window coffee; shorter for old, slightly longer for very fresh
-function getBloomDuration(roastDate?: string): number {
-  if (roastDate) {
-    const daysOld = Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000);
-    if (daysOld < 7)  return 50; // very fresh: slight extension for heavy CO2
-    if (daysOld < 22) return 45; // peak window: Hoffmann/Rao standard
-    return 30;                    // older: minimal CO2, move on
-  }
-  return 45; // default: expert standard
-}
-
-function parsePourSteps(sequence: string, targetTimeSec: number, roastDate?: string): PourStep[] | null {
-  const parts = sequence.split(/\s*[–—\-]\s*/).map(s => s.trim());
-  if (parts.length < 2 || !parts.every(p => /^\d+$/.test(p))) return null;
-
-  const milestones = parts.map(Number);
-  const n = milestones.length;
-  const bloomDur = getBloomDuration(roastDate);
-  // Reserve 33% of brew time after last pour for pouring + drawdown.
-  // Calibrated for Drip Assist (disc bottleneck): ~89s at 270s, ~69s at 210s.
-  const drawdownReserve = Math.round(targetTimeSec * 0.33);
-  const remaining = targetTimeSec - bloomDur - drawdownReserve;
-  // n-2: there are (n-2) intervals between pour 1 and the final pour,
-  // so the last pour lands exactly at (targetTimeSec - drawdownReserve).
-  const interval = n > 2 ? remaining / (n - 2) : 0;
-
-  return milestones.map((grams, i) => ({
-    index: i,
-    label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
-    cumulativeGrams: grams,
-    pourGrams: i === 0 ? grams : grams - milestones[i - 1],
-    startTimeSec: i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval),
-    action: (i === 0 ? "bloom" : i === n - 1 ? "final" : "pour") as PourStep["action"],
-  }));
-}
-
-function getActiveIdx(elapsed: number, steps: PourStep[]): number {
-  let idx = 0;
-  for (let i = 0; i < steps.length; i++) {
-    if (elapsed >= steps[i].startTimeSec) idx = i;
-  }
-  return idx;
-}
+import { parsePourSteps, getActiveIdx, type PourStep } from "@/lib/utils/pourSequence";
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
