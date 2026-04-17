@@ -445,6 +445,19 @@ export default function StepScan() {
                   {draft.coffee.variety !== undefined && (
                     <EditableRow label="Variety" value={draft.coffee.variety || ""} onChange={v => setCoffee({ variety: v })} />
                   )}
+                  {draft.coffee.fermentationStyle !== undefined && (
+                    <EditableRow label="Fermentation" value={draft.coffee.fermentationStyle || ""} onChange={v => setCoffee({ fermentationStyle: v || undefined })} />
+                  )}
+                  {draft.coffee.cuppingScore !== undefined && (
+                    <EditableRow
+                      label="Cupping Score"
+                      value={draft.coffee.cuppingScore ? String(draft.coffee.cuppingScore) : ""}
+                      onChange={v => {
+                        const n = parseFloat(v);
+                        setCoffee({ cuppingScore: Number.isFinite(n) ? n : undefined });
+                      }}
+                    />
+                  )}
                   {(draft.coffee.tastingNotesFromBag !== undefined) && (
                     <div>
                       <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Tasting Notes from Bag</p>

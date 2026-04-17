@@ -426,7 +426,7 @@ export async function generateRecommendation(
 
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
-Process: ${coffee.process || "Unknown"} | Roast: ${coffee.roastLevel || "Unknown"}
+Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}
 Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
 ${roasterBlock}

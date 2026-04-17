@@ -9,8 +9,10 @@ const UrlExtractSchema = z.object({
   region: z.string().optional(),
   variety: z.string().optional(),
   process: z.string().optional(),
+  fermentationStyle: z.string().optional(),
   roastLevel: z.string().optional(),
   roastDate: z.string().optional(),
+  cuppingScore: z.number().optional(),
   tastingNotesFromBag: z.array(z.string()).optional(),
 });
 
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "user",
-          content: `Extract coffee product details from this webpage text. Return ONLY a valid JSON object with these fields (omit any fields you cannot find with confidence): roaster (string), name (string), origin (string), region (string), variety (string), process (string — Natural/Washed/Honey/Anaerobic), roastLevel (string — Light/Medium-Light/Medium/Dark), roastDate (ISO date string YYYY-MM-DD if found), tastingNotesFromBag (array of short flavor note strings).\n\nWebpage text:\n${text}`,
+          content: `Extract coffee product details from this webpage text. Return ONLY a valid JSON object with these fields (omit any fields you cannot find with confidence): roaster (string), name (string), origin (string), region (string), variety (string), process (string — Natural/Washed/Honey/Anaerobic), fermentationStyle (string — the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol), roastLevel (string — Light/Medium-Light/Medium/Dark), roastDate (ISO date string YYYY-MM-DD if found), cuppingScore (number — SCA / Q-grade if printed, e.g. 87.5), tastingNotesFromBag (array of short flavor note strings).\n\nWebpage text:\n${text}`,
         },
       ],
     });

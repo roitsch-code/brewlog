@@ -13,9 +13,11 @@ const BagAnalysisSchema = z.object({
       farm: z.string().nullable().optional(),
       variety: z.string().nullable().optional(),
       process: z.string().nullable().optional(),
+      fermentationStyle: z.string().nullable().optional(),
       roastLevel: z.string().nullable().optional(),
       roastDate: z.string().nullable().optional(),
       altitudeMeters: z.number().nullable().optional(),
+      cuppingScore: z.number().nullable().optional(),
       tastingNotesFromBag: z.array(z.string()).optional(),
     })
     .passthrough(),
@@ -38,9 +40,11 @@ Return this exact JSON structure:
     "farm": string | null,
     "variety": string | null,
     "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other" | null,
+    "fermentationStyle": string | null,
     "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark" | null,
     "roastDate": string | null,
     "altitudeMeters": number | null,
+    "cuppingScore": number | null,
     "tastingNotesFromBag": string[]
   },
   "confidence": {
@@ -54,6 +58,9 @@ Return this exact JSON structure:
   "clarifications": string[],
   "isCoffeeBag": boolean
 }
+
+fermentationStyle: for modern/experimental coffees the sub-style is the real differentiator. Examples: "Spontaneous Anaerobic", "Starter-culture Natural (Lalcafé Cima)", "Thermal-shock Washed", "Carbonic Maceration 72h", "Co-fermented with cascara". Only fill this if the bag names a specific sub-style or fermentation protocol — don't guess from the broad process category alone.
+cuppingScore: numeric SCA / Q-grade if printed on the bag (e.g. 87.5, 89). Null if not shown.
 
 clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) roast date if unknown, (2) variety if unknown, (3) tasting notes if the array is empty, (4) region/process if unclear. Examples:
 - "I can see it's from Ethiopia but couldn't read the region — Yirgacheffe, Guji, or Sidama?"
@@ -86,9 +93,11 @@ export interface BagAnalysisResult {
     farm?: string;
     variety?: string;
     process?: string;
+    fermentationStyle?: string;
     roastLevel?: string;
     roastDate?: string;
     altitudeMeters?: number;
+    cuppingScore?: number;
     tastingNotesFromBag?: string[];
   };
   confidence: Record<string, "bag" | "researched" | "unknown">;

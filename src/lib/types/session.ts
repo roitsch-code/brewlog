@@ -8,8 +8,10 @@ export interface CoffeeIdentity {
   region?: string;
   variety?: string;
   process: string; // Natural | Washed | Honey | Anaerobic | Other
+  fermentationStyle?: string; // e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed"
   roastLevel: string; // Light | Medium-Light | Medium | Dark
   roastDate?: string; // ISO date string
+  cuppingScore?: number; // SCA / Q-grade, e.g. 87.5
   bagPhotoUrl?: string;
   bagPhotoPath?: string;
   aiExtracted: boolean;
