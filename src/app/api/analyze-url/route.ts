@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { parseClaudeJson, z } from "@/lib/claude/parseJson";
+
+const UrlExtractSchema = z.object({
+  roaster: z.string().optional(),
+  name: z.string().optional(),
+  origin: z.string().optional(),
+  region: z.string().optional(),
+  variety: z.string().optional(),
+  process: z.string().optional(),
+  roastLevel: z.string().optional(),
+  roastDate: z.string().optional(),
+  tastingNotesFromBag: z.array(z.string()).optional(),
+});
 
 export async function POST(req: Request) {
   try {
@@ -68,20 +81,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "AI did not return text" }, { status: 500 });
     }
 
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    const extracted = parseClaudeJson(content.text, UrlExtractSchema);
+    if (!extracted) {
       return NextResponse.json(
         { error: "Could not extract coffee details from that page. Try entering manually." },
-        { status: 422 }
-      );
-    }
-
-    let extracted: Record<string, unknown> = {};
-    try {
-      extracted = JSON.parse(jsonMatch[0]);
-    } catch {
-      return NextResponse.json(
-        { error: "Could not parse coffee details. Try entering manually." },
         { status: 422 }
       );
     }

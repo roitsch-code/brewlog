@@ -12,6 +12,27 @@ import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
 import { buildTimingStats } from "./historyUtils";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
+import { parseClaudeJson, z } from "./parseJson";
+
+const CandidateSchema = z.object({
+  method: z.string(),
+  role: z.string(),
+  title: z.string(),
+  recipe: z.record(z.string(), z.unknown()),
+  whyChosen: z.string(),
+  hypothesis: z.string(),
+  predictedCupProfile: z.string(),
+  primaryVariable: z.string(),
+  whatToObserve: z.string(),
+  confidence: z.string(),
+  confidenceReason: z.string(),
+  learningValue: z.string(),
+});
+
+const RecommendationResponseSchema = z.object({
+  candidates: z.array(CandidateSchema).min(1),
+  reasoning: z.string().optional(),
+});
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -462,54 +483,34 @@ Return valid JSON only.`;
   const text =
     response.content[0].type === "text" ? response.content[0].text : "{}";
 
-  try {
-    const raw = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || text);
+  const raw = parseClaudeJson(text, RecommendationResponseSchema);
+  if (!raw) throw new Error("Failed to parse recommendation from Claude");
 
-    const candidates: RecommendationCandidate[] = (
-      raw.candidates as Array<{
-        method: string;
-        role: string;
-        title: string;
-        recipe: BrewRecipe;
-        whyChosen: string;
-        hypothesis: string;
-        predictedCupProfile: string;
-        primaryVariable: string;
-        whatToObserve: string;
-        confidence: string;
-        confidenceReason: string;
-        learningValue: string;
-      }>
-    ).map((c) => ({
-      method: c.method,
-      recipe: c.recipe as BrewRecipe,
-      role: c.role as CandidateRole,
-      title: c.title,
-      whyChosen: c.whyChosen,
-      hypothesis: c.hypothesis,
-      predictedCupProfile: c.predictedCupProfile,
-      primaryVariable: c.primaryVariable,
-      whatToObserve: c.whatToObserve,
-      confidence: c.confidence as CandidateConfidence,
-      confidenceReason: c.confidenceReason,
-      learningValue: c.learningValue,
-    }));
+  const candidates: RecommendationCandidate[] = raw.candidates.map((c) => ({
+    method: c.method,
+    recipe: c.recipe as unknown as BrewRecipe,
+    role: c.role as CandidateRole,
+    title: c.title,
+    whyChosen: c.whyChosen,
+    hypothesis: c.hypothesis,
+    predictedCupProfile: c.predictedCupProfile,
+    primaryVariable: c.primaryVariable,
+    whatToObserve: c.whatToObserve,
+    confidence: c.confidence as CandidateConfidence,
+    confidenceReason: c.confidenceReason,
+    learningValue: c.learningValue,
+  }));
 
-    if (!candidates.length) throw new Error("No candidates in response");
-
-    return {
-      recommendation: {
-        candidates,
-        primaryMethod: candidates[0].method,
-        primaryRecipe: candidates[0].recipe,
-        alternativeMethod: candidates[1]?.method,
-        alternativeRecipe: candidates[1]?.recipe,
-        reasoning: raw.reasoning ?? "",
-        generatedAt: new Date().toISOString(),
-      },
-      usage: response.usage,
-    };
-  } catch {
-    throw new Error("Failed to parse recommendation from Claude");
-  }
+  return {
+    recommendation: {
+      candidates,
+      primaryMethod: candidates[0].method,
+      primaryRecipe: candidates[0].recipe,
+      alternativeMethod: candidates[1]?.method,
+      alternativeRecipe: candidates[1]?.recipe,
+      reasoning: raw.reasoning ?? "",
+      generatedAt: new Date().toISOString(),
+    },
+    usage: response.usage,
+  };
 }

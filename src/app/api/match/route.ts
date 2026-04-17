@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
+import { parseClaudeJson, z } from "@/lib/claude/parseJson";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
+
+const MatchResultSchema = z.object({
+  matchLevel: z.enum(["great", "good", "maybe", "avoid"]),
+  score: z.number().min(0).max(100),
+  headline: z.string(),
+  reasons: z.array(z.string()),
+  expect: z.string(),
+  freshnessNote: z.string().optional(),
+});
 
 /** Fetch a product page URL and extract meaningful text for Claude */
 async function fetchPageText(url: string): Promise<string> {
@@ -329,10 +339,15 @@ Return valid JSON only. No markdown, no explanation outside the JSON.`,
     });
 
     const text = response.content[0].type === "text" ? response.content[0].text : "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    const result: MatchResult = jsonMatch
-      ? JSON.parse(jsonMatch[0])
-      : { matchLevel: "maybe", score: 50, headline: "Unable to assess", reasons: [], expect: "Could not analyze.", freshnessNote: freshnessNote || undefined };
+    const parsed = parseClaudeJson(text, MatchResultSchema);
+    const result: MatchResult = parsed ?? {
+      matchLevel: "maybe",
+      score: 50,
+      headline: "Unable to assess",
+      reasons: [],
+      expect: "Could not analyze.",
+      freshnessNote: freshnessNote || undefined,
+    };
 
     // Always include server-computed freshness note if roast date was provided
     if (freshnessNote && !result.freshnessNote) {

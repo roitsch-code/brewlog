@@ -1,6 +1,28 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { parseClaudeJson, z } from "./parseJson";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const BagAnalysisSchema = z.object({
+  extracted: z
+    .object({
+      roaster: z.string().nullable().optional(),
+      name: z.string().nullable().optional(),
+      origin: z.string().nullable().optional(),
+      region: z.string().nullable().optional(),
+      farm: z.string().nullable().optional(),
+      variety: z.string().nullable().optional(),
+      process: z.string().nullable().optional(),
+      roastLevel: z.string().nullable().optional(),
+      roastDate: z.string().nullable().optional(),
+      altitudeMeters: z.number().nullable().optional(),
+      tastingNotesFromBag: z.array(z.string()).optional(),
+    })
+    .passthrough(),
+  confidence: z.record(z.string(), z.string()).optional(),
+  clarifications: z.array(z.string()).optional(),
+  isCoffeeBag: z.boolean().optional(),
+});
 
 const SYSTEM_PROMPT = `You are an expert specialty coffee analyst with deep knowledge of coffee producers, origins, processing methods, and roasters worldwide. When given a photo of a coffee bag or label, extract all visible information AND supplement with your knowledge to fill in gaps the bag doesn't explicitly state. Return structured JSON only.`;
 
@@ -97,15 +119,24 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
   });
 
   const text = response.content[0].type === "text" ? response.content[0].text : "";
-  try {
-    return { result: JSON.parse(text) as BagAnalysisResult, usage: response.usage };
-  } catch {
-    // Try to extract JSON from text
-    const match = text.match(/\{[\s\S]*\}/);
-    if (match) return { result: JSON.parse(match[0]) as BagAnalysisResult, usage: response.usage };
+  const parsed = parseClaudeJson(text, BagAnalysisSchema);
+  if (parsed) {
+    // Strip nulls — downstream code + TS expect `string | undefined`, not `string | null`
+    const cleanExtracted = Object.fromEntries(
+      Object.entries(parsed.extracted).filter(([, v]) => v !== null && v !== undefined)
+    );
     return {
-      result: { extracted: {}, confidence: {}, clarifications: [], isCoffeeBag: false },
+      result: {
+        extracted: cleanExtracted as BagAnalysisResult["extracted"],
+        confidence: (parsed.confidence ?? {}) as BagAnalysisResult["confidence"],
+        clarifications: parsed.clarifications ?? [],
+        isCoffeeBag: parsed.isCoffeeBag ?? true,
+      },
       usage: response.usage,
     };
   }
+  return {
+    result: { extracted: {}, confidence: {}, clarifications: [], isCoffeeBag: false },
+    usage: response.usage,
+  };
 }
