@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { parseClaudeJson, z } from "@/lib/claude/parseJson";
+import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 
 const UrlExtractSchema = z.object({
   roaster: z.string().optional(),
@@ -20,8 +21,13 @@ export async function POST(req: Request) {
   try {
     const { url } = await req.json() as { url: string };
 
-    if (!url || !url.startsWith("http")) {
+    if (!url) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+
+    const safety = await assertSafeHttpsUrl(url);
+    if (!safety.ok) {
+      return NextResponse.json({ error: safety.error ?? "Invalid URL" }, { status: 400 });
     }
 
     // Fetch the page

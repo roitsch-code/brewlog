@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { parseClaudeJson, z } from "@/lib/claude/parseJson";
+import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
 
@@ -17,9 +18,9 @@ const MatchResultSchema = z.object({
 
 /** Fetch a product page URL and extract meaningful text for Claude */
 async function fetchPageText(url: string): Promise<string> {
-  // Only allow HTTPS URLs to prevent SSRF against internal resources
-  if (!url.startsWith("https://")) {
-    return "[Only HTTPS URLs are supported]";
+  const safety = await assertSafeHttpsUrl(url);
+  if (!safety.ok) {
+    return `[${safety.error ?? "Unsafe URL"}]`;
   }
 
   const controller = new AbortController();
