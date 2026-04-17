@@ -184,13 +184,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fullSystemPrompt =
-      SYSTEM_PROMPT + (contextParts.length > 0 ? contextParts.join("") : "");
+    const dynamicContext = contextParts.length > 0 ? contextParts.join("") : "";
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 900,
-      system: fullSystemPrompt,
+      system: [
+        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+        ...(dynamicContext ? [{ type: "text" as const, text: dynamicContext }] : []),
+      ],
       messages: messages.map(m => ({
         role: m.role,
         content: m.content,
