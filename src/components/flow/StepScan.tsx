@@ -60,6 +60,12 @@ export default function StepScan() {
 
   // Auto-generating roaster profile after photo scan
   const [isGeneratingRoaster, setIsGeneratingRoaster] = useState(false);
+  // AI-generated profile awaiting user confirmation before it's written to the library
+  const [pendingRoasterSave, setPendingRoasterSave] = useState<{
+    profile: RoasterPriorSummary;
+    originalName: string;
+  } | null>(null);
+  const [isSavingRoaster, setIsSavingRoaster] = useState(false);
 
   // Roaster onboarding Q&A (manual entry only — photo scan auto-generates)
   const [roasterQA, setRoasterQA] = useState<RoasterQAState | null>(null);
@@ -157,19 +163,44 @@ export default function StepScan() {
       const generated: RoasterPriorSummary = await res.json();
       if (!generated?.styleSummary) throw new Error("Invalid roaster profile");
       const profile: RoasterPriorSummary = { ...generated, confidence: "inferred" };
-      // Save to Firestore so future scans find it immediately
-      fetch("/api/roasters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
-      }).catch(() => {});
+      // Show the profile to the user. Save requires explicit confirmation so the
+      // library always reflects what you approved, not what the AI first guessed.
       setAnalysisResult({ ...currentResult, roasterPrior: profile });
+      setPendingRoasterSave({ profile, originalName: name });
     } catch (err) {
       console.error("autoGenerateRoasterProfile error:", err);
     } finally {
       setIsGeneratingRoaster(false);
     }
   };
+
+  const confirmSaveRoaster = async () => {
+    if (!pendingRoasterSave) return;
+    setIsSavingRoaster(true);
+    try {
+      const payload = {
+        ...pendingRoasterSave.profile,
+        confidence: "user" as const,
+        originalName: pendingRoasterSave.originalName,
+      };
+      const res = await fetch("/api/roasters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("save failed");
+      const saved: RoasterPriorSummary = { ...pendingRoasterSave.profile, confidence: "user" };
+      if (analysisResult) setAnalysisResult({ ...analysisResult, roasterPrior: saved });
+      else setManualRoasterPrior(saved);
+      setPendingRoasterSave(null);
+    } catch (err) {
+      console.error("confirmSaveRoaster error:", err);
+    } finally {
+      setIsSavingRoaster(false);
+    }
+  };
+
+  const dismissPendingRoaster = () => setPendingRoasterSave(null);
 
   const handleClarificationAnswer = async (answer: string) => {
     if (!analysisResult) return;
@@ -289,11 +320,11 @@ export default function StepScan() {
         const generated: RoasterPriorSummary = await genRes.json();
         const saved: RoasterPriorSummary = { ...generated, confidence: "user" };
 
-        // Auto-save to Firestore silently
+        // Auto-save to Firestore — user explicitly confirmed the name + style through the Q&A
         fetch("/api/roasters", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(saved),
+          body: JSON.stringify({ ...saved, originalName: roasterName }),
         }).catch(() => {});
 
         if (analysisResult) {
@@ -447,14 +478,57 @@ export default function StepScan() {
               {!isAnalyzing && !isGeneratingRoaster && displayPrior && (
                 <RoasterProfileCard prior={displayPrior} onEdit={() => setShowRoasterForm(v => !v)} />
               )}
+              {/* AI-generated profile awaiting confirmation — save builds a permanent library entry */}
+              {!isAnalyzing && !isGeneratingRoaster && pendingRoasterSave && !showRoasterForm && (
+                <div
+                  className="rounded-2xl p-4 flex flex-col gap-3"
+                  style={{
+                    background: "rgba(212,184,150,0.08)",
+                    border: "1px solid rgba(212,184,150,0.25)",
+                  }}
+                >
+                  <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                    AI-generated from web research. Save to your library so every future bag from this roaster uses the same profile.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={confirmSaveRoaster}
+                      disabled={isSavingRoaster}
+                      className="flex-1 px-4 py-2 rounded-xl text-sm font-medium active:scale-95 transition-all disabled:opacity-40"
+                      style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                    >
+                      {isSavingRoaster ? "Saving…" : "Save to library"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowRoasterForm(true)}
+                      className="px-4 py-2 rounded-xl text-sm border active:scale-95 transition-all"
+                      style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                    >
+                      Edit first
+                    </button>
+                    <button
+                      type="button"
+                      onClick={dismissPendingRoaster}
+                      className="px-4 py-2 rounded-xl text-sm active:scale-95 transition-all"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              )}
               {showRoasterForm && (
                 <GenerateRoasterForm
                   roasterName={draft.coffee?.roaster || manualRoaster || ""}
                   existingPrior={displayPrior ?? undefined}
+                  originalName={pendingRoasterSave?.originalName}
                   onSaved={saved => {
                     if (analysisResult) setAnalysisResult({ ...analysisResult, roasterPrior: saved });
                     else setManualRoasterPrior(saved);
                     setShowRoasterForm(false);
+                    setPendingRoasterSave(null);
                   }}
                   onCancel={() => setShowRoasterForm(false)}
                 />
@@ -892,11 +966,14 @@ const RATIO_BIASES = ["lean", "standard", "rich"] as const;
 function GenerateRoasterForm({
   roasterName,
   existingPrior,
+  originalName,
   onSaved,
   onCancel,
 }: {
   roasterName: string;
   existingPrior?: RoasterPriorSummary;
+  /** Raw name from the bag, tracked as an alias when it differs from the canonical. */
+  originalName?: string;
   onSaved: (prior: RoasterPriorSummary) => void;
   onCancel: () => void;
 }) {
@@ -937,7 +1014,7 @@ function GenerateRoasterForm({
       const res = await fetch("/api/roasters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...draft, confidence: "user" }),
+        body: JSON.stringify({ ...draft, confidence: "user", originalName }),
       });
       if (!res.ok) throw new Error("Save failed");
       onSaved({ ...draft, confidence: "user" } as RoasterPriorSummary);

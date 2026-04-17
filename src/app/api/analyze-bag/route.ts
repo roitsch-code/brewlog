@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeBagImage } from "@/lib/claude/analyzeBag";
-import { getRoasterPrior } from "@/lib/roasters/priors";
+import { getRoasterPrior, canonicalRoasterSlug } from "@/lib/roasters/priors";
 import { getAdminDb } from "@/lib/firebase/admin";
 import type { RoasterPrior } from "@/lib/roasters/priors";
-
-function toSlug(name: string): string {
-  return name.toLowerCase().trim().replace(/\s+/g, "-");
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,12 +24,22 @@ export async function POST(req: NextRequest) {
     const roasterName = result.extracted.roaster;
     let roasterPrior = undefined;
     if (roasterName) {
-      // 1. Check user-saved roasters in Firestore
+      // 1. Check user-saved roasters in Firestore (canonical slug + alias fallback)
       let prior: RoasterPrior | null = null;
       try {
         const db = getAdminDb();
-        const snap = await db.collection("roasters").doc(toSlug(roasterName)).get();
-        if (snap.exists) prior = snap.data() as RoasterPrior;
+        const slug = canonicalRoasterSlug(roasterName);
+        const direct = await db.collection("roasters").doc(slug).get();
+        if (direct.exists) {
+          prior = direct.data() as RoasterPrior;
+        } else {
+          const aliasSnap = await db
+            .collection("roasters")
+            .where("aliases", "array-contains", slug)
+            .limit(1)
+            .get();
+          if (!aliasSnap.empty) prior = aliasSnap.docs[0].data() as RoasterPrior;
+        }
       } catch {}
 
       // 2. Fall back to built-in list

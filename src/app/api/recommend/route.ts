@@ -3,12 +3,9 @@ import { generateRecommendation } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { getAdminDb } from "@/lib/firebase/admin";
 import { requireAuth } from "@/lib/auth/requireAuth";
+import { canonicalRoasterSlug } from "@/lib/roasters/priors";
 import type { UserPreferences } from "@/lib/types/preferences";
 import type { RoasterPrior } from "@/lib/roasters/priors";
-
-function toSlug(name: string): string {
-  return name.toLowerCase().trim().replace(/\s+/g, "-");
-}
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
@@ -36,8 +33,18 @@ export async function POST(req: NextRequest) {
     if (coffee?.roaster) {
       try {
         const db = getAdminDb();
-        const snap = await db.collection("roasters").doc(toSlug(coffee.roaster)).get();
-        if (snap.exists) userRoasterPrior = snap.data() as RoasterPrior;
+        const slug = canonicalRoasterSlug(coffee.roaster);
+        const direct = await db.collection("roasters").doc(slug).get();
+        if (direct.exists) {
+          userRoasterPrior = direct.data() as RoasterPrior;
+        } else {
+          const aliasSnap = await db
+            .collection("roasters")
+            .where("aliases", "array-contains", slug)
+            .limit(1)
+            .get();
+          if (!aliasSnap.empty) userRoasterPrior = aliasSnap.docs[0].data() as RoasterPrior;
+        }
       } catch {}
     }
 

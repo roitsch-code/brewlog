@@ -1,5 +1,6 @@
 export interface RoasterPrior {
   name: string;
+  aliases?: string[];
   region?: string;
   styleSummary: string;
   roastTendency: "very-light" | "light" | "light-medium" | "medium" | "varied";
@@ -15,6 +16,25 @@ export interface RoasterPrior {
   notes: string;
   confidence: "curated" | "inferred" | "fallback" | "user";
   disclaimer: string;
+  savedAt?: string;
+}
+
+/**
+ * Canonical slug for a roaster name — strips trailing business-type words
+ * ("Coffee Roasters", "Roastery", "Coffee Co.", etc.) and punctuation so that
+ * "Friedhats", "Friedhats Coffee", and "Friedhats Coffee Roasters" all map to
+ * the same Firestore document.
+ */
+export function canonicalRoasterSlug(name: string): string {
+  const stripWords =
+    /\b(coffee\s+roasters?|coffee\s+roastery|coffee\s+co\.?|roasters?|roastery|coffee)\b/gi;
+  return name
+    .toLowerCase()
+    .replace(stripWords, " ")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\s/g, "-");
 }
 
 const DISCLAIMER =
@@ -1168,10 +1188,17 @@ export const FALLBACK_PRIOR: RoasterPrior = {
  */
 export function getRoasterPrior(roasterName: string): RoasterPrior {
   const normalised = roasterName.toLowerCase().trim();
+  const slug = canonicalRoasterSlug(roasterName);
   return (
     // Exact match first
     ROASTER_PRIORS.find((r) => r.name.toLowerCase() === normalised) ??
-    // Fuzzy: stored name contains prior name or vice versa (e.g. "Friedhats Coffee Roasters" → "Friedhats")
+    // Canonical slug match (handles "Friedhats" vs "Friedhats Coffee Roasters")
+    ROASTER_PRIORS.find((r) => canonicalRoasterSlug(r.name) === slug) ??
+    // Alias match
+    ROASTER_PRIORS.find((r) =>
+      r.aliases?.some((a) => canonicalRoasterSlug(a) === slug)
+    ) ??
+    // Fuzzy: stored name contains prior name or vice versa
     ROASTER_PRIORS.find((r) => {
       const n = r.name.toLowerCase();
       return normalised.includes(n) || n.includes(normalised);
