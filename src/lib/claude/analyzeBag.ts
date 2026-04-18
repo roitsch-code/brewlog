@@ -62,11 +62,12 @@ Return this exact JSON structure:
 fermentationStyle: for modern/experimental coffees the sub-style is the real differentiator. Examples: "Spontaneous Anaerobic", "Starter-culture Natural (Lalcafé Cima)", "Thermal-shock Washed", "Carbonic Maceration 72h", "Co-fermented with cascara". Only fill this if the bag names a specific sub-style or fermentation protocol — don't guess from the broad process category alone.
 cuppingScore: numeric SCA / Q-grade if printed on the bag (e.g. 87.5, 89). Null if not shown.
 
-clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) roast date if unknown, (2) variety if unknown, (3) tasting notes if the array is empty, (4) region/process if unclear. Examples:
+clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) region/process if unclear. Examples:
 - "I can see it's from Ethiopia but couldn't read the region — Yirgacheffe, Guji, or Sidama?"
-- "No roast date visible — do you remember roughly when you bought it?"
 - "I didn't spot a variety — is it listed anywhere on the bag, or do you know it?"
 - "No tasting notes were visible — what flavour descriptors does the roaster use?"
+
+NEVER ask about roast date (the user enters this via a dedicated date picker in the UI) or cupping/Q score (optional, often unavailable — leave null if not printed on the bag).
 
 Return ONLY valid JSON with no markdown or explanation.`;
 
