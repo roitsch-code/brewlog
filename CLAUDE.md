@@ -1,1 +1,141 @@
-{"data": "IyBCcmV3TG9nIOKAlCBDbGF1ZGUgQ29kZSBDb250ZXh0CgpQZXJzb25hbCBjb2ZmZWUgYnJldyBhZHZpc29yICYgZGlhcnkgUFdBLiBOZXh0LmpzIDE0IEFwcCBSb3V0ZXIgKyBGaXJlYmFzZSArIENsYXVkZSBBSSArIFZlcmNlbC4KCi0tLQoKIyMgUHJvamVjdCBTdHJ1Y3R1cmUgJiBLZXkgRmlsZXMKCmBgYApzcmMvCuKUnOKUgOKUgCBhcHAvCuKUgiAgIOKUnOKUgOKUgCBwYWdlLnRzeCAgICAgICAgICAgICAgICAgICAgICMgSG9tZSDigJQgc2Vzc2lvbiBkaWFyeSBmZWVkCuKUgiAgIOKUnOKUgOKUgCBicmV3L25ldy9wYWdlLnRzeCAgICAgICAgICAgICMgRmxvdyBlbnRyeSBwb2ludArilIIgICDilJzilIDilIAgdGFzdGUvcGFnZS50c3ggICAgICAgICAgICAgICAjIFRhc3RlIHByb2ZpbGUgKyBBSSBzdW1tYXJ5CuKUgiAgIOKUnOKUgOKUgCBjb2ZmZWVzLyAgICAgICAgICAgICAgICAgICAgICMgQ29mZmVlIGxpYnJhcnkgKGxpc3QgKyBkZXRhaWwpCuKUgiAgIOKUnOKUgOKUgCBleHBsb3JlL3BhZ2UudHN4ICAgICAgICAgICAgICMgQU1BIGNoYXQgd2l0aCBjb2ZmZWUgZXhwZXJ0CuKUgiAgIOKUnOKUgOKUgCBtYXRjaC9wYWdlLnRzeCAgICAgICAgICAgICAgICMgVGFzdGUtbWF0Y2ggZmluZGVyCuKUgiAgIOKUlOKUgOKUgCBhcGkvCuKUgiAgICAgICDilJzilIDilIAgc2Vzc2lvbnMvcm91dGUudHMgICAgICAgICMg4piFIENvcmUgQ1JVRCDigJQgc2Vzc2lvbiBzYXZlL2xvYWQK4pSCICAgICAgIOKUnOKUgOKUgCByZWNvbW1lbmQvcm91dGUudHMgICAgICAgIyBCcmV3IHJlY2lwZSBnZW5lcmF0aW9uCuKUgiAgICAgICDilJzilIDilIAgYW5hbHl6ZS1iYWcvcm91dGUudHMgICAgICMgQ2xhdWRlIFZpc2lvbiDihpIgY29mZmVlIGlkZW50aXR5CuKUgiAgICAgICDilJzilIDilIAgYW5hbHl6ZS1iYWcvY2xhcmlmeS8gICAgICMgRm9sbG93LXVwIGNsYXJpZmljYXRpb24gQUkK4pSCICAgICAgIOKUnOKUgOKUgCBtYXRjaC9yb3V0ZS50cyAgICAgICAgICAgIyBUYXN0ZSBzY29yaW5nIGFsZ29yaXRobQrilIIgICAgICAg4pSc4pSA4pSAIGV4cGxvcmUvcm91dGUudHMgICAgICAgICAjIEFNQSBzeXN0ZW0gcHJvbXB0CuKUgiAgICAgICDilJzilIDilIAgYnJldy1pbnNpZ2h0L3JvdXRlLnRzICAgICMgUG9zdC1icmV3IG9uZS1saW5lciBpbnNpZ2h0CuKUgiAgICAgICDilJzilIDilIAgdGFzdGUtc3VtbWFyeS9yb3V0ZS50cyAgICMgVGFzdGUgcHJvZmlsZSBBSSBzdW1tYXJ5CuKUgiAgICAgICDilJzilIDilIAgdXBsb2FkL3JvdXRlLnRzICAgICAgICAgICMgRmlyZWJhc2UgU3RvcmFnZSAoYmFncy8gcHJlZml4IG9ubHkpCuKUgiAgICAgICDilJTilIDilIAgcmVzZWFyY2gvcm91dGUudHMgICAgICAgICMgV2Vla2x5IGNyb24gYWdlbnQgKFZlcmNlbCkK4pSc4pSA4pSAIGNvbXBvbmVudHMvZmxvdy8gICAgICAgICAgICAgICAgICMgNy1zdGVwIGJyZXcgZmxvdyBVSQrilIIgICDilJzilIDilIAgRmxvd1NoZWxsLnRzeCAgICAgICAgICAgICAgICMgU3RlcCByb3V0ZXIgKyBuYXYgc2hlbGwK4pSCICAg4pSc4pSA4pSAIFN0ZXBNb2RlLnRzeCAgICAgICAgICAgICAgICAjIEhvbWUgdnMgRXh0ZXJuYWwK4pSCICAg4pSc4pSA4pSAIFN0ZXBTY2FuLnRzeCAgICAgICAgICAgICAgICAjIFBob3RvICsgQUkgZXh0cmFjdGlvbgrilIIgICDilJzilIDilIAgU3RlcENvbnRleHQudHN4ICAgICAgICAgICAgICMgT2NjYXNpb24gLyBtb29kIC8gd2F0ZXIK4pSCICAg4pSc4pSA4pSAIFN0ZXBSZWNvbW1lbmQudHN4ICAgICAgICAgICAjIFJlY2lwZSBjYXJkICsgcmVhc29uaW5nCuKUgiAgIOKUnOKUgOKUgCBTdGVwQnJldy50c3ggICAgICAgICAgICAgICAgIyDimIUgVGltZXIgKyBsaXZlIHBvdXIgZ3VpZGUK4pSCICAg4pSc4pSA4pSAIFN0ZXBMb2cudHN4ICAgICAgICAgICAgICAgICAjIFRhc3RlIHJhdGluZyArIG5vdGVzCuKUgiAgIOKUlOKUgOKUgCBTdGVwU3VtbWFyeS50c3ggICAgICAgICAgICAgIyBTYXZlICsgc3VjY2VzcyBzY3JlZW4K4pSc4pSA4pSAIGNvbXBvbmVudHMvdWkvICAgICAgICAgICAgICAgICAgICMgUmV1c2FibGU6IENpcmN1bGFyVGltZXIsIFN0YXJSYXRpbmcsCuKUgiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIyAgIFJhZGFyQ2hhcnQsIENoaXAsIFBob3RvVXBsb2FkLCAuLi4K4pSc4pSA4pSAIGhvb2tzL3VzZVdha2VMb2NrLnRzICAgICAgICAgICAgIyBLZWVwIHNjcmVlbiBvbiBkdXJpbmcgYnJldwrilJzilIDilIAgbGliLwrilIIgICDilJzilIDilIAgY2xhdWRlL3JlY29tbWVuZC50cyAgICAgICAgICMg4piFIEZ1bGwgc3lzdGVtIHByb21wdCAoZXF1aXBtZW50IGJha2VkIGluKQrilIIgICDilJzilIDilIAgY2xhdWRlL2FuYWx5emVCYWcudHMgICAgICAgICMgVmlzaW9uIHByb21wdCArIEJhZ0FuYWx5c2lzUmVzdWx0IHR5cGUK4pSCICAg4pSc4pSA4pSAIHR5cGVzL3Nlc3Npb24udHMgICAgICAgICAgICAjIOKYhSBDb3JlIGRhdGEgbW9kZWwgKGFsbCBpbnRlcmZhY2VzKQrilIIgICDilJTilIDilIAgZmlyZWJhc2UvYWRtaW4udHMgICAgICAgICAgICMgQWRtaW4gU0RLIGluaXQgKGJhc2U2NCBzZXJ2aWNlIGFjY291bnQpCuKUlOKUgOKUgCBzdG9yZS9mbG93U3RvcmUudHMgICAgICAgICAgICAgICMg4piFIFp1c3RhbmQgYnJldyBmbG93IHN0YXRlIChzZXNzaW9uU3RvcmFnZSkKYGBgCgoqKkRlcGxveToqKiBgdmVyY2VsIC0tcHJvZGAKKipUeXBlLWNoZWNrIGJlZm9yZSBldmVyeSBjb21taXQ6KiogYG5vZGUgbm9kZV9tb2R1bGVzLy5iaW4vdHNjIC0tbm9FbWl0YAoKLS0tCgojIyBDdXJyZW50IFN0YXR1cwoKIyMjIOKchSBEb25lCi0gRnVsbCA3LXN0ZXAgYnJldyBmbG93IChtb2RlIOKGkiBzY2FuIOKGkiBjb250ZXh0IOKGkiByZWNvbW1lbmQg4oaSIGJyZXcg4oaSIGxvZyDihpIgc3VtbWFyeSkKLSBBSSBiYWcgcGhvdG8gZXh0cmFjdGlvbiAoQ2xhdWRlIFZpc2lvbiDihpIgWm9kLXZhbGlkYXRlZCBzZXNzaW9uKQotIEJyZXcgdGltZXI6IGNpcmN1bGFyLCBwb3VyLW92ZXIgc2VxdWVuY2UgKyBwcm9zZS1zdGVwIGd1aWRlIChBZXJvUHJlc3MgZXRjLikKLSBTY3JlZW4gd2FrZSBsb2NrIGR1cmluZyBhY3RpdmUgYnJldyAodXNlV2FrZUxvY2sgaG9vaykKLSBCbG9vbSBkdXJhdGlvbiBmcm9tIHJvYXN0IGRhdGUgKEhvZmZtYW5uL1JhbzogNTBzIGZyZXNoIC8gNDVzIHBlYWsgLyAzMHMgb2xkKQotIFBvdXIgdGltaW5nIGZvcm11bGE6IGByZW1haW5pbmcgLyAobi0yKWAg4oCUIGxhc3QgcG91ciBsYW5kcyBhdCBgdGFyZ2V0IC0gZHJhd2Rvd25SZXNlcnZlYAotIFByb3BvcnRpb25hbCBkcmF3ZG93biByZXNlcnZlOiBgdGFyZ2V0VGltZVNlYyAqIDAuMzNgCi0gU2Vzc2lvbiBzYXZlOiBudWxsLXN0cmlwcGluZyDihpIgWm9kIHZhbGlkYXRpb24g4oaSIEpTT04tc2FuaXRpc2Ug4oaSIEZpcmVzdG9yZQotIEZpcmVzdG9yZSBHRVQ6IGR1YWwtaW5kZXggKG9yZGVyQnkgY3JlYXRlZEF0TXMgKyBsZWdhY3kgZmFsbGJhY2ssIGRlZHVwZWQpCi0gVGFzdGUgcHJvZmlsZSBwYWdlICsgRXhwbG9yZSBOZXh0IGxheW91dCAoc3RhY2tlZCwgbm90IHNpZGUtYnktc2lkZSkKLSBDb2ZmZWUgbGlicmFyeSwgbWF0Y2ggZmluZGVyLCBBTUEgZXhwbG9yZSBjaGF0LCB3ZWVrbHkgcmVzZWFyY2ggY3JvbgotIFBXQSAobWFuaWZlc3QsIHNlcnZpY2Ugd29ya2VyLCBvZmZsaW5lIGRyYWZ0cykKLSBXZWJBdXRobiAocGFzc2tleSkgYXV0aAoKIyMjIOKdjCBOb3QgRG9uZSAvIEtub3duIEdhcHMKLSBQaG90byB1cGxvYWRzOiBzdG9yZWQgdW5kZXIgYGJhZ3MvYCDigJQgb2xkIHNlc3Npb25zIHNjYW5uZWQgYmVmb3JlIHRoaXMgZml4IGhhdmUgbm8gYmFnUGhvdG9VcmwKLSBObyBwZXItdXNlciBGaXJlc3RvcmUgaXNvbGF0aW9uIChzaW5nbGUgY29sbGVjdGlvbiwgc2luZ2xlLXVzZXIgYXBwIGJ5IGRlc2lnbikKLSBSZXNlYXJjaCBjcm9uIGRhdGEgKGluc2lnaHRzL2hpbnRzL25ld3MpIG5lZWRzIHNlZWRpbmc6IGBub2RlIHNjcmlwdHMvc2VlZC1pbnNpZ2h0cy5tanNgCgotLS0KCiMjIENvbnZlbnRpb25zCgojIyMgQ29kZQotICoqVHlwZVNjcmlwdCBzdHJpY3QqKiDigJQgbm8gYGFueWAsIG5vIGBAdHMtaWdub3JlYCB3aXRob3V0IGNvbW1lbnQKLSAqKlRhaWx3aW5kIG9ubHkqKiDigJQgbm8gaW5saW5lIHN0eWxlcyBleGNlcHQgYHNhZmUtYXJlYS1pbnNldC0qYAotICoqTm8gZXh0ZXJuYWwgVUkgbGlicmFyaWVzKiog4oCUIGV2ZXJ5IGNvbXBvbmVudCBpcyBiZXNwb2tlCi0gKipSZWZzIG92ZXIgc3RhdGUqKiBmb3IgdmFsdWVzIHRoYXQgZG9uJ3QgbmVlZCB0byB0cmlnZ2VyIHJlbmRlcnMgKHRpbWVycywgd2FrZSBsb2NrLCBjYWxsYmFja3MpCi0gYHVzZUNhbGxiYWNrYCBkZXBzIG11c3QgYmUgYWNjdXJhdGUg4oCUIGRvbid0IG9taXQgdG8gc2lsZW5jZSBsaW50ZXIKLSAqKlpvZCBzY2hlbWFzKiogb24gYWxsIEFQSSBQT1NUIHJvdXRlczsgc3RyaXAgbnVsbHMgd2l0aCBgZGVlcFN0cmlwTnVsbHMoKWAgYmVmb3JlIHBhcnNpbmcKCiMjIyBGaXJlc3RvcmUKLSBgSlNPTi5wYXJzZShKU09OLnN0cmluZ2lmeShkYXRhKSlgIGJlZm9yZSBldmVyeSBgLmFkZCgpYCAvIGAuc2V0KClgIOKAlCByZW1vdmVzIGB1bmRlZmluZWRgIHdoaWNoIEZpcmVzdG9yZSByZWplY3RzCi0gU2Vzc2lvbiB0aW1lc3RhbXBzOiBgY3JlYXRlZEF0YCAoSVNPIHN0cmluZywgbGVnYWN5KSArIGBjcmVhdGVkQXRNc2AgKHVuaXggbXMsIG5ldyDigJQgZW5hYmxlcyBvcmRlckJ5KQotIFVwbG9hZCBwYXRocyBtdXN0IHN0YXJ0IHdpdGggYGJhZ3MvYCBvciBgdXBsb2Fkcy9gIChlbmZvcmNlZCBpbiB1cGxvYWQgcm91dGUpCgojIyMgQUkgbW9kZWxzCi0gYGNsYXVkZS1zb25uZXQtNC02YCDigJQgcmVjb21tZW5kLCBhbmFseXplLWJhZywgbWF0Y2gsIGV4cGxvcmUKLSBgY2xhdWRlLWhhaWt1LTQtNWAg4oCUIGJyZXctaW5zaWdodCwgdGFzdGUtc3VtbWFyeSwgcmVzZWFyY2gsIGNsYXJpZnkKCiMjIyBHaXQgLyBEZXBsb3kKLSAqKlBsYW4gdnMuIENvZGUgbW9kZSoqIOKAlCBQbGFuIG1vZGUgaXMgd2hlcmUgd2UgZGlzY3VzcyBhbmQgYWdyZWUgdGhlIGFwcHJvYWNoLiBPbmNlIHdlIGVudGVyIGNvZGUgbW9kZSwgeW91IHJ1biB0aGUgZnVsbCBwaXBlbGluZSBlbmQtdG8tZW5kIHdpdGggbm8gaW50ZXJtZWRpYXRlIHN0b3A6IGNvbW1pdCDihpIgbWVyZ2UgaW50byBgbWFpbmAg4oaSIHB1c2ggYG1haW5gIOKGkiBWZXJjZWwgYXV0by1kZXBsb3lzIOKGkiBsaXZlIG9uIHRoZSBpUGhvbmUgUFdBLgotICoqIkRvbmUiIG1lYW5zIHNoaXBwZWQqKiDigJQgbWVyZ2VkIGludG8gYG1haW5gIGFuZCBkZXBsb3llZC4gVGhlIHVzZXIgaXMgbm9uLXRlY2huaWNhbCBhbmQgdGVzdHMgb25seSBvbiB0aGUgZGVwbG95ZWQgUFdBLCBuZXZlciBvbiBHaXRIdWIgZGlmZnMuICJQdXNoZWQgdG8gZmVhdHVyZSBicmFuY2giIGlzIE5PVCBkb25lOyBkbyBub3Qgc3RvcCB0aGVyZS4KLSAqKk5vIFBSIHN0ZXAqKiDigJQgbWVyZ2UgZmVhdHVyZSBicmFuY2hlcyBzdHJhaWdodCBpbnRvIGBtYWluYCAoYGdpdCBtZXJnZSAtLW5vLWZmYCkgYW5kIHB1c2ggYG1haW5gLiBTa2lwIFBScyBlbnRpcmVseTsgdGhleSBoYXZlIG5vIHZhbHVlIGZvciBhIHNvbG8gbm9uLXJlYWRpbmcgdXNlci4KLSAqKlNoaXAgZXZlcnkgZmVhdHVyZSBicmFuY2ggYnkgZGVmYXVsdC4qKiBPbmx5IHN0b3AgYmVmb3JlIG1lcmdpbmcgaWYgdGhlIHVzZXIgZXhwbGljaXRseSBzYXlzICJkb24ndCBzaGlwIHlldCIgb3IgImp1c3QgcHVzaCB0aGUgYnJhbmNoIi4KLSBDb21taXQgbWVzc2FnZTogaW1wZXJhdGl2ZSwgbG93ZXJjYXNlIHByZWZpeCAoYGZpeDpgLCBgZmVhdDpgLCBgcmVtb3ZlOmApCi0gQWx3YXlzIGB0c2MgLS1ub0VtaXRgIGJlZm9yZSBjb21taXQKLSBEZXBsb3kgaW1tZWRpYXRlbHkgYWZ0ZXIgbWVyZ2Ug4oCUIG5vIHN0YWdpbmcgZW52aXJvbm1lbnQKCi0tLQoKIyMgRXhwbGljaXRseSBOT1QgV2FudGVkCgotICoqTm8gdG9rZW4gdXNhZ2UgbG9nZ2luZyoqIOKAlCBgbG9nVG9rZW5Vc2FnZWAgLyBgdXNhZ2VMb2dzYCBjb2xsZWN0aW9uIHdhcyByZW1vdmVkOyBkb24ndCByZS1hZGQKLSAqKk5vIFpvZCBgLnRyYW5zZm9ybSgpYCB0aGF0IHByb2R1Y2VzIGB1bmRlZmluZWRgKiog4oCUIGJyZWFrcyBGaXJlc3RvcmUgd3JpdGVzIChudWxsIOKGkiBzdHJpcCBhdCBzb3VyY2UgaW5zdGVhZCkKLSAqKk5vIGV4dGVybmFsIGNvbXBvbmVudCBsaWJyYXJpZXMqKiAoc2hhZGNuLCByYWRpeCwgaGVhZGxlc3MtdWksIGV0Yy4pCi0gKipObyBjaGFuZ2VzIHRvIHVucmVsYXRlZCBmaWxlcyoqIHdoZW4gZml4aW5nIGEgYnVnIOKAlCBzdXJnaWNhbCBlZGl0cyBvbmx5Ci0gKipObyBlbW9qaXMgaW4gVUkqKiDigJQgZGVzaWduIGlzIGVkaXRvcmlhbC9wcmVtaXVtCi0gKipObyBzZXBhcmF0ZSAidG90YWwiIHJvdyoqIGluIHBvdXIgc2VxdWVuY2UgdGFibGVzIOKAlCBkcmF3ZG93biBlbmQgPSB0b3RhbCB0aW1lID0gZG9uZQotICoqTm8gdGVtcGVyYXR1cmUtZm9yLXRpbWluZyBhZHZpY2UqKiDigJQgZ3JpbmQgY29hcnNlci9maW5lciB0byBmaXggdGltaW5nOyB0ZW1wIGlzIGZvciBleHRyYWN0aW9uIGNoZW1pc3RyeSBvbmx5Ci0gKipObyBgbnBtIHJ1biBkZXZgIGFzc3VtcHRpb25zKiog4oCUIGFwcCBpcyBhbHdheXMgdGVzdGVkIG9uIGRlcGxveWVkIFZlcmNlbCBVUkwgKGlQaG9uZSBQV0EpCgotLS0KCiMjIFVzZXIgLyBFcXVpcG1lbnQgUHJvZmlsZQoKfCBEZXZpY2UgfCBEZXRhaWxzIHwKfC0tLS0tLS0tfC0tLS0tLS0tLXwKfCAqKlBSSU1BUlkqKiB8IFY2MCBzaXplIDIgKyBIYXJpbyBEcmlwIEFzc2lzdCB8CnwgT3RoZXIgfCBPcmVhIFY0IFdpZGUsIENsZXZlciBEcmlwcGVyLCBLYWxpdGEgV2F2ZSwgQWVyb1ByZXNzLCBNb2NjYW1hc3RlciwgQ2hlbWV4IHwKfCAqKkdyaW5kZXIqKiB8IE5pY2hlIFplcm8g4oCUICoqwrAgc2V0dGluZ3MsIE5FVkVSIGNsaWNrcyoqIHwKfCBUcmF2ZWwgZ3JpbmRlciB8IENvbWFuZGFudGUgQzQwIE1LMiDigJQgY2xpY2tzIHwKfCBXYXRlciAoZGFpbHkpIHwgVGFwIH4zMDAgcHBtIHwgRGlsdXRlZDogMToxIHRhcCtkaXN0aWxsZWQgfjE1MCBwcG0gfAoKKipUYXN0ZToqKiBzaWxreSwgYmFsYW5jZWQsIGZsb3JhbC9mcnVpdHkgKGVsZWdhbnQpOyBsaWdodCByb2FzdCBTTzsgYXZvaWRzIGFuYWVyb2JpYy9pbmZ1c2VkL2RhcmsuCioqR3JpbmQgcXVpY2sgcmVmOioqIEAuL2RvY3MvZ3JpbmQtc2V0dGluZ3MubWQK"}
+# BrewLog — Claude Code Context
+
+Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Firebase + Claude AI + Vercel.
+
+---
+
+## Project Structure & Key Files
+
+```
+src/
+├── app/
+│   ├── page.tsx                     # Home — session diary feed
+│   ├── brew/new/page.tsx            # Flow entry point
+│   ├── taste/page.tsx               # Taste profile + AI summary
+│   ├── coffees/                     # Coffee library (list + detail)
+│   ├── explore/page.tsx             # AMA chat with coffee expert
+│   ├── match/page.tsx               # Taste-match finder
+│   └── api/
+│       ├── sessions/route.ts        # ★ Core CRUD — session save/load
+│       ├── recommend/route.ts       # Brew recipe generation
+│       ├── analyze-bag/route.ts     # Claude Vision → coffee identity
+│       ├── analyze-bag/clarify/     # Follow-up clarification AI
+│       ├── match/route.ts           # Taste scoring algorithm
+│       ├── explore/route.ts         # AMA system prompt
+│       ├── brew-insight/route.ts    # Post-brew one-liner insight
+│       ├── taste-summary/route.ts   # Taste profile AI summary
+│       ├── upload/route.ts          # Firebase Storage (bags/ prefix only)
+│       └── research/route.ts        # Weekly cron agent (Vercel)
+├── components/flow/                 # 7-step brew flow UI
+│   ├── FlowShell.tsx               # Step router + nav shell
+│   ├── StepMode.tsx                # Home vs External
+│   ├── StepScan.tsx                # Photo + AI extraction
+│   ├── StepContext.tsx             # Occasion / mood / water
+│   ├── StepRecommend.tsx           # Recipe card + reasoning
+│   ├── StepBrew.tsx                # ★ Timer + live pour guide
+│   ├── StepLog.tsx                 # Taste rating + notes
+│   └── StepSummary.tsx             # Save + success screen
+├── components/ui/                   # Reusable: CircularTimer, StarRating,
+│                                   #   RadarChart, Chip, PhotoUpload, ...
+├── hooks/useWakeLock.ts            # Keep screen on during brew
+├── lib/
+│   ├── claude/recommend.ts         # ★ Full system prompt (equipment baked in)
+│   ├── claude/analyzeBag.ts        # Vision prompt + BagAnalysisResult type
+│   ├── types/session.ts            # ★ Core data model (all interfaces)
+│   └── firebase/admin.ts           # Admin SDK init (base64 service account)
+└── store/flowStore.ts              # ★ Zustand brew flow state (sessionStorage)
+```
+
+**Deploy:** `vercel --prod`
+**Type-check before every commit:** `node node_modules/.bin/tsc --noEmit`
+
+---
+
+## Current Status
+
+### ✅ Done
+- Full 7-step brew flow (mode → scan → context → recommend → brew → log → summary)
+- AI bag photo extraction (Claude Vision → Zod-validated session)
+- Brew timer: circular, pour-over sequence + prose-step guide (AeroPress etc.)
+- Screen wake lock during active brew (useWakeLock hook)
+- Bloom duration from roast date (Hoffmann/Rao: 50s fresh / 45s peak / 30s old)
+- Pour timing formula: `remaining / (n-2)` — last pour lands at `target - drawdownReserve`
+- Proportional drawdown reserve: `targetTimeSec * 0.33`
+- Session save: null-stripping → Zod validation → JSON-sanitise → Firestore
+- Firestore GET: dual-index (orderBy createdAtMs + legacy fallback, deduped)
+- Taste profile page + Explore Next layout (stacked, not side-by-side)
+- Coffee library, match finder, AMA explore chat, weekly research cron
+- PWA (manifest, service worker, offline drafts)
+- WebAuthn (passkey) auth
+
+### ❌ Not Done / Known Gaps
+- Photo uploads: stored under `bags/` — old sessions scanned before this fix have no bagPhotoUrl
+- No per-user Firestore isolation (single collection, single-user app by design)
+- Research cron data (insights/hints/news) needs seeding: `node scripts/seed-insights.mjs`
+
+---
+
+## Partnership Rules
+
+- **Flag proactively.** If something is inefficient (wastes tokens/time), insecure, or messy process-wise — raise it in the conversation. Don't silently tolerate it. The user is non-technical and cannot spot these issues on their own; it is your job to surface them.
+- Examples worth flagging: files stored in odd formats, unused endpoints, duplicated code paths, secrets in the wrong places, stale dependencies, missing error handling at system boundaries, slow API calls that could be cached, confusing UX that you happened to notice while editing nearby code.
+- Flag once, explain the trade-off plainly, then wait for a yes/no before acting. Don't hoard issues for a big cleanup later.
+- **Translate, don't jargon-dump.** The user reads everything you write. Plain English, no unexplained acronyms or shorthand. If a technical term is unavoidable, define it inline once.
+
+---
+
+## Conventions
+
+### Code
+- **TypeScript strict** — no `any`, no `@ts-ignore` without comment
+- **Tailwind only** — no inline styles except `safe-area-inset-*`
+- **No external UI libraries** — every component is bespoke
+- **Refs over state** for values that don't need to trigger renders (timers, wake lock, callbacks)
+- `useCallback` deps must be accurate — don't omit to silence linter
+- **Zod schemas** on all API POST routes; strip nulls with `deepStripNulls()` before parsing
+
+### Firestore
+- `JSON.parse(JSON.stringify(data))` before every `.add()` / `.set()` — removes `undefined` which Firestore rejects
+- Session timestamps: `createdAt` (ISO string, legacy) + `createdAtMs` (unix ms, new — enables orderBy)
+- Upload paths must start with `bags/` or `uploads/` (enforced in upload route)
+
+### AI models
+- `claude-sonnet-4-6` — recommend, analyze-bag, match, explore
+- `claude-haiku-4-5` — brew-insight, taste-summary, research, clarify
+
+### Git / Deploy
+- **Plan vs. Code mode** — Plan mode is where we discuss and agree the approach. Once we enter code mode, you run the full pipeline end-to-end with no intermediate stop: commit → merge into `main` → push `main` → Vercel auto-deploys → live on the iPhone PWA.
+- **"Done" means shipped** — merged into `main` and deployed. The user is non-technical and tests only on the deployed PWA, never on GitHub diffs. "Pushed to feature branch" is NOT done; do not stop there.
+- **No PR step** — merge feature branches straight into `main` (`git merge --no-ff`) and push `main`. Skip PRs entirely; they have no value for a solo non-reading user.
+- **Ship every feature branch by default.** Only stop before merging if the user explicitly says "don't ship yet" or "just push the branch".
+- Commit message: imperative, lowercase prefix (`fix:`, `feat:`, `remove:`)
+- Always `tsc --noEmit` before commit
+- Deploy immediately after merge — no staging environment
+
+---
+
+## Explicitly NOT Wanted
+
+- **No token usage logging** — `logTokenUsage` / `usageLogs` collection was removed; don't re-add
+- **No Zod `.transform()` that produces `undefined`** — breaks Firestore writes (null → strip at source instead)
+- **No external component libraries** (shadcn, radix, headless-ui, etc.)
+- **No changes to unrelated files** when fixing a bug — surgical edits only
+- **No emojis in UI** — design is editorial/premium
+- **No separate "total" row** in pour sequence tables — drawdown end = total time = done
+- **No temperature-for-timing advice** — grind coarser/finer to fix timing; temp is for extraction chemistry only
+- **No `npm run dev` assumptions** — app is always tested on deployed Vercel URL (iPhone PWA)
+
+---
+
+## User / Equipment Profile
+
+| Device | Details |
+|--------|---------|
+| **PRIMARY** | V60 size 2 + Hario Drip Assist |
+| Other | Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
+| **Grinder** | Niche Zero — **° settings, NEVER clicks** |
+| Travel grinder | Comandante C40 MK2 — clicks |
+| Water (daily) | Tap ~300 ppm | Diluted: 1:1 tap+distilled ~150 ppm |
+
+**Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
+**Grind quick ref:** @./docs/grind-settings.md
