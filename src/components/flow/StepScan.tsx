@@ -46,6 +46,7 @@ export default function StepScan() {
   const [manualBagNotes, setManualBagNotes] = useState("");
   const [manualProcess, setManualProcess] = useState("");
   const [manualRoastLevel, setManualRoastLevel] = useState("");
+  const [manualRoastDate, setManualRoastDate] = useState<string | undefined>(undefined);
 
   // Roaster prior for manual entry (looked up client-side on blur)
   const [manualRoasterPrior, setManualRoasterPrior] = useState<RoasterPriorSummary | null>(null);
@@ -347,6 +348,7 @@ export default function StepScan() {
       tastingNotesFromBag: manualBagNotes ? manualBagNotes.split(",").map(s => s.trim()).filter(Boolean) : undefined,
       process: manualProcess || undefined,
       roastLevel: manualRoastLevel || undefined,
+      roastDate: manualRoastDate || undefined,
       aiExtracted: false,
     });
   };
@@ -458,6 +460,18 @@ export default function StepScan() {
                       }}
                     />
                   )}
+                  <div>
+                    <div className="flex items-baseline justify-between mb-2">
+                      <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Roast Date</p>
+                      {!draft.coffee?.roastDate && (
+                        <span className="text-[10px]" style={{ color: "var(--primary)" }}>Improves bloom timing</span>
+                      )}
+                    </div>
+                    <RoastDateInput
+                      value={draft.coffee?.roastDate}
+                      onChange={v => setCoffee({ roastDate: v })}
+                    />
+                  </div>
                   {(draft.coffee.tastingNotesFromBag !== undefined) && (
                     <div>
                       <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Tasting Notes from Bag</p>
@@ -732,6 +746,10 @@ export default function StepScan() {
                 <div className="flex flex-wrap gap-2">
                   {ROAST_LEVELS.map(r => <Chip key={r} label={r} selected={manualRoastLevel === r} onClick={() => setManualRoastLevel(r)} size="sm" />)}
                 </div>
+              </div>
+              <div>
+                <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Roast Date</p>
+                <RoastDateInput value={manualRoastDate} onChange={setManualRoastDate} />
               </div>
             </div>
           )}
@@ -1180,6 +1198,58 @@ function GenerateRoasterForm({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Roast date input ──────────────────────────────────────────────────────
+
+function toLocalIso(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function RoastDateInput({ value, onChange }: { value?: string; onChange: (v: string | undefined) => void }) {
+  const todayIso = toLocalIso(new Date());
+  const daysAgoIso = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return toLocalIso(d);
+  };
+  const chips: { label: string; iso: string }[] = [
+    { label: "Today", iso: daysAgoIso(0) },
+    { label: "3d ago", iso: daysAgoIso(3) },
+    { label: "1 wk", iso: daysAgoIso(7) },
+    { label: "2 wk", iso: daysAgoIso(14) },
+    { label: "1 mo", iso: daysAgoIso(30) },
+  ];
+  return (
+    <div className="flex flex-col gap-2">
+      <input
+        type="date"
+        value={value ?? ""}
+        max={todayIso}
+        onChange={e => onChange(e.target.value || undefined)}
+        className="w-full rounded-2xl px-3 py-2 text-base focus:outline-none"
+        style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+      />
+      <div className="flex flex-wrap gap-2">
+        {chips.map(c => (
+          <Chip key={c.label} label={c.label} selected={value === c.iso} onClick={() => onChange(c.iso)} size="sm" />
+        ))}
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            className="text-xs px-2 py-1 transition-colors"
+            style={{ color: "var(--muted-foreground)" }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
     </div>
   );
 }
