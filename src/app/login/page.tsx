@@ -125,6 +125,33 @@ export default function LoginPage() {
     }
   }
 
+  async function handleResetPasskey() {
+    setPinError("");
+    setWorking(true);
+    try {
+      const loginRes = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "pin", pin }),
+      });
+      if (!loginRes.ok) {
+        setPinError("Wrong PIN");
+        setPin("");
+        return;
+      }
+      const resetRes = await fetch("/api/auth/reset-passkey", { method: "POST" });
+      if (!resetRes.ok) {
+        setPinError("Reset failed — try again");
+        return;
+      }
+      setPin("");
+      setError("");
+      setMode("register");
+    } finally {
+      setWorking(false);
+    }
+  }
+
   // ── Loading ──────────────────────────────────────────────────────────────
   if (mode === "loading") {
     return (
@@ -168,6 +195,13 @@ export default function LoginPage() {
             className="text-brew-muted text-sm text-center py-2"
           >
             ← Use Face ID
+          </button>
+          <button
+            onClick={handleResetPasskey}
+            disabled={pin.length < 4 || working}
+            className="text-brew-muted text-xs text-center py-2 underline-offset-4 hover:underline disabled:opacity-40"
+          >
+            Reset Face ID on this device
           </button>
         </div>
       </div>
