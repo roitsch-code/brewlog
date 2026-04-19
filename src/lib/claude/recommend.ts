@@ -168,12 +168,17 @@ Portfolio rules (non-negotiable):
 EQUIPMENT RULES — these must be followed exactly
 ═══════════════════════════════════════════════════════════════
 
-DRIP ASSIST — CRITICAL RULES (when V60 + Drip Assist is a candidate):
+DRIP ASSIST — CRITICAL RULES (apply whenever the user is pouring through a Hario Drip Assist
+on ANY pour-over brewer — V60, Orea, Kalita, or Chemex. The Assist is a perforated disc that
+controls flow rate regardless of the brewer beneath it; rules are identical across brewers,
+only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
 1. Start temp +2–3°C higher than without Assist (heat loss from transfers)
    Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
 2. Kettle back on base after EVERY pour (Fellow Corvo reheats in 10–15s)
 3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
-4. Niche° with Drip Assist: Washed 403–408° | Honey 405–410° | Natural 406–412°
+4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
+   For Orea/Kalita/Chemex + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
+   (the disc slows flow, so you can afford slightly tighter grind).
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
 7. Small (350ml): 23g:350ml (1:15.2) | Bloom 50g → 150g → 250g → 350g | ~3:30
@@ -409,9 +414,23 @@ export async function generateRecommendation(
       : "";
   })();
 
+  const DRIP_ASSIST_COMPATIBLE = new Set([
+    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
+  ]);
   const methodNote = context.preferredMethod
-    ? `\nPREFERRED METHOD: "${context.preferredMethod}" — use as primary unless genuinely incompatible; explain clearly if overriding.`
-    : "";
+    ? (() => {
+        const withAssist = context.dripAssist && DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod);
+        const label = withAssist
+          ? `${context.preferredMethod} + Drip Assist`
+          : context.preferredMethod;
+        const assistRule = withAssist
+          ? ` The user is pouring through a Hario Drip Assist — apply the DRIP ASSIST critical rules from the system prompt (temp +2–3°C, outer-ring 3.5–5 g/s, bloom agitation per process, Niche° adjustment). The method name you return MUST include "+ Drip Assist" (e.g. "Orea Classic + Drip Assist").`
+          : "";
+        return `\nPREFERRED METHOD: "${label}" — use as primary unless genuinely incompatible; explain clearly if overriding.${assistRule}`;
+      })()
+    : context.dripAssist
+      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a pour-over brewer (V60, Orea, Kalita, or Chemex) and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
+      : "";
 
   const intentNote = context.intent
     ? `\nUSER INTENT: "${context.intent}" — this is the explicit goal for this brew session. Use it to drive portfolio composition.`
