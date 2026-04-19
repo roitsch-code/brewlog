@@ -15,6 +15,19 @@ export default function StepBrew() {
   const method = draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
   const recipe = rec?.candidates?.find(c => c.method === method)?.recipe ?? rec?.primaryRecipe;
 
+  // Drip Assist state flows through three layers:
+  //   1. BrewLog.dripAssist (logged at brew time, survives resume)
+  //   2. SessionContext.dripAssist (user's pre-brew selection)
+  //   3. Legacy: method name contains "Drip Assist" (old sessions / legacy v60-drip-assist id)
+  const dripAssist =
+    draft.brew?.dripAssist ??
+    draft.context?.dripAssist ??
+    /drip assist/i.test(method);
+
+  const methodLabel = dripAssist && !/drip assist/i.test(method)
+    ? `${method} + Drip Assist`
+    : method;
+
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -33,13 +46,13 @@ export default function StepBrew() {
 
   const handleDone = useCallback((actualSec?: number) => {
     disableWakeLock(); // brewing complete — screen can sleep normally again
-    setBrew({ ...draft.brew, methodUsed: method, followedRecipe: true, actualTimeSec: actualSec ?? elapsed });
+    setBrew({ ...draft.brew, methodUsed: method, dripAssist, followedRecipe: true, actualTimeSec: actualSec ?? elapsed });
     setStep("log");
-  }, [draft.brew, method, elapsed, setBrew, setStep, disableWakeLock]);
+  }, [draft.brew, method, dripAssist, elapsed, setBrew, setStep, disableWakeLock]);
 
   const handleTimerComplete = useCallback((e: number) => {
-    setBrew({ ...draft.brew, methodUsed: method, followedRecipe: true, actualTimeSec: e });
-  }, [draft.brew, method, setBrew]);
+    setBrew({ ...draft.brew, methodUsed: method, dripAssist, followedRecipe: true, actualTimeSec: e });
+  }, [draft.brew, method, dripAssist, setBrew]);
 
   const steps = recipe?.pourSequence && recipe.targetTimeSec
     ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, draft.coffee?.roastDate)
@@ -55,7 +68,7 @@ export default function StepBrew() {
         {/* Recipe mini bar */}
         {recipe && (
           <div className="bg-brew-surface rounded-2xl p-4">
-            <p className="text-brew-muted text-xs tracking-widest uppercase mb-3">{method}</p>
+            <p className="text-brew-muted text-xs tracking-widest uppercase mb-3">{methodLabel}</p>
             <div className="grid grid-cols-4 gap-2 text-center">
               <MiniStat label="Dose"  value={`${recipe.doseGrams}g`} />
               <MiniStat label="Water" value={`${recipe.waterGrams}g`} />
@@ -80,6 +93,7 @@ export default function StepBrew() {
             targetTimeSec={recipe.targetTimeSec}
             started={started}
             process={draft.coffee?.process}
+            dripAssist={dripAssist}
           />
         )}
 
@@ -107,9 +121,10 @@ interface LivePourSequenceProps {
   targetTimeSec: number;
   started: boolean;
   process?: string;
+  dripAssist?: boolean;
 }
 
-function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: LivePourSequenceProps) {
+function LivePourSequence({ steps, elapsed, targetTimeSec, started, process, dripAssist }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep  = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
@@ -213,7 +228,9 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, process }: L
                 <p className="text-white/40 text-xs mt-2">Pour in slow circles from centre outward</p>
               )}
               {activeStep.action === "pour" && (
-                <p className="text-white/40 text-xs mt-2">Outer ring · 3.5–5 g/s</p>
+                <p className="text-white/40 text-xs mt-2">
+                  {dripAssist ? "Outer ring · 3.5–5 g/s" : "Slow spiral from centre outward"}
+                </p>
               )}
               {activeStep.action === "final" && (
                 <p className="text-white/40 text-xs mt-2">Last pour — swirl gently after</p>

@@ -28,6 +28,7 @@ export interface SessionContext {
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
   waterSource?: string; // "tap" | "diluted" — tap = ~300ppm, diluted = 1:1 tap+distilled = ~150ppm
   preferredMethod?: string; // optional method lock-in: "V60 + Drip Assist" | "Orea Fast" | etc.
+  dripAssist?: boolean; // Hario Drip Assist disc in use; orthogonal to preferredMethod — applies to any pour-over brewer
   intent?: string;
   // "explore" | "safest" | "high-clarity" | "sweetness-forward"
   // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
@@ -84,6 +85,7 @@ export interface Recommendation {
 
 export interface BrewLog {
   methodUsed?: string;
+  dripAssist?: boolean; // mirrors SessionContext.dripAssist — logs whether the Assist was actually used
   followedRecipe?: boolean;
   modifications?: string;
   actualTimeSec?: number;
