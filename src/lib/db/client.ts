@@ -10,26 +10,18 @@ declare global {
   var __brewlogDb: NodePgDatabase<typeof schema> | undefined;
 }
 
-function createPool(): Pool {
+function getPool(): Pool {
+  if (global.__brewlogPgPool) return global.__brewlogPgPool;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set");
   }
-  return new Pool({
+  const pool = new Pool({
     connectionString,
     max: 10,
     idleTimeoutMillis: 30_000,
   });
-}
-
-function getPool(): Pool {
-  if (global.__brewlogPgPool) return global.__brewlogPgPool;
-  const pool = createPool();
-  if (process.env.NODE_ENV !== "production") {
-    global.__brewlogPgPool = pool;
-  } else {
-    global.__brewlogPgPool = pool;
-  }
+  global.__brewlogPgPool = pool;
   return pool;
 }
 
@@ -40,14 +32,32 @@ function getDb(): NodePgDatabase<typeof schema> {
   return instance;
 }
 
-export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
-  get(_target, prop, receiver) {
-    return Reflect.get(getDb() as object, prop, receiver);
+// During `next build`, Next.js loads route files to extract metadata. DATABASE_URL
+// isn't available in the build container, so we defer actual DB initialization
+// until the first query at runtime. A Proxy wraps the real db instance and
+// delegates every call to it — this preserves `this` binding for Drizzle's
+// internal methods.
+export const db: NodePgDatabase<typeof schema> = new Proxy(
+  {} as NodePgDatabase<typeof schema>,
+  {
+    get(_target, prop) {
+      const real = getDb() as unknown as Record<string | symbol, unknown>;
+      const value = real[prop];
+      if (typeof value === "function") {
+        return value.bind(real);
+      }
+      return value;
+    },
   },
-});
+);
 
-export const pool = new Proxy({} as Pool, {
-  get(_target, prop, receiver) {
-    return Reflect.get(getPool() as object, prop, receiver);
+export const pool: Pool = new Proxy({} as Pool, {
+  get(_target, prop) {
+    const real = getPool() as unknown as Record<string | symbol, unknown>;
+    const value = real[prop];
+    if (typeof value === "function") {
+      return value.bind(real);
+    }
+    return value;
   },
 });
