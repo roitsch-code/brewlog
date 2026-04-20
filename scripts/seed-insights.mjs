@@ -1,9 +1,8 @@
-// Seed initial insights into Firestore
+// Seed initial insights into Postgres
 // Run: node scripts/seed-insights.mjs
+// Requires DATABASE_URL in .env.local
 
-import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { readFileSync } from "fs";
+import pg from "pg";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import { config } from "dotenv";
@@ -11,19 +10,7 @@ import { config } from "dotenv";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, "../.env.local") });
 
-const raw = process.env.FIREBASE_SERVICE_ACCOUNT_B64
-  ? Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_B64.trim(), "base64").toString("utf8")
-  : process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-
-const sa = JSON.parse(raw);
-sa.private_key = sa.private_key.replace(/\\n/g, "\n");
-
-initializeApp({
-  credential: cert(sa),
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-});
-
-const db = getFirestore(process.env.FIRESTORE_DATABASE_ID || "(default)");
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
 const insights = [
   {
@@ -89,7 +76,6 @@ const insights = [
     title: "Grind Distribution Matters More Than Average Grind Size",
     summary: "A burr grinder with a narrow particle size distribution (few fines, few boulders) extracts more evenly than one with a wide distribution at the same average grind size. This is why flat burrs (like the Niche Zero's 63mm Italmill burrs) tend to produce cleaner, more controllable cups than entry-level conicals. Fines over-extract and cause bitterness; boulders under-extract and contribute sourness — both in the same cup.",
     source: "Grinder Research / Matt Perger",
-    url: "https://www.baristaHustle.com",
     tags: ["grinder", "extraction", "science", "niche-zero"],
     savedAt: new Date("2025-03-19").toISOString(),
   },
@@ -114,11 +100,14 @@ const insights = [
 ];
 
 async function seed() {
-  await db.collection("knowledge").doc("insights").set({
-    items: insights,
-    updatedAt: new Date().toISOString(),
-  });
-  console.log(`✓ Seeded ${insights.length} insights to Firestore`);
+  const data = { items: insights, updatedAt: new Date().toISOString() };
+  await pool.query(
+    `INSERT INTO knowledge (kind, data) VALUES ('insights', $1)
+     ON CONFLICT (kind) DO UPDATE SET data = EXCLUDED.data`,
+    [JSON.stringify(data)]
+  );
+  console.log(`✓ Seeded ${insights.length} insights to Postgres`);
+  await pool.end();
 }
 
 seed().catch(console.error);

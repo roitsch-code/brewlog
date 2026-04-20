@@ -1,6 +1,6 @@
 # BrewLog — Claude Code Context
 
-Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Firebase + Claude AI + Vercel.
+Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Claude AI + Hetzner.
 
 ---
 
@@ -24,8 +24,8 @@ src/
 │       ├── explore/route.ts         # AMA system prompt
 │       ├── brew-insight/route.ts    # Post-brew one-liner insight
 │       ├── taste-summary/route.ts   # Taste profile AI summary
-│       ├── upload/route.ts          # Firebase Storage (bags/ prefix only)
-│       └── research/route.ts        # Weekly cron agent (Vercel)
+│       ├── upload/route.ts          # Hetzner S3 upload (bags/ prefix only)
+│       └── research/route.ts        # Weekly cron agent (Ofelia)
 ├── components/flow/                 # 7-step brew flow UI
 │   ├── FlowShell.tsx               # Step router + nav shell
 │   ├── StepMode.tsx                # Home vs External
@@ -42,11 +42,14 @@ src/
 │   ├── claude/recommend.ts         # ★ Full system prompt (equipment baked in)
 │   ├── claude/analyzeBag.ts        # Vision prompt + BagAnalysisResult type
 │   ├── types/session.ts            # ★ Core data model (all interfaces)
-│   └── firebase/admin.ts           # Admin SDK init (base64 service account)
+│   ├── db/client.ts                # Drizzle ORM + pg Pool
+│   ├── db/schema.ts                # All table definitions
+│   ├── db/migrations/              # SQL migrations (drizzle-kit)
+│   └── storage/s3.ts               # Hetzner Object Storage (S3-compatible)
 └── store/flowStore.ts              # ★ Zustand brew flow state (sessionStorage)
 ```
 
-**Deploy:** `vercel --prod`
+**Deploy:** `git push origin main` on VPS → `docker compose build app && docker compose up -d app`
 **Type-check before every commit:** `node node_modules/.bin/tsc --noEmit`
 
 ---
@@ -61,8 +64,8 @@ src/
 - Bloom duration from roast date (Hoffmann/Rao: 50s fresh / 45s peak / 30s old)
 - Pour timing formula: `remaining / (n-2)` — last pour lands at `target - drawdownReserve`
 - Proportional drawdown reserve: `targetTimeSec * 0.33`
-- Session save: null-stripping → Zod validation → JSON-sanitise → Firestore
-- Firestore GET: dual-index (orderBy createdAtMs + legacy fallback, deduped)
+- Session save: Zod validation → Postgres JSONB (null-safe, no JSON-roundtrip needed)
+- Session GET: single indexed query on createdAtMs DESC (Postgres; no dual-index fallback)
 - Taste profile page + Explore Next layout (stacked, not side-by-side)
 - Coffee library, match finder, AMA explore chat, weekly research cron
 - PWA (manifest, service worker, offline drafts)
@@ -70,8 +73,9 @@ src/
 
 ### ❌ Not Done / Known Gaps
 - Photo uploads: stored under `bags/` — old sessions scanned before this fix have no bagPhotoUrl
-- No per-user Firestore isolation (single collection, single-user app by design)
-- Research cron data (insights/hints/news) needs seeding: `node scripts/seed-insights.mjs`
+- Single-user app by design (no multi-user isolation needed)
+- Research cron data (insights/hints/news) needs seeding on new installs: `node scripts/seed-insights.mjs`
+- Data migration from Firebase: `node scripts/migrate-firestore-to-postgres.mjs` + `node scripts/migrate-storage-to-s3.mjs`
 
 ---
 
@@ -94,10 +98,11 @@ src/
 - `useCallback` deps must be accurate — don't omit to silence linter
 - **Zod schemas** on all API POST routes; strip nulls with `deepStripNulls()` before parsing
 
-### Firestore
-- `JSON.parse(JSON.stringify(data))` before every `.add()` / `.set()` — removes `undefined` which Firestore rejects
-- Session timestamps: `createdAt` (ISO string, legacy) + `createdAtMs` (unix ms, new — enables orderBy)
+### Database (Postgres + Drizzle)
+- JSONB columns for nested objects (coffee, brew, result, etc.) — preserves TypeScript types unchanged
+- Session timestamps: `createdAt` (timestamptz) + `createdAtMs` (bigint, indexed DESC for feed order)
 - Upload paths must start with `bags/` or `uploads/` (enforced in upload route)
+- Numeric fields (ratingSum, avgRating, cuppingScore) stored as `numeric` in Postgres, use `String()` when inserting
 
 ### AI models
 - `claude-sonnet-4-6` — recommend, analyze-bag, match, explore
