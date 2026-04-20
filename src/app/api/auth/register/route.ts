@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { authChallenges, authCredentials } from "@/lib/db/schema";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
+const CHALLENGE_KEY = "default";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const db = getAdminDb();
 
-    // Retrieve stored challenge
-    const challengeSnap = await db.collection("auth").doc("challenge").get();
-    if (!challengeSnap.exists) {
+    const challengeRows = await db.select().from(authChallenges).where(eq(authChallenges.key, CHALLENGE_KEY)).limit(1);
+    if (challengeRows.length === 0) {
       return NextResponse.json({ error: "No challenge found — start over" }, { status: 400 });
     }
-    const expectedChallenge = challengeSnap.data()!.value as string;
+    const expectedChallenge = challengeRows[0].value;
 
     const verification = await verifyRegistrationResponse({
       response: body,
@@ -29,20 +31,20 @@ export async function POST(req: NextRequest) {
     }
 
     const { credential } = verification.registrationInfo;
+    const publicKey = Buffer.from(credential.publicKey).toString("base64url");
+    const transports: string[] = body.response?.transports ?? [];
 
-    // Store credential — base64url encode the Uint8Array fields for Firestore
-    await db.collection("auth").doc("credential").set({
+    await db.delete(authCredentials);
+    await db.insert(authCredentials).values({
       id: credential.id,
-      publicKey: Buffer.from(credential.publicKey).toString("base64url"),
+      publicKey,
       counter: credential.counter,
-      transports: body.response?.transports ?? [],
-      createdAt: new Date().toISOString(),
+      transports,
+      createdAt: new Date(),
     });
 
-    // Clean up challenge
-    await db.collection("auth").doc("challenge").delete();
+    await db.delete(authChallenges).where(eq(authChallenges.key, CHALLENGE_KEY));
 
-    // Create session
     const token = await createSession();
     setSessionCookie(token);
 

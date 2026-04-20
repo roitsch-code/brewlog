@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { db } from "@/lib/db/client";
+import { authChallenges, authCredentials } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
+const CHALLENGE_KEY = "default";
+
 export async function POST() {
   try {
-    const db = getAdminDb();
-
-    // Check if a credential already exists
-    const credSnap = await db.collection("auth").doc("credential").get();
-    const existing = credSnap.exists ? credSnap.data() : null;
+    const rows = await db.select().from(authCredentials).limit(1);
+    const existing = rows[0];
 
     const options = await generateRegistrationOptions({
       rpName: "Coffee Brew Log",
@@ -20,18 +20,22 @@ export async function POST() {
       userDisplayName: "Coffee Logger",
       attestationType: "none",
       authenticatorSelection: {
-        authenticatorAttachment: "platform", // Face ID / Touch ID only
+        authenticatorAttachment: "platform",
         userVerification: "required",
         residentKey: "preferred",
       },
-      excludeCredentials: existing?.id ? [{ id: existing.id, transports: existing.transports }] : [],
+      excludeCredentials: existing?.id
+        ? [{ id: existing.id, transports: existing.transports as AuthenticatorTransport[] | undefined }]
+        : [],
     });
 
-    // Store challenge temporarily (60s TTL)
-    await db.collection("auth").doc("challenge").set({
-      value: options.challenge,
-      createdAt: new Date().toISOString(),
-    });
+    await db
+      .insert(authChallenges)
+      .values({ key: CHALLENGE_KEY, value: options.challenge, createdAt: new Date() })
+      .onConflictDoUpdate({
+        target: authChallenges.key,
+        set: { value: options.challenge, createdAt: new Date() },
+      });
 
     return NextResponse.json(options);
   } catch (err) {

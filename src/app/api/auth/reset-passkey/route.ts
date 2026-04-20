@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { db } from "@/lib/db/client";
+import { authCredentials } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/requireAuth";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +10,7 @@ export async function POST(req: NextRequest) {
   if (authError) return authError;
 
   try {
-    const db = getAdminDb();
-    await db.collection("auth").doc("credential").delete();
+    await db.delete(authCredentials);
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("reset-passkey error:", err);

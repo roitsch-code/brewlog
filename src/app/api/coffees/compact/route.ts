@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { inArray, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { coffees, sessions } from "@/lib/db/schema";
+import { rowToCoffee, rowToSession } from "@/lib/db/helpers";
 import type { Coffee } from "@/lib/types/coffee";
 import type { Session } from "@/lib/types/session";
 
@@ -20,9 +23,9 @@ Be direct, specific, and personal. No generic phrases. No emojis.
 Reference actual numbers (e.g. "4 of 6 brews rated 4★+").
 Metric units only.`;
 
-function topNotes(sessions: Session[], n = 5): string[] {
+function topNotes(sessionList: Session[], n = 5): string[] {
   const counts: Record<string, number> = {};
-  for (const s of sessions) {
+  for (const s of sessionList) {
     for (const note of s.result?.flavorNotes || []) {
       counts[note] = (counts[note] || 0) + 1;
     }
@@ -33,9 +36,9 @@ function topNotes(sessions: Session[], n = 5): string[] {
     .map(([note]) => note);
 }
 
-function bestMethod(sessions: Session[]): string | null {
+function bestMethod(sessionList: Session[]): string | null {
   const data: Record<string, { sum: number; count: number }> = {};
-  for (const s of sessions) {
+  for (const s of sessionList) {
     const method = (s.brew as { methodUsed?: string } | undefined)?.methodUsed
       || (s.recommendation as { primaryMethod?: string } | undefined)?.primaryMethod;
     const rating = s.result?.rating;
@@ -49,25 +52,19 @@ function bestMethod(sessions: Session[]): string | null {
   return ranked[0]?.[0] ?? null;
 }
 
-function buildUserMessage(coffee: Coffee, sessions: Session[]): string {
-  const rated = sessions.filter(s => s.result?.rating != null);
+function buildUserMessage(coffee: Coffee, sessionList: Session[]): string {
+  const rated = sessionList.filter(s => s.result?.rating != null);
   const avgRating = rated.length > 0
-    ? Math.round((rated.reduce((s, sess) => s + sess.result!.rating, 0) / rated.length) * 10) / 10
+    ? Math.round((rated.reduce((sum, sess) => sum + sess.result!.rating, 0) / rated.length) * 10) / 10
     : null;
-  const best = bestMethod(sessions);
-  const notes = topNotes(sessions, 5);
+  const best = bestMethod(sessionList);
+  const notes = topNotes(sessionList, 5);
 
-  const lines = sessions
+  const lines = sessionList
     .slice()
-    .sort((a, b) => {
-      const aMs = (a as Session & { createdAtMs?: number }).createdAtMs ?? new Date(a.createdAt).getTime();
-      const bMs = (b as Session & { createdAtMs?: number }).createdAtMs ?? new Date(b.createdAt).getTime();
-      return aMs - bMs;
-    })
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     .map(s => {
-      const d = (s as Session & { createdAtMs?: number }).createdAtMs
-        ? new Date((s as Session & { createdAtMs?: number }).createdAtMs!)
-        : new Date(s.createdAt);
+      const d = new Date(s.createdAt);
       const date = d.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
       const method = (s.brew as { methodUsed?: string } | undefined)?.methodUsed
         || (s.recommendation as { primaryMethod?: string } | undefined)?.primaryMethod
@@ -79,39 +76,35 @@ function buildUserMessage(coffee: Coffee, sessions: Session[]): string {
 
   return `Coffee: ${coffee.name} by ${coffee.roaster}
 Origin: ${coffee.origin || "unknown"} | Process: ${coffee.process || "unknown"}
-Sessions (${sessions.length} total):
+Sessions (${sessionList.length} total):
 ${lines.join("\n")}
 ${avgRating != null ? `Avg rating: ${avgRating}` : ""}${best ? ` | Best method: ${best}` : ""}${notes.length > 0 ? ` | Most common notes: ${notes.join(", ")}` : ""}`;
 }
 
 export async function POST(req: NextRequest) {
-  // Auth check — Vercel cron sends this header automatically; manual calls need it too
   const secret = process.env.CRON_SECRET;
   const auth = req.headers.get("authorization");
   if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getAdminDb();
   let processed = 0;
   let skipped = 0;
   let errors = 0;
 
   try {
-    const coffeesSnap = await db.collection("coffees").get();
+    const coffeeRows = await db.select().from(coffees);
     const now = Date.now();
     const twentyEightDaysMs = 28 * 24 * 60 * 60 * 1000;
 
-    for (const doc of coffeesSnap.docs) {
-      const coffee = { id: doc.id, ...doc.data() } as Coffee;
+    for (const row of coffeeRows) {
+      const coffee = rowToCoffee(row);
 
-      // Skip if fewer than 2 sessions
       if (!coffee.sessionIds || coffee.sessionIds.length < 2) {
         skipped++;
         continue;
       }
 
-      // Skip if summarized within the last 28 days
       if (coffee.lastSummarizedAt) {
         const lastMs = new Date(coffee.lastSummarizedAt).getTime();
         if (now - lastMs < twentyEightDaysMs) {
@@ -121,20 +114,15 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Fetch all sessions for this coffee by ID
-        const sessionDocs = await Promise.all(
-          coffee.sessionIds.map(id => db.collection("sessions").doc(id).get())
-        );
-        const sessions: Session[] = sessionDocs
-          .filter(d => d.exists)
-          .map(d => ({ id: d.id, ...d.data() } as Session));
+        const sessionRows = await db.select().from(sessions).where(inArray(sessions.id, coffee.sessionIds));
+        const sessionList: Session[] = sessionRows.map(rowToSession);
 
-        if (sessions.length < 2) {
+        if (sessionList.length < 2) {
           skipped++;
           continue;
         }
 
-        const userMessage = buildUserMessage(coffee, sessions);
+        const userMessage = buildUserMessage(coffee, sessionList);
 
         const msg = await client.messages.create({
           model: "claude-haiku-4-5",
@@ -149,14 +137,12 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        const commonNotes = topNotes(sessions, 5);
+        const commonNotes = topNotes(sessionList, 5);
         const lastSummarizedAt = new Date().toISOString();
 
-        await db.collection("coffees").doc(coffee.id).update({
-          writtenSummary,
-          lastSummarizedAt,
-          commonNotes,
-        });
+        await db.update(coffees)
+          .set({ writtenSummary, lastSummarizedAt, commonNotes })
+          .where(eq(coffees.id, coffee.id));
 
         processed++;
       } catch (err) {

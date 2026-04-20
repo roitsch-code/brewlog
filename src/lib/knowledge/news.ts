@@ -1,27 +1,26 @@
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { knowledge } from "@/lib/db/schema";
 
 export type NewsItemType = "article" | "video" | "instagram" | "podcast" | "research" | "social";
 
 export interface NewsItem {
   id: string;
   title: string;
-  excerpt: string; // 1–2 sentences
+  excerpt: string;
   url: string;
   type: NewsItemType;
-  source: string; // e.g. "James Hoffmann", "Barista Hustle", "SCA"
+  source: string;
   savedAt: string;
 }
 
-const COLLECTION = "knowledge";
-const DOC = "news";
+const KIND = "news";
 
 export async function getNews(limit = 30): Promise<NewsItem[]> {
   try {
-    const db = getAdminDb();
-    const snap = await db.collection(COLLECTION).doc(DOC).get();
-    if (!snap.exists) return [];
-    const data = snap.data() as { items?: NewsItem[] };
-    const items = Array.isArray(data?.items) ? data.items : [];
+    const rows = await db.select().from(knowledge).where(eq(knowledge.kind, KIND)).limit(1);
+    const data = rows[0]?.data as { items?: NewsItem[] } | undefined;
+    const items = Array.isArray(data?.items) ? data!.items! : [];
     return items.slice(0, limit);
   } catch (err) {
     console.error("getNews error:", err);
@@ -30,12 +29,15 @@ export async function getNews(limit = 30): Promise<NewsItem[]> {
 }
 
 export async function saveNews(items: NewsItem[]): Promise<void> {
-  const db = getAdminDb();
-  await db.collection(COLLECTION).doc(DOC).set({ items, updatedAt: new Date().toISOString() });
+  const data = { items, updatedAt: new Date().toISOString() };
+  await db
+    .insert(knowledge)
+    .values({ kind: KIND, data })
+    .onConflictDoUpdate({ target: knowledge.kind, set: { data } });
 }
 
 export async function addNewsItems(newItems: Omit<NewsItem, "id" | "savedAt">[]): Promise<number> {
-  const existing = await getNews();
+  const existing = await getNews(100);
   const existingUrls = new Set(existing.map(n => n.url.toLowerCase()));
 
   const toAdd: NewsItem[] = newItems
@@ -48,7 +50,7 @@ export async function addNewsItems(newItems: Omit<NewsItem, "id" | "savedAt">[])
 
   if (toAdd.length === 0) return 0;
 
-  const combined = [...toAdd, ...existing].slice(0, 60); // Keep max 60 items
+  const combined = [...toAdd, ...existing].slice(0, 60);
   await saveNews(combined);
   return toAdd.length;
 }

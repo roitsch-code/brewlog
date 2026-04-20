@@ -3,8 +3,13 @@ import { useState, useEffect } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import Chip from "@/components/ui/Chip";
-import { getRecentSessions } from "@/lib/firebase/firestore";
-import type { SessionContext } from "@/lib/types/session";
+import type { Session, SessionContext } from "@/lib/types/session";
+
+async function getRecentSessions(limit: number): Promise<Session[]> {
+  const res = await fetch(`/api/sessions?limit=${limit}`);
+  if (!res.ok) return [];
+  return (await res.json()) as Session[];
+}
 import { Brain, FlaskConical, Moon, Users, Snowflake } from "lucide-react";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 

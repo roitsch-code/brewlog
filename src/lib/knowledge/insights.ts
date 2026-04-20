@@ -1,7 +1,8 @@
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { knowledge } from "@/lib/db/schema";
 
-const COLLECTION = "knowledge";
-const DOC = "insights";
+const KIND = "insights";
 
 export interface InsightItem {
   id: string;
@@ -15,27 +16,24 @@ export interface InsightItem {
 
 export async function getInsights(limit?: number): Promise<InsightItem[]> {
   try {
-    const db = getAdminDb();
-    const doc = await db.collection(COLLECTION).doc(DOC).get();
-    if (doc.exists) {
-      const data = doc.data() as { items: InsightItem[]; updatedAt: string };
-      if (Array.isArray(data.items)) {
-        const shuffled = [...data.items].sort(() => Math.random() - 0.5);
-        return limit ? shuffled.slice(0, limit) : shuffled;
-      }
+    const rows = await db.select().from(knowledge).where(eq(knowledge.kind, KIND)).limit(1);
+    const data = rows[0]?.data as { items?: InsightItem[] } | undefined;
+    if (data && Array.isArray(data.items)) {
+      const shuffled = [...data.items].sort(() => Math.random() - 0.5);
+      return limit ? shuffled.slice(0, limit) : shuffled;
     }
   } catch (err) {
-    console.error("getInsights: Firestore error:", err);
+    console.error("getInsights: db error:", err);
   }
   return [];
 }
 
 export async function saveInsights(items: InsightItem[]): Promise<void> {
-  const db = getAdminDb();
-  await db.collection(COLLECTION).doc(DOC).set({
-    items,
-    updatedAt: new Date().toISOString(),
-  });
+  const data = { items, updatedAt: new Date().toISOString() };
+  await db
+    .insert(knowledge)
+    .values({ kind: KIND, data })
+    .onConflictDoUpdate({ target: knowledge.kind, set: { data } });
 }
 
 export async function addInsight(

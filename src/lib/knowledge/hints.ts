@@ -1,7 +1,8 @@
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { knowledge } from "@/lib/db/schema";
 
-const COLLECTION = "knowledge";
-const DOC = "hints";
+const KIND = "hints";
 
 export const FALLBACK_HINTS: string[] = [
   // Origins & terroir
@@ -126,24 +127,21 @@ export const FALLBACK_HINTS: string[] = [
 
 export async function getHints(): Promise<string[]> {
   try {
-    const db = getAdminDb();
-    const doc = await db.collection(COLLECTION).doc(DOC).get();
-    if (doc.exists) {
-      const data = doc.data() as { hints: string[]; updatedAt: string };
-      if (Array.isArray(data.hints) && data.hints.length > 0) {
-        return data.hints;
-      }
+    const rows = await db.select().from(knowledge).where(eq(knowledge.kind, KIND)).limit(1);
+    const data = rows[0]?.data as { hints?: string[] } | undefined;
+    if (data && Array.isArray(data.hints) && data.hints.length > 0) {
+      return data.hints;
     }
   } catch (err) {
-    console.error("getHints: Firestore error:", err);
+    console.error("getHints: db error:", err);
   }
   return FALLBACK_HINTS;
 }
 
 export async function saveHints(hints: string[]): Promise<void> {
-  const db = getAdminDb();
-  await db.collection(COLLECTION).doc(DOC).set({
-    hints,
-    updatedAt: new Date().toISOString(),
-  });
+  const data = { hints, updatedAt: new Date().toISOString() };
+  await db
+    .insert(knowledge)
+    .values({ kind: KIND, data })
+    .onConflictDoUpdate({ target: knowledge.kind, set: { data } });
 }
