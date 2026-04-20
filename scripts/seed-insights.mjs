@@ -1,14 +1,8 @@
 // Seed initial insights into Postgres
-// Run: node scripts/seed-insights.mjs
-// Requires DATABASE_URL in .env.local
+// Run from host: docker cp scripts brewlog-app-1:/app/ && docker compose exec app node scripts/seed-insights.mjs
+// Requires DATABASE_URL in the environment (already set in docker-compose.yml)
 
 import pg from "pg";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
-import { config } from "dotenv";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, "../.env.local") });
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 
