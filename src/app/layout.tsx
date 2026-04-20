@@ -12,6 +12,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bettertastethansorry.com"),
   title: "BrewLog",
   description: "Your personal coffee brew advisor & diary",
   manifest: "/manifest.json",

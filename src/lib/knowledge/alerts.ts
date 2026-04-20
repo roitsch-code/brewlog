@@ -1,6 +1,7 @@
-import { getAdminDb } from "@/lib/firebase/admin";
-
-const COLLECTION = "coffeeAlerts";
+import { eq, desc } from "drizzle-orm";
+import { randomUUID } from "crypto";
+import { db } from "@/lib/db/client";
+import { coffeeAlerts } from "@/lib/db/schema";
 
 export interface CoffeeAlert {
   id: string;
@@ -15,32 +16,31 @@ export interface CoffeeAlert {
   read: boolean;
 }
 
+function rowToAlert(row: typeof coffeeAlerts.$inferSelect): CoffeeAlert {
+  return { id: row.id, ...(row.data as Omit<CoffeeAlert, "id">) };
+}
+
 export async function getAlerts(limit?: number): Promise<CoffeeAlert[]> {
   try {
-    const db = getAdminDb();
-    let query = db
-      .collection(COLLECTION)
-      .orderBy("alertedAt", "desc") as FirebaseFirestore.Query;
-    if (limit) {
-      query = query.limit(limit);
-    }
-    const snap = await query.get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as CoffeeAlert));
+    const q = db.select().from(coffeeAlerts).orderBy(desc(coffeeAlerts.createdAt));
+    const rows = limit ? await q.limit(limit) : await q;
+    return rows.map(rowToAlert);
   } catch (err) {
-    console.error("getAlerts: Firestore error:", err);
+    console.error("getAlerts: db error:", err);
     return [];
   }
 }
 
-export async function saveAlert(
-  alert: Omit<CoffeeAlert, "id">
-): Promise<string> {
-  const db = getAdminDb();
-  const ref = await db.collection(COLLECTION).add(alert);
-  return ref.id;
+export async function saveAlert(alert: Omit<CoffeeAlert, "id">): Promise<string> {
+  const id = randomUUID();
+  await db.insert(coffeeAlerts).values({ id, data: alert });
+  return id;
 }
 
 export async function markRead(id: string): Promise<void> {
-  const db = getAdminDb();
-  await db.collection(COLLECTION).doc(id).update({ read: true });
+  const rows = await db.select().from(coffeeAlerts).where(eq(coffeeAlerts.id, id)).limit(1);
+  const existing = rows[0];
+  if (!existing) return;
+  const data = { ...(existing.data as CoffeeAlert), read: true };
+  await db.update(coffeeAlerts).set({ data }).where(eq(coffeeAlerts.id, id));
 }

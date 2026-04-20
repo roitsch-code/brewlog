@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { coffees, roasters } from "@/lib/db/schema";
+import { rowToCoffee } from "@/lib/db/helpers";
 import { getRoasterPrior } from "@/lib/roasters/priors";
-import type { Coffee } from "@/lib/types/coffee";
 
 export const dynamic = "force-dynamic";
 
@@ -13,35 +15,31 @@ export interface RoasterSummary {
 
 export async function GET(req: NextRequest) {
   try {
-    const db = getAdminDb();
-    const snap = await db.collection("coffees").get();
+    const rows = await db.select().from(coffees);
+    const all = rows.map(rowToCoffee);
 
-    // ?roasters=true — unique sorted roaster names
     if (req.nextUrl.searchParams.get("roasters") === "true") {
-      const allNames = snap.docs.map(d => (d.data() as Coffee).roaster).filter(Boolean);
-      const names = Array.from(new Set(allNames)).sort((a, b) => a.localeCompare(b));
+      const names = Array.from(new Set(all.map(c => c.roaster).filter(Boolean))).sort((a, b) => a.localeCompare(b));
       return NextResponse.json(names);
     }
 
-    // ?roasterSummaries=true — { [roasterName]: { region, styleSummary, confidence } }
     if (req.nextUrl.searchParams.get("roasterSummaries") === "true") {
-      const allNames = snap.docs.map(d => (d.data() as Coffee).roaster).filter(Boolean);
-      const roasterNames = Array.from(new Set(allNames));
+      const roasterNames = Array.from(new Set(all.map(c => c.roaster).filter(Boolean)));
       const summaries: Record<string, RoasterSummary> = {};
 
       for (const name of roasterNames) {
-        // Check Firestore roasters collection first (user-saved profiles)
         const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
-        try {
-          const roasterDoc = await db.collection("roasters").doc(slug).get();
-          if (roasterDoc.exists) {
-            const d = roasterDoc.data()!;
-            summaries[name] = { region: d.region, styleSummary: d.styleSummary, confidence: d.confidence || "user" };
-            continue;
-          }
-        } catch {}
+        const roasterRows = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
+        const saved = roasterRows[0];
+        if (saved) {
+          summaries[name] = {
+            region: saved.region ?? undefined,
+            styleSummary: saved.styleSummary ?? undefined,
+            confidence: saved.confidence ?? "user",
+          };
+          continue;
+        }
 
-        // Fall back to static prior (fuzzy match handles "Friedhats Coffee Roasters" → "Friedhats")
         const prior = getRoasterPrior(name);
         if (prior.confidence !== "fallback") {
           summaries[name] = { region: prior.region, styleSummary: prior.styleSummary, confidence: prior.confidence };
@@ -51,22 +49,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(summaries);
     }
 
-    // ?match=true&name=X&roaster=Y — case-insensitive lookup for coffee recognition
     if (req.nextUrl.searchParams.get("match") === "true") {
       const name = (req.nextUrl.searchParams.get("name") || "").toLowerCase().trim();
       const roaster = (req.nextUrl.searchParams.get("roaster") || "").toLowerCase().trim();
-      const match = snap.docs
-        .map(d => ({ id: d.id, ...d.data() } as Coffee))
-        .find(c =>
-          (name ? c.name?.toLowerCase().trim() === name : true) &&
-          (roaster ? c.roaster?.toLowerCase().trim() === roaster : true) &&
-          (name || roaster) // need at least one filter
-        ) ?? null;
+      if (!name && !roaster) return NextResponse.json(null);
+      const match = all.find(c =>
+        (name ? c.name?.toLowerCase().trim() === name : true) &&
+        (roaster ? c.roaster?.toLowerCase().trim() === roaster : true)
+      ) ?? null;
       return NextResponse.json(match);
     }
 
-    const coffees: Coffee[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as Coffee));
-    return NextResponse.json(coffees);
+    return NextResponse.json(all);
   } catch (err) {
     console.error("coffees GET error:", err);
     return NextResponse.json({ error: "Failed to load coffees" }, { status: 500 });

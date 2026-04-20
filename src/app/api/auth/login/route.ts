@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { authChallenges, authCredentials } from "@/lib/db/schema";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
-// In-memory PIN rate limiting: ip → { count, lockedUntil }
 const pinAttempts = new Map<string, { count: number; lockedUntil: number }>();
 const PIN_MAX_ATTEMPTS = 5;
 const PIN_LOCKOUT_MS = 60_000;
+const CHALLENGE_KEY = "default";
+const CHALLENGE_TTL_MS = 2 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // ── PIN fallback ──────────────────────────────────────────────────────
     if (body.type === "pin") {
       const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
       const now = Date.now();
@@ -43,40 +45,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ verified: true });
     }
 
-    // ── Passkey / Face ID ─────────────────────────────────────────────────
-    const db = getAdminDb();
-
-    const [challengeSnap, credSnap] = await Promise.all([
-      db.collection("auth").doc("challenge").get(),
-      db.collection("auth").doc("credential").get(),
+    const [challengeRows, credentialRows] = await Promise.all([
+      db.select().from(authChallenges).where(eq(authChallenges.key, CHALLENGE_KEY)).limit(1),
+      db.select().from(authCredentials).limit(1),
     ]);
 
-    if (!challengeSnap.exists || !credSnap.exists) {
+    const challenge = challengeRows[0];
+    const stored = credentialRows[0];
+    if (!challenge || !stored) {
       return NextResponse.json({ error: "Missing challenge or credential" }, { status: 400 });
     }
 
-    const challengeData = challengeSnap.data()!;
-    const expectedChallenge = challengeData.value as string;
-
-    // Enforce 2-minute TTL on WebAuthn challenges
-    const CHALLENGE_TTL_MS = 2 * 60 * 1000;
-    if (challengeData.createdAt && Date.now() - challengeData.createdAt > CHALLENGE_TTL_MS) {
-      await db.collection("auth").doc("challenge").delete();
+    if (Date.now() - challenge.createdAt.getTime() > CHALLENGE_TTL_MS) {
+      await db.delete(authChallenges).where(eq(authChallenges.key, CHALLENGE_KEY));
       return NextResponse.json({ error: "Challenge expired. Please try again." }, { status: 400 });
     }
 
-    const stored = credSnap.data()!;
-
     const verification = await verifyAuthenticationResponse({
       response: body,
-      expectedChallenge,
+      expectedChallenge: challenge.value,
       expectedOrigin: process.env.WEBAUTHN_ORIGIN || "http://localhost:3000",
       expectedRPID: process.env.WEBAUTHN_RP_ID || "localhost",
       credential: {
         id: stored.id,
         publicKey: Buffer.from(stored.publicKey, "base64url"),
         counter: stored.counter,
-        transports: stored.transports,
+        transports: stored.transports as AuthenticatorTransport[] | undefined,
       },
     });
 
@@ -84,13 +78,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Verification failed" }, { status: 401 });
     }
 
-    // Update counter (replay attack prevention)
-    await db.collection("auth").doc("credential").update({
-      counter: verification.authenticationInfo.newCounter,
-    });
+    await db
+      .update(authCredentials)
+      .set({ counter: verification.authenticationInfo.newCounter })
+      .where(eq(authCredentials.id, stored.id));
 
-    // Clean up challenge
-    await db.collection("auth").doc("challenge").delete();
+    await db.delete(authChallenges).where(eq(authChallenges.key, CHALLENGE_KEY));
 
     const token = await createSession();
     setSessionCookie(token);

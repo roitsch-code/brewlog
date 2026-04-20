@@ -3,8 +3,13 @@ import { useState, useEffect } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import Chip from "@/components/ui/Chip";
-import { getRecentSessions } from "@/lib/firebase/firestore";
-import type { SessionContext } from "@/lib/types/session";
+import type { Session, SessionContext } from "@/lib/types/session";
+
+async function getRecentSessions(limit: number): Promise<Session[]> {
+  const res = await fetch(`/api/sessions?limit=${limit}`);
+  if (!res.ok) return [];
+  return (await res.json()) as Session[];
+}
 import { Brain, FlaskConical, Moon, Users, Snowflake } from "lucide-react";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 
@@ -69,8 +74,7 @@ const INTENTS = [
 const DEFAULT_GRINDERS = ["Niche Zero", "Comandante C40"];
 
 const METHODS = [
-  { id: "V60 + Drip Assist", label: "V60 + Drip Assist",   sub: "daily driver, max ~600 ml" },
-  { id: "V60",               label: "V60",                  sub: "classic, no assist" },
+  { id: "V60",               label: "V60",                  sub: "Hario cone" },
   { id: "Orea Fast",         label: "Orea Fast",            sub: "fast drip, max ~500 ml" },
   { id: "Orea Apex",         label: "Orea Apex",            sub: "clarity & brightness" },
   { id: "Orea Classic",      label: "Orea Classic",         sub: "sweetness focus" },
@@ -81,6 +85,13 @@ const METHODS = [
   { id: "Clever Dripper",    label: "Clever Dripper",       sub: "immersion, max 400 ml" },
   { id: "Moccamaster",       label: "Moccamaster",          sub: "batch brewer, ≥ 500 ml" },
 ];
+
+// Brewers that can have the Hario Drip Assist disc placed on top for a steadier pour.
+// Immersion / pressure / batch brewers are excluded — the Assist controls pour rate and
+// has no effect when there's no pouring phase.
+const DRIP_ASSIST_COMPATIBLE = new Set<string>([
+  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
+]);
 
 export default function StepContext() {
   const { draft, setContext, setStep, setIsRecommending, setRecommendError } = useFlowStore();
@@ -102,7 +113,7 @@ export default function StepContext() {
       .catch(() => {});
   }, []);
 
-  const update = (key: keyof SessionContext, value: string | number) => {
+  const update = (key: keyof SessionContext, value: string | number | boolean) => {
     setContext({ ...ctx, [key]: value } as SessionContext);
   };
 
@@ -294,7 +305,7 @@ export default function StepContext() {
               type="button"
               onClick={() => {
                 setBrewMode("ai");
-                update("preferredMethod", "");
+                setContext({ ...ctx, preferredMethod: "", dripAssist: false } as SessionContext);
               }}
               className={`flex-1 p-4 rounded-2xl border text-left transition-all active:scale-95 ${
                 brewMode === "ai" ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
@@ -330,7 +341,15 @@ export default function StepContext() {
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => update("preferredMethod", ctx.preferredMethod === m.id ? "" : m.id)}
+                  onClick={() => {
+                    const newMethod = ctx.preferredMethod === m.id ? "" : m.id;
+                    setContext({
+                      ...ctx,
+                      preferredMethod: newMethod,
+                      // Clear dripAssist if the new method can't use it
+                      dripAssist: DRIP_ASSIST_COMPATIBLE.has(newMethod) ? ctx.dripAssist : false,
+                    } as SessionContext);
+                  }}
                   className={`flex items-center justify-between px-4 py-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
                     ctx.preferredMethod === m.id
                       ? "border-brew-accent bg-brew-accent/10"
@@ -347,9 +366,34 @@ export default function StepContext() {
                 </button>
               ))}
             </div>
+            {ctx.preferredMethod && DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) && (
+              <button
+                type="button"
+                onClick={() => update("dripAssist", !ctx.dripAssist)}
+                className={`flex items-center justify-between w-full mt-2 px-4 py-3 rounded-2xl border text-left transition-all active:scale-[0.98] ${
+                  ctx.dripAssist ? "border-brew-accent bg-brew-accent/10" : "border-brew-border bg-brew-surface"
+                }`}
+              >
+                <div>
+                  <p className={`text-sm font-medium ${ctx.dripAssist ? "text-brew-accent" : "text-white"}`}>
+                    With Drip Assist
+                  </p>
+                  <p className="text-brew-muted text-xs mt-0.5">Hario disc — steadier pour for any pour-over</p>
+                </div>
+                <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                  ctx.dripAssist ? "bg-brew-accent border-brew-accent" : "border-white/30"
+                }`}>
+                  {ctx.dripAssist && (
+                    <svg className="w-3.5 h-3.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </button>
+            )}
             {ctx.preferredMethod ? (
               <p className="text-brew-muted text-xs px-1 mt-2">
-                {ctx.preferredMethod} locked in — Claude will dial in the full recipe for it.
+                {ctx.preferredMethod}{ctx.dripAssist && ctx.preferredMethod !== "V60" && DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) ? " + Drip Assist" : ""} locked in — Claude will dial in the full recipe for it.
               </p>
             ) : (
               <p className="text-brew-muted text-xs px-1 mt-2">Tap a method to lock it in.</p>

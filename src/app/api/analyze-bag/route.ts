@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, sql } from "drizzle-orm";
 import { analyzeBagImage } from "@/lib/claude/analyzeBag";
 import { getRoasterPrior, canonicalRoasterSlug } from "@/lib/roasters/priors";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { db } from "@/lib/db/client";
+import { roasters } from "@/lib/db/schema";
 import type { RoasterPrior } from "@/lib/roasters/priors";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,21 +28,19 @@ export async function POST(req: NextRequest) {
     const roasterName = result.extracted.roaster;
     let roasterPrior = undefined;
     if (roasterName) {
-      // 1. Check user-saved roasters in Firestore (canonical slug + alias fallback)
       let prior: RoasterPrior | null = null;
       try {
-        const db = getAdminDb();
         const slug = canonicalRoasterSlug(roasterName);
-        const direct = await db.collection("roasters").doc(slug).get();
-        if (direct.exists) {
-          prior = direct.data() as RoasterPrior;
+        const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
+        if (direct.length > 0) {
+          prior = direct[0].data as RoasterPrior;
         } else {
-          const aliasSnap = await db
-            .collection("roasters")
-            .where("aliases", "array-contains", slug)
-            .limit(1)
-            .get();
-          if (!aliasSnap.empty) prior = aliasSnap.docs[0].data() as RoasterPrior;
+          const viaAlias = await db
+            .select()
+            .from(roasters)
+            .where(sql`${roasters.aliases} @> ${JSON.stringify([slug])}::jsonb`)
+            .limit(1);
+          if (viaAlias.length > 0) prior = viaAlias[0].data as RoasterPrior;
         }
       } catch {}
 

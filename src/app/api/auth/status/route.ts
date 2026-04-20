@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { sql } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { authCredentials } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const db = getAdminDb();
-    const snap = await db.collection("auth").doc("credential").get();
-    return NextResponse.json({ registered: snap.exists });
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(authCredentials);
+    return NextResponse.json({ registered: count > 0 });
   } catch {
     return NextResponse.json({ registered: false });
   }

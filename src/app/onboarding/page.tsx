@@ -2,8 +2,15 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { savePreferences } from "@/lib/firebase/firestore";
 import type { UserPreferences } from "@/lib/types/preferences";
+
+async function savePreferences(prefs: UserPreferences): Promise<void> {
+  await fetch("/api/preferences", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(prefs),
+  });
+}
 
 const EQUIPMENT_OPTIONS = [
   { id: "V60", label: "V60" },

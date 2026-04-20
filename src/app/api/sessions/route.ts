@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { randomUUID } from "crypto";
+import { desc, inArray, sql } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { sessions, coffees } from "@/lib/db/schema";
+import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
-
-// Strip null values recursively before Zod — AI extraction returns null for
-// unknown fields, but Zod .optional() expects absence (undefined), not null.
-// Firestore also rejects undefined, so we sanitise at both ends.
-function deepStripNulls(val: unknown): unknown {
-  if (val === null) return undefined;
-  if (Array.isArray(val)) return val.map(deepStripNulls).filter(v => v !== undefined);
-  if (val && typeof val === "object") {
-    return Object.fromEntries(
-      Object.entries(val as Record<string, unknown>)
-        .map(([k, v]) => [k, deepStripNulls(v)])
-        .filter(([, v]) => v !== undefined)
-    );
-  }
-  return val;
-}
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -67,53 +55,29 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
 
-    // Count-only mode — one aggregate read, no data transfer
     if (url.searchParams.get("count") === "true") {
-      const db = getAdminDb();
-      const snap = await db.collection("sessions").count().get();
-      return NextResponse.json({ total: snap.data().count });
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(sessions);
+      return NextResponse.json({ total: count });
     }
 
-    // IDs mode — fetch specific sessions by ID (used by coffee detail page)
     const idsParam = url.searchParams.get("ids");
     if (idsParam) {
       const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean).slice(0, 300);
-      const db = getAdminDb();
-      const docs = await Promise.all(ids.map(id => db.collection("sessions").doc(id).get()));
-      const sessions: Session[] = docs
-        .filter(d => d.exists)
-        .map(d => ({ id: d.id, ...d.data() } as Session));
-      return NextResponse.json(sessions);
+      if (ids.length === 0) return NextResponse.json([]);
+      const rows = await db.select().from(sessions).where(inArray(sessions.id, ids));
+      return NextResponse.json(rows.map(rowToSession));
     }
 
     const rawLimit = Number(url.searchParams.get("limit") || "50");
     const limit = Math.min(Math.max(1, rawLimit), 300);
-    const db = getAdminDb();
-    // Two-query strategy: fetch newest sessions via createdAtMs index (all post-fix sessions),
-    // then fall back to a larger unordered fetch to catch legacy sessions (no createdAtMs).
-    // This guarantees the most recent sessions always appear regardless of collection size.
-    const [newSnap, legacySnap] = await Promise.all([
-      db.collection("sessions").orderBy("createdAtMs", "desc").limit(limit).get(),
-      db.collection("sessions").limit(limit * 3).get(),
-    ]);
-    const seen = new Set<string>();
-    const allDocs = [...newSnap.docs, ...legacySnap.docs].filter(d => {
-      if (seen.has(d.id)) return false;
-      seen.add(d.id);
-      return true;
-    });
-    const sessions: Session[] = allDocs
-      .map(d => ({ id: d.id, ...d.data() } as Session))
-      .sort((a, b) => {
-        const getMs = (s: Session & { createdAtMs?: number }) => {
-          if (s.createdAtMs) return s.createdAtMs;
-          if (s.createdAt) return new Date(s.createdAt).getTime();
-          return 0;
-        };
-        return getMs(b) - getMs(a);
-      })
-      .slice(0, limit);
-    return NextResponse.json(sessions);
+    const rows = await db
+      .select()
+      .from(sessions)
+      .orderBy(desc(sessions.createdAtMs))
+      .limit(limit);
+    return NextResponse.json(rows.map(rowToSession));
   } catch (err) {
     console.error("sessions GET error:", err);
     return NextResponse.json([], { status: 500 });
@@ -123,75 +87,82 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.json();
-    // Strip nulls before Zod (AI returns null for unknown fields; Zod .optional() wants absence)
-    const body = deepStripNulls(rawBody);
-    const parsed = SessionPostSchema.safeParse(body);
+    const parsed = SessionPostSchema.safeParse(rawBody);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid session data", details: parsed.error.flatten() }, { status: 400 });
     }
     const data = parsed.data as Omit<Session, "id">;
-    const db = getAdminDb();
-    // Sanitise via JSON round-trip: removes any undefined values Firestore would reject
-    const firestoreData = JSON.parse(JSON.stringify({ ...data, createdAtMs: Date.now() }));
-    const ref = await db.collection("sessions").add(firestoreData);
-    const sessionId = ref.id;
+    const sessionId = randomUUID();
+    const createdAtMs = Date.now();
+    const createdAt = new Date(data.createdAt);
 
-    // Upsert coffee library entry
+    await db.insert(sessions).values({
+      id: sessionId,
+      type: data.type,
+      mode: data.mode,
+      createdAt,
+      createdAtMs,
+      coffee: data.coffee,
+      place: data.place,
+      context: data.context,
+      recommendation: data.recommendation,
+      brew: data.brew,
+      result: data.result,
+    });
+
     if (data.coffee?.name && data.coffee?.roaster) {
       const coffeeKey = `${data.coffee.roaster}__${data.coffee.name}`
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "_");
 
-      const coffeeRef = db.collection("coffees").doc(coffeeKey);
-      const coffeeSnap = await coffeeRef.get();
-
       const newRating = data.result?.rating;
       const hasRating = typeof newRating === "number";
 
-      if (!coffeeSnap.exists) {
-        await coffeeRef.set({
+      const existingRows = await db
+        .select()
+        .from(coffees)
+        .where(sql`${coffees.id} = ${coffeeKey}`)
+        .limit(1);
+      const existing = existingRows[0];
+
+      if (!existing) {
+        await db.insert(coffees).values({
+          id: coffeeKey,
           roaster: data.coffee.roaster,
           name: data.coffee.name,
           origin: data.coffee.origin || "",
           process: data.coffee.process || "",
-          fermentationStyle: data.coffee.fermentationStyle || null,
-          cuppingScore: data.coffee.cuppingScore ?? null,
+          fermentationStyle: data.coffee.fermentationStyle,
+          cuppingScore: data.coffee.cuppingScore != null ? String(data.coffee.cuppingScore) : undefined,
           firstSeenAt: data.createdAt,
           sessionCount: 1,
           sessionIds: [sessionId],
-          bagPhotoUrl: data.coffee.bagPhotoUrl || null,
-          latestRoastDate: data.coffee.roastDate || null,
-          ratingSum: hasRating ? newRating : 0,
+          bagPhotoUrl: data.coffee.bagPhotoUrl || undefined,
+          latestRoastDate: data.coffee.roastDate,
+          ratingSum: hasRating ? String(newRating) : "0",
           ratingCount: hasRating ? 1 : 0,
-          avgRating: hasRating ? newRating : null,
+          avgRating: hasRating ? String(newRating) : undefined,
         });
       } else {
-        const existing = coffeeSnap.data()!;
-        const sessionIds: string[] = existing.sessionIds || [];
-        sessionIds.push(sessionId);
-
-        const ratingSum = (existing.ratingSum || 0) + (hasRating ? newRating! : 0);
-        const ratingCount = (existing.ratingCount || 0) + (hasRating ? 1 : 0);
+        const sessionIds = [...(existing.sessionIds ?? []), sessionId];
+        const prevSum = Number(existing.ratingSum ?? 0);
+        const prevCount = existing.ratingCount ?? 0;
+        const ratingSum = prevSum + (hasRating ? newRating! : 0);
+        const ratingCount = prevCount + (hasRating ? 1 : 0);
         const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null;
 
-        const updateData: Record<string, unknown> = {
-          sessionCount: sessionIds.length,
-          sessionIds,
-          ratingSum,
-          ratingCount,
-          avgRating,
-        };
-
-        // Store photo if we don't have one yet
-        if (!existing.bagPhotoUrl && data.coffee.bagPhotoUrl) {
-          updateData.bagPhotoUrl = data.coffee.bagPhotoUrl;
-        }
-        // Always update roast date so the most recent session's date wins
-        if (data.coffee.roastDate) {
-          updateData.latestRoastDate = data.coffee.roastDate;
-        }
-
-        await coffeeRef.update(updateData);
+        await db
+          .update(coffees)
+          .set({
+            sessionCount: sessionIds.length,
+            sessionIds,
+            ratingSum: String(ratingSum),
+            ratingCount,
+            avgRating: avgRating != null ? String(avgRating) : null,
+            bagPhotoUrl: existing.bagPhotoUrl ?? data.coffee.bagPhotoUrl ?? null,
+            latestRoastDate: data.coffee.roastDate ?? existing.latestRoastDate,
+          })
+          .where(sql`${coffees.id} = ${coffeeKey}`);
       }
     }
 

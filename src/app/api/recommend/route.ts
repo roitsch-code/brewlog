@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, sql } from "drizzle-orm";
 import { generateRecommendation } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { db } from "@/lib/db/client";
+import { preferences as preferencesTable, roasters } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { canonicalRoasterSlug } from "@/lib/roasters/priors";
 import type { UserPreferences } from "@/lib/types/preferences";
 import type { RoasterPrior } from "@/lib/roasters/priors";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
@@ -16,9 +20,8 @@ export async function POST(req: NextRequest) {
 
     let preferences: UserPreferences | null = null;
     try {
-      const db = getAdminDb();
-      const snap = await db.collection("preferences").doc("default").get();
-      if (snap.exists) preferences = snap.data() as UserPreferences;
+      const rows = await db.select().from(preferencesTable).where(eq(preferencesTable.key, "default")).limit(1);
+      if (rows.length > 0) preferences = rows[0].data as UserPreferences;
     } catch {}
     const prefs = preferences || {
       equipment: ["V60", "V60 + Drip Assist", "OreaV4", "Kalita", "CleverDripper", "AeroPress", "Moccamaster"],
@@ -28,28 +31,24 @@ export async function POST(req: NextRequest) {
       onboardingComplete: true,
     };
 
-    // Check Firestore for a user-saved roaster profile — takes priority over built-in list
     let userRoasterPrior: RoasterPrior | null = null;
     if (coffee?.roaster) {
       try {
-        const db = getAdminDb();
         const slug = canonicalRoasterSlug(coffee.roaster);
-        const direct = await db.collection("roasters").doc(slug).get();
-        if (direct.exists) {
-          userRoasterPrior = direct.data() as RoasterPrior;
+        const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
+        if (direct.length > 0) {
+          userRoasterPrior = direct[0].data as RoasterPrior;
         } else {
-          const aliasSnap = await db
-            .collection("roasters")
-            .where("aliases", "array-contains", slug)
-            .limit(1)
-            .get();
-          if (!aliasSnap.empty) userRoasterPrior = aliasSnap.docs[0].data() as RoasterPrior;
+          const viaAlias = await db
+            .select()
+            .from(roasters)
+            .where(sql`${roasters.aliases} @> ${JSON.stringify([slug])}::jsonb`)
+            .limit(1);
+          if (viaAlias.length > 0) userRoasterPrior = viaAlias[0].data as RoasterPrior;
         }
       } catch {}
     }
 
-    // Build Escher terrain in parallel with nothing (it's the first async call)
-    // Only run when there are enough sessions to have something meaningful
     const sessions = pastSessions || [];
     const terrain = sessions.length >= 3
       ? await buildEscherTerrain(sessions, coffee).catch(() => "")

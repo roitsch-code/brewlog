@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { getAdminDb } from "@/lib/firebase/admin";
+import { desc, eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { sessions as sessionsTable, preferences as preferencesTable } from "@/lib/db/schema";
+import { rowToSession } from "@/lib/db/helpers";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { parseClaudeJson, z } from "@/lib/claude/parseJson";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
+
+export const dynamic = "force-dynamic";
 
 const MatchResultSchema = z.object({
   matchLevel: z.enum(["great", "good", "maybe", "avoid"]),
@@ -183,19 +188,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { coffee, imageBase64, mimeType, url } = body;
 
-    const db = getAdminDb();
-
-    // Load user preferences and sessions in parallel
-    const [prefResult, sessionsSnap] = await Promise.all([
-      db.collection("preferences").doc("default").get().catch(() => null),
-      db.collection("sessions").orderBy("createdAt", "desc").limit(100).get(),
+    const [prefRows, sessionRows] = await Promise.all([
+      db.select().from(preferencesTable).where(eq(preferencesTable.key, "default")).limit(1).catch(() => [] as typeof preferencesTable.$inferSelect[]),
+      db.select().from(sessionsTable).orderBy(desc(sessionsTable.createdAtMs)).limit(100),
     ]);
 
-    const preferences: UserPreferences | null = prefResult?.exists
-      ? (prefResult.data() as UserPreferences)
-      : null;
-
-    const sessions = sessionsSnap.docs.map(d => d.data() as Session);
+    const preferences: UserPreferences | null = prefRows[0]?.data ? (prefRows[0].data as UserPreferences) : null;
+    const sessions: Session[] = sessionRows.map(rowToSession);
     const rated = sessions.filter(s => s.result?.rating);
 
     // Pattern analysis

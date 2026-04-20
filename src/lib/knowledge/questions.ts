@@ -1,7 +1,8 @@
-import { getAdminDb } from "@/lib/firebase/admin";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { knowledge } from "@/lib/db/schema";
 
-const COLLECTION = "knowledge";
-const DOC = "starterQuestions";
+const KIND = "starterQuestions";
 
 export const FALLBACK_QUESTIONS: string[] = [
   // Brewing techniques
@@ -79,13 +80,10 @@ export const FALLBACK_QUESTIONS: string[] = [
 
 export async function getQuestions(): Promise<string[]> {
   try {
-    const db = getAdminDb();
-    const doc = await db.collection(COLLECTION).doc(DOC).get();
-    if (doc.exists) {
-      const data = doc.data();
-      if (Array.isArray(data?.items) && data.items.length > 0) {
-        return data.items as string[];
-      }
+    const rows = await db.select().from(knowledge).where(eq(knowledge.kind, KIND)).limit(1);
+    const data = rows[0]?.data as { items?: string[] } | undefined;
+    if (data && Array.isArray(data.items) && data.items.length > 0) {
+      return data.items;
     }
   } catch (err) {
     console.error("getQuestions error:", err);
@@ -94,9 +92,9 @@ export async function getQuestions(): Promise<string[]> {
 }
 
 export async function saveQuestions(questions: string[]): Promise<void> {
-  const db = getAdminDb();
-  await db.collection(COLLECTION).doc(DOC).set({
-    items: questions,
-    updatedAt: new Date().toISOString(),
-  });
+  const data = { items: questions, updatedAt: new Date().toISOString() };
+  await db
+    .insert(knowledge)
+    .values({ kind: KIND, data })
+    .onConflictDoUpdate({ target: knowledge.kind, set: { data } });
 }

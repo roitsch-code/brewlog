@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAdminDb } from "@/lib/firebase/admin";
-import type { Coffee } from "@/lib/types/coffee";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { coffees } from "@/lib/db/schema";
+import { rowToCoffee } from "@/lib/db/helpers";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const db = getAdminDb();
-    const doc = await db.collection("coffees").doc(params.id).get();
-    if (!doc.exists) return NextResponse.json(null, { status: 404 });
-    return NextResponse.json({ id: doc.id, ...doc.data() } as Coffee);
+    const rows = await db.select().from(coffees).where(eq(coffees.id, params.id)).limit(1);
+    if (rows.length === 0) return NextResponse.json(null, { status: 404 });
+    return NextResponse.json(rowToCoffee(rows[0]));
   } catch (err) {
     console.error("coffee GET error:", err);
     return NextResponse.json(null, { status: 500 });
@@ -28,11 +29,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
-    const db = getAdminDb();
-    const ref = db.collection("coffees").doc(params.id);
-    const doc = await ref.get();
-    if (!doc.exists) return NextResponse.json(null, { status: 404 });
-    await ref.update({ personalNotes: parsed.data.personalNotes });
+    const rows = await db.select({ id: coffees.id }).from(coffees).where(eq(coffees.id, params.id)).limit(1);
+    if (rows.length === 0) return NextResponse.json(null, { status: 404 });
+    await db.update(coffees).set({ personalNotes: parsed.data.personalNotes }).where(eq(coffees.id, params.id));
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("coffee PATCH error:", err);

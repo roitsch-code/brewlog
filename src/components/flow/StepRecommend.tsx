@@ -93,10 +93,19 @@ export default function StepRecommend() {
   const active = candidates[selectedIdx];
   const activeRecipe = active?.recipe;
   const activeMethod = active?.method;
+  // Safety net: if the user toggled Drip Assist in context but Claude's returned method name
+  // omits the suffix, append it so card/brew screen stay consistent.
+  const activeMethodLabel = activeMethod && draft.context?.dripAssist && !/drip assist/i.test(activeMethod)
+    ? `${activeMethod} + Drip Assist`
+    : activeMethod;
 
   const handleUse = () => {
     if (!activeMethod || !activeRecipe) return;
-    setBrew({ methodUsed: activeMethod, followedRecipe: true });
+    // Inherit Drip Assist from context if the user pre-selected it; otherwise detect from the
+    // method name Claude returned ("Orea Classic + Drip Assist" when the user toggled it on in
+    // Claude-picks mode).
+    const dripAssist = draft.context?.dripAssist ?? /drip assist/i.test(activeMethod);
+    setBrew({ methodUsed: activeMethodLabel ?? activeMethod, dripAssist, followedRecipe: true });
     setStep("brew");
   };
 
@@ -182,7 +191,7 @@ export default function StepRecommend() {
             <div className="flex items-center justify-between mt-0.5">
               <div className="flex items-center gap-2">
                 <BrewMethodIcon method={activeMethod} className="w-5 h-5" />
-                <p className="text-brew-muted text-sm">{activeMethod}</p>
+                <p className="text-brew-muted text-sm">{activeMethodLabel}</p>
               </div>
               <ConfidenceBadge confidence={active.confidence} />
             </div>
@@ -241,7 +250,7 @@ export default function StepRecommend() {
             onClick={handleUse}
             className="w-full h-14 rounded-full bg-white text-black font-semibold text-base active:scale-95 transition-all"
           >
-            Brew with {activeMethod}
+            Brew with {activeMethodLabel}
           </button>
         </div>
 
