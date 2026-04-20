@@ -37,6 +37,10 @@ async function migrateSessions() {
   let count = 0;
   for (const doc of snap.docs) {
     const d = doc.data();
+    const createdAtIso = d.createdAt ?? new Date().toISOString();
+    // Always derive ms from createdAt so the two columns stay in sync —
+    // some old Firestore docs predate the createdAtMs field.
+    const createdAtMs = d.createdAtMs ?? new Date(createdAtIso).getTime();
     await pool.query(
       `INSERT INTO sessions (id, type, mode, created_at, created_at_ms, coffee, place, context, recommendation, brew, result)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
@@ -49,8 +53,8 @@ async function migrateSessions() {
         doc.id,
         d.type ?? null,
         d.mode ?? null,
-        d.createdAt ?? new Date().toISOString(),
-        d.createdAtMs ?? Date.now(),
+        createdAtIso,
+        createdAtMs,
         JSON.stringify(d.coffee ?? {}),
         JSON.stringify(d.place ?? null),
         JSON.stringify(d.context ?? null),
