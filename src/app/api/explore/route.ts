@@ -7,6 +7,8 @@ import { buildHistorySummary } from "@/lib/claude/historyUtils";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import type { Session } from "@/lib/types/session";
 
+export const dynamic = "force-dynamic";
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";

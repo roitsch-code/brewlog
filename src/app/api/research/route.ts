@@ -7,6 +7,8 @@ import { getQuestions, saveQuestions } from "@/lib/knowledge/questions";
 import type { InsightItem } from "@/lib/knowledge/insights";
 import type { NewsItemType } from "@/lib/knowledge/news";
 
+export const dynamic = "force-dynamic";
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const RESEARCH_SYSTEM = `You are a specialty coffee research assistant for a filter-coffee-focused home brewer.

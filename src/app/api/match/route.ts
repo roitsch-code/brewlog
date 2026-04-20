@@ -10,6 +10,8 @@ import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import type { Session } from "@/lib/types/session";
 import type { UserPreferences } from "@/lib/types/preferences";
 
+export const dynamic = "force-dynamic";
+
 const MatchResultSchema = z.object({
   matchLevel: z.enum(["great", "good", "maybe", "avoid"]),
   score: z.number().min(0).max(100),

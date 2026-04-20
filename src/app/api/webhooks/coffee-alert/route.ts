@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveAlert } from "@/lib/knowledge/alerts";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   // Verify webhook secret
   const secret = req.headers.get("x-coffee-alert-secret");

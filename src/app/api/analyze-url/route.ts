@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { parseClaudeJson, z } from "@/lib/claude/parseJson";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 
+export const dynamic = "force-dynamic";
+
 const UrlExtractSchema = z.object({
   roaster: z.string().optional(),
   name: z.string().optional(),

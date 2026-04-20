@@ -6,6 +6,8 @@ import { db } from "@/lib/db/client";
 import { roasters } from "@/lib/db/schema";
 import type { RoasterPrior } from "@/lib/roasters/priors";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();

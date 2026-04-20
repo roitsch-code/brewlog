@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { getAlerts, markRead } from "@/lib/knowledge/alerts";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const alerts = await getAlerts(20);

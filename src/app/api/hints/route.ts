@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getHints } from "@/lib/knowledge/hints";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const hints = await getHints();

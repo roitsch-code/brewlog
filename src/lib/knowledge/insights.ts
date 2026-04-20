@@ -17,9 +17,7 @@ export interface InsightItem {
 export async function getInsights(limit?: number): Promise<InsightItem[]> {
   try {
     const rows = await db.select().from(knowledge).where(eq(knowledge.kind, KIND)).limit(1);
-    console.log("[getInsights] rows:", JSON.stringify(rows).slice(0, 500));
     const data = rows[0]?.data as { items?: InsightItem[] } | undefined;
-    console.log("[getInsights] data keys:", data ? Object.keys(data) : "null", "items len:", data?.items?.length);
     if (data && Array.isArray(data.items)) {
       const shuffled = [...data.items].sort(() => Math.random() - 0.5);
       return limit ? shuffled.slice(0, limit) : shuffled;

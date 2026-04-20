@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { putObject } from "@/lib/storage/s3";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
