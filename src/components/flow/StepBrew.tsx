@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import FlowShell from "./FlowShell";
 import CircularTimer from "@/components/ui/CircularTimer";

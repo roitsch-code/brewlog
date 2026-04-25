@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { CafeSummary } from "@/app/api/cafes/route";
+import type { CafeSummary } from "@/lib/types/cafes";
 
 function formatRelativeDate(ms: number): string {
   const diff = Date.now() - ms;

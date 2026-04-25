@@ -3,17 +3,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sessions } from "@/lib/db/schema";
 import type { ExternalPlace, TasteResult, CoffeeIdentity } from "@/lib/types/session";
+import type { CafeSummary } from "@/lib/types/cafes";
 
 export const dynamic = "force-dynamic";
-
-export interface CafeSummary {
-  name: string;
-  location?: string;
-  visits: number;
-  avgRating: number | null;
-  coffees: string[];
-  lastVisitedMs: number;
-}
 
 export async function GET() {
   const rows = await db
