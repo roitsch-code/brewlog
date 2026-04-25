@@ -409,6 +409,11 @@ function ProseStepGuide({
 }: {
   sequence: string; method: string; elapsed: number; targetTimeSec: number; started: boolean;
 }) {
+  // All hooks first — React rules of hooks
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const prevAutoIdxRef = useRef(-1);
+  const [manualIdx, setManualIdx] = useState<number | null>(null);
+
   const raw = sequence.split(/\s*[·|]\s*/).map(s => s.trim()).filter(Boolean);
   const all = raw.length >= 2 ? raw : sequence.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
 
@@ -432,8 +437,6 @@ function ProseStepGuide({
   }
 
   // Play a brief 2-tone alert when a step auto-advances
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const prevAutoIdxRef = useRef(-1);
   useEffect(() => {
     if (started && autoIdx > prevAutoIdxRef.current && autoIdx > 0) {
       try {
@@ -450,13 +453,12 @@ function ProseStepGuide({
           osc.start(ctx.currentTime + delay);
           osc.stop(ctx.currentTime + delay + 0.25);
         });
-      } catch { /* audio unavailable */ }
+      } catch (_e) { /* audio unavailable */ }
       navigator.vibrate?.(80);
     }
     prevAutoIdxRef.current = autoIdx;
   }, [autoIdx, started]);
 
-  const [manualIdx, setManualIdx] = useState<number | null>(null);
   const currentIdx = manualIdx !== null ? Math.max(manualIdx, autoIdx) : autoIdx;
   const isLast = currentIdx >= effectiveSteps.length - 1;
 
