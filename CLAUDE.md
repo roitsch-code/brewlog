@@ -4,6 +4,22 @@ Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Cla
 
 ---
 
+## Infrastructure
+
+| What | Detail |
+|------|--------|
+| **VPS** | Hetzner, IP `89.167.31.219`, path `/opt/brewlog` |
+| **Stack** | Docker Compose: `postgres`, `app` (Next.js), `caddy` (reverse proxy), `ofelia` (cron) |
+| **Vercel** | **Deleted.** App is 100% on Hetzner. No Vercel, no Vercel env vars, nothing. |
+| **Auto-deploy** | `.github/workflows/deploy.yml` — pushes to `main` trigger SSH deploy on VPS |
+| **Auto-deploy secrets** | `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_PATH` in GitHub repo secrets |
+
+**Manual deploy (fallback):** SSH into VPS → `cd /opt/brewlog && git pull origin main && docker compose build app && docker compose up -d app`
+
+**Type-check before every commit:** `npx tsc --noEmit`
+
+---
+
 ## Project Structure & Key Files
 
 ```
@@ -11,6 +27,7 @@ src/
 ├── app/
 │   ├── page.tsx                     # Home — session diary feed
 │   ├── brew/new/page.tsx            # Flow entry point
+│   ├── cafes/page.tsx               # Café collection — all external visits
 │   ├── taste/page.tsx               # Taste profile + AI summary
 │   ├── coffees/                     # Coffee library (list + detail)
 │   ├── explore/page.tsx             # AMA chat with coffee expert
@@ -18,6 +35,7 @@ src/
 │   └── api/
 │       ├── sessions/route.ts        # ★ Core CRUD — session save/load
 │       ├── recommend/route.ts       # Brew recipe generation
+│       ├── cafes/route.ts           # Café visit aggregator (external sessions)
 │       ├── analyze-bag/route.ts     # Claude Vision → coffee identity
 │       ├── analyze-bag/clarify/     # Follow-up clarification AI
 │       ├── match/route.ts           # Taste scoring algorithm
@@ -42,15 +60,13 @@ src/
 │   ├── claude/recommend.ts         # ★ Full system prompt (equipment baked in)
 │   ├── claude/analyzeBag.ts        # Vision prompt + BagAnalysisResult type
 │   ├── types/session.ts            # ★ Core data model (all interfaces)
+│   ├── types/cafes.ts              # CafeSummary interface (shared server+client)
 │   ├── db/client.ts                # Drizzle ORM + pg Pool
 │   ├── db/schema.ts                # All table definitions
 │   ├── db/migrations/              # SQL migrations (drizzle-kit)
 │   └── storage/s3.ts               # Hetzner Object Storage (S3-compatible)
 └── store/flowStore.ts              # ★ Zustand brew flow state (sessionStorage)
 ```
-
-**Deploy:** `git push origin main` on VPS → `docker compose build app && docker compose up -d app`
-**Type-check before every commit:** `node node_modules/.bin/tsc --noEmit`
 
 ---
 
@@ -70,12 +86,19 @@ src/
 - Coffee library, match finder, AMA explore chat, weekly research cron
 - PWA (manifest, service worker, offline drafts)
 - WebAuthn (passkey) auth
+- **Immersion timer precision** — system prompt generates per-step durations that sum exactly to `targetTimeSec`; no "at X:XX" absolute timestamps. Steps like `"pour 15s · steep 3:40 · drain 55s"` = 300s exactly.
+- **Background-safe timer** — `CircularTimer` uses `Date.now()` anchor instead of `setInterval` counter; snaps to real wall-clock time via `visibilitychange` event when returning from background on iOS
+- **Step-change alerts** — 2-tone Web Audio cue (880 Hz → 660 Hz) fires on each auto-advanced immersion step; `navigator.vibrate(80)` for Android (no-op on iOS)
+- **Café visit wording** — external sessions show "The Brew" (not "Your Brew") and "Would you drink this again?" (not "Would you brew again?")
+- **Café collection page** — `/cafes` lists all visited cafés grouped from external sessions: visit count, avg rating, coffees tasted, last visited date
+- **Auto-deploy via GitHub Actions** — push to `main` → GitHub runs SSH deploy on Hetzner VPS automatically
 
 ### ❌ Not Done / Known Gaps
 - Photo uploads: stored under `bags/` — old sessions scanned before this fix have no bagPhotoUrl
 - Single-user app by design (no multi-user isolation needed)
 - Research cron data (insights/hints/news) needs seeding on new installs: `node scripts/seed-insights.mjs`
 - Data migration from Firebase: `node scripts/migrate-firestore-to-postgres.mjs` + `node scripts/migrate-storage-to-s3.mjs`
+- Step alerts during background are missed — iOS suspends JS; no workaround without server-push notifications
 
 ---
 
@@ -97,6 +120,7 @@ src/
 - **Refs over state** for values that don't need to trigger renders (timers, wake lock, callbacks)
 - `useCallback` deps must be accurate — don't omit to silence linter
 - **Zod schemas** on all API POST routes; strip nulls with `deepStripNulls()` before parsing
+- **Never import from `app/api/*/route.ts` in client components** — Next.js App Router enforces a strict server/client boundary. Shared types go in `src/lib/types/`.
 
 ### Database (Postgres + Drizzle)
 - JSONB columns for nested objects (coffee, brew, result, etc.) — preserves TypeScript types unchanged
@@ -109,13 +133,12 @@ src/
 - `claude-haiku-4-5` — brew-insight, taste-summary, research, clarify
 
 ### Git / Deploy
-- **Plan vs. Code mode** — Plan mode is where we discuss and agree the approach. Once we enter code mode, you run the full pipeline end-to-end with no intermediate stop: commit → merge into `main` → push `main` → Vercel auto-deploys → live on the iPhone PWA.
-- **"Done" means shipped** — merged into `main` and deployed. The user is non-technical and tests only on the deployed PWA, never on GitHub diffs. "Pushed to feature branch" is NOT done; do not stop there.
-- **No PR step** — merge feature branches straight into `main` (`git merge --no-ff`) and push `main`. Skip PRs entirely; they have no value for a solo non-reading user.
-- **Ship every feature branch by default.** Only stop before merging if the user explicitly says "don't ship yet" or "just push the branch".
+- **"Done" means shipped** — pushed to `main`, auto-deploy runs on Hetzner, live on the iPhone PWA. "Pushed to a feature branch" is NOT done.
+- **No PR step** — push straight to `main`. No PRs, no feature branch merges, no staging.
+- **Auto-deploy** — GitHub Actions runs on every push to `main`. No manual steps needed unless the action fails (fallback: SSH to VPS and run docker compose manually).
 - Commit message: imperative, lowercase prefix (`fix:`, `feat:`, `remove:`)
-- Always `tsc --noEmit` before commit
-- Deploy immediately after merge — no staging environment
+- Always `npx tsc --noEmit` before commit
+- Deploy immediately after commit — no staging environment
 
 ---
 
@@ -128,7 +151,8 @@ src/
 - **No emojis in UI** — design is editorial/premium
 - **No separate "total" row** in pour sequence tables — drawdown end = total time = done
 - **No temperature-for-timing advice** — grind coarser/finer to fix timing; temp is for extraction chemistry only
-- **No `npm run dev` assumptions** — app is always tested on deployed Vercel URL (iPhone PWA)
+- **No Vercel** — deleted. Do not reference Vercel URLs or Vercel deployment in any context.
+- **No `npm run dev` assumptions** — app is always tested on the deployed Hetzner PWA
 
 ---
 
