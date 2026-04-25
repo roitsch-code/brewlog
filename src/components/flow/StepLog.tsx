@@ -111,7 +111,7 @@ export default function StepLog() {
         {/* Three quality dimensions — shown once rating is set */}
         {rating > 0 && (
           <>
-            <Section title="Your Brew">
+            <Section title={isExternal ? "The Brew" : "Your Brew"}>
               <div className="flex gap-2">
                 {(["off", "solid", "exceptional"] as const).map(opt => (
                   <Chip
@@ -322,7 +322,7 @@ export default function StepLog() {
         </Section>
 
         {/* Would brew again */}
-        <Section title={isExternal ? "Would you have this again?" : "Would you brew this exact setup again?"}>
+        <Section title={isExternal ? "Would you drink this again?" : "Would you brew this exact setup again?"}>
           <div className="flex gap-3">
             <button
               type="button"

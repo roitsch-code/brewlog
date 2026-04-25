@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Session } from "@/lib/types/session";
 import type { CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
@@ -108,6 +109,27 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Café Visits shortcut */}
+      <div className="px-5 mb-5">
+        <Link
+          href="/cafes"
+          className="flex items-center justify-between w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 active:scale-95 transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-brew-elevated flex items-center justify-center">
+              <svg className="w-4 h-4 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+            </div>
+            <span className="text-white text-sm font-medium">Café Visits</span>
+          </div>
+          <svg className="w-4 h-4 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </Link>
+      </div>
 
       {/* Recent Brews */}
       <div className="flex-1 px-5">
