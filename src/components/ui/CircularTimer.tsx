@@ -20,6 +20,16 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
   useEffect(() => { onTickRef.current = onTick; }, [onTick]);
 
   const elapsedRef = useRef(0);
+  // Wall-clock anchor: Date.now() value when elapsed was last set to 0 (or resumed)
+  const startTimestampRef = useRef<number | null>(null);
+
+  const syncElapsed = useCallback(() => {
+    if (startTimestampRef.current === null) return;
+    const next = Math.round((Date.now() - startTimestampRef.current) / 1000);
+    setElapsed(next);
+    elapsedRef.current = next;
+    onTickRef.current?.(next);
+  }, []);
 
   const stop = useCallback(() => {
     setRunning(false);
@@ -29,19 +39,23 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
 
   useEffect(() => {
     if (running) {
-      intervalRef.current = setInterval(() => {
-        setElapsed(e => {
-          const next = e + 1;
-          elapsedRef.current = next;
-          onTickRef.current?.(next);
-          return next;
-        });
-      }, 1000);
+      // Anchor wall clock — resume from whatever elapsed is currently at
+      startTimestampRef.current = Date.now() - elapsedRef.current * 1000;
+      intervalRef.current = setInterval(syncElapsed, 500);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [running]);
+  }, [running, syncElapsed]);
+
+  // When the app returns from background, snap elapsed to real wall-clock value
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden && running) syncElapsed();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [running, syncElapsed]);
 
   // No auto-stop — user decides when the brew is actually done
 
@@ -49,6 +63,7 @@ export default function CircularTimer({ targetSeconds, onComplete, onTick, class
     setRunning(false);
     setElapsed(0);
     elapsedRef.current = 0;
+    startTimestampRef.current = null;
     onTickRef.current?.(0);
   };
 

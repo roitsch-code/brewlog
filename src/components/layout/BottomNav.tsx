@@ -12,7 +12,7 @@ const tabs = [
   { href: "/explore", label: "EXPLORE", Icon: Compass },
 ];
 
-const SHOW_ON = ["/", "/coffees", "/explore", "/taste"];
+const SHOW_ON = ["/", "/coffees", "/explore", "/taste", "/cafes"];
 
 export default function BottomNav() {
   const pathname = usePathname();

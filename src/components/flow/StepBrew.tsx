@@ -380,18 +380,19 @@ function StepDots({ steps, activeIdx, allDone }: {
  */
 function parseStepDuration(step: string): number {
   const s = step.toLowerCase();
-  const mmss = s.match(/(\d+):(\d{2})/);
+  // mm:ss is a duration only when NOT preceded by "at", "until", or "by" (those are absolute cues, not durations)
+  const mmss = s.match(/(?<!(?:at|until|by)\s{0,3})(\d+):(\d{2})(?=\s|[·,.|]|$)/);
   if (mmss) return +mmss[1] * 60 + +mmss[2];
   const mins = s.match(/(\d+)\s*min(?:ute)?s?/);
   // Seconds: must be followed by boundary/end to avoid matching "50g" as seconds
-  const secs = s.match(/(\d+)\s*s(?:ec(?:ond)?s?)?(?=\s|[·,]|$)/);
+  const secs = s.match(/(\d+)\s*s(?:ec(?:ond)?s?)?(?=\s|[·,.|]|$)/);
   if (mins && secs) return +mins[1] * 60 + +secs[1];
   if (mins) return +mins[1] * 60;
   if (secs) return +secs[1];
   // Action-type defaults
   if (/press|plunge/.test(s)) return 25;
   if (/steep|wait|brew|rest/.test(s)) return 60;
-  if (/stir|agitat|swirl|mix/.test(s)) return 5;
+  if (/stir|agitat|swirl|mix/.test(s)) return 10;
   if (/pour|add|fill|water/.test(s)) return 10;
   return 12;
 }
@@ -429,6 +430,31 @@ function ProseStepGuide({
       if (elapsed >= cumulativeStarts[i]) autoIdx = i;
     }
   }
+
+  // Play a brief 2-tone alert when a step auto-advances
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const prevAutoIdxRef = useRef(-1);
+  useEffect(() => {
+    if (started && autoIdx > prevAutoIdxRef.current && autoIdx > 0) {
+      try {
+        if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+        const ctx = audioCtxRef.current;
+        const tones: [number, number, number][] = [[880, 0, 0.18], [660, 0.2, 0.14]];
+        tones.forEach(([freq, delay, gain]) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.connect(g); g.connect(ctx.destination);
+          osc.frequency.value = freq;
+          g.gain.setValueAtTime(gain, ctx.currentTime + delay);
+          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.22);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.25);
+        });
+      } catch { /* audio unavailable */ }
+      navigator.vibrate?.(80);
+    }
+    prevAutoIdxRef.current = autoIdx;
+  }, [autoIdx, started]);
 
   const [manualIdx, setManualIdx] = useState<number | null>(null);
   const currentIdx = manualIdx !== null ? Math.max(manualIdx, autoIdx) : autoIdx;

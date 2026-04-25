@@ -204,10 +204,10 @@ PERCOLATION:
 - Turbo V60: stir 2–3× at bloom. Turbulence from fast pours, not extra stirs.
 IMMERSION:
 - Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
-- Clever Dripper (Hoffmann): swirl at 0:10, swirl again at ~2:00. NEVER stir.
-- Clever Extended: swirl at 0:10, 2:00, 4:00, before drain. Never stir.
-- AeroPress (all modes): stir 2–3× at 0:10, stir again at 1:30. Both required.
-- AeroPress Bypass: stir at 0:10. Swirl cup after adding bypass water.
+- Clever Dripper (Hoffmann): swirl early (~15s after pour), swirl again at roughly the halfway point of the steep. NEVER stir.
+- Clever Extended: swirl early, swirl at halfway, swirl before drain. Never stir.
+- AeroPress (all modes): stir 2–3× shortly after adding water (~10s), stir again at roughly the halfway point of the steep. Both stirs required.
+- AeroPress Bypass: stir 2–3× shortly after adding concentrate water. Swirl cup after adding bypass water.
 - Moccamaster: no user agitation. Do not include stir/swirl.
 
 CHEMEX — dedicated rules:
@@ -244,8 +244,8 @@ Grind finer than hot equivalent (shorter brew time, higher concentration).
 - Japanese Iced Chemex (small ~350g): 22g : 210g hot + 140g ice | 94°C | 396–404° | Bloom 40g → 110g → 210g | gentle swirl at bloom only | ~3:00 (targetTimeSec: 180)
 - Japanese Iced Chemex (big ~520g): 33g : 310g hot + 210g ice | 94°C | 396–404° | Bloom 60g → 155g → 310g | gentle swirl at bloom only | ~3:30 (targetTimeSec: 210)
 - Japanese Iced Kalita (small): 22g : 210g hot + 140g ice | 95°C | 393–398° | Bloom 30g → 110g → 210g | ~2:30 (targetTimeSec: 150)
-- AeroPress Iced: 14g : 120g hot concentrate onto 180–200g ice | 88°C | 372–377° | inverted · add 120g water · stir 2–3× at 0:10 · steep 90s · stir at 1:30 · press onto ice · ~2:30 (targetTimeSec: 150); waterGrams = 120 (concentrate only)
-- Hoffmann Immersion Iced (Clever Dripper): 20g : 250g water | 95°C | 421–431° | add water · swirl at 0:10 · steep 4min · swirl at 2:00 · drain onto 120g ice | ~5:00 (targetTimeSec: 300); waterGrams = 250
+- AeroPress Iced: 14g : 120g hot concentrate onto 180–200g ice | 88°C | 372–377° | inverted · add 120g water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press onto ice 30s | ~2:30 (targetTimeSec: 150); waterGrams = 120 (concentrate only)
+- Hoffmann Immersion Iced (Clever Dripper): 20g : 250g water | 95°C | 421–431° | pour water 15s · swirl 5s · steep 3:40 · swirl 5s · drain onto ice 55s | ~5:00 (targetTimeSec: 300); waterGrams = 250
 Agitation for iced percolation (Japanese style): swirl or stir same as hot equivalent (washed → stir, others → swirl) at bloom.
 Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
 
@@ -253,9 +253,9 @@ CHAMPIONSHIP / EXPLORATION RECIPES — available when intent is explore, experim
 - Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
 - Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
 - Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55ppm) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30–4:00
-- Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water · stir 2–3× at 0:10 · 2min steep · stir again at 1:30 · fast press 30s
-- AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water · stir 2–3× at 0:10 · press · swirl cup after adding 140g bypass water
-- Clever Extended: 20g:300ml | 92°C | 421–431° | add water · swirl at 0:10 · 4min steep · swirl at 2:00 · swirl before drain · drain → ~5:30
+- Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s (targetTimeSec: 150)
+- AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water 10s · stir 2–3× 10s · press 20s · swirl cup after adding 140g bypass water (targetTimeSec: 90)
+- Clever Extended: 20g:300ml | 92°C | 421–431° | pour water 15s · swirl 5s · steep 4:20 · swirl 5s · swirl 5s · drain 40s (targetTimeSec: 330)
 - Orea Apex clarity: 17g:270ml | 95–98°C | 403–407° | bloom → light stir 1–2× at 0:10 → 3 even pours, no further agitation → ~3:30
 - Orea Classic sweetness: 17g:270ml | 94–96°C | 406–411° | bloom → gentle swirl → 3 pours → gentle swirl after final pour → ~3:00 (targetTimeSec: 180)
 - Orea Open: 17g:270ml | 95–97°C | 402–409° | bloom → gentle swirl → 3 pours, no agitation, fast open-bed drawdown → ~2:45 (targetTimeSec: 165)
@@ -270,7 +270,27 @@ TIMING RULE:
 Drawdown end = total time = DONE. Never add a separate "total time" line.
 Pour sequence format for percolation: cumulative weight milestones separated by " – "
 Example: "70 – 220 – 370 – 520" (each number = total water in cup at that moment)
-For immersion / AeroPress / Moccamaster: prose description instead.
+
+IMMERSION / AEROPRESS / MOCCAMASTER — STEP SEQUENCE FORMAT:
+Each step must carry an explicit duration. All step durations must sum EXACTLY to targetTimeSec.
+Setup steps (inverted, cap, assemble, flip) are stated but NOT timed — they don't count toward the sum.
+Use mm:ss for steps ≥60s (e.g. "steep 3:40"). Use bare seconds for shorter steps (e.g. "swirl 5s", "pour 15s").
+NEVER use "at X:XX" timestamp cues. Durations only.
+
+Worked examples — verify your arithmetic before outputting:
+  Clever Dripper, targetTimeSec=300 (5:00):
+    "pour water 15s · swirl 5s · steep 3:40 · swirl 5s · drain 55s"  ← 15+5+220+5+55 = 300 ✓
+  AeroPress inverted, targetTimeSec=150 (2:30):
+    "inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s"  ← 10+10+90+10+30 = 150 ✓
+  AeroPress inverted, targetTimeSec=180 (3:00):
+    "inverted · add water 10s · stir 2–3× 10s · steep 2:00 · stir 10s · press 30s"  ← 10+10+120+10+30 = 180 ✓
+  Moccamaster, targetTimeSec=480 (8:00):
+    "fill tank 30s · brew 7:30"  ← 30+450 = 480 ✓
+Formula: steep = targetTimeSec − (pour + stirs + press/drain overhead). Compute steep last.
+
+HYPOTHESIS/WHY CONSISTENCY: In hypothesis, whyChosen, and predictedCupProfile text, always
+reference the TOTAL brew time (targetTimeSec as mm:ss), never just the steep phase.
+Write "a 5-minute immersion" not "a 4-minute steep" for targetTimeSec=300.
 
 TIMING & GRIND CALIBRATION (grind only — NEVER temperature):
 - Slow drawdown → grind COARSER
