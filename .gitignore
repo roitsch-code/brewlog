@@ -38,3 +38,4 @@ next-env.d.ts
 # recovery artifacts
 /vercel-recovery
 /vercel-diff.txt
+
