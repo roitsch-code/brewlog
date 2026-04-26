@@ -142,11 +142,21 @@ export default function CafeCoffeeDetailPage() {
                     </div>
                   </div>
 
-                  {method && (
-                    <div className="mt-2">
-                      <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">
-                        {method}
-                      </span>
+                  {(method || s.brew?.doseGrams || s.brew?.waterGrams || s.brew?.actualTimeSec) && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {method && (
+                        <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">{method}</span>
+                      )}
+                      {(s.brew?.doseGrams || s.brew?.waterGrams) && (
+                        <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">
+                          {[s.brew.doseGrams ? `${s.brew.doseGrams}g` : null, s.brew.waterGrams ? `${s.brew.waterGrams}ml` : null].filter(Boolean).join(" / ")}
+                        </span>
+                      )}
+                      {s.brew?.actualTimeSec && (
+                        <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">
+                          {Math.floor(s.brew.actualTimeSec / 60)}:{String(s.brew.actualTimeSec % 60).padStart(2, "0")}
+                        </span>
+                      )}
                     </div>
                   )}
 

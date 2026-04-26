@@ -6,6 +6,7 @@ import Chip from "@/components/ui/Chip";
 import StarRating from "@/components/ui/StarRating";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import { SCA_WHEEL, QUICK_FLAVORS } from "@/lib/constants/scaFlavorWheel";
+import { BREW_METHODS } from "@/lib/constants/brewMethods";
 
 const FLOW_OPTIONS = ["too-fast", "perfect", "too-slow", "na"] as const;
 const FLOW_LABELS: Record<string, string> = { "too-fast": "Too Fast", "perfect": "Perfect", "too-slow": "Too Slow", "na": "N/A" };
@@ -47,6 +48,13 @@ export default function StepLog() {
   const [followedAgitation, setFollowedAgitation] = useState<"yes" | "partially" | "no" | "">("");
   const [agitationNote, setAgitationNote] = useState("");
 
+  // External brew details (optional)
+  const [showBrewDetails, setShowBrewDetails] = useState(false);
+  const [externalMethod, setExternalMethod] = useState(draft.place?.methodServed ?? "");
+  const [externalDose, setExternalDose] = useState("");
+  const [externalWater, setExternalWater] = useState("");
+  const [externalTime, setExternalTime] = useState("");
+
   // Extended sensory fields (optional)
   const [showSensory, setShowSensory] = useState(false);
   const [sweetness, setSweetness] = useState<"low" | "medium" | "high" | "">("");
@@ -62,15 +70,25 @@ export default function StepLog() {
   const canProceed = rating > 0;
 
   const handleNext = () => {
-    setBrew({
-      ...draft.brew,
-      flow: flow as "too-fast" | "perfect" | "too-slow" | "na",
-      timing: timing as "as-expected" | "faster" | "slower",
-      ...(grindUsed ? { grindSettingUsed: grindUsed } : {}),
-      ...(tempUsed ? { actualTempC: parseFloat(tempUsed) } : {}),
-      ...(followedAgitation ? { followedAgitation } : {}),
-      ...(agitationNote.trim() ? { agitationNote: agitationNote.trim() } : {}),
-    });
+    if (isExternal) {
+      setBrew({
+        ...draft.brew,
+        ...(externalMethod ? { methodUsed: externalMethod } : {}),
+        ...(externalDose ? { doseGrams: parseFloat(externalDose) } : {}),
+        ...(externalWater ? { waterGrams: parseFloat(externalWater) } : {}),
+        ...(externalTime ? { actualTimeSec: parseInt(externalTime, 10) } : {}),
+      });
+    } else {
+      setBrew({
+        ...draft.brew,
+        flow: flow as "too-fast" | "perfect" | "too-slow" | "na",
+        timing: timing as "as-expected" | "faster" | "slower",
+        ...(grindUsed ? { grindSettingUsed: grindUsed } : {}),
+        ...(tempUsed ? { actualTempC: parseFloat(tempUsed) } : {}),
+        ...(followedAgitation ? { followedAgitation } : {}),
+        ...(agitationNote.trim() ? { agitationNote: agitationNote.trim() } : {}),
+      });
+    }
     setResult({
       rating,
       flavorNotes: selectedFlavors,
@@ -247,6 +265,83 @@ export default function StepLog() {
               />
             )}
           </Section>
+        )}
+
+        {/* Brew Details — external sessions only, collapsible */}
+        {isExternal && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowBrewDetails(v => !v)}
+              className="flex items-center gap-2 text-brew-muted text-xs uppercase tracking-widest hover:text-white transition-colors"
+            >
+              <span>Brew Details — optional</span>
+              <span className="text-white/30">{showBrewDetails ? "▲" : "▼"}</span>
+            </button>
+
+            <div className={`overflow-hidden transition-all duration-300 ${showBrewDetails ? "max-h-[600px] opacity-100 mt-4" : "max-h-0 opacity-0"}`}>
+              <div className="space-y-5">
+
+                {/* Method picker */}
+                <div className="space-y-2">
+                  <p className="text-brew-muted text-xs uppercase tracking-widest">Method</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                    {BREW_METHODS.map(m => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setExternalMethod(prev => prev === m.label ? "" : m.label)}
+                        className={`shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all active:scale-95 ${
+                          externalMethod === m.label
+                            ? "border-brew-accent bg-brew-accent/10 text-brew-accent"
+                            : "border-brew-border text-brew-muted"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dose + Water */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-brew-muted text-xs mb-1.5">Dose (g)</p>
+                    <input
+                      type="number"
+                      value={externalDose}
+                      onChange={e => setExternalDose(e.target.value)}
+                      placeholder="e.g. 18"
+                      className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-brew-muted text-xs mb-1.5">Water (ml)</p>
+                    <input
+                      type="number"
+                      value={externalWater}
+                      onChange={e => setExternalWater(e.target.value)}
+                      placeholder="e.g. 270"
+                      className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div>
+                  <p className="text-brew-muted text-xs mb-1.5">Brew time (seconds)</p>
+                  <input
+                    type="number"
+                    value={externalTime}
+                    onChange={e => setExternalTime(e.target.value)}
+                    placeholder="e.g. 210"
+                    className="w-full bg-brew-surface border border-brew-border rounded-xl px-3 py-2.5 text-white text-sm placeholder:text-brew-muted/50 focus:outline-none focus:border-white/30"
+                  />
+                </div>
+
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Flavor notes — SCA wheel navigation */}

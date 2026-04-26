@@ -85,6 +85,8 @@ export interface Recommendation {
 
 export interface BrewLog {
   methodUsed?: string;
+  doseGrams?: number;   // dose used (external sessions; home sessions use recommendation)
+  waterGrams?: number;  // water used (external sessions; home sessions use recommendation)
   dripAssist?: boolean; // mirrors SessionContext.dripAssist — logs whether the Assist was actually used
   followedRecipe?: boolean;
   modifications?: string;
