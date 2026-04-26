@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import type { Session } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
+import { BREW_METHODS } from "@/lib/constants/brewMethods";
 
 function formatRelativeDate(iso: string): string {
   const ms = new Date(iso).getTime();
@@ -16,12 +17,24 @@ function formatRelativeDate(iso: string): string {
   return new Date(ms).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 }
 
+function toCoffeeKey(roaster: string, name: string): string {
+  return `${roaster}__${name}`.toLowerCase().replace(/[^a-z0-9]/g, "_");
+}
+
 export default function CafeDetailPage() {
   const params = useParams();
   const cafeName = decodeURIComponent(params.slug as string);
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMethod, setEditMethod] = useState("");
+  const [editDose, setEditDose] = useState("");
+  const [editWater, setEditWater] = useState("");
+  const [editTime, setEditTime] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch("/api/sessions?mode=external&limit=200", { cache: "no-store" })
@@ -35,6 +48,50 @@ export default function CafeDetailPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [cafeName]);
+
+  function startEdit(s: Session) {
+    setEditingId(s.id);
+    setEditMethod(s.brew?.methodUsed || s.place?.methodServed || "");
+    setEditDose(s.brew?.doseGrams != null ? String(s.brew.doseGrams) : "");
+    setEditWater(s.brew?.waterGrams != null ? String(s.brew.waterGrams) : "");
+    setEditTime(s.brew?.actualTimeSec != null ? String(s.brew.actualTimeSec) : "");
+    setEditNotes(s.result?.freeNotes || "");
+  }
+
+  async function saveEdit(s: Session) {
+    setSaving(true);
+    const brewUpdate = {
+      ...(s.brew ?? {}),
+      methodUsed: editMethod || undefined,
+      doseGrams: editDose ? Number(editDose) : undefined,
+      waterGrams: editWater ? Number(editWater) : undefined,
+      actualTimeSec: editTime ? Number(editTime) : undefined,
+    };
+    const resultUpdate = s.result
+      ? { ...s.result, freeNotes: editNotes || undefined }
+      : undefined;
+
+    setSessions((prev: Session[]) => prev.map((sess: Session) =>
+      sess.id === s.id
+        ? { ...sess, brew: brewUpdate, ...(resultUpdate ? { result: resultUpdate } : {}) }
+        : sess
+    ));
+    setEditingId(null);
+
+    try {
+      await fetch(`/api/sessions/${s.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brew: brewUpdate,
+          ...(resultUpdate ? { result: resultUpdate } : {}),
+        }),
+      });
+    } catch {
+      // optimistic update stands
+    }
+    setSaving(false);
+  }
 
   const location = sessions[0]?.place?.location;
   const avgRating = sessions.length > 0
@@ -109,7 +166,13 @@ export default function CafeDetailPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {sessions.map((s: Session) => {
-              const method = s.place?.methodServed || s.brew?.methodUsed;
+              const method = s.brew?.methodUsed || s.place?.methodServed;
+              const coffeeKey = s.coffee?.name && s.coffee?.roaster
+                ? toCoffeeKey(s.coffee.roaster, s.coffee.name)
+                : null;
+              const sub = s.coffee ? [s.coffee.origin, s.coffee.process].filter(Boolean).join(" · ") : "";
+              const isEditing = editingId === s.id;
+
               return (
                 <div key={s.id} className="bg-brew-surface border border-brew-border rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -120,16 +183,28 @@ export default function CafeDetailPage() {
                             <p className="text-brew-muted text-xs truncate">{s.coffee.roaster}</p>
                           )}
                           <p className="text-white text-sm font-medium leading-snug truncate">{s.coffee.name}</p>
+                          {sub && <p className="text-brew-muted text-xs mt-0.5">{sub}</p>}
                         </>
                       )}
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-brew-muted text-xs">{formatRelativeDate(s.createdAt)}</p>
-                      {s.result?.rating != null && s.result.rating > 0 && (
-                        <div className="mt-1">
-                          <StarRating value={s.result.rating} readonly size="sm" />
-                        </div>
-                      )}
+                    <div className="flex items-start gap-2 shrink-0">
+                      <div className="text-right">
+                        <p className="text-brew-muted text-xs">{formatRelativeDate(s.createdAt)}</p>
+                        {s.result?.rating != null && s.result.rating > 0 && (
+                          <div className="mt-1">
+                            <StarRating value={s.result.rating} readonly size="sm" />
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => isEditing ? setEditingId(null) : startEdit(s)}
+                        className="p-1 rounded-lg text-brew-muted active:text-white transition-colors mt-0.5"
+                        aria-label="Edit brew details"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
 
@@ -151,6 +226,19 @@ export default function CafeDetailPage() {
                     </div>
                   )}
 
+                  {s.coffee?.tastingNotesFromBag && s.coffee.tastingNotesFromBag.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {s.coffee.tastingNotesFromBag.slice(0, 3).map((note: string) => (
+                        <span
+                          key={note}
+                          className="text-xs text-brew-muted border border-dashed border-brew-border rounded-lg px-2 py-0.5 italic"
+                        >
+                          {note}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {s.result?.flavorNotes && s.result.flavorNotes.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {s.result.flavorNotes.slice(0, 3).map((note: string) => (
@@ -163,6 +251,105 @@ export default function CafeDetailPage() {
                       ))}
                     </div>
                   )}
+
+                  {coffeeKey && (
+                    <div className="mt-2">
+                      <Link
+                        href={`/coffees/${coffeeKey}`}
+                        className="inline-flex items-center gap-1 text-xs text-brew-accent border border-brew-accent/30 rounded-lg px-2 py-0.5"
+                      >
+                        Coffee Library
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Inline edit panel */}
+                  <div className={`overflow-hidden transition-all duration-300 ${isEditing ? "max-h-[30rem] opacity-100 mt-3" : "max-h-0 opacity-0"}`}>
+                    <div className="border-t border-brew-border pt-3 space-y-3">
+                      <div>
+                        <p className="text-brew-muted text-xs mb-1.5">Method</p>
+                        <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                          {BREW_METHODS.map(m => (
+                            <button
+                              key={m.id}
+                              onClick={() => setEditMethod(editMethod === m.label ? "" : m.label)}
+                              className={`shrink-0 px-2.5 py-1 rounded-lg text-xs border transition-colors ${
+                                editMethod === m.label
+                                  ? "bg-brew-accent text-brew-bg border-brew-accent"
+                                  : "text-brew-muted border-brew-border"
+                              }`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-brew-muted text-xs block mb-1">Dose (g)</label>
+                          <input
+                            type="number"
+                            value={editDose}
+                            onChange={e => setEditDose(e.target.value)}
+                            placeholder="—"
+                            className="w-full bg-brew-bg border border-brew-border rounded-lg px-2.5 py-1.5 text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-brew-muted text-xs block mb-1">Water (ml)</label>
+                          <input
+                            type="number"
+                            value={editWater}
+                            onChange={e => setEditWater(e.target.value)}
+                            placeholder="—"
+                            className="w-full bg-brew-bg border border-brew-border rounded-lg px-2.5 py-1.5 text-white text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-brew-muted text-xs block mb-1">Time (seconds)</label>
+                        <input
+                          type="number"
+                          value={editTime}
+                          onChange={e => setEditTime(e.target.value)}
+                          placeholder="—"
+                          className="w-full bg-brew-bg border border-brew-border rounded-lg px-2.5 py-1.5 text-white text-sm"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-brew-muted text-xs block mb-1">Notes</label>
+                        <textarea
+                          value={editNotes}
+                          onChange={e => setEditNotes(e.target.value)}
+                          placeholder="Add notes..."
+                          rows={2}
+                          className="w-full bg-brew-bg border border-brew-border rounded-lg px-2.5 py-1.5 text-white text-sm resize-none"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => saveEdit(s)}
+                          disabled={saving}
+                          className="flex-1 py-1.5 bg-brew-accent text-brew-bg text-sm font-medium rounded-lg"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="flex-1 py-1.5 bg-brew-surface border border-brew-border text-brew-muted text-sm rounded-lg"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}
