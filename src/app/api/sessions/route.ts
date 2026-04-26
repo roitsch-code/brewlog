@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { desc, inArray, sql } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
@@ -55,10 +55,14 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
 
+    const modeParam = url.searchParams.get("mode");
+    const modeFilter = modeParam === "home" || modeParam === "external"
+      ? eq(sessions.mode, modeParam)
+      : undefined;
+
     if (url.searchParams.get("count") === "true") {
-      const [{ count }] = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sessions);
+      const base = db.select({ count: sql<number>`count(*)::int` }).from(sessions);
+      const [{ count }] = modeFilter ? await base.where(modeFilter) : await base;
       return NextResponse.json({ total: count });
     }
 
@@ -72,11 +76,8 @@ export async function GET(req: NextRequest) {
 
     const rawLimit = Number(url.searchParams.get("limit") || "50");
     const limit = Math.min(Math.max(1, rawLimit), 300);
-    const rows = await db
-      .select()
-      .from(sessions)
-      .orderBy(desc(sessions.createdAtMs))
-      .limit(limit);
+    const base = db.select().from(sessions).orderBy(desc(sessions.createdAtMs)).limit(limit);
+    const rows = modeFilter ? await base.where(modeFilter) : await base;
     return NextResponse.json(rows.map(rowToSession));
   } catch (err) {
     console.error("sessions GET error:", err);
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
       result: data.result,
     });
 
-    if (data.coffee?.name && data.coffee?.roaster) {
+    if (data.mode !== "external" && data.coffee?.name && data.coffee?.roaster) {
       const coffeeKey = `${data.coffee.roaster}__${data.coffee.name}`
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "_");

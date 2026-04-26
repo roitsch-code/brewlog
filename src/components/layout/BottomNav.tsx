@@ -6,13 +6,15 @@ import { House, BookOpen, Plus, Radar, Compass } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "HOME", Icon: House },
-  { href: "/coffees", label: "LIBRARY", Icon: BookOpen },
+  { href: "/library", label: "LIBRARY", Icon: BookOpen },
   { href: "/brew/new", label: "BREW", Icon: Plus, isBrew: true },
   { href: "/taste", label: "TASTE", Icon: Radar },
   { href: "/explore", label: "EXPLORE", Icon: Compass },
 ];
 
-const SHOW_ON = ["/", "/coffees", "/explore", "/taste", "/cafes"];
+const SHOW_ON = ["/", "/library", "/coffees", "/cafes", "/explore", "/taste"];
+
+const LIBRARY_PATHS = ["/library", "/coffees", "/cafes"];
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -47,7 +49,9 @@ export default function BottomNav() {
         }}
       >
         {tabs.map(tab => {
-          const active = pathname === tab.href;
+          const active = tab.href === "/library"
+            ? LIBRARY_PATHS.includes(pathname)
+            : pathname === tab.href;
           const { Icon } = tab;
 
           return (

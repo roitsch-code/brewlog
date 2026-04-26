@@ -27,7 +27,7 @@ export default function CoffeesPage() {
           setCoffees(sorted);
         })
         .catch(() => setError(true)),
-      fetch("/api/sessions?count=true", { cache: "no-store" })
+      fetch("/api/sessions?count=true&mode=home", { cache: "no-store" })
         .then(r => r.ok ? r.json() : null)
         .then((d: { total: number } | null) => { if (d?.total != null) setTotalSessions(d.total); })
         .catch(() => {}),
