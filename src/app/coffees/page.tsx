@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Coffee } from "@/lib/types/coffee";
 import StarRating from "@/components/ui/StarRating";
 
@@ -69,6 +70,12 @@ export default function CoffeesPage() {
 
       {/* Header */}
       <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <Link href="/library" className="flex items-center gap-1 text-brew-muted text-sm mb-3 w-fit">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Library
+        </Link>
         <h1 className="font-display text-3xl text-white leading-none">Coffee Library</h1>
         {loading ? (
           <div className="h-4 w-48 bg-brew-surface rounded-full animate-pulse mt-2" />

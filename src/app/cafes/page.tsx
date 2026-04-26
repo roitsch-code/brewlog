@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState, useMemo, type ReactNode } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import type { CafeSummary } from "@/lib/types/cafes";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
 
-type Tab = "cafes" | "coffees" | "sessions";
+type Tab = "cafes" | "coffees";
 
 function formatRelativeDate(ms: number): string {
   const diff = Date.now() - ms;
@@ -57,7 +59,9 @@ function deriveCafeCoffees(sessions: Session[]): CafeCoffee[] {
 }
 
 export default function CafesPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("cafes");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "coffees" ? "coffees" : "cafes";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   const [cafes, setCafes] = useState<CafeSummary[]>([]);
   const [cafesLoading, setCafesLoading] = useState(true);
@@ -65,6 +69,8 @@ export default function CafesPage() {
   const [externalSessions, setExternalSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionsFetched, setSessionsFetched] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/cafes", { cache: "no-store" })
@@ -75,7 +81,7 @@ export default function CafesPage() {
   }, []);
 
   useEffect(() => {
-    if ((activeTab === "coffees" || activeTab === "sessions") && !sessionsFetched) {
+    if (activeTab === "coffees" && !sessionsFetched) {
       setSessionsLoading(true);
       fetch("/api/sessions?mode=external&limit=200", { cache: "no-store" })
         .then(r => r.json())
@@ -86,13 +92,11 @@ export default function CafesPage() {
   }, [activeTab, sessionsFetched]);
 
   const cafeCoffees = useMemo(() => deriveCafeCoffees(externalSessions), [externalSessions]);
-
   const totalVisits = cafes.reduce((sum: number, cafe: CafeSummary) => sum + cafe.visits, 0);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "cafes", label: "Cafés" },
     { id: "coffees", label: "Coffees" },
-    { id: "sessions", label: "Sessions" },
   ];
 
   return (
@@ -100,6 +104,12 @@ export default function CafesPage() {
 
       {/* Header */}
       <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <Link href="/library" className="flex items-center gap-1 text-brew-muted text-sm mb-3 w-fit">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Library
+        </Link>
         <h1 className="font-display text-3xl text-white leading-none">Café Library</h1>
         {!cafesLoading && (
           <p className="text-brew-muted text-sm mt-1.5">
@@ -130,13 +140,10 @@ export default function CafesPage() {
 
       <div className="flex-1 px-5">
         {activeTab === "cafes" && (
-          <CafesTab cafes={cafes} loading={cafesLoading} />
+          <CafesTab cafes={cafes} loading={cafesLoading} onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)} />
         )}
         {activeTab === "coffees" && (
-          <CoffeesTab coffees={cafeCoffees} loading={sessionsLoading} />
-        )}
-        {activeTab === "sessions" && (
-          <SessionsTab sessions={externalSessions} loading={sessionsLoading} />
+          <CoffeesTab coffees={cafeCoffees} loading={sessionsLoading} onSelect={key => router.push(`/cafes/coffee/${key}`)} />
         )}
       </div>
     </div>
@@ -145,7 +152,7 @@ export default function CafesPage() {
 
 /* ── Cafés tab ─────────────────────────────────────────────── */
 
-function CafesTab({ cafes, loading }: { cafes: CafeSummary[]; loading: boolean }) {
+function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading: boolean; onSelect: (cafe: CafeSummary) => void }) {
   if (loading) return <LoadingSkeletons />;
   if (cafes.length === 0) return (
     <EmptyState
@@ -158,7 +165,12 @@ function CafesTab({ cafes, loading }: { cafes: CafeSummary[]; loading: boolean }
   return (
     <div className="flex flex-col gap-3">
       {cafes.map(cafe => (
-        <div key={cafe.name} className="bg-brew-surface border border-brew-border rounded-2xl p-4">
+        <button
+          key={cafe.name}
+          type="button"
+          onClick={() => onSelect(cafe)}
+          className="w-full bg-brew-surface border border-brew-border rounded-2xl p-4 text-left active:scale-[0.98] transition-transform"
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <p className="text-white font-medium leading-tight truncate">{cafe.name}</p>
@@ -192,7 +204,7 @@ function CafesTab({ cafes, loading }: { cafes: CafeSummary[]; loading: boolean }
               ))}
             </div>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -200,7 +212,7 @@ function CafesTab({ cafes, loading }: { cafes: CafeSummary[]; loading: boolean }
 
 /* ── Coffees tab ───────────────────────────────────────────── */
 
-function CoffeesTab({ coffees, loading }: { coffees: CafeCoffee[]; loading: boolean }) {
+function CoffeesTab({ coffees, loading, onSelect }: { coffees: CafeCoffee[]; loading: boolean; onSelect: (key: string) => void }) {
   if (loading) return <LoadingSkeletons />;
   if (coffees.length === 0) return (
     <EmptyState
@@ -215,11 +227,13 @@ function CoffeesTab({ coffees, loading }: { coffees: CafeCoffee[]; loading: bool
       {coffees.map(({ key, coffee, cafes, avgRating, visitCount }) => {
         const sub = [coffee.origin, coffee.process].filter(Boolean).join(" · ");
         return (
-          <div
+          <button
             key={key}
-            className="flex items-center gap-3 bg-brew-surface border border-brew-border rounded-2xl p-3"
+            type="button"
+            onClick={() => onSelect(key)}
+            className="flex items-center gap-3 w-full bg-brew-surface border border-brew-border rounded-2xl p-3 text-left active:scale-[0.98] transition-transform"
           >
-            {/* Placeholder thumbnail */}
+            {/* Thumbnail */}
             <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-brew-elevated shrink-0">
               {coffee.bagPhotoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -254,86 +268,11 @@ function CoffeesTab({ coffees, loading }: { coffees: CafeCoffee[]; loading: bool
                 </div>
               )}
             </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
-/* ── Sessions tab ──────────────────────────────────────────── */
-
-function SessionsTab({ sessions, loading }: { sessions: Session[]; loading: boolean }) {
-  if (loading) return <LoadingSkeletons />;
-  if (sessions.length === 0) return (
-    <EmptyState
-      icon={<LocationIcon />}
-      title="No sessions yet"
-      body={'Log a brew with "Visit a café" and it will appear here.'}
-    />
-  );
-
-  return (
-    <div className="flex flex-col gap-3">
-      {sessions.map(s => {
-        const method = s.place?.methodServed || s.brew?.methodUsed;
-        const createdAtMs = typeof s.createdAt === "string" ? new Date(s.createdAt).getTime() : Date.now();
-        return (
-          <div key={s.id} className="bg-brew-surface border border-brew-border rounded-2xl p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                {s.place?.name && (
-                  <p className="text-brew-accent text-xs font-medium truncate mb-0.5">{s.place.name}</p>
-                )}
-                {s.coffee?.name && (
-                  <>
-                    {s.coffee.roaster && (
-                      <p className="text-brew-muted text-xs truncate">{s.coffee.roaster}</p>
-                    )}
-                    <p className="text-white text-sm font-medium leading-snug truncate">{s.coffee.name}</p>
-                  </>
-                )}
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-brew-muted text-xs">{formatRelativeDate(createdAtMs)}</p>
-                {s.result?.rating != null && s.result.rating > 0 && (
-                  <div className="mt-1">
-                    <StarRating value={s.result.rating} readonly size="sm" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Partial brew info */}
-            {(method || s.place?.location) && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {method && (
-                  <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">
-                    {method}
-                  </span>
-                )}
-                {s.place?.location && (
-                  <span className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5">
-                    {s.place.location}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Flavor notes */}
-            {s.result?.flavorNotes && s.result.flavorNotes.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {s.result.flavorNotes.slice(0, 3).map(note => (
-                  <span
-                    key={note}
-                    className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5"
-                  >
-                    {note}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            <svg className="w-4 h-4 text-brew-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
         );
       })}
     </div>

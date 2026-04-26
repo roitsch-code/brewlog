@@ -12,15 +12,15 @@ const tabs = [
   { href: "/explore", label: "EXPLORE", Icon: Compass },
 ];
 
-const SHOW_ON = ["/", "/library", "/coffees", "/cafes", "/explore", "/taste"];
-
-const LIBRARY_PATHS = ["/library", "/coffees", "/cafes"];
+const EXACT_SHOW = ["/", "/explore", "/taste"];
+const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function BottomNav() {
   const pathname = usePathname();
   const reset = useFlowStore(s => s.reset);
 
-  if (!SHOW_ON.includes(pathname)) return null;
+  const showNav = EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p));
+  if (!showNav) return null;
 
   return (
     <div
@@ -50,7 +50,7 @@ export default function BottomNav() {
       >
         {tabs.map(tab => {
           const active = tab.href === "/library"
-            ? LIBRARY_PATHS.includes(pathname)
+            ? PREFIX_SHOW.some(p => pathname.startsWith(p))
             : pathname === tab.href;
           const { Icon } = tab;
 
