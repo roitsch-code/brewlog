@@ -6,10 +6,15 @@ import type { CafeSummary, Place } from "@/lib/types/cafes";
 import StarRating from "@/components/ui/StarRating";
 
 const geocodeCache = new Map<string, { lat: number; lng: number } | null>();
+let nominatimLastMs = 0;
 
 async function geocafe(name: string, location?: string): Promise<{ lat: number; lng: number } | null> {
   const key = `${name}__${location ?? ""}`;
   if (geocodeCache.has(key)) return geocodeCache.get(key) ?? null;
+
+  const wait = Math.max(0, nominatimLastMs + 1100 - Date.now());
+  if (wait > 0) await new Promise<void>(r => setTimeout(r, wait));
+  nominatimLastMs = Date.now();
 
   const q = location ? `${name}, ${location}` : name;
   try {
@@ -115,7 +120,6 @@ export default function CafeMap({ cafes, onSelect }: {
 
       const placed: LMarker[] = [];
       for (let i = 0; i < cafes.length; i++) {
-        if (i > 0) await new Promise<void>(r => setTimeout(r, 1100));
         if (cancelled) break;
 
         const cafe = cafes[i];
@@ -169,7 +173,6 @@ export default function CafeMap({ cafes, onSelect }: {
     (async () => {
       const placed: LMarker[] = [];
       for (let i = 0; i < places.length; i++) {
-        if (i > 0) await new Promise<void>(r => setTimeout(r, 1100));
         if (cancelled) break;
 
         const place = places[i];
