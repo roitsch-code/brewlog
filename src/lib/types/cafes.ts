@@ -6,3 +6,10 @@ export interface CafeSummary {
   coffees: string[];
   lastVisitedMs: number;
 }
+
+export interface Place {
+  id: number;
+  name: string;
+  address: string | null;
+  city: string;
+}

@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   numeric,
+  serial,
   index,
 } from "drizzle-orm/pg-core";
 import type {
@@ -109,7 +110,16 @@ export const coffeeAlerts = pgTable("coffee_alerts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const places = pgTable("places", {
+  id:        serial("id").primaryKey(),
+  name:      text("name").notNull(),
+  address:   text("address"),
+  city:      text("city").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;
 export type CoffeeRow = typeof coffees.$inferSelect;
 export type NewCoffeeRow = typeof coffees.$inferInsert;
+export type PlaceRow = typeof places.$inferSelect;
