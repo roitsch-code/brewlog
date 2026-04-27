@@ -10,7 +10,7 @@ INSERT INTO "places" ("name", "address", "city") VALUES
   ('Roasted Kaffeebar',             NULL,                        'Düsseldorf'),
   ('Das Coffe',                     NULL,                        'Düsseldorf'),
   ('Stoak',                         NULL,                        'Düsseldorf'),
-  ('Schwarz Kaffee',                NULL,                        'Düsseldorf'),
+  ('Schvarz Kaffee',                NULL,                        'Düsseldorf'),
   ('BREW Specialty Coffee Shop',    NULL,                        'Düsseldorf'),
   ('No Worries Coffee',             NULL,                        'Düsseldorf'),
   ('MERCY coffee company',          NULL,                        'Düsseldorf'),
@@ -22,7 +22,7 @@ INSERT INTO "places" ("name", "address", "city") VALUES
   ('Jaenner Coffee',                NULL,                        'Düsseldorf'),
   ('Orange - Finest Coffee',        NULL,                        'Düsseldorf'),
   ('Carl Ferdinand Röstfabrik',     NULL,                        'Düsseldorf'),
-  ('Biz Coffee',                    NULL,                        'Düsseldorf'),
+  ('B12 Coffee',                    NULL,                        'Düsseldorf'),
   ('RVTC Rösterei Vier Wallstreet', NULL,                        'Düsseldorf'),
   ('Lightroast Coffee',             NULL,                        'Düsseldorf')
 ON CONFLICT DO NOTHING;
