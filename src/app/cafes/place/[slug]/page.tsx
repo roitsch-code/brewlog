@@ -226,20 +226,7 @@ export default function CafeDetailPage() {
                     </div>
                   )}
 
-                  {s.coffee?.tastingNotesFromBag && s.coffee.tastingNotesFromBag.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {s.coffee.tastingNotesFromBag.slice(0, 3).map((note: string) => (
-                        <span
-                          key={note}
-                          className="text-xs text-brew-muted border border-dashed border-brew-border rounded-lg px-2 py-0.5 italic"
-                        >
-                          {note}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {s.result?.flavorNotes && s.result.flavorNotes.length > 0 && (
+                  {s.result?.flavorNotes && s.result.flavorNotes.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {s.result.flavorNotes.slice(0, 3).map((note: string) => (
                         <span
@@ -250,7 +237,18 @@ export default function CafeDetailPage() {
                         </span>
                       ))}
                     </div>
-                  )}
+                  ) : s.coffee?.tastingNotesFromBag && s.coffee.tastingNotesFromBag.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {s.coffee.tastingNotesFromBag.slice(0, 3).map((note: string) => (
+                        <span
+                          key={note}
+                          className="text-xs text-brew-muted border border-dashed border-brew-border rounded-lg px-2 py-0.5 italic"
+                        >
+                          {note}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
 
                   {coffeeKey && (
                     <div className="mt-2">
