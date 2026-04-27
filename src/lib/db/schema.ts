@@ -7,6 +7,7 @@ import {
   jsonb,
   numeric,
   serial,
+  doublePrecision,
   index,
 } from "drizzle-orm/pg-core";
 import type {
@@ -115,6 +116,8 @@ export const places = pgTable("places", {
   name:      text("name").notNull(),
   address:   text("address"),
   city:      text("city").notNull(),
+  lat:       doublePrecision("lat"),
+  lng:       doublePrecision("lng"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

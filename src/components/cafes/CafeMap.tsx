@@ -155,13 +155,12 @@ export default function CafeMap({ cafes, onSelect }: {
     };
   }, [cafes]);
 
-  // Add ghost pins for curated places
+  // Add ghost pins for curated places (coordinates come from DB — no client-side geocoding)
   useEffect(() => {
-    if (!mapReady || !mapRef.current || !leafletRef.current || places.length === 0) return;
+    if (!mapReady || !mapRef.current || !leafletRef.current) return;
 
     const L = leafletRef.current;
     const map = mapRef.current;
-    let cancelled = false;
 
     const ghostIcon = L.divIcon({ html: GHOST_PIN_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
 
@@ -169,28 +168,18 @@ export default function CafeMap({ cafes, onSelect }: {
     placeMarkersRef.current = [];
 
     const visitedNames = new Set(cafes.map(c => c.name.toLowerCase().trim()));
+    const placed: LMarker[] = [];
 
-    (async () => {
-      const placed: LMarker[] = [];
-      for (let i = 0; i < places.length; i++) {
-        if (cancelled) break;
+    for (const place of places) {
+      if (place.lat == null || place.lng == null) continue;
+      if (visitedNames.has(place.name.toLowerCase().trim())) continue;
 
-        const place = places[i];
-        if (visitedNames.has(place.name.toLowerCase().trim())) continue;
+      const marker = L.marker([place.lat, place.lng], { icon: ghostIcon }).addTo(map);
+      marker.on("click", () => { setPlaceSelected(place); setSelected(null); });
+      placed.push(marker);
+    }
 
-        const locationQuery = place.address ? `${place.address}, ${place.city}` : place.city;
-        const coords = await geocafe(place.name, locationQuery);
-        if (cancelled || !coords) continue;
-
-        const marker = L.marker([coords.lat, coords.lng], { icon: ghostIcon }).addTo(map);
-        marker.on("click", () => { setPlaceSelected(place); setSelected(null); });
-        placed.push(marker);
-      }
-
-      if (!cancelled) placeMarkersRef.current = placed;
-    })();
-
-    return () => { cancelled = true; };
+    placeMarkersRef.current = placed;
   }, [mapReady, places, cafes]);
 
   return (

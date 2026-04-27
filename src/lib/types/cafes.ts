@@ -12,4 +12,6 @@ export interface Place {
   name: string;
   address: string | null;
   city: string;
+  lat: number | null;
+  lng: number | null;
 }
