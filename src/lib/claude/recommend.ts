@@ -105,6 +105,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max ~500ml
 - Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
 - Kalita Wave: max ~500ml
+- Origami Air M (Resin): max ~400ml water. Compatible with Hario Drip Assist.
 - AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
 - Moccamaster: batch ONLY; minimum 500ml. NEVER for single-cup amounts.
 - Grinder: Niche Zero (° — NEVER clicks!) | Comandante C40 MK2 (clicks — NEVER °)
@@ -177,7 +178,7 @@ only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
 2. Kettle back on base after EVERY pour (Fellow Corvo reheats in 10–15s)
 3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
 4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
-   For Orea/Kalita/Chemex + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
+   For Orea/Kalita/Chemex/Origami Air M + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
    (the disc slows flow, so you can afford slightly tighter grind).
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
@@ -199,6 +200,7 @@ PERCOLATION:
 - Orea Apex: light stir 1–2× at bloom ONLY. No post-bloom agitation (clarity focus).
 - Orea Fast / Wölfl: light stir 1–2× at bloom. No post-bloom agitation.
 - Orea Open: gentle swirl at bloom only. No post-bloom agitation. Full open bed — let flow do the work.
+- Origami Air M: light stir 1–2× at bloom only. No post-bloom agitation (full ridges drain fast; extra agitation over-extracts).
 - Peng 2025: stir 3× at bloom. No post-bloom stir.
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
 - Turbo V60: stir 2–3× at bloom. Turbulence from fast pours, not extra stirs.
@@ -224,7 +226,7 @@ CHEMEX — dedicated rules:
 7. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
 
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411°
+V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
 Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
@@ -251,6 +253,8 @@ Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Cleve
 
 CHAMPIONSHIP / EXPLORATION RECIPES — available when intent is explore, experiment, or wildcard:
 - Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
+- Origami Air M standard: 20g:300ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
+- Origami Air M clarity: 20g:300ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
 - Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
 - Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55ppm) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30–4:00
 - Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s (targetTimeSec: 150)
@@ -358,6 +362,7 @@ export async function generateRecommendation(
     "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
     "kalita", "kalita wave", "chemex", "drip assist", "v60 + drip assist",
     "turbo v60", "peng", "4:6", "kasuya",
+    "origami", "origami air", "origami air m",
   ]);
   const isPercolation = (method?: string) =>
     method ? PERCOLATION_METHODS.has(method.toLowerCase().trim()) : false;
@@ -370,9 +375,9 @@ export async function generateRecommendation(
 
   const amountGuide: Record<string, string> = {
     small:
-      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex, Origami Air M (350ml < 400ml ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60 + Drip Assist, Orea, Kalita, Chemex. NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water / 34g dose (1:15.3). Suitable: V60 + Drip Assist, Orea, Kalita, Chemex. NOT Origami Air M (520ml > 400ml ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -427,7 +432,7 @@ export async function generateRecommendation(
     if (!ml) return "";
     const violations: string[] = [];
     if (ml > 230) violations.push("AeroPress (max 230ml)");
-    if (ml > 400) violations.push("Clever Dripper (max 400ml)");
+    if (ml > 400) violations.push("Clever Dripper (max 400ml)", "Origami Air M (max 400ml)");
     if (ml < 500) violations.push("Moccamaster (batch only, min 500ml)");
     return violations.length
       ? `\nHARD CAPACITY CONSTRAINT — target ${ml}ml: FORBIDDEN methods: ${violations.join(", ")}.`
@@ -435,7 +440,7 @@ export async function generateRecommendation(
   })();
 
   const DRIP_ASSIST_COMPATIBLE = new Set([
-    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
+    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex", "Origami Air M",
   ]);
   const methodNote = context.preferredMethod
     ? (() => {
