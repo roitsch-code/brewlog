@@ -16,6 +16,12 @@ Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Cla
 
 **Manual deploy (fallback):** SSH into VPS → `cd /opt/brewlog && git pull origin main && docker compose build app && docker compose up -d app`
 
+**Running a new SQL migration:** After deploying code that adds a new migration file, SSH into the VPS and run:
+```bash
+cd /opt/brewlog && cat src/lib/db/migrations/0001_add_places.sql | docker compose exec -T postgres psql -U brewlog -d brewlog
+```
+Replace the filename with the actual migration file. You should see `INSERT 0 N` or `CREATE TABLE` confirming success. This only needs to be done once per migration.
+
 **Type-check before every commit:** `npx tsc --noEmit`
 
 ---
