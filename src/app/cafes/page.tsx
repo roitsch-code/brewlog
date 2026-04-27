@@ -198,8 +198,8 @@ function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading:
 
       {view === "map" ? (
         <div
-          className="-mx-5 overflow-hidden"
-          style={{ height: "calc(100dvh - 260px)", minHeight: 360 }}
+          className="-mx-5 -mb-8 overflow-hidden"
+          style={{ height: "calc(100dvh - 228px)", minHeight: 360 }}
         >
           <CafeMap cafes={cafes} onSelect={onSelect} />
         </div>
