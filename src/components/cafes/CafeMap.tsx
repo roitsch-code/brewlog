@@ -270,11 +270,21 @@ export default function CafeMap({ cafes, onSelect }: {
                 <p className="text-brew-muted text-xs mt-0.5">{placeSelected.city}</p>
                 <p className="text-brew-muted text-xs mt-1.5">Not visited yet</p>
               </div>
-              <button type="button" onClick={() => setPlaceSelected(null)} className="text-brew-muted p-0.5 active:scale-95 transition-transform shrink-0" aria-label="Close">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <button type="button" onClick={() => setPlaceSelected(null)} className="text-brew-muted p-0.5 active:scale-95 transition-transform" aria-label="Close">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <a
+                  href={`https://maps.google.com/maps?q=${encodeURIComponent(`${placeSelected.name} ${placeSelected.city}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-brew-accent text-brew-accent-fg text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                >
+                  Open in Maps
+                </a>
+              </div>
             </div>
           </div>
         </div>
