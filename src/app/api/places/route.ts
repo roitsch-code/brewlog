@@ -4,7 +4,12 @@ import { asc, eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-async function geocodeServerSide(q: string): Promise<{ lat: number; lng: number } | null> {
+let lastNominatimMs = 0;
+
+async function nominatim(q: string): Promise<{ lat: number; lng: number } | null> {
+  const wait = Math.max(0, lastNominatimMs + 1100 - Date.now());
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  lastNominatimMs = Date.now();
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
@@ -17,18 +22,43 @@ async function geocodeServerSide(q: string): Promise<{ lat: number; lng: number 
   return null;
 }
 
+function buildQueries(name: string, address: string | null, city: string): string[] {
+  if (address) return [`${name}, ${address}, ${city}`];
+
+  const queries: string[] = [];
+  const seen = new Set<string>();
+  const add = (q: string) => { if (!seen.has(q)) { seen.add(q); queries.push(q); } };
+
+  // Strip common suffixes — shorter brand name works better in Nominatim
+  const stripped = name
+    .replace(/\s+(Specialty Coffee Shop|Coffee Shop|Coffee|Kaffee|Kaffeebar|Kafferösterei|Rösterei|Röstfabrik|company)\s*$/i, "")
+    .trim();
+
+  if (stripped !== name && stripped.length > 2) add(`${stripped}, ${city}`);
+
+  // Original full name
+  add(`${name}, ${city}`);
+
+  // Fix "Coffe" typo → "Coffee"
+  if (/\bCoffe\b/.test(name)) add(`${name.replace(/\bCoffe\b/g, "Coffee")}, ${city}`);
+
+  // First word only — useful for acronyms like RVTC, single-word brands
+  const first = name.split(/\s+/)[0];
+  if (first.length > 3) add(`${first}, ${city}`);
+
+  return queries;
+}
+
 export async function GET() {
   const rows = await db.select().from(places).orderBy(asc(places.city), asc(places.name));
-
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
 
-  for (let i = 0; i < unresolved.length; i++) {
-    if (i > 0) await new Promise(r => setTimeout(r, 1100));
-    const place = unresolved[i];
-    const q = place.address
-      ? `${place.name}, ${place.address}, ${place.city}`
-      : `${place.name}, ${place.city}`;
-    const coords = await geocodeServerSide(q);
+  for (const place of unresolved) {
+    let coords: { lat: number; lng: number } | null = null;
+    for (const q of buildQueries(place.name, place.address, place.city)) {
+      coords = await nominatim(q);
+      if (coords) break;
+    }
     if (coords) {
       await db.update(places).set({ lat: coords.lat, lng: coords.lng }).where(eq(places.id, place.id));
       const row = rows.find(r => r.id === place.id);
