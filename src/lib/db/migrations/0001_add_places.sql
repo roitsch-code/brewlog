@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "places" (
 --> statement-breakpoint
 INSERT INTO "places" ("name", "address", "city") VALUES
   ('Roasted Kaffeebar',             NULL,                        'Düsseldorf'),
-  ('Das Coffe',                     NULL,                        'Düsseldorf'),
+  ('Cøffe',                          NULL,                        'Düsseldorf'),
   ('Stoak',                         NULL,                        'Düsseldorf'),
   ('Schvarz Kaffee',                NULL,                        'Düsseldorf'),
   ('BREW Specialty Coffee Shop',    NULL,                        'Düsseldorf'),
@@ -23,6 +23,6 @@ INSERT INTO "places" ("name", "address", "city") VALUES
   ('Orange - Finest Coffee',        NULL,                        'Düsseldorf'),
   ('Carl Ferdinand Röstfabrik',     NULL,                        'Düsseldorf'),
   ('B12 Coffee',                    NULL,                        'Düsseldorf'),
-  ('RVTC Rösterei Vier Wallstreet', NULL,                        'Düsseldorf'),
+  ('Rösterei Vier',                 NULL,                        'Düsseldorf'),
   ('Lightroast Coffee',             NULL,                        'Düsseldorf')
 ON CONFLICT DO NOTHING;
