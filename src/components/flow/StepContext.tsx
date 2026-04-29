@@ -80,6 +80,7 @@ const METHODS = [
   { id: "Orea Classic",      label: "Orea Classic",         sub: "sweetness focus" },
   { id: "Orea Open",         label: "Orea Open",            sub: "open bed, max flow, max ~500 ml" },
   { id: "Kalita Wave",       label: "Kalita Wave",          sub: "even bed, max ~500 ml" },
+  { id: "Origami Dripper",   label: "Origami Dripper",      sub: "ridged cone, Washed 95°C / Natural 93°C" },
   { id: "Chemex",            label: "Chemex",               sub: "clean & bright, max ~600 ml" },
   { id: "AeroPress",         label: "AeroPress",            sub: "max 230 ml · or concentrate" },
   { id: "Clever Dripper",    label: "Clever Dripper",       sub: "immersion, max 400 ml" },
@@ -90,7 +91,7 @@ const METHODS = [
 // Immersion / pressure / batch brewers are excluded — the Assist controls pour rate and
 // has no effect when there's no pouring phase.
 const DRIP_ASSIST_COMPATIBLE = new Set<string>([
-  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
+  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Origami Dripper", "Chemex",
 ]);
 
 export default function StepContext() {

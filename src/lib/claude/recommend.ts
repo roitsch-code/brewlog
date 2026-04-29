@@ -175,10 +175,10 @@ controls flow rate regardless of the brewer beneath it; rules are identical acro
 only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
 1. Start temp +2–3°C higher than without Assist (heat loss from transfers)
    Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
-2. Kettle back on base after EVERY pour (Fellow Corvo reheats in 10–15s)
+2. Kettle back on base after EVERY pour (Stagg EKG holds set temperature — stays ready instantly)
 3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
 4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
-   For Orea/Kalita/Chemex/Origami Air M + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
+   For Orea/Kalita/Chemex/Origami Dripper/Origami Air M + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
    (the disc slows flow, so you can afford slightly tighter grind).
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
@@ -200,6 +200,7 @@ PERCOLATION:
 - Orea Apex: light stir 1–2× at bloom ONLY. No post-bloom agitation (clarity focus).
 - Orea Fast / Wölfl: light stir 1–2× at bloom. No post-bloom agitation.
 - Orea Open: gentle swirl at bloom only. No post-bloom agitation. Full open bed — let flow do the work.
+- Origami Dripper: light stir 1–2× at bloom only. No post-bloom agitation (ridged walls drain fast; extra agitation over-extracts).
 - Origami Air M: light stir 1–2× at bloom only. No post-bloom agitation (full ridges drain fast; extra agitation over-extracts).
 - Peng 2025: stir 3× at bloom. No post-bloom stir.
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
@@ -226,7 +227,7 @@ CHEMEX — dedicated rules:
 7. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
 
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
+V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Dripper: 401–409° | Origami Air M: 401–408°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
 Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
