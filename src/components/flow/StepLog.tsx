@@ -72,7 +72,9 @@ export default function StepLog() {
   const handleNext = () => {
     if (isExternal) {
       setBrew({
-        ...draft.brew,
+        // Do NOT spread draft.brew here — home-mode fields (flow, timing, etc.)
+        // from a previous or switched session would otherwise leak in and fail
+        // Zod's enum validation on save.
         ...(externalMethod ? { methodUsed: externalMethod } : {}),
         ...(externalDose ? { doseGrams: parseFloat(externalDose) } : {}),
         ...(externalWater ? { waterGrams: parseFloat(externalWater) } : {}),
@@ -81,8 +83,8 @@ export default function StepLog() {
     } else {
       setBrew({
         ...draft.brew,
-        flow: flow as "too-fast" | "perfect" | "too-slow" | "na",
-        timing: timing as "as-expected" | "faster" | "slower",
+        ...(flow ? { flow: flow as "too-fast" | "perfect" | "too-slow" | "na" } : {}),
+        ...(timing ? { timing: timing as "as-expected" | "faster" | "slower" } : {}),
         ...(grindUsed ? { grindSettingUsed: grindUsed } : {}),
         ...(tempUsed ? { actualTempC: parseFloat(tempUsed) } : {}),
         ...(followedAgitation ? { followedAgitation } : {}),
