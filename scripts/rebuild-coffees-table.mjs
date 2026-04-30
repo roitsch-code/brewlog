@@ -25,7 +25,7 @@ async function main() {
 
     for (const session of sessions) {
       const coffee = session.coffee;
-      if (!coffee?.name || !coffee?.roaster) continue;
+      if (!coffee?.name) continue;
 
       const key = toCoffeeKey(coffee.roaster, coffee.name);
       const rating = session.result?.rating;

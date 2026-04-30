@@ -42,7 +42,7 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   await db.delete(sessions).where(eq(sessions.id, id));
 
   const sessionCoffee = session.coffee;
-  if (sessionCoffee?.name && sessionCoffee?.roaster) {
+  if (sessionCoffee?.name) {
     const coffeeKey = `${sessionCoffee.roaster}__${sessionCoffee.name}`
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "_");
