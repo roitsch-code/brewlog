@@ -253,7 +253,7 @@ export default function CafeDetailPage() {
                   {coffeeKey && (
                     <div className="mt-2">
                       <Link
-                        href={`/cafes/coffee/${coffeeKey}`}
+                        href={`/coffees/${coffeeKey}`}
                         className="inline-flex items-center gap-1 text-xs text-brew-accent border border-brew-accent/30 rounded-lg px-2 py-0.5"
                       >
                         Coffee Library

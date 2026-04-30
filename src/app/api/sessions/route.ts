@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
       result: data.result,
     });
 
-    if (data.mode !== "external" && data.coffee?.name && data.coffee?.roaster) {
+    if (data.coffee?.name && data.coffee?.roaster) {
       const coffeeKey = `${data.coffee.roaster}__${data.coffee.name}`
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "_");
