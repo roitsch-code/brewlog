@@ -76,7 +76,9 @@ export async function POST(req: NextRequest) {
   try {
     const { draft, recentSessions } = await req.json() as {
       draft: {
+        mode?: string;
         coffee?: { name?: string; roaster?: string; origin?: string; process?: string; region?: string };
+        place?: { name?: string; location?: string; methodServed?: string };
         result?: {
           rating?: number;
           flavorNotes?: string[];
@@ -107,6 +109,8 @@ export async function POST(req: NextRequest) {
     const result = draft?.result;
     const brew = draft?.brew;
     const rec = draft?.recommendation;
+    const place = draft?.place;
+    const isExternal = draft?.mode === "external";
 
     if (!coffee?.name || result?.rating == null) {
       return NextResponse.json({ terrain: null, adjustment: null });
@@ -114,23 +118,36 @@ export async function POST(req: NextRequest) {
 
     const sessions: Session[] = Array.isArray(recentSessions) ? recentSessions : [];
 
-    // Run Escher terrain and adaptive adjustment in parallel
-    const [terrain, adjustment] = await Promise.all([
-      sessions.length >= 3
-        ? buildEscherTerrain(sessions, {
-            name: coffee.name ?? "",
-            roaster: coffee.roaster ?? "",
-            origin: coffee.origin ?? "",
-            process: coffee.process ?? "",
-          }).catch(() => null)
-        : Promise.resolve(null),
-      Promise.resolve(computeAdjustment(draft)),
-    ]);
+    // Café sessions: no extraction adjustment advice (not actionable for a visited café)
+    const adjustment = isExternal ? null : computeAdjustment(draft);
 
-    // If terrain is empty and we have a session, generate a minimal one-liner via Haiku
+    // Escher terrain only makes sense for home brew history
+    const terrain = (!isExternal && sessions.length >= 3)
+      ? await buildEscherTerrain(sessions, {
+          name: coffee.name ?? "",
+          roaster: coffee.roaster ?? "",
+          origin: coffee.origin ?? "",
+          process: coffee.process ?? "",
+        }).catch(() => null)
+      : null;
+
+    // If terrain is empty, generate a one-liner via Haiku
     let finalTerrain = terrain;
     if (!finalTerrain) {
-      const prompt = `You are reviewing a brew session with the person who just brewed it. Speak directly to them as "you" — never refer to them in the third person.
+      const prompt = isExternal
+        ? `You are giving someone a brief insight after they tasted a coffee at a café. Speak directly to them as "you".
+
+This visit:
+- Coffee: ${coffee.name} by ${coffee.roaster || "?"}
+- Origin: ${[coffee.origin, coffee.region].filter(Boolean).join(", ") || "unknown"} | Process: ${coffee.process || "unknown"}
+${place?.name ? `- Café: ${place.name}${place.location ? ` in ${place.location}` : ""}` : ""}
+- Method: ${brew?.methodUsed || place?.methodServed || "unknown"}
+- Rating: ${result.rating}/5
+- Flavor notes: ${result.flavorNotes?.join(", ") || "none"}
+- Notes: ${result.freeNotes || "none"}
+
+Write 1–2 sentences of personal, specific insight about this coffee — what made it interesting, how the origin or process character came through, or what it says about the café's sourcing. Do not give home-brew extraction or grind advice. No generic praise. No emojis.`
+        : `You are reviewing a brew session with the person who just brewed it. Speak directly to them as "you" — never refer to them in the third person.
 
 This session:
 - Coffee: ${coffee.name} by ${coffee.roaster || "?"}
