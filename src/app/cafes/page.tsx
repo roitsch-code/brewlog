@@ -147,7 +147,7 @@ export default function CafesPage() {
           <CafesTab cafes={cafes} loading={cafesLoading} onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)} />
         )}
         {activeTab === "coffees" && (
-          <CoffeesTab coffees={cafeCoffees} loading={sessionsLoading} onSelect={key => router.push(`/cafes/coffee/${key}`)} />
+          <CoffeesTab coffees={cafeCoffees} loading={sessionsLoading} onSelect={key => router.push(`/coffees/${key}`)} />
         )}
       </div>
     </div>
