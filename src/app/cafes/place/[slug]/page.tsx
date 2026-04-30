@@ -35,6 +35,7 @@ export default function CafeDetailPage() {
   const [editTime, setEditTime] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/sessions?mode=external&limit=200", { cache: "no-store" })
@@ -91,6 +92,18 @@ export default function CafeDetailPage() {
       // optimistic update stands
     }
     setSaving(false);
+  }
+
+  async function deleteSession(id: string) {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/sessions/${id}`, { method: "DELETE" });
+      setSessions(prev => prev.filter(s => s.id !== id));
+      setEditingId(null);
+    } catch {
+      // leave as-is on error
+    }
+    setDeletingId(null);
   }
 
   const location = sessions[0]?.place?.location;
@@ -346,6 +359,13 @@ export default function CafeDetailPage() {
                           Cancel
                         </button>
                       </div>
+                      <button
+                        onClick={() => deleteSession(s.id)}
+                        disabled={deletingId === s.id}
+                        className="w-full py-1.5 text-red-400/70 text-xs rounded-lg border border-red-900/30 active:scale-95 transition-all disabled:opacity-40"
+                      >
+                        {deletingId === s.id ? "Deleting…" : "Delete session"}
+                      </button>
                     </div>
                   </div>
                 </div>
