@@ -252,20 +252,6 @@ export default function CafeCoffeeDetailPage() {
                     </div>
                   ) : null}
 
-                  {/* Coffee Library cross-link */}
-                  {s.coffee?.name && s.coffee?.roaster && (
-                    <div className="mt-2">
-                      <Link
-                        href={`/coffees/${toCoffeeKey(s.coffee.roaster, s.coffee.name)}`}
-                        className="inline-flex items-center gap-1 text-xs text-brew-accent border border-brew-accent/30 rounded-lg px-2 py-0.5"
-                      >
-                        Coffee Library
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
-                      </Link>
-                    </div>
-                  )}
 
                   {/* Inline edit panel */}
                   <div className={`overflow-hidden transition-all duration-300 ${isEditing ? "max-h-[30rem] opacity-100 mt-3" : "max-h-0 opacity-0"}`}>
