@@ -319,7 +319,7 @@ function PourSequence({
   const milestones = parts.map(Number);
   const n = milestones.length;
   const daysOld = roastDate
-    ? Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000)
+    ? Math.max(0, Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000))
     : null;
   const bloomDur =
     daysOld === null ? 45

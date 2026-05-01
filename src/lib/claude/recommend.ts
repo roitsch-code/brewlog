@@ -379,7 +379,7 @@ export async function generateRecommendation(
     small:
       "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex, Origami Air M (23g < 30g dose limit ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60 + Drip Assist, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water / 34g dose (1:15.3). Suitable: V60 (with or without Drip Assist), Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -453,7 +453,9 @@ export async function generateRecommendation(
           : context.preferredMethod;
         const assistRule = withAssist
           ? ` The user is pouring through a Hario Drip Assist — apply the DRIP ASSIST critical rules from the system prompt (temp +2–3°C, outer-ring 3.5–5 g/s, bloom agitation per process, Niche° adjustment). The method name you return MUST include "+ Drip Assist" (e.g. "Orea Classic + Drip Assist").`
-          : "";
+          : DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod)
+            ? ` The user is NOT using the Drip Assist this session — use bare ${context.preferredMethod} only. Do NOT add "+ Drip Assist" to the method name.`
+            : "";
         return `\nPREFERRED METHOD: "${label}" — use as primary unless genuinely incompatible; explain clearly if overriding.${assistRule}`;
       })()
     : context.dripAssist

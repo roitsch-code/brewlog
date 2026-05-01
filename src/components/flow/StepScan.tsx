@@ -1231,7 +1231,11 @@ function RoastDateInput({ value, onChange }: { value?: string; onChange: (v: str
         type="date"
         value={value ?? ""}
         max={todayIso}
-        onChange={e => onChange(e.target.value || undefined)}
+        onChange={e => {
+          const v = e.target.value || undefined;
+          if (v && v > todayIso) return;
+          onChange(v);
+        }}
         className="w-full rounded-2xl px-3 py-2 text-base focus:outline-none"
         style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
       />
