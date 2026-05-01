@@ -157,29 +157,33 @@ export default function CafeMap({ cafes, onSelect }: {
       locateMeFnRef.current = () => {
         setLocatingUser(true);
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
+          async (pos) => {
             const { latitude: lat, longitude: lng } = pos.coords;
 
             userMarkerRef.current?.remove();
             userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
+            map.setView([lat, lng], 14);
 
-            const userLatLng = L.latLng(lat, lng);
-            const pins = markersRef.current;
-
-            if (pins.length === 0) {
-              map.flyTo([lat, lng], 14);
-            } else {
-              const sorted = [...pins].sort((a, b) =>
-                userLatLng.distanceTo(a.getLatLng()) - userLatLng.distanceTo(b.getLatLng())
+            // Reverse-geocode to city name, then populate search so ghost pins
+            // appear for unvisited places in the current city
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+                { headers: { "User-Agent": "BrewLog-CafeMap/1.0" } }
               );
-              // Within 30 km = same city; otherwise fall back to nearest café
-              const nearby = sorted.filter(m => userLatLng.distanceTo(m.getLatLng()) < 30000);
-              const toShow = nearby.length > 0 ? nearby : [sorted[0]];
-
-              const bounds = L.latLngBounds([userLatLng]);
-              toShow.forEach(m => bounds.extend(m.getLatLng()));
-              map.fitBounds(bounds.pad(0.3));
-            }
+              const data = await res.json() as { address?: Record<string, string> };
+              const city =
+                data.address?.city ||
+                data.address?.town ||
+                data.address?.village ||
+                data.address?.municipality ||
+                "";
+              if (city) {
+                setSearch(city);
+                setDebouncedSearch(city);
+                // Ghost pins effect will auto-pan to city bounds once pins load
+              }
+            } catch { /* ignore — user is already at their location on the map */ }
 
             setLocatingUser(false);
           },
