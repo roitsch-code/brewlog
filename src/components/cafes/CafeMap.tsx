@@ -348,20 +348,20 @@ export default function CafeMap({ cafes, onSelect }: {
 
     placeMarkersRef.current = placed;
 
-    // Auto-pan when results are all in one city
-    if (placed.length > 0 && resultCities.length === 1) {
+    // Always fit to the matching pins — even when they span multiple cities,
+    // the user wants to see where they are (zoomed-out view is fine).
+    if (placed.length > 0) {
       map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
     }
   }, [mapReady, filteredPlaces, debouncedSearch, resultCities]);
 
-  // Geocode the search query and pan there when fitBounds above won't trigger
-  // (multi-city matches or zero curated matches). This lets the user type any
-  // city/address and have the map actually move to it.
+  // Geocode the search query and pan there only when there are no curated
+  // matches at all — fallback so typing a city/address still moves the map.
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const q = debouncedSearch.trim();
     if (!q) return;
-    if (filteredPlaces.length > 0 && resultCities.length === 1) return;
+    if (filteredPlaces.length > 0) return;
 
     let cancelled = false;
     (async () => {
