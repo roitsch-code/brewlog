@@ -143,7 +143,6 @@ export default function CafeMap({ cafes, onSelect }: {
 
       const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false });
       mapRef.current = map;
-      setMapReady(true);
 
       L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
         maxZoom: 19,
@@ -185,6 +184,14 @@ export default function CafeMap({ cafes, onSelect }: {
         );
       });
 
+      // Reveal the map regardless of whether GPS succeeded or the component
+      // was cancelled — setLocating(false) must come before the cancelled
+      // check so the overlay never gets stuck on screen.
+      setLocating(false);
+      setMapReady(true);
+      // Let the overlay leave the DOM before Leaflet recalculates its size.
+      setTimeout(() => { if (mapRef.current) mapRef.current.invalidateSize(); }, 50);
+
       if (cancelled) return;
 
       if (userPos) {
@@ -192,9 +199,6 @@ export default function CafeMap({ cafes, onSelect }: {
         userMarkerRef.current?.remove();
         userMarkerRef.current = L.marker([userPos.lat, userPos.lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
       }
-
-      setMapReady(true);
-      setLocating(false);
 
       // Geocode visited café pins in background — map is already visible
       const placed: LMarker[] = [];
