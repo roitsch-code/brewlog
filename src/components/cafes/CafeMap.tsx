@@ -64,14 +64,21 @@ export default function CafeMap({ cafes, onSelect }: {
   const [placeSelected, setPlaceSelected] = useState<Place | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locating, setLocating] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
 
-  const filteredPlaces = search.trim()
+  // Debounce: map pins only rebuild 300ms after the user stops typing
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const filteredPlaces = debouncedSearch.trim()
     ? places.filter(p => {
-        const q = search.toLowerCase();
+        const q = debouncedSearch.toLowerCase();
         return (
           p.name.toLowerCase().includes(q) ||
           p.city.toLowerCase().includes(q) ||
@@ -194,13 +201,13 @@ export default function CafeMap({ cafes, onSelect }: {
     placeMarkersRef.current = placed;
 
     // Auto-pan when search narrows to a single city
-    if (search.trim() && placed.length > 0) {
+    if (debouncedSearch.trim() && placed.length > 0) {
       const matchedCities = new Set(filteredPlaces.map(p => p.city.toLowerCase()));
       if (matchedCities.size === 1) {
         map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
       }
     }
-  }, [mapReady, filteredPlaces, cafes, search]);
+  }, [mapReady, filteredPlaces, cafes, debouncedSearch]);
 
   return (
     <div className="relative w-full h-full">
