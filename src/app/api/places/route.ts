@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +49,15 @@ function buildQueries(name: string, address: string | null, city: string): strin
   return queries;
 }
 
-export async function GET() {
-  const rows = await db.select().from(places).orderBy(asc(places.city), asc(places.name));
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q")?.trim() ?? "";
+
+  const rows = q
+    ? await db.select().from(places).where(
+        sql`(${places.name} ILIKE ${"%" + q + "%"} OR ${places.city} ILIKE ${"%" + q + "%"} OR ${places.address} ILIKE ${"%" + q + "%"})`
+      ).orderBy(asc(places.city), asc(places.name))
+    : await db.select().from(places).orderBy(asc(places.city), asc(places.name));
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
 
   for (const place of unresolved) {

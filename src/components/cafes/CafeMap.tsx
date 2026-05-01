@@ -63,10 +63,22 @@ export default function CafeMap({ cafes, onSelect }: {
   const [selected, setSelected] = useState<CafeSummary | null>(null);
   const [placeSelected, setPlaceSelected] = useState<Place | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [search, setSearch] = useState("");
   const [locating, setLocating] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+
+  const filteredPlaces = search.trim()
+    ? places.filter(p => {
+        const q = search.toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          p.city.toLowerCase().includes(q) ||
+          (p.address ?? "").toLowerCase().includes(q)
+        );
+      })
+    : places;
 
   // Fetch curated places
   useEffect(() => {
@@ -170,7 +182,7 @@ export default function CafeMap({ cafes, onSelect }: {
     const visitedNames = new Set(cafes.map(c => c.name.toLowerCase().trim()));
     const placed: LMarker[] = [];
 
-    for (const place of places) {
+    for (const place of filteredPlaces) {
       if (place.lat == null || place.lng == null) continue;
       if (visitedNames.has(place.name.toLowerCase().trim())) continue;
 
@@ -180,11 +192,48 @@ export default function CafeMap({ cafes, onSelect }: {
     }
 
     placeMarkersRef.current = placed;
-  }, [mapReady, places, cafes]);
+
+    // Auto-pan when search narrows to a single city
+    if (search.trim() && placed.length > 0) {
+      const matchedCities = new Set(filteredPlaces.map(p => p.city.toLowerCase()));
+      if (matchedCities.size === 1) {
+        map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
+      }
+    }
+  }, [mapReady, filteredPlaces, cafes, search]);
 
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="absolute inset-0" />
+
+      {/* Search input */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] w-64">
+        <div className="relative flex items-center">
+          <svg className="absolute left-3 w-3.5 h-3.5 text-brew-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="11" cy="11" r="8" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search cafés…"
+            className="w-full bg-brew-surface/90 border border-brew-border text-white text-sm placeholder-brew-muted rounded-full pl-8 pr-8 py-2 focus:outline-none focus:border-brew-accent backdrop-blur-sm"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 text-brew-muted active:scale-95 transition-transform"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="absolute bottom-2 right-2 z-[1000] text-white/25 pointer-events-none" style={{ fontSize: "9px" }}>
         © OpenStreetMap · © CARTO
