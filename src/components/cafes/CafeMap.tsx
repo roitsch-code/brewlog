@@ -38,21 +38,22 @@ const PIN_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xm
   <circle cx="14" cy="14" r="5" fill="#1A1008"/>
 </svg>`;
 
-// White fill when selected — stands out clearly in dense clusters
+// visited + selected: white body, dark dot
 const PIN_SELECTED_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FFFFFF"/>
   <circle cx="14" cy="14" r="5" fill="#1A1008"/>
 </svg>`;
 
+// not-visited + not-selected: no fill, accent outline, hollow inner dot
 const GHOST_PIN_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#D4B896" stroke-width="2.5"/>
   <circle cx="14" cy="14" r="4" fill="none" stroke="#D4B896" stroke-width="2"/>
 </svg>`;
 
-// Filled when selected
+// not-visited + selected: white body, accent outline, solid accent dot — distinct from all three above
 const GHOST_PIN_SELECTED_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#D4B896" stroke="#D4B896" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="4" fill="#1A1008"/>
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FFFFFF" stroke="#D4B896" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="#D4B896"/>
 </svg>`;
 
 const YOU_ARE_HERE_HTML = `
@@ -173,6 +174,29 @@ export default function CafeMap({ cafes, onSelect }: {
         );
       };
 
+      // Request GPS first — map opens at the user's actual location.
+      // 5s timeout so a slow fix doesn't block the map indefinitely.
+      const userPos = await new Promise<{ lat: number; lng: number } | null>(resolve => {
+        const timer = setTimeout(() => resolve(null), 5000);
+        navigator.geolocation.getCurrentPosition(
+          pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+          () => { clearTimeout(timer); resolve(null); },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      });
+
+      if (cancelled) return;
+
+      if (userPos) {
+        map.setView([userPos.lat, userPos.lng], 14);
+        userMarkerRef.current?.remove();
+        userMarkerRef.current = L.marker([userPos.lat, userPos.lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
+      }
+
+      setMapReady(true);
+      setLocating(false);
+
+      // Geocode visited café pins in background — map is already visible
       const placed: LMarker[] = [];
       for (let i = 0; i < cafesRef.current.length; i++) {
         if (cancelled) break;
@@ -183,9 +207,7 @@ export default function CafeMap({ cafes, onSelect }: {
 
         const marker = L.marker([coords.lat, coords.lng], { icon: pinIcon, zIndexOffset: 500 }).addTo(map);
         marker.on("click", () => {
-          // Deselect previous solid pin
           if (selectedMarkerRef.current) selectedMarkerRef.current.setIcon(pinIcon);
-          // Deselect any ghost pin
           if (selectedPlaceMarkerRef.current && ghostIconRef.current) {
             selectedPlaceMarkerRef.current.setIcon(ghostIconRef.current);
             selectedPlaceMarkerRef.current = null;
@@ -199,7 +221,8 @@ export default function CafeMap({ cafes, onSelect }: {
         markersRef.current = placed;
       }
 
-      if (!cancelled) {
+      // If GPS was unavailable, fall back to fitting visited café pins
+      if (!cancelled && !userPos) {
         if (placed.length === 1) {
           map.setView(placed[0].getLatLng(), 14);
         } else if (placed.length > 1) {
@@ -207,7 +230,6 @@ export default function CafeMap({ cafes, onSelect }: {
         } else {
           map.setView([51.22, 6.78], 12);
         }
-        setLocating(false);
       }
     })();
 
@@ -368,7 +390,7 @@ export default function CafeMap({ cafes, onSelect }: {
       {/* Initial loading overlay */}
       {locating && (
         <div className="absolute inset-0 bg-brew-bg flex items-center justify-center z-10">
-          <p className="text-brew-muted text-sm">Locating cafés…</p>
+          <p className="text-brew-muted text-sm">Finding your location…</p>
         </div>
       )}
 
