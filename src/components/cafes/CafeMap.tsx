@@ -159,9 +159,28 @@ export default function CafeMap({ cafes, onSelect }: {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const { latitude: lat, longitude: lng } = pos.coords;
-            map.flyTo([lat, lng], 15);
+
             userMarkerRef.current?.remove();
             userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
+
+            const userLatLng = L.latLng(lat, lng);
+            const pins = markersRef.current;
+
+            if (pins.length === 0) {
+              map.flyTo([lat, lng], 14);
+            } else {
+              const sorted = [...pins].sort((a, b) =>
+                userLatLng.distanceTo(a.getLatLng()) - userLatLng.distanceTo(b.getLatLng())
+              );
+              // Within 30 km = same city; otherwise fall back to nearest café
+              const nearby = sorted.filter(m => userLatLng.distanceTo(m.getLatLng()) < 30000);
+              const toShow = nearby.length > 0 ? nearby : [sorted[0]];
+
+              const bounds = L.latLngBounds([userLatLng]);
+              toShow.forEach(m => bounds.extend(m.getLatLng()));
+              map.fitBounds(bounds.pad(0.3));
+            }
+
             setLocatingUser(false);
           },
           () => {
