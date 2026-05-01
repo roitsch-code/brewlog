@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useFlowStore } from "@/store/flowStore";
 import { House, BookOpen, Plus, Radar, Compass } from "lucide-react";
 
@@ -17,11 +17,9 @@ const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const reset = useFlowStore(s => s.reset);
 
-  const isMapView = searchParams.get("view") === "map";
-  const showNav = !isMapView && (EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p)));
+  const showNav = EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p));
   if (!showNav) return null;
 
   return (

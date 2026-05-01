@@ -2,15 +2,11 @@
 import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import type { CafeSummary } from "@/lib/types/cafes";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
 
-const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
-
 type Tab = "cafes" | "coffees";
-type CafesView = "list" | "map";
 
 function formatRelativeDate(ms: number): string {
   const diff = Date.now() - ms;
@@ -157,15 +153,6 @@ export default function CafesPage() {
 /* ── Cafés tab ─────────────────────────────────────────────── */
 
 function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading: boolean; onSelect: (cafe: CafeSummary) => void }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const view: CafesView = searchParams.get("view") === "map" ? "map" : "list";
-  const setView = (v: CafesView) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (v === "map") { params.set("view", "map"); } else { params.delete("view"); }
-    router.replace(`/cafes?${params}`, { scroll: false });
-  };
-
   if (loading) return <LoadingSkeletons />;
   if (cafes.length === 0) return (
     <EmptyState
@@ -177,83 +164,48 @@ function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading:
 
   return (
     <div className="flex flex-col gap-3">
-      {/* List / Map toggle */}
-      <div className="flex justify-end">
-        <div className="flex gap-0.5 bg-brew-surface border border-brew-border rounded-full p-0.5">
-          <button
-            type="button"
-            onClick={() => setView("list")}
-            aria-label="List view"
-            className={`p-1.5 rounded-full transition-colors ${view === "list" ? "bg-brew-accent text-brew-accent-fg" : "text-brew-muted"}`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("map")}
-            aria-label="Map view"
-            className={`p-1.5 rounded-full transition-colors ${view === "map" ? "bg-brew-accent text-brew-accent-fg" : "text-brew-muted"}`}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {view === "map" ? (
-        <div
-          className="-mx-5 -mb-8 overflow-hidden"
-          style={{ height: "calc(100dvh - 228px)", minHeight: 360 }}
+      {cafes.map(cafe => (
+        <button
+          key={cafe.name}
+          type="button"
+          onClick={() => onSelect(cafe)}
+          className="w-full bg-brew-surface border border-brew-border rounded-2xl p-4 text-left active:scale-[0.98] transition-transform"
         >
-          <CafeMap cafes={cafes} onSelect={onSelect} />
-        </div>
-      ) : (
-        cafes.map(cafe => (
-          <button
-            key={cafe.name}
-            type="button"
-            onClick={() => onSelect(cafe)}
-            className="w-full bg-brew-surface border border-brew-border rounded-2xl p-4 text-left active:scale-[0.98] transition-transform"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium leading-tight truncate">{cafe.name}</p>
-                {cafe.location && (
-                  <p className="text-brew-muted text-xs mt-0.5 truncate">{cafe.location}</p>
-                )}
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-brew-muted text-xs">{formatRelativeDate(cafe.lastVisitedMs)}</p>
-                <p className="text-white/60 text-xs mt-0.5">
-                  {cafe.visits} visit{cafe.visits !== 1 ? "s" : ""}
-                </p>
-              </div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-medium leading-tight truncate">{cafe.name}</p>
+              {cafe.location && (
+                <p className="text-brew-muted text-xs mt-0.5 truncate">{cafe.location}</p>
+              )}
             </div>
+            <div className="text-right shrink-0">
+              <p className="text-brew-muted text-xs">{formatRelativeDate(cafe.lastVisitedMs)}</p>
+              <p className="text-white/60 text-xs mt-0.5">
+                {cafe.visits} visit{cafe.visits !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
 
-            {cafe.avgRating !== null && (
-              <div className="mt-2">
-                <StarRating value={cafe.avgRating} readonly size="sm" />
-              </div>
-            )}
+          {cafe.avgRating !== null && (
+            <div className="mt-2">
+              <StarRating value={cafe.avgRating} readonly size="sm" />
+            </div>
+          )}
 
-            {cafe.coffees.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {cafe.coffees.map(name => (
-                  <span
-                    key={name}
-                    className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5"
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            )}
-          </button>
-        ))
-      )}
+          {cafe.coffees.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {cafe.coffees.map(name => (
+                <span
+                  key={name}
+                  className="text-xs text-brew-muted border border-brew-border rounded-lg px-2 py-0.5"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+        </button>
+      ))}
     </div>
   );
 }

@@ -1,8 +1,13 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import type { Session } from "@/lib/types/session";
+import type { CafeSummary } from "@/lib/types/cafes";
 import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen } from "lucide-react";
+
+const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
 
 const SUGGESTION_ICONS = [FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, FlaskConical];
 
@@ -58,8 +63,16 @@ const DEFAULT_STARTER_QUESTIONS = [
 
 // ── Main page ──────────────────────────────────────────────────────────────
 
+type ExploreTab = "ask" | "insights" | "nearby";
+
+const TAB_LABELS: Record<ExploreTab, string> = {
+  ask: "Chat",
+  insights: "Insights",
+  nearby: "Nearby",
+};
+
 export default function ExplorePage() {
-  const [activeTab, setActiveTab] = useState<"ask" | "insights">("ask");
+  const [activeTab, setActiveTab] = useState<ExploreTab>("ask");
 
   return (
     <div className="min-h-full bg-brew-bg flex flex-col">
@@ -72,7 +85,7 @@ export default function ExplorePage() {
 
         {/* Tabs — pill style */}
         <div className="flex gap-2">
-          {(["ask", "insights"] as const).map(tab => (
+          {(["ask", "insights", "nearby"] as const).map(tab => (
             <button
               key={tab}
               type="button"
@@ -84,7 +97,7 @@ export default function ExplorePage() {
                 border: activeTab === tab ? "none" : "1px solid var(--border)",
               }}
             >
-              {tab === "ask" ? "Chat" : "Insights"}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
@@ -92,7 +105,9 @@ export default function ExplorePage() {
 
       {/* Tab content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {activeTab === "ask" ? <AskTab /> : <InsightsTab />}
+        {activeTab === "ask" && <AskTab />}
+        {activeTab === "insights" && <InsightsTab />}
+        {activeTab === "nearby" && <NearbyTab />}
       </div>
     </div>
   );
@@ -570,6 +585,35 @@ function InsightsTab() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Nearby Tab ─────────────────────────────────────────────────────────────
+
+function NearbyTab() {
+  const router = useRouter();
+  const [cafes, setCafes] = useState<CafeSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/cafes", { cache: "no-store" })
+      .then(r => r.json())
+      .then((data: CafeSummary[]) => setCafes(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div className="flex-1 flex items-center justify-center"><CoffeeBeanGlow size={48} /></div>;
+  }
+
+  return (
+    <div className="flex-1 overflow-hidden">
+      <CafeMap
+        cafes={cafes}
+        onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)}
+      />
     </div>
   );
 }
