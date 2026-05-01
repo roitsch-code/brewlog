@@ -5,6 +5,16 @@ import type { Map as LMap, Marker as LMarker } from "leaflet";
 import type { CafeSummary, Place } from "@/lib/types/cafes";
 import StarRating from "@/components/ui/StarRating";
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 const geocodeCache = new Map<string, { lat: number; lng: number } | null>();
 let nominatimLastMs = 0;
 
@@ -86,6 +96,9 @@ export default function CafeMap({ cafes, onSelect }: {
   const [selected, setSelected] = useState<CafeSummary | null>(null);
   const [placeSelected, setPlaceSelected] = useState<Place | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  // Always-current places ref so locate-me (inside [] effect) can read latest places
+  const placesRef = useRef(places);
+  placesRef.current = places;
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [locating, setLocating] = useState(true);
@@ -164,26 +177,46 @@ export default function CafeMap({ cafes, onSelect }: {
             userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
             map.setView([lat, lng], 14);
 
-            // Reverse-geocode to city name, then populate search so ghost pins
-            // appear for unvisited places in the current city
+            // All curated places that have coordinates and haven't been visited
+            const visitedNames = new Set(cafesRef.current.map(c => c.name.toLowerCase().trim()));
+            const unvisited = placesRef.current.filter(
+              p => p.lat != null && p.lng != null && !visitedNames.has(p.name.toLowerCase().trim())
+            );
+
+            // Reverse-geocode GPS to city name
+            let city = "";
             try {
               const res = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
                 { headers: { "User-Agent": "BrewLog-CafeMap/1.0" } }
               );
               const data = await res.json() as { address?: Record<string, string> };
-              const city =
+              city =
                 data.address?.city ||
                 data.address?.town ||
                 data.address?.village ||
                 data.address?.municipality ||
                 "";
-              if (city) {
-                setSearch(city);
-                setDebouncedSearch(city);
-                // Ghost pins effect will auto-pan to city bounds once pins load
-              }
-            } catch { /* ignore — user is already at their location on the map */ }
+            } catch { /* ignore — user is already centred on the map */ }
+
+            // Check if the current city has any unvisited curated places
+            const cityUnvisited = city
+              ? unvisited.filter(p => p.city.toLowerCase().includes(city.toLowerCase()))
+              : [];
+
+            if (cityUnvisited.length > 0) {
+              // Current city has places — show them
+              setSearch(city);
+              setDebouncedSearch(city);
+            } else if (unvisited.length > 0) {
+              // Nothing nearby — find the nearest city that has unvisited places
+              const nearest = unvisited
+                .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
+                .sort((a, b) => a.dist - b.dist)[0];
+              setSearch(nearest.p.city);
+              setDebouncedSearch(nearest.p.city);
+            }
+            // If unvisited is empty there's nothing to show — just leave the map at user location
 
             setLocatingUser(false);
           },
