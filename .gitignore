@@ -39,3 +39,6 @@ next-env.d.ts
 /vercel-recovery
 /vercel-diff.txt
 
+# backup credentials (stored on VPS only, never commit)
+.gmail-app-password
+
