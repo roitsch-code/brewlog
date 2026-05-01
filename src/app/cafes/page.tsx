@@ -157,7 +157,14 @@ export default function CafesPage() {
 /* ── Cafés tab ─────────────────────────────────────────────── */
 
 function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading: boolean; onSelect: (cafe: CafeSummary) => void }) {
-  const [view, setView] = useState<CafesView>("list");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const view: CafesView = searchParams.get("view") === "map" ? "map" : "list";
+  const setView = (v: CafesView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (v === "map") { params.set("view", "map"); } else { params.delete("view"); }
+    router.replace(`/cafes?${params}`, { scroll: false });
+  };
 
   if (loading) return <LoadingSkeletons />;
   if (cafes.length === 0) return (

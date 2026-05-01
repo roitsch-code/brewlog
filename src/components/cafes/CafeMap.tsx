@@ -207,8 +207,8 @@ export default function CafeMap({ cafes, onSelect }: {
       <div ref={containerRef} className="absolute inset-0" />
 
       {/* Search input */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] w-64">
-        <div className="relative flex items-center">
+      <div className="absolute top-4 left-4 right-4 z-[1000]">
+        <div className="relative flex items-center max-w-xs mx-auto">
           <svg className="absolute left-3 w-3.5 h-3.5 text-brew-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35" />
@@ -218,7 +218,7 @@ export default function CafeMap({ cafes, onSelect }: {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search cafés…"
-            className="w-full bg-brew-surface/90 border border-brew-border text-white text-sm placeholder-brew-muted rounded-full pl-8 pr-8 py-2 focus:outline-none focus:border-brew-accent backdrop-blur-sm"
+            className="w-full bg-brew-elevated border border-brew-accent/30 text-white text-sm placeholder-brew-muted rounded-full pl-8 pr-8 py-2 focus:outline-none focus:border-brew-accent shadow-lg shadow-black/70"
           />
           {search && (
             <button

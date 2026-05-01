@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { JetBrains_Mono } from "next/font/google";
@@ -45,7 +46,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div style={{ height: "100dvh", overflowY: "auto", overflowX: "hidden", paddingBottom: "calc(78px + env(safe-area-inset-bottom))" }} className="[&::-webkit-scrollbar]:hidden">
           {children}
         </div>
-        <BottomNav />
+        <Suspense fallback={null}>
+          <BottomNav />
+        </Suspense>
       </body>
     </html>
   );
