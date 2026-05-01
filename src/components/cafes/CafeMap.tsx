@@ -354,6 +354,36 @@ export default function CafeMap({ cafes, onSelect }: {
     }
   }, [mapReady, filteredPlaces, debouncedSearch, resultCities]);
 
+  // Geocode the search query and pan there when fitBounds above won't trigger
+  // (multi-city matches or zero curated matches). This lets the user type any
+  // city/address and have the map actually move to it.
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const q = debouncedSearch.trim();
+    if (!q) return;
+    if (filteredPlaces.length > 0 && resultCities.length === 1) return;
+
+    let cancelled = false;
+    (async () => {
+      const wait = Math.max(0, nominatimLastMs + 1100 - Date.now());
+      if (wait > 0) await new Promise<void>(r => setTimeout(r, wait));
+      if (cancelled) return;
+      nominatimLastMs = Date.now();
+
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`,
+          { headers: { "User-Agent": "BrewLog-CafeMap/1.0" } }
+        );
+        const data = (await res.json()) as Array<{ lat: string; lon: string }>;
+        if (cancelled || !data[0] || !mapRef.current) return;
+        mapRef.current.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 12);
+      } catch { /* offline or failed — silent */ }
+    })();
+
+    return () => { cancelled = true; };
+  }, [mapReady, debouncedSearch, filteredPlaces.length, resultCities.length]);
+
   const clearSelected = () => {
     if (selectedMarkerRef.current && pinIconRef.current) {
       selectedMarkerRef.current.setIcon(pinIconRef.current);
