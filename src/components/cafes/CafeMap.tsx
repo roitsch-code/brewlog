@@ -1,6 +1,6 @@
 "use client";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Map as LMap, Marker as LMarker } from "leaflet";
 import type { CafeSummary, Place } from "@/lib/types/cafes";
 import StarRating from "@/components/ui/StarRating";
@@ -38,9 +38,21 @@ const PIN_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xm
   <circle cx="14" cy="14" r="5" fill="#1A1008"/>
 </svg>`;
 
+// White fill when selected — stands out clearly in dense clusters
+const PIN_SELECTED_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FFFFFF"/>
+  <circle cx="14" cy="14" r="5" fill="#1A1008"/>
+</svg>`;
+
 const GHOST_PIN_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#D4B896" stroke-width="2.5"/>
   <circle cx="14" cy="14" r="4" fill="none" stroke="#D4B896" stroke-width="2"/>
+</svg>`;
+
+// Filled when selected
+const GHOST_PIN_SELECTED_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#D4B896" stroke="#D4B896" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="#1A1008"/>
 </svg>`;
 
 const YOU_ARE_HERE_HTML = `
@@ -59,6 +71,16 @@ export default function CafeMap({ cafes, onSelect }: {
   const placeMarkersRef = useRef<LMarker[]>([]);
   const userMarkerRef = useRef<LMarker | null>(null);
   const locateMeFnRef = useRef<(() => void) | null>(null);
+  // Stable refs for icon objects so close-card handlers can reset them
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pinIconRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ghostIconRef = useRef<any>(null);
+  const selectedMarkerRef = useRef<LMarker | null>(null);
+  const selectedPlaceMarkerRef = useRef<LMarker | null>(null);
+  // Always-current cafes ref so Leaflet init effect can use [] deps
+  const cafesRef = useRef(cafes);
+  cafesRef.current = cafes;
 
   const [selected, setSelected] = useState<CafeSummary | null>(null);
   const [placeSelected, setPlaceSelected] = useState<Place | null>(null);
@@ -70,22 +92,31 @@ export default function CafeMap({ cafes, onSelect }: {
   const [locatingUser, setLocatingUser] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
 
-  // Debounce: map pins only rebuild 300ms after the user stops typing
+  // Debounce: marker rebuilds fire 300ms after typing stops
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(t);
   }, [search]);
 
-  const filteredPlaces = debouncedSearch.trim()
-    ? places.filter(p => {
-        const q = debouncedSearch.toLowerCase();
-        return (
-          p.name.toLowerCase().includes(q) ||
-          p.city.toLowerCase().includes(q) ||
-          (p.address ?? "").toLowerCase().includes(q)
-        );
-      })
-    : places;
+  // Ghost pins only appear while searching — empty array otherwise prevents
+  // any marker work when the user isn't looking for something specific
+  const filteredPlaces = useMemo(() =>
+    debouncedSearch.trim()
+      ? places.filter(p => {
+          const q = debouncedSearch.toLowerCase();
+          return (
+            p.name.toLowerCase().includes(q) ||
+            p.city.toLowerCase().includes(q) ||
+            (p.address ?? "").toLowerCase().includes(q)
+          );
+        })
+      : [],
+  [places, debouncedSearch]);
+
+  const resultCities = useMemo(
+    () => Array.from(new Set(filteredPlaces.map(p => p.city))),
+    [filteredPlaces]
+  );
 
   // Fetch curated places
   useEffect(() => {
@@ -95,7 +126,10 @@ export default function CafeMap({ cafes, onSelect }: {
       .catch(() => {});
   }, []);
 
-  // Initialize Leaflet + café pins
+  // Initialize Leaflet + visited café pins — runs once on mount.
+  // Cafes data is read from cafesRef so this effect doesn't need cafes as a dep
+  // (CafeMap only mounts after CafesTab confirms cafes is loaded).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!containerRef.current) return;
     let cancelled = false;
@@ -116,7 +150,9 @@ export default function CafeMap({ cafes, onSelect }: {
       }).addTo(map);
 
       const pinIcon = L.divIcon({ html: PIN_HTML, className: "", iconSize: [28, 36], iconAnchor: [14, 36] });
+      const pinSelectedIcon = L.divIcon({ html: PIN_SELECTED_HTML, className: "", iconSize: [28, 36], iconAnchor: [14, 36] });
       const youAreHereIcon = L.divIcon({ html: YOU_ARE_HERE_HTML, className: "", iconSize: [12, 12], iconAnchor: [6, 6] });
+      pinIconRef.current = pinIcon;
 
       locateMeFnRef.current = () => {
         setLocatingUser(true);
@@ -138,15 +174,27 @@ export default function CafeMap({ cafes, onSelect }: {
       };
 
       const placed: LMarker[] = [];
-      for (let i = 0; i < cafes.length; i++) {
+      for (let i = 0; i < cafesRef.current.length; i++) {
         if (cancelled) break;
 
-        const cafe = cafes[i];
+        const cafe = cafesRef.current[i];
         const coords = await geocafe(cafe.name, cafe.location);
         if (cancelled || !coords) continue;
 
         const marker = L.marker([coords.lat, coords.lng], { icon: pinIcon, zIndexOffset: 500 }).addTo(map);
-        marker.on("click", () => { setSelected(cafe); setPlaceSelected(null); });
+        marker.on("click", () => {
+          // Deselect previous solid pin
+          if (selectedMarkerRef.current) selectedMarkerRef.current.setIcon(pinIcon);
+          // Deselect any ghost pin
+          if (selectedPlaceMarkerRef.current && ghostIconRef.current) {
+            selectedPlaceMarkerRef.current.setIcon(ghostIconRef.current);
+            selectedPlaceMarkerRef.current = null;
+          }
+          marker.setIcon(pinSelectedIcon);
+          selectedMarkerRef.current = marker;
+          setSelected(cafe);
+          setPlaceSelected(null);
+        });
         placed.push(marker);
         markersRef.current = placed;
       }
@@ -170,23 +218,31 @@ export default function CafeMap({ cafes, onSelect }: {
       leafletRef.current = null;
       markersRef.current = [];
       placeMarkersRef.current = [];
+      selectedMarkerRef.current = null;
+      selectedPlaceMarkerRef.current = null;
       setMapReady(false);
     };
-  }, [cafes]);
+  }, []);
 
-  // Add ghost pins for curated places (coordinates come from DB — no client-side geocoding)
+  // Ghost pins — only renders when debouncedSearch is non-empty
   useEffect(() => {
     if (!mapReady || !mapRef.current || !leafletRef.current) return;
 
     const L = leafletRef.current;
     const map = mapRef.current;
 
-    const ghostIcon = L.divIcon({ html: GHOST_PIN_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
-
+    // Always clear stale ghost pins
     placeMarkersRef.current.forEach(m => m.remove());
     placeMarkersRef.current = [];
+    selectedPlaceMarkerRef.current = null;
 
-    const visitedNames = new Set(cafes.map(c => c.name.toLowerCase().trim()));
+    if (!debouncedSearch.trim()) return;
+
+    const ghostIcon = L.divIcon({ html: GHOST_PIN_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
+    const ghostSelectedIcon = L.divIcon({ html: GHOST_PIN_SELECTED_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
+    ghostIconRef.current = ghostIcon;
+
+    const visitedNames = new Set(cafesRef.current.map(c => c.name.toLowerCase().trim()));
     const placed: LMarker[] = [];
 
     for (const place of filteredPlaces) {
@@ -194,20 +250,43 @@ export default function CafeMap({ cafes, onSelect }: {
       if (visitedNames.has(place.name.toLowerCase().trim())) continue;
 
       const marker = L.marker([place.lat, place.lng], { icon: ghostIcon }).addTo(map);
-      marker.on("click", () => { setPlaceSelected(place); setSelected(null); });
+      marker.on("click", () => {
+        if (selectedPlaceMarkerRef.current) selectedPlaceMarkerRef.current.setIcon(ghostIcon);
+        if (selectedMarkerRef.current && pinIconRef.current) {
+          selectedMarkerRef.current.setIcon(pinIconRef.current);
+          selectedMarkerRef.current = null;
+        }
+        marker.setIcon(ghostSelectedIcon);
+        selectedPlaceMarkerRef.current = marker;
+        setPlaceSelected(place);
+        setSelected(null);
+      });
       placed.push(marker);
     }
 
     placeMarkersRef.current = placed;
 
-    // Auto-pan when search narrows to a single city
-    if (debouncedSearch.trim() && placed.length > 0) {
-      const matchedCities = new Set(filteredPlaces.map(p => p.city.toLowerCase()));
-      if (matchedCities.size === 1) {
-        map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
-      }
+    // Auto-pan when results are all in one city
+    if (placed.length > 0 && resultCities.length === 1) {
+      map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
     }
-  }, [mapReady, filteredPlaces, cafes, debouncedSearch]);
+  }, [mapReady, filteredPlaces, debouncedSearch, resultCities]);
+
+  const clearSelected = () => {
+    if (selectedMarkerRef.current && pinIconRef.current) {
+      selectedMarkerRef.current.setIcon(pinIconRef.current);
+      selectedMarkerRef.current = null;
+    }
+    setSelected(null);
+  };
+
+  const clearPlaceSelected = () => {
+    if (selectedPlaceMarkerRef.current && ghostIconRef.current) {
+      selectedPlaceMarkerRef.current.setIcon(ghostIconRef.current);
+      selectedPlaceMarkerRef.current = null;
+    }
+    setPlaceSelected(null);
+  };
 
   return (
     <div className="relative w-full h-full">
@@ -224,13 +303,14 @@ export default function CafeMap({ cafes, onSelect }: {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") setDebouncedSearch(search); }}
             placeholder="Search cafés…"
             className="w-full bg-brew-elevated border border-brew-accent/30 text-white text-sm placeholder-brew-muted rounded-full pl-8 pr-8 py-2 focus:outline-none focus:border-brew-accent shadow-lg shadow-black/70"
           />
           {search && (
             <button
               type="button"
-              onClick={() => setSearch("")}
+              onClick={() => { setSearch(""); setDebouncedSearch(""); }}
               aria-label="Clear search"
               className="absolute right-2.5 text-brew-muted active:scale-95 transition-transform"
             >
@@ -240,6 +320,16 @@ export default function CafeMap({ cafes, onSelect }: {
             </button>
           )}
         </div>
+        {/* Result count — shown once debounce settles */}
+        {debouncedSearch.trim() && debouncedSearch === search && (
+          <p className="text-center text-xs text-brew-muted mt-1.5 pointer-events-none">
+            {filteredPlaces.length === 0
+              ? "No places found"
+              : resultCities.length === 1
+              ? `${filteredPlaces.length} in ${resultCities[0]}`
+              : `${filteredPlaces.length} found`}
+          </p>
+        )}
       </div>
 
       <div className="absolute bottom-2 right-2 z-[1000] text-white/25 pointer-events-none" style={{ fontSize: "9px" }}>
@@ -302,7 +392,7 @@ export default function CafeMap({ cafes, onSelect }: {
                 )}
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <button type="button" onClick={() => setSelected(null)} className="text-brew-muted p-0.5 active:scale-95 transition-transform" aria-label="Close">
+                <button type="button" onClick={clearSelected} className="text-brew-muted p-0.5 active:scale-95 transition-transform" aria-label="Close">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -327,7 +417,7 @@ export default function CafeMap({ cafes, onSelect }: {
                 <p className="text-brew-muted text-xs mt-1.5">Not visited yet</p>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
-                <button type="button" onClick={() => setPlaceSelected(null)} className="text-brew-muted p-0.5 active:scale-95 transition-transform" aria-label="Close">
+                <button type="button" onClick={clearPlaceSelected} className="text-brew-muted p-0.5 active:scale-95 transition-transform" aria-label="Close">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
