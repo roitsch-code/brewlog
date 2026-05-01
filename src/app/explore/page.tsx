@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import type { Session } from "@/lib/types/session";
@@ -72,7 +72,17 @@ const TAB_LABELS: Record<ExploreTab, string> = {
 };
 
 export default function ExplorePage() {
-  const [activeTab, setActiveTab] = useState<ExploreTab>("ask");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab: ExploreTab = tabParam === "insights" || tabParam === "nearby" ? tabParam : "ask";
+  const setActiveTab = (tab: ExploreTab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "ask") params.delete("tab");
+    else params.set("tab", tab);
+    const qs = params.toString();
+    router.replace(qs ? `/explore?${qs}` : "/explore", { scroll: false });
+  };
 
   return (
     <div className="min-h-full bg-brew-bg flex flex-col">
@@ -609,7 +619,10 @@ function NearbyTab() {
   }
 
   return (
-    <div className="flex-1 overflow-hidden">
+    <div
+      className="flex-1 overflow-hidden"
+      style={{ marginBottom: "calc(-78px - env(safe-area-inset-bottom))" }}
+    >
       <CafeMap
         cafes={cafes}
         onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)}
