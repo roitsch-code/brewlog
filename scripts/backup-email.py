@@ -34,7 +34,8 @@ def send_backup(attachment_path):
         part.add_header("Content-Disposition", f'attachment; filename="{filename}"')
         msg.attach(part)
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
         server.login(GMAIL_USER, password)
         server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
         print(f"Email sent ({size_kb} KB attachment)")
