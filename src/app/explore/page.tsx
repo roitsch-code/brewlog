@@ -620,8 +620,11 @@ function NearbyTab() {
 
   return (
     <div
-      className="flex-1 overflow-hidden"
-      style={{ marginBottom: "calc(-78px - env(safe-area-inset-bottom))" }}
+      className="overflow-hidden"
+      style={{
+        height: "calc(100dvh - 150px - env(safe-area-inset-top))",
+        marginBottom: "calc(-78px - env(safe-area-inset-bottom))",
+      }}
     >
       <CafeMap
         cafes={cafes}
