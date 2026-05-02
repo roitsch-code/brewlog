@@ -1,1 +1,21 @@
-{"data":"IyBHcmluZCBTZXR0aW5ncyDigJQgTmljaGUgWmVybyAowrApCgp8IE1ldGhvZCB8IFByb2Nlc3MgfCBOaWNoZcKwIHwKfC0tLS0tLS0tfC0tLS0tLS0tLXwtLS0tLS0tLXwKfCBWNjAgKyBEcmlwIEFzc2lzdCB8IFdhc2hlZCB8IDQwM+KAkzQwOMKwIHwKfCBWNjAgKyBEcmlwIEFzc2lzdCB8IEhvbmV5IHwgNDA14oCTNDEwwrAgfAp8IFY2MCArIERyaXAgQXNzaXN0IHwgTmF0dXJhbCB8IDQwNuKAkzQxMsKwIHwKfCBWNjAgKG5vIEFzc2lzdCkgfCBhbnkgfCAzOTbigJM0MDbCsCB8CnwgT3JlYSBWNCB8IGFueSB8IDQwMeKAkzQxMcKwIHwKfCBPcmlnYW1pIERyaXBwZXIgfCBXYXNoZWQgfCA0MDHigJM0MDfCsCB8CnwgT3JpZ2FtaSBEcmlwcGVyIHwgSG9uZXkgfCA0MDPigJM0MDjCsCB8CnwgT3JpZ2FtaSBEcmlwcGVyIHwgTmF0dXJhbCB8IDQwNOKAkzQwOcKwIHwKfCBDbGV2ZXIgRHJpcHBlciB8IGFueSB8IDQxNuKAkzQzNsKwIHwKfCBBZXJvUHJlc3MgfCBhbnkgfCAzNzfigJMzODfCsCB8CnwgTW9jY2FtYXN0ZXIgfCBhbnkgfCA0MzHigJM0NDHCsCB8CnwgUGVuZyAyMDI1IChDaGFtcGlvbnNoaXApIHwgYW55IHwgMzg24oCTMzk2wrAgfAp8IEthc3V5YSA0OjYgfCBhbnkgfCA0MTHigJM0MjHCsCB8CgoqKkNvbWFuZGFudGUgQzQwIE1LMjoqKiB1c2VzIGNsaWNrcywgbm90IGRlZ3JlZXMuCgo+IEdyaW5kIGNvYXJzZXIvZmluZXIgdG8gYWRqdXN0IHRpbWluZy4gVGVtcGVyYXR1cmUgY29udHJvbHMgZXh0cmFjdGlvbiBjaGVtaXN0cnkg4oCUIG5ldmVyIHVzZSBpdCB0byBmaXggZmxvdyBzcGVlZC4K"}
+# Grind Settings — Niche Zero (°)
+
+| Method | Process | Niche° |
+|--------|---------|--------|
+| V60 + Drip Assist | Washed | 403–408° |
+| V60 + Drip Assist | Honey | 405–410° |
+| V60 + Drip Assist | Natural | 406–412° |
+| V60 (no Assist) | any | 396–406° |
+| Orea V4 | any | 401–411° |
+| Origami Dripper | Washed | 401–407° |
+| Origami Dripper | Honey | 403–408° |
+| Origami Dripper | Natural | 404–409° |
+| Clever Dripper | any | 416–436° |
+| AeroPress | any | 377–387° |
+| Moccamaster | any | 431–441° |
+| Peng 2025 (Championship) | any | 386–396° |
+| Kasuya 4:6 | any | 411–421° |
+
+**Comandante C40 MK2:** uses clicks, not degrees.
+
+> Grind coarser/finer to adjust timing. Temperature controls extraction chemistry — never use it to fix flow speed.
