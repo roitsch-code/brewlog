@@ -13,6 +13,8 @@ export const BREW_METHODS: BrewMethod[] = [
   { id: "v60", label: "V60", emoji: "☕", defaultTemp: 98, defaultDose: 23, defaultWater: 350, defaultTimeSec: 210, category: "pour-over" },
   { id: "v60-drip-assist", label: "V60 + Drip Assist", emoji: "☕", defaultTemp: 98, defaultDose: 34, defaultWater: 520, defaultTimeSec: 240, category: "pour-over" },
   { id: "orea", label: "Orea V4", emoji: "⬡", defaultTemp: 94, defaultDose: 17, defaultWater: 270, defaultTimeSec: 150, category: "pour-over" },
+  { id: "origami-cone", label: "Origami (cone)", emoji: "◇", defaultTemp: 96, defaultDose: 17, defaultWater: 255, defaultTimeSec: 180, category: "pour-over" },
+  { id: "origami-wave", label: "Origami (wave)", emoji: "◇", defaultTemp: 94, defaultDose: 17, defaultWater: 255, defaultTimeSec: 200, category: "pour-over" },
   { id: "kalita", label: "Kalita Wave", emoji: "△", defaultTemp: 94, defaultDose: 15, defaultWater: 250, defaultTimeSec: 210, category: "pour-over" },
   { id: "clever", label: "Clever Dripper", emoji: "⊡", defaultTemp: 93, defaultDose: 25, defaultWater: 400, defaultTimeSec: 300, category: "immersion" },
   { id: "aeropress", label: "AeroPress", emoji: "⊙", defaultTemp: 88, defaultDose: 14, defaultWater: 240, defaultTimeSec: 120, category: "immersion" },

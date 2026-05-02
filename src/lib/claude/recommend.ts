@@ -103,6 +103,7 @@ LAYER 4 — CONSTRAINTS (NON-NEGOTIABLE physical limits)
 HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - V60 size 2 + Hario Drip Assist: max ~600ml water
 - Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max ~500ml
+- Origami Dripper (size M): max ~500ml
 - Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
 - Kalita Wave: max ~500ml
 - Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Compatible with Hario Drip Assist. Reserve 34g:520ml brews for V60 or Orea.
@@ -226,8 +227,29 @@ CHEMEX — dedicated rules:
    Big (520ml): 34g:520ml | Bloom 68g → 220g → 370g → 520g | ~5:00 (targetTimeSec: 300)
 7. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
 
+ORIGAMI DRIPPER — dedicated rules:
+1. Japanese ceramic dripper with 20 vertical ribs. Two filter shapes — pick based on goal:
+   - V60 conical filter (clarity / brightness): drains like V60, ceramic adds thermal stability.
+     Default for washed light, Ethiopian florals, Kenyan brightness, clarity-forward intent.
+   - Kalita wave filter (sweetness / body): flatter bed, slower drawdown, more even extraction.
+     Default for naturals, honeys, sweetness/body-forward intent.
+   The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
+2. Drip Assist compatible with conical filter ONLY (disc geometry doesn't suit waves).
+3. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
+4. Niche° — Conical: 398–408° | Wave: 398–406°
+5. Agitation:
+   - Conical: same as V60 — Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
+   - Wave: SWIRL ONLY at bloom (same as Kalita — ribs + flat bed channel if stirred)
+6. Reference recipes (1:15 ratio, 4 milestones):
+   - Small (17g:255g): Bloom 35g → 105g → 180g → 255g | ~3:00 (targetTimeSec: 180)
+   - Standard (20g:300g): Bloom 40g → 125g → 215g → 300g | ~3:10 (targetTimeSec: 190)
+   - Big (22g:330g): Bloom 45g → 135g → 235g → 330g | ~3:20 (targetTimeSec: 200)
+7. Max practical volume: 500 ml. Minimum: 200 ml.
+   NEVER pull targetTimeSec from V60 + Drip Assist Big or Chemex — those rules don't apply here.
+
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Dripper: 401–409° | Origami Air M: 401–408°
+V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
+Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
 Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
@@ -237,6 +259,7 @@ Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
 Start 2–3 clicks coarser than expected. ONE specific click value, never a range.
 Starting clicks: V60+Assist Washed 25 | Natural/Honey 27 | V60 no Assist 23
 Orea Fast/Apex 26 | Orea Classic 27 | Chemex Washed 24 | Chemex Natural/Honey 26 | AeroPress 19 | Clever 31
+Origami cone Washed 24 | Origami cone Natural/Honey 26 | Origami wave 24
 
 ICED COFFEE RECIPES — use when occasion is "summer-time":
 Ratio rule: brew at ~1:10–1:12 hot-water concentration; ice (40% of final drink weight) dilutes to effective 1:15–1:16.

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       if (rows.length > 0) preferences = rows[0].data as UserPreferences;
     } catch {}
     const prefs = preferences || {
-      equipment: ["V60", "V60 + Drip Assist", "OreaV4", "Kalita", "CleverDripper", "AeroPress", "Moccamaster"],
+      equipment: ["V60", "V60 + Drip Assist", "OreaV4", "Kalita", "Chemex", "Origami (cone)", "Origami (wave)", "CleverDripper", "AeroPress", "Moccamaster"],
       grinder: "Niche Zero",
       tasteProfile: { preferredBodyLevel: "medium", preferredAcidityLevel: "medium-high", likedOrigins: ["Ethiopia", "Brazil", "Kenya", "Costa Rica"], likedProcesses: ["Natural", "Washed", "Honey"], avoidProcesses: ["Anaerobic"] },
       defaultAmount: "small",
