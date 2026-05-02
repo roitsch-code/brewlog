@@ -169,8 +169,8 @@ src/
 | **PRIMARY** | V60 size 2 + Hario Drip Assist |
 | Other | Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
-| **Grinder** | Niche Zero — **° settings, NEVER clicks** |
-| Travel grinder | Comandante C40 MK2 — clicks |
+| **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
+| Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
 | Water (daily) | Tap ~300 ppm | Diluted: 1:1 tap+distilled ~150 ppm |
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
