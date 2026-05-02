@@ -15,4 +15,4 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "cd ${{ secrets.DEPLOY_PATH }} && git pull origin main && docker compose build app && docker compose up -d app"
+            "cd ${{ secrets.DEPLOY_PATH }} && git fetch origin main && git reset --hard origin/main && docker compose build app && docker compose up -d app"
