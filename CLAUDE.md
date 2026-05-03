@@ -129,6 +129,8 @@ src/
 - **Never import from `app/api/*/route.ts` in client components** — Next.js App Router enforces a strict server/client boundary. Shared types go in `src/lib/types/`.
 
 ### Database (Postgres + Drizzle)
+- **BEFORE any SQL migration or UPDATE/DELETE: run a COUNT query first.** Verify the number of affected rows is what you expect. Never write a broad WHERE clause (or no WHERE clause) without checking the row count first. If the count is surprising, stop and ask.
+- **Never reset or wipe existing data to fix a single row.** Target the specific row by id or a precise unique condition. Resetting a column for all rows with `address IS NOT NULL` when only 1 row needed fixing is not acceptable.
 - JSONB columns for nested objects (coffee, brew, result, etc.) — preserves TypeScript types unchanged
 - Session timestamps: `createdAt` (timestamptz) + `createdAtMs` (bigint, indexed DESC for feed order)
 - Upload paths must start with `bags/` or `uploads/` (enforced in upload route)
