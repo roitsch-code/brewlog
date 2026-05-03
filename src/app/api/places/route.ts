@@ -63,7 +63,9 @@ export async function GET(req: Request) {
     : await db.select().from(places).orderBy(asc(places.city), asc(places.name));
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
 
-  for (const place of unresolved) {
+  // Cap geocoding to 5 places per request — avoids multi-minute hangs when
+  // many places need coords. Remaining places resolve across subsequent loads.
+  for (const place of unresolved.slice(0, 5)) {
     let coords: { lat: number; lng: number } | null = null;
     for (const q of buildQueries(place.name, place.address, place.city)) {
       coords = await nominatim(q);
