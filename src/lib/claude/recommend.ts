@@ -662,7 +662,7 @@ For immersion methods (AeroPress, Clever, Moccamaster), use prose description in
 Return valid JSON only.`;
 
   const response = await client.messages.create({
-    model: "claude-opus-4-7",
+    model: "claude-sonnet-4-6",
     max_tokens: 5000,
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },

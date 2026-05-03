@@ -31,28 +31,30 @@ export async function POST(req: NextRequest) {
       onboardingComplete: true,
     };
 
-    let userRoasterPrior: RoasterPrior | null = null;
-    if (coffee?.roaster) {
-      try {
-        const slug = canonicalRoasterSlug(coffee.roaster);
-        const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
-        if (direct.length > 0) {
-          userRoasterPrior = direct[0].data as RoasterPrior;
-        } else {
+    const sessions = pastSessions || [];
+
+    // Run DB roaster lookup and Escher terrain in parallel — saves 3–5s vs sequential
+    const [userRoasterPriorResult, terrain] = await Promise.all([
+      (async (): Promise<RoasterPrior | null> => {
+        if (!coffee?.roaster) return null;
+        try {
+          const slug = canonicalRoasterSlug(coffee.roaster);
+          const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
+          if (direct.length > 0) return direct[0].data as RoasterPrior;
           const viaAlias = await db
             .select()
             .from(roasters)
             .where(sql`${roasters.aliases} @> ${JSON.stringify([slug])}::jsonb`)
             .limit(1);
-          if (viaAlias.length > 0) userRoasterPrior = viaAlias[0].data as RoasterPrior;
-        }
-      } catch {}
-    }
-
-    const sessions = pastSessions || [];
-    const terrain = sessions.length >= 3
-      ? await buildEscherTerrain(sessions, coffee).catch(() => "")
-      : "";
+          if (viaAlias.length > 0) return viaAlias[0].data as RoasterPrior;
+        } catch {}
+        return null;
+      })(),
+      sessions.length >= 3
+        ? buildEscherTerrain(sessions, coffee).catch(() => "")
+        : Promise.resolve(""),
+    ]);
+    const userRoasterPrior = userRoasterPriorResult;
 
     const { recommendation } = await generateRecommendation(
       coffee, context, prefs, sessions, userRoasterPrior ?? undefined, terrain || undefined
