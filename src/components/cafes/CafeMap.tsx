@@ -105,6 +105,7 @@ export default function CafeMap({ cafes, onSelect }: {
   const [mapReady, setMapReady] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const [nearbyIds, setNearbyIds] = useState<Set<number> | null>(null);
 
   // Debounce: marker rebuilds fire 300ms after typing stops
   useEffect(() => {
@@ -112,20 +113,19 @@ export default function CafeMap({ cafes, onSelect }: {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Ghost pins only appear while searching — empty array otherwise prevents
-  // any marker work when the user isn't looking for something specific
-  const filteredPlaces = useMemo(() =>
-    debouncedSearch.trim()
-      ? places.filter(p => {
-          const q = debouncedSearch.toLowerCase();
-          return (
-            p.name.toLowerCase().includes(q) ||
-            p.city.toLowerCase().includes(q) ||
-            (p.address ?? "").toLowerCase().includes(q)
-          );
-        })
-      : [],
-  [places, debouncedSearch]);
+  const filteredPlaces = useMemo(() => {
+    if (nearbyIds != null)
+      return places.filter(p => nearbyIds.has(p.id) && p.lat != null && p.lng != null);
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
+      return places.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q) ||
+        (p.address ?? "").toLowerCase().includes(q)
+      );
+    }
+    return [];
+  }, [places, debouncedSearch, nearbyIds]);
 
   const resultCities = useMemo(
     () => Array.from(new Set(filteredPlaces.map(p => p.city))),
@@ -170,53 +170,43 @@ export default function CafeMap({ cafes, onSelect }: {
       locateMeFnRef.current = () => {
         setLocatingUser(true);
         navigator.geolocation.getCurrentPosition(
-          async (pos) => {
+          (pos) => {
             const { latitude: lat, longitude: lng } = pos.coords;
 
             userMarkerRef.current?.remove();
             userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
-            map.setView([lat, lng], 14);
 
-            // All curated places that have coordinates and haven't been visited
-            const visitedNames = new Set(cafesRef.current.map(c => c.name.toLowerCase().trim()));
-            const unvisited = placesRef.current.filter(
-              p => p.lat != null && p.lng != null && !visitedNames.has(p.name.toLowerCase().trim())
-            );
+            const allPlaces = placesRef.current.filter(p => p.lat != null && p.lng != null);
 
-            // Reverse-geocode GPS to city name
-            let city = "";
-            try {
-              const res = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-                { headers: { "User-Agent": "BrewLog-CafeMap/1.0" } }
-              );
-              const data = await res.json() as { address?: Record<string, string> };
-              city =
-                data.address?.city ||
-                data.address?.town ||
-                data.address?.village ||
-                data.address?.municipality ||
-                "";
-            } catch { /* ignore — user is already centred on the map */ }
-
-            // Check if the current city has any unvisited curated places
-            const cityUnvisited = city
-              ? unvisited.filter(p => p.city.toLowerCase().includes(city.toLowerCase()))
-              : [];
-
-            if (cityUnvisited.length > 0) {
-              // Current city has places — show them
-              setSearch(city);
-              setDebouncedSearch(city);
-            } else if (unvisited.length > 0) {
-              // Nothing nearby — find the nearest city that has unvisited places
-              const nearest = unvisited
-                .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
-                .sort((a, b) => a.dist - b.dist)[0];
-              setSearch(nearest.p.city);
-              setDebouncedSearch(nearest.p.city);
+            if (allPlaces.length === 0) {
+              map.setView([lat, lng], 14);
+              setLocatingUser(false);
+              return;
             }
-            // If unvisited is empty there's nothing to show — just leave the map at user location
+
+            // Sort all curated places by distance from user
+            const sorted = allPlaces
+              .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
+              .sort((a, b) => a.dist - b.dist);
+
+            // Small city mode: nearest place <50 km away and whole city fits in 25 → show all
+            const nearestCity = sorted[0].p.city;
+            const cityPlaces = allPlaces.filter(
+              p => p.city.toLowerCase() === nearestCity.toLowerCase()
+            );
+            const toShow =
+              sorted[0].dist < 50 && cityPlaces.length <= 25
+                ? cityPlaces
+                : sorted.slice(0, 25).map(x => x.p);
+
+            setNearbyIds(new Set(toShow.map(p => p.id)));
+
+            // Fit map to user location + all nearby spots
+            const bounds = L.latLngBounds([
+              [lat, lng],
+              ...toShow.map(p => [p.lat!, p.lng!] as [number, number]),
+            ]);
+            map.fitBounds(bounds.pad(0.2));
 
             setLocatingUser(false);
           },
@@ -318,7 +308,7 @@ export default function CafeMap({ cafes, onSelect }: {
     placeMarkersRef.current = [];
     selectedPlaceMarkerRef.current = null;
 
-    if (!debouncedSearch.trim()) return;
+    if (!debouncedSearch.trim() && nearbyIds == null) return;
 
     const ghostIcon = L.divIcon({ html: GHOST_PIN_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
     const ghostSelectedIcon = L.divIcon({ html: GHOST_PIN_SELECTED_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
@@ -348,12 +338,12 @@ export default function CafeMap({ cafes, onSelect }: {
 
     placeMarkersRef.current = placed;
 
-    // Always fit to the matching pins — even when they span multiple cities,
-    // the user wants to see where they are (zoomed-out view is fine).
-    if (placed.length > 0) {
+    // Only fit bounds in text-search mode — locate-me already fits bounds
+    // to include the user marker, and we don't want to override that.
+    if (placed.length > 0 && nearbyIds == null) {
       map.fitBounds(L.featureGroup(placed).getBounds().pad(0.3));
     }
-  }, [mapReady, filteredPlaces, debouncedSearch, resultCities]);
+  }, [mapReady, filteredPlaces, debouncedSearch, resultCities, nearbyIds]);
 
   // Geocode the search query and pan there only when there are no curated
   // matches at all — fallback so typing a city/address still moves the map.
@@ -414,15 +404,15 @@ export default function CafeMap({ cafes, onSelect }: {
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setNearbyIds(null); }}
             onKeyDown={e => { if (e.key === "Enter") setDebouncedSearch(search); }}
             placeholder="Search cafés…"
             className="w-full bg-brew-elevated border border-brew-accent/30 text-white text-sm placeholder-brew-muted rounded-full pl-8 pr-8 py-2 focus:outline-none focus:border-brew-accent shadow-lg shadow-black/70"
           />
-          {search && (
+          {(search || nearbyIds != null) && (
             <button
               type="button"
-              onClick={() => { setSearch(""); setDebouncedSearch(""); }}
+              onClick={() => { setSearch(""); setDebouncedSearch(""); setNearbyIds(null); }}
               aria-label="Clear search"
               className="absolute right-2.5 text-brew-muted active:scale-95 transition-transform"
             >
@@ -433,7 +423,7 @@ export default function CafeMap({ cafes, onSelect }: {
           )}
         </div>
         {/* Result count — shown once debounce settles */}
-        {debouncedSearch.trim() && debouncedSearch === search && (
+        {(nearbyIds != null || (debouncedSearch.trim() && debouncedSearch === search)) && (
           <p className="text-center text-xs text-brew-muted mt-1.5 pointer-events-none">
             {filteredPlaces.length === 0
               ? "No places found"
