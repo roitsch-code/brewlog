@@ -523,7 +523,7 @@ export default function CafeMap({ cafes, onSelect }: {
                   </svg>
                 </button>
                 <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address ?? `${placeSelected.name} ${placeSelected.city}`)}`}
+                  href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address!)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brew-accent text-brew-accent-fg text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform"
