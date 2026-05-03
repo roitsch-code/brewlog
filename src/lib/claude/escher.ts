@@ -23,6 +23,7 @@ STRICT RULES:
 8. Length: one paragraph per meaningful observation, maximum three paragraphs total. If there's nothing meaningful to say, say so in one sentence.
 9. No emojis. No closing remarks. No "I hope this helps."
 10. Do NOT tell the brewer what grind setting, temperature, or ppm to use. Describe the direction and pattern only.
+11. EXPLORATION MAP: If an exploration map is present, treat unexplored territory as equally important to observed patterns. Name clearly what hasn't been tried yet. The gap between "what has been done" and "what could reveal something new" is where the next learning lives. Name it explicitly.
 
 OUTPUT FORMAT: Return valid JSON only. No markdown outside the JSON.
 { "terrain": "prose string" }`;
@@ -41,7 +42,7 @@ export async function buildEscherTerrain(
     : undefined;
 
   const typeCluster = currentCoffee
-    ? buildTypeCluster(currentCoffee.origin ?? "", currentCoffee.process ?? "", "")
+    ? buildTypeCluster(currentCoffee.origin ?? "", currentCoffee.process ?? "")
     : undefined;
 
   const output = extract(signatures, {
@@ -54,8 +55,8 @@ export async function buildEscherTerrain(
 
   try {
     const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 500,
+      model: "claude-sonnet-4-6",
+      max_tokens: 800,
       system: ESCHER_SYSTEM,
       messages: [{ role: "user", content: serialised }],
     });
@@ -93,6 +94,6 @@ function normalizeProcess(process: string): string {
   return "other";
 }
 
-function buildTypeCluster(origin: string, process: string, method: string): string {
-  return `${classifyOriginRegion(origin)}-${normalizeProcess(process)}-${method || "v60"}`;
+function buildTypeCluster(origin: string, process: string): string {
+  return `${classifyOriginRegion(origin)}-${normalizeProcess(process)}`;
 }

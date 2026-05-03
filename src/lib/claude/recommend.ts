@@ -27,11 +27,14 @@ const CandidateSchema = z.object({
   confidence: z.string(),
   confidenceReason: z.string(),
   learningValue: z.string(),
+  brewingLesson: z.string().optional(),
 });
 
 const RecommendationResponseSchema = z.object({
   candidates: z.array(CandidateSchema).min(1),
   reasoning: z.string().optional(),
+  sessionObjective: z.string().optional(),
+  coffeeAssessment: z.string().optional(),
 });
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -80,14 +83,93 @@ Reason from what this coffee actually needs based on its properties:
   berry + fruit punch = likely natural; caramel + nut = likely medium roast or honey
 - Tasting notes also signal expected flavor register — use them to predict cup outcome
 
-Science attribution: when reasoning about extraction physics, grind size, or water chemistry in
-hypothesis and learningValue fields, you may reference the underlying science by name:
-- Gagné's extraction curve model (filter physics, solute distribution)
-- Hendon on water chemistry (bicarbonate buffering, magnesium extraction)
-- Perger's agitation / turbulence thesis (extraction uniformity)
-- Rao on extraction control (brewing by the numbers, ratio / temp / time)
-- Solis on fermentation science (when processing notes are relevant)
-Do not put attributions in recipe values. Use them in hypothesis, learningValue, and reasoning only.
+Science attribution: when reasoning in hypothesis, learningValue, brewingLesson, and reasoning fields,
+attribute science directly where relevant — but reason FROM the framework, not just cite it.
+
+═══════════════════════════════════════════════════════════════
+EXTRACTION SCIENCE — reason from these frameworks, don't just cite them
+═══════════════════════════════════════════════════════════════
+
+SOLUBILITY SEQUENCE (Gagné — Physics of Filter Coffee):
+Compounds extract in strict order of solubility:
+  Zone 1 (first pours): Organic acids, fragrant aromatics — brightness, citrus, floral notes.
+    Extract fastest. Fragile: dissipate above ~96°C and fade with over-extraction.
+  Zone 2 (mid-brew): Sugars, maillard compounds — sweetness, caramel, body.
+  Zone 3 (late pours, extended contact): Bitters, phenolics, astringency — body depth,
+    but harshness when overdone.
+Pour sequence is a composition tool: more/earlier pours = brighter. Fewer, longer steep = sweeter.
+A flat cup often means stalling in Zone 2 before Zone 1 aromatics fully developed (under-extraction).
+A harsh cup means Zone 3 invaded (over-extraction or excess late agitation).
+
+WATER CHEMISTRY (Hendon — Water for Coffee):
+Magnesium (Mg²⁺): Enhances extraction of organic acids and aromatics — brighter, more complex cups.
+Calcium (Ca²⁺): Adds body. Less flavor complexity gain than magnesium.
+Bicarbonate (HCO₃⁻): Acid buffer. At ~300ppm (this user's tap water), it actively mutes brightness
+  and rounds acidity. Especially damaging for high-clarity coffees (Ethiopian washed, Kenyan).
+  State this clearly when recommending clarity candidates: tap water suppresses what this coffee offers.
+The 1:1 dilution (~150ppm) removes most of this suppression — a meaningful quality difference.
+Championship water (~50ppm): nearly zero buffering; delicate florals become prominent.
+Rule: the more delicate the coffee (light washed, high-altitude, Ethiopian), the more water quality
+  determines the ceiling. A washed Guji on tap water and on diluted water are genuinely different cups.
+
+AGITATION MECHANICS (Perger — Coffee Compass / WBC methodology):
+Turbulence increases contact between water and grounds — raises extraction yield.
+The Drip Assist disc creates turbulence from its perforations. It is an agitation mechanism, not only
+  a flow controller. This is why Drip Assist recipes run 2–3°C hotter: more agitation at lower temp
+  pulls Zone 3 compounds before Zone 2 sweetness fully develops.
+Channeling (water finding fast paths through the bed): creates striped extraction — some grounds
+  over-extracted (harsh, bitter), others under (sour, flat). Result: "confusing cup — I can't tell
+  if it's sour or bitter." Causes: center-only pouring, uneven bed setup, fines migration.
+  Drip Assist eliminates outer-ring vs. center differential — it is a specific channeling solution.
+Bloom agitation: purpose is even wetting and CO₂ release. Vigorous stir for washed (stable uniform
+  bed) = better extraction uniformity. Gentle swirl for natural (irregular fermentation-residue bed)
+  = avoids creating channels.
+
+FERMENTATION CHEMISTRY (Solis — fermentation science applied to coffee):
+Natural/Dry Process: Fruit fermentation adds esters (tropical, stone fruit, winey), lactic acid
+  (creamy texture), acetaldehyde (winey sharpness). Highly soluble — extract quickly, intensify
+  with agitation. Brew cooler (ester volatility), gentler, with fewer pours.
+  The "natural sweetness" is fermentation-derived sugar metabolism, not just the bean's own sugars.
+Washed/Wet Process: No fermentation intermediates. Cup exposes variety and terroir directly — the
+  bean's own organic acid profile. Clarity methods are correct because clarity is the goal.
+Honey: Partial mucilage = partial fermentation activity. Some esters + more body than washed.
+  Bridge style; responds to either washed or natural techniques depending on intent.
+Anaerobic/Carbonic Maceration: Creates dominant fermentation esters. This user avoids anaerobic
+  coffees — flag explicitly if encountered.
+
+TERROIR AND VARIETY SIGNALS:
+High altitude (>1800m): Higher density, higher solubility, more aromatic complexity. Often needs
+  longer bloom; can handle slightly longer brew time.
+Ethiopia Heirloom/Gesha: Jasmine, bergamot, citrus aromatics. These extract in Zone 1 and dissipate
+  above 96°C. Hard ceiling of 93–95°C for genuine floral expression — this is not a preference,
+  it is chemistry. At 98°C the florals are gone before they reach the cup.
+Kenya SL28/SL34: Intense blackcurrant, tomato, savory depth. Very high density. Can handle higher
+  temp. Slower extraction than Ethiopian at the same grind — may need finer than expected.
+Colombia Castillo/Caturra: Balanced, approachable. Good teaching coffees — results are consistent
+  and repeatable, ideal for isolating variables.
+Natural Ethiopia (Guji, Harrar): Stone fruit from variety + fermentation overlap. Over-agitation
+  amplifies fermentation notes toward vinegar — stay below 95°C, no vigorous stir.
+Brazil: Low altitude, lower density, nutty/chocolate. Forgiving. Suited to immersion methods.
+
+COFFEE COMPASS (Perger/Rao — use when diagnosing previous session notes):
+Sour/thin → under-extraction: finer, hotter, more agitation, longer contact
+Bitter/harsh → over-extraction: coarser, cooler, less agitation, shorter
+Flat/dull → under-extraction OR channeling: check flow; if flow was good, grind finer
+Sweet/balanced → well-extracted: document exactly and replicate
+Muddy/heavy → try a clarity method or reduce the ratio
+Cup improved significantly while cooling → acids were masking sweetness initially; good extraction
+  sign but possibly slightly over-concentrated — test a bigger ratio next time
+
+CHAMPIONSHIP TECHNIQUE RATIONALE:
+Peng 2025 (WBC winner): Temperature staging — hot bloom starts extraction, cool final pour preserves
+  fragile Zone 1 aromatics. Tests whether delicate florals can be isolated from Zone 3 astringency.
+Wölfl 2024 (WAC): Ultra-fast turbulent Orea on naturals. Paradox: high agitation + fast drain
+  prevents extended contact, keeping extract in Zone 1–2. Often more clarity than gentle approaches.
+Kasuya 4:6: Separates acid/sweet phases explicitly (first 40% = brightness control,
+  last 60% = strength control). Teaches the user to dial each axis independently — a calibration tool.
+Origami Air M: Deep flat bed with moderate agitation. Body-forward, even extraction.
+Hoffmann AeroPress Bypass: Concentrate (1:7) + bypass water. Separates extraction from dilution —
+  excellent for learning how ratio controls cup weight independently of flavor extraction.
 
 LAYER 3 — ROASTER PRIOR
 A curated style prior will appear in the message if available.
@@ -133,23 +215,27 @@ Perger's agitation theory, Rao's control framework, Solis on fermentation scienc
 from WBC/WAC/WCCE. Your job is NOT to apply the correct rule for this method + process combination.
 Your job is to form an interesting, specific hypothesis for THIS coffee, brewed by THIS person, THIS morning.
 
-Be a coach, not a rulebook. Surprise them occasionally. If a championship technique might reveal something
-about this coffee, suggest it. If Gagné and Perger would disagree about agitation for this natural at this temp,
-name the tension, pick a side, explain why. If the terrain says a variable hasn't mattered, don't waste a candidate
-testing it — find something more interesting.
+Be a coach, not a rulebook. Every session should teach something new. If a session arc note is present,
+respect it — a session 7 portfolio should not look like a session 1 portfolio.
 
 What makes a strong portfolio:
 - Candidates that answer genuinely different questions — not just different methods
-- At least one unexpected option when the history and coffee character suggest it could work
+- If an exploration map is present: at least one candidate should test something that has NEVER been tried
+  for this coffee. "You've never used Clever Dripper for this coffee" is more valuable information
+  than "V60+DripAssist again, slightly different grind." Use the gap.
 - The anchor should have a specific hypothesis, not just "safest choice"
 - If the terrain shows a recurring setup underperforming, propose something different — not the same thing with minor adjustments
-- The reasoning field is the overview: tell them WHY this portfolio was assembled, then let the candidates speak
+- brewingLesson should explain the WHY, in Hoffmann-style plain language: the physics, the chemistry,
+  what it predicts the brewer will taste and why. Not "Perger says more agitation." Say what Perger's
+  thesis actually predicts for this specific coffee at this specific extraction stage.
+- The reasoning field is the coach's opening: what does this coffee demand, what does the history tell us,
+  what are we discovering today? 4–6 sentences minimum. Direct address to the user.
 
 What to avoid:
-- Category rules disguised as hypotheses: "AeroPress is always good for X" is wrong framing — say instead what THIS AeroPress recipe tests for THIS coffee
-- Generic role-filling: don't add an adjacent candidate just to fill a slot
-- Citing a rule when you mean a hypothesis: instead of "Perger says more agitation", say "Perger's turbulence thesis suggests the flat cups in the terrain may be losing contact time to channeling — two deliberate stirs could test whether uniformity is the lever"
+- Category rules disguised as hypotheses: "AeroPress is always good for X" — say what THIS recipe tests
+- Generic role-filling: don't add a contrast candidate just to fill a slot; add it because it tests something worth knowing
 - Restating the terrain verbatim — use it as background, not as content
+- Wasting a candidate confirming what already works when the exploration map shows untested territory
 
 Role definitions (use flexibly, not as a checklist):
 - anchor: most evidence-backed option — can be a bold hypothesis if the terrain supports it
@@ -333,6 +419,8 @@ OUTPUT FORMAT
 Return valid JSON only. No markdown. No explanation outside the JSON.
 
 {
+  "sessionObjective": "2 sentences: what this brew session is for — the learning goal, not just 'brew a good cup'. Based on session count for this coffee and what the terrain or exploration map reveals.",
+  "coffeeAssessment": "2 sentences: the coach's first-principles read on THIS coffee — what makes it interesting, what the primary extraction challenge is, what to watch for in the cup. Specific, not generic.",
   "intent": "one sentence — what this user is trying to achieve with this brew",
   "coffeeLayer": "one sentence — key extraction insight about this specific coffee",
   "roasterPriorUsed": "how the roaster prior influenced the portfolio, or null if no prior or not used",
@@ -356,17 +444,31 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "whatToObserve": "1 short sentence: what to notice in the cup",
       "confidence": "high | moderate | low | exploratory",
       "confidenceReason": "1 short sentence: why this confidence",
-      "learningValue": "1 short sentence: what this teaches"
+      "learningValue": "1 short sentence: what this teaches",
+      "brewingLesson": "3–4 sentences. Teach the extraction science behind this candidate in Hoffmann-style plain language. What physical or chemical mechanism is being tested? What does that mechanism predict the brewer will taste? What should they notice at each stage of the brew? No jargon without explanation."
     }
   ],
-  "reasoning": "2 short sentences: overall portfolio logic and key signals"
+  "reasoning": "4–6 sentences. The coach's briefing to the user — direct address. What does this coffee demand and why. What does the history or arc tell us about where we are in learning this coffee. Why was this portfolio assembled this way. What single thing should they pay close attention to across all candidates. Open a conversation, don't write a summary."
 }
 
-BREVITY: Keep every text field to 1–2 short sentences maximum. Aim for under 25 words per field.
+BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1–2 short sentences. brewingLesson, reasoning, sessionObjective, coffeeAssessment: no word cap — these are the teaching fields.
 
 LANGUAGE: Always respond in English. All text fields must be in English only.
 GRIND SIZE: Must be a single Niche° value (e.g. "406°") or single Comandante click count (e.g. "26"). Never a range.`;
 
+
+function buildDiversityNote(sessions: import("../types/session").Session[]): string {
+  const recent = sessions.slice(0, 8);
+  const anchors: Record<string, number> = {};
+  for (const s of recent) {
+    const method = s.recommendation?.primaryMethod;
+    if (method) anchors[method] = (anchors[method] ?? 0) + 1;
+  }
+  const sorted = Object.entries(anchors).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length || sorted[0][1] < 3) return "";
+  const summary = sorted.map(([m, n]) => `${m} ×${n}`).join(", ");
+  return `\nPORTFOLIO DIVERSITY — anchor methods in last ${recent.length} sessions: ${summary}. Vary deliberately unless the coffee or terrain genuinely demands the same approach.`;
+}
 
 export async function generateRecommendation(
   coffee: CoffeeIdentity,
@@ -393,6 +495,20 @@ export async function generateRecommendation(
     method ? PERCOLATION_METHODS.has(method.toLowerCase().trim()) : false;
 
   const timingStats = buildTimingStats(pastSessions, isPercolation);
+
+  // Session arc: how many times has this exact coffee been brewed before?
+  const sessionCountForThisCoffee = pastSessions.filter(
+    s => s.coffee?.name === coffee.name && s.coffee?.roaster === coffee.roaster
+  ).length;
+
+  const sessionArcNote =
+    sessionCountForThisCoffee === 0
+      ? "\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Anchor on the most evidence-backed approach for this coffee type; use contrast and wildcard to explore what this coffee might reveal under different conditions."
+      : sessionCountForThisCoffee <= 2
+      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.`
+      : sessionCountForThisCoffee <= 5
+      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. The character is understood. This portfolio should test something genuinely new — an unexplored method, an untested variable. Don't recycle what worked; push the boundary.`
+      : `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Expert territory. Find the ceiling: what does this coffee do that no other has? What technique reveals its most distinctive character? What would a championship barista choose to showcase it?`;
   const totalPercolationSamples = Object.values(timingStats).reduce(
     (n, v) => n + v.count,
     0
@@ -517,9 +633,11 @@ Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=
 ${escherTerrain
   ? `Brew pattern terrain (use as case history — informs your hypothesis, does not override recipe physics):\n${escherTerrain}`
   : pastSessions.length === 0
-    ? "No previous sessions — cold start. Reason from coffee properties and roaster prior only."
+    ? "No previous sessions — first brew ever logged. Reason from coffee properties and roaster prior only."
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
+${sessionArcNote}
+${buildDiversityNote(pastSessions)}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +
@@ -544,8 +662,8 @@ For immersion methods (AeroPress, Clever, Moccamaster), use prose description in
 Return valid JSON only.`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 3000,
+    model: "claude-opus-4-7",
+    max_tokens: 5000,
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
     ],
@@ -571,6 +689,7 @@ Return valid JSON only.`;
     confidence: c.confidence as CandidateConfidence,
     confidenceReason: c.confidenceReason,
     learningValue: c.learningValue,
+    ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
   return {
@@ -581,6 +700,8 @@ Return valid JSON only.`;
       alternativeMethod: candidates[1]?.method,
       alternativeRecipe: candidates[1]?.recipe,
       reasoning: raw.reasoning ?? "",
+      ...(raw.sessionObjective ? { sessionObjective: raw.sessionObjective } : {}),
+      ...(raw.coffeeAssessment ? { coffeeAssessment: raw.coffeeAssessment } : {}),
       generatedAt: new Date().toISOString(),
     },
     usage: response.usage,

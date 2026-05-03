@@ -132,7 +132,7 @@ export function buildSignature(session: Session): BrewSignature | null {
   return {
     sessionId: session.id,
     coffeeKey,
-    coffeeTypeCluster: `${originRegion}-${normalizedProcess}-${normalizedMethod}`,
+    coffeeTypeCluster: `${originRegion}-${normalizedProcess}`,
     originRegion,
     process: normalizedProcess,
     method: normalizedMethod,

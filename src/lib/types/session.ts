@@ -67,6 +67,7 @@ export interface RecommendationCandidate {
   confidence: CandidateConfidence;
   confidenceReason: string;
   learningValue: string;
+  brewingLesson?: string;
   // Deprecated — moved to post-brew adaptive feedback in brew-insight
   nextIfWeak?: string;
   nextIfBitter?: string;
@@ -80,6 +81,8 @@ export interface Recommendation {
   alternativeMethod?: string;            // = candidates[1]?.method (backward compat)
   alternativeRecipe?: BrewRecipe;        // = candidates[1]?.recipe (backward compat)
   reasoning: string;
+  sessionObjective?: string;
+  coffeeAssessment?: string;
   generatedAt: string; // ISO timestamp
 }
 

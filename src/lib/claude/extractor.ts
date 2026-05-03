@@ -9,6 +9,14 @@ export interface ExtractorVariableFinding {
   significance: "strong" | "moderate" | "weak" | "none";
 }
 
+export interface ExplorationMap {
+  methodsTried: Array<{ method: string; count: number; avgRating: number }>;
+  methodsNeverTried: string[];
+  tempVaried: boolean;
+  pourCountVaried: boolean;
+  primaryGap: string;
+}
+
 export interface ExtractorOutput {
   granularity: "cold-start" | "per-coffee" | "per-type";
   label: string;        // "this Kenyan" | "East African Naturals on V60" | "your brewing"
@@ -17,6 +25,7 @@ export interface ExtractorOutput {
   variableFindings: ExtractorVariableFinding[];
   personalPatterns: string[];   // cross-coffee: pace, craft score, occasion
   missingData: string[];        // variables never captured
+  explorationMap?: ExplorationMap;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -252,6 +261,58 @@ function detectMissingData(signatures: BrewSignature[]): string[] {
   return missing;
 }
 
+// ─── Exploration map builder ──────────────────────────────────────────────────
+
+const ALL_KNOWN_METHODS = [
+  "v60", "v60-drip-assist", "orea", "clever", "kalita", "aeropress", "chemex", "moccamaster",
+];
+
+function buildExplorationMap(signatures: BrewSignature[]): ExplorationMap {
+  // Methods tried with ratings
+  const methodAcc: Record<string, { sum: number; count: number }> = {};
+  for (const s of signatures) {
+    const m = s.method;
+    if (!m || m === "other") continue;
+    methodAcc[m] = methodAcc[m] ?? { sum: 0, count: 0 };
+    methodAcc[m].sum += s.ratingWeight;
+    methodAcc[m].count += 1;
+  }
+  const methodsTried = Object.entries(methodAcc).map(([method, { sum, count }]) => ({
+    method,
+    count,
+    avgRating: Math.round((sum / count) * 10) / 10,
+  }));
+
+  const triedSet = new Set(methodsTried.map(m => m.method));
+  const methodsNeverTried = ALL_KNOWN_METHODS.filter(m => !triedSet.has(m));
+
+  // Temperature variation
+  const temps = signatures.map(s => s.tempC).filter((t): t is number => t != null);
+  const tempVaried = temps.length >= 2 && (Math.max(...temps) - Math.min(...temps)) >= 2;
+
+  // Pour count variation (infer from grind numeric as proxy — direct pour count not stored)
+  // Use method diversity as an approximation: different methods imply different pour structures
+  const pourCountVaried = methodsTried.length >= 2;
+
+  // Primary gap: what's the most valuable untested thing?
+  let primaryGap: string;
+  if (methodsTried.length === 1) {
+    const m = methodsTried[0].method;
+    const never = methodsNeverTried.slice(0, 2).join(" or ");
+    primaryGap = `Only ${m} has been tried for this coffee — ${never} would reveal how extraction method changes the cup character`;
+  } else if (!tempVaried && temps.length >= 2) {
+    primaryGap = `Temperature has barely varied across sessions — a deliberate high-vs-low test would reveal whether this coffee is temperature-sensitive`;
+  } else if (methodsTried.length >= 2 && methodsNeverTried.length > 0) {
+    const best = methodsTried.sort((a, b) => b.avgRating - a.avgRating)[0];
+    const gap = methodsNeverTried[0];
+    primaryGap = `${best.method} leads in ratings — ${gap} hasn't been tried yet and would provide a genuine method contrast`;
+  } else {
+    primaryGap = `${methodsTried.length} methods explored — temperature and pour-count variation are the remaining levers`;
+  }
+
+  return { methodsTried, methodsNeverTried, tempVaried, pourCountVaried, primaryGap };
+}
+
 // ─── Core cluster analysis ────────────────────────────────────────────────────
 
 function analyzeCluster(
@@ -291,6 +352,7 @@ function analyzeCluster(
     variableFindings: meaningfulFindings,
     personalPatterns: detectPersonalPatterns(signatures),
     missingData: detectMissingData(signatures),
+    explorationMap: buildExplorationMap(signatures),
   };
 }
 
@@ -332,7 +394,7 @@ export function extract(
   // Fall back to type cluster
   if (context.currentTypeCluster) {
     const typeSigs = signatures.filter(s => s.coffeeTypeCluster === context.currentTypeCluster);
-    if (typeSigs.length >= 4) {
+    if (typeSigs.length >= 3) {
       const clusterLabel = context.currentTypeCluster
         .replace(/-/g, " ")
         .replace(/\b\w/g, c => c.toUpperCase());
@@ -370,11 +432,15 @@ export function extract(
 // ─── Serialise for Escher transformer ────────────────────────────────────────
 
 export function serialiseForEscher(output: ExtractorOutput): string {
+  const explorationBlock = output.explorationMap
+    ? serialiseExplorationMap(output.explorationMap)
+    : "";
+
   if (!output.hasPattern) {
     const missingNote = output.missingData.length > 0
       ? `\nNot yet captured: ${output.missingData.join(", ")}.`
       : "";
-    return `Context: ${output.sessionCount} sessions logged, not yet enough data at the ${output.granularity} level for pattern claims.${missingNote} Reasoning is physics-based only.`;
+    return `Context: ${output.sessionCount} sessions logged, not yet enough data at the ${output.granularity} level for pattern claims.${missingNote} Reasoning is physics-based only.${explorationBlock}`;
   }
 
   const lines: string[] = [
@@ -397,6 +463,27 @@ export function serialiseForEscher(output: ExtractorOutput): string {
     lines.push("", "Missing data (honest gap, mention if relevant):");
     output.missingData.forEach(m => lines.push(`  ${m}`));
   }
+
+  if (explorationBlock) lines.push(explorationBlock);
+
+  return lines.join("\n");
+}
+
+function serialiseExplorationMap(map: ExplorationMap): string {
+  const lines: string[] = ["", "Exploration map:"];
+
+  if (map.methodsTried.length > 0) {
+    const tried = map.methodsTried
+      .map(m => `${m.method} (${m.count}×, avg ${m.avgRating}★)`)
+      .join(", ");
+    lines.push(`  Methods tried: ${tried}`);
+  }
+  if (map.methodsNeverTried.length > 0) {
+    lines.push(`  Methods never tried: ${map.methodsNeverTried.join(", ")}`);
+  }
+  lines.push(`  Temperature varied: ${map.tempVaried ? "yes" : "no — never tested a different temp for this coffee"}`);
+  lines.push(`  Pour count varied: ${map.pourCountVaried ? "yes" : "no"}`);
+  lines.push(`  Primary gap: ${map.primaryGap}`);
 
   return lines.join("\n");
 }
