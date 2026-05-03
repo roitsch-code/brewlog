@@ -23,7 +23,10 @@ async function nominatim(q: string): Promise<{ lat: number; lng: number } | null
 }
 
 function buildQueries(name: string, address: string | null, city: string): string[] {
-  if (address) return [`${name}, ${address}, ${city}`];
+  if (address) return [
+    `${name}, ${address}, ${city}`,
+    `${address}, ${city}`,          // fallback: geocode the street if business name fails
+  ];
 
   const queries: string[] = [];
   const seen = new Set<string>();
