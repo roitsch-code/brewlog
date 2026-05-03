@@ -19,7 +19,6 @@ export const BREW_METHODS: BrewMethod[] = [
   { id: "clever", label: "Clever Dripper", emoji: "⊡", defaultTemp: 93, defaultDose: 25, defaultWater: 400, defaultTimeSec: 300, category: "immersion" },
   { id: "aeropress", label: "AeroPress", emoji: "⊙", defaultTemp: 88, defaultDose: 14, defaultWater: 240, defaultTimeSec: 120, category: "immersion" },
   { id: "aeropress-concentrate", label: "AeroPress Concentrate", emoji: "⊙", defaultTemp: 86, defaultDose: 14, defaultWater: 90, defaultTimeSec: 90, category: "immersion" },
-  { id: "origami", label: "Origami Dripper", emoji: "◇", defaultTemp: 95, defaultDose: 22, defaultWater: 330, defaultTimeSec: 180, category: "pour-over" },
   { id: "moccamaster", label: "Moccamaster", emoji: "⚡", defaultTemp: 92, defaultDose: 45, defaultWater: 750, defaultTimeSec: 360, category: "other" },
 ];
 

@@ -106,12 +106,12 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Origami Dripper (size M): max ~500ml
 - Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
 - Kalita Wave: max ~500ml
-- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Compatible with Hario Drip Assist. Reserve 34g:520ml brews for V60 or Orea.
+- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. NOT Drip-Assist compatible (brewer body too wide for the disc). Reserve 34g:520ml brews for V60 or Orea.
 - AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
 - Moccamaster: batch ONLY; minimum 500ml. NEVER for single-cup amounts.
 - Grinder: Niche Zero (° — NEVER clicks!) | Comandante C40 MK2 (clicks — NEVER °)
 - Grind size output: ONE specific value. No ranges. Ever.
-- Kettle: Fellow Corvo EKG — must return to base between pours (Drip Assist)
+- Kettle: Fellow Stagg EKG Pro — holds set temperature between pours; variable flow control means Drip Assist is optional, not required
 
 Time constraints:
 - "quick" (~2 min): AeroPress, Turbo V60, Peng. targetTimeSec ≤ 150.
@@ -176,10 +176,10 @@ controls flow rate regardless of the brewer beneath it; rules are identical acro
 only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
 1. Start temp +2–3°C higher than without Assist (heat loss from transfers)
    Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
-2. Kettle back on base after EVERY pour (Stagg EKG holds set temperature — stays ready instantly)
+2. Kettle back on base after EVERY pour (Stagg EKG Pro holds set temperature — stays ready instantly)
 3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
 4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
-   For Orea/Kalita/Chemex/Origami Dripper/Origami Air M + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
+   For Orea/Kalita/Chemex + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
    (the disc slows flow, so you can afford slightly tighter grind).
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
@@ -234,7 +234,7 @@ ORIGAMI DRIPPER — dedicated rules:
    - Kalita wave filter (sweetness / body): flatter bed, slower drawdown, more even extraction.
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
-2. Drip Assist compatible with conical filter ONLY (disc geometry doesn't suit waves).
+2. Drip Assist NOT compatible with either Origami variant — the brewer body itself is too wide for the disc to seat (regardless of filter paper shape). Use Origami without the Assist; if the user wants Drip-Assist flow control on a similar profile, switch to V60 (cone clarity) or Kalita Wave (wave sweetness).
 3. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
 4. Niche° — Conical: 398–408° | Wave: 398–406°
 5. Agitation:
@@ -466,7 +466,7 @@ export async function generateRecommendation(
   })();
 
   const DRIP_ASSIST_COMPATIBLE = new Set([
-    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex", "Origami Air M",
+    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
   ]);
   const methodNote = context.preferredMethod
     ? (() => {

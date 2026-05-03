@@ -74,7 +74,7 @@ export const FALLBACK_HINTS: string[] = [
   "Moccamaster's gold standard: fixed 92–96°C water, 6-minute brew cycle, SCAA certified.",
   "The Niche Zero is a zero-retention conical grinder — what you grind in comes out, instantly.",
   "Comandante C40 uses high-nitrogen hardened steel burrs — remarkably consistent for a hand grinder.",
-  "Fellow Corvo EKG's PID holds temperature within ±0.5°C — critical for washed high-acidity coffees.",
+  "Fellow Stagg EKG Pro's PID holds temperature within ±0.5°C — critical for washed high-acidity coffees.",
   "Scale precision matters: 0.1g resolution is important for espresso; 1g is fine for pour-over.",
 
   // Brew methods deep-dives

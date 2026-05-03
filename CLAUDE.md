@@ -168,12 +168,14 @@ src/
 
 | Device | Details |
 |--------|---------|
-| **PRIMARY** | V60 size 2 + Hario Drip Assist |
-| Other | Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
-| **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
+| **Brewers** | V60 size 2, Origami Dripper (cone + wave), Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
+| **Accessory** | Hario Drip Assist — optional pour-rate disc; toggle per session. Fits V60 / Orea / Kalita Wave / Chemex. **NOT** Origami (brewer body too wide for the disc). |
+| **Kettle** | Fellow Stagg EKG Pro — gooseneck, PID temp hold, variable flow control |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
 | Water (daily) | Tap ~300 ppm | Diluted: 1:1 tap+distilled ~150 ppm |
+
+*No default brewer — Claude picks per coffee, occasion, amount, and goal.*
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
 **Grind quick ref:** @./docs/grind-settings.md

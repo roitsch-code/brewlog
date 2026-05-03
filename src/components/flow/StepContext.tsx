@@ -92,7 +92,7 @@ const METHODS = [
 // Immersion / pressure / batch brewers are excluded — the Assist controls pour rate and
 // has no effect when there's no pouring phase.
 const DRIP_ASSIST_COMPATIBLE = new Set<string>([
-  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex", "Origami (cone)",
+  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
 ]);
 
 export default function StepContext() {

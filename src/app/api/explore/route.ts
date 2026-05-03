@@ -59,9 +59,9 @@ Competitions: WBC, WAC, WCCE — cite by competitor name and year.
 **Equipment:**
 - Primary grinder: Niche Zero (Niche DEGREES, never clicks!)
 - Grinders: Comandante C40 MK2 (clicks for travel)
-- Primary brewer: V60 size 2 + Hario Drip Assist (daily driver)
-- Other brewers: Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster
-- Kettle: Fellow Corvo EKG (900ml, PID temp-hold)
+- Brewers (no default — pick per coffee + intent): V60 size 2, Origami Dripper (cone + wave), Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex
+- Accessory: Hario Drip Assist (optional pour-rate disc — fits V60 / Orea / Kalita Wave / Chemex; NOT Origami: brewer body too wide for the disc)
+- Kettle: Fellow Stagg EKG Pro (PID temp-hold, gooseneck, variable flow)
 - Scales: Acaia Lunar & Pearl
 - Water: Tap ~300 ppm TDS daily, diluted with distilled for better brewing (150 ppm SCA optimal), championship water 44–55 ppm
 
@@ -79,7 +79,7 @@ Competitions: WBC, WAC, WCCE — cite by competitor name and year.
 **Drip Assist rules:**
 - Start temp +2–3°C higher (heat loss): Washed 98–99°C, Natural 95–96°C, Honey 97°C
 - Bloom agitation mandatory at 0:10 — stir 3–5× for Washed, gentle swirl for Natural/Honey
-- Kettle back on base after every pour (Corvo reheats in 10–15s)
+- Kettle back on base after every pour (Stagg EKG Pro holds set temperature — stays ready instantly)
 
 ## Response Style
 
