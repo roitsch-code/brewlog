@@ -314,12 +314,10 @@ export default function CafeMap({ cafes, onSelect }: {
     const ghostSelectedIcon = L.divIcon({ html: GHOST_PIN_SELECTED_HTML, className: "", iconSize: [24, 31], iconAnchor: [12, 31] });
     ghostIconRef.current = ghostIcon;
 
-    const visitedNames = new Set(cafesRef.current.map(c => c.name.toLowerCase().trim()));
     const placed: LMarker[] = [];
 
     for (const place of filteredPlaces) {
       if (place.lat == null || place.lng == null) continue;
-      if (visitedNames.has(place.name.toLowerCase().trim())) continue;
 
       const marker = L.marker([place.lat, place.lng], { icon: ghostIcon }).addTo(map);
       marker.on("click", () => {
