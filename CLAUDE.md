@@ -117,6 +117,19 @@ src/
 
 ---
 
+## Hard rule: validate before changing AI behavior
+
+A "behavioral change" is anything that affects what the AI produces or what the user sees: model swaps (Opus ↔ Sonnet ↔ Haiku), prompt edits that change output character or scope, schema/enum changes, thresholds, `max_tokens`, default parameter values, prompt-internal rules. For any such change:
+
+1. **Sample real outputs before and after.** Run the changed code path against at least 2-3 representative inputs and compare the actual outputs. Diffing the source code is not validation.
+2. **Never claim "no meaningful quality delta" without that comparison.** If you have not run it, say so explicitly and ask the user before shipping. "I think this should be fine" is not allowed.
+3. **Never bundle a behavioral change with an unrelated commit** (e.g. "perf: parallelize X, also revert model"). Behavioral changes get their own commit so they can be reverted cleanly.
+4. **Performance is not a sufficient reason** to swap a model under a prompt that was engineered for a specific model. Either re-engineer the prompt for the smaller model and validate the new outputs, or accept the latency.
+
+Cause for this rule: commit `932ff25` swapped the recommend model Opus → Sonnet "for performance" with the claim "no meaningful quality delta" — without sampling outputs. The prompt was engineered for Opus; under Sonnet it collapsed to a tiny safe set of brewers (V60/Kalita/Orea), shipped directly to main, and broke the core recipe feature for ~24 hours. Do not repeat.
+
+---
+
 ## Conventions
 
 ### Code
