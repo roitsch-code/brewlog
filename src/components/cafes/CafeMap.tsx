@@ -179,7 +179,9 @@ export default function CafeMap({ cafes, onSelect }: {
             const allPlaces = placesRef.current.filter(p => p.lat != null && p.lng != null);
 
             if (allPlaces.length === 0) {
-              map.setView([lat, lng], 14);
+              map.flyTo([lat, lng], 15);
+              setLocateError("No cafés in database for this area yet");
+              setTimeout(() => setLocateError(null), 3000);
               setLocatingUser(false);
               return;
             }
