@@ -331,7 +331,7 @@ ORIGAMI DRIPPER — dedicated rules:
    - Kalita wave filter (sweetness / body): flatter bed, slower drawdown, more even extraction.
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
-2. NOT compatible with Hario Drip Assist — Origami's bed is too wide; the disc does not seat on either filter shape. Use bare Origami only.
+2. NOT compatible with Hario Drip Assist — Origami's bed is too wide; the disc does not seat on either filter shape. There is no Origami + Drip Assist configuration; the brewer always pours directly.
 3. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
 4. Niche° — Conical: 398–408° | Wave: 398–406°
 5. Agitation:
