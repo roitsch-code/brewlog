@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
+import ScrollContainer from "@/components/layout/ScrollContainer";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -43,9 +44,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased">
         {/* Scroll container fills viewport; fixed nav sits above it */}
-        <div style={{ height: "100dvh", overflowY: "auto", overflowX: "hidden", paddingBottom: "calc(78px + env(safe-area-inset-bottom))" }} className="[&::-webkit-scrollbar]:hidden">
+        <ScrollContainer>
           {children}
-        </div>
+        </ScrollContainer>
         <Suspense fallback={null}>
           <BottomNav />
         </Suspense>
