@@ -198,7 +198,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Origami Dripper (size M): max ~500ml
 - Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
 - Kalita Wave: max ~500ml
-- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Compatible with Hario Drip Assist. Reserve 34g:520ml brews for V60 or Orea.
+- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. NOT compatible with Hario Drip Assist (Origami's bed is too wide for the disc — disc geometry does not seat). Reserve 34g:520ml brews for V60 or Orea.
 - AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
 - Moccamaster: batch ONLY; minimum 500ml. NEVER for single-cup amounts.
 - Grinder: Niche Zero (° — NEVER clicks!) | Comandante C40 MK2 (clicks — NEVER °)
@@ -276,7 +276,7 @@ only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
 2. Kettle back on base after EVERY pour (Stagg EKG holds set temperature — stays ready instantly)
 3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
 4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
-   For Orea/Kalita/Chemex/Origami Dripper/Origami Air M + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
+   For Orea/Kalita/Chemex + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
    (the disc slows flow, so you can afford slightly tighter grind).
 5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
 6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
@@ -331,7 +331,7 @@ ORIGAMI DRIPPER — dedicated rules:
    - Kalita wave filter (sweetness / body): flatter bed, slower drawdown, more even extraction.
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
-2. Drip Assist compatible with conical filter ONLY (disc geometry doesn't suit waves).
+2. NOT compatible with Hario Drip Assist — Origami's bed is too wide; the disc does not seat on either filter shape. Use bare Origami only.
 3. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
 4. Niche° — Conical: 398–408° | Wave: 398–406°
 5. Agitation:
@@ -593,7 +593,7 @@ export async function generateRecommendation(
   })();
 
   const DRIP_ASSIST_COMPATIBLE = new Set([
-    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex", "Origami Air M",
+    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
   ]);
   const methodNote = context.preferredMethod
     ? (() => {
@@ -609,7 +609,7 @@ export async function generateRecommendation(
         return `\nLOCKED METHOD: "${label}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee or capacity, and explain clearly.${assistRule}`;
       })()
     : context.dripAssist
-      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a Drip-Assist-compatible pour-over (V60, Orea, Kalita, Chemex, Origami cone, or Origami Air M) for at least one candidate and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
+      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a Drip-Assist-compatible pour-over (V60, Orea, Kalita, or Chemex; Origami is NOT compatible — too wide) for at least one candidate and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
       : "";
 
   const goal = context.intent || "balanced";
