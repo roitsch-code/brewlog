@@ -127,7 +127,7 @@ export default function StepContext() {
     setStep("recommend");
     try {
       let pastSessions: Awaited<ReturnType<typeof getRecentSessions>> = [];
-      try { pastSessions = await getRecentSessions(10); } catch {}
+      try { pastSessions = await getRecentSessions(100); } catch {}
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
