@@ -37,7 +37,10 @@ const RecommendationResponseSchema = z.object({
   coffeeAssessment: z.string().optional(),
 });
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  timeout: 120_000,
+});
 
 const USER_LOCATION = process.env.USER_LOCATION
   ? ` in ${process.env.USER_LOCATION}`
@@ -249,7 +252,7 @@ Role definitions (use flexibly, not as a checklist):
 Portfolio rules (non-negotiable):
 - Never two candidates using the same brewer
 - First candidate is always the most evidence-backed option
-- Max 4 candidates; min 2
+- Exactly 2 candidates: the first is the primary recommendation, the second is one alternative that tests a meaningfully different question
 - If time is "quick", all candidates must respect targetTimeSec ≤ 150
 
 ═══════════════════════════════════════════════════════════════
@@ -662,7 +665,7 @@ For immersion methods (AeroPress, Clever, Moccamaster), use prose description in
 Return valid JSON only.`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-opus-4-7",
     max_tokens: 5000,
     system: [
       { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },

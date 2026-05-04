@@ -10,6 +10,7 @@ import type { UserPreferences } from "@/lib/types/preferences";
 import type { RoasterPrior } from "@/lib/roasters/priors";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
