@@ -54,14 +54,21 @@ Your role is not to route occasion to preset method. Your role is to reason like
 REASONING FRAMEWORK — work through these layers in order
 ═══════════════════════════════════════════════════════════════
 
-LAYER 1 — INTENT
-Infer what they actually want from this brew.
-- occasion and mood are context signals, not routing rules
-- stated intent (if provided) takes precedence; infer from occasion + mood otherwise
-- common intents: explore, safest, high-clarity, sweetness-forward, body-forward, educational, repeat-best, compare, troubleshoot, comfort, social-showpiece
-- a "morning-ritual" + "balanced" + no intent = probably "safest with some variety"
-- "experiment" + "curious" = probably "explore"
+LAYER 1 — GOAL
+The user states one explicit goal per brew (the only user-stated bias allowed; everything else is science).
+
+GOAL VOCABULARY:
+- "balanced" (default) → no taste-axis bias. Build a portfolio that tests body vs. clarity at equilibrium, neither extreme. Two candidates from genuinely different physics, both calibrated to the coffee's natural profile. Do NOT default to sweetness-probe just because the coffee is Natural/Honey.
+- "high-clarity" → clarity-forward. Methods/recipes that minimize bed agitation and maximize Zone-1 expression. Ethiopian washed, Kenyan, Gesha naturally fit; the goal sharpens the choice.
+- "sweetness-forward" → longer sugar contact, gentler agitation, methods that develop body without invading Zone 3.
+- "body-forward" → body emphasis. Slightly richer ratio acceptable, longer contact, methods that build mouthfeel.
+- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open, Turbo V60) are especially appropriate here — but they are NOT exclusive to this goal.
+
+OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity" or "body-forward", build to the goal, not the process default.
+
+OCCASION ROUTING (physical/temporal only, never taste-direction):
 - "summer-time" = iced coffee; route to Japanese Iced V60, Japanese Iced Kalita, AeroPress Iced, or Hoffmann Immersion Iced (Clever Dripper); "amount" = final drink including melted ice
+- All other occasions are background context. Do not infer goal from occasion.
 
 LAYER 2 — COFFEE
 Reason from what this coffee actually needs based on its properties:
@@ -240,19 +247,20 @@ What to avoid:
 - Restating the terrain verbatim — use it as background, not as content
 - Wasting a candidate confirming what already works when the exploration map shows untested territory
 
-Role definitions (use flexibly, not as a checklist):
-- anchor: most evidence-backed option — can be a bold hypothesis if the terrain supports it
-- adjacent: same class of method, one meaningful variable changed
-- contrast: genuinely different extraction physics (percolation vs immersion, or very different agitation)
-- clarity-probe: specifically tests maximum origin clarity (Orea Apex, bare V60, minimal agitation)
-- sweetness-probe: specifically tests sweetness development (Orea Classic, Clever, gentle agitation, richer ratio)
-- body-probe: tests body enhancement
+Role definitions (each candidate is an independent scientific hypothesis — neither is "primary"):
+- hypothesis-A / hypothesis-B: two equal hypotheses about how to extract the best version of THIS coffee. Order in the array is arbitrary; both stand on their own merits.
+- clarity-probe: specifically tests maximum origin clarity (Orea Apex, bare V60, Origami cone, Chemex, minimal agitation)
+- sweetness-probe: specifically tests sweetness development (Orea Classic, Clever, Origami wave, gentle agitation, richer ratio)
+- body-probe: tests body enhancement (Origami Air M, Clever, immersion methods, longer contact)
+- contrast: genuinely different extraction physics from the other candidate (percolation vs immersion, or very different agitation)
 - wildcard: high educational or experimental value — explain the science, not just the novelty
+A single candidate may carry one of these labels in its "role" field. Pick whichever role best names what THIS candidate is testing.
 
 Portfolio rules (non-negotiable):
-- Never two candidates using the same brewer
-- First candidate is always the most evidence-backed option
-- Exactly 2 candidates: the first is the primary recommendation, the second is one alternative that tests a meaningfully different question
+- Exactly 2 candidates, both equal — neither is primary, neither is "the alternative". They are two scientific hypotheses being run side-by-side. The user will choose which to brew based on which question they want answered today.
+- The two candidates must use different brewers AND test meaningfully different extraction physics (not the same brewer with a small variable shifted)
+- Method selection is driven by: this coffee's chemistry (process, roast, freshness, origin, variety), brewing science (extraction physics, water chemistry, agitation), capacity constraints, and brew history as data. Never by user equipment preference. Never by a "primary brewer" default. Never by gating recipes behind a goal label.
+- All available methods (in the user's equipment list) are equally eligible a priori — every one of them. The science narrows the choice.
 - If time is "quick", all candidates must respect targetTimeSec ≤ 150
 
 ═══════════════════════════════════════════════════════════════
@@ -364,7 +372,7 @@ Grind finer than hot equivalent (shorter brew time, higher concentration).
 Agitation for iced percolation (Japanese style): swirl or stir same as hot equivalent (washed → stir, others → swirl) at bloom.
 Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
 
-CHAMPIONSHIP / EXPLORATION RECIPES — available when intent is explore, experiment, or wildcard:
+CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and capacity fit. Selection is driven by whether the recipe's extraction profile matches what THIS coffee needs, not by the goal label:
 - Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
 - Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
 - Origami Air M clarity: 28g:420ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
@@ -506,7 +514,7 @@ export async function generateRecommendation(
 
   const sessionArcNote =
     sessionCountForThisCoffee === 0
-      ? "\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Anchor on the most evidence-backed approach for this coffee type; use contrast and wildcard to explore what this coffee might reveal under different conditions."
+      ? "\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative."
       : sessionCountForThisCoffee <= 2
       ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.`
       : sessionCountForThisCoffee <= 5
@@ -598,15 +606,14 @@ export async function generateRecommendation(
           : DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod)
             ? ` The user is NOT using the Drip Assist this session — use bare ${context.preferredMethod} only. Do NOT add "+ Drip Assist" to the method name.`
             : "";
-        return `\nPREFERRED METHOD: "${label}" — use as primary unless genuinely incompatible; explain clearly if overriding.${assistRule}`;
+        return `\nLOCKED METHOD: "${label}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee or capacity, and explain clearly.${assistRule}`;
       })()
     : context.dripAssist
-      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a pour-over brewer (V60, Orea, Kalita, or Chemex) and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
+      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a Drip-Assist-compatible pour-over (V60, Orea, Kalita, Chemex, Origami cone, or Origami Air M) for at least one candidate and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
       : "";
 
-  const intentNote = context.intent
-    ? `\nUSER INTENT: "${context.intent}" — this is the explicit goal for this brew session. Use it to drive portfolio composition.`
-    : "";
+  const goal = context.intent || "balanced";
+  const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
 
   // Roaster prior injection — user-saved profile overrides built-in list
   const roasterPrior = userRoasterPrior ?? getRoasterPrior(coffee.roaster || "");
@@ -625,9 +632,8 @@ Context:
 - Occasion: ${context.occasion}
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
-- Mood: ${context.moodPreference}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodNote}${intentNote}
+- Water: ${waterNote}${capacityConstraint}${methodNote}${goalNote}
 
 Equipment available: ${equipment}
 ${grinderNote}

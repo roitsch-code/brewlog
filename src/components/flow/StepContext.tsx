@@ -52,23 +52,12 @@ const TIMES = [
   { id: "unhurried", label: "Unhurried", sub: "7 min+" },
 ];
 
-const MOODS = [
-  { id: "strong",   label: "Strong & Bold" },
-  { id: "balanced", label: "Balanced" },
-  { id: "light",    label: "Light & Clean" },
-  { id: "sweet",    label: "Sweet" },
-  { id: "curious",  label: "Surprise me" },
-];
-
-const INTENTS = [
-  { id: "safest",           label: "Safest bet" },
-  { id: "explore",          label: "Explore" },
-  { id: "high-clarity",     label: "High clarity" },
-  { id: "sweetness-forward", label: "Sweetness" },
-  { id: "educational",      label: "Educational" },
-  { id: "repeat-best",      label: "Repeat best" },
-  { id: "compare",          label: "Compare methods" },
-  { id: "troubleshoot",     label: "Troubleshoot" },
+const GOALS = [
+  { id: "balanced",          label: "Balanced",         sub: "no taste-axis bias" },
+  { id: "high-clarity",      label: "Bright / Clarity", sub: "Zone-1 emphasis" },
+  { id: "sweetness-forward", label: "Sweet",            sub: "Zone-2 emphasis" },
+  { id: "body-forward",      label: "Bold / Body",      sub: "mouthfeel emphasis" },
+  { id: "explore",           label: "Explore",          sub: "wildcard / championship recipes" },
 ];
 
 const DEFAULT_GRINDERS = ["Niche Zero", "Comandante C40"];
@@ -123,7 +112,7 @@ export default function StepContext() {
     ctx.occasion &&
     ctx.amount &&
     ctx.timeAvailable &&
-    ctx.moodPreference &&
+    ctx.intent &&
     (ctx.amount !== "custom" || (customMl.trim() !== "" && Number(customMl) >= 50))
   );
 
@@ -254,30 +243,33 @@ export default function StepContext() {
           </div>
         </Section>
 
-        <Section title="Mood">
-          <div className="flex flex-wrap gap-2">
-            {MOODS.map(m => (
-              <Chip key={m.id} label={m.label} selected={ctx.moodPreference === m.id} onClick={() => update("moodPreference", m.id)} />
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Goal — optional">
-          <div className="flex flex-wrap gap-2">
-            {INTENTS.map(i => (
-              <Chip
-                key={i.id}
-                label={i.label}
-                selected={ctx.intent === i.id}
-                onClick={() => update("intent", ctx.intent === i.id ? "" : i.id)}
-                size="sm"
-              />
-            ))}
+        <Section title="Goal">
+          <div className="grid grid-cols-2 gap-2">
+            {GOALS.map(g => {
+              const selected = ctx.intent === g.id;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => update("intent", g.id)}
+                  className="rounded-2xl border py-3 px-3 text-left transition-all active:scale-[0.98]"
+                  style={{
+                    background: selected ? "#2A241C" : "var(--card)",
+                    borderColor: selected ? "var(--primary)" : "var(--border)",
+                  }}
+                >
+                  <p className="text-sm font-semibold leading-tight" style={{ color: selected ? "var(--primary)" : "var(--foreground)" }}>
+                    {g.label}
+                  </p>
+                  <p className="text-xs mt-0.5 leading-tight" style={{ color: "var(--muted-foreground)" }}>
+                    {g.sub}
+                  </p>
+                </button>
+              );
+            })}
           </div>
           <p className="text-brew-muted text-xs px-1">
-            {ctx.intent
-              ? `Goal: ${INTENTS.find(i => i.id === ctx.intent)?.label ?? ctx.intent} — Claude will tailor the recipe portfolio to this.`
-              : "Skip to let Claude infer the goal from occasion and mood."}
+            Your taste direction for this brew. Method selection is driven by science — every brewer in your equipment is equally eligible; the goal sharpens which is best for THIS coffee.
           </p>
         </Section>
 
