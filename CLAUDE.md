@@ -28,83 +28,218 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 ## Project Structure & Key Files
 
+### Pages (`src/app/`)
+
+| Route | Purpose |
+|-------|---------|
+| `page.tsx` | Home — session diary feed, "New Brew" / "Brew Again" entry |
+| `layout.tsx` | Root layout: auth check, PWA meta tags |
+| `login/page.tsx` | Passkey (WebAuthn) login UI |
+| `onboarding/page.tsx` | First-run equipment / grinder / preferences wizard |
+| `brew/new/page.tsx` | Multi-step brew flow entry point |
+| `brew/[id]/page.tsx` | Edit / review an existing session |
+| `coffees/page.tsx` | Coffee library — searchable list |
+| `coffees/[id]/page.tsx` | Coffee detail: rating history, brew signatures, notes |
+| `cafes/page.tsx` | Café map + place search |
+| `cafes/place/[slug]/page.tsx` | Individual café detail (menu, coffees tasted) |
+| `cafes/coffee/[id]/page.tsx` | Coffee tasted at an external location |
+| `taste/page.tsx` | Taste profile + AI-written summary |
+| `match/page.tsx` | Guided taste-match flow vs past sessions |
+| `explore/page.tsx` | Conversational AI + map explorer |
+| `library/page.tsx` | Navigation hub to library, sessions, insights |
+
+### API Routes (`src/app/api/`)
+
+| Route | Purpose |
+|-------|---------|
+| `auth/login-challenge` | WebAuthn: generate login challenge |
+| `auth/register-challenge` | WebAuthn: generate registration challenge |
+| `auth/login` | WebAuthn: complete login |
+| `auth/register` | WebAuthn: complete registration |
+| `auth/logout` | Invalidate session cookie |
+| `auth/status` | Check auth state |
+| `sessions` | ★ Core CRUD — GET (paginated feed) / POST new session |
+| `sessions/[id]` | GET / PUT / DELETE individual session |
+| `coffees` | GET library / POST new coffee |
+| `coffees/[id]` | GET / PUT / DELETE individual coffee |
+| `coffees/compact` | Lightweight list (id, roaster, name, photo) for dropdowns |
+| `recommend` | ★ POST coffee + context → 2–4 AI brew recipe candidates |
+| `analyze-bag` | Claude Vision → coffee identity from bag photo |
+| `analyze-bag/clarify` | Follow-up clarification on extracted bag data |
+| `analyze-url` | Scrape & analyze a coffee product page URL |
+| `brew-insight` | AI terrain/pattern one-liner for post-brew screen |
+| `taste-summary` | AI written summary of taste evolution across sessions |
+| `match` | Taste scoring — find similar past sessions |
+| `explore` | AMA conversational exploration with sources |
+| `research` | Weekly deep-research cron agent (Ofelia) |
+| `preferences` | GET / POST user preferences (equipment, grinder, location) |
+| `roasters` | GET / POST roaster profiles |
+| `roasters/generate` | AI-generate roaster style summary |
+| `places` | GET / POST café locations (auto-geocodes) |
+| `upload` | Multipart photo → Hetzner S3, returns URL |
+| `insights` | GET curated articles from knowledge base |
+| `hints` | GET contextual brewing hints |
+| `news` | GET coffee news feed |
+| `questions` | GET suggestion questions for explore mode |
+| `alerts` | GET / POST coffee availability alert subscriptions |
+| `webhooks/coffee-alert` | Incoming webhook for coffee availability notifications |
+| `admin/seed` | Populate knowledge base (run once on new installs) |
+
+### Components
+
+**Flow steps (`src/components/flow/`):**
+
+| Component | Purpose |
+|-----------|---------|
+| `FlowShell.tsx` | Step router + nav shell |
+| `StepMode.tsx` | Home Brew / Coffee Shop / Taste Match selector |
+| `StepScan.tsx` | Camera / photo upload + AI bag extraction + clarification |
+| `StepContext.tsx` | Occasion, water amount, time, mood, equipment |
+| `StepRecommend.tsx` | 2–4 AI recipe candidates with reasoning |
+| `StepBrew.tsx` | ★ Circular timer + real-time pour guide |
+| `StepLog.tsx` | Post-brew: flavor wheel, star rating, tasting notes |
+| `StepSummary.tsx` | Review + save session |
+| `StepMatchResult.tsx` | Taste-match results vs past sessions |
+
+**UI primitives (`src/components/ui/`):**
+`Button`, `CircularTimer`, `CoffeeBeanGlow`, `Chip`, `FlavorWheel`, `BrewMethodIcon`, `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `RadarChart`, `StarRating`
+
+**Layout (`src/components/layout/`):**
+`TopMenu`, `BottomNav`, `ScrollContainer`, `BottomSpacer`
+
+**Session:** `SessionCard`
+**Cafés:** `CafeMap` (Leaflet)
+
+### `src/lib/`
+
 ```
-src/
-├── app/
-│   ├── page.tsx                     # Home — session diary feed
-│   ├── brew/new/page.tsx            # Flow entry point
-│   ├── cafes/page.tsx               # Café collection — all external visits
-│   ├── taste/page.tsx               # Taste profile + AI summary
-│   ├── coffees/                     # Coffee library (list + detail)
-│   ├── explore/page.tsx             # AMA chat with coffee expert
-│   ├── match/page.tsx               # Taste-match finder
-│   └── api/
-│       ├── sessions/route.ts        # ★ Core CRUD — session save/load
-│       ├── recommend/route.ts       # Brew recipe generation
-│       ├── cafes/route.ts           # Café visit aggregator (external sessions)
-│       ├── analyze-bag/route.ts     # Claude Vision → coffee identity
-│       ├── analyze-bag/clarify/     # Follow-up clarification AI
-│       ├── match/route.ts           # Taste scoring algorithm
-│       ├── explore/route.ts         # AMA system prompt
-│       ├── brew-insight/route.ts    # Post-brew one-liner insight
-│       ├── taste-summary/route.ts   # Taste profile AI summary
-│       ├── upload/route.ts          # Hetzner S3 upload (bags/ prefix only)
-│       └── research/route.ts        # Weekly cron agent (Ofelia)
-├── components/flow/                 # 7-step brew flow UI
-│   ├── FlowShell.tsx               # Step router + nav shell
-│   ├── StepMode.tsx                # Home vs External
-│   ├── StepScan.tsx                # Photo + AI extraction
-│   ├── StepContext.tsx             # Occasion / mood / water
-│   ├── StepRecommend.tsx           # Recipe card + reasoning
-│   ├── StepBrew.tsx                # ★ Timer + live pour guide
-│   ├── StepLog.tsx                 # Taste rating + notes
-│   └── StepSummary.tsx             # Save + success screen
-├── components/ui/                   # Reusable: CircularTimer, StarRating,
-│                                   #   RadarChart, Chip, PhotoUpload, ...
-├── hooks/useWakeLock.ts            # Keep screen on during brew
-├── lib/
-│   ├── claude/recommend.ts         # ★ Full system prompt (equipment baked in)
-│   ├── claude/analyzeBag.ts        # Vision prompt + BagAnalysisResult type
-│   ├── types/session.ts            # ★ Core data model (all interfaces)
-│   ├── types/cafes.ts              # CafeSummary interface (shared server+client)
-│   ├── db/client.ts                # Drizzle ORM + pg Pool
-│   ├── db/schema.ts                # All table definitions
-│   ├── db/migrations/              # SQL migrations (drizzle-kit)
-│   └── storage/s3.ts               # Hetzner Object Storage (S3-compatible)
-└── store/flowStore.ts              # ★ Zustand brew flow state (sessionStorage)
+lib/
+├── claude/
+│   ├── recommend.ts        # ★ Full system prompt + recipe generation
+│   ├── analyzeBag.ts       # Vision prompt + BagAnalysisResult type
+│   ├── escher.ts           # Pattern/terrain interpreter (Escher insights)
+│   ├── extractor.ts        # Cross-session pattern extraction
+│   ├── brewSignature.ts    # Weighted brew signature per coffee/method
+│   ├── patterns.ts         # Pace, craft approach, occasion patterns
+│   ├── historyUtils.ts     # Timing/temp statistics from past sessions
+│   ├── translate.ts        # Tasting notes ↔ SCA flavor wheel taxonomy
+│   └── parseJson.ts        # Safe Claude JSON parsing with Zod
+├── types/
+│   ├── session.ts          # ★ Core data model (all interfaces)
+│   ├── coffee.ts           # Coffee-specific types
+│   ├── preferences.ts      # UserPreferences interface
+│   └── cafes.ts            # CafeSummary + PlaceCoordinates
+├── db/
+│   ├── schema.ts           # Drizzle table definitions (9 tables)
+│   ├── client.ts           # Lazy Drizzle client + pg Pool
+│   └── helpers.ts          # rowToSession, rowToCoffee converters
+├── db/migrations/
+│   ├── 0000_init.sql       # All core tables + indexes
+│   ├── 0001_add_places.sql # places table + 18 Düsseldorf cafés
+│   ├── 0002_add_place_coords.sql  # lat/lng columns on places
+│   └── 0005_cologne_specialty_places.sql  # 12 Cologne specialty cafés
+├── knowledge/
+│   ├── insights.ts / news.ts / hints.ts / questions.ts / alerts.ts
+├── roasters/priors.ts      # Roaster style priors for recommendation engine
+├── constants/
+│   ├── brewMethods.ts / flavorTaxonomy.ts / scaFlavorWheel.ts
+├── storage/s3.ts           # Hetzner Object Storage (S3-compatible)
+└── utils/
+    ├── cn.ts / safeFetch.ts / formatTime.ts / pourSequence.ts
 ```
+
+### Other key files
+
+| File | Purpose |
+|------|---------|
+| `src/store/flowStore.ts` | ★ Zustand brew flow state (sessionStorage-persisted) |
+| `src/hooks/useWakeLock.ts` | Keep screen on during active brew |
+| `src/middleware.ts` | Auth check + redirects |
+| `scripts/seed-insights.mjs` | Populate knowledge base (run once on new installs) |
+| `scripts/migrate-firestore-to-postgres.mjs` | One-time Firebase → Postgres migration |
+| `scripts/migrate-storage-to-s3.mjs` | One-time local storage → S3 migration |
+| `scripts/rebuild-coffees-table.mjs` | Recompute coffee aggregates |
+| `scripts/geocode-places.mjs` | Geocode café addresses via Google Maps |
+| `docker-compose.yml` | 4-service stack: postgres, app, caddy, ofelia |
+
+### Database tables (Drizzle + Postgres)
+
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`
+
+### Key dependencies
+
+| Package | Version | Role |
+|---------|---------|------|
+| `next` | 14.2.35 | Framework |
+| `@anthropic-ai/sdk` | 0.80.0 | Claude API |
+| `drizzle-orm` | 0.36.0 | ORM |
+| `pg` | 8.13.0 | Postgres driver |
+| `zustand` | 5.0.12 | State management |
+| `zod` | 4.3.6 | Schema validation |
+| `@simplewebauthn/server` | 13.3.0 | Passkey auth |
+| `jose` | 6.2.2 | JWT |
+| `leaflet` | 1.9.4 | Maps |
+| `@aws-sdk/client-s3` | 3.700.0 | S3 uploads |
+| `@ducanh2912/next-pwa` | 10.2.9 | PWA / service worker |
 
 ---
 
-## Current Status
+## Current Status — Snapshot May 2026
 
 ### ✅ Done
-- Full 7-step brew flow (mode → scan → context → recommend → brew → log → summary)
+**Core brew flow**
+- Full 7-step brew flow: mode → scan → context → recommend → brew → log → summary
 - AI bag photo extraction (Claude Vision → Zod-validated session)
-- Brew timer: circular, pour-over sequence + prose-step guide (AeroPress etc.)
-- Screen wake lock during active brew (useWakeLock hook)
+- Follow-up clarification step on bag extraction
+- URL-based coffee product page analysis
+- Brew timer: circular, pour-over sequence + prose-step guide (AeroPress / immersion etc.)
+- Screen wake lock during active brew (`useWakeLock`)
 - Bloom duration from roast date (Hoffmann/Rao: 50s fresh / 45s peak / 30s old)
 - Pour timing formula: `remaining / (n-2)` — last pour lands at `target - drawdownReserve`
 - Proportional drawdown reserve: `targetTimeSec * 0.33`
-- Session save: Zod validation → Postgres JSONB (null-safe, no JSON-roundtrip needed)
-- Session GET: single indexed query on createdAtMs DESC (Postgres; no dual-index fallback)
-- Taste profile page + Explore Next layout (stacked, not side-by-side)
-- Coffee library, match finder, AMA explore chat, weekly research cron
-- PWA (manifest, service worker, offline drafts)
-- WebAuthn (passkey) auth
-- **Immersion timer precision** — system prompt generates per-step durations that sum exactly to `targetTimeSec`; no "at X:XX" absolute timestamps. Steps like `"pour 15s · steep 3:40 · drain 55s"` = 300s exactly.
-- **Background-safe timer** — `CircularTimer` uses `Date.now()` anchor instead of `setInterval` counter; snaps to real wall-clock time via `visibilitychange` event when returning from background on iOS
-- **Step-change alerts** — 2-tone Web Audio cue (880 Hz → 660 Hz) fires on each auto-advanced immersion step; `navigator.vibrate(80)` for Android (no-op on iOS)
-- **Café visit wording** — external sessions show "The Brew" (not "Your Brew") and "Would you drink this again?" (not "Would you brew again?")
-- **Café collection page** — `/cafes` lists all visited cafés grouped from external sessions: visit count, avg rating, coffees tasted, last visited date
-- **Auto-deploy via GitHub Actions** — push to `main` → GitHub runs SSH deploy on Hetzner VPS automatically
+- **Immersion timer precision** — per-step durations sum exactly to `targetTimeSec`; no absolute timestamps
+- **Background-safe timer** — `CircularTimer` uses `Date.now()` anchor; snaps via `visibilitychange` on iOS
+- **Step-change alerts** — 2-tone Web Audio cue (880 Hz → 660 Hz) on each auto-advanced step; `navigator.vibrate(80)` on Android
+
+**Data & persistence**
+- Session save: Zod validation → Postgres JSONB (null-safe)
+- Session GET: single indexed query on `createdAtMs DESC`
+- Coffee library with detail pages (rating history, brew signatures, notes)
+- Roaster profiles with AI-generated style summaries
+- Zustand flow store with sessionStorage persistence
+
+**AI features**
+- Brew recipe generation: 2–4 candidates with reasoning (`recommend.ts`)
+- Post-brew Escher insights: terrain/pattern prose analysis
+- Cross-session pattern extraction (pace, craft approach, occasions)
+- Brew signature: weighted averages per coffee/method combo
+- Taste profile page with AI-written summary
+- Taste-match finder: scores past sessions against current coffee
+- AMA explore chat with conversational AI
+- Weekly deep-research cron (Ofelia)
+- Knowledge base: insights, hints, news, questions
+
+**Auth & infra**
+- WebAuthn (passkey) auth — register, login, re-enroll
+- JWT session cookie via `jose`
+- PWA (manifest, service worker, offline)
+- Auto-deploy via GitHub Actions → SSH → Hetzner VPS
+
+**Places & cafés**
+- Café map with Leaflet, place search, detail pages
+- `/cafes` collection: visit count, avg rating, coffees tasted, last visited
+- External sessions show "The Brew" / "Would you drink this again?" wording
+- Geocoded places (Düsseldorf + Cologne specialty shops seeded)
+
+**Coffee alerts**
+- Alert subscriptions + incoming webhook for coffee availability notifications
 
 ### ❌ Not Done / Known Gaps
-- Photo uploads: stored under `bags/` — old sessions scanned before this fix have no bagPhotoUrl
-- Single-user app by design (no multi-user isolation needed)
-- Research cron data (insights/hints/news) needs seeding on new installs: `node scripts/seed-insights.mjs`
-- Data migration from Firebase: `node scripts/migrate-firestore-to-postgres.mjs` + `node scripts/migrate-storage-to-s3.mjs`
+- Photo uploads: stored under `bags/` — old sessions scanned before this fix have no `bagPhotoUrl`
 - Step alerts during background are missed — iOS suspends JS; no workaround without server-push notifications
+- Single-user app by design (no multi-user isolation needed)
+- Knowledge base needs seeding on new installs: `node scripts/seed-insights.mjs`
+- Firebase migration scripts exist but are one-shot: `migrate-firestore-to-postgres.mjs` + `migrate-storage-to-s3.mjs`
 
 ---
 
