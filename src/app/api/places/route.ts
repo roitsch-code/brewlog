@@ -63,22 +63,24 @@ export async function GET(req: Request) {
     : await db.select().from(places).orderBy(asc(places.city), asc(places.name));
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
 
-  // Geocode 5 per request. Sort by id DESC so newly-added places (highest IDs)
-  // are resolved first — cities added via recent migrations get coords on the
-  // first few loads instead of waiting behind thousands of alphabetically-earlier
-  // places that lost their coords when migration 0003 ran.
-  const toGeocode = [...unresolved].sort((a, b) => b.id - a.id).slice(0, 5);
-  for (const place of toGeocode) {
-    let coords: { lat: number; lng: number } | null = null;
-    for (const q of buildQueries(place.name, place.address, place.city)) {
-      coords = await nominatim(q);
-      if (coords) break;
-    }
-    if (coords) {
-      await db.update(places).set({ lat: coords.lat, lng: coords.lng }).where(eq(places.id, place.id));
-      const row = rows.find(r => r.id === place.id);
-      if (row) { row.lat = coords.lat; row.lng = coords.lng; }
-    }
+  // Geocode any unresolved places in the background — newest IDs first so
+  // recently-added cities get coords on the next load without delaying this response.
+  // Previously this was synchronous (5 × 1.1s = 5.5s+ delay), which meant
+  // locate-me fired before places were loaded and showed "No cafés in this area".
+  if (unresolved.length > 0) {
+    const toGeocode = [...unresolved].sort((a, b) => b.id - a.id).slice(0, 5);
+    (async () => {
+      for (const place of toGeocode) {
+        let coords: { lat: number; lng: number } | null = null;
+        for (const q of buildQueries(place.name, place.address, place.city)) {
+          coords = await nominatim(q);
+          if (coords) break;
+        }
+        if (coords) {
+          await db.update(places).set({ lat: coords.lat, lng: coords.lng }).where(eq(places.id, place.id));
+        }
+      }
+    })().catch(() => {});
   }
 
   return Response.json(rows);
