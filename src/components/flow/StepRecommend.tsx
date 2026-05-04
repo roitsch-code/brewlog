@@ -6,6 +6,7 @@ import { formatSeconds } from "@/lib/utils/formatTime";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { getLoadingHints, COFFEE_HINTS } from "@/lib/coffeeHints";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
 
 function shuffleSubset(arr: string[], count: number): string[] {
@@ -52,6 +53,15 @@ export default function StepRecommend() {
   const rec = draft.recommendation;
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showAdjustments, setShowAdjustments] = useState(false);
+
+  const { enableWakeLock, disableWakeLock } = useWakeLock();
+  useEffect(() => {
+    if (isRecommending) {
+      enableWakeLock();
+    } else {
+      disableWakeLock();
+    }
+  }, [isRecommending, enableWakeLock, disableWakeLock]);
 
   // Cycling hints during loading
   const [hints, setHints] = useState<string[]>(() => getLoadingHints(8));
