@@ -121,7 +121,9 @@ lib/
 │   ├── extractor.ts        # Cross-session pattern extraction
 │   ├── brewSignature.ts    # Weighted brew signature per coffee/method
 │   ├── patterns.ts         # Pace, craft approach, occasion patterns
-│   ├── historyUtils.ts     # Timing/temp statistics from past sessions
+│   ├── historyUtils.ts     # ★ Timing stats + buildHistorySummary + buildRecentRecipes (compact dose/water/grind/temp/timing per session)
+│   ├── userProfile.ts      # ★ loadUserProfile() reads preferences table; formatProfileForPrompt() builds the cached "About you" system block
+│   ├── coffeeLibrary.ts    # loadCoffeeLibraryCompact() + formatter — last 30 bags for "what should I open?" questions
 │   ├── translate.ts        # Tasting notes ↔ SCA flavor wheel taxonomy
 │   └── parseJson.ts        # Safe Claude JSON parsing with Zod
 ├── types/
@@ -140,9 +142,10 @@ lib/
 │   └── 0005_cologne_specialty_places.sql  # 12 Cologne specialty cafés
 ├── knowledge/
 │   ├── insights.ts / news.ts / hints.ts / questions.ts / alerts.ts
-├── roasters/priors.ts      # Roaster style priors for recommendation engine
+├── roasters/priors.ts      # ★ 50+ curated roaster style priors; getRoasterPrior() + formatRoasterPriorForPrompt() consumed by /recommend AND /explore
 ├── constants/
 │   ├── brewMethods.ts / flavorTaxonomy.ts / scaFlavorWheel.ts
+│   └── grindSettings.ts    # ★ Single source of Niche Zero degrees — replaces hardcoded copies in CLAUDE.md / docs / prompts
 ├── storage/s3.ts           # Hetzner Object Storage (S3-compatible)
 └── utils/
     ├── cn.ts / safeFetch.ts / formatTime.ts / pourSequence.ts
@@ -215,7 +218,12 @@ lib/
 - Brew signature: weighted averages per coffee/method combo
 - Taste profile page with AI-written summary
 - Taste-match finder: scores past sessions against current coffee
-- AMA explore chat with conversational AI
+- **Explore chat coach upgrade (May 2026)** — `/explore` no longer relies on a hardcoded user profile. Each turn injects:
+  - **Recent recipes block** — `buildRecentRecipes()` shows the actual dose/water/ratio/Niche degrees/temp/target+actual timing/flow/Drip Assist/water source for the last 5 brews, so timing questions get answered with real numbers
+  - **Live preferences block** — `loadUserProfile()` reads the `preferences` table; canonical equipment + grind settings live in a separately cached system block that invalidates only when onboarding changes
+  - **Coffee library block** — `loadCoffeeLibraryCompact()` lists the last 30 bags with roast-date freshness, so "which bag should I open next?" gets a specific answer
+  - **Roaster priors block** — up to 5 unique roasters from recent sessions hydrated via `getRoasterPrior()` so it can reference Friedhats' clarity bias, April's minimal-agitation rule, etc.
+  - **BrewLog feature awareness** — system prompt now knows about Match, Taste, Cafés and points the user at them when relevant
 - Weekly deep-research cron (Ofelia)
 - Knowledge base: insights, hints, news, questions
 
@@ -326,3 +334,4 @@ Cause for this rule: commit `932ff25` swapped the recommend model Opus → Sonne
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
 **Grind quick ref:** @./docs/grind-settings.md
+**Grind source of truth (code):** `src/lib/constants/grindSettings.ts` — `/recommend` and `/explore` both read from here. Update degrees in this file; the markdown docs mirror it.

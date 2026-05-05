@@ -1,5 +1,7 @@
 # Grind Settings — Niche Zero (°)
 
+> **Code source of truth:** `src/lib/constants/grindSettings.ts`. Recommend and Explore both import from there. If you change a number, change it in the constants file — this table mirrors it.
+
 | Method | Process | Niche° |
 |--------|---------|--------|
 | V60 + Drip Assist | Washed | 403–408° |
