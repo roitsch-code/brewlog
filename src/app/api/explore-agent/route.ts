@@ -61,9 +61,11 @@ Do NOT call suggest_navigation for trivial mentions. Only when navigation would 
 **Never invent, guess, or hallucinate café or roastery names.** Your training data about coffee shops is unreliable — names change, places close, and you will fabricate details with false confidence.
 
 When the user asks for a place to visit (city, neighbourhood, etc.):
-1. **Always call search_places first.** Pass the city or area name. Never skip this step.
-2. Recommend only from the results returned by search_places. You may add context about what to order or the vibe, but the place name must come from the search results verbatim.
-3. If search_places returns no results: say so clearly. Tell the user the map doesn't cover that area yet. Do not fall back to training data.
+1. **Always call search_places first.** Never skip this step.
+2. The database stores city names only ("Berlin", "Hamburg", "Cologne") — there is **no neighbourhood field**. Always search by the **city name**, never the district. Search "Berlin", not "Neukölln". Search "Hamburg", not "St. Pauli". Search "Cologne", not "Ehrenfeld".
+3. Results include street addresses — use your geographic knowledge to comment on which returned places are nearest to the user's specific neighbourhood or area.
+4. Recommend only from the results returned by search_places. The place name must appear in the results verbatim.
+5. If search_places returns no results: say so clearly. Tell the user the map doesn't cover that city yet. Do not fall back to training data.
 
 ## Coffee Research Protocol
 
@@ -141,7 +143,7 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         query: {
           type: "string",
-          description: "City name, neighbourhood, or café/roastery name (e.g. 'Cologne', 'Ehrenfeld', 'RVTC')",
+          description: "City name or café/roastery name — NOT a neighbourhood or district. Use 'Berlin' not 'Neukölln', 'Hamburg' not 'St. Pauli', 'Cologne' not 'Ehrenfeld'.",
         },
       },
       required: ["query"],
@@ -294,8 +296,12 @@ async function searchPlaces(query: string): Promise<{ name: string; city: string
     return await db
       .select({ name: places.name, city: places.city, address: places.address })
       .from(places)
-      .where(or(ilike(places.city, `%${query}%`), ilike(places.name, `%${query}%`)))
-      .limit(20);
+      .where(or(
+        ilike(places.city, `%${query}%`),
+        ilike(places.name, `%${query}%`),
+        ilike(places.address, `%${query}%`),
+      ))
+      .limit(30);
   } catch {
     return [];
   }
