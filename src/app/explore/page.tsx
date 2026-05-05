@@ -129,6 +129,7 @@ function AskTab() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [starterQuestions, setStarterQuestions] = useState<string[]>(DEFAULT_STARTER_QUESTIONS);
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -167,9 +168,14 @@ function AskTab() {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
+    setAgentStatus(null);
+
+    // Route to agent endpoint when message contains a URL
+    const isAgentRequest = /https?:\/\//.test(trimmed);
+    const endpoint = isAgentRequest ? "/api/explore-agent" : "/api/explore";
 
     try {
-      const res = await fetch("/api/explore", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,8 +195,16 @@ function AskTab() {
 
       const applyEvent = (event: string, data: string) => {
         try {
-          const payload = JSON.parse(data) as { text?: string; sources?: { title: string; url: string }[]; error?: string };
-          if (event === "delta" && payload.text) {
+          const payload = JSON.parse(data) as {
+            text?: string;
+            message?: string;
+            sources?: { title: string; url: string }[];
+            error?: string;
+          };
+          if (event === "status" && payload.message) {
+            setAgentStatus(payload.message);
+          } else if (event === "delta" && payload.text) {
+            setAgentStatus(null);
             setMessages(prev => {
               const copy = prev.slice();
               const last = copy[copy.length - 1];
@@ -200,6 +214,7 @@ function AskTab() {
               return copy;
             });
           } else if (event === "done") {
+            setAgentStatus(null);
             if (payload.sources) {
               setMessages(prev => {
                 const copy = prev.slice();
@@ -258,6 +273,7 @@ function AskTab() {
       });
     } finally {
       setLoading(false);
+      setAgentStatus(null);
     }
   };
 
@@ -381,8 +397,11 @@ function AskTab() {
                     style={{ objectFit: "contain" }}
                   />
                 </div>
-                <div className="bg-brew-surface border border-brew-border rounded-2xl px-4 py-3">
+                <div className="bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 flex flex-col gap-1.5">
                   <CoffeeBeanGlow size={24} />
+                  {agentStatus && (
+                    <p className="text-white/40 text-xs leading-snug">{agentStatus}</p>
+                  )}
                 </div>
               </div>
             )}
