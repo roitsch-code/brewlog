@@ -8,6 +8,7 @@ import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
+import { or, ilike } from "drizzle-orm";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -60,9 +61,9 @@ Do NOT call suggest_navigation for trivial mentions. Only when navigation would 
 **Never invent, guess, or hallucinate café or roastery names.** Your training data about coffee shops is unreliable — names change, places close, and you will fabricate details with false confidence.
 
 When the user asks for a place to visit (city, neighbourhood, etc.):
-1. Check the "Known Cafés & Roasteries in BrewLog" list injected below.
-2. If there are matching places: recommend only from that list. You may add context about the neighbourhood or what to order, but the place name must appear verbatim in the list.
-3. If there are NO places in the list for that city or area: say so clearly and honestly. Tell the user the map doesn't cover that location yet. Do not fall back to training data to invent names.
+1. **Always call search_places first.** Pass the city or area name. Never skip this step.
+2. Recommend only from the results returned by search_places. You may add context about what to order or the vibe, but the place name must come from the search results verbatim.
+3. If search_places returns no results: say so clearly. Tell the user the map doesn't cover that area yet. Do not fall back to training data.
 
 ## Coffee Research Protocol
 
@@ -129,6 +130,21 @@ const TOOLS: Anthropic.Tool[] = [
         question: { type: "string", description: "What to extract or look for" },
       },
       required: ["url", "question"],
+    },
+  },
+  {
+    name: "search_places",
+    description:
+      "Search the BrewLog café and roastery database by city or name. Call this BEFORE recommending any place to visit — never use training data for place names. Returns up to 20 matches.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "City name, neighbourhood, or café/roastery name (e.g. 'Cologne', 'Ehrenfeld', 'RVTC')",
+        },
+      },
+      required: ["query"],
     },
   },
   {
@@ -273,6 +289,18 @@ async function fetchImageAsBase64(
   }
 }
 
+async function searchPlaces(query: string): Promise<{ name: string; city: string; address: string | null }[]> {
+  try {
+    return await db
+      .select({ name: places.name, city: places.city, address: places.address })
+      .from(places)
+      .where(or(ilike(places.city, `%${query}%`), ilike(places.name, `%${query}%`)))
+      .limit(20);
+  } catch {
+    return [];
+  }
+}
+
 // ── Context helpers ───────────────────────────────────────────────────────────
 
 // Includes IDs so Claude can reference them in suggest_navigation
@@ -287,14 +315,6 @@ function formatLibraryForAgent(library: CompactCoffee[]): string {
       return `- [id:${c.id}] ${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${usage}`;
     })
     .join("\n");
-}
-
-async function loadKnownPlaces(): Promise<{ name: string; city: string }[]> {
-  try {
-    return await db.select({ name: places.name, city: places.city }).from(places);
-  } catch {
-    return [];
-  }
 }
 
 // ── Route ─────────────────────────────────────────────────────────────────────
@@ -316,10 +336,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "messages required" }, { status: 400 });
     }
 
-    const [userPrefs, library, knownPlaces] = await Promise.all([
+    const [userPrefs, library] = await Promise.all([
       loadUserProfile().catch(() => null),
       loadCoffeeLibraryCompact(30).catch(() => []),
-      loadKnownPlaces(),
     ]);
 
     const profileBlock = formatProfileForPrompt(userPrefs);
@@ -341,21 +360,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (knownPlaces.length > 0) {
-      const placeLines = knownPlaces
-        .map((p) => `- ${p.name} (${p.city})`)
-        .join("\n");
-      contextParts.push(
-        `\n## Known Cafés & Roasteries in BrewLog (EXHAUSTIVE LIST — do not recommend any place not on this list)\n` +
-        `This is every place currently in the database. If a city the user asks about has no entries here, say so — do not invent names.\n` +
-        `Use the exact name as the id when calling suggest_navigation with destination "cafe_detail".\n` +
-          placeLines
-      );
-    } else {
-      contextParts.push(
-        `\n## Known Cafés & Roasteries in BrewLog\nThe database has no places seeded yet. If the user asks for a café recommendation, tell them the map is empty and do not invent names.\n`
-      );
-    }
 
     const recentRoasters = Array.from(
       new Set(
@@ -432,7 +436,28 @@ export async function POST(req: NextRequest) {
               for (const block of response.content) {
                 if (block.type !== "tool_use") continue;
 
-                if (block.name === "fetch_page") {
+                if (block.name === "search_places") {
+                  const input = block.input as { query: string };
+                  send("status", { message: `Searching map for "${input.query}"...` });
+                  try {
+                    const results = await searchPlaces(input.query);
+                    const content =
+                      results.length === 0
+                        ? `No places found in the BrewLog database matching "${input.query}".`
+                        : `Found ${results.length} place(s) matching "${input.query}":\n\n` +
+                          results
+                            .map((p) => `- ${p.name} | ${p.city}${p.address ? ` | ${p.address}` : ""}`)
+                            .join("\n");
+                    toolResults.push({ type: "tool_result", tool_use_id: block.id, content });
+                  } catch (err) {
+                    toolResults.push({
+                      type: "tool_result",
+                      tool_use_id: block.id,
+                      content: `Search error: ${err instanceof Error ? err.message : "failed"}`,
+                      is_error: true,
+                    });
+                  }
+                } else if (block.name === "fetch_page") {
                   const input = block.input as { url: string };
                   let hostname = input.url;
                   try { hostname = new URL(input.url).hostname; } catch { /* use raw */ }
