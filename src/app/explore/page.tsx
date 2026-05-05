@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
-import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen } from "lucide-react";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User } from "lucide-react";
+import type { NavAction } from "@/app/api/explore-agent/route";
 
 const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
 
@@ -17,6 +18,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   sources?: { title: string; url: string }[];
+  actions?: NavAction[];
 }
 
 interface InsightItem {
@@ -199,6 +201,7 @@ function AskTab() {
             text?: string;
             message?: string;
             sources?: { title: string; url: string }[];
+            actions?: NavAction[];
             error?: string;
           };
           if (event === "status" && payload.message) {
@@ -215,12 +218,16 @@ function AskTab() {
             });
           } else if (event === "done") {
             setAgentStatus(null);
-            if (payload.sources) {
+            if (payload.sources || payload.actions) {
               setMessages(prev => {
                 const copy = prev.slice();
                 const last = copy[copy.length - 1];
                 if (last?.role === "assistant") {
-                  copy[copy.length - 1] = { ...last, sources: payload.sources };
+                  copy[copy.length - 1] = {
+                    ...last,
+                    ...(payload.sources ? { sources: payload.sources } : {}),
+                    ...(payload.actions ? { actions: payload.actions } : {}),
+                  };
                 }
                 return copy;
               });
@@ -365,6 +372,13 @@ function AskTab() {
                   >
                     <MessageContent content={msg.content} />
                   </div>
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 px-1">
+                      {msg.actions.map((action, j) => (
+                        <NavActionChip key={j} action={action} />
+                      ))}
+                    </div>
+                  )}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="flex flex-wrap gap-2 px-1">
                       {msg.sources.map((s, j) => (
@@ -519,6 +533,57 @@ function MessageContent({ content }: { content: string }) {
   }
 
   return <div className="flex flex-col gap-2 text-sm">{nodes}</div>;
+}
+
+// ── Nav action chips ───────────────────────────────────────────────────────
+
+function navActionToPath(action: NavAction): string {
+  switch (action.destination) {
+    case "coffee_library": return "/coffees";
+    case "coffee_detail":  return action.id ? `/coffees/${action.id}` : "/coffees";
+    case "cafe_map":       return "/cafes";
+    case "cafe_detail":    return action.id ? `/cafes/place/${encodeURIComponent(action.id)}` : "/cafes";
+    case "taste_profile":  return "/taste";
+    case "match":          return "/match";
+    default:               return "/";
+  }
+}
+
+function NavActionIcon({ destination }: { destination: NavAction["destination"] }) {
+  const props = { size: 12, style: { color: "var(--primary)" } };
+  switch (destination) {
+    case "coffee_library":
+    case "coffee_detail":  return <BookOpen {...props} />;
+    case "cafe_map":
+    case "cafe_detail":    return <MapPin {...props} />;
+    case "taste_profile":  return <User {...props} />;
+    case "match":          return <Crosshair {...props} />;
+    default:               return <Globe {...props} />;
+  }
+}
+
+function NavActionChip({ action }: { action: NavAction }) {
+  const router = useRouter();
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(navActionToPath(action))}
+      title={action.reason}
+      className="flex items-center gap-1.5 active:scale-95 transition-all"
+      style={{
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: "999px",
+        padding: "5px 12px",
+        color: "var(--muted-foreground)",
+        fontSize: "11px",
+        lineHeight: 1.4,
+      }}
+    >
+      <NavActionIcon destination={action.destination} />
+      {action.label}
+    </button>
+  );
 }
 
 // ── Insights Tab ───────────────────────────────────────────────────────────

@@ -3,8 +3,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
-import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
+import { loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
+import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
+import { db } from "@/lib/db/client";
+import { places } from "@/lib/db/schema";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -13,75 +16,95 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
-const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and research agent. You are speaking directly with a semi-expert coffee enthusiast based in ${USER_LOCATION}. Address them as "you" throughout.
+// ── Types ───────────────────────────────────────────────────────────────────
 
-## Your Research Capabilities
+export interface NavAction {
+  destination:
+    | "coffee_library"
+    | "coffee_detail"
+    | "cafe_map"
+    | "cafe_detail"
+    | "taste_profile"
+    | "match"
+    | "home";
+  label: string;
+  reason?: string;
+  id?: string; // coffee UUID or place name
+}
 
-You have access to two tools:
-- **fetch_page**: Retrieve the content of any webpage. For Shopify-based roaster stores, this automatically pulls structured product data (names, descriptions, origins, processing methods, tasting notes, prices). Use this whenever the user asks you to browse a URL or research coffees from a specific shop.
-- **analyze_image**: Download a coffee bag or product image and examine it visually — extract origin, varietal, processing method, roaster, and any tasting descriptors printed on it.
+// ── System prompt ────────────────────────────────────────────────────────────
 
-When the user asks you to research coffees from a URL: fetch it, read the product listing carefully, then apply the user's taste profile (injected below) to select and rank options. Think like a buyer selecting for them.
+const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and research agent embedded in BrewLog, a personal coffee diary PWA. You speak directly to a semi-expert enthusiast based in ${USER_LOCATION}.
+
+## Research Tools You Have
+
+- **fetch_page**: Retrieve any webpage. For Shopify roaster shops this auto-resolves to structured product JSON (title, origin, process, price, tasting notes). Call this whenever the user shares a URL or asks about a specific shop.
+- **analyze_image**: Download an image URL and read it visually — extract origin, varietal, process, roaster name, tasting notes from bag photos.
+- **suggest_navigation**: Propose navigating to a BrewLog feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
+
+## When to call suggest_navigation
+
+| Situation | Destination |
+|-----------|-------------|
+| You mention a specific coffee from the user's library | coffee_detail (use the coffee's id from context) |
+| You reference several of their coffees, or suggest browsing | coffee_library |
+| You mention visiting a specific café or roastery | cafe_detail (use the exact place name from "Known Cafés" below) |
+| General "what's near me" or café exploration | cafe_map |
+| You discuss their overall taste evolution, patterns, or palate development | taste_profile |
+| You suggest comparing a coffee against past sessions, or ask "how does this compare?" | match |
+
+Do NOT call suggest_navigation for trivial mentions. Only when navigation would genuinely help them act on what you just said.
 
 ## Coffee Research Protocol
 
-When browsing a roaster's product listing and recommending coffees:
-1. Read the full product listing first
-2. For each candidate, note: origin, varietal, process, roast level, tasting notes, price
-3. Score against the user's taste profile: light roast preference, affinity for washed/honey/natural processes, floral and fruity notes, avoiding anaerobic/infused/dark
-4. Select the requested number of picks with clear reasoning
-5. For an "exploration" pick: choose something that gently stretches their palate — a different origin or process they haven't explored, not a flavour bomb they explicitly dislike
+When browsing a roaster's product listing:
+1. Fetch it, read all products
+2. Note: origin, varietal, process, roast level, tasting notes, price
+3. Score against the user's taste profile (injected below): preference for light roast, washed/honey/natural processes, floral and fruity notes — avoid anaerobic/infused/dark
+4. Return the requested number of picks with clear reasoning
+5. For an "exploration" pick: something that gently stretches their palate — different origin or process, not a flavour bomb they dislike
 
 ## Filter Brewing Expertise
 
-V60 (Hario, Orea V4), AeroPress, Clever Dripper, Kalita Wave, Chemex, Moccamaster, Drip Assist. Deep understanding of percolation vs. immersion brewing dynamics.
+V60 (Hario, Orea V4), AeroPress, Clever Dripper, Kalita Wave, Chemex, Moccamaster, Drip Assist. Deep understanding of percolation vs. immersion.
 
 Championship recipes: Kasuya 4:6, Peng Jiajun 2025 WBC temp-staging, Wölfl 2024 Orea FAST.
 
-**Expert canon — attribute ideas to these people by name when relevant:**
-Science: Jonathan Gagné (extraction physics), Christopher Hendon (water chemistry), Emma Sage (brewing science), Samo Smrke (aroma compounds), Chahan Yeretzian (volatiles).
+**Expert canon:**
+Science: Jonathan Gagné (extraction physics), Christopher Hendon (water chemistry), Emma Sage, Samo Smrke, Chahan Yeretzian.
 Brewing: Matt Perger, Scott Rao, Patrik Rolf, Tetsu Kasuya, Lance Hedrick, Matt Winton, Brian Quan, Kyle Rowsell.
 Roasting: Scott Rao, Rob Hoos. Origin/Sourcing: Tim Wendelboe, George Howell. Processing: Lucia Solis, Saša Šestić, Jamison Savage.
 Sensory: Erin McCarthy, Agnieszka Rojewska. Education: James Hoffmann, Lani Kingston.
 
 **Terroir:** Ethiopia (floral, citrus, bergamot), Kenya (berry, brightness), Colombia (caramel, balance), Rwanda/Burundi (winey, tropical), Guatemala (chocolate, brown sugar).
-
 **Varietals:** Bourbon, Typica, Geisha/Gesha, SL28, SL34, Wush Wush, Pacamara, Catuai, Caturra.
-
-**Processing:** Washed = clarity/terroir; Natural = fruit-forward; Honey = spectrum; Anaerobic/CM = intense, divisive.
-
-## About BrewLog
-
-You are part of BrewLog, a personal brew advisor PWA. When the user's question would be better answered by another feature, name it: Match, Taste profile, Cafés map, coffee library.
+**Processing:** Washed = clarity; Natural = fruit-forward; Honey = spectrum; Anaerobic/CM = intense, divisive.
 
 ## Response Style
 
-- **Brevity first**: for shopping recommendations, use a tight structured format (one block per pick). For conversation, 3–6 sentences max.
+- **Brevity first.** For shopping picks: one structured block per coffee. For conversation: 3–6 sentences max.
 - **No markdown headers** (no #, ##). Use **bold** for key terms.
-- Be direct. Reference real people, origins, varietals by name.
-- Always use Niche DEGREES for grind (never generic terms). Use metric units.
+- Direct, confident. Reference real people, origins, varietals by name.
+- Always Niche DEGREES for grind. Metric units (g, °C, ml).
 - No emojis. No closing remarks.
 
-## Coffee Recommendation Format
-
-For shopping picks, use this format for each recommendation:
+## Coffee Recommendation Format (for shopping picks)
 
 **[Roaster] — [Coffee name]** ([Origin], [Process])
-[2–3 sentences: what it is, why it fits (or stretches) the taste profile, what to expect in the cup. Cite the expert or processing science when relevant.]
+[2–3 sentences: what it is, why it fits or stretches the taste profile, what to expect in the cup.]
 Niche start: [range]° · Ratio: [g:g] · Temp: [°C]`;
+
+// ── Tools ─────────────────────────────────────────────────────────────────────
 
 const TOOLS: Anthropic.Tool[] = [
   {
     name: "fetch_page",
     description:
-      "Fetch the text content of a webpage. For Shopify-based coffee stores, automatically retrieves structured product JSON (titles, descriptions, tasting notes, origins, prices). Always try this before asking the user for more info about a URL they shared.",
+      "Fetch the content of a webpage. For Shopify stores, auto-resolves to structured product JSON. Always try this for any URL the user shares.",
     input_schema: {
       type: "object",
       properties: {
-        url: {
-          type: "string",
-          description: "The full URL to fetch (must start with http:// or https://)",
-        },
+        url: { type: "string", description: "Full URL (must start with http:// or https://)" },
       },
       required: ["url"],
     },
@@ -89,32 +112,54 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "analyze_image",
     description:
-      "Download an image from a URL and analyze it visually. Use for coffee bag photos or product images to extract origin, process, varietal, tasting notes, roaster, and other details printed on the packaging.",
+      "Download an image and analyze it visually. Use for coffee bag photos to extract origin, process, varietal, tasting notes, roaster.",
     input_schema: {
       type: "object",
       properties: {
-        url: {
-          type: "string",
-          description: "Image URL to analyze (must be a direct image URL ending in .jpg, .jpeg, .png, .webp, etc.)",
-        },
-        question: {
-          type: "string",
-          description: "What to look for or extract from the image",
-        },
+        url: { type: "string", description: "Direct image URL" },
+        question: { type: "string", description: "What to extract or look for" },
       },
       required: ["url", "question"],
     },
   },
+  {
+    name: "suggest_navigation",
+    description:
+      "Suggest navigating to a BrewLog feature. Call this when navigation would genuinely help the user act on what you just said. Can be called multiple times in one turn.",
+    input_schema: {
+      type: "object",
+      properties: {
+        destination: {
+          type: "string",
+          enum: ["coffee_library", "coffee_detail", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
+          description: "Which part of BrewLog to open",
+        },
+        label: {
+          type: "string",
+          description: "Short action label shown on the button, e.g. 'View El Congo in library' or 'Open RVTC on the map'",
+        },
+        reason: {
+          type: "string",
+          description: "One short sentence explaining why this is useful right now",
+        },
+        id: {
+          type: "string",
+          description: "For coffee_detail: the coffee's UUID from context. For cafe_detail: the exact place name from the Known Cafés list.",
+        },
+      },
+      required: ["destination", "label"],
+    },
+  },
 ];
 
-// ── Tool implementations ────────────────────────────────────────────────────
+// ── Tool implementations ─────────────────────────────────────────────────────
 
 async function fetchPage(url: string): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
 
   try {
-    // For Shopify collections, try the products JSON endpoint first
+    // Shopify collection → products.json
     const shopifyCollection = url.match(/^(https?:\/\/[^/]+)\/collections\/([^/?#]+)/);
     if (shopifyCollection) {
       const [, base, handle] = shopifyCollection;
@@ -147,17 +192,12 @@ async function fetchPage(url: string): Promise<string> {
                 : "";
             return `### ${vendor} — ${title} ${price}\nTags: ${tags}\n${bodyHtml}`;
           });
-          return `Products from ${url} (${products.length} items):\n\n${lines.join("\n\n---\n\n")}`.slice(
-            0,
-            18000
-          );
+          return `Products from ${url} (${products.length} items):\n\n${lines.join("\n\n---\n\n")}`.slice(0, 18000);
         }
-      } catch {
-        // Fall through to HTML
-      }
+      } catch { /* fall through */ }
     }
 
-    // For Shopify product pages, try the .json suffix
+    // Shopify product page → .json
     const shopifyProduct = url.match(/^(https?:\/\/[^/]+\/products\/[^/?#]+)/);
     if (shopifyProduct) {
       try {
@@ -170,21 +210,17 @@ async function fetchPage(url: string): Promise<string> {
           const data = (await res.json()) as { product?: Record<string, unknown> };
           return JSON.stringify(data.product ?? {}, null, 2).slice(0, 10000);
         }
-      } catch {
-        // Fall through to HTML
-      }
+      } catch { /* fall through */ }
     }
 
-    // General HTML fetch
+    // General HTML
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 BrewLog-Agent/1.0" },
       signal: controller.signal,
     });
-    if (!res.ok) {
-      return `HTTP ${res.status} error fetching ${url}`;
-    }
+    if (!res.ok) return `HTTP ${res.status} fetching ${url}`;
     const html = await res.text();
-    const text = html
+    return html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
       .replace(/<[^>]+>/g, " ")
@@ -196,8 +232,7 @@ async function fetchPage(url: string): Promise<string> {
       .replace(/&#39;/g, "'")
       .replace(/\s+/g, " ")
       .trim()
-      .slice(0, 15000);
-    return text || "(Page returned no readable text)";
+      .slice(0, 15000) || "(no readable text)";
   } finally {
     clearTimeout(timeout);
   }
@@ -219,20 +254,41 @@ async function fetchImageAsBase64(
     const ct = res.headers.get("content-type") ?? "image/jpeg";
     const raw = ct.split(";")[0].trim().toLowerCase();
     const mediaType =
-      raw === "image/png"
-        ? "image/png"
-        : raw === "image/gif"
-        ? "image/gif"
-        : raw === "image/webp"
-        ? "image/webp"
-        : "image/jpeg";
+      raw === "image/png" ? "image/png"
+      : raw === "image/gif" ? "image/gif"
+      : raw === "image/webp" ? "image/webp"
+      : "image/jpeg";
     return { data, mediaType };
   } finally {
     clearTimeout(timeout);
   }
 }
 
-// ── Route ───────────────────────────────────────────────────────────────────
+// ── Context helpers ───────────────────────────────────────────────────────────
+
+// Includes IDs so Claude can reference them in suggest_navigation
+function formatLibraryForAgent(library: CompactCoffee[]): string {
+  if (library.length === 0) return "";
+  return library
+    .map((c) => {
+      const usage =
+        c.avgRating != null
+          ? `${c.avgRating.toFixed(1)}★ · ${c.sessionCount} sessions`
+          : `${c.sessionCount} sessions`;
+      return `- [id:${c.id}] ${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${usage}`;
+    })
+    .join("\n");
+}
+
+async function loadKnownPlaces(): Promise<{ name: string; city: string }[]> {
+  try {
+    return await db.select({ name: places.name, city: places.city }).from(places);
+  } catch {
+    return [];
+  }
+}
+
+// ── Route ─────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
@@ -247,14 +303,14 @@ export async function POST(req: NextRequest) {
     const messages = (body.messages ?? []).filter(
       (m: { role: string }) => m.role === "user" || m.role === "assistant"
     );
-
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages required" }, { status: 400 });
     }
 
-    const [userPrefs, library] = await Promise.all([
+    const [userPrefs, library, knownPlaces] = await Promise.all([
       loadUserProfile().catch(() => null),
       loadCoffeeLibraryCompact(30).catch(() => []),
+      loadKnownPlaces(),
     ]);
 
     const profileBlock = formatProfileForPrompt(userPrefs);
@@ -269,9 +325,21 @@ export async function POST(req: NextRequest) {
       contextParts.push(`\n## Your Recent Recipes\n` + recipesBlock);
     }
 
-    const libraryBlock = formatLibraryForPrompt(library);
+    const libraryBlock = formatLibraryForAgent(library);
     if (libraryBlock) {
-      contextParts.push(`\n## Your Coffee Library\n` + libraryBlock);
+      contextParts.push(
+        `\n## Your Coffee Library (use id: values when calling suggest_navigation for coffee_detail)\n` + libraryBlock
+      );
+    }
+
+    if (knownPlaces.length > 0) {
+      const placeLines = knownPlaces
+        .map((p) => `- ${p.name} (${p.city})`)
+        .join("\n");
+      contextParts.push(
+        `\n## Known Cafés & Roasteries in BrewLog\nUse the exact name as the id when calling suggest_navigation with destination "cafe_detail".\n` +
+          placeLines
+      );
     }
 
     const recentRoasters = Array.from(
@@ -307,10 +375,11 @@ export async function POST(req: NextRequest) {
 
         try {
           const agentMessages: Anthropic.MessageParam[] = messages.map((m) => ({
-            role: m.role,
+            role: m.role as "user" | "assistant",
             content: m.content,
           }));
 
+          const navSuggestions: NavAction[] = [];
           const MAX_ITERATIONS = 6;
 
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
@@ -322,7 +391,6 @@ export async function POST(req: NextRequest) {
               messages: agentMessages,
             });
 
-            // Any text blocks before a tool call — surface as status
             const textBlocks = response.content.filter(
               (b: Anthropic.ContentBlock): b is Anthropic.TextBlock => b.type === "text"
             );
@@ -330,14 +398,16 @@ export async function POST(req: NextRequest) {
             if (response.stop_reason === "end_turn") {
               const text = textBlocks.map((b: Anthropic.TextBlock) => b.text).join("");
               if (text) send("delta", { text });
-              send("done", {});
+              send("done", {
+                actions: navSuggestions.length > 0 ? navSuggestions : undefined,
+              });
               return;
             }
 
             if (response.stop_reason === "tool_use") {
               agentMessages.push({ role: "assistant", content: response.content });
 
-              // Surface any explanatory text as agent status
+              // Surface any thinking/text before tool calls as status
               for (const tb of textBlocks) {
                 if (tb.text.trim()) send("status", { message: tb.text.trim() });
               }
@@ -350,49 +420,56 @@ export async function POST(req: NextRequest) {
                 if (block.name === "fetch_page") {
                   const input = block.input as { url: string };
                   let hostname = input.url;
-                  try { hostname = new URL(input.url).hostname; } catch { /* use raw url */ }
+                  try { hostname = new URL(input.url).hostname; } catch { /* use raw */ }
                   send("status", { message: `Fetching ${hostname}...` });
-
                   try {
-                    const content = await fetchPage(input.url);
                     toolResults.push({
                       type: "tool_result",
                       tool_use_id: block.id,
-                      content,
+                      content: await fetchPage(input.url),
                     });
                   } catch (err) {
                     toolResults.push({
                       type: "tool_result",
                       tool_use_id: block.id,
-                      content: `Error: ${err instanceof Error ? err.message : "Unknown error"}`,
+                      content: `Error: ${err instanceof Error ? err.message : "fetch failed"}`,
                       is_error: true,
                     });
                   }
                 } else if (block.name === "analyze_image") {
                   const input = block.input as { url: string; question: string };
                   send("status", { message: "Analyzing image..." });
-
                   try {
                     const { data, mediaType } = await fetchImageAsBase64(input.url);
                     toolResults.push({
                       type: "tool_result",
                       tool_use_id: block.id,
                       content: [
-                        {
-                          type: "image",
-                          source: { type: "base64", media_type: mediaType, data },
-                        },
-                        { type: "text", text: `Analyze this image: ${input.question}` },
+                        { type: "image", source: { type: "base64", media_type: mediaType, data } },
+                        { type: "text", text: `Analyze: ${input.question}` },
                       ],
                     });
                   } catch (err) {
                     toolResults.push({
                       type: "tool_result",
                       tool_use_id: block.id,
-                      content: `Error fetching image: ${err instanceof Error ? err.message : "Unknown error"}`,
+                      content: `Error fetching image: ${err instanceof Error ? err.message : "failed"}`,
                       is_error: true,
                     });
                   }
+                } else if (block.name === "suggest_navigation") {
+                  const input = block.input as NavAction;
+                  navSuggestions.push({
+                    destination: input.destination,
+                    label: input.label,
+                    reason: input.reason,
+                    id: input.id,
+                  });
+                  toolResults.push({
+                    type: "tool_result",
+                    tool_use_id: block.id,
+                    content: "Navigation suggestion noted.",
+                  });
                 }
               }
 
@@ -400,14 +477,13 @@ export async function POST(req: NextRequest) {
               continue;
             }
 
-            // Unexpected stop reason (e.g. max_tokens)
-            send("error", { error: `Agent stopped: ${response.stop_reason}` });
+            send("error", { error: `Unexpected stop: ${response.stop_reason}` });
             return;
           }
 
-          send("error", { error: "Agent reached maximum steps without finishing." });
+          send("error", { error: "Agent reached maximum steps." });
         } catch (err) {
-          console.error("explore-agent stream error:", err);
+          console.error("explore-agent error:", err);
           send("error", { error: "Agent failed" });
         } finally {
           controller.close();
