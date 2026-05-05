@@ -47,12 +47,14 @@ const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and r
 
 | Situation | Destination |
 |-----------|-------------|
-| You mention a specific coffee from the user's library | coffee_detail (use the coffee's id from context) |
-| You reference several of their coffees, or suggest browsing | coffee_library |
-| You mention visiting a specific café or roastery | cafe_detail (use the exact place name from "Known Cafés" below) |
-| General "what's near me" or café exploration | cafe_map |
+| You mention a specific coffee **bag** from the user's library | coffee_detail (use the coffee's id from context) |
+| You reference several of their coffee bags, or suggest browsing their bag collection | coffee_library |
+| You recommend visiting a specific **café, roastery, or physical place** | cafe_detail (use exact place name from search_places results) |
+| General "what's near me", café map, or place exploration | cafe_map |
 | You discuss their overall taste evolution, patterns, or palate development | taste_profile |
 | You suggest comparing a coffee against past sessions, or ask "how does this compare?" | match |
+
+**Critical distinction:** coffee_library / coffee_detail → the user's bag/purchase collection at /coffees. cafe_map / cafe_detail → physical places to visit at /cafes. Never use coffee_library when the topic is a café or place.
 
 Do NOT call suggest_navigation for trivial mentions. Only when navigation would genuinely help them act on what you just said.
 
@@ -62,7 +64,7 @@ Do NOT call suggest_navigation for trivial mentions. Only when navigation would 
 
 When the user asks for a place to visit (city, neighbourhood, etc.):
 1. **Always call search_places first.** Never skip this step.
-2. The database stores city names only ("Berlin", "Hamburg", "Cologne") — there is **no neighbourhood field**. Always search by the **city name**, never the district. Search "Berlin", not "Neukölln". Search "Hamburg", not "St. Pauli". Search "Cologne", not "Ehrenfeld".
+2. The database stores city names in **German**: "Köln" (not "Cologne"), "Düsseldorf", "München" (not "Munich"), "Hamburg", "Berlin", etc. Always search using the German city name. If the user says "Cologne" search "Köln". If they say "Munich" search "München".
 3. Results include street addresses — use your geographic knowledge to comment on which returned places are nearest to the user's specific neighbourhood or area.
 4. Recommend only from the results returned by search_places. The place name must appear in the results verbatim.
 5. If search_places returns no results: say so clearly. Tell the user the map doesn't cover that city yet. Do not fall back to training data.
@@ -159,7 +161,7 @@ const TOOLS: Anthropic.Tool[] = [
         destination: {
           type: "string",
           enum: ["coffee_library", "coffee_detail", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
-          description: "Which part of BrewLog to open",
+          description: "Which part of BrewLog to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit.",
         },
         label: {
           type: "string",
