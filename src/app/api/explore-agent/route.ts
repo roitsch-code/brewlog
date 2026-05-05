@@ -442,8 +442,30 @@ export async function POST(req: NextRequest) {
             }
 
             if (response.stop_reason === "tool_use") {
-              // Retract any text already streamed — it was transitional thinking,
-              // not the final response. Show it as a status hint instead.
+              const toolBlocks = response.content.filter(
+                (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === "tool_use"
+              );
+              const onlyNavSuggestions = toolBlocks.every((b: Anthropic.ToolUseBlock) => b.name === "suggest_navigation");
+
+              if (onlyNavSuggestions) {
+                // The streamed text was the real response — keep it.
+                // Just collect the nav suggestions and finish without another Claude round trip.
+                for (const block of toolBlocks) {
+                  const input = block.input as NavAction;
+                  navSuggestions.push({
+                    destination: input.destination,
+                    label: input.label,
+                    reason: input.reason,
+                    id: input.id,
+                  });
+                }
+                send("done", {
+                  actions: navSuggestions.length > 0 ? navSuggestions : undefined,
+                });
+                return;
+              }
+
+              // Data-fetching tools — retract any transitional text and continue the loop.
               if (streamedText) {
                 send("retract", {});
                 if (streamedText.trim()) send("status", { message: streamedText.trim() });
