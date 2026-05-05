@@ -55,6 +55,15 @@ const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and r
 
 Do NOT call suggest_navigation for trivial mentions. Only when navigation would genuinely help them act on what you just said.
 
+## STRICT RULE: Physical place recommendations
+
+**Never invent, guess, or hallucinate café or roastery names.** Your training data about coffee shops is unreliable — names change, places close, and you will fabricate details with false confidence.
+
+When the user asks for a place to visit (city, neighbourhood, etc.):
+1. Check the "Known Cafés & Roasteries in BrewLog" list injected below.
+2. If there are matching places: recommend only from that list. You may add context about the neighbourhood or what to order, but the place name must appear verbatim in the list.
+3. If there are NO places in the list for that city or area: say so clearly and honestly. Tell the user the map doesn't cover that location yet. Do not fall back to training data to invent names.
+
 ## Coffee Research Protocol
 
 When browsing a roaster's product listing:
@@ -337,8 +346,14 @@ export async function POST(req: NextRequest) {
         .map((p) => `- ${p.name} (${p.city})`)
         .join("\n");
       contextParts.push(
-        `\n## Known Cafés & Roasteries in BrewLog\nUse the exact name as the id when calling suggest_navigation with destination "cafe_detail".\n` +
+        `\n## Known Cafés & Roasteries in BrewLog (EXHAUSTIVE LIST — do not recommend any place not on this list)\n` +
+        `This is every place currently in the database. If a city the user asks about has no entries here, say so — do not invent names.\n` +
+        `Use the exact name as the id when calling suggest_navigation with destination "cafe_detail".\n` +
           placeLines
+      );
+    } else {
+      contextParts.push(
+        `\n## Known Cafés & Roasteries in BrewLog\nThe database has no places seeded yet. If the user asks for a café recommendation, tell them the map is empty and do not invent names.\n`
       );
     }
 
