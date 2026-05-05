@@ -547,8 +547,8 @@ function navActionToPath(action: NavAction): string {
   switch (action.destination) {
     case "coffee_library": return "/coffees";
     case "coffee_detail":  return action.id ? `/coffees/${action.id}` : "/coffees";
-    case "cafe_map":       return "/cafes";
-    case "cafe_detail":    return action.id ? `/cafes/place/${encodeURIComponent(action.id)}` : "/cafes";
+    case "cafe_map":       return "/explore?tab=nearby";
+    case "cafe_detail":    return "/explore?tab=nearby";
     case "taste_profile":  return "/taste";
     case "match":          return "/match";
     default:               return "/";

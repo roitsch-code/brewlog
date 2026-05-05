@@ -49,8 +49,8 @@ const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and r
 |-----------|-------------|
 | You mention a specific coffee **bag** from the user's library | coffee_detail (use the coffee's id from context) |
 | You reference several of their coffee bags, or suggest browsing their bag collection | coffee_library |
-| You recommend visiting a specific **café, roastery, or physical place** | cafe_detail (use exact place name from search_places results) |
-| General "what's near me", café map, or place exploration | cafe_map |
+| You recommend visiting a specific **café, roastery, or physical place** | cafe_detail — opens the Explore Nearby map |
+| General "what's near me" or map exploration | cafe_map — opens the Explore Nearby map |
 | You discuss their overall taste evolution, patterns, or palate development | taste_profile |
 | You suggest comparing a coffee against past sessions, or ask "how does this compare?" | match |
 
