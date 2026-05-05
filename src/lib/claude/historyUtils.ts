@@ -226,3 +226,81 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
 
   return rankingBlock + sensoryBlock + roasterBlock + lines.join("\n");
 }
+
+function formatMSS(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function formatRelativeDate(iso: string): string {
+  const ms = new Date(iso).getTime();
+  if (!Number.isFinite(ms)) return "unknown date";
+  const days = Math.floor((Date.now() - ms) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.round(days / 7)}w ago`;
+  if (days < 365) return `${Math.round(days / 30)}mo ago`;
+  return `${Math.round(days / 365)}y ago`;
+}
+
+/**
+ * Builds a compact "what you brewed and how" block for explore-style chats.
+ * Shows the actual recipe parameters (dose/water/grind/temp/timing/water source)
+ * for the most recent sessions so the AI can comment on real brews instead of
+ * generic guidance. Returns an empty string when there are no sessions.
+ */
+export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
+  if (!pastSessions.length) return "";
+  const lines = pastSessions.slice(0, limit).map((s) => {
+    const date = formatRelativeDate(s.createdAt);
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod || "?";
+    const coffee =
+      s.coffee?.roaster && s.coffee?.name
+        ? `${s.coffee.roaster} — ${s.coffee.name}`
+        : s.coffee?.name || "unknown coffee";
+
+    const dose = s.brew?.doseGrams ?? s.recommendation?.primaryRecipe?.doseGrams;
+    const water = s.brew?.waterGrams ?? s.recommendation?.primaryRecipe?.waterGrams;
+    const ratio = dose && water ? `1:${(water / dose).toFixed(1)}` : null;
+    const grind = s.brew?.grindSettingUsed ?? s.recommendation?.primaryRecipe?.grindSize;
+    const temp = s.brew?.actualTempC ?? s.recommendation?.primaryRecipe?.waterTempC;
+    const target = s.recommendation?.primaryRecipe?.targetTimeSec;
+    const actual = s.brew?.actualTimeSec;
+    const flow = s.brew?.flow && s.brew.flow !== "na" ? s.brew.flow : null;
+    const dripAssist = s.brew?.dripAssist === true;
+    const waterSource = s.context?.waterSource;
+    const rating = s.result?.rating;
+    const flavors = s.result?.flavorNotes?.slice(0, 3).join(", ");
+
+    const parts: string[] = [date, method, coffee];
+
+    const doseWater = [dose ? `${dose}g` : null, water ? `${water}g` : null]
+      .filter(Boolean)
+      .join("/");
+    if (doseWater) parts.push(`${doseWater}${ratio ? ` (${ratio})` : ""}`);
+    else if (ratio) parts.push(ratio);
+
+    if (grind != null && grind !== "") {
+      parts.push(typeof grind === "number" ? `${grind}°` : `${grind}`);
+    }
+    if (temp != null) parts.push(`${temp}°C`);
+
+    if (target || actual) {
+      const t = target ? formatMSS(target) : "?";
+      const a = actual ? formatMSS(actual) : "?";
+      parts.push(`target ${t} actual ${a}${flow ? ` (${flow})` : ""}`);
+    } else if (flow) {
+      parts.push(`(${flow})`);
+    }
+
+    if (dripAssist) parts.push("+Drip Assist");
+    if (waterSource) parts.push(`water:${waterSource}`);
+    if (rating != null) parts.push(`${rating}★`);
+    if (flavors) parts.push(`[${flavors}]`);
+
+    return `- ${parts.join(" · ")}`;
+  });
+  return lines.join("\n");
+}

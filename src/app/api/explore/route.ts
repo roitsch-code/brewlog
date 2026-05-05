@@ -3,8 +3,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getInsights } from "@/lib/knowledge/insights";
 import { getAlerts } from "@/lib/knowledge/alerts";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { buildHistorySummary } from "@/lib/claude/historyUtils";
+import { buildHistorySummary, buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { buildEscherTerrain } from "@/lib/claude/escher";
+import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
+import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
+import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -54,32 +57,11 @@ Competitions: WBC, WAC, WCCE — cite by competitor name and year.
 - Retronasal vs. orthonasal olfaction
 - Body (mouthfeel), acidity (brightness), sweetness, finish, clarity
 
-## About you
+## About BrewLog (the app you're inside)
 
-**Equipment:**
-- Primary grinder: Niche Zero (Niche DEGREES, never clicks!)
-- Grinders: Comandante C40 MK2 (clicks for travel)
-- Primary brewer: V60 size 2 + Hario Drip Assist (daily driver)
-- Other brewers: Orea V4 Wide, Clever Dripper, Kalita Wave, AeroPress, Moccamaster
-- Kettle: Fellow Corvo EKG (900ml, PID temp-hold)
-- Scales: Acaia Lunar & Pearl
-- Water: Tap ~300 ppm TDS daily, diluted with distilled for better brewing (150 ppm SCA optimal), championship water 44–55 ppm
+You are part of BrewLog, a personal brew advisor PWA. The user can: log home or café brews, scan a coffee bag photo (you'll see extracted bag data), follow guided multi-step brew flows with a circular pour timer, browse their coffee library and roaster profiles, view a Taste profile with an AI-written summary, run a Match flow to score the current coffee against past sessions, and explore cafés on a map. When the user's question would be better answered by another part of BrewLog, name the feature: e.g. "open Match to score this", "your Taste profile shows…", "log it as a café brew under Cafés".
 
-**Taste preferences:**
-- Likes: silky, balanced, floral/fruity light roasts — elegant, not wild
-- Avoids: extreme fermentation, infused varieties, heavy/dark roasts, "fruit bombs"
-- Favourite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey
-
-**Niche Zero grind settings (degrees, not clicks):**
-- V60 + Drip Assist Washed: 403–408° | Honey: 405–410° | Natural: 406–412°
-- V60 without Assist: 396–406° | Orea V4: 401–411° | Clever Dripper: 416–436°
-- AeroPress: 377–387° | Moccamaster: 431–441°
-- Championship/Peng: 386–396° | 4:6 Method: 411–421°
-
-**Drip Assist rules:**
-- Start temp +2–3°C higher (heat loss): Washed 98–99°C, Natural 95–96°C, Honey 97°C
-- Bloom agitation mandatory at 0:10 — stir 3–5× for Washed, gentle swirl for Natural/Honey
-- Kettle back on base after every pour (Corvo reheats in 10–15s)
+The user's equipment, grind settings, taste preferences, recent recipes, and current coffee library are injected dynamically below. Use them as the personal source of truth; do not invent details that aren't shown.
 
 ## Response Style
 
@@ -121,10 +103,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Load context in parallel
-    const [insights, alerts] = await Promise.all([
+    const [insights, alerts, userPrefs, library] = await Promise.all([
       getInsights(10).catch(() => []),
       getAlerts(5).catch(() => []),
+      loadUserProfile().catch(() => null),
+      loadCoffeeLibraryCompact(30).catch(() => []),
     ]);
+
+    // Cached "About you" block — built from preferences table, falls back to canonical defaults.
+    const profileBlock = formatProfileForPrompt(userPrefs);
 
     // Build dynamic context to append to system prompt
     const contextParts: string[] = [];
@@ -133,6 +120,15 @@ export async function POST(req: NextRequest) {
     const recentSessions: Session[] = Array.isArray(body.recentSessions)
       ? body.recentSessions.slice(0, 10)
       : [];
+
+    // Compact recipe block: actual dose/water/grind/temp/timing for the last 5 brews.
+    const recipesBlock = buildRecentRecipes(recentSessions, 5);
+    if (recipesBlock) {
+      contextParts.push(
+        `\n## Your Recent Recipes (actual numbers from the last brews — reference these directly when relevant)\n` +
+          recipesBlock
+      );
+    }
 
     if (recentSessions.length > 0) {
       if (recentSessions.length >= 5) {
@@ -159,6 +155,33 @@ export async function POST(req: NextRequest) {
             buildHistorySummary(recentSessions, 5)
         );
       }
+    }
+
+    // Coffee library — bags currently in rotation (most recently added first).
+    const libraryBlock = formatLibraryForPrompt(library);
+    if (libraryBlock) {
+      contextParts.push(
+        `\n## Your Coffee Library (bags you have logged — use to answer "what should I open next" questions)\n` +
+          libraryBlock
+      );
+    }
+
+    // Roaster style priors — for the unique roasters appearing in the recent sessions.
+    const recentRoasters = Array.from(
+      new Set(
+        recentSessions
+          .map((s) => s.coffee?.roaster?.trim())
+          .filter((r): r is string => !!r && r.length > 0)
+      )
+    ).slice(0, 5);
+    if (recentRoasters.length > 0) {
+      const priorBlocks = recentRoasters.map((name) =>
+        formatRoasterPriorForPrompt(getRoasterPrior(name))
+      );
+      contextParts.push(
+        `\n## Roaster Style Priors (for roasters in your recent sessions — user brew history overrides these)\n` +
+          priorBlocks.join("\n\n")
+      );
     }
 
     // Research insights with stable IDs for attribution
@@ -193,6 +216,7 @@ export async function POST(req: NextRequest) {
       max_tokens: 900,
       system: [
         { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+        { type: "text", text: profileBlock, cache_control: { type: "ephemeral" } },
         ...(dynamicContext ? [{ type: "text" as const, text: dynamicContext }] : []),
       ],
       messages: messages.map(m => ({
