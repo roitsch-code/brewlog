@@ -70,9 +70,10 @@ const YOU_ARE_HERE_HTML = `
 <style>@keyframes ect-pulse{0%,100%{box-shadow:0 0 0 5px rgba(255,255,255,0.2)}50%{box-shadow:0 0 0 10px rgba(255,255,255,0.06)}}</style>
 <div style="width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px rgba(255,255,255,0.2);animation:ect-pulse 1.8s ease-in-out infinite"></div>`;
 
-export default function CafeMap({ cafes, onSelect }: {
+export default function CafeMap({ cafes, onSelect, initialSearch }: {
   cafes: CafeSummary[];
   onSelect: (cafe: CafeSummary) => void;
+  initialSearch?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LMap | null>(null);
@@ -99,8 +100,8 @@ export default function CafeMap({ cafes, onSelect }: {
   // Always-current places ref so locate-me (inside [] effect) can read latest places
   const placesRef = useRef(places);
   placesRef.current = places;
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch ?? "");
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? "");
   const [locating, setLocating] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);

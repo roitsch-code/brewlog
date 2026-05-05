@@ -119,7 +119,7 @@ export default function ExplorePage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {activeTab === "ask" && <AskTab />}
         {activeTab === "insights" && <InsightsTab />}
-        {activeTab === "nearby" && <NearbyTab />}
+        {activeTab === "nearby" && <NearbyTab focus={searchParams.get("focus") ?? undefined} />}
       </div>
     </div>
   );
@@ -548,7 +548,9 @@ function navActionToPath(action: NavAction): string {
     case "coffee_library": return "/coffees";
     case "coffee_detail":  return action.id ? `/coffees/${action.id}` : "/coffees";
     case "cafe_map":       return "/explore?tab=nearby";
-    case "cafe_detail":    return "/explore?tab=nearby";
+    case "cafe_detail":    return action.id
+      ? `/explore?tab=nearby&focus=${encodeURIComponent(action.id)}`
+      : "/explore?tab=nearby";
     case "taste_profile":  return "/taste";
     case "match":          return "/match";
     default:               return "/";
@@ -691,7 +693,7 @@ function InsightsTab() {
 
 // ── Nearby Tab ─────────────────────────────────────────────────────────────
 
-function NearbyTab() {
+function NearbyTab({ focus }: { focus?: string }) {
   const router = useRouter();
   const [cafes, setCafes] = useState<CafeSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -723,6 +725,7 @@ function NearbyTab() {
       <CafeMap
         cafes={cafes}
         onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)}
+        initialSearch={focus}
       />
     </div>
   );
