@@ -172,9 +172,7 @@ function AskTab() {
     setLoading(true);
     setAgentStatus(null);
 
-    // Route to agent endpoint when message contains a URL
-    const isAgentRequest = /https?:\/\//.test(trimmed);
-    const endpoint = isAgentRequest ? "/api/explore-agent" : "/api/explore";
+    const endpoint = "/api/explore-agent";
 
     try {
       const res = await fetch(endpoint, {
@@ -204,7 +202,15 @@ function AskTab() {
             actions?: NavAction[];
             error?: string;
           };
-          if (event === "status" && payload.message) {
+          if (event === "retract") {
+            // Claude started responding then decided to call a tool — clear the bubble
+            setMessages(prev => {
+              const copy = prev.slice();
+              const last = copy[copy.length - 1];
+              if (last?.role === "assistant") copy[copy.length - 1] = { ...last, content: "" };
+              return copy;
+            });
+          } else if (event === "status" && payload.message) {
             setAgentStatus(payload.message);
           } else if (event === "delta" && payload.text) {
             setAgentStatus(null);

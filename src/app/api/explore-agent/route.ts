@@ -402,7 +402,7 @@ export async function POST(req: NextRequest) {
           const MAX_ITERATIONS = 6;
 
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
-            const response = await client.messages.create({
+            const stream = client.messages.stream({
               model: "claude-sonnet-4-6",
               max_tokens: 2000,
               system: systemBlocks,
@@ -410,13 +410,23 @@ export async function POST(req: NextRequest) {
               messages: agentMessages,
             });
 
-            const textBlocks = response.content.filter(
-              (b: Anthropic.ContentBlock): b is Anthropic.TextBlock => b.type === "text"
-            );
+            // Stream text tokens as they arrive so simple questions feel fast.
+            // We track what was streamed; if stop_reason turns out to be tool_use
+            // (Claude spoke before calling a tool), we retract it from the bubble.
+            let streamedText = "";
+            for await (const event of stream) {
+              if (
+                event.type === "content_block_delta" &&
+                event.delta.type === "text_delta"
+              ) {
+                streamedText += event.delta.text;
+                send("delta", { text: event.delta.text });
+              }
+            }
+
+            const response = await stream.finalMessage();
 
             if (response.stop_reason === "end_turn") {
-              const text = textBlocks.map((b: Anthropic.TextBlock) => b.text).join("");
-              if (text) send("delta", { text });
               send("done", {
                 actions: navSuggestions.length > 0 ? navSuggestions : undefined,
               });
@@ -424,12 +434,14 @@ export async function POST(req: NextRequest) {
             }
 
             if (response.stop_reason === "tool_use") {
-              agentMessages.push({ role: "assistant", content: response.content });
-
-              // Surface any thinking/text before tool calls as status
-              for (const tb of textBlocks) {
-                if (tb.text.trim()) send("status", { message: tb.text.trim() });
+              // Retract any text already streamed — it was transitional thinking,
+              // not the final response. Show it as a status hint instead.
+              if (streamedText) {
+                send("retract", {});
+                if (streamedText.trim()) send("status", { message: streamedText.trim() });
               }
+
+              agentMessages.push({ role: "assistant", content: response.content });
 
               const toolResults: Anthropic.ToolResultBlockParam[] = [];
 
