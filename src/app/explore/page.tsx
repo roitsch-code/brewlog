@@ -174,17 +174,43 @@ function AskTab() {
 
     const endpoint = "/api/explore-agent";
 
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-          recentSessions,
-        }),
-      });
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setMessages(prev => [
+        ...prev,
+        { role: "assistant", content: "You're offline. Reconnect and try again." },
+      ]);
+      setLoading(false);
+      setAgentStatus(null);
+      return;
+    }
 
-      if (!res.ok || !res.body) throw new Error("Request failed");
+    let receivedAnyDelta = false;
+    let errorMessage = "Sorry, I couldn't get a response right now. Please try again.";
+
+    try {
+      let res: Response;
+      try {
+        res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+            recentSessions,
+          }),
+        });
+      } catch {
+        errorMessage = "Couldn't reach BrewLog. Check your connection.";
+        throw new Error("network");
+      }
+
+      if (!res.ok) {
+        errorMessage = `BrewLog is having trouble (server ${res.status}). Try again in a moment.`;
+        throw new Error("server");
+      }
+      if (!res.body) {
+        errorMessage = "No response from BrewLog. Try again.";
+        throw new Error("nobody");
+      }
 
       // Seed an empty assistant bubble we progressively fill
       setMessages(prev => [...prev, { role: "assistant", content: "" }]);
@@ -192,16 +218,22 @@ function AskTab() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let carry = "";
+      let streamError: string | null = null;
 
       const applyEvent = (event: string, data: string) => {
+        let payload: {
+          text?: string;
+          message?: string;
+          sources?: { title: string; url: string }[];
+          actions?: NavAction[];
+          error?: string;
+        };
         try {
-          const payload = JSON.parse(data) as {
-            text?: string;
-            message?: string;
-            sources?: { title: string; url: string }[];
-            actions?: NavAction[];
-            error?: string;
-          };
+          payload = JSON.parse(data);
+        } catch {
+          return; // Malformed event — skip
+        }
+        try {
           if (event === "retract") {
             // Claude started responding then decided to call a tool — clear the bubble
             setMessages(prev => {
@@ -213,6 +245,7 @@ function AskTab() {
           } else if (event === "status" && payload.message) {
             setAgentStatus(payload.message);
           } else if (event === "delta" && payload.text) {
+            receivedAnyDelta = true;
             setAgentStatus(null);
             setMessages(prev => {
               const copy = prev.slice();
@@ -239,10 +272,10 @@ function AskTab() {
               });
             }
           } else if (event === "error") {
-            throw new Error(payload.error ?? "Stream error");
+            streamError = payload.error ?? "Stream error";
           }
         } catch {
-          // Malformed event — skip
+          // Defensive — never let render side-effects break the read loop
         }
       };
 
@@ -264,25 +297,29 @@ function AskTab() {
           if (dataLine) applyEvent(eventName, dataLine);
           boundary = carry.indexOf("\n\n");
         }
+
+        if (streamError) {
+          errorMessage = "The AI hit an error mid-response. Try again.";
+          throw new Error(streamError);
+        }
       }
     } catch {
+      const dropped = receivedAnyDelta;
       setMessages(prev => {
         const copy = prev.slice();
         const last = copy[copy.length - 1];
-        if (last?.role === "assistant" && last.content === "") {
+        if (dropped && last?.role === "assistant" && last.content) {
           copy[copy.length - 1] = {
-            role: "assistant",
-            content: "Sorry, I couldn't get a response right now. Please try again.",
+            ...last,
+            content: `${last.content}\n\n_(Connection dropped — try resending if the answer looks incomplete.)_`,
           };
           return copy;
         }
-        return [
-          ...prev,
-          {
-            role: "assistant",
-            content: "Sorry, I couldn't get a response right now. Please try again.",
-          },
-        ];
+        if (last?.role === "assistant" && last.content === "") {
+          copy[copy.length - 1] = { role: "assistant", content: errorMessage };
+          return copy;
+        }
+        return [...prev, { role: "assistant", content: errorMessage }];
       });
     } finally {
       setLoading(false);
