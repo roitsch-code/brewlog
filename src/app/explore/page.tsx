@@ -22,6 +22,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   imageUrl?: string;
+  coffeeRef?: { id: string; roaster: string; name: string };
   sources?: { title: string; url: string }[];
   actions?: NavAction[];
 }
@@ -44,6 +45,12 @@ interface NewsItem {
   type: "article" | "video" | "instagram" | "podcast" | "research" | "social";
   source: string;
   savedAt: string;
+}
+
+interface CompactCoffee {
+  id: string;
+  roaster: string;
+  name: string;
 }
 
 interface CoffeeAlert {
@@ -169,6 +176,10 @@ function AskTab() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
   const [attachSheetOpen, setAttachSheetOpen] = useState(false);
+  const [coffeePickerOpen, setCoffeePickerOpen] = useState(false);
+  const [coffeeQuery, setCoffeeQuery] = useState("");
+  const [coffeeList, setCoffeeList] = useState<CompactCoffee[]>([]);
+  const [referencedCoffee, setReferencedCoffee] = useState<CompactCoffee | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -228,6 +239,20 @@ function AskTab() {
       .then(r => r.ok ? r.json() : [])
       .then((data: Session[]) => { if (Array.isArray(data)) setRecentSessions(data); })
       .catch(() => {});
+
+    // Load the compact coffee list for the reference-coffee picker.
+    fetch("/api/coffees", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { id: string; roaster: string; name: string }[]) => {
+        if (Array.isArray(data)) {
+          setCoffeeList(
+            data
+              .filter(c => c?.id && c?.name && c?.roaster)
+              .map(c => ({ id: c.id, roaster: c.roaster, name: c.name }))
+          );
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Auto-scroll on new messages
@@ -240,19 +265,24 @@ function AskTab() {
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
     // Allow image-only sends (no text) when an image is attached.
-    if (!trimmed && !attachedImageUrl) return;
+    if (!trimmed && !attachedImageUrl && !referencedCoffee) return;
     if (loading) return;
 
+    // The user-facing message keeps just the typed text + a coffee ref
+    // chip / image thumbnail. The agent gets a richer payload built below.
     const userMsg: ChatMessage = {
       role: "user",
       content: trimmed,
       ...(attachedImageUrl ? { imageUrl: attachedImageUrl } : {}),
+      ...(referencedCoffee ? { coffeeRef: referencedCoffee } : {}),
     };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
     const sentImageUrl = attachedImageUrl;
+    const sentCoffeeRef = referencedCoffee;
     setAttachedImageUrl(null);
+    setReferencedCoffee(null);
     setLoading(true);
     setAgentStatus(null);
 
@@ -278,7 +308,18 @@ function AskTab() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+            messages: newMessages.map((m, idx) => {
+              // Inject the coffee ref into the most recent user turn so the
+              // agent sees the bag explicitly — keeps display clean.
+              if (idx === newMessages.length - 1 && sentCoffeeRef) {
+                const tag = `[Coffee: ${sentCoffeeRef.roaster} ${sentCoffeeRef.name}]`;
+                return {
+                  role: m.role,
+                  content: m.content ? `${tag}\n${m.content}` : tag,
+                };
+              }
+              return { role: m.role, content: m.content };
+            }),
             recentSessions,
             ...(sentImageUrl ? { attachedImageUrl: sentImageUrl } : {}),
           }),
@@ -561,6 +602,16 @@ function AskTab() {
                         className="rounded-xl max-h-64 w-full object-cover"
                       />
                     )}
+                    {msg.coffeeRef && (
+                      <div
+                        className="flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full text-xs"
+                        style={{ background: "rgba(26,19,14,0.06)", color: "var(--text-on-pill-user)" }}
+                      >
+                        <Coffee size={12} />
+                        <span style={{ opacity: 0.7 }}>{msg.coffeeRef.roaster}</span>
+                        <span>{msg.coffeeRef.name}</span>
+                      </div>
+                    )}
                     {msg.content && (
                       <div className="text-sm leading-relaxed">
                         <MessageContent content={msg.content} darkText />
@@ -658,6 +709,30 @@ function AskTab() {
             <button type="button" onClick={() => setAttachError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
               <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
             </button>
+          </div>
+        )}
+
+        {/* Pending coffee reference chip above the input pill */}
+        {referencedCoffee && (
+          <div className="mb-2 flex">
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-full border border-dot-edge backdrop-blur-md"
+              style={{ background: "var(--surface-pill-attach)" }}
+            >
+              <Coffee size={14} style={{ color: "var(--text-accent)" }} />
+              <span className="text-xs" style={{ color: "var(--text-primary)" }}>
+                <span style={{ color: "var(--text-secondary)" }}>{referencedCoffee.roaster}</span>{" "}
+                <span>{referencedCoffee.name}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setReferencedCoffee(null)}
+                aria-label="Remove coffee reference"
+                className="active:scale-90"
+              >
+                <X size={12} style={{ color: "var(--text-secondary)" }} />
+              </button>
+            </div>
           </div>
         )}
 
@@ -764,6 +839,74 @@ function AskTab() {
         </div>
       </div>
 
+      {/* Coffee picker — search sheet, spec §6.4 */}
+      {coffeePickerOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+          onClick={() => setCoffeePickerOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-2"
+            style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
+            <div className="flex items-center gap-2 px-1 mt-1">
+              <Coffee size={16} style={{ color: "var(--text-accent)" }} />
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>Reference a coffee</p>
+            </div>
+            <input
+              autoFocus
+              type="text"
+              value={coffeeQuery}
+              onChange={e => setCoffeeQuery(e.target.value)}
+              placeholder="Search roaster or coffee"
+              className="w-full bg-transparent border border-dot-edge rounded-full px-4 py-2.5 text-sm focus:outline-none placeholder:text-dot-ink-soft"
+              style={{ color: "var(--text-primary)" }}
+            />
+            <div className="flex-1 overflow-y-auto -mx-1 px-1">
+              {(() => {
+                const q = coffeeQuery.trim().toLowerCase();
+                const filtered = q
+                  ? coffeeList.filter(
+                      c =>
+                        c.name.toLowerCase().includes(q) ||
+                        c.roaster.toLowerCase().includes(q)
+                    )
+                  : coffeeList;
+                if (filtered.length === 0) {
+                  return (
+                    <p className="text-xs py-6 text-center" style={{ color: "var(--text-secondary)" }}>
+                      No matching coffees
+                    </p>
+                  );
+                }
+                return (
+                  <ul className="flex flex-col gap-0.5">
+                    {filtered.slice(0, 50).map(c => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReferencedCoffee(c);
+                            setCoffeePickerOpen(false);
+                          }}
+                          className="w-full flex flex-col text-left px-3 py-2.5 rounded-xl active:bg-dot-edge transition-colors"
+                        >
+                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{c.roaster}</span>
+                          <span className="text-sm" style={{ color: "var(--text-primary)" }}>{c.name}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Attach sheet — bottom modal, spec §6.4 */}
       {attachSheetOpen && (
         <div
@@ -789,13 +932,15 @@ function AskTab() {
 
             <button
               type="button"
-              disabled
-              title="Coming soon"
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl text-left opacity-40 cursor-not-allowed"
+              onClick={() => { setAttachSheetOpen(false); setCoffeeQuery(""); setCoffeePickerOpen(true); }}
+              disabled={coffeeList.length === 0}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Coffee size={20} style={{ color: "var(--text-secondary)" }} />
-              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Reference coffee</span>
-              <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>soon</span>
+              <Coffee size={20} style={{ color: "var(--text-accent)" }} />
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Reference coffee</span>
+              {coffeeList.length === 0 && (
+                <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>library empty</span>
+              )}
             </button>
 
             <button
