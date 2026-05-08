@@ -53,8 +53,18 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    console.error("[voice/transcribe] upstream error", res.status, detail.slice(0, 300));
-    return NextResponse.json({ error: "Transcription failed." }, { status: 502 });
+    console.error("[voice/transcribe] upstream error", res.status, detail.slice(0, 500));
+    if (res.status === 401 || res.status === 403) {
+      return NextResponse.json(
+        { error: "Scribe rejected the API key. Enable 'Speech to Text → Access' on the ElevenLabs API key." },
+        { status: 502 },
+      );
+    }
+    const snippet = detail.slice(0, 200).replace(/\s+/g, " ").trim();
+    return NextResponse.json(
+      { error: `Transcription failed (Scribe ${res.status})${snippet ? `: ${snippet}` : ""}` },
+      { status: 502 },
+    );
   }
 
   const data = await res.json().catch(() => null) as { text?: string } | null;

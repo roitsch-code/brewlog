@@ -456,44 +456,24 @@ function AskTab() {
         style={{ paddingBottom: "1rem" }}
       >
         {showStarter ? (
-          <div className="flex flex-col gap-5 mt-4">
-            {/* Atmospheric intro */}
-            <div className="flex flex-col items-center gap-5 py-6">
-              <div className="relative">
-                {/* Glow halo behind the bean */}
-                <div
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    background: "radial-gradient(circle, rgba(240,237,232,0.12) 0%, transparent 70%)",
-                    transform: "scale(2.5)",
-                  }}
-                />
-                <CoffeeBeanGlow size={72} />
-              </div>
-              <p className="text-white/30 text-xs text-center leading-relaxed max-w-[200px]">
-                Ask anything — methods, origins, science, championships, or your next brew.
-              </p>
-            </div>
-            {/* Starter questions — full-width list with icons */}
-            <div>
-              <p className="label-mono mb-3" style={{ color: "var(--muted-foreground)" }}>Suggested</p>
-              <div className="flex flex-col gap-2">
-                {starterQuestions.slice(0, 3).map((q, i) => {
-                  const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => sendMessage(q)}
-                      className="flex items-center gap-3 text-left rounded-2xl px-4 py-3 active:scale-[0.98] transition-all w-full"
-                      style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-                    >
-                      <Icon size={16} style={{ color: "var(--primary)" }} className="shrink-0" />
-                      <span className="text-sm leading-snug" style={{ color: "var(--foreground)" }}>{q}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="mt-1">
+            <p className="label-mono mb-2" style={{ color: "var(--muted-foreground)" }}>Suggested</p>
+            <div className="flex flex-col gap-1.5">
+              {starterQuestions.slice(0, 3).map((q, i) => {
+                const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sendMessage(q)}
+                    className="flex items-center gap-3 text-left rounded-xl px-3.5 py-2.5 active:scale-[0.98] transition-all w-full"
+                    style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                  >
+                    <Icon size={14} style={{ color: "var(--primary)" }} className="shrink-0" />
+                    <span className="text-sm leading-snug" style={{ color: "var(--foreground)" }}>{q}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (

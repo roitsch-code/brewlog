@@ -126,11 +126,11 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
         surfaceError("Couldn't reach BrewLog. Check your connection.");
         return;
       }
+      const data = await res.json().catch(() => null) as { text?: string; error?: string } | null;
       if (!res.ok) {
-        surfaceError(`Transcription failed (${res.status}).`);
+        surfaceError(data?.error ?? `Transcription failed (${res.status}).`);
         return;
       }
-      const data = await res.json().catch(() => null) as { text?: string } | null;
       const text = data?.text?.trim() ?? "";
       if (!text) {
         surfaceError("Didn't catch that — try again.");
