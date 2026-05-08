@@ -105,9 +105,21 @@
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom);
   }
+  /* Display / editorial face — Instrument Serif at weight 400, per spec §3.
+     All 17 existing `font-display` consumers (page titles, step headers)
+     pick this up automatically. Spec says serif is for display moments
+     only — never body. The few small-size consumers (text-sm/text-lg)
+     were audited individually; see commit message. */
   .font-display {
-    font-family: var(--font-geist-sans), system-ui, sans-serif;
-    font-weight: 600;
+    font-family: var(--font-instrument-serif), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  /* Alias preserved for spec naming; identical to .font-display. */
+  .font-editorial {
+    font-family: var(--font-instrument-serif), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
   /* DOT-inspired editorial face — used by Phase 2/3 hero/loading moments
      (spec §3). Existing .font-display stays Geist 600 for the 17+ titles
