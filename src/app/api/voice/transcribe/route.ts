@@ -40,9 +40,11 @@ export async function POST(req: NextRequest) {
   upstream.append("file", file, filename);
   upstream.append("model_id", "scribe_v1");
 
+  const baseUrl = process.env.ELEVENLABS_BASE_URL || "https://api.elevenlabs.io";
+
   let res: Response;
   try {
-    res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+    res = await fetch(`${baseUrl}/v1/speech-to-text`, {
       method: "POST",
       headers: { "xi-api-key": apiKey },
       body: upstream,

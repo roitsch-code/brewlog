@@ -32,8 +32,9 @@ export async function POST(req: NextRequest) {
   }
 
   const voiceId = body.voiceId || process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
+  const baseUrl = process.env.ELEVENLABS_BASE_URL || "https://api.elevenlabs.io";
   const url =
-    `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream` +
+    `${baseUrl}/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream` +
     `?optimize_streaming_latency=3&output_format=mp3_44100_128`;
 
   let upstream: Response;
