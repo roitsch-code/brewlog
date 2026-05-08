@@ -33,7 +33,7 @@ const config: Config = {
           s2: "#1F1A17",
           "pill-user": "#F5ECE5",
           ink: "#F0E8E1",
-          "on-pill": "#1A130E",
+          "on-pill": "#2E2118",
           "ink-soft": "#B8ADA4",
           "ink-mute": "#6B635D",
           accent: "#E8C5A8",

@@ -30,10 +30,13 @@ export const gradientHeroSurface =
 
 /**
  * Subtle warm-on-warm fill for the cream user message bubble — adds
- * dimensionality without breaking the flat-pill read.
+ * dimensionality without breaking the flat-pill read. Tones down from
+ * the original near-white #FBF4ED start; the spec --surface-pill-user
+ * is #F5ECE5 and the gradient now sits within that warmer cream range
+ * so the dark text-on-pill reads as warm-brown rather than harsh black.
  */
 export const gradientPillUser =
-  "bg-[linear-gradient(135deg,#FBF4ED_0%,#F1E5DA_100%)]";
+  "bg-[linear-gradient(135deg,#F5ECE5_0%,#EBDFD2_100%)]";
 
 /**
  * Primary CTA fill (Phase 2/3 — Brew button, send arrow background).

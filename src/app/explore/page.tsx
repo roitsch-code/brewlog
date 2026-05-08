@@ -790,11 +790,19 @@ function AskTab() {
 
         {/* Recording dock — replaces the input pill while capture is active.
             Spec §6.3: full-width waveform across most of the dock, stop
-            button on the right (filled square in a circle). No timer. */}
+            button on the right (filled square in a circle). No timer.
+            DOT-style soft-cream capsule — no hard border, blends into the
+            gradient via a translucent warm tint. */}
         {capture.recording ? (
           <div
-            className="flex items-center gap-2 rounded-full border border-dot-edge backdrop-blur-xl shadow-glow-strong px-3"
-            style={{ background: "var(--surface-pill-input)", minHeight: 52 }}
+            className="flex items-center gap-2 rounded-full backdrop-blur-xl px-3"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,240,224,0.10) 0%, rgba(255,240,224,0.04) 100%)",
+              boxShadow:
+                "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
+              minHeight: 52,
+            }}
           >
             <span
               className="w-2 h-2 rounded-full animate-pulse shrink-0"
@@ -820,9 +828,15 @@ function AskTab() {
           </div>
         ) : (
         <div
-          className="flex items-center gap-1 rounded-full border border-dot-edge backdrop-blur-xl shadow-glow-subtle"
+          className="flex items-center gap-1 rounded-full backdrop-blur-xl"
           style={{
-            background: "var(--surface-pill-input)",
+            // Soft cream glaze — warm tint that blends into the gradient
+            // rather than reading as a hard glass rectangle. Inner top
+            // highlight + outer drop shadow give definition without an edge.
+            background:
+              "linear-gradient(180deg, rgba(255,240,224,0.10) 0%, rgba(255,240,224,0.04) 100%)",
+            boxShadow:
+              "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
             paddingLeft: 6,
             paddingRight: 6,
             minHeight: 52,
