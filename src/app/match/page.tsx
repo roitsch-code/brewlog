@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import PhotoUpload from "@/components/ui/PhotoUpload";
-import TopMenu from "@/components/layout/TopMenu";
 import type { MatchResult } from "@/app/api/match/route";
 
 type InputMode = "photo" | "url" | "manual";
@@ -92,12 +91,9 @@ export default function MatchPage() {
   return (
     <div className="min-h-svh bg-brew-bg flex flex-col">
       {/* Header */}
-      <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
-        <div>
-          <h1 className="font-display text-2xl text-white">Match Finder</h1>
-          <p className="text-brew-muted text-sm">Check a coffee against your taste profile</p>
-        </div>
-        <TopMenu />
+      <div className="px-5 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+        <h1 className="font-display text-2xl text-white">Match Finder</h1>
+        <p className="text-brew-muted text-sm">Check a coffee against your taste profile</p>
       </div>
 
       <div className="px-5 flex flex-col gap-6 pb-10">
