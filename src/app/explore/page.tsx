@@ -608,7 +608,7 @@ function AskTab() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={capture.recording ? "Listening…" : "Ask about brewing, beans, gear..."}
+              placeholder={capture.recording ? "Listening…" : "Ask something"}
               rows={1}
               disabled={capture.recording || capture.busy}
               className="flex-1 text-sm resize-none focus:outline-none transition-colors disabled:opacity-60"
