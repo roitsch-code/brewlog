@@ -8,7 +8,6 @@ import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
-import { or, ilike } from "drizzle-orm";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +63,7 @@ Do NOT call suggest_navigation for trivial mentions. Only when navigation would 
 
 When the user asks for a place to visit (city, neighbourhood, etc.):
 1. **Always call search_places first.** Never skip this step.
-2. The database stores city names in **German**: "Köln" (not "Cologne"), "Düsseldorf", "München" (not "Munich"), "Hamburg", "Berlin", etc. Always search using the German city name. If the user says "Cologne" search "Köln". If they say "Munich" search "München".
+2. The database stores city names in **English/ASCII**: "Cologne" (not "Köln"), "Munich" (not "München"), "Dusseldorf", "Vienna" (not "Wien"), "Prague" (not "Praha"), "Warsaw" (not "Warszawa"), "Bucharest" (not "București"), "Lisbon" (not "Lisboa"), "Hamburg", "Berlin", etc. Always search using the English/ASCII city name. If the user says "Köln" search "Cologne"; if they say "München" search "Munich". Don't worry about umlauts — the search ignores diacritics.
 3. Results include street addresses — use your geographic knowledge to comment on which returned places are nearest to the user's specific neighbourhood or area.
 4. Recommend only from the results returned by search_places. The place name must appear in the results verbatim.
 5. If search_places returns no results: say so clearly. Tell the user the map doesn't cover that city yet. Do not fall back to training data.
@@ -155,7 +154,7 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         query: {
           type: "string",
-          description: "City name in German (e.g. 'Köln' not 'Cologne', 'München' not 'Munich', 'Düsseldorf'), or a café/roastery name. Always use the German city spelling with umlauts. NOT a neighbourhood — use 'Berlin' not 'Neukölln', 'Hamburg' not 'St. Pauli', 'Köln' not 'Ehrenfeld'.",
+          description: "City name in English/ASCII (e.g. 'Cologne', 'Munich', 'Dusseldorf', 'Prague', 'Vienna'), or a café/roastery name. NOT a neighbourhood — use 'Berlin' not 'Neukölln', 'Hamburg' not 'St. Pauli', 'Paris' not 'Le Marais'.",
         },
       },
       required: ["query"],
@@ -303,70 +302,55 @@ async function fetchImageAsBase64(
   }
 }
 
-// German umlaut variants of a query — the model often passes ASCII spellings
-// like "Dusseldorf" or "Koln" even though the DB stores "Düsseldorf"/"Köln".
-// Postgres ILIKE is case-insensitive but NOT accent-insensitive, so we expand
-// the query into all reasonable variants and OR them together.
-function umlautVariants(query: string): string[] {
-  const variants = new Set<string>([query]);
-  // ASCII → umlaut: ue→ü, oe→ö, ae→ä, Ue→Ü, Oe→Ö, Ae→Ä, ss→ß
-  variants.add(
-    query
-      .replace(/ue/g, "ü").replace(/oe/g, "ö").replace(/ae/g, "ä")
-      .replace(/Ue/g, "Ü").replace(/Oe/g, "Ö").replace(/Ae/g, "Ä")
-      .replace(/ss/g, "ß")
-  );
-  // Umlaut → ASCII strip: ü→u, ö→o, ä→a, ß→ss
-  variants.add(
-    query
-      .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ä/g, "a")
-      .replace(/Ü/g, "U").replace(/Ö/g, "O").replace(/Ä/g, "A")
-      .replace(/ß/g, "ss")
-  );
-  // Umlaut → expanded: ü→ue, ö→oe, ä→ae, ß→ss
-  variants.add(
-    query
-      .replace(/ü/g, "ue").replace(/ö/g, "oe").replace(/ä/g, "ae")
-      .replace(/Ü/g, "Ue").replace(/Ö/g, "Oe").replace(/Ä/g, "Ae")
-      .replace(/ß/g, "ss")
-  );
-  // City aliases — bare-ASCII spellings the model often uses for German cities
-  // that ILIKE alone cannot match (Postgres ILIKE is not accent-insensitive).
-  // Each key, when found anywhere in the query, adds a variant with the German
-  // spelling substituted in.
-  const aliases: Record<string, string> = {
-    cologne: "Köln",
-    koln: "Köln",
-    koeln: "Köln",
-    dusseldorf: "Düsseldorf",
-    duesseldorf: "Düsseldorf",
-    munich: "München",
-    munchen: "München",
-    muenchen: "München",
-    nuremberg: "Nürnberg",
-    nurnberg: "Nürnberg",
-    nuernberg: "Nürnberg",
-  };
-  const lower = query.toLowerCase();
-  for (const [k, v] of Object.entries(aliases)) {
-    if (lower.includes(k)) variants.add(query.replace(new RegExp(k, "gi"), v));
-  }
-  return Array.from(variants).filter((v) => v.length > 0);
+// Strip diacritics + lowercase + collapse German digraphs so "Düsseldorf",
+// "Dusseldorf", "Duesseldorf", and "düsseldorf" all collapse to "dusseldorf".
+// Applied to BOTH the user's query and each row before substring matching,
+// so search is accent- and umlaut-insensitive without any DB extension.
+function fold(s: string): string {
+  return s
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/ß/g, "ss")
+    .replace(/ue/g, "u").replace(/oe/g, "o").replace(/ae/g, "a");
 }
 
-async function searchPlaces(query: string): Promise<{ name: string; city: string; address: string | null }[]> {
+// In-memory cache of all places. Table is small (~6k rows × ~150 bytes ≈ 1MB)
+// and the chat hits searchPlaces frequently — caching avoids one DB round-trip
+// per call. 5-minute TTL means newly added places appear within 5 min.
+type CachedPlace = { name: string; city: string; address: string | null };
+let placesCache: CachedPlace[] | null = null;
+let placesCacheAt = 0;
+const PLACES_CACHE_TTL_MS = 5 * 60_000;
+
+async function getPlacesCached(): Promise<CachedPlace[]> {
+  if (placesCache && Date.now() - placesCacheAt < PLACES_CACHE_TTL_MS) {
+    return placesCache;
+  }
+  const rows = await db
+    .select({ name: places.name, city: places.city, address: places.address })
+    .from(places);
+  placesCache = rows;
+  placesCacheAt = Date.now();
+  return rows;
+}
+
+async function searchPlaces(query: string): Promise<CachedPlace[]> {
   try {
-    const variants = umlautVariants(query);
-    const conditions = variants.flatMap((v) => [
-      ilike(places.city, `%${v}%`),
-      ilike(places.name, `%${v}%`),
-      ilike(places.address, `%${v}%`),
-    ]);
-    return await db
-      .select({ name: places.name, city: places.city, address: places.address })
-      .from(places)
-      .where(or(...conditions))
-      .limit(30);
+    const f = fold(query);
+    if (!f) return [];
+    const all = await getPlacesCached();
+    const matches: CachedPlace[] = [];
+    for (const p of all) {
+      if (
+        fold(p.name).includes(f) ||
+        fold(p.city).includes(f) ||
+        (p.address ? fold(p.address).includes(f) : false)
+      ) {
+        matches.push(p);
+        if (matches.length >= 30) break;
+      }
+    }
+    return matches;
   } catch {
     return [];
   }
