@@ -60,11 +60,18 @@ export default function BottomNav() {
               aria-label={tab.label}
               className="relative flex items-center justify-center w-11 h-11 rounded-2xl transition-colors duration-150"
               style={{
-                background: active ? "var(--surface-2)" : "transparent",
-                color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                background: active ? "rgba(232,197,168,0.14)" : "transparent",
+                color: active ? "var(--text-accent)" : "var(--text-secondary)",
               }}
             >
-              <Icon size={20} strokeWidth={active ? 2 : 1.6} />
+              <Icon size={20} strokeWidth={active ? 2.25 : 1.6} />
+              {active && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                  style={{ background: "var(--text-accent)" }}
+                />
+              )}
             </Link>
           );
         })}

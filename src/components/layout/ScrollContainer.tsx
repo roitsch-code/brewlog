@@ -1,20 +1,21 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-// Mirror BottomNav's visibility: same routes, same /explore tab nuance.
-// Keep in sync with BottomNav.tsx.
+// Mirrors the BottomNav show rule — except /explore, where the page
+// owns its own bottom padding (the chat input pill on Ask, an internal
+// scrollable list on Insights, full-screen map on Nearby).
+//
+// Critical: do NOT use useSearchParams() here. ScrollContainer wraps
+// children in app/layout.tsx without a Suspense boundary, so any
+// useSearchParams() reference triggers an SSG bailout and breaks the
+// production build for every page.
 const EXACT_SHOW = ["/", "/taste", "/match"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function ScrollContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const onExplore = pathname === "/explore";
-  const exploreInsights = onExplore && searchParams.get("tab") === "insights";
-  const showNav =
-    exploreInsights ||
-    (!onExplore && (EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p))));
+  const showNav = EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p));
   return (
     <div
       style={{

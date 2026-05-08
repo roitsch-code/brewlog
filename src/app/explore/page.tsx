@@ -181,6 +181,10 @@ function AskTab() {
   const [coffeeQuery, setCoffeeQuery] = useState("");
   const [coffeeList, setCoffeeList] = useState<CompactCoffee[]>([]);
   const [referencedCoffee, setReferencedCoffee] = useState<CompactCoffee | null>(null);
+  // Once the user types, taps mic, or otherwise acts, hide the starter
+  // suggestions for the rest of the session — they shouldn't reappear if
+  // the input is cleared back to empty.
+  const [hasInteracted, setHasInteracted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -500,6 +504,7 @@ function AskTab() {
   // permit subsequent <audio> playback in this session.
   const handleMicTap = () => {
     setVoiceError(null);
+    setHasInteracted(true);
     if (voiceMode) playback.unlock();
     void capture.toggle();
   };
@@ -555,7 +560,11 @@ function AskTab() {
   };
 
   const showStarter =
-    messages.length === 0 && !loading && input.trim() === "" && !capture.recording;
+    !hasInteracted &&
+    messages.length === 0 &&
+    !loading &&
+    input.trim() === "" &&
+    !capture.recording;
 
   return (
     <>
@@ -688,8 +697,9 @@ function AskTab() {
         )}
       </div>
 
-      {/* Input area — DOT-spec glass dock (spec §6.1) */}
-      <div className="shrink-0 px-3" style={{ paddingBottom: "0.75rem", paddingTop: "0.25rem" }}>
+      {/* Input area — DOT-spec glass dock (spec §6.1). ScrollContainer
+          doesn't reserve padding on /explore, so we own safe-area here. */}
+      <div className="shrink-0 px-3" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))", paddingTop: "0.25rem" }}>
         {/* Hidden file input for photo attach */}
         <input
           ref={fileInputRef}
@@ -833,7 +843,7 @@ function AskTab() {
           <textarea
             ref={inputRef}
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={e => { setInput(e.target.value); if (e.target.value.length > 0) setHasInteracted(true); }}
             onKeyDown={handleKeyDown}
             placeholder={capture.recording ? "Listening…" : "Ask something"}
             rows={1}
@@ -1161,7 +1171,10 @@ function InsightsTab() {
 
   return (
     <div
-      className="flex-1 overflow-y-auto flex flex-col gap-0 pb-8"
+      className="flex-1 overflow-y-auto flex flex-col gap-0"
+      // ScrollContainer reserves no bottom padding on /explore, so the
+      // Insights tab clears the floating BottomNav itself.
+      style={{ paddingBottom: "calc(78px + env(safe-area-inset-bottom) + 1rem)" }}
     >
       {/* ── News Ticker ─────────────────────────────────────── */}
       {news.length > 0 && (
