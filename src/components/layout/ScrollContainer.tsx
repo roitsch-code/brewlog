@@ -1,15 +1,20 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
-// Mirrors the BottomNav show rules so the scroll viewport reserves
-// room for the floating 4+1 nav. Keep in sync with BottomNav.tsx.
-const EXACT_SHOW = ["/", "/explore", "/taste", "/match"];
+// Mirror BottomNav's visibility: same routes, same /explore tab nuance.
+// Keep in sync with BottomNav.tsx.
+const EXACT_SHOW = ["/", "/taste", "/match"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function ScrollContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const showNav = EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p));
+  const searchParams = useSearchParams();
+  const onExplore = pathname === "/explore";
+  const exploreInsights = onExplore && searchParams.get("tab") === "insights";
+  const showNav =
+    exploreInsights ||
+    (!onExplore && (EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p))));
   return (
     <div
       style={{
