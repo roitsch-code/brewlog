@@ -263,6 +263,17 @@ function AskTab() {
     }
   }, [messages, loading]);
 
+  // Auto-grow the textarea so the input pill expands with content (DOT
+  // Chat_Type_Long pattern). We reset to "auto" first so shrinking on
+  // delete works, then snap to scrollHeight up to the cap.
+  useEffect(() => {
+    const ta = inputRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    const cap = 140;
+    ta.style.height = Math.min(ta.scrollHeight, cap) + "px";
+  }, [input]);
+
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
     // Allow image-only sends (no text) when an image is attached.
@@ -874,7 +885,7 @@ function AskTab() {
       {/* Coffee picker — search sheet, spec §6.4 */}
       {coffeePickerOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
+          className="fixed inset-0 z-[60] flex items-end justify-center"
           style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setCoffeePickerOpen(false)}
         >
@@ -942,7 +953,7 @@ function AskTab() {
       {/* Attach sheet — bottom modal, spec §6.4 */}
       {attachSheetOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
+          className="fixed inset-0 z-[60] flex items-end justify-center"
           style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setAttachSheetOpen(false)}
         >
