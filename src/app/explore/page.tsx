@@ -561,7 +561,7 @@ function AskTab() {
       <div className="shrink-0">
         <div
           className="h-6 pointer-events-none"
-          style={{ background: "linear-gradient(to top, #111111 0%, transparent 100%)" }}
+          style={{ background: "linear-gradient(to top, #0E0B0A 0%, transparent 100%)" }}
         />
         <div
           className="px-4 bg-brew-bg"

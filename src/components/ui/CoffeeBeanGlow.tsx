@@ -62,20 +62,20 @@ export default function CoffeeBeanGlow({
       {/* Dim static bean outline */}
       <path
         d="M 14,50 C 14,26 26,7 50,7 C 74,7 86,26 86,50 C 86,74 74,93 50,93 C 26,93 14,74 14,50 Z"
-        stroke="#D4B896" strokeOpacity={0.2} strokeWidth={1.5}
+        stroke="#E8C5A8" strokeOpacity={0.2} strokeWidth={1.5}
       />
 
       {/* Dim static S-crease */}
       <path
         d={staticCrease}
-        stroke="#D4B896" strokeOpacity={0.15} strokeWidth={1.5}
+        stroke="#E8C5A8" strokeOpacity={0.15} strokeWidth={1.5}
         strokeLinecap="round"
       />
 
       {/* Halo layer — blurred, wider */}
       <path
         d={figurePath}
-        stroke="#D4B896"
+        stroke="#E8C5A8"
         strokeOpacity={0.5}
         strokeWidth={4.5}
         strokeLinecap="round"
@@ -94,7 +94,7 @@ export default function CoffeeBeanGlow({
       {/* Core layer — crisp, bright */}
       <path
         d={figurePath}
-        stroke="#D4B896"
+        stroke="#E8C5A8"
         strokeOpacity={0.92}
         strokeWidth={2}
         strokeLinecap="round"

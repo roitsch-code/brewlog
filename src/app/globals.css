@@ -4,20 +4,20 @@
 
 :root {
   /* Dark theme */
-  --background: #111111;
+  --background: #0E0B0A;
   --foreground: #FFFFFF;
-  --card: #1A1A1A;
+  --card: #171311;
   --card-foreground: #FFFFFF;
-  --border: #2E2E2E;
-  --primary: #D4B896;
-  --primary-foreground: #1A1008;
-  --secondary: #2E2E2E;
+  --border: #2E2A27;
+  --primary: #E8C5A8;
+  --primary-foreground: #1A130E;
+  --secondary: #2E2A27;
   --secondary-foreground: #FFFFFF;
-  --muted: #2E2E2E;
-  --muted-foreground: #B8B9B6;
+  --muted: #2E2A27;
+  --muted-foreground: #B8ADA4;
   --destructive: #FF5C33;
-  --ring: #666666;
-  --input: #2E2E2E;
+  --ring: #6B635D;
+  --input: #2E2A27;
   /* Semantic */
   --color-success: #222924;
   --color-success-foreground: #B6FFCE;
@@ -27,8 +27,31 @@
   --color-error-foreground: #FF5C33;
   --color-info: #222229;
   --color-info-foreground: #B2B2FF;
-  /* Radii */
-  --radius-m: 16px;
+  /* DOT-inspired redesign tokens — spec: docs/redesign/spec.md §2.
+     These mirror the spec's --bg-*, --surface-*, --text-*, --border-* names.
+     Tailwind keys under `dot.*` reference these via var(). */
+  --bg-base: #0E0B0A;
+  --bg-gradient-warm: #3A2018;
+  --bg-gradient-glow: #6B4838;
+  --bg-gradient-cool: #1A1614;
+  --surface-1: #171311;
+  --surface-2: #1F1A17;
+  --surface-pill-user: #F5ECE5;
+  --surface-pill-input: rgba(28,22,19,0.65);
+  --surface-pill-attach: rgba(40,30,26,0.7);
+  --text-primary: #F0E8E1;
+  --text-on-pill-user: #1A130E;
+  --text-secondary: #B8ADA4;
+  --text-muted: #6B635D;
+  --text-accent: #E8C5A8;
+  --border-subtle: rgba(255,235,220,0.08);
+  --scrim-dialog: rgba(8,5,4,0.55);
+  /* Radii (spec §4) */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-m: 16px; /* legacy alias — pre-redesign components */
+  --radius-lg: 22px;
+  --radius-xl: 28px;
   --radius-pill: 999px;
   /* Font stacks */
   --font-primary: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
@@ -59,13 +82,13 @@
 
   html {
     height: 100%;
-    background-color: #111111;
+    background-color: #0E0B0A;
   }
 
   body {
     height: 100%;
     overflow: hidden;
-    background-color: #111111;
+    background-color: #0E0B0A;
     color: #FFFFFF;
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     overscroll-behavior: none;
@@ -86,6 +109,14 @@
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     font-weight: 600;
   }
+  /* DOT-inspired editorial face — used by Phase 2/3 hero/loading moments
+     (spec §3). Existing .font-display stays Geist 600 for the 17+ titles
+     already consuming it; that audit is its own slice. */
+  .font-editorial {
+    font-family: var(--font-instrument-serif), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
   .font-mono-num {
     font-family: var(--font-geist-mono), var(--font-jetbrains-mono), 'Fira Code', monospace;
   }
@@ -96,8 +127,8 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .text-gradient-amber {
-    background: linear-gradient(135deg, #D4B896, #ffffff);
+  .text-gradient-warm {
+    background: linear-gradient(135deg, #E8C5A8, #ffffff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
