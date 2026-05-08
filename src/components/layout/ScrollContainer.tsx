@@ -2,7 +2,9 @@
 
 import { usePathname } from "next/navigation";
 
-const EXACT_SHOW = ["/", "/explore", "/taste"];
+// Mirrors the BottomNav show rules so the scroll viewport reserves
+// room for the floating 4+1 nav. Keep in sync with BottomNav.tsx.
+const EXACT_SHOW = ["/", "/explore", "/taste", "/match"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function ScrollContainer({ children }: { children: React.ReactNode }) {

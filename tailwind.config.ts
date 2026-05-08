@@ -21,21 +21,23 @@ const config: Config = {
           success: "#5A9E5A",
         },
         // DOT-inspired redesign tokens (spec: docs/redesign/spec.md §2).
-        // Each value is a CSS var so :root is the single source of truth.
+        // Direct hex so Tailwind can apply opacity modifiers (e.g.
+        // `bg-dot-s1/50`); :root CSS vars in globals.css mirror these
+        // values 1:1 for inline-style consumers — keep in sync.
         dot: {
-          base: "var(--bg-base)",
-          "warm-mid": "var(--bg-gradient-warm)",
-          "warm-peak": "var(--bg-gradient-glow)",
-          cool: "var(--bg-gradient-cool)",
-          s1: "var(--surface-1)",
-          s2: "var(--surface-2)",
-          "pill-user": "var(--surface-pill-user)",
-          ink: "var(--text-primary)",
-          "on-pill": "var(--text-on-pill-user)",
-          "ink-soft": "var(--text-secondary)",
-          "ink-mute": "var(--text-muted)",
-          accent: "var(--text-accent)",
-          edge: "var(--border-subtle)",
+          base: "#0E0B0A",
+          "warm-mid": "#3A2018",
+          "warm-peak": "#6B4838",
+          cool: "#1A1614",
+          s1: "#171311",
+          s2: "#1F1A17",
+          "pill-user": "#F5ECE5",
+          ink: "#F0E8E1",
+          "on-pill": "#1A130E",
+          "ink-soft": "#B8ADA4",
+          "ink-mute": "#6B635D",
+          accent: "#E8C5A8",
+          edge: "rgba(255,235,220,0.08)",
         },
       },
       fontFamily: {

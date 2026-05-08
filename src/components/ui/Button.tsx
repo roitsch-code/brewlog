@@ -1,6 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils/cn";
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { gradientButtonPrimary } from "@/lib/theme/gradients";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "destructive";
@@ -8,6 +9,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
+/**
+ * BrewLog button primitive — DOT-inspired (spec §7).
+ *  - primary    : warm gradient fill, dark-warm glyph; the app's main CTA.
+ *  - secondary  : glass pill (translucent surface + backdrop-blur + edge).
+ *  - ghost      : transparent until press / hover.
+ *  - destructive: kept for compat; not part of the redesign vocabulary.
+ *
+ * All variants use the `rounded-full` pill shape per spec radius scale.
+ */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", size = "md", loading, className, children, disabled, ...props }, ref) => {
     return (
@@ -15,14 +25,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:pointer-events-none select-none",
+          "inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none select-none",
           {
-            // Variants
-            "bg-brew-accent text-brew-accent-fg hover:bg-brew-accent/90": variant === "primary",
-            "bg-brew-surface border border-brew-border text-white hover:bg-brew-elevated": variant === "secondary",
-            "text-white hover:bg-white/10": variant === "ghost",
-            "bg-red-900/50 border border-red-800 text-red-300 hover:bg-red-900/70": variant === "destructive",
-            // Sizes
+            // primary — gradient fill
+            [`${gradientButtonPrimary} text-dot-on-pill shadow-glow-subtle hover:brightness-[1.05]`]:
+              variant === "primary",
+            // secondary — glass pill
+            "bg-dot-s2/60 backdrop-blur-xl border border-dot-edge text-dot-ink hover:bg-dot-s2/80":
+              variant === "secondary",
+            // ghost — transparent
+            "text-dot-ink hover:bg-dot-edge": variant === "ghost",
+            // destructive — unchanged from pre-redesign
+            "bg-red-900/50 border border-red-800 text-red-300 hover:bg-red-900/70":
+              variant === "destructive",
+            // sizes
             "px-4 py-2 text-sm h-9": size === "sm",
             "px-6 py-3 text-base h-12": size === "md",
             "px-8 py-4 text-base h-[52px] w-full": size === "lg",
