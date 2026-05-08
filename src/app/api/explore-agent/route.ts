@@ -155,7 +155,7 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         query: {
           type: "string",
-          description: "City name or café/roastery name — NOT a neighbourhood or district. Use 'Berlin' not 'Neukölln', 'Hamburg' not 'St. Pauli', 'Cologne' not 'Ehrenfeld'.",
+          description: "City name in German (e.g. 'Köln' not 'Cologne', 'München' not 'Munich', 'Düsseldorf'), or a café/roastery name. Always use the German city spelling with umlauts. NOT a neighbourhood — use 'Berlin' not 'Neukölln', 'Hamburg' not 'St. Pauli', 'Köln' not 'Ehrenfeld'.",
         },
       },
       required: ["query"],
@@ -303,16 +303,69 @@ async function fetchImageAsBase64(
   }
 }
 
+// German umlaut variants of a query — the model often passes ASCII spellings
+// like "Dusseldorf" or "Koln" even though the DB stores "Düsseldorf"/"Köln".
+// Postgres ILIKE is case-insensitive but NOT accent-insensitive, so we expand
+// the query into all reasonable variants and OR them together.
+function umlautVariants(query: string): string[] {
+  const variants = new Set<string>([query]);
+  // ASCII → umlaut: ue→ü, oe→ö, ae→ä, Ue→Ü, Oe→Ö, Ae→Ä, ss→ß
+  variants.add(
+    query
+      .replace(/ue/g, "ü").replace(/oe/g, "ö").replace(/ae/g, "ä")
+      .replace(/Ue/g, "Ü").replace(/Oe/g, "Ö").replace(/Ae/g, "Ä")
+      .replace(/ss/g, "ß")
+  );
+  // Umlaut → ASCII strip: ü→u, ö→o, ä→a, ß→ss
+  variants.add(
+    query
+      .replace(/ü/g, "u").replace(/ö/g, "o").replace(/ä/g, "a")
+      .replace(/Ü/g, "U").replace(/Ö/g, "O").replace(/Ä/g, "A")
+      .replace(/ß/g, "ss")
+  );
+  // Umlaut → expanded: ü→ue, ö→oe, ä→ae, ß→ss
+  variants.add(
+    query
+      .replace(/ü/g, "ue").replace(/ö/g, "oe").replace(/ä/g, "ae")
+      .replace(/Ü/g, "Ue").replace(/Ö/g, "Oe").replace(/Ä/g, "Ae")
+      .replace(/ß/g, "ss")
+  );
+  // City aliases — bare-ASCII spellings the model often uses for German cities
+  // that ILIKE alone cannot match (Postgres ILIKE is not accent-insensitive).
+  // Each key, when found anywhere in the query, adds a variant with the German
+  // spelling substituted in.
+  const aliases: Record<string, string> = {
+    cologne: "Köln",
+    koln: "Köln",
+    koeln: "Köln",
+    dusseldorf: "Düsseldorf",
+    duesseldorf: "Düsseldorf",
+    munich: "München",
+    munchen: "München",
+    muenchen: "München",
+    nuremberg: "Nürnberg",
+    nurnberg: "Nürnberg",
+    nuernberg: "Nürnberg",
+  };
+  const lower = query.toLowerCase();
+  for (const [k, v] of Object.entries(aliases)) {
+    if (lower.includes(k)) variants.add(query.replace(new RegExp(k, "gi"), v));
+  }
+  return Array.from(variants).filter((v) => v.length > 0);
+}
+
 async function searchPlaces(query: string): Promise<{ name: string; city: string; address: string | null }[]> {
   try {
+    const variants = umlautVariants(query);
+    const conditions = variants.flatMap((v) => [
+      ilike(places.city, `%${v}%`),
+      ilike(places.name, `%${v}%`),
+      ilike(places.address, `%${v}%`),
+    ]);
     return await db
       .select({ name: places.name, city: places.city, address: places.address })
       .from(places)
-      .where(or(
-        ilike(places.city, `%${query}%`),
-        ilike(places.name, `%${query}%`),
-        ilike(places.address, `%${query}%`),
-      ))
+      .where(or(...conditions))
       .limit(30);
   } catch {
     return [];
