@@ -40,7 +40,10 @@
   --surface-pill-input: rgba(28,22,19,0.65);
   --surface-pill-attach: rgba(40,30,26,0.7);
   --text-primary: #F0E8E1;
-  --text-on-pill-user: #1A130E;
+  /* Warm dark for text inside the cream user pill. Used to be #1A130E
+     which read as harsh near-black; this is still high contrast on the
+     #F5ECE5 cream but with a softer warm-brown character. */
+  --text-on-pill-user: #2E2118;
   --text-secondary: #B8ADA4;
   --text-muted: #6B635D;
   --text-accent: #E8C5A8;
