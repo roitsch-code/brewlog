@@ -392,6 +392,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as {
       messages: { role: "user" | "assistant"; content: string }[];
       recentSessions?: Session[];
+      attachedImageUrl?: string;
     };
 
     const messages = (body.messages ?? []).filter(
@@ -399,6 +400,23 @@ export async function POST(req: NextRequest) {
     );
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages required" }, { status: 400 });
+    }
+
+    // Optional image attached to the most recent user turn (chat photo upload).
+    // We fetch+base64 it once here so Claude sees the image natively in the
+    // user message — no analyze_image tool round-trip needed.
+    const attachedImageUrl =
+      typeof body.attachedImageUrl === "string" && body.attachedImageUrl.startsWith("http")
+        ? body.attachedImageUrl
+        : null;
+    let attachedImage: { data: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" } | null = null;
+    if (attachedImageUrl) {
+      try {
+        attachedImage = await fetchImageAsBase64(attachedImageUrl);
+      } catch (err) {
+        console.error("attached image fetch failed:", err);
+        attachedImage = null;
+      }
     }
 
     const [userPrefs, library] = await Promise.all([
@@ -458,10 +476,34 @@ export async function POST(req: NextRequest) {
         };
 
         try {
-          const agentMessages: Anthropic.MessageParam[] = messages.map((m) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-          }));
+          const agentMessages: Anthropic.MessageParam[] = messages.map((m, idx) => {
+            // If an image is attached to this turn AND it's the last user
+            // message, build a mixed-content turn so Claude sees the image.
+            const isLastUser =
+              attachedImage !== null &&
+              m.role === "user" &&
+              idx === messages.length - 1;
+            if (isLastUser && attachedImage) {
+              return {
+                role: "user" as const,
+                content: [
+                  {
+                    type: "image" as const,
+                    source: {
+                      type: "base64" as const,
+                      media_type: attachedImage.mediaType,
+                      data: attachedImage.data,
+                    },
+                  },
+                  { type: "text" as const, text: m.content || "What can you tell me about this?" },
+                ],
+              };
+            }
+            return {
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            };
+          });
 
           const navSuggestions: NavAction[] = [];
           const MAX_ITERATIONS = 6;
