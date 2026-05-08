@@ -5,14 +5,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MIN_BYTES = 1024;            // ~drop empty/silent recordings
-const MAX_BYTES = 25 * 1024 * 1024; // Whisper hard limit
+const MIN_BYTES = 1024;             // drop empty/silent recordings
+const MAX_BYTES = 25 * 1024 * 1024; // sanity cap; Scribe accepts much more
 
 export async function POST(req: NextRequest) {
   const authError = await requireAuth(req);
   if (authError) return authError;
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "Voice transcription not configured." }, { status: 503 });
   }
@@ -36,18 +36,15 @@ export async function POST(req: NextRequest) {
   }
 
   const upstream = new FormData();
-  // Whisper infers format from filename extension; default to .webm if missing.
   const filename = file.name && file.name.includes(".") ? file.name : "voice.webm";
   upstream.append("file", file, filename);
-  upstream.append("model", "whisper-1");
-  upstream.append("response_format", "json");
-  upstream.append("temperature", "0");
+  upstream.append("model_id", "scribe_v1");
 
   let res: Response;
   try {
-    res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { "xi-api-key": apiKey },
       body: upstream,
     });
   } catch {
