@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import ThinkingDots from "@/components/ui/ThinkingDots";
+import WaveformBars from "@/components/ui/WaveformBars";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
 import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X, Plus, Camera, Coffee } from "lucide-react";
@@ -766,7 +767,37 @@ function AskTab() {
           </div>
         )}
 
-        {/* The pill itself */}
+        {/* Recording dock — replaces the input pill while capture is active.
+            Spec §6.3: full-width waveform across most of the dock, stop
+            button on the right (filled square in a circle). No timer. */}
+        {capture.recording ? (
+          <div
+            className="flex items-center gap-2 rounded-full border border-dot-edge backdrop-blur-xl shadow-glow-strong px-3"
+            style={{ background: "var(--surface-pill-input)", minHeight: 52 }}
+          >
+            <span
+              className="w-2 h-2 rounded-full animate-pulse shrink-0"
+              style={{ background: "var(--text-accent)" }}
+              aria-label="Recording"
+            />
+            <WaveformBars
+              getLevel={capture.getLevel}
+              bars={32}
+              height={32}
+              className="flex-1 min-w-0"
+            />
+            <button
+              type="button"
+              onClick={() => void capture.stop()}
+              disabled={capture.busy}
+              aria-label="Stop recording"
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
+              style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
+            >
+              <Square size={14} fill="currentColor" />
+            </button>
+          </div>
+        ) : (
         <div
           className="flex items-center gap-1 rounded-full border border-dot-edge backdrop-blur-xl shadow-glow-subtle"
           style={{
@@ -837,6 +868,7 @@ function AskTab() {
             </button>
           )}
         </div>
+        )}
       </div>
 
       {/* Coffee picker — search sheet, spec §6.4 */}

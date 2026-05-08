@@ -14,6 +14,8 @@ interface VoiceCapture {
   stop: () => Promise<void>;
   toggle: () => Promise<void>;
   clearError: () => void;
+  /** Snapshot the current input level normalised 0..1, or 0 when idle. */
+  getLevel: () => number;
 }
 
 function pickMimeType(): string | undefined {
@@ -39,11 +41,29 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const mimeRef = useRef<string | undefined>(undefined);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const levelBufferRef = useRef<Uint8Array | null>(null);
+
+  const teardownAnalyser = useCallback(() => {
+    try { sourceNodeRef.current?.disconnect(); } catch { /* ignore */ }
+    sourceNodeRef.current = null;
+    analyserRef.current = null;
+    levelBufferRef.current = null;
+    if (audioCtxRef.current) {
+      const ctx = audioCtxRef.current;
+      audioCtxRef.current = null;
+      // close() is async — fire and forget; errors here don't matter.
+      ctx.close().catch(() => { /* ignore */ });
+    }
+  }, []);
 
   const teardownStream = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
-  }, []);
+    teardownAnalyser();
+  }, [teardownAnalyser]);
 
   const surfaceError = useCallback((msg: string) => {
     setError(msg);
@@ -72,6 +92,25 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
       return;
     }
     streamRef.current = stream;
+    // Analyser for live waveform rendering. Errors here mustn't block recording —
+    // worst case the waveform sits flat.
+    try {
+      const Ctor: typeof AudioContext | undefined =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (Ctor) {
+        const ctx = new Ctor();
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.4;
+        source.connect(analyser);
+        audioCtxRef.current = ctx;
+        sourceNodeRef.current = source;
+        analyserRef.current = analyser;
+        levelBufferRef.current = new Uint8Array(analyser.fftSize);
+      }
+    } catch { /* analyser optional */ }
     const mime = pickMimeType();
     mimeRef.current = mime;
     let recorder: MediaRecorder;
@@ -149,10 +188,28 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
 
   const clearError = useCallback(() => setError(null), []);
 
+  // Pulls the current peak amplitude (0..1) from the analyser. Returns 0
+  // when no analyser exists (e.g. browser doesn't support AudioContext).
+  const getLevel = useCallback(() => {
+    const analyser = analyserRef.current;
+    const buf = levelBufferRef.current;
+    if (!analyser || !buf) return 0;
+    // The DOM lib types getByteTimeDomainData more strictly than the
+    // runtime needs; cast through the underlying ArrayBufferView interface.
+    analyser.getByteTimeDomainData(buf as unknown as Uint8Array<ArrayBuffer>);
+    // Peak deviation from 128 (silence midpoint).
+    let peak = 0;
+    for (let i = 0; i < buf.length; i++) {
+      const dev = Math.abs(buf[i] - 128);
+      if (dev > peak) peak = dev;
+    }
+    return Math.min(peak / 128, 1);
+  }, []);
+
   useEffect(() => () => {
     try { recorderRef.current?.stop(); } catch { /* ignore */ }
     teardownStream();
   }, [teardownStream]);
 
-  return { recording, busy, error, start, stop, toggle, clearError };
+  return { recording, busy, error, start, stop, toggle, clearError, getLevel };
 }
