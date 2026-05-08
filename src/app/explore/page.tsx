@@ -3,11 +3,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import ThinkingDots from "@/components/ui/ThinkingDots";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
-import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X, Plus, Camera, Coffee } from "lucide-react";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
+import { gradientChatBg, gradientPillUser } from "@/lib/theme/gradients";
 import type { NavAction } from "@/app/api/explore-agent/route";
 
 const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
@@ -19,6 +21,7 @@ const SUGGESTION_ICONS = [FlaskConical, Thermometer, RotateCcw, Globe, BookOpen,
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string;
   sources?: { title: string; url: string }[];
   actions?: NavAction[];
 }
@@ -117,26 +120,22 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="min-h-full bg-brew-bg flex flex-col">
-      {/* Header */}
-      <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
-        <div className="mb-4">
-          <h1 className="font-display text-3xl text-white leading-none">Ask anything</h1>
-          <p className="text-brew-muted text-sm mt-1">about coffee</p>
-        </div>
-
-        {/* Tabs — pill style */}
-        <div className="flex gap-2">
+    <div className={`min-h-full flex flex-col ${activeTab === "ask" ? gradientChatBg : "bg-brew-bg"}`}>
+      {/* Header — DOT-spec: tab switcher pills only, no app icon, no title */}
+      <div className="px-5 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
+        <div
+          className="flex gap-1 rounded-full p-1 border border-dot-edge backdrop-blur-xl w-fit"
+          style={{ background: "var(--surface-pill-input)" }}
+        >
           {(["ask", "insights", "nearby"] as const).map(tab => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className="px-5 py-1.5 rounded-full text-sm font-medium transition-all"
+              className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
               style={{
-                background: activeTab === tab ? "var(--primary)" : "var(--card)",
-                color: activeTab === tab ? "var(--primary-foreground)" : "var(--muted-foreground)",
-                border: activeTab === tab ? "none" : "1px solid var(--border)",
+                background: activeTab === tab ? "var(--surface-pill-user)" : "transparent",
+                color: activeTab === tab ? "var(--text-on-pill-user)" : "var(--text-secondary)",
               }}
             >
               {TAB_LABELS[tab]}
@@ -166,8 +165,13 @@ function AskTab() {
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const [voiceMode, setVoiceMode] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [attachedImageUrl, setAttachedImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
+  const [attachSheetOpen, setAttachSheetOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const sentenceBufferRef = useRef<{ current: string }>({ current: "" });
   const voiceModeRef = useRef(false);
 
@@ -235,12 +239,20 @@ function AskTab() {
 
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    // Allow image-only sends (no text) when an image is attached.
+    if (!trimmed && !attachedImageUrl) return;
+    if (loading) return;
 
-    const userMsg: ChatMessage = { role: "user", content: trimmed };
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: trimmed,
+      ...(attachedImageUrl ? { imageUrl: attachedImageUrl } : {}),
+    };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
+    const sentImageUrl = attachedImageUrl;
+    setAttachedImageUrl(null);
     setLoading(true);
     setAgentStatus(null);
 
@@ -268,6 +280,7 @@ function AskTab() {
           body: JSON.stringify({
             messages: newMessages.map(m => ({ role: m.role, content: m.content })),
             recentSessions,
+            ...(sentImageUrl ? { attachedImageUrl: sentImageUrl } : {}),
           }),
         });
       } catch {
@@ -444,6 +457,50 @@ function AskTab() {
     setVoiceMode(next);
   };
 
+  const handleAttachClick = () => {
+    setAttachError(null);
+    setAttachSheetOpen(true);
+  };
+
+  const handlePhotoPick = () => {
+    setAttachSheetOpen(false);
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setAttachError("Photo too large (max 10 MB).");
+      return;
+    }
+    setUploadingImage(true);
+    setAttachError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("path", `uploads/chat-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Upload failed (${res.status})`);
+      }
+      const { url } = await res.json();
+      if (!url) throw new Error("No URL returned");
+      setAttachedImageUrl(url);
+    } catch (err) {
+      setAttachError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleClearAttachment = () => {
+    setAttachedImageUrl(null);
+    setAttachError(null);
+  };
+
   const showStarter =
     messages.length === 0 && !loading && input.trim() === "" && !capture.recording;
 
@@ -477,197 +534,304 @@ function AskTab() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.role === "assistant" && (
-                  <div className="shrink-0 mt-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/icons/BrewLog.png"
-                      alt=""
-                      aria-hidden="true"
-                      width={20}
-                      height={24}
-                      style={{ objectFit: "contain" }}
-                    />
+                {msg.role === "user" ? (
+                  // Cream pill — asymmetric radius, dark text on warm cream.
+                  <div
+                    className={`max-w-[78%] flex flex-col gap-2 ${gradientPillUser}`}
+                    style={{
+                      borderTopLeftRadius: "var(--radius-xl)",
+                      borderTopRightRadius: "var(--radius-xl)",
+                      borderBottomLeftRadius: "var(--radius-xl)",
+                      borderBottomRightRadius: "var(--radius-lg)",
+                      padding: "12px 16px",
+                      color: "var(--text-on-pill-user)",
+                    }}
+                  >
+                    {msg.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={msg.imageUrl}
+                        alt="Attached"
+                        className="rounded-xl max-h-64 w-full object-cover"
+                      />
+                    )}
+                    {msg.content && (
+                      <div className="text-sm leading-relaxed">
+                        <MessageContent content={msg.content} darkText />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Assistant — no bubble, text directly on the gradient.
+                  <div className="flex flex-col gap-2" style={{ maxWidth: "88%" }}>
+                    <div className="text-sm" style={{ color: "var(--text-primary)" }}>
+                      <MessageContent content={msg.content} />
+                    </div>
+                    {msg.actions && msg.actions.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {msg.actions.map((action, j) => (
+                          <NavActionChip key={j} action={action} />
+                        ))}
+                      </div>
+                    )}
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {msg.sources.map((s, j) => (
+                          <a
+                            key={j}
+                            href={s.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs underline underline-offset-2"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
+                            {s.title}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
-                <div className="flex flex-col gap-1.5" style={{ maxWidth: msg.role === "user" ? "80%" : "85%" }}>
-                  <div
-                    className={`rounded-2xl px-4 py-3 text-sm ${
-                      msg.role === "user"
-                        ? "bg-brew-elevated text-white"
-                        : "bg-brew-surface border border-brew-border text-white"
-                    }`}
-                  >
-                    <MessageContent content={msg.content} />
-                  </div>
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div className="flex flex-wrap gap-2 px-1">
-                      {msg.actions.map((action, j) => (
-                        <NavActionChip key={j} action={action} />
-                      ))}
-                    </div>
-                  )}
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="flex flex-wrap gap-2 px-1">
-                      {msg.sources.map((s, j) => (
-                        <a
-                          key={j}
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-white/40 underline underline-offset-2"
-                        >
-                          {s.title}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
               </div>
             ))}
 
-            {loading && (
-              <div className="flex gap-2 justify-start">
-                <div className="shrink-0 mt-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/icons/BrewLog.png"
-                    alt=""
-                    aria-hidden="true"
-                    width={20}
-                    height={24}
-                    style={{ objectFit: "contain" }}
-                  />
+            {loading && (() => {
+              // Only show the indicator while we're still waiting for the
+              // first delta — once tokens stream in, the assistant message
+              // itself is the visual feedback.
+              const last = messages[messages.length - 1];
+              const stillEmpty = !last || last.role !== "assistant" || !last.content;
+              if (!stillEmpty) return null;
+              return (
+                <div className="flex justify-start">
+                  <div className="flex flex-col gap-1">
+                    <ThinkingDots />
+                    {agentStatus && (
+                      <p className="text-xs leading-snug" style={{ color: "var(--text-secondary)" }}>
+                        {agentStatus}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 flex flex-col gap-1.5">
-                  <CoffeeBeanGlow size={24} />
-                  {agentStatus && (
-                    <p className="text-white/40 text-xs leading-snug">{agentStatus}</p>
-                  )}
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
       </div>
 
-      {/* Input area — in normal flow, sits at bottom of flex column */}
-      <div className="shrink-0">
-        <div
-          className="h-6 pointer-events-none"
-          style={{ background: "linear-gradient(to top, #0E0B0A 0%, transparent 100%)" }}
+      {/* Input area — DOT-spec glass dock (spec §6.1) */}
+      <div className="shrink-0 px-3" style={{ paddingBottom: "0.75rem", paddingTop: "0.25rem" }}>
+        {/* Hidden file input for photo attach */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handlePhotoFile}
         />
-        <div
-          className="px-4 bg-brew-bg"
-          style={{ paddingBottom: "0.75rem", paddingTop: "0.25rem" }}
-        >
-          {voiceError && (
+
+        {voiceError && (
+          <div
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+          >
+            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>
+              {voiceError}
+            </p>
+            <button type="button" onClick={() => setVoiceError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
+              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
+            </button>
+          </div>
+        )}
+        {attachError && (
+          <div
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+          >
+            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>{attachError}</p>
+            <button type="button" onClick={() => setAttachError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
+              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
+            </button>
+          </div>
+        )}
+
+        {/* Pending image thumbnail above the input pill */}
+        {(attachedImageUrl || uploadingImage) && (
+          <div className="mb-2 flex">
             <div
-              className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
-              style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+              className="relative rounded-2xl overflow-hidden border border-dot-edge"
+              style={{ width: 88, height: 88, background: "var(--surface-pill-attach)", backdropFilter: "blur(12px)" }}
             >
-              <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>
-                {voiceError}
-              </p>
-              <button
-                type="button"
-                onClick={() => setVoiceError(null)}
-                className="shrink-0 active:scale-90 transition-transform"
-                aria-label="Dismiss"
-              >
-                <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
-              </button>
+              {uploadingImage ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ThinkingDots />
+                </div>
+              ) : (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={attachedImageUrl ?? ""} alt="Attached" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={handleClearAttachment}
+                    aria-label="Remove attachment"
+                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(0,0,0,0.55)" }}
+                  >
+                    <X size={12} className="text-white" />
+                  </button>
+                </>
+              )}
             </div>
-          )}
-          <div className="flex gap-2 items-end">
+          </div>
+        )}
+
+        {/* The pill itself */}
+        <div
+          className="flex items-center gap-1 rounded-full border border-dot-edge backdrop-blur-xl shadow-glow-subtle"
+          style={{
+            background: "var(--surface-pill-input)",
+            paddingLeft: 6,
+            paddingRight: 6,
+            minHeight: 52,
+          }}
+        >
+          {/* + attach */}
+          <button
+            type="button"
+            onClick={handleAttachClick}
+            disabled={loading || capture.recording}
+            aria-label="Add attachment"
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            <Plus size={22} strokeWidth={1.75} />
+          </button>
+
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={capture.recording ? "Listening…" : "Ask something"}
+            rows={1}
+            disabled={capture.recording || capture.busy}
+            className="flex-1 bg-transparent resize-none focus:outline-none disabled:opacity-60 placeholder:text-dot-ink-soft"
+            style={{
+              color: "var(--text-primary)",
+              minHeight: 40,
+              maxHeight: 120,
+              padding: "10px 4px",
+              fontSize: 16,
+            }}
+          />
+
+          {/* Mic OR Send swap (spec §6.1) */}
+          {input.trim().length > 0 || attachedImageUrl ? (
             <button
               type="button"
-              onClick={handleVoiceToggle}
-              aria-label={voiceMode ? "Mute spoken responses" : "Speak responses aloud"}
-              title={voiceMode ? "Spoken responses on" : "Spoken responses off"}
-              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
-              style={{
-                background: voiceMode ? "var(--card)" : "transparent",
-                border: `1px solid ${voiceMode ? "var(--primary)" : "var(--border)"}`,
-              }}
+              onClick={() => sendMessage(input)}
+              disabled={loading || uploadingImage}
+              aria-label="Send"
+              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
+              style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
             >
-              {voiceMode ? (
-                <Volume2 size={16} style={{ color: "var(--primary)" }} />
-              ) : (
-                <VolumeX size={16} style={{ color: "var(--muted-foreground)" }} />
-              )}
+              <ArrowUp size={18} strokeWidth={2.25} />
             </button>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={capture.recording ? "Listening…" : "Ask something"}
-              rows={1}
-              disabled={capture.recording || capture.busy}
-              className="flex-1 text-sm resize-none focus:outline-none transition-colors disabled:opacity-60"
-              style={{
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "999px",
-                padding: "10px 16px",
-                color: "var(--foreground)",
-                minHeight: "44px",
-                maxHeight: "120px",
-                fontSize: "16px",
-              }}
-            />
+          ) : (
             <button
               type="button"
               onClick={handleMicTap}
               disabled={loading || capture.busy}
               aria-label={capture.recording ? "Stop recording" : "Start recording"}
-              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-30 ${capture.recording ? "animate-pulse" : ""}`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 ${capture.recording ? "animate-pulse" : ""}`}
               style={{
-                background: capture.recording ? "rgba(220, 80, 80, 0.18)" : "var(--card)",
-                border: `1px solid ${capture.recording ? "rgba(220, 80, 80, 0.7)" : "var(--border)"}`,
+                background: capture.recording ? "rgba(220, 80, 80, 0.18)" : "transparent",
               }}
             >
               {capture.recording ? (
                 <Square size={14} style={{ color: "rgba(255,180,180,0.95)" }} fill="currentColor" />
               ) : (
-                <Mic size={16} style={{ color: "var(--foreground)" }} />
+                <Mic size={18} style={{ color: "var(--text-secondary)" }} strokeWidth={1.75} />
               )}
             </button>
+          )}
+        </div>
+      </div>
+
+      {/* Attach sheet — bottom modal, spec §6.4 */}
+      {attachSheetOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+          onClick={() => setAttachSheetOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-1"
+            style={{ background: "var(--surface-2)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--text-muted)" }} />
+
             <button
               type="button"
-              onClick={() => sendMessage(input)}
-              disabled={!input.trim() || loading}
-              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-30"
-              style={{ background: "var(--primary)" }}
+              onClick={handlePhotoPick}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
             >
-              <ArrowUp size={18} style={{ color: "var(--primary-foreground)" }} />
+              <Camera size={20} style={{ color: "var(--text-accent)" }} />
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Photo</span>
+            </button>
+
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl text-left opacity-40 cursor-not-allowed"
+            >
+              <Coffee size={20} style={{ color: "var(--text-secondary)" }} />
+              <span className="text-sm" style={{ color: "var(--text-secondary)" }}>Reference coffee</span>
+              <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>soon</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { handleVoiceToggle(); setAttachSheetOpen(false); }}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
+            >
+              {voiceMode ? (
+                <Volume2 size={20} style={{ color: "var(--text-accent)" }} />
+              ) : (
+                <VolumeX size={20} style={{ color: "var(--text-secondary)" }} />
+              )}
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>
+                Voice replies {voiceMode ? "on" : "off"}
+              </span>
             </button>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
 
 // Renders markdown: **bold**, *italic*, bullet lists, line breaks
-function renderInline(text: string): React.ReactNode[] {
+function renderInline(text: string, darkText?: boolean): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   // Match **bold** and *italic*
   const regex = /(\*\*(.+?)\*\*|\*(.+?)\*)/g;
   let last = 0;
   let match;
   let key = 0;
+  const boldClass = darkText ? "font-semibold" : "text-white font-semibold";
   while ((match = regex.exec(text)) !== null) {
     if (match.index > last) parts.push(text.slice(last, match.index));
     if (match[0].startsWith("**")) {
-      parts.push(<strong key={key++} className="text-white font-semibold">{match[2]}</strong>);
+      parts.push(<strong key={key++} className={boldClass}>{match[2]}</strong>);
     } else {
       parts.push(<em key={key++} className="italic">{match[3]}</em>);
     }
@@ -677,7 +841,7 @@ function renderInline(text: string): React.ReactNode[] {
   return parts;
 }
 
-function MessageContent({ content }: { content: string }) {
+function MessageContent({ content, darkText }: { content: string; darkText?: boolean }) {
   const lines = content.split("\n");
   const nodes: React.ReactNode[] = [];
   let i = 0;
@@ -697,7 +861,7 @@ function MessageContent({ content }: { content: string }) {
       while (i < lines.length && /^[-•]\s/.test(lines[i].trim())) {
         bullets.push(
           <li key={i} className="leading-snug">
-            {renderInline(lines[i].trim().replace(/^[-•]\s/, ""))}
+            {renderInline(lines[i].trim().replace(/^[-•]\s/, ""), darkText)}
           </li>
         );
         i++;
@@ -713,7 +877,7 @@ function MessageContent({ content }: { content: string }) {
     // Regular paragraph line
     nodes.push(
       <p key={i} className="leading-relaxed">
-        {renderInline(line)}
+        {renderInline(line, darkText)}
       </p>
     );
     i++;
