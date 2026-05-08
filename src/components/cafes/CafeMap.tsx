@@ -44,7 +44,7 @@ async function geocafe(name: string, location?: string): Promise<{ lat: number; 
 }
 
 const PIN_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#D4B896"/>
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#E8C5A8"/>
   <circle cx="14" cy="14" r="5" fill="#1A1008"/>
 </svg>`;
 
@@ -56,14 +56,14 @@ const PIN_SELECTED_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill=
 
 // not-visited + not-selected: no fill, accent outline, hollow inner dot
 const GHOST_PIN_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#D4B896" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="4" fill="none" stroke="#D4B896" stroke-width="2"/>
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#E8C5A8" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="none" stroke="#E8C5A8" stroke-width="2"/>
 </svg>`;
 
 // not-visited + selected: white body, accent outline, solid accent dot — distinct from all three above
 const GHOST_PIN_SELECTED_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FFFFFF" stroke="#D4B896" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="4" fill="#D4B896"/>
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FFFFFF" stroke="#E8C5A8" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="#E8C5A8"/>
 </svg>`;
 
 const YOU_ARE_HERE_HTML = `

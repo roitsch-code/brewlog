@@ -36,7 +36,7 @@ export default function BottomNav() {
         paddingLeft: "16px",
         paddingRight: "16px",
         paddingBottom: "env(safe-area-inset-bottom)",
-        background: "#111111",
+        background: "var(--bg-base)",
       }}
     >
       <div
