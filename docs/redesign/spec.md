@@ -75,7 +75,7 @@ Implementation note: gradients live as exported class strings, not magic literal
 ### Stack
 
 - **Body:** Geist Sans (existing). No change. Geist is clean and sits well next to a serif.
-- **Display / editorial:** **add Instrument Serif** (free, Google Fonts, variable). Used for the "thinking…" loading state, hero headlines on the home feed, and the empty-state of the chat. Reference: DOT's `LoadingScreen` ("Dot is reflecting on your letter...") sets the tone — a single serif line, generous size, calm.
+- **Display / editorial:** **Instrument Serif** (decided — free, Google Fonts, variable). Used for the "thinking…" loading state, hero headlines on the home feed, and the empty-state of the chat. Reference: DOT's `LoadingScreen` ("Dot is reflecting on your letter...") sets the tone — a single serif line, generous size, calm. Loaded via Next.js font loader; ~30 KB woff2 budget. Never used at body size — display moments only.
 - **Mono:** Geist Mono (existing). No change. Kept for numbers, grind degrees, ratios.
 
 ### Scale
@@ -143,10 +143,10 @@ Implementation note: gradients live as exported class strings, not magic literal
 ### 6.1 Layout shell
 
 - **Header (top of chat):**
-  - Top-left: a small expand/collapse glyph (DOT uses two diagonal arrows). For BrewLog, **a back/menu chevron** is more honest — there's nowhere to "expand" into. Use `<` icon in `--text-secondary`. 24px tap target.
+  - Top-left: **tab switcher pills** for Ask / Insights / Nearby (decided). Active tab uses `--surface-pill-user` background with `--text-on-pill-user` label; inactive tabs are transparent with `--text-secondary` label. Pills sit in a single floating glass container with the same backdrop-blur treatment as the bottom nav.
   - Top-right: three-dots overflow `⋯` opening a sheet with "Clear chat / Settings / Help".
   - **No app icon, no coffee bean, no avatar.** Per the user's explicit note: drop the icon entirely.
-  - No title text. The chat speaks for itself.
+  - No title text. The tabs are the only top-level affordance.
 - **Message scroll area:**
   - Edge-to-edge horizontally with 20px lateral padding for content.
   - 16px vertical gap between message groups; 8px between same-author follow-ups.
@@ -186,7 +186,7 @@ The existing voice hooks (`useVoiceCapture`, `useVoicePlayback`) stay. Visual ch
 
 #### Review → send
 - Tap up-arrow.
-- The user message renders as a **mini playback pill** in the chat (right-aligned, cream background, mini play button + static waveform). Body text is the transcript, rendered below or hidden — TBD: the DOT screen `Chat_Voice_Answer.png` does not show transcript text, only the audio pill. **Decision needed from the user** (see Open Questions below).
+- The user message renders as a **normal text bubble** containing the transcript only (decided — transcript-only, no audio retained). The waveform UI is for capture/preview only; nothing is persisted as audio. This keeps the existing `useVoiceCapture` flow untouched and avoids adding audio storage. We diverge from DOT here intentionally — DOT keeps the audio pill, BrewLog doesn't need to.
 
 #### Edge cases
 - If transcript fails: show a small error banner above the input ("Couldn't transcribe — tap to retry") — already in current code; restyle only.
@@ -224,22 +224,55 @@ The existing voice hooks (`useVoiceCapture`, `useVoicePlayback`) stay. Visual ch
 | `Button.tsx` | Solid `brew-accent` fills, sharp radius | New gradient-fill primary, glass secondary, ghost tertiary; `radius-pill` everywhere. |
 | `Chip.tsx` | `bg-card` solid pill | Glass pill (`--surface-pill-input` style) for resting; `--text-accent` border + background for active. |
 | `TopMenu.tsx` | Floating rounded-full surface | Strip-style header consistent with chat (no rounded-full container); only the dropdown panel uses a card surface. |
-| `BottomNav.tsx` | Floating rounded-full bottom strip | Keep the silhouette (it's already DOT-adjacent) but recolor to glass + new accent. |
+| `BottomNav.tsx` | Single floating rounded-full bottom strip with 5 mixed icons + Brew centered | **Replaced — see §7.1 (4+1 split).** |
 | `ScrollContainer.tsx` | Flat `bg-brew-bg` | Place the `gradientChatBg` (or hero variant per page) behind it; container goes transparent. |
 | `BottomSpacer.tsx` | No change. |
 
 The `CircularTimer.tsx` glow ring shifts from amber to `--text-accent` warm-peach. The brew flow itself isn't redesigned in Phase 3, but the timer ring lives across screens — single-line touch.
 
+### 7.1 BottomNav — 4+1 split (decided)
+
+Replaces the current single centered pill with **two floating elements** at the bottom of the viewport. Inspiration: the divided-pill pattern at the *top* of Linear's mobile views (back-pill on the left, actions-pill on the right) — adapted to the bottom for BrewLog.
+
+**Main pill** (left, 4 icons, no text labels):
+
+| Slot | Icon (lucide) | Route | Reasoning |
+|------|--------------|-------|-----------|
+| Home | `home` | `/` | Standard, recognized. |
+| Library | `coffee` | `/coffees` | Distinctive against `home`; says "this is where my coffees live" without text. |
+| Taste | `radar` | `/taste` | Taste profile already renders as a radar chart — on-the-nose match. |
+| Explore | `sparkles` | `/explore` | Reads as "AI / magic" — fits the conversational + voice + image-analysis nature of Explore. |
+
+- Pill: glass surface (`--surface-pill-input` + `backdrop-blur(20px)`), `radius-pill`.
+- Height ~52px, internal horizontal padding so each tap target is ≥44×44px.
+- Active state: subtle inner tile (`--surface-2` overlay, `radius-md`) behind the icon, with the icon stroke shifting from `--text-secondary` → `--text-primary`.
+- Optional: a small `--text-accent` chevron-up indicator above the active tile (the Linear pattern). Decide during Phase 2 implementation; can be added in a one-line follow-up if it doesn't read well.
+
+**Brew FAB** (right, separated):
+
+- `plus` icon (lucide), filled.
+- Circular, 56px diameter (visually outranks the 52px nav).
+- Background: `--text-accent` (`#E8C5A8`); glyph: `--bg-base` (dark).
+- Glow: `glow-subtle` so it reads as floating.
+- Sits ~14px to the right of the main pill.
+- Tap → `/brew/new` (existing route, unchanged).
+
+**Layout:** both elements anchor to the safe-area bottom with ~16px lateral padding from screen edge. The Brew FAB is intentionally larger and color-distinct — Brew is the app's primary action, navigation is secondary.
+
+**Hidden on:** routes that own their own bottom dock — `/explore` (chat input replaces it on the Ask tab), `/brew/new` and steps (their own flow shell). Same hide rules as today; just two elements to fade instead of one.
+
+**Why not a hamburger menu:** rejected by the user. Bottom nav stays because Home / Library / Taste / Explore are surfaces accessed multiple times per session; hiding them behind a modal tap costs more than it saves.
+
 ---
 
-## 8. Open questions for the user (must resolve before Phase 3 starts)
+## 8. Decisions log
 
-1. **Voice messages: audio pill or transcript-only?** DOT keeps audio as a pill in the conversation (no transcript shown in the chat scroll). Current BrewLog inserts the transcript as a normal text message and discards the audio. Three options:
-   - (a) Keep current behavior (transcript only, no audio) — simplest, reuses everything.
-   - (b) Match DOT (audio pill, no transcript visible) — needs audio storage + playback infra; bigger lift.
-   - (c) Hybrid — show transcript in the bubble *and* a small play button to replay the audio. Best UX, medium lift.
-2. **Header back action:** chat is one of three tabs (Ask / Insights / Nearby) inside `/explore`. There's no "back" — only tab switching. Should the top-left be (a) tab switcher pills (current pattern), (b) nothing, or (c) a "New chat" button to clear history?
-3. **Instrument Serif.** Adopting a second font means an extra ~30 KB woff2 + a Next.js font loader entry. Confirm this is OK before we add it.
+All Phase-3 blockers resolved 2026-05-08:
+
+1. **Voice messages → transcript only.** Existing `useVoiceCapture` flow stays; voice messages render as normal text bubbles after transcription. No audio persistence. We diverge from DOT here intentionally.
+2. **Chat header → tab switcher pills.** Ask / Insights / Nearby remain the three tabs. Active tab pill uses `--surface-pill-user`; container is glass with the same backdrop-blur as the bottom nav.
+3. **Typography → Geist Sans + Instrument Serif (display only).** Instrument Serif loaded via Next.js font loader. ~30 KB woff2 budget. Used on display headlines and "thinking…" states only; never at body size.
+4. **Bottom nav → 4+1 split.** Four-icon glass pill (Home, Library, Taste, Explore) + separated Brew `+` FAB. Icon set: `home`, `coffee`, `radar`, `sparkles`, `plus`. Detailed in §7.1.
 
 ---
 
