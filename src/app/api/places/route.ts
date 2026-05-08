@@ -56,9 +56,20 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim() ?? "";
 
-  const rows = q
+  // Split on whitespace so a search like "Kolo Berlin" requires BOTH "Kolo"
+  // AND "Berlin" to appear somewhere in name/city/address — instead of
+  // looking for the literal string "Kolo Berlin" in a single column.
+  const tokens = q.split(/\s+/).filter(Boolean);
+
+  const rows = tokens.length > 0
     ? await db.select().from(places).where(
-        sql`(${places.name} ILIKE ${"%" + q + "%"} OR ${places.city} ILIKE ${"%" + q + "%"} OR ${places.address} ILIKE ${"%" + q + "%"})`
+        sql.join(
+          tokens.map((t) => {
+            const pat = `%${t}%`;
+            return sql`(${places.name} ILIKE ${pat} OR ${places.city} ILIKE ${pat} OR ${places.address} ILIKE ${pat})`;
+          }),
+          sql` AND `,
+        ),
       ).orderBy(asc(places.city), asc(places.name))
     : await db.select().from(places).orderBy(asc(places.city), asc(places.name));
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
