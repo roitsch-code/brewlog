@@ -1,11 +1,13 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
-import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User } from "lucide-react";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
+import { useVoiceCapture } from "@/hooks/useVoiceCapture";
+import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import type { NavAction } from "@/app/api/explore-agent/route";
 
 const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
@@ -62,6 +64,34 @@ const DEFAULT_STARTER_QUESTIONS = [
   "Why does bloom time matter and how long should I bloom for fresh beans?",
   "What are the key differences between Ethiopian and Kenyan single origins?",
 ];
+
+// ── Voice helpers ─────────────────────────────────────────────────────────────
+// Strip citation markers like [I3] before sending text to TTS or buffering it.
+function stripCitations(text: string): string {
+  return text.replace(/\s*\[I\d+\]/g, "");
+}
+
+// Pull complete sentences out of a streaming buffer; mutate the buffer to leave
+// any unfinished tail in place. When `force` is true, flush whatever remains.
+const SENTENCE_RE = /[^.!?\n]+(?:[.!?]+["')\]]*|\n+)/g;
+function flushSentences(buffer: { current: string }, force: boolean): string[] {
+  if (force) {
+    const tail = buffer.current.trim();
+    buffer.current = "";
+    return tail ? [tail] : [];
+  }
+  const out: string[] = [];
+  const re = new RegExp(SENTENCE_RE.source, "g");
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(buffer.current)) !== null) {
+    const sentence = m[0].trim();
+    if (sentence) out.push(sentence);
+    lastIndex = re.lastIndex;
+  }
+  if (lastIndex > 0) buffer.current = buffer.current.slice(lastIndex);
+  return out;
+}
 
 // ── Main page ──────────────────────────────────────────────────────────────
 
@@ -134,8 +164,50 @@ function AskTab() {
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [starterQuestions, setStarterQuestions] = useState<string[]>(DEFAULT_STARTER_QUESTIONS);
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const sentenceBufferRef = useRef<{ current: string }>({ current: "" });
+  const voiceModeRef = useRef(false);
+
+  const playback = useVoicePlayback();
+  const playbackRef = useRef(playback);
+  playbackRef.current = playback;
+
+  const sendMessageRef = useRef<(text: string) => void>(() => {});
+
+  const handleTranscript = useCallback((text: string) => {
+    setVoiceError(null);
+    sendMessageRef.current(text);
+  }, []);
+  const handleVoiceError = useCallback((msg: string) => setVoiceError(msg), []);
+
+  const capture = useVoiceCapture({
+    onTranscript: handleTranscript,
+    onError: handleVoiceError,
+  });
+
+  // Hydrate voice-mode preference once on mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.localStorage.getItem("brewlog.voiceMode") === "1") setVoiceMode(true);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Mirror voiceMode to a ref (so the SSE consumer reads the live value), and
+  // persist + cancel any in-flight playback when it flips off.
+  useEffect(() => {
+    voiceModeRef.current = voiceMode;
+    if (typeof window !== "undefined") {
+      try { window.localStorage.setItem("brewlog.voiceMode", voiceMode ? "1" : "0"); } catch { /* ignore */ }
+    }
+    if (!voiceMode) {
+      playback.cancel();
+      sentenceBufferRef.current.current = "";
+    }
+  }, [voiceMode, playback]);
 
   useEffect(() => {
     fetch("/api/questions")
@@ -242,6 +314,8 @@ function AskTab() {
               if (last?.role === "assistant") copy[copy.length - 1] = { ...last, content: "" };
               return copy;
             });
+            playbackRef.current.cancel();
+            sentenceBufferRef.current.current = "";
           } else if (event === "status" && payload.message) {
             setAgentStatus(payload.message);
           } else if (event === "delta" && payload.text) {
@@ -255,8 +329,22 @@ function AskTab() {
               }
               return copy;
             });
+            if (voiceModeRef.current) {
+              const cleaned = stripCitations(payload.text);
+              if (cleaned) {
+                sentenceBufferRef.current.current += cleaned;
+                for (const s of flushSentences(sentenceBufferRef.current, false)) {
+                  playbackRef.current.enqueue(s);
+                }
+              }
+            }
           } else if (event === "done") {
             setAgentStatus(null);
+            if (voiceModeRef.current) {
+              for (const s of flushSentences(sentenceBufferRef.current, true)) {
+                playbackRef.current.enqueue(s);
+              }
+            }
             if (payload.sources || payload.actions) {
               setMessages(prev => {
                 const copy = prev.slice();
@@ -273,6 +361,8 @@ function AskTab() {
             }
           } else if (event === "error") {
             streamError = payload.error ?? "Stream error";
+            playbackRef.current.cancel();
+            sentenceBufferRef.current.current = "";
           }
         } catch {
           // Defensive — never let render side-effects break the read loop
@@ -304,6 +394,8 @@ function AskTab() {
         }
       }
     } catch {
+      playbackRef.current.cancel();
+      sentenceBufferRef.current.current = "";
       const dropped = receivedAnyDelta;
       setMessages(prev => {
         const copy = prev.slice();
@@ -327,6 +419,10 @@ function AskTab() {
     }
   };
 
+  // Keep the ref pointing at the latest sendMessage so the voice-capture hook's
+  // stable onTranscript callback always invokes the current closure.
+  sendMessageRef.current = sendMessage;
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -334,7 +430,22 @@ function AskTab() {
     }
   };
 
-  const isEmpty = messages.length === 0 && !loading;
+  // Tap mic — also primes audio playback inside the user gesture so iOS will
+  // permit subsequent <audio> playback in this session.
+  const handleMicTap = () => {
+    setVoiceError(null);
+    if (voiceMode) playback.unlock();
+    void capture.toggle();
+  };
+
+  const handleVoiceToggle = () => {
+    const next = !voiceMode;
+    if (next) playback.unlock();
+    setVoiceMode(next);
+  };
+
+  const showStarter =
+    messages.length === 0 && !loading && input.trim() === "" && !capture.recording;
 
   return (
     <>
@@ -344,7 +455,7 @@ function AskTab() {
         className="flex-1 min-h-0 overflow-y-auto px-5 py-4"
         style={{ paddingBottom: "1rem" }}
       >
-        {isEmpty ? (
+        {showStarter ? (
           <div className="flex flex-col gap-5 mt-4">
             {/* Atmospheric intro */}
             <div className="flex flex-col items-center gap-5 py-6">
@@ -367,7 +478,7 @@ function AskTab() {
             <div>
               <p className="label-mono mb-3" style={{ color: "var(--muted-foreground)" }}>Suggested</p>
               <div className="flex flex-col gap-2">
-                {starterQuestions.slice(0, 4).map((q, i) => {
+                {starterQuestions.slice(0, 3).map((q, i) => {
                   const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
                   return (
                     <button
@@ -476,15 +587,51 @@ function AskTab() {
           className="px-4 bg-brew-bg"
           style={{ paddingBottom: "0.75rem", paddingTop: "0.25rem" }}
         >
+          {voiceError && (
+            <div
+              className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+              style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+            >
+              <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>
+                {voiceError}
+              </p>
+              <button
+                type="button"
+                onClick={() => setVoiceError(null)}
+                className="shrink-0 active:scale-90 transition-transform"
+                aria-label="Dismiss"
+              >
+                <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
+              </button>
+            </div>
+          )}
           <div className="flex gap-2 items-end">
+            <button
+              type="button"
+              onClick={handleVoiceToggle}
+              aria-label={voiceMode ? "Mute spoken responses" : "Speak responses aloud"}
+              title={voiceMode ? "Spoken responses on" : "Spoken responses off"}
+              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
+              style={{
+                background: voiceMode ? "var(--card)" : "transparent",
+                border: `1px solid ${voiceMode ? "var(--primary)" : "var(--border)"}`,
+              }}
+            >
+              {voiceMode ? (
+                <Volume2 size={16} style={{ color: "var(--primary)" }} />
+              ) : (
+                <VolumeX size={16} style={{ color: "var(--muted-foreground)" }} />
+              )}
+            </button>
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about brewing, beans, gear..."
+              placeholder={capture.recording ? "Listening…" : "Ask about brewing, beans, gear..."}
               rows={1}
-              className="flex-1 text-sm resize-none focus:outline-none transition-colors"
+              disabled={capture.recording || capture.busy}
+              className="flex-1 text-sm resize-none focus:outline-none transition-colors disabled:opacity-60"
               style={{
                 background: "var(--card)",
                 border: "1px solid var(--border)",
@@ -496,6 +643,23 @@ function AskTab() {
                 fontSize: "16px",
               }}
             />
+            <button
+              type="button"
+              onClick={handleMicTap}
+              disabled={loading || capture.busy}
+              aria-label={capture.recording ? "Stop recording" : "Start recording"}
+              className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-30 ${capture.recording ? "animate-pulse" : ""}`}
+              style={{
+                background: capture.recording ? "rgba(220, 80, 80, 0.18)" : "var(--card)",
+                border: `1px solid ${capture.recording ? "rgba(220, 80, 80, 0.7)" : "var(--border)"}`,
+              }}
+            >
+              {capture.recording ? (
+                <Square size={14} style={{ color: "rgba(255,180,180,0.95)" }} fill="currentColor" />
+              ) : (
+                <Mic size={16} style={{ color: "var(--foreground)" }} />
+              )}
+            </button>
             <button
               type="button"
               onClick={() => sendMessage(input)}
