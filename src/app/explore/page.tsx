@@ -7,7 +7,7 @@ import ThinkingDots from "@/components/ui/ThinkingDots";
 import WaveformBars from "@/components/ui/WaveformBars";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
-import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X, Plus, Camera, Coffee } from "lucide-react";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X, Plus, Camera, Coffee, ChevronRight } from "lucide-react";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import { gradientChatBg, gradientPillUser } from "@/lib/theme/gradients";
@@ -185,6 +185,8 @@ function AskTab() {
   // suggestions for the rest of the session — they shouldn't reappear if
   // the input is cleared back to empty.
   const [hasInteracted, setHasInteracted] = useState(false);
+  // Index of the assistant message whose Sources sheet is open (null = closed).
+  const [sourcesOpenForMsg, setSourcesOpenForMsg] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -653,20 +655,22 @@ function AskTab() {
                       </div>
                     )}
                     {msg.sources && msg.sources.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {msg.sources.map((s, j) => (
-                          <a
-                            key={j}
-                            href={s.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs underline underline-offset-2"
-                            style={{ color: "var(--text-secondary)" }}
-                          >
-                            {s.title}
-                          </a>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSourcesOpenForMsg(i)}
+                        className="self-start inline-flex items-center gap-1 px-3 py-1 rounded-full backdrop-blur-md active:scale-95 transition-all"
+                        style={{
+                          background: "var(--surface-pill-attach)",
+                          border: "1px solid var(--border-subtle)",
+                          color: "var(--text-secondary)",
+                          fontSize: 12,
+                          fontWeight: 500,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {msg.sources.length === 1 ? "Source" : "Sources"}
+                        <ChevronRight size={12} strokeWidth={2} />
+                      </button>
                     )}
                   </div>
                 )}
@@ -906,6 +910,14 @@ function AskTab() {
         )}
       </div>
 
+      {/* Sources sheet — spec §6.5 */}
+      {sourcesOpenForMsg !== null && messages[sourcesOpenForMsg]?.sources && (
+        <SourcesSheet
+          sources={messages[sourcesOpenForMsg].sources!}
+          onClose={() => setSourcesOpenForMsg(null)}
+        />
+      )}
+
       {/* Coffee picker — search sheet, spec §6.4 */}
       {coffeePickerOpen && (
         <div
@@ -1096,6 +1108,136 @@ function MessageContent({ content, darkText }: { content: string; darkText?: boo
   }
 
   return <div className="flex flex-col gap-2 text-sm">{nodes}</div>;
+}
+
+// ── Sources sheet (spec §6.5) ──────────────────────────────────────────────
+
+function SourcesSheet({
+  sources,
+  onClose,
+}: {
+  sources: { title: string; url: string }[];
+  onClose: () => void;
+}) {
+  // Dedupe by URL — keep first occurrence's title.
+  const dedup: { title: string; url: string }[] = [];
+  const seen = new Set<string>();
+  for (const s of sources) {
+    if (seen.has(s.url)) continue;
+    seen.add(s.url);
+    dedup.push(s);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center"
+      style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-3"
+        style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
+        <div className="flex items-center justify-between px-1">
+          <span className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+            {dedup.length === 1 ? "Source" : "Sources"}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="-mr-1 w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-all"
+          >
+            <X size={18} style={{ color: "var(--text-secondary)" }} />
+          </button>
+        </div>
+        <ul className="flex flex-col gap-2 overflow-y-auto -mx-1 px-1">
+          {dedup.map((src, i) => (
+            <li key={i}>
+              <a
+                href={src.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onClose}
+                className="flex items-center gap-3 px-3.5 py-3 rounded-2xl active:scale-[0.99] transition-all"
+                style={{
+                  background: "var(--surface-1)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <SourceFavicon url={src.url} />
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span
+                    className="text-sm font-medium truncate"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {src.title || prettyUrl(src.url)}
+                  </span>
+                  <span
+                    className="text-xs truncate"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {prettyUrl(src.url)}
+                  </span>
+                </div>
+                <ChevronRight size={16} style={{ color: "var(--text-muted)" }} className="shrink-0" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function SourceFavicon({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  let host = "";
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    /* invalid URL — fall through to globe */
+  }
+
+  const wrapperClass =
+    "w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden shrink-0";
+  const wrapperStyle: React.CSSProperties = {
+    background: "var(--surface-2)",
+    border: "1px solid var(--border-subtle)",
+  };
+
+  if (failed || !host) {
+    return (
+      <div className={wrapperClass} style={wrapperStyle}>
+        <Globe size={16} style={{ color: "var(--text-secondary)" }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={wrapperClass} style={wrapperStyle}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`https://www.google.com/s2/favicons?sz=64&domain=${host}`}
+        alt=""
+        width={20}
+        height={20}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
+function prettyUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname === "/" ? "" : u.pathname;
+    return `${u.hostname}${path}`;
+  } catch {
+    return url;
+  }
 }
 
 // ── Nav action chips ───────────────────────────────────────────────────────
