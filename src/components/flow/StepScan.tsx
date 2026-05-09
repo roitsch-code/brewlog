@@ -216,7 +216,10 @@ export default function StepScan() {
         body: JSON.stringify({ currentCoffeeData: draft.coffee, question, answer }),
       });
       const { updated } = await res.json();
-      setCoffee(updated);
+      const clean = Object.fromEntries(
+        Object.entries(updated ?? {}).filter(([, v]) => v !== null && v !== undefined)
+      ) as Parameters<typeof setCoffee>[0];
+      setCoffee(clean);
     } catch {}
 
     const next = clarificationIndex + 1;
