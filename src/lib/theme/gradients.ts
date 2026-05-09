@@ -2,41 +2,38 @@
  * Named gradient class strings for the BrewLog redesign (spec §2.4).
  *
  * One source of truth — components import these instead of scattering
- * `bg-[radial-gradient(...)]` literals. Each gradient pairs a base radial
- * with optional offset glow rendered via `::before` in the consuming
- * component's wrapper (see Phase 2 primitives).
+ * `bg-[radial-gradient(...)]` literals.
  *
- * Reference images: docs/redesign/dot-refs/Splashscreen2_*.png +
- * LoadingScreen_*.png (chat); GradientBackground_*.png (hero).
+ * Reference images: docs/redesign/dot-refs/Chat_Text_*.png +
+ * Chat_Type_*.png (chat); GradientBackground_*.png (hero).
  */
 
 /**
- * Full chat-surface gradient. Two warm radial stops on the dark base.
- * Use as the wrapper background behind the message scroll area.
+ * Full chat-surface gradient (DOT inversion, May 2026).
  *
- * Stops:
- *  - top-left peak  (warm-peak → warm-mid → base) ~55% radius
- *  - bottom-right (warm-mid at low alpha) ~70% radius
+ * Soft warm-light surface: cream glow at top-left → warm peach radial at
+ * the bottom-center, sitting on a medium warm-taupe base. Designed for
+ * dark text on a light surface, matching DOT's chat. Use as the wrapper
+ * background behind the message scroll area.
  */
 export const gradientChatBg =
-  "bg-[radial-gradient(ellipse_55%_45%_at_15%_10%,var(--bg-gradient-glow)_0%,var(--bg-gradient-warm)_35%,var(--bg-base)_75%),radial-gradient(ellipse_60%_50%_at_85%_90%,rgba(107,72,56,0.35)_0%,transparent_60%)] bg-[color:var(--bg-base)]";
+  "bg-[radial-gradient(ellipse_70%_55%_at_18%_8%,var(--bg-chat-glow)_0%,transparent_60%),radial-gradient(ellipse_95%_60%_at_50%_105%,var(--bg-chat-warm)_0%,transparent_65%),radial-gradient(ellipse_60%_40%_at_88%_92%,var(--bg-chat-deep)_0%,transparent_70%)] bg-[color:var(--bg-chat-base)]";
 
 /**
  * Tighter hero gradient for the home feed hero card and Phase 4 brew
- * recommend candidates. Single warm stop, less drama than the chat bg.
+ * recommend candidates. Single warm stop on the dark base — kept dark
+ * because the home feed surface is still on the dark palette.
  */
 export const gradientHeroSurface =
   "bg-[radial-gradient(ellipse_70%_60%_at_30%_20%,var(--bg-gradient-warm)_0%,var(--bg-base)_70%)] bg-[color:var(--bg-base)]";
 
 /**
- * Subtle warm-on-warm fill for the cream user message bubble — adds
- * dimensionality without breaking the flat-pill read. Tones down from
- * the original near-white #FBF4ED start; the spec --surface-pill-user
- * is #F5ECE5 and the gradient now sits within that warmer cream range
- * so the dark text-on-pill reads as warm-brown rather than harsh black.
+ * User message pill — pure white speech-bubble card with a soft warm
+ * shadow, matching DOT's user message (Chat_Text_*.png). Dark text on
+ * white reads cleanly over the warm-light chat surface.
  */
 export const gradientPillUser =
-  "bg-[linear-gradient(135deg,#F5ECE5_0%,#EBDFD2_100%)]";
+  "bg-[#FFFFFF]";
 
 /**
  * Primary CTA fill (Phase 2/3 — Brew button, send arrow background).
