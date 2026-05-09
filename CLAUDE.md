@@ -146,12 +146,12 @@ lib/
 │   └── helpers.ts          # rowToSession, rowToCoffee converters
 ├── db/migrations/
 │   ├── 0000_init.sql                      # All core tables + indexes (only file registered in meta/_journal.json)
-│   ├── 0001_add_places.sql                # places table + 18 Düsseldorf cafés
+│   ├── 0001_add_places.sql                # creates places table; historic seed data, irrelevant in prod
 │   ├── 0002_add_place_coords.sql          # lat/lng columns on places
-│   ├── 0004_add_cologne_places.sql        # 3 Cologne cafés (note: 0003 is intentionally absent)
-│   └── 0005_cologne_specialty_places.sql  # 12 Cologne specialty cafés
+│   ├── 0004_add_cologne_places.sql        # (0003 is intentionally absent)
+│   └── 0005_cologne_specialty_places.sql
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
-│   # The ~6.2k production places dataset has NO seed file in Git; it lives only in Production.
+│   # The real places dataset (6,202 rows, verified 2026-05-09) lives only in Production; no seed file in Git.
 ├── knowledge/
 │   ├── insights.ts / news.ts / hints.ts / questions.ts / alerts.ts
 ├── roasters/priors.ts      # ★ 50+ curated roaster style priors; getRoasterPrior() + formatRoasterPriorForPrompt() consumed by /recommend AND /explore
@@ -257,7 +257,7 @@ lib/
 - Café map with Leaflet, place search, detail pages
 - `/cafes` collection: visit count, avg rating, coffees tasted, last visited
 - External sessions show "The Brew" / "Would you drink this again?" wording
-- Production `places` table holds ~6.2k geocoded specialty cafés. The bulk dataset lives **only in the production DB** — there is no seed file in Git for it. Repo migrations (0001/0004/0005) only seed ~33 DE-cafés (18 Düsseldorf + 3 Cologne + 12 Cologne-Specialty). For real counts use `SELECT count(*) FROM places` on the VPS.
+- Production `places` table: **6,202 rows** (verified 2026-05-09 via `SELECT count(*) FROM places`). The bulk dataset lives **only in the production DB** — no seed file in Git. For a fresh count rerun the same query on the VPS.
 
 **Coffee alerts**
 - Alert subscriptions + incoming webhook for coffee availability notifications
@@ -303,7 +303,7 @@ Migrations files, seed scripts, `.env.example` and code comments only show what 
 4. **Flag your own inconsistencies immediately.** If you produce two different numbers for the same thing in one session (12 vs. 13, 33 vs. 34), call it out openly and re-verify — do not silently overwrite the earlier number.
 5. **When the user pushes back ("that's wrong, we have X"), do not defend.** Re-open the search, surface the path that led to the wrong conclusion ("I only checked Y, that's why I missed Z"), correct cleanly. Apologize once, fix, move on.
 
-Cause for this rule: claimed "~33 cafés in the places table" based on counting INSERTs in three migration files, when the production DB actually holds ~6,200 places loaded outside the repo (see `scripts/geocode-places.mjs` comment "Takes ~2 hours for 6000+ places"). The Drizzle `meta/_journal.json` only registers `0000_init` — all place migrations are applied manually via `psql` on the VPS, and the bulk dataset has no import script in Git at all. Do not extrapolate from migrations to reality.
+Cause for this rule: claimed "~33 cafés in the places table" based on counting INSERTs in three migration files, when the production DB actually holds 6,202 places (verified 2026-05-09) loaded outside the repo. The Drizzle `meta/_journal.json` only registers `0000_init` — all place migrations are applied manually via `psql` on the VPS, and the bulk dataset has no import script in Git at all. Do not extrapolate from migrations to reality.
 
 ---
 
