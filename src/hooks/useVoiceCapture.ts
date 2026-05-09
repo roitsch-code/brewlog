@@ -12,6 +12,8 @@ interface VoiceCapture {
   error: string | null;
   start: () => Promise<void>;
   stop: () => Promise<void>;
+  /** Abort an in-flight recording without transcribing. */
+  cancel: () => void;
   toggle: () => Promise<void>;
   clearError: () => void;
   /** Snapshot the current input level normalised 0..1, or 0 when idle. */
@@ -181,6 +183,17 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
     }
   }, [recording, onTranscript, surfaceError, teardownStream]);
 
+  const cancel = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (recorder) {
+      try { recorder.stop(); } catch { /* ignore */ }
+    }
+    recorderRef.current = null;
+    chunksRef.current = [];
+    setRecording(false);
+    teardownStream();
+  }, [teardownStream]);
+
   const toggle = useCallback(async () => {
     if (recording) await stop();
     else await start();
@@ -211,5 +224,5 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
     teardownStream();
   }, [teardownStream]);
 
-  return { recording, busy, error, start, stop, toggle, clearError, getLevel };
+  return { recording, busy, error, start, stop, cancel, toggle, clearError, getLevel };
 }

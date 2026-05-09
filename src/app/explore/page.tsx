@@ -7,7 +7,7 @@ import ThinkingDots from "@/components/ui/ThinkingDots";
 import WaveformBars from "@/components/ui/WaveformBars";
 import type { Session } from "@/lib/types/session";
 import type { CafeSummary } from "@/lib/types/cafes";
-import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, Mic, Square, Volume2, VolumeX, X, Plus, Camera, Coffee, ChevronRight } from "lucide-react";
+import { ArrowUp, FlaskConical, Thermometer, RotateCcw, Globe, BookOpen, MapPin, Crosshair, User, AudioLines, Square, Volume2, VolumeX, X, Plus, Camera, Coffee, ChevronRight } from "lucide-react";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import { gradientChatBg, gradientPillUser } from "@/lib/theme/gradients";
@@ -127,13 +127,23 @@ export default function ExplorePage() {
     router.replace(qs ? `/explore?${qs}` : "/explore", { scroll: false });
   };
 
+  const isAsk = activeTab === "ask";
+  const tabPillBg = isAsk ? "var(--surface-chat-pill)" : "var(--surface-pill-input)";
+  const tabPillBorder = isAsk ? "var(--border-chat-subtle)" : "var(--border-subtle)";
+  const tabActiveBg = isAsk ? "var(--surface-chat-card)" : "var(--surface-pill-user)";
+  const tabActiveText = isAsk ? "var(--text-chat-primary)" : "var(--text-on-pill-user)";
+  const tabInactiveText = isAsk ? "var(--text-chat-secondary)" : "var(--text-secondary)";
+
   return (
-    <div className={`min-h-full flex flex-col ${activeTab === "ask" ? gradientChatBg : "bg-brew-bg"}`}>
+    <div className={`min-h-full flex flex-col ${isAsk ? gradientChatBg : "bg-brew-bg"}`}>
       {/* Header — DOT-spec: tab switcher pills only, no app icon, no title */}
       <div className="px-5 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
         <div
-          className="flex gap-1 rounded-full p-1 border border-dot-edge backdrop-blur-xl w-fit"
-          style={{ background: "var(--surface-pill-input)" }}
+          className="flex gap-1 rounded-full p-1 backdrop-blur-xl w-fit"
+          style={{
+            background: tabPillBg,
+            border: `1px solid ${tabPillBorder}`,
+          }}
         >
           {(["ask", "insights", "nearby"] as const).map(tab => (
             <button
@@ -142,8 +152,8 @@ export default function ExplorePage() {
               onClick={() => setActiveTab(tab)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
               style={{
-                background: activeTab === tab ? "var(--surface-pill-user)" : "transparent",
-                color: activeTab === tab ? "var(--text-on-pill-user)" : "var(--text-secondary)",
+                background: activeTab === tab ? tabActiveBg : "transparent",
+                color: activeTab === tab ? tabActiveText : tabInactiveText,
               }}
             >
               {TAB_LABELS[tab]}
@@ -577,25 +587,46 @@ function AskTab() {
         style={{ paddingBottom: "1rem" }}
       >
         {showStarter ? (
-          <div className="mt-1">
-            <p className="label-mono mb-2" style={{ color: "var(--muted-foreground)" }}>Suggested</p>
-            <div className="flex flex-col gap-1.5">
-              {starterQuestions.slice(0, 3).map((q, i) => {
-                const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sendMessage(q)}
-                    className="flex items-center gap-3 text-left rounded-xl px-3.5 py-2.5 active:scale-[0.98] transition-all w-full"
-                    style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+          // Chronicles-style suggestion cards: soft white rounded rectangles
+          // with a small uppercase label on top and dark body text below.
+          // Reference: docs/redesign/dot-refs/Chronicles_*.png + Chronicles2_*.png.
+          <div className="mt-1 flex flex-col gap-3">
+            {starterQuestions.slice(0, 3).map((q, i) => {
+              const Icon = SUGGESTION_ICONS[i % SUGGESTION_ICONS.length];
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sendMessage(q)}
+                  className="text-left active:scale-[0.99] transition-all w-full"
+                  style={{
+                    background: "var(--surface-chat-card-soft)",
+                    borderRadius: 22,
+                    boxShadow: "var(--shadow-chat-card)",
+                    padding: "16px 18px",
+                  }}
+                >
+                  <div
+                    className="flex items-center gap-2 mb-1.5"
+                    style={{ color: "var(--text-chat-muted)" }}
                   >
-                    <Icon size={14} style={{ color: "var(--primary)" }} className="shrink-0" />
-                    <span className="text-sm leading-snug" style={{ color: "var(--foreground)" }}>{q}</span>
-                  </button>
-                );
-              })}
-            </div>
+                    <Icon size={12} strokeWidth={1.75} />
+                    <span
+                      className="text-[11px] uppercase tracking-[0.08em]"
+                      style={{ fontWeight: 500 }}
+                    >
+                      Suggested
+                    </span>
+                  </div>
+                  <p
+                    className="text-[15px] leading-snug"
+                    style={{ color: "var(--text-chat-primary)" }}
+                  >
+                    {q}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -605,16 +636,20 @@ function AskTab() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "user" ? (
-                  // Cream pill — asymmetric radius, dark text on warm cream.
+                  // White speech-bubble pill — DOT pattern (Chat_Text_*.png).
+                  // Asymmetric corner on the bottom-right to read as a "tail"
+                  // pointing toward the user; soft warm shadow lifts it off
+                  // the gradient. Dark warm-brown text inside.
                   <div
                     className={`max-w-[78%] flex flex-col gap-2 ${gradientPillUser}`}
                     style={{
-                      borderTopLeftRadius: "var(--radius-xl)",
-                      borderTopRightRadius: "var(--radius-xl)",
-                      borderBottomLeftRadius: "var(--radius-xl)",
-                      borderBottomRightRadius: "var(--radius-lg)",
+                      borderTopLeftRadius: 22,
+                      borderTopRightRadius: 22,
+                      borderBottomLeftRadius: 22,
+                      borderBottomRightRadius: 8,
                       padding: "12px 16px",
                       color: "var(--text-on-pill-user)",
+                      boxShadow: "var(--shadow-chat-card)",
                     }}
                   >
                     {msg.imageUrl && (
@@ -642,10 +677,11 @@ function AskTab() {
                     )}
                   </div>
                 ) : (
-                  // Assistant — no bubble, text directly on the gradient.
+                  // Assistant — no bubble, dark text directly on the warm-light
+                  // gradient. Matches DOT (Chat_LongAnswer_*.png).
                   <div className="flex flex-col gap-2" style={{ maxWidth: "88%" }}>
-                    <div className="text-sm" style={{ color: "var(--text-primary)" }}>
-                      <MessageContent content={msg.content} />
+                    <div className="text-[15px]" style={{ color: "var(--text-chat-primary)" }}>
+                      <MessageContent content={msg.content} darkText />
                     </div>
                     {msg.actions && msg.actions.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -658,14 +694,16 @@ function AskTab() {
                       <button
                         type="button"
                         onClick={() => setSourcesOpenForMsg(i)}
-                        className="self-start inline-flex items-center gap-1 px-3 py-1 rounded-full backdrop-blur-md active:scale-95 transition-all"
+                        className="self-start inline-flex items-center gap-1 px-3 py-1 rounded-full active:scale-95 transition-all"
                         style={{
-                          background: "var(--surface-pill-attach)",
-                          border: "1px solid var(--border-subtle)",
-                          color: "var(--text-secondary)",
+                          background: "var(--surface-chat-pill)",
+                          border: "1px solid var(--border-chat-subtle)",
+                          color: "var(--text-chat-secondary)",
                           fontSize: 12,
                           fontWeight: 500,
                           lineHeight: 1,
+                          backdropFilter: "blur(12px)",
+                          WebkitBackdropFilter: "blur(12px)",
                         }}
                       >
                         {msg.sources.length === 1 ? "Source" : "Sources"}
@@ -686,10 +724,10 @@ function AskTab() {
               if (!stillEmpty) return null;
               return (
                 <div className="flex justify-start">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1" style={{ color: "var(--text-chat-secondary)" }}>
                     <ThinkingDots />
                     {agentStatus && (
-                      <p className="text-xs leading-snug" style={{ color: "var(--text-secondary)" }}>
+                      <p className="text-xs leading-snug">
                         {agentStatus}
                       </p>
                     )}
@@ -701,8 +739,12 @@ function AskTab() {
         )}
       </div>
 
-      {/* Input area — DOT-spec glass dock (spec §6.1). ScrollContainer
-          doesn't reserve padding on /explore, so we own safe-area here. */}
+      {/* Input area — DOT-spec dock (spec §6.1). The + button is its own
+          circular soft button, separate from the text input pill (DOT
+          Chat_Type_*.png). Both elements use the same translucent warm-
+          white surface so they read as one family without merging. The
+          input pill grows vertically as the textarea content grows or
+          a photo / coffee ref is attached. */}
       <div className="shrink-0 px-3" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))", paddingTop: "0.25rem" }}>
         {/* Hidden file input for photo attach */}
         <input
@@ -715,198 +757,242 @@ function AskTab() {
 
         {voiceError && (
           <div
-            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
-            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.55)",
+              border: "1px solid rgba(180,60,60,0.35)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
           >
-            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>
+            <p className="flex-1 text-xs leading-snug" style={{ color: "#7A2A2A" }}>
               {voiceError}
             </p>
             <button type="button" onClick={() => setVoiceError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
-              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
+              <X size={14} style={{ color: "#7A2A2A" }} />
             </button>
           </div>
         )}
         {attachError && (
           <div
-            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
-            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.55)",
+              border: "1px solid rgba(180,60,60,0.35)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+            }}
           >
-            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>{attachError}</p>
+            <p className="flex-1 text-xs leading-snug" style={{ color: "#7A2A2A" }}>{attachError}</p>
             <button type="button" onClick={() => setAttachError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
-              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
+              <X size={14} style={{ color: "#7A2A2A" }} />
             </button>
           </div>
         )}
 
-        {/* Pending coffee reference chip above the input pill */}
-        {referencedCoffee && (
-          <div className="mb-2 flex">
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-full border border-dot-edge backdrop-blur-md"
-              style={{ background: "var(--surface-pill-attach)" }}
+        {/* Recording dock — single-pill swap, spec §6.3. Uses the SAME
+            translucent warm-white surface as the resting input pill (no
+            heavy box-shadow, no dark backdrop) so it reads as the input
+            pill simply changing role. */}
+        {capture.recording ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => capture.cancel()}
+              aria-label="Cancel recording"
+              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
+              style={{
+                background: "var(--surface-chat-pill-strong)",
+                color: "var(--text-chat-secondary)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: "var(--shadow-chat-pill)",
+              }}
             >
-              <Coffee size={14} style={{ color: "var(--text-accent)" }} />
-              <span className="text-xs" style={{ color: "var(--text-primary)" }}>
-                <span style={{ color: "var(--text-secondary)" }}>{referencedCoffee.roaster}</span>{" "}
-                <span>{referencedCoffee.name}</span>
-              </span>
+              <X size={18} strokeWidth={1.75} />
+            </button>
+            <div
+              className="flex-1 flex items-center gap-2 rounded-full px-3"
+              style={{
+                background: "var(--surface-chat-pill-strong)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: "var(--shadow-chat-pill)",
+                minHeight: 44,
+              }}
+            >
+              <span
+                className="w-2 h-2 rounded-full animate-pulse shrink-0"
+                style={{ background: "#C84A3A" }}
+                aria-label="Recording"
+              />
+              <div style={{ color: "var(--text-chat-primary)" }} className="flex-1 min-w-0">
+                <WaveformBars
+                  getLevel={capture.getLevel}
+                  bars={32}
+                  height={28}
+                  className="w-full"
+                />
+              </div>
               <button
                 type="button"
-                onClick={() => setReferencedCoffee(null)}
-                aria-label="Remove coffee reference"
-                className="active:scale-90"
+                onClick={() => void capture.stop()}
+                disabled={capture.busy}
+                aria-label="Stop recording"
+                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
+                style={{ background: "var(--text-chat-primary)", color: "var(--surface-chat-card)" }}
               >
-                <X size={12} style={{ color: "var(--text-secondary)" }} />
+                <Square size={12} fill="currentColor" />
               </button>
             </div>
           </div>
-        )}
-
-        {/* Pending image thumbnail above the input pill */}
-        {(attachedImageUrl || uploadingImage) && (
-          <div className="mb-2 flex">
-            <div
-              className="relative rounded-2xl overflow-hidden border border-dot-edge"
-              style={{ width: 88, height: 88, background: "var(--surface-pill-attach)", backdropFilter: "blur(12px)" }}
-            >
-              {uploadingImage ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ThinkingDots />
-                </div>
-              ) : (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={attachedImageUrl ?? ""} alt="Attached" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={handleClearAttachment}
-                    aria-label="Remove attachment"
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(0,0,0,0.55)" }}
-                  >
-                    <X size={12} className="text-white" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Recording dock — replaces the input pill while capture is active.
-            Spec §6.3: full-width waveform across most of the dock, stop
-            button on the right (filled square in a circle). No timer.
-            DOT-style soft-cream capsule — no hard border, blends into the
-            gradient via a translucent warm tint. */}
-        {capture.recording ? (
-          <div
-            className="flex items-center gap-2 rounded-full backdrop-blur-xl px-3"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(255,240,224,0.10) 0%, rgba(255,240,224,0.04) 100%)",
-              boxShadow:
-                "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
-              minHeight: 52,
-            }}
-          >
-            <span
-              className="w-2 h-2 rounded-full animate-pulse shrink-0"
-              style={{ background: "var(--text-accent)" }}
-              aria-label="Recording"
-            />
-            <WaveformBars
-              getLevel={capture.getLevel}
-              bars={32}
-              height={32}
-              className="flex-1 min-w-0"
-            />
-            <button
-              type="button"
-              onClick={() => void capture.stop()}
-              disabled={capture.busy}
-              aria-label="Stop recording"
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
-              style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
-            >
-              <Square size={14} fill="currentColor" />
-            </button>
-          </div>
         ) : (
-        <div
-          className="flex items-center gap-1 rounded-full backdrop-blur-xl"
-          style={{
-            // Soft cream glaze — warm tint that blends into the gradient
-            // rather than reading as a hard glass rectangle. Inner top
-            // highlight + outer drop shadow give definition without an edge.
-            background:
-              "linear-gradient(180deg, rgba(255,240,224,0.10) 0%, rgba(255,240,224,0.04) 100%)",
-            boxShadow:
-              "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
-            paddingLeft: 6,
-            paddingRight: 6,
-            minHeight: 52,
-          }}
-        >
-          {/* + attach */}
-          <button
-            type="button"
-            onClick={handleAttachClick}
-            disabled={loading || capture.recording}
-            aria-label="Add attachment"
-            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <Plus size={22} strokeWidth={1.75} />
-          </button>
-
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => { setInput(e.target.value); if (e.target.value.length > 0) setHasInteracted(true); }}
-            onKeyDown={handleKeyDown}
-            placeholder={capture.recording ? "Listening…" : "Ask something"}
-            rows={1}
-            disabled={capture.recording || capture.busy}
-            className="flex-1 bg-transparent resize-none focus:outline-none disabled:opacity-60 placeholder:text-dot-ink-soft"
-            style={{
-              color: "var(--text-primary)",
-              minHeight: 40,
-              maxHeight: 120,
-              padding: "10px 4px",
-              fontSize: 16,
-            }}
-          />
-
-          {/* Mic OR Send swap (spec §6.1) */}
-          {input.trim().length > 0 || attachedImageUrl ? (
+          <div className="flex items-end gap-2">
+            {/* + button — separate circular soft button, DOT pattern. */}
             <button
               type="button"
-              onClick={() => sendMessage(input)}
-              disabled={loading || uploadingImage}
-              aria-label="Send"
-              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
-              style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
-            >
-              <ArrowUp size={18} strokeWidth={2.25} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleMicTap}
+              onClick={handleAttachClick}
               disabled={loading || capture.busy}
-              aria-label={capture.recording ? "Stop recording" : "Start recording"}
-              className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 ${capture.recording ? "animate-pulse" : ""}`}
+              aria-label="Add attachment"
+              className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
               style={{
-                background: capture.recording ? "rgba(220, 80, 80, 0.18)" : "transparent",
+                background: "var(--surface-chat-pill-strong)",
+                color: "var(--text-chat-secondary)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: "var(--shadow-chat-pill)",
               }}
             >
-              {capture.recording ? (
-                <Square size={14} style={{ color: "rgba(255,180,180,0.95)" }} fill="currentColor" />
-              ) : (
-                <Mic size={18} style={{ color: "var(--text-secondary)" }} strokeWidth={1.75} />
-              )}
+              <Plus size={20} strokeWidth={1.75} />
             </button>
-          )}
-        </div>
+
+            {/* Input pill — its own container; grows with content / image
+                / coffee ref. Image preview and coffee chip live INSIDE
+                the pill so the whole capsule expands vertically. */}
+            <div
+              className="flex-1 flex flex-col gap-2 px-2"
+              style={{
+                background: "var(--surface-chat-pill-strong)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: "var(--shadow-chat-pill)",
+                borderRadius: (attachedImageUrl || uploadingImage || referencedCoffee) ? 22 : 999,
+                paddingTop: (attachedImageUrl || uploadingImage || referencedCoffee) ? 8 : 0,
+                paddingBottom: 0,
+                minHeight: 44,
+                transition: "border-radius 180ms ease",
+              }}
+            >
+              {(attachedImageUrl || uploadingImage) && (
+                <div className="flex pl-1 pt-1">
+                  <div
+                    className="relative rounded-xl overflow-hidden"
+                    style={{
+                      width: 76,
+                      height: 76,
+                      background: "rgba(255,255,255,0.4)",
+                      border: "1px solid var(--border-chat-subtle)",
+                    }}
+                  >
+                    {uploadingImage ? (
+                      <div
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ color: "var(--text-chat-secondary)" }}
+                      >
+                        <ThinkingDots />
+                      </div>
+                    ) : (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={attachedImageUrl ?? ""} alt="Attached" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={handleClearAttachment}
+                          aria-label="Remove attachment"
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: "rgba(31,20,14,0.7)" }}
+                        >
+                          <X size={11} className="text-white" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {referencedCoffee && (
+                <div className="flex pl-1">
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
+                    style={{
+                      background: "rgba(31,20,14,0.06)",
+                      color: "var(--text-chat-primary)",
+                      border: "1px solid var(--border-chat-subtle)",
+                    }}
+                  >
+                    <Coffee size={11} style={{ color: "var(--text-chat-secondary)" }} />
+                    <span style={{ color: "var(--text-chat-secondary)" }}>{referencedCoffee.roaster}</span>
+                    <span>{referencedCoffee.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setReferencedCoffee(null)}
+                      aria-label="Remove coffee reference"
+                      className="active:scale-90 ml-0.5"
+                    >
+                      <X size={11} style={{ color: "var(--text-chat-secondary)" }} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-end gap-1">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => { setInput(e.target.value); if (e.target.value.length > 0) setHasInteracted(true); }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask something"
+                  rows={1}
+                  disabled={capture.busy}
+                  className="flex-1 bg-transparent resize-none focus:outline-none disabled:opacity-60 chat-input-light"
+                  style={{
+                    color: "var(--text-chat-primary)",
+                    caretColor: "var(--text-chat-primary)",
+                    minHeight: 40,
+                    maxHeight: 140,
+                    padding: "10px 6px",
+                    fontSize: 16,
+                  }}
+                />
+
+                {/* Send (when input non-empty / image attached) OR transcribe.
+                    Spec §6.1 — DOT uses an audio-lines waveform glyph for
+                    the voice trigger (NOT a microphone). */}
+                {input.trim().length > 0 || attachedImageUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => sendMessage(input)}
+                    disabled={loading || uploadingImage}
+                    aria-label="Send"
+                    className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 mb-0.5"
+                    style={{ background: "var(--text-chat-primary)", color: "var(--surface-chat-card)" }}
+                  >
+                    <ArrowUp size={16} strokeWidth={2.25} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleMicTap}
+                    disabled={loading || capture.busy}
+                    aria-label="Start voice input"
+                    className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 mb-0.5"
+                  >
+                    <AudioLines size={18} style={{ color: "var(--text-chat-secondary)" }} strokeWidth={1.75} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -918,22 +1004,27 @@ function AskTab() {
         />
       )}
 
-      {/* Coffee picker — search sheet, spec §6.4 */}
+      {/* Coffee picker — search sheet, spec §6.4. Light cream variant
+          to read on the new chat surface. */}
       {coffeePickerOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+          style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setCoffeePickerOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-2"
-            style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
+            className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-2"
+            style={{
+              background: "var(--surface-chat-card)",
+              maxHeight: "70vh",
+              boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
+            }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
+            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
             <div className="flex items-center gap-2 px-1 mt-1">
-              <Coffee size={16} style={{ color: "var(--text-accent)" }} />
-              <p className="text-sm" style={{ color: "var(--text-primary)" }}>Reference a coffee</p>
+              <Coffee size={16} style={{ color: "var(--text-chat-secondary)" }} />
+              <p className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Reference a coffee</p>
             </div>
             <input
               autoFocus
@@ -941,8 +1032,12 @@ function AskTab() {
               value={coffeeQuery}
               onChange={e => setCoffeeQuery(e.target.value)}
               placeholder="Search roaster or coffee"
-              className="w-full bg-transparent border border-dot-edge rounded-full px-4 py-2.5 text-sm focus:outline-none placeholder:text-dot-ink-soft"
-              style={{ color: "var(--text-primary)" }}
+              className="w-full bg-transparent rounded-full px-4 py-2.5 text-sm focus:outline-none chat-input-light"
+              style={{
+                color: "var(--text-chat-primary)",
+                border: "1px solid var(--border-chat-subtle)",
+                background: "var(--surface-chat-card-soft)",
+              }}
             />
             <div className="flex-1 overflow-y-auto -mx-1 px-1">
               {(() => {
@@ -956,7 +1051,7 @@ function AskTab() {
                   : coffeeList;
                 if (filtered.length === 0) {
                   return (
-                    <p className="text-xs py-6 text-center" style={{ color: "var(--text-secondary)" }}>
+                    <p className="text-xs py-6 text-center" style={{ color: "var(--text-chat-secondary)" }}>
                       No matching coffees
                     </p>
                   );
@@ -971,10 +1066,14 @@ function AskTab() {
                             setReferencedCoffee(c);
                             setCoffeePickerOpen(false);
                           }}
-                          className="w-full flex flex-col text-left px-3 py-2.5 rounded-xl active:bg-dot-edge transition-colors"
+                          className="w-full flex flex-col text-left px-3 py-2.5 rounded-xl transition-colors"
+                          style={{ background: "transparent" }}
+                          onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
+                          onMouseUp={e => (e.currentTarget.style.background = "transparent")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                         >
-                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{c.roaster}</span>
-                          <span className="text-sm" style={{ color: "var(--text-primary)" }}>{c.name}</span>
+                          <span className="text-xs" style={{ color: "var(--text-chat-secondary)" }}>{c.roaster}</span>
+                          <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>{c.name}</span>
                         </button>
                       </li>
                     ))}
@@ -986,53 +1085,65 @@ function AskTab() {
         </div>
       )}
 
-      {/* Attach sheet — bottom modal, spec §6.4 */}
+      {/* Attach sheet — bottom modal, spec §6.4. Light cream variant. */}
       {attachSheetOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+          style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setAttachSheetOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-1"
-            style={{ background: "var(--surface-2)" }}
+            className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-1"
+            style={{
+              background: "var(--surface-chat-card)",
+              boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
+            }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--text-muted)" }} />
+            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
 
             <button
               type="button"
               onClick={handlePhotoPick}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left"
+              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
+              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
-              <Camera size={20} style={{ color: "var(--text-accent)" }} />
-              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Photo</span>
+              <Camera size={20} style={{ color: "var(--text-chat-secondary)" }} />
+              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Photo</span>
             </button>
 
             <button
               type="button"
               onClick={() => { setAttachSheetOpen(false); setCoffeeQuery(""); setCoffeePickerOpen(true); }}
               disabled={coffeeList.length === 0}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
+              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
+              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
-              <Coffee size={20} style={{ color: "var(--text-accent)" }} />
-              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Reference coffee</span>
+              <Coffee size={20} style={{ color: "var(--text-chat-secondary)" }} />
+              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Reference coffee</span>
               {coffeeList.length === 0 && (
-                <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>library empty</span>
+                <span className="ml-auto text-xs" style={{ color: "var(--text-chat-muted)" }}>library empty</span>
               )}
             </button>
 
             <button
               type="button"
               onClick={() => { handleVoiceToggle(); setAttachSheetOpen(false); }}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left"
+              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
+              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               {voiceMode ? (
-                <Volume2 size={20} style={{ color: "var(--text-accent)" }} />
+                <Volume2 size={20} style={{ color: "var(--text-chat-secondary)" }} />
               ) : (
-                <VolumeX size={20} style={{ color: "var(--text-secondary)" }} />
+                <VolumeX size={20} style={{ color: "var(--text-chat-muted)" }} />
               )}
-              <span className="text-sm" style={{ color: "var(--text-primary)" }}>
+              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>
                 Voice replies {voiceMode ? "on" : "off"}
               </span>
             </button>
@@ -1131,17 +1242,21 @@ function SourcesSheet({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end justify-center"
-      style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-3"
-        style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
+        className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-3"
+        style={{
+          background: "var(--surface-chat-card)",
+          maxHeight: "70vh",
+          boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
+        }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
+        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
         <div className="flex items-center justify-between px-1">
-          <span className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+          <span className="text-base font-medium" style={{ color: "var(--text-chat-primary)" }}>
             {dedup.length === 1 ? "Source" : "Sources"}
           </span>
           <button
@@ -1150,7 +1265,7 @@ function SourcesSheet({
             aria-label="Close"
             className="-mr-1 w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-all"
           >
-            <X size={18} style={{ color: "var(--text-secondary)" }} />
+            <X size={18} style={{ color: "var(--text-chat-secondary)" }} />
           </button>
         </div>
         <ul className="flex flex-col gap-2 overflow-y-auto -mx-1 px-1">
@@ -1163,26 +1278,26 @@ function SourcesSheet({
                 onClick={onClose}
                 className="flex items-center gap-3 px-3.5 py-3 rounded-2xl active:scale-[0.99] transition-all"
                 style={{
-                  background: "var(--surface-1)",
-                  border: "1px solid var(--border-subtle)",
+                  background: "var(--surface-chat-card-soft)",
+                  border: "1px solid var(--border-chat-subtle)",
                 }}
               >
                 <SourceFavicon url={src.url} />
                 <div className="flex-1 min-w-0 flex flex-col">
                   <span
                     className="text-sm font-medium truncate"
-                    style={{ color: "var(--text-primary)" }}
+                    style={{ color: "var(--text-chat-primary)" }}
                   >
                     {src.title || prettyUrl(src.url)}
                   </span>
                   <span
                     className="text-xs truncate"
-                    style={{ color: "var(--text-secondary)" }}
+                    style={{ color: "var(--text-chat-secondary)" }}
                   >
                     {prettyUrl(src.url)}
                   </span>
                 </div>
-                <ChevronRight size={16} style={{ color: "var(--text-muted)" }} className="shrink-0" />
+                <ChevronRight size={16} style={{ color: "var(--text-chat-muted)" }} className="shrink-0" />
               </a>
             </li>
           ))}
@@ -1204,14 +1319,14 @@ function SourceFavicon({ url }: { url: string }) {
   const wrapperClass =
     "w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden shrink-0";
   const wrapperStyle: React.CSSProperties = {
-    background: "var(--surface-2)",
-    border: "1px solid var(--border-subtle)",
+    background: "var(--surface-chat-card)",
+    border: "1px solid var(--border-chat-subtle)",
   };
 
   if (failed || !host) {
     return (
       <div className={wrapperClass} style={wrapperStyle}>
-        <Globe size={16} style={{ color: "var(--text-secondary)" }} />
+        <Globe size={16} style={{ color: "var(--text-chat-secondary)" }} />
       </div>
     );
   }
@@ -1257,7 +1372,7 @@ function navActionToPath(action: NavAction): string {
 }
 
 function NavActionIcon({ destination }: { destination: NavAction["destination"] }) {
-  const props = { size: 12, style: { color: "var(--primary)" } };
+  const props = { size: 12, style: { color: "var(--text-chat-secondary)" } };
   switch (destination) {
     case "coffee_library":
     case "coffee_detail":  return <BookOpen {...props} />;
@@ -1278,11 +1393,13 @@ function NavActionChip({ action }: { action: NavAction }) {
       title={action.reason}
       className="flex items-center gap-1.5 active:scale-95 transition-all"
       style={{
-        background: "var(--card)",
-        border: "1px solid var(--border)",
+        background: "var(--surface-chat-pill)",
+        border: "1px solid var(--border-chat-subtle)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         borderRadius: "999px",
         padding: "5px 12px",
-        color: "var(--muted-foreground)",
+        color: "var(--text-chat-secondary)",
         fontSize: "11px",
         lineHeight: 1.4,
       }}
