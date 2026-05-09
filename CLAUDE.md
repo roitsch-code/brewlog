@@ -327,8 +327,9 @@ Cause for this rule: claimed "~33 cafés in the places table" based on counting 
 - Numeric fields (ratingSum, avgRating, cuppingScore) stored as `numeric` in Postgres, use `String()` when inserting
 
 ### AI models
-- `claude-sonnet-4-6` — recommend, analyze-bag, match, explore
-- `claude-haiku-4-5` — brew-insight, taste-summary, research, clarify
+- `claude-opus-4-7` — recommend (engineered for Opus; do NOT swap to Sonnet without re-validating outputs — see Hard Rule above)
+- `claude-sonnet-4-6` — analyze-bag, match, explore, explore-agent, escher (post-brew insight helper)
+- `claude-haiku-4-5` — brew-insight, taste-summary, research, analyze-bag/clarify, analyze-url, coffees/compact, roasters/generate, translate (tasting-notes ↔ SCA helper)
 
 ### Git / Deploy
 - **"Done" means shipped** — merged to `main`, auto-deploy runs on Hetzner, live on the iPhone PWA. "Pushed to a feature branch" is NOT done. Stopping at a branch leaves the user staring at the still-broken app, re-reporting the bug, and re-fixing what is already fixed. That is chaos and it is not acceptable.
