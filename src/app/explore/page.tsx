@@ -127,23 +127,13 @@ export default function ExplorePage() {
     router.replace(qs ? `/explore?${qs}` : "/explore", { scroll: false });
   };
 
-  const isAsk = activeTab === "ask";
-  const tabPillBg = isAsk ? "var(--surface-chat-pill)" : "var(--surface-pill-input)";
-  const tabPillBorder = isAsk ? "var(--border-chat-subtle)" : "var(--border-subtle)";
-  const tabActiveBg = isAsk ? "var(--surface-chat-card)" : "var(--surface-pill-user)";
-  const tabActiveText = isAsk ? "var(--text-chat-primary)" : "var(--text-on-pill-user)";
-  const tabInactiveText = isAsk ? "var(--text-chat-secondary)" : "var(--text-secondary)";
-
   return (
-    <div className={`min-h-full flex flex-col ${isAsk ? gradientChatBg : "bg-brew-bg"}`}>
+    <div className={`min-h-full flex flex-col ${activeTab === "ask" ? gradientChatBg : "bg-brew-bg"}`}>
       {/* Header — DOT-spec: tab switcher pills only, no app icon, no title */}
       <div className="px-5 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
         <div
-          className="flex gap-1 rounded-full p-1 backdrop-blur-xl w-fit"
-          style={{
-            background: tabPillBg,
-            border: `1px solid ${tabPillBorder}`,
-          }}
+          className="flex gap-1 rounded-full p-1 border border-dot-edge backdrop-blur-xl w-fit"
+          style={{ background: "var(--surface-pill-input)" }}
         >
           {(["ask", "insights", "nearby"] as const).map(tab => (
             <button
@@ -152,8 +142,8 @@ export default function ExplorePage() {
               onClick={() => setActiveTab(tab)}
               className="px-4 py-1.5 rounded-full text-sm font-medium transition-all"
               style={{
-                background: activeTab === tab ? tabActiveBg : "transparent",
-                color: activeTab === tab ? tabActiveText : tabInactiveText,
+                background: activeTab === tab ? "var(--surface-pill-user)" : "transparent",
+                color: activeTab === tab ? "var(--text-on-pill-user)" : "var(--text-secondary)",
               }}
             >
               {TAB_LABELS[tab]}
@@ -600,15 +590,15 @@ function AskTab() {
                   onClick={() => sendMessage(q)}
                   className="text-left active:scale-[0.99] transition-all w-full"
                   style={{
-                    background: "var(--surface-chat-card-soft)",
+                    background: "var(--surface-1)",
+                    border: "1px solid var(--border-subtle)",
                     borderRadius: 22,
-                    boxShadow: "var(--shadow-chat-card)",
                     padding: "16px 18px",
                   }}
                 >
                   <div
                     className="flex items-center gap-2 mb-1.5"
-                    style={{ color: "var(--text-chat-muted)" }}
+                    style={{ color: "var(--text-muted)" }}
                   >
                     <Icon size={12} strokeWidth={1.75} />
                     <span
@@ -620,7 +610,7 @@ function AskTab() {
                   </div>
                   <p
                     className="text-[15px] leading-snug"
-                    style={{ color: "var(--text-chat-primary)" }}
+                    style={{ color: "var(--text-primary)" }}
                   >
                     {q}
                   </p>
@@ -636,10 +626,8 @@ function AskTab() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {msg.role === "user" ? (
-                  // White speech-bubble pill — DOT pattern (Chat_Text_*.png).
-                  // Asymmetric corner on the bottom-right to read as a "tail"
-                  // pointing toward the user; soft warm shadow lifts it off
-                  // the gradient. Dark warm-brown text inside.
+                  // Cream speech-bubble pill — asymmetric corner on the
+                  // bottom-right reads as a tail pointing toward the user.
                   <div
                     className={`max-w-[78%] flex flex-col gap-2 ${gradientPillUser}`}
                     style={{
@@ -649,7 +637,6 @@ function AskTab() {
                       borderBottomRightRadius: 8,
                       padding: "12px 16px",
                       color: "var(--text-on-pill-user)",
-                      boxShadow: "var(--shadow-chat-card)",
                     }}
                   >
                     {msg.imageUrl && (
@@ -677,11 +664,10 @@ function AskTab() {
                     )}
                   </div>
                 ) : (
-                  // Assistant — no bubble, dark text directly on the warm-light
-                  // gradient. Matches DOT (Chat_LongAnswer_*.png).
+                  // Assistant — no bubble, light text directly on the gradient.
                   <div className="flex flex-col gap-2" style={{ maxWidth: "88%" }}>
-                    <div className="text-[15px]" style={{ color: "var(--text-chat-primary)" }}>
-                      <MessageContent content={msg.content} darkText />
+                    <div className="text-sm" style={{ color: "var(--text-primary)" }}>
+                      <MessageContent content={msg.content} />
                     </div>
                     {msg.actions && msg.actions.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -696,9 +682,9 @@ function AskTab() {
                         onClick={() => setSourcesOpenForMsg(i)}
                         className="self-start inline-flex items-center gap-1 px-3 py-1 rounded-full active:scale-95 transition-all"
                         style={{
-                          background: "var(--surface-chat-pill)",
-                          border: "1px solid var(--border-chat-subtle)",
-                          color: "var(--text-chat-secondary)",
+                          background: "var(--surface-pill-attach)",
+                          border: "1px solid var(--border-subtle)",
+                          color: "var(--text-secondary)",
                           fontSize: 12,
                           fontWeight: 500,
                           lineHeight: 1,
@@ -724,7 +710,7 @@ function AskTab() {
               if (!stillEmpty) return null;
               return (
                 <div className="flex justify-start">
-                  <div className="flex flex-col gap-1" style={{ color: "var(--text-chat-secondary)" }}>
+                  <div className="flex flex-col gap-1" style={{ color: "var(--text-secondary)" }}>
                     <ThinkingDots />
                     {agentStatus && (
                       <p className="text-xs leading-snug">
@@ -757,35 +743,25 @@ function AskTab() {
 
         {voiceError && (
           <div
-            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.55)",
-              border: "1px solid rgba(180,60,60,0.35)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-            }}
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
           >
-            <p className="flex-1 text-xs leading-snug" style={{ color: "#7A2A2A" }}>
+            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>
               {voiceError}
             </p>
             <button type="button" onClick={() => setVoiceError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
-              <X size={14} style={{ color: "#7A2A2A" }} />
+              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
             </button>
           </div>
         )}
         {attachError && (
           <div
-            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-2xl"
-            style={{
-              background: "rgba(255,255,255,0.55)",
-              border: "1px solid rgba(180,60,60,0.35)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-            }}
+            className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(220, 80, 80, 0.12)", border: "1px solid rgba(220, 80, 80, 0.35)" }}
           >
-            <p className="flex-1 text-xs leading-snug" style={{ color: "#7A2A2A" }}>{attachError}</p>
+            <p className="flex-1 text-xs leading-snug" style={{ color: "rgba(255,200,200,0.85)" }}>{attachError}</p>
             <button type="button" onClick={() => setAttachError(null)} className="shrink-0 active:scale-90" aria-label="Dismiss">
-              <X size={14} style={{ color: "#7A2A2A" }} />
+              <X size={14} style={{ color: "rgba(255,200,200,0.7)" }} />
             </button>
           </div>
         )}
@@ -802,11 +778,11 @@ function AskTab() {
               aria-label="Cancel recording"
               className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all"
               style={{
-                background: "var(--surface-chat-pill-strong)",
-                color: "var(--text-chat-secondary)",
+                background: "var(--surface-pill-input)",
+                color: "var(--text-secondary)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "var(--shadow-chat-pill)",
+                boxShadow: "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
               }}
             >
               <X size={18} strokeWidth={1.75} />
@@ -814,10 +790,10 @@ function AskTab() {
             <div
               className="flex-1 flex items-center gap-2 rounded-full px-3"
               style={{
-                background: "var(--surface-chat-pill-strong)",
+                background: "var(--surface-pill-input)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "var(--shadow-chat-pill)",
+                boxShadow: "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
                 minHeight: 44,
               }}
             >
@@ -826,21 +802,19 @@ function AskTab() {
                 style={{ background: "#C84A3A" }}
                 aria-label="Recording"
               />
-              <div style={{ color: "var(--text-chat-primary)" }} className="flex-1 min-w-0">
-                <WaveformBars
-                  getLevel={capture.getLevel}
-                  bars={32}
-                  height={28}
-                  className="w-full"
-                />
-              </div>
+              <WaveformBars
+                getLevel={capture.getLevel}
+                bars={32}
+                height={28}
+                className="flex-1 min-w-0"
+              />
               <button
                 type="button"
                 onClick={() => void capture.stop()}
                 disabled={capture.busy}
                 aria-label="Stop recording"
                 className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
-                style={{ background: "var(--text-chat-primary)", color: "var(--surface-chat-card)" }}
+                style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
               >
                 <Square size={12} fill="currentColor" />
               </button>
@@ -856,11 +830,11 @@ function AskTab() {
               aria-label="Add attachment"
               className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40"
               style={{
-                background: "var(--surface-chat-pill-strong)",
-                color: "var(--text-chat-secondary)",
+                background: "var(--surface-pill-input)",
+                color: "var(--text-secondary)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "var(--shadow-chat-pill)",
+                boxShadow: "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
               }}
             >
               <Plus size={20} strokeWidth={1.75} />
@@ -872,10 +846,10 @@ function AskTab() {
             <div
               className="flex-1 flex flex-col gap-2 px-2"
               style={{
-                background: "var(--surface-chat-pill-strong)",
+                background: "var(--surface-pill-input)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
-                boxShadow: "var(--shadow-chat-pill)",
+                boxShadow: "0 10px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,235,220,0.10)",
                 borderRadius: (attachedImageUrl || uploadingImage || referencedCoffee) ? 22 : 999,
                 paddingTop: (attachedImageUrl || uploadingImage || referencedCoffee) ? 8 : 0,
                 paddingBottom: 0,
@@ -890,14 +864,14 @@ function AskTab() {
                     style={{
                       width: 76,
                       height: 76,
-                      background: "rgba(255,255,255,0.4)",
-                      border: "1px solid var(--border-chat-subtle)",
+                      background: "rgba(0,0,0,0.25)",
+                      border: "1px solid var(--border-subtle)",
                     }}
                   >
                     {uploadingImage ? (
                       <div
                         className="w-full h-full flex items-center justify-center"
-                        style={{ color: "var(--text-chat-secondary)" }}
+                        style={{ color: "var(--text-secondary)" }}
                       >
                         <ThinkingDots />
                       </div>
@@ -926,12 +900,12 @@ function AskTab() {
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
                     style={{
                       background: "rgba(31,20,14,0.06)",
-                      color: "var(--text-chat-primary)",
-                      border: "1px solid var(--border-chat-subtle)",
+                      color: "var(--text-primary)",
+                      border: "1px solid var(--border-subtle)",
                     }}
                   >
-                    <Coffee size={11} style={{ color: "var(--text-chat-secondary)" }} />
-                    <span style={{ color: "var(--text-chat-secondary)" }}>{referencedCoffee.roaster}</span>
+                    <Coffee size={11} style={{ color: "var(--text-secondary)" }} />
+                    <span style={{ color: "var(--text-secondary)" }}>{referencedCoffee.roaster}</span>
                     <span>{referencedCoffee.name}</span>
                     <button
                       type="button"
@@ -939,7 +913,7 @@ function AskTab() {
                       aria-label="Remove coffee reference"
                       className="active:scale-90 ml-0.5"
                     >
-                      <X size={11} style={{ color: "var(--text-chat-secondary)" }} />
+                      <X size={11} style={{ color: "var(--text-secondary)" }} />
                     </button>
                   </div>
                 </div>
@@ -954,10 +928,10 @@ function AskTab() {
                   placeholder="Ask something"
                   rows={1}
                   disabled={capture.busy}
-                  className="flex-1 bg-transparent resize-none focus:outline-none disabled:opacity-60 chat-input-light"
+                  className="flex-1 bg-transparent resize-none focus:outline-none disabled:opacity-60 placeholder:text-dot-ink-soft"
                   style={{
-                    color: "var(--text-chat-primary)",
-                    caretColor: "var(--text-chat-primary)",
+                    color: "var(--text-primary)",
+                    caretColor: "var(--text-primary)",
                     minHeight: 40,
                     maxHeight: 140,
                     padding: "10px 6px",
@@ -975,7 +949,7 @@ function AskTab() {
                     disabled={loading || uploadingImage}
                     aria-label="Send"
                     className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 mb-0.5"
-                    style={{ background: "var(--text-chat-primary)", color: "var(--surface-chat-card)" }}
+                    style={{ background: "var(--text-accent)", color: "var(--bg-base)" }}
                   >
                     <ArrowUp size={16} strokeWidth={2.25} />
                   </button>
@@ -987,7 +961,7 @@ function AskTab() {
                     aria-label="Start voice input"
                     className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-all disabled:opacity-40 mb-0.5"
                   >
-                    <AudioLines size={18} style={{ color: "var(--text-chat-secondary)" }} strokeWidth={1.75} />
+                    <AudioLines size={18} style={{ color: "var(--text-secondary)" }} strokeWidth={1.75} />
                   </button>
                 )}
               </div>
@@ -1004,27 +978,22 @@ function AskTab() {
         />
       )}
 
-      {/* Coffee picker — search sheet, spec §6.4. Light cream variant
-          to read on the new chat surface. */}
+      {/* Coffee picker — search sheet, spec §6.4 */}
       {coffeePickerOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
+          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setCoffeePickerOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-2"
-            style={{
-              background: "var(--surface-chat-card)",
-              maxHeight: "70vh",
-              boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
-            }}
+            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-2"
+            style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
+            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
             <div className="flex items-center gap-2 px-1 mt-1">
-              <Coffee size={16} style={{ color: "var(--text-chat-secondary)" }} />
-              <p className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Reference a coffee</p>
+              <Coffee size={16} style={{ color: "var(--text-accent)" }} />
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>Reference a coffee</p>
             </div>
             <input
               autoFocus
@@ -1032,12 +1001,8 @@ function AskTab() {
               value={coffeeQuery}
               onChange={e => setCoffeeQuery(e.target.value)}
               placeholder="Search roaster or coffee"
-              className="w-full bg-transparent rounded-full px-4 py-2.5 text-sm focus:outline-none chat-input-light"
-              style={{
-                color: "var(--text-chat-primary)",
-                border: "1px solid var(--border-chat-subtle)",
-                background: "var(--surface-chat-card-soft)",
-              }}
+              className="w-full bg-transparent border border-dot-edge rounded-full px-4 py-2.5 text-sm focus:outline-none placeholder:text-dot-ink-soft"
+              style={{ color: "var(--text-primary)" }}
             />
             <div className="flex-1 overflow-y-auto -mx-1 px-1">
               {(() => {
@@ -1051,7 +1016,7 @@ function AskTab() {
                   : coffeeList;
                 if (filtered.length === 0) {
                   return (
-                    <p className="text-xs py-6 text-center" style={{ color: "var(--text-chat-secondary)" }}>
+                    <p className="text-xs py-6 text-center" style={{ color: "var(--text-secondary)" }}>
                       No matching coffees
                     </p>
                   );
@@ -1066,14 +1031,10 @@ function AskTab() {
                             setReferencedCoffee(c);
                             setCoffeePickerOpen(false);
                           }}
-                          className="w-full flex flex-col text-left px-3 py-2.5 rounded-xl transition-colors"
-                          style={{ background: "transparent" }}
-                          onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
-                          onMouseUp={e => (e.currentTarget.style.background = "transparent")}
-                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          className="w-full flex flex-col text-left px-3 py-2.5 rounded-xl active:bg-dot-edge transition-colors"
                         >
-                          <span className="text-xs" style={{ color: "var(--text-chat-secondary)" }}>{c.roaster}</span>
-                          <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>{c.name}</span>
+                          <span className="text-xs" style={{ color: "var(--text-secondary)" }}>{c.roaster}</span>
+                          <span className="text-sm" style={{ color: "var(--text-primary)" }}>{c.name}</span>
                         </button>
                       </li>
                     ))}
@@ -1085,65 +1046,53 @@ function AskTab() {
         </div>
       )}
 
-      {/* Attach sheet — bottom modal, spec §6.4. Light cream variant. */}
+      {/* Attach sheet — bottom modal, spec §6.4 */}
       {attachSheetOpen && (
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center"
-          style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
+          style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
           onClick={() => setAttachSheetOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-1"
-            style={{
-              background: "var(--surface-chat-card)",
-              boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
-            }}
+            className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-1"
+            style={{ background: "var(--surface-2)" }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
+            <div className="w-10 h-1 rounded-full mx-auto mb-3" style={{ background: "var(--text-muted)" }} />
 
             <button
               type="button"
               onClick={handlePhotoPick}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left"
-              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
-              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
             >
-              <Camera size={20} style={{ color: "var(--text-chat-secondary)" }} />
-              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Photo</span>
+              <Camera size={20} style={{ color: "var(--text-accent)" }} />
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Photo</span>
             </button>
 
             <button
               type="button"
               onClick={() => { setAttachSheetOpen(false); setCoffeeQuery(""); setCoffeePickerOpen(true); }}
               disabled={coffeeList.length === 0}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
-              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
-              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Coffee size={20} style={{ color: "var(--text-chat-secondary)" }} />
-              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>Reference coffee</span>
+              <Coffee size={20} style={{ color: "var(--text-accent)" }} />
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>Reference coffee</span>
               {coffeeList.length === 0 && (
-                <span className="ml-auto text-xs" style={{ color: "var(--text-chat-muted)" }}>library empty</span>
+                <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>library empty</span>
               )}
             </button>
 
             <button
               type="button"
               onClick={() => { handleVoiceToggle(); setAttachSheetOpen(false); }}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl transition-colors text-left"
-              onMouseDown={e => (e.currentTarget.style.background = "var(--surface-chat-card-soft)")}
-              onMouseUp={e => (e.currentTarget.style.background = "transparent")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              className="flex items-center gap-3 px-3 py-3.5 rounded-2xl active:bg-dot-edge transition-colors text-left"
             >
               {voiceMode ? (
-                <Volume2 size={20} style={{ color: "var(--text-chat-secondary)" }} />
+                <Volume2 size={20} style={{ color: "var(--text-accent)" }} />
               ) : (
-                <VolumeX size={20} style={{ color: "var(--text-chat-muted)" }} />
+                <VolumeX size={20} style={{ color: "var(--text-secondary)" }} />
               )}
-              <span className="text-sm" style={{ color: "var(--text-chat-primary)" }}>
+              <span className="text-sm" style={{ color: "var(--text-primary)" }}>
                 Voice replies {voiceMode ? "on" : "off"}
               </span>
             </button>
@@ -1242,21 +1191,17 @@ function SourcesSheet({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end justify-center"
-      style={{ background: "var(--scrim-chat-dialog)", backdropFilter: "blur(4px)" }}
+      style={{ background: "var(--scrim-dialog)", backdropFilter: "blur(4px)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl p-4 pb-6 flex flex-col gap-3"
-        style={{
-          background: "var(--surface-chat-card)",
-          maxHeight: "70vh",
-          boxShadow: "0 -12px 40px rgba(40,25,15,0.18)",
-        }}
+        className="w-full max-w-md rounded-t-3xl border-t border-x border-dot-edge p-4 pb-6 flex flex-col gap-3"
+        style={{ background: "var(--surface-2)", maxHeight: "70vh" }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-chat-muted)", opacity: 0.4 }} />
+        <div className="w-10 h-1 rounded-full mx-auto" style={{ background: "var(--text-muted)" }} />
         <div className="flex items-center justify-between px-1">
-          <span className="text-base font-medium" style={{ color: "var(--text-chat-primary)" }}>
+          <span className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
             {dedup.length === 1 ? "Source" : "Sources"}
           </span>
           <button
@@ -1265,7 +1210,7 @@ function SourcesSheet({
             aria-label="Close"
             className="-mr-1 w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-all"
           >
-            <X size={18} style={{ color: "var(--text-chat-secondary)" }} />
+            <X size={18} style={{ color: "var(--text-secondary)" }} />
           </button>
         </div>
         <ul className="flex flex-col gap-2 overflow-y-auto -mx-1 px-1">
@@ -1278,26 +1223,26 @@ function SourcesSheet({
                 onClick={onClose}
                 className="flex items-center gap-3 px-3.5 py-3 rounded-2xl active:scale-[0.99] transition-all"
                 style={{
-                  background: "var(--surface-chat-card-soft)",
-                  border: "1px solid var(--border-chat-subtle)",
+                  background: "var(--surface-1)",
+                  border: "1px solid var(--border-subtle)",
                 }}
               >
                 <SourceFavicon url={src.url} />
                 <div className="flex-1 min-w-0 flex flex-col">
                   <span
                     className="text-sm font-medium truncate"
-                    style={{ color: "var(--text-chat-primary)" }}
+                    style={{ color: "var(--text-primary)" }}
                   >
                     {src.title || prettyUrl(src.url)}
                   </span>
                   <span
                     className="text-xs truncate"
-                    style={{ color: "var(--text-chat-secondary)" }}
+                    style={{ color: "var(--text-secondary)" }}
                   >
                     {prettyUrl(src.url)}
                   </span>
                 </div>
-                <ChevronRight size={16} style={{ color: "var(--text-chat-muted)" }} className="shrink-0" />
+                <ChevronRight size={16} style={{ color: "var(--text-muted)" }} className="shrink-0" />
               </a>
             </li>
           ))}
@@ -1319,14 +1264,14 @@ function SourceFavicon({ url }: { url: string }) {
   const wrapperClass =
     "w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden shrink-0";
   const wrapperStyle: React.CSSProperties = {
-    background: "var(--surface-chat-card)",
-    border: "1px solid var(--border-chat-subtle)",
+    background: "var(--surface-2)",
+    border: "1px solid var(--border-subtle)",
   };
 
   if (failed || !host) {
     return (
       <div className={wrapperClass} style={wrapperStyle}>
-        <Globe size={16} style={{ color: "var(--text-chat-secondary)" }} />
+        <Globe size={16} style={{ color: "var(--text-secondary)" }} />
       </div>
     );
   }
@@ -1372,7 +1317,7 @@ function navActionToPath(action: NavAction): string {
 }
 
 function NavActionIcon({ destination }: { destination: NavAction["destination"] }) {
-  const props = { size: 12, style: { color: "var(--text-chat-secondary)" } };
+  const props = { size: 12, style: { color: "var(--primary)" } };
   switch (destination) {
     case "coffee_library":
     case "coffee_detail":  return <BookOpen {...props} />;
@@ -1393,13 +1338,11 @@ function NavActionChip({ action }: { action: NavAction }) {
       title={action.reason}
       className="flex items-center gap-1.5 active:scale-95 transition-all"
       style={{
-        background: "var(--surface-chat-pill)",
-        border: "1px solid var(--border-chat-subtle)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
         borderRadius: "999px",
         padding: "5px 12px",
-        color: "var(--text-chat-secondary)",
+        color: "var(--muted-foreground)",
         fontSize: "11px",
         lineHeight: 1.4,
       }}

@@ -49,27 +49,6 @@
   --text-accent: #E8C5A8;
   --border-subtle: rgba(255,235,220,0.08);
   --scrim-dialog: rgba(8,5,4,0.55);
-  /* Chat-light palette (DOT inversion, May 2026). The chat surface is
-     a warm-light gradient (cream → peach), so every element rendered
-     over it needs dark text + light translucent surfaces. These tokens
-     are scoped to the chat tab — the rest of the app stays on the
-     dark palette above. */
-  --bg-chat-base: #B8AFA8;
-  --bg-chat-glow: #ECDFCE;
-  --bg-chat-warm: #D89F8C;
-  --bg-chat-deep: #8E5F4D;
-  --text-chat-primary: #1F140E;
-  --text-chat-secondary: #5C4838;
-  --text-chat-muted: #8A7868;
-  --surface-chat-card: #FFFFFF;
-  --surface-chat-card-soft: #F4EEE6;
-  --surface-chat-pill: rgba(255,250,244,0.55);
-  --surface-chat-pill-strong: rgba(255,250,244,0.75);
-  --border-chat-subtle: rgba(40,25,15,0.08);
-  --shadow-chat-card: 0 6px 18px rgba(40,25,15,0.10), 0 1px 2px rgba(40,25,15,0.06);
-  --shadow-chat-pill: 0 8px 24px rgba(40,25,15,0.12), inset 0 1px 0 rgba(255,255,255,0.55);
-  --scrim-chat-dialog: rgba(40,25,15,0.32);
-  --text-chat-placeholder: rgba(31,20,14,0.42);
   /* Radii (spec §4) */
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -117,14 +96,6 @@
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     overscroll-behavior: none;
   }
-}
-
-/* Placeholder colour for inputs on the warm-light chat surface — muted
-   warm-brown that contrasts on the translucent cream pill without
-   shouting. Used by the chat textarea and the coffee-picker search. */
-.chat-input-light::placeholder {
-  color: var(--text-chat-placeholder);
-  opacity: 1;
 }
 
 @layer utilities {

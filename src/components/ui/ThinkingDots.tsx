@@ -16,7 +16,7 @@ export default function ThinkingDots({ className = "" }: { className?: string })
           width: 6px;
           height: 6px;
           border-radius: 999px;
-          background: currentColor;
+          background: var(--text-secondary);
           opacity: 0.35;
           animation: thinking-pulse 1200ms ease-in-out infinite;
         }
