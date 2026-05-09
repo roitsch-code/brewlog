@@ -47,8 +47,17 @@ export default function StepSummary() {
         }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { error?: string }).error || `Save failed (${res.status})`);
+        const body = await res.json().catch(() => ({})) as {
+          error?: string;
+          details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
+        };
+        const fieldErrors = body.details?.fieldErrors ?? {};
+        const firstField = Object.entries(fieldErrors).find(([, msgs]) => msgs && msgs.length > 0);
+        const detailMsg = firstField
+          ? `${firstField[0]}: ${firstField[1][0]}`
+          : body.details?.formErrors?.[0];
+        const baseMsg = body.error || `Save failed (${res.status})`;
+        throw new Error(detailMsg ? `${baseMsg} — ${detailMsg}` : baseMsg);
       }
       setSaved(true);
       setTimeout(() => { reset(); router.push("/"); }, 1500);

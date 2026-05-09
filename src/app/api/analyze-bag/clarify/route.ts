@@ -28,7 +28,12 @@ Update the coffee data with this new information and return the updated JSON obj
 
     const text = response.content[0].type === "text" ? response.content[0].text : "{}";
     const match = text.match(/\{[\s\S]*\}/);
-    const updated = match ? JSON.parse(match[0]) : currentCoffeeData;
+    const parsed = match ? JSON.parse(match[0]) : currentCoffeeData;
+    const updated = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? Object.fromEntries(
+          Object.entries(parsed).filter(([, v]) => v !== null && v !== undefined)
+        )
+      : parsed;
 
     return NextResponse.json({ updated });
   } catch (err) {
