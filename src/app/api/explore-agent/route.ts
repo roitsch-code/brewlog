@@ -6,6 +6,11 @@ import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfil
 import { loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
+import {
+  getVarietyPrior,
+  formatVarietyPriorForPrompt,
+} from "@/lib/knowledge/varieties";
+import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
 import type { Session } from "@/lib/types/session";
@@ -457,6 +462,38 @@ export async function POST(req: NextRequest) {
       );
       contextParts.push(`\n## Roaster Style Priors\n` + priorBlocks.join("\n\n"));
     }
+
+    // Variety priors — WCR-grounded genetics for varieties in recent sessions.
+    const recentVarieties = Array.from(
+      new Set(
+        recentSessions.flatMap((s) =>
+          (s.coffee?.variety ?? "")
+            .split(/\s*(?:[,/+&]|\band\b)\s*/i)
+            .map((v) => v.trim())
+            .filter(Boolean)
+        )
+      )
+    );
+    const matchedVarietyPriors = recentVarieties
+      .map((v) => getVarietyPrior(v))
+      .filter((p): p is NonNullable<typeof p> => !!p);
+    const dedupedVarietyPriors = Array.from(
+      new Map(matchedVarietyPriors.map((p) => [p.name, p])).values()
+    ).slice(0, 6);
+    if (dedupedVarietyPriors.length > 0) {
+      contextParts.push(
+        `\n## Variety Priors (WCR-grounded genetics for varieties in your recent sessions)\n` +
+          dedupedVarietyPriors.map(formatVarietyPriorForPrompt).join("\n\n")
+      );
+    }
+
+    // Available techniques — atomic-move vocabulary, citable by id.
+    contextParts.push(
+      `\n## Available Brewing Techniques (atomic moves citable by id when teaching mechanism)\n` +
+        TECHNIQUES.map(
+          (t) => `- ${t.id} (${t.attribution.person}): ${t.description}`
+        ).join("\n")
+    );
 
     const dynamicContext = contextParts.join("");
 

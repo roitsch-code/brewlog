@@ -14,41 +14,124 @@ export const ALL_RECIPES: Recipe[] = [
 ];
 
 /**
- * Maps the free-text equipment strings the user has in preferences.equipment
- * to the structured BrewerType used by recipes. A single recipe brewer (e.g.
- * "v60") can match multiple equipment strings ("V60", "V60 + Drip Assist").
+ * Maps free-text equipment strings (preferences.equipment) to the structured
+ * BrewerType used by recipes. The matcher normalises the input (lowercase,
+ * stripped of spaces/punctuation/parentheses) so "V60", "V60 + Drip Assist",
+ * "OreaV4", "Origami (cone)", and "CleverDripper" all resolve correctly.
+ *
+ * A single recipe brewer (e.g. "v60") can match multiple equipment strings.
  */
-const EQUIPMENT_TO_BREWERS: Record<string, BrewerType[]> = {
-  "v60": ["v60"],
-  "v60 + drip assist": ["v60"],
-  "hario v60": ["v60"],
-  "orea": ["orea-v4-fast", "orea-v4-wide", "orea-apex", "orea-classic", "orea-open"],
-  "orea v4": ["orea-v4-fast", "orea-v4-wide", "orea-apex", "orea-classic", "orea-open"],
-  "orea v4 wide": ["orea-v4-wide", "orea-v4-fast", "orea-apex", "orea-classic", "orea-open"],
-  "orea fast": ["orea-v4-fast"],
-  "orea apex": ["orea-apex"],
-  "orea classic": ["orea-classic"],
-  "orea open": ["orea-open"],
-  "origami": ["origami-cone", "origami-wave"],
-  "origami dripper": ["origami-cone", "origami-wave"],
-  "origami air m": ["origami-air-m"],
-  "clever": ["clever"],
-  "clever dripper": ["clever"],
-  "kalita": ["kalita-wave"],
-  "kalita wave": ["kalita-wave"],
-  "aeropress": ["aeropress", "aeropress-prismo"],
-  "moccamaster": ["moccamaster"],
-  "chemex": ["chemex"],
-};
+function normaliseEquipmentKey(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/\bdrip\s*assist\b/g, "")
+    .replace(/[()+\-]/g, " ")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+const EQUIPMENT_PATTERNS: Array<{
+  match: (k: string) => boolean;
+  brewers: BrewerType[];
+}> = [
+  // Specific Orea bottoms first (so 'oreafast' doesn't get caught by 'orea').
+  {
+    match: (k) => k.includes("oreafast"),
+    brewers: ["orea-v4-fast"],
+  },
+  {
+    match: (k) => k.includes("oreaapex"),
+    brewers: ["orea-apex"],
+  },
+  {
+    match: (k) => k.includes("oreaclassic"),
+    brewers: ["orea-classic"],
+  },
+  {
+    match: (k) => k.includes("oreaopen"),
+    brewers: ["orea-open"],
+  },
+  {
+    match: (k) => k.includes("oreawide"),
+    brewers: ["orea-v4-wide", "orea-v4-fast"],
+  },
+  {
+    // Generic "Orea" or "OreaV4" — user has the modular V4, all bottoms
+    // count as available.
+    match: (k) => k.startsWith("oreav4") || k === "orea",
+    brewers: [
+      "orea-v4-wide",
+      "orea-v4-fast",
+      "orea-apex",
+      "orea-classic",
+      "orea-open",
+    ],
+  },
+  // Origami — disambiguate by filter shape, with a generic fallback.
+  {
+    match: (k) => k.includes("origami") && k.includes("cone"),
+    brewers: ["origami-cone"],
+  },
+  {
+    match: (k) => k.includes("origami") && k.includes("wave"),
+    brewers: ["origami-wave"],
+  },
+  {
+    match: (k) => k.includes("origamiairm") || k.includes("airm"),
+    brewers: ["origami-air-m"],
+  },
+  {
+    match: (k) => k.includes("origami"),
+    brewers: ["origami-cone", "origami-wave"],
+  },
+  // V60 — including "+ Drip Assist" variants (drip-assist is stripped above).
+  {
+    match: (k) => k.includes("v60") || k.includes("hariov60"),
+    brewers: ["v60"],
+  },
+  // Other brewers.
+  {
+    match: (k) => k.includes("clever"),
+    brewers: ["clever"],
+  },
+  {
+    match: (k) => k.includes("kalita"),
+    brewers: ["kalita-wave"],
+  },
+  {
+    match: (k) => k.includes("aeropress"),
+    brewers: ["aeropress", "aeropress-prismo"],
+  },
+  {
+    match: (k) => k.includes("moccamaster") || k.includes("technivorm"),
+    brewers: ["moccamaster"],
+  },
+  {
+    match: (k) => k.includes("chemex"),
+    brewers: ["chemex"],
+  },
+  {
+    match: (k) => k.includes("solo"),
+    brewers: ["solo-dripper"],
+  },
+  {
+    match: (k) => k.includes("cafec") || k.includes("flower"),
+    brewers: ["cafec-flower"],
+  },
+];
 
 export function brewersAvailableFromEquipment(
   equipment: string[]
 ): Set<BrewerType> {
   const set = new Set<BrewerType>();
   for (const raw of equipment) {
-    const key = raw.toLowerCase().trim();
-    const brewers = EQUIPMENT_TO_BREWERS[key];
-    if (brewers) for (const b of brewers) set.add(b);
+    const key = normaliseEquipmentKey(raw);
+    for (const { match, brewers } of EQUIPMENT_PATTERNS) {
+      if (match(key)) {
+        for (const b of brewers) set.add(b);
+        break;
+      }
+    }
   }
   return set;
 }

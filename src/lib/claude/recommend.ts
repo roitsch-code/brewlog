@@ -12,6 +12,19 @@ import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
 import { buildTimingStats } from "./historyUtils";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
+import {
+  selectRecipes,
+  formatRecipesForPrompt,
+  brewersAvailableFromEquipment,
+  normaliseRoastLevel,
+  normaliseProcess,
+  normaliseGoal,
+} from "../knowledge/recipes";
+import {
+  getVarietyPriorsForBag,
+  formatVarietyPriorsForPrompt,
+} from "../knowledge/varieties";
+import { TECHNIQUES } from "../knowledge/techniques";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -622,6 +635,56 @@ export async function generateRecommendation(
       ? `\n${formatRoasterPriorForPrompt(roasterPrior)}`
       : "";
 
+  // ── Knowledge layer injection ──────────────────────────────────────────
+  // Three structured blocks selected per turn:
+  //   1. Variety priors — what genetics tell us (WCR-grounded)
+  //   2. Reference recipes — top-N selections from the championship +
+  //      reference corpus, scored against this brew
+  //   3. Available techniques — atomic-move vocabulary for composition
+  // The brain reads these alongside the embedded science blocks in the
+  // system prompt and either selects, adapts, or composes.
+
+  const varietyPriors = getVarietyPriorsForBag(coffee.variety);
+  const varietyBlock = varietyPriors.length
+    ? `\n${formatVarietyPriorsForPrompt(varietyPriors)}`
+    : "";
+
+  const targetWaterMl =
+    context.amount === "custom"
+      ? (context.customWaterMl ?? 350)
+      : context.amount === "big"
+        ? 520
+        : context.amount === "small"
+          ? 350
+          : context.amount === "batch"
+            ? 750
+            : undefined;
+
+  const brewersAvailable = brewersAvailableFromEquipment(preferences.equipment);
+  const selectedRecipes = selectRecipes(
+    {
+      brewersAvailable,
+      roastLevel: normaliseRoastLevel(coffee.roastLevel),
+      process: normaliseProcess(coffee.process),
+      variety: coffee.variety,
+      goal: normaliseGoal(context.intent),
+      occasion: context.occasion,
+      maxWaterMl: targetWaterMl,
+    },
+    4
+  );
+  const recipesBlock = selectedRecipes.length
+    ? `\n${formatRecipesForPrompt(selectedRecipes)}`
+    : "";
+
+  // Compact technique vocabulary — id + one-line description per technique.
+  // The full mechanism for each is reachable via the recipe's `science`
+  // field; this block exists so the brain has a vocabulary to compose with
+  // when no recipe matches exactly.
+  const techniquesBlock =
+    "\nAVAILABLE TECHNIQUES (atomic moves you can compose with — cite by id when adapting a recipe):\n" +
+    TECHNIQUES.map((t) => `  - ${t.id}: ${t.description}`).join("\n");
+
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}
@@ -664,6 +727,8 @@ ${
       "\nApply the relevant row only when recommending that specific method."
     : ""
 }
+
+${varietyBlock}${recipesBlock}${techniquesBlock}
 
 Pour sequence format: CUMULATIVE weight milestones separated by " – " for percolation (e.g. "50 – 180 – 320 – 500").
 For immersion methods (AeroPress, Clever, Moccamaster), use prose description instead.
