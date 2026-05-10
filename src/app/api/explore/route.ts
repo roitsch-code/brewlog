@@ -8,6 +8,11 @@ import { buildEscherTerrain } from "@/lib/claude/escher";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
+import {
+  getVarietyPrior,
+  formatVarietyPriorForPrompt,
+} from "@/lib/knowledge/varieties";
+import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -183,6 +188,42 @@ export async function POST(req: NextRequest) {
           priorBlocks.join("\n\n")
       );
     }
+
+    // Variety priors — for the unique varieties appearing in recent sessions.
+    // WCR-grounded genetic / cup-character context for the coffees in rotation.
+    const recentVarieties = Array.from(
+      new Set(
+        recentSessions
+          .flatMap((s) =>
+            (s.coffee?.variety ?? "")
+              .split(/\s*(?:[,/+&]|\band\b)\s*/i)
+              .map((v) => v.trim())
+              .filter(Boolean)
+          )
+      )
+    );
+    const matchedVarietyPriors = recentVarieties
+      .map((v) => getVarietyPrior(v))
+      .filter((p): p is NonNullable<typeof p> => !!p);
+    const dedupedVarietyPriors = Array.from(
+      new Map(matchedVarietyPriors.map((p) => [p.name, p])).values()
+    ).slice(0, 6);
+    if (dedupedVarietyPriors.length > 0) {
+      contextParts.push(
+        `\n## Variety Priors (genetics + cup signature for varieties in your recent sessions — WCR-grounded)\n` +
+          dedupedVarietyPriors
+            .map(formatVarietyPriorForPrompt)
+            .join("\n\n")
+      );
+    }
+
+    // Available techniques — atomic-move vocabulary for composing answers.
+    // Compact form (id + one-line description) — full mechanism is in the
+    // techniques data module, not duplicated here.
+    contextParts.push(
+      `\n## Available Brewing Techniques (atomic moves you can cite by id when teaching)\n` +
+        TECHNIQUES.map((t) => `- ${t.id} (${t.attribution.person}): ${t.description}`).join("\n")
+    );
 
     // Research insights with stable IDs for attribution
     const insightMap: Map<string, typeof insights[number]> = new Map();
