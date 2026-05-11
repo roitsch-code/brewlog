@@ -494,13 +494,26 @@ function buildDiversityNote(sessions: import("../types/session").Session[]): str
   return `\nPORTFOLIO DIVERSITY — anchor methods in last ${recent.length} sessions: ${summary}. Vary deliberately unless the coffee or terrain genuinely demands the same approach.`;
 }
 
+/**
+ * Aggregated tasting history for the coffee being brewed.
+ * Populated by the weekly /api/coffees/compact cron. Both fields are
+ * optional — undefined on first brews or coffees with <2 sessions.
+ */
+export interface CoffeeHistory {
+  /** Top flavor notes the user has tasted across logged sessions. */
+  commonNotes?: string[];
+  /** 2–4 sentence AI brew memory. */
+  writtenSummary?: string;
+}
+
 export async function generateRecommendation(
   coffee: CoffeeIdentity,
   context: SessionContext,
   preferences: UserPreferences,
   pastSessions: Session[] = [],
   userRoasterPrior?: import("../roasters/priors").RoasterPrior,
-  escherTerrain?: string
+  escherTerrain?: string,
+  coffeeHistory?: CoffeeHistory,
 ): Promise<{
   recommendation: Recommendation;
   usage: { input_tokens: number; output_tokens: number };
@@ -635,6 +648,23 @@ export async function generateRecommendation(
       ? `\n${formatRoasterPriorForPrompt(roasterPrior)}`
       : "";
 
+  // Coffee tasting-history block — what the user has actually tasted vs.
+  // what the bag claims. Populated weekly by /api/coffees/compact and only
+  // present for coffees with ≥2 logged sessions.
+  const historyBlock = (() => {
+    if (!coffeeHistory) return "";
+    const lines: string[] = [
+      "\nYOUR TASTING HISTORY FOR THIS COFFEE — aggregated across your logged sessions of this exact bag. Compare against the bag's claimed tasting notes (above): when they diverge, the divergence is the signal. Use this to inform the hypothesis, not to override the bag's variety/process facts.",
+    ];
+    if (coffeeHistory.commonNotes?.length) {
+      lines.push(`- Notes you typically taste: ${coffeeHistory.commonNotes.join(", ")}`);
+    }
+    if (coffeeHistory.writtenSummary) {
+      lines.push(`- Brew memory: ${coffeeHistory.writtenSummary}`);
+    }
+    return lines.length > 1 ? lines.join("\n") : "";
+  })();
+
   // ── Knowledge layer injection ──────────────────────────────────────────
   // Three structured blocks selected per turn:
   //   1. Variety priors — what genetics tell us (WCR-grounded)
@@ -690,7 +720,7 @@ Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}
 Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
-${roasterBlock}
+${roasterBlock}${historyBlock}
 Context:
 - Occasion: ${context.occasion}
 - Amount: ${context.amount} (${guide})
