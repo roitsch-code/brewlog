@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
   try {
     const coffeeRows = await db.select().from(coffees);
     const now = Date.now();
-    const twentyEightDaysMs = 28 * 24 * 60 * 60 * 1000;
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
     for (const row of coffeeRows) {
       const coffee = rowToCoffee(row);
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
 
       if (coffee.lastSummarizedAt) {
         const lastMs = new Date(coffee.lastSummarizedAt).getTime();
-        if (now - lastMs < twentyEightDaysMs) {
+        if (now - lastMs < sevenDaysMs) {
           skipped++;
           continue;
         }
