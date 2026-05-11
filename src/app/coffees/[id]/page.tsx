@@ -125,6 +125,7 @@ export default function CoffeeDetailPage() {
   const roastLevel = latestCoffee?.roastLevel;
   const region = latestCoffee?.region;
   const tastingNotes = latestCoffee?.tastingNotesFromBag ?? [];
+  const commonNotes = coffee.commonNotes ?? [];
   const origin = latestCoffee?.origin || coffee.origin;
 
   return (
@@ -195,7 +196,7 @@ export default function CoffeeDetailPage() {
       </div>
 
       {/* Coffee scan details */}
-      {(roastDate || variety || roastLevel || region || tastingNotes.length > 0) && (
+      {(roastDate || variety || roastLevel || region || tastingNotes.length > 0 || commonNotes.length > 0) && (
         <div className="px-5 py-4 border-b border-brew-border space-y-2">
           <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">Coffee Details</p>
           {variety && <DetailRow label="Variety" value={variety} />}
@@ -213,6 +214,18 @@ export default function CoffeeDetailPage() {
               <div className="flex flex-wrap gap-1.5">
                 {tastingNotes.map(note => (
                   <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full border border-brew-border text-white/60">
+                    {note}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {commonNotes.length > 0 && (
+            <div className="flex items-baseline gap-3 pt-0.5">
+              <span className="text-brew-muted text-sm shrink-0 w-24">You taste</span>
+              <div className="flex flex-wrap gap-1.5">
+                {commonNotes.map(note => (
+                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full bg-white/10 text-white/80">
                     {note}
                   </span>
                 ))}
