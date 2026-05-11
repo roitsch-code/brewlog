@@ -61,6 +61,7 @@ export const coffees = pgTable("coffees", {
   writtenSummary: text("written_summary"),
   lastSummarizedAt: text("last_summarized_at"),
   commonNotes: jsonb("common_notes").$type<string[]>(),
+  whatToExplore: text("what_to_explore"),
   personalNotes: text("personal_notes"),
 });
 

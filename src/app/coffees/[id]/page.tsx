@@ -331,6 +331,14 @@ export default function CoffeeDetailPage() {
         </div>
       )}
 
+      {/* What to explore */}
+      {coffee.whatToExplore && (
+        <div className="px-5 py-4 border-b border-brew-border">
+          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">What to explore</p>
+          <p className="text-white/80 text-sm leading-relaxed">{coffee.whatToExplore}</p>
+        </div>
+      )}
+
       {/* Sessions */}
       <div className="px-5 py-5 flex flex-col gap-4 pb-safe pb-8">
         <p className="text-brew-muted text-xs uppercase tracking-widest">All Brews</p>

@@ -84,6 +84,11 @@ const DRIP_ASSIST_COMPATIBLE = new Set<string>([
   "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
 ]);
 
+interface CoffeeMemory {
+  writtenSummary?: string;
+  whatToExplore?: string;
+}
+
 export default function StepContext() {
   const { draft, setContext, setStep, setIsRecommending, setRecommendError } = useFlowStore();
   const ctx = draft.context || {} as Partial<SessionContext>;
@@ -91,6 +96,11 @@ export default function StepContext() {
   const [grinders, setGrinders] = useState<string[]>(DEFAULT_GRINDERS);
   // null = nothing selected yet (like all other sections); "ai" = Claude picks; "manual" = user picks
   const [brewMode, setBrewMode] = useState<"ai" | "manual" | null>(null);
+  // Aggregated brew memory + what-to-explore for this coffee. Populated
+  // weekly by /api/coffees/compact. Only shown when entering the flow
+  // for a previously brewed coffee (typically via "Brew Again" from
+  // home; not on a first-time bag scan).
+  const [coffeeMemory, setCoffeeMemory] = useState<CoffeeMemory | null>(null);
 
   useEffect(() => {
     fetch("/api/preferences", { cache: "no-store" })
@@ -103,6 +113,30 @@ export default function StepContext() {
       })
       .catch(() => {});
   }, []);
+
+  // Load this coffee's brew memory if it exists (i.e. the user has
+  // brewed it before and the weekly cron has summarised at least 2
+  // sessions). Silent failure — absence of memory is the common case.
+  useEffect(() => {
+    const coffeeId = draft.coffee?.coffeeId;
+    if (!coffeeId) return;
+    let cancelled = false;
+    fetch(`/api/coffees/${coffeeId}`, { cache: "no-store" })
+      .then(r => (r.ok ? r.json() : null))
+      .then((coffee: { writtenSummary?: string; whatToExplore?: string } | null) => {
+        if (cancelled || !coffee) return;
+        if (coffee.writtenSummary || coffee.whatToExplore) {
+          setCoffeeMemory({
+            writtenSummary: coffee.writtenSummary,
+            whatToExplore: coffee.whatToExplore,
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [draft.coffee?.coffeeId]);
 
   const update = (key: keyof SessionContext, value: string | number | boolean) => {
     setContext({ ...ctx, [key]: value } as SessionContext);
@@ -151,6 +185,27 @@ export default function StepContext() {
           <p className="text-brew-muted text-xs tracking-widest uppercase mb-2">Context</p>
           <h1 className="font-display text-2xl text-white">What&apos;s the vibe?</h1>
         </div>
+
+        {/* Brew memory — present only when this coffee has prior history. */}
+        {coffeeMemory && (coffeeMemory.writtenSummary || coffeeMemory.whatToExplore) && (
+          <div
+            className="rounded-2xl border p-4 flex flex-col gap-3"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          >
+            {coffeeMemory.writtenSummary && (
+              <div>
+                <p className="text-brew-muted text-xs uppercase tracking-widest mb-1.5">Brew memory</p>
+                <p className="text-white/80 text-sm leading-relaxed">{coffeeMemory.writtenSummary}</p>
+              </div>
+            )}
+            {coffeeMemory.whatToExplore && (
+              <div>
+                <p className="text-brew-muted text-xs uppercase tracking-widest mb-1.5">What to explore</p>
+                <p className="text-white/80 text-sm leading-relaxed">{coffeeMemory.whatToExplore}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <Section title="Occasion">
           <div className="grid grid-cols-2 gap-2">
