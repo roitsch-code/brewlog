@@ -12,16 +12,16 @@ export const maxDuration = 120;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are generating a personal brew memory for a specialty coffee enthusiast.
-Given all brew sessions for one coffee, write 2–4 sentences that capture:
-- overall quality impression and rating pattern
-- which method(s) worked best
-- recurring flavor notes or sensory highlights
-- any trend over time (improving, consistent, one-off)
+const SYSTEM_PROMPT = `You are generating two short paragraphs for a personal brew memory.
 
-Be direct, specific, and personal. No generic phrases. No emojis.
-Reference actual numbers (e.g. "4 of 6 brews rated 4★+").
-Metric units only.`;
+Given all brew sessions for one coffee, output exactly this JSON shape (no markdown, no commentary):
+
+{
+  "writtenSummary": "Exactly 2 sentences. Capture overall quality, which method worked best, recurring flavor notes, and trend if any. Reference actual numbers (e.g. \\"4 of 6 brews rated 4★+\\"). Direct, specific, personal. Metric units only. No emojis.",
+  "whatToExplore": "Exactly 2 sentences suggesting a specific unexplored angle for the next brew of this coffee. Could be: an untested method, a temperature shift, a different ratio, a championship recipe that fits the variety/process, or a technique to test (e.g. Hsu staged-temp, Rao spin, sieving fines). Be concrete. No emojis. No generic 'try different things'."
+}
+
+Both fields are required strings. Total response budget: ~120 words.`;
 
 function topNotes(sessionList: Session[], n = 5): string[] {
   const counts: Record<string, number> = {};
@@ -126,12 +126,37 @@ export async function POST(req: NextRequest) {
 
         const msg = await client.messages.create({
           model: "claude-haiku-4-5",
-          max_tokens: 200,
+          max_tokens: 350,
           system: SYSTEM_PROMPT,
           messages: [{ role: "user", content: userMessage }],
         });
 
-        const writtenSummary = (msg.content[0] as { type: string; text: string })?.text?.trim();
+        const rawText = (msg.content[0] as { type: string; text: string })?.text?.trim();
+        if (!rawText) {
+          errors++;
+          continue;
+        }
+
+        // Parse the structured JSON output. Be defensive — if the model
+        // emits anything that doesn't have both fields, fall back to
+        // treating the whole response as writtenSummary (preserves
+        // pre-PR behaviour for this coffee).
+        let writtenSummary: string;
+        let whatToExplore: string | null;
+        try {
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+          writtenSummary = typeof parsed.writtenSummary === "string"
+            ? parsed.writtenSummary.trim()
+            : rawText;
+          whatToExplore = typeof parsed.whatToExplore === "string"
+            ? parsed.whatToExplore.trim()
+            : null;
+        } catch {
+          writtenSummary = rawText;
+          whatToExplore = null;
+        }
+
         if (!writtenSummary) {
           errors++;
           continue;
@@ -141,7 +166,7 @@ export async function POST(req: NextRequest) {
         const lastSummarizedAt = new Date().toISOString();
 
         await db.update(coffees)
-          .set({ writtenSummary, lastSummarizedAt, commonNotes })
+          .set({ writtenSummary, whatToExplore, lastSummarizedAt, commonNotes })
           .where(eq(coffees.id, coffee.id));
 
         processed++;

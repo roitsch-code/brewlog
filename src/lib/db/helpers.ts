@@ -21,6 +21,7 @@ export function rowToCoffee(r: typeof coffees.$inferSelect): Coffee {
     writtenSummary: r.writtenSummary ?? undefined,
     lastSummarizedAt: r.lastSummarizedAt ?? undefined,
     commonNotes: r.commonNotes ?? undefined,
+    whatToExplore: r.whatToExplore ?? undefined,
     personalNotes: r.personalNotes ?? undefined,
   };
 }
