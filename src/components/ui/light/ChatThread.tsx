@@ -1,29 +1,34 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { Coffee as CoffeeIcon } from "lucide-react";
+import type { NavAction } from "@/app/api/explore-agent/route";
+import ActionPill from "@/components/ui/light/ActionPill";
 
 /**
- * BTTS Chat Thread — specs/home.md §4.
+ * BTTS Chat Thread — specs/home.md §4 + §6.
  *
- * User content as right-aligned Glass bubbles (§4.2); agent responses as
- * left-aligned prose, no bubble (§4.3). Stacked-bubble rule when the
- * user message includes an attachment (photo bubble above text bubble).
+ * Visual distinction (the spec's "user chats, BTTS writes" anchor):
+ *   - User content: right-aligned Glass bubble(s). When a message has
+ *     a photo or coffee reference, those render as their own bubble
+ *     above the text bubble (§4.2 stacked-bubble rule).
+ *   - Agent content: left-aligned prose, no bubble. Inline Markdown
+ *     bold + italic parsed so /api/explore-agent's `**Roaster — Name**`
+ *     renders as actual bold.
+ *
+ * Below an agent response, up to three Action Pills (§6) render in a
+ * horizontal flex row when the agent emitted suggest_navigation calls.
  *
  * §4.4 top-edge fade + §4.5 stick-to-bottom auto-scroll preserved from
  * PR2e.
- *
- * Inline Markdown: the agent prose is rendered through a tiny
- * Markdown-to-React parser so `**bold**` and `*italic*` from the
- * /api/explore-agent response don't leak through as literal asterisks.
- * Anything beyond inline bold/italic (lists, headers, code blocks)
- * stays as plain text for now — add cases here as they show up in
- * real responses.
  */
 
 export interface Message {
   role: "user" | "assistant";
   content: string;
   imageUrl?: string;
+  coffeeRef?: { id: string; roaster: string; name: string };
+  actions?: NavAction[];
 }
 
 interface ChatThreadProps {
@@ -31,28 +36,10 @@ interface ChatThreadProps {
   loading: boolean;
 }
 
-/**
- * Render a string with inline Markdown emphasis. Supports `**bold**`
- * and `*italic*` (and their underscore variants). Anything else flows
- * through as plain text — `whitespace-pre-wrap` on the `<p>` preserves
- * single newlines.
- *
- * Strategy: scan left-to-right; longer delimiters (`**` / `__`) before
- * shorter (`*` / `_`) so bold isn't misread as two adjacent italics.
- */
 function renderInlineMarkdown(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   let i = 0;
   let key = 0;
-
-  const matchDelim = (delim: string): number => {
-    if (text.startsWith(delim, i)) {
-      const end = text.indexOf(delim, i + delim.length);
-      if (end > i + delim.length) return end;
-    }
-    return -1;
-  };
-
   let buffer = "";
   const flush = () => {
     if (buffer) {
@@ -62,27 +49,21 @@ function renderInlineMarkdown(text: string): ReactNode[] {
   };
 
   while (i < text.length) {
-    const boldEnd =
-      matchDelim("**") !== -1
-        ? matchDelim("**")
-        : matchDelim("__") !== -1
-        ? matchDelim("__")
-        : -1;
     const boldDelim = text.startsWith("**", i) ? "**" : text.startsWith("__", i) ? "__" : null;
-
-    if (boldDelim && boldEnd !== -1) {
-      flush();
-      nodes.push(
-        <strong key={key++} className="font-semibold text-light-foreground">
-          {text.slice(i + 2, boldEnd)}
-        </strong>
-      );
-      i = boldEnd + 2;
-      continue;
+    if (boldDelim) {
+      const end = text.indexOf(boldDelim, i + 2);
+      if (end > i + 2) {
+        flush();
+        nodes.push(
+          <strong key={key++} className="font-semibold text-light-foreground">
+            {text.slice(i + 2, end)}
+          </strong>
+        );
+        i = end + 2;
+        continue;
+      }
     }
 
-    // Italic — single * or _ . Require non-space on both sides so URLs
-    // and word_with_underscores don't trip it.
     if (text[i] === "*" || text[i] === "_") {
       const delim = text[i];
       const end = text.indexOf(delim, i + 1);
@@ -151,6 +132,19 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                     />
                   </div>
                 )}
+                {m.coffeeRef && (
+                  <div className="flex max-w-[80%] items-center gap-3 rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                    <CoffeeIcon className="h-5 w-5 shrink-0 text-light-foreground/80" strokeWidth={1.5} />
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-inter text-[13px] font-normal text-light-muted-foreground">
+                        {m.coffeeRef.roaster}
+                      </span>
+                      <span className="truncate font-inter text-[15px] font-medium text-light-foreground">
+                        {m.coffeeRef.name}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {m.content && (
                   <div className="max-w-[80%] rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
                     <p className="whitespace-pre-wrap font-inter text-[15px] font-normal text-light-foreground">
@@ -160,16 +154,24 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                 )}
               </div>
             ) : (
-              m.content && (
+              (m.content || (m.actions && m.actions.length > 0)) && (
                 <div key={i} className="space-y-3">
-                  {m.content.split(/\n\n+/).map((para, j) => (
-                    <p
-                      key={j}
-                      className="whitespace-pre-wrap font-inter text-[15px] font-normal leading-[1.5] text-light-foreground"
-                    >
-                      {renderInlineMarkdown(para)}
-                    </p>
-                  ))}
+                  {m.content &&
+                    m.content.split(/\n\n+/).map((para, j) => (
+                      <p
+                        key={j}
+                        className="whitespace-pre-wrap font-inter text-[15px] font-normal leading-[1.5] text-light-foreground"
+                      >
+                        {renderInlineMarkdown(para)}
+                      </p>
+                    ))}
+                  {m.actions && m.actions.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {m.actions.slice(0, 3).map((a, j) => (
+                        <ActionPill key={j} action={a} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             )
