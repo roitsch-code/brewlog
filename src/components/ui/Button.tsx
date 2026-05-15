@@ -24,11 +24,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        style={variant === "primary" ? { background: gradientButtonPrimary } : undefined}
         className={cn(
           "inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none select-none",
           {
-            // primary — gradient fill
-            [`${gradientButtonPrimary} text-dot-on-pill shadow-glow-subtle hover:brightness-[1.05]`]:
+            // primary — gradient fill (background applied via inline style above)
+            "text-dot-on-pill shadow-glow-subtle hover:brightness-[1.05]":
               variant === "primary",
             // secondary — glass pill
             "bg-dot-s2/60 backdrop-blur-xl border border-dot-edge text-dot-ink hover:bg-dot-s2/80":

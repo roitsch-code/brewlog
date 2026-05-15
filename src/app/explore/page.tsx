@@ -128,7 +128,10 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className={`min-h-full flex flex-col ${activeTab === "ask" ? gradientChatBg : "bg-brew-bg"}`}>
+    <div
+      className="min-h-full flex flex-col"
+      style={activeTab === "ask" ? { background: gradientChatBg } : { background: "var(--bg-base)" }}
+    >
       {/* Header — DOT-spec: tab switcher pills only, no app icon, no title */}
       <div className="px-5 pb-3" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
         <div
@@ -629,8 +632,9 @@ function AskTab() {
                   // Cream speech-bubble pill — asymmetric corner on the
                   // bottom-right reads as a tail pointing toward the user.
                   <div
-                    className={`max-w-[78%] flex flex-col gap-2 ${gradientPillUser}`}
+                    className="max-w-[78%] flex flex-col gap-2"
                     style={{
+                      background: gradientPillUser,
                       borderTopLeftRadius: 22,
                       borderTopRightRadius: 22,
                       borderBottomLeftRadius: 22,
