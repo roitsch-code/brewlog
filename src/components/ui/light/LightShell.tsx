@@ -16,7 +16,7 @@ import type { ReactNode } from "react";
  */
 export default function LightShell({ children }: { children: ReactNode }) {
   return (
-    <div className="font-inter text-light-foreground min-h-dvh">
+    <div data-light-scope="true" className="font-inter text-light-foreground min-h-dvh">
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
