@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Coffee } from "@/lib/types/coffee";
+import type { CoffeeIdentity } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
+import { useFlowStore } from "@/store/flowStore";
 
 type Filter = "recent" | "favorites" | "roaster";
 
@@ -16,6 +18,30 @@ export default function CoffeesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("recent");
   const router = useRouter();
+  const { reset, setCoffee, setStep, setMode, setSkipScan } = useFlowStore();
+
+  const brewThis = (coffee: Coffee) => {
+    // Synthesize a CoffeeIdentity from the aggregate. roastLevel isn't stored
+    // on the Coffee row — default to "Light" (matches the user's profile).
+    // Downstream /recommend gets the rest from preferences + history.
+    const identity: CoffeeIdentity = {
+      roaster: coffee.roaster,
+      name: coffee.name,
+      origin: coffee.origin,
+      process: coffee.process,
+      roastLevel: "Light",
+      roastDate: coffee.latestRoastDate,
+      bagPhotoUrl: coffee.bagPhotoUrl,
+      aiExtracted: false,
+      coffeeId: coffee.id,
+    };
+    reset();
+    setCoffee(identity);
+    setMode("home");
+    setSkipScan(true);
+    setStep("context");
+    router.push("/brew/new");
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -165,56 +191,66 @@ export default function CoffeesPage() {
             {filteredCoffees.map(coffee => {
               const sub = [coffee.origin, coffee.process].filter(Boolean).join(" · ");
               return (
-                <button
+                <div
                   key={coffee.id}
-                  type="button"
-                  onClick={() => router.push(`/coffees/${coffee.id}`)}
-                  className="flex items-center gap-3 bg-brew-surface border border-brew-border rounded-2xl p-3 text-left active:scale-[0.98] transition-transform w-full"
+                  className="flex items-center gap-3 bg-brew-surface border border-brew-border rounded-2xl p-3 w-full"
                 >
-                  {/* Thumbnail */}
-                  <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-brew-elevated shrink-0">
-                    {coffee.bagPhotoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
-                        </svg>
+                  {/* Tap target — opens detail page */}
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/coffees/${coffee.id}`)}
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-brew-elevated shrink-0">
+                      {coffee.bagPhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <svg className="w-6 h-6 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
+                          </svg>
+                        </div>
+                      )}
+                      {/* Session count badge */}
+                      <div className="absolute top-0.5 right-0.5 bg-black/70 rounded-full w-4 h-4 flex items-center justify-center">
+                        <span className="text-white font-mono-num" style={{ fontSize: "8px" }}>{coffee.sessionCount}</span>
                       </div>
-                    )}
-                    {/* Session count badge */}
-                    <div className="absolute top-0.5 right-0.5 bg-black/70 rounded-full w-4 h-4 flex items-center justify-center">
-                      <span className="text-white font-mono-num" style={{ fontSize: "8px" }}>{coffee.sessionCount}</span>
                     </div>
-                  </div>
 
-                  {/* Text */}
-                  <div className="flex-1 min-w-0">
-                    {coffee.roaster && (
-                      <p className="text-brew-muted text-xs truncate mb-0.5">{coffee.roaster}</p>
-                    )}
-                    <p className="text-white text-sm font-medium leading-snug truncate">{coffee.name}</p>
-                    {sub && (
-                      <p className="text-brew-muted text-xs truncate mt-0.5">{sub}</p>
-                    )}
-                    {coffee.latestRoastDate && (
-                      <p className="text-brew-muted text-xs truncate mt-0.5">
-                        Roasted {new Date(coffee.latestRoastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                      </p>
-                    )}
-                    {coffee.avgRating != null && coffee.avgRating > 0 && (
-                      <div className="mt-1.5">
-                        <StarRating value={coffee.avgRating} readonly size="sm" />
-                      </div>
-                    )}
-                  </div>
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      {coffee.roaster && (
+                        <p className="text-brew-muted text-xs truncate mb-0.5">{coffee.roaster}</p>
+                      )}
+                      <p className="text-white text-sm font-medium leading-snug truncate">{coffee.name}</p>
+                      {sub && (
+                        <p className="text-brew-muted text-xs truncate mt-0.5">{sub}</p>
+                      )}
+                      {coffee.latestRoastDate && (
+                        <p className="text-brew-muted text-xs truncate mt-0.5">
+                          Roasted {new Date(coffee.latestRoastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                      )}
+                      {coffee.avgRating != null && coffee.avgRating > 0 && (
+                        <div className="mt-1.5">
+                          <StarRating value={coffee.avgRating} readonly size="sm" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
 
-                  {/* Chevron */}
-                  <svg className="w-4 h-4 text-brew-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
+                  {/* Brew this — jumps to the brew context step with this coffee preloaded */}
+                  <button
+                    type="button"
+                    onClick={() => brewThis(coffee)}
+                    aria-label={`Brew ${coffee.name}`}
+                    className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-brew-accent text-brew-accent-fg active:scale-95 transition-transform"
+                  >
+                    Brew
+                  </button>
+                </div>
               );
             })}
           </div>
