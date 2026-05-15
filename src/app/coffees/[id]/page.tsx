@@ -2,11 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { Coffee } from "@/lib/types/coffee";
-import type { Session } from "@/lib/types/session";
+import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
 import StarRating from "@/components/ui/StarRating";
 import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
+import { useFlowStore } from "@/store/flowStore";
 
 interface RoasterInfo {
   region?: string;
@@ -23,6 +24,7 @@ export default function CoffeeDetailPage() {
   const [roasterGenerating, setRoasterGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { reset, setCoffee: setFlowCoffee, setStep, setMode, setSkipScan } = useFlowStore();
 
   // Personal notes state
   const [editingNotes, setEditingNotes] = useState(false);
@@ -128,6 +130,29 @@ export default function CoffeeDetailPage() {
   const commonNotes = coffee.commonNotes ?? [];
   const origin = latestCoffee?.origin || coffee.origin;
 
+  const brewThis = () => {
+    // Prefer the most-recent scanned CoffeeIdentity (has variety, tasting notes,
+    // roast level). Fall back to the aggregate if the coffee somehow has no
+    // sessions yet — defaults match the user's profile (light roast).
+    const identity: CoffeeIdentity = latestCoffee ?? {
+      roaster: coffee.roaster,
+      name: coffee.name,
+      origin: coffee.origin,
+      process: coffee.process,
+      roastLevel: "Light",
+      roastDate: coffee.latestRoastDate,
+      bagPhotoUrl: coffee.bagPhotoUrl,
+      aiExtracted: false,
+      coffeeId: coffee.id,
+    };
+    reset();
+    setFlowCoffee({ ...identity, coffeeId: coffee.id });
+    setMode("home");
+    setSkipScan(true);
+    setStep("context");
+    router.push("/brew/new");
+  };
+
   return (
     <div className="min-h-svh bg-brew-bg flex flex-col">
       {/* Hero */}
@@ -193,6 +218,17 @@ export default function CoffeeDetailPage() {
             <p className="text-brew-muted text-xs uppercase tracking-widest mt-0.5">Best Method</p>
           </div>
         )}
+      </div>
+
+      {/* Brew this — jumps straight to the brew context step with this coffee preloaded */}
+      <div className="px-5 pt-4">
+        <button
+          type="button"
+          onClick={brewThis}
+          className="w-full py-3.5 rounded-2xl text-sm font-medium bg-brew-accent text-brew-accent-fg active:scale-[0.98] transition-transform"
+        >
+          Brew this
+        </button>
       </div>
 
       {/* Coffee scan details */}
