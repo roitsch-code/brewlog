@@ -96,6 +96,24 @@
     font-family: var(--font-geist-sans), system-ui, sans-serif;
     overscroll-behavior: none;
   }
+
+  /* Light System v1.0 hybrid-repo override.
+   *
+   * The root layout sets body bg = #0E0B0A so every Dark route renders on
+   * the canonical dark canvas. v1.0 §2.1 puts the warm Field at z-index
+   * -10 — but in CSS painting order, body's bg paints in step 3 of the
+   * root stacking context, ON TOP of -z-10 children. The dark body
+   * therefore covers the Field on (light) routes.
+   *
+   * Fix: when a LightShell is mounted, drop body bg to transparent so
+   * the -z-10 Field is visible. Dark routes have no [data-light-scope]
+   * marker, so the rule does not match and their bg stays #0E0B0A.
+   *
+   * `:has()` is supported in Safari 15.4+ / iOS 15.4+ — the iPhone PWA
+   * target sits well above that. */
+  body:has([data-light-scope="true"]) {
+    background-color: transparent;
+  }
 }
 
 @layer utilities {
