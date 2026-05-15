@@ -133,13 +133,13 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                   </div>
                 )}
                 {m.coffeeRef && (
-                  <div className="flex max-w-[80%] items-center gap-3 rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
-                    <CoffeeIcon className="h-5 w-5 shrink-0 text-light-foreground/80" strokeWidth={1.5} />
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-inter text-[13px] font-normal text-light-muted-foreground">
+                  <div className="flex max-w-[80%] items-start gap-3 rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                    <CoffeeIcon className="mt-0.5 h-5 w-5 shrink-0 text-light-foreground/80" strokeWidth={1.5} />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="line-clamp-2 break-words font-inter text-[13px] font-normal text-light-muted-foreground">
                         {m.coffeeRef.roaster}
                       </span>
-                      <span className="truncate font-inter text-[15px] font-medium text-light-foreground">
+                      <span className="break-words font-inter text-[15px] font-medium text-light-foreground">
                         {m.coffeeRef.name}
                       </span>
                     </div>

@@ -2,9 +2,9 @@
 
 import { usePathname } from "next/navigation";
 
-// Mirrors the BottomNav show rule — except /explore, where the page
-// owns its own bottom padding (the chat input pill on Ask, an internal
-// scrollable list on Insights, full-screen map on Nearby).
+// Mirrors the BottomNav show rule. Light routes (/home,
+// /past-conversations) own their own bottom UI and never need the
+// reserved space, so they fall outside this allowlist by design.
 //
 // Critical: do NOT use useSearchParams() here. ScrollContainer wraps
 // children in app/layout.tsx without a Suspense boundary, so any
