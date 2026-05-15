@@ -9,7 +9,17 @@ import {
   serial,
   doublePrecision,
   index,
+  uuid,
 } from "drizzle-orm/pg-core";
+// NavAction shape is mirrored here as a structural type so this schema
+// module stays free of API-route imports. Keep in sync with
+// src/app/api/explore-agent/route.ts.
+interface NavAction {
+  destination: string;
+  label: string;
+  reason?: string;
+  id?: string;
+}
 import type {
   CoffeeIdentity,
   SessionContext,
@@ -121,6 +131,45 @@ export const places = pgTable("places", {
   lng:       doublePrecision("lng"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// BTTS Home conversation persistence — specs/home.md §10.
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    messageCount: integer("message_count").notNull().default(0),
+    firstUserMessage: text("first_user_message"),
+  },
+  (t) => ({
+    archivedAtIdx: index("conversations_archived_at_idx").on(t.archivedAt),
+    lastMessageAtIdx: index("conversations_last_message_at_idx").on(t.lastMessageAt.desc()),
+  })
+);
+
+export const conversationMessages = pgTable(
+  "conversation_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull().default(""),
+    imageUrl: text("image_url"),
+    coffeeRefId: text("coffee_ref_id"),
+    coffeeRefRoaster: text("coffee_ref_roaster"),
+    coffeeRefName: text("coffee_ref_name"),
+    actions: jsonb("actions").$type<NavAction[] | null>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    convIdIdx: index("conversation_messages_conversation_id_idx").on(t.conversationId),
+    createdAtIdx: index("conversation_messages_created_at_idx").on(t.createdAt),
+  })
+);
 
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;

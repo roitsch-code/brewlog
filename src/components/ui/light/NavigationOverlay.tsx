@@ -34,7 +34,7 @@ interface NavItem {
 
 const ITEMS: NavItem[] = [
   { label: "Home", href: "/home" },
-  { label: "Past Conversations" },
+  { label: "Past Conversations", href: "/past-conversations" },
   { label: "New Session", href: "/brew/new" },
   { label: "Coffee Library", href: "/coffees" },
   { label: "Nearby", href: "/cafes" },

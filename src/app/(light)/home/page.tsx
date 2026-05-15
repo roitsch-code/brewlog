@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu } from "lucide-react";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
@@ -9,32 +9,40 @@ import type { Session } from "@/lib/types/session";
 import type { NavAction } from "@/app/api/explore-agent/route";
 
 /**
- * BTTS Home (specs/home.md §0, §8, §11).
+ * BTTS Home (specs/home.md §0, §8, §10, §11).
  *
- * State derives the Hero-slot content:
- *   - showStarter — the daily editorial Haiku (§8) when no thread
- *     exists and the user hasn't started composing.
- *   - otherwise — the live conversation thread.
+ * Persistence (§10):
+ *   - On mount we ask /api/conversations/active for the latest non-
+ *     archived conversation. If `lastMessageAt` is older than the
+ *     30-min idle window we POST /api/conversations/archive and start
+ *     fresh with the daily Starter; otherwise we resume the thread.
+ *   - On every send (user message) and at the end of every assistant
+ *     response (with its final content + actions) we fire-and-forget
+ *     POST /api/conversations so the thread is durable even if the
+ *     tab is closed mid-stream.
+ *   - Empty conversations are auto-deleted by the archive endpoint
+ *     when no user message ever landed (§10 "Only threads with at
+ *     least one User-Message survive").
  *
- * Starter (§8.2):
+ * Starter (§8):
  *   - One Haiku call per calendar day, cached in localStorage under
  *     `brewlog.starter.<YYYY-MM-DD>`.
- *   - On mount we check today's cache; if missing, fetch from
- *     /api/greeting and store. Failures fall back to the hardcoded
- *     welcome line.
+ *   - Only rendered when there is no live thread and the user hasn't
+ *     started composing.
  *
- * Compose flow now passes a SendPayload (text + optional photo URL +
- * optional coffee reference). The coffee reference is folded into the
- * last user message as an inline `[Coffee: roaster · name]` tag (same
- * pattern /explore uses) so /api/explore-agent surfaces it without
- * needing a new field.
+ * Inline tag (§3.3 + /explore parity):
+ *   - When a coffeeRef rides with a send, we prepend `[Coffee: roaster
+ *     name]` to the last user message we ship to /api/explore-agent.
+ *     The DB still stores the structured coffeeRef on the message row.
  *
- * Action Pills (§6): the SSE `done` event carries a `actions` array;
- * we attach it to the last assistant message so ChatThread can render
- * the pills under the response.
+ * Action Pills (§6):
+ *   - SSE `done` event carries `actions`; we attach them to the
+ *     in-memory assistant message AND persist them with the assistant
+ *     POST so they survive across sessions.
  */
 
 const FALLBACK_STARTER = "Welcome to Better Taste Than Sorry.";
+const IDLE_WINDOW_MS = 30 * 60 * 1000;
 
 function todayKey(): string {
   const now = new Date();
@@ -44,6 +52,26 @@ function todayKey(): string {
   return `${y}-${m}-${d}`;
 }
 
+interface ActiveConversationResponse {
+  conversation: {
+    id: string;
+    startedAt: string;
+    lastMessageAt: string;
+    archivedAt: string | null;
+    messageCount: number;
+    firstUserMessage: string | null;
+  };
+  messages: Array<{
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    imageUrl?: string;
+    coffeeRef?: { id: string; roaster: string; name: string };
+    actions?: NavAction[];
+    createdAt: string;
+  }>;
+}
+
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,6 +79,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [interacted, setInteracted] = useState(false);
   const [starter, setStarter] = useState<string>(FALLBACK_STARTER);
+  const conversationIdRef = useRef<string | null>(null);
 
   // Recent sessions for the agent's personal-context block.
   useEffect(() => {
@@ -62,7 +91,41 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Daily Starter — read cache, fetch if today's slot is empty.
+  // Idle-window check + resume or fresh start.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/conversations/active", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: ActiveConversationResponse | null) => {
+        if (cancelled || !data) return;
+        const ageMs = Date.now() - new Date(data.conversation.lastMessageAt).getTime();
+        if (ageMs > IDLE_WINDOW_MS) {
+          fetch("/api/conversations/archive", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversationId: data.conversation.id }),
+          }).catch(() => {});
+          return;
+        }
+        conversationIdRef.current = data.conversation.id;
+        setMessages(
+          data.messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+            ...(m.imageUrl ? { imageUrl: m.imageUrl } : {}),
+            ...(m.coffeeRef ? { coffeeRef: m.coffeeRef } : {}),
+            ...(m.actions ? { actions: m.actions } : {}),
+          }))
+        );
+        if (data.messages.length > 0) setInteracted(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Daily Starter — cached per calendar day in localStorage.
   useEffect(() => {
     const key = `brewlog.starter.${todayKey()}`;
     try {
@@ -72,9 +135,8 @@ export default function HomePage() {
         return;
       }
     } catch {
-      /* private mode etc. — fall through to fetch */
+      /* private mode etc. — fall through */
     }
-
     fetch("/api/greeting", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,15 +150,44 @@ export default function HomePage() {
         try {
           window.localStorage.setItem(key, text);
         } catch {
-          /* ignore quota / private-mode errors */
+          /* ignore */
         }
       })
-      .catch(() => {
-        /* keep fallback */
-      });
+      .catch(() => {});
   }, []);
 
   const showStarter = messages.length === 0 && !interacted;
+
+  const persistMessage = (
+    role: "user" | "assistant",
+    content: string,
+    extras: {
+      imageUrl?: string;
+      coffeeRef?: { id: string; roaster: string; name: string };
+      actions?: NavAction[];
+    } = {}
+  ): Promise<string | null> => {
+    return fetch("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        conversationId: conversationIdRef.current,
+        role,
+        content,
+        imageUrl: extras.imageUrl ?? null,
+        coffeeRef: extras.coffeeRef ?? null,
+        actions: extras.actions ?? null,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { conversationId?: string } | null) => {
+        if (data?.conversationId && !conversationIdRef.current) {
+          conversationIdRef.current = data.conversationId;
+        }
+        return data?.conversationId ?? conversationIdRef.current;
+      })
+      .catch(() => null);
+  };
 
   const handleSend = async ({ text, imageUrl, coffeeRef }: SendPayload) => {
     const userMsg: Message = {
@@ -110,10 +201,16 @@ export default function HomePage() {
     setLoading(true);
     setInteracted(true);
 
+    // Persist the user message in parallel with the agent request.
+    void persistMessage("user", text, {
+      ...(imageUrl ? { imageUrl } : {}),
+      ...(coffeeRef ? { coffeeRef } : {}),
+    });
+
+    let assistantContent = "";
+    let assistantActions: NavAction[] | undefined;
+
     try {
-      // Inline the coffee reference into the last user turn — same
-      // pattern /explore uses so /api/explore-agent picks it up
-      // without a new API field.
       const apiMessages = next.map((m, idx) => {
         if (idx === next.length - 1 && coffeeRef) {
           const tag = `[Coffee: ${coffeeRef.roaster} ${coffeeRef.name}]`;
@@ -170,6 +267,7 @@ export default function HomePage() {
             try {
               const payload = JSON.parse(data) as { text?: string };
               if (payload.text) {
+                assistantContent += payload.text;
                 setMessages((prev) => {
                   const copy = prev.slice();
                   const lastIdx = copy.length - 1;
@@ -181,9 +279,10 @@ export default function HomePage() {
                 });
               }
             } catch {
-              /* malformed — skip */
+              /* skip malformed */
             }
           } else if (event === "retract") {
+            assistantContent = "";
             setMessages((prev) => {
               const copy = prev.slice();
               const lastIdx = copy.length - 1;
@@ -197,6 +296,7 @@ export default function HomePage() {
             try {
               const payload = JSON.parse(data) as { actions?: NavAction[] };
               if (payload.actions && payload.actions.length > 0) {
+                assistantActions = payload.actions;
                 setMessages((prev) => {
                   const copy = prev.slice();
                   const lastIdx = copy.length - 1;
@@ -212,6 +312,12 @@ export default function HomePage() {
             }
           }
         }
+      }
+
+      if (assistantContent || assistantActions) {
+        void persistMessage("assistant", assistantContent, {
+          ...(assistantActions ? { actions: assistantActions } : {}),
+        });
       }
     } catch {
       setMessages((prev) => [

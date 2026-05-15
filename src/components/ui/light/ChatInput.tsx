@@ -365,19 +365,24 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                 </div>
               )}
               {attachedCoffee && (
-                <div className="flex h-7 w-fit max-w-full items-center gap-1.5 rounded-full border border-light-foreground/10 bg-light-card-default px-2 pr-1">
+                <div className="flex max-w-full items-start gap-2 rounded-xl border border-light-foreground/10 bg-light-card-default px-2.5 py-1.5">
                   <CoffeeIcon
-                    className="h-3.5 w-3.5 shrink-0 text-light-foreground/80"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-light-foreground/80"
                     strokeWidth={1.5}
                   />
-                  <span className="truncate font-inter text-[12px] font-medium text-light-foreground">
-                    {attachedCoffee.roaster} · {attachedCoffee.name}
-                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="line-clamp-1 break-words font-inter text-[11px] font-normal text-light-muted-foreground">
+                      {attachedCoffee.roaster}
+                    </span>
+                    <span className="line-clamp-2 break-words font-inter text-[13px] font-medium text-light-foreground">
+                      {attachedCoffee.name}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setAttachedCoffee(null)}
                     aria-label="Remove coffee reference"
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)]"
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)]"
                   >
                     <X className="h-3 w-3" strokeWidth={2.25} />
                   </button>
