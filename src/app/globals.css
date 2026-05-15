@@ -151,6 +151,49 @@
   .card-scrim {
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
   }
+
+  /* ───────────────────────────────────────────────────────────────────────
+   * Light System v1.0 — The Field (§2.1 of specs/design-system-v1.0.md).
+   *
+   * Six-layer gradient (linear base + five radial hotspots), blurred 60px
+   * and scaled past the viewport so the blur halo lands outside.
+   *
+   * Sandwich structure required by the spec — the inner element gets this
+   * utility, the wrapper handles position/overflow:
+   *
+   *   <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+   *     <div className="absolute inset-[-10%] bg-brew-field" />
+   *   </div>
+   *
+   * CSS gradient stacking paints later layers on top, so the linear base
+   * (Layer 1) is listed LAST and the top-right cream highlight (Layer 6)
+   * is listed FIRST. This matches §2.1's "rendered bottom-up" note.
+   *
+   * One Field, application-wide. Do not re-render per view (§2.1 anti-pattern).
+   * ─────────────────────────────────────────────────────────────────────── */
+  .bg-brew-field {
+    background:
+      radial-gradient(circle at 92% 8%, hsl(30 65% 91%) 0%, transparent 60%),
+      radial-gradient(circle at 55% 25%, hsl(348 75% 86% / 0.55) 0%, transparent 50%),
+      radial-gradient(circle at 18% 50%, hsl(330 50% 70% / 0.85) 0%, transparent 55%),
+      radial-gradient(circle at 95% 45%, hsl(25 60% 88% / 0.7) 0%, transparent 50%),
+      radial-gradient(circle at 12% 92%, hsl(14 88% 68% / 0.8) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(30 60% 92%) 0%, hsl(345 50% 82%) 50%, hsl(18 80% 72%) 100%);
+    filter: blur(60px);
+    transform: scale(1.18);
+    transform-origin: center;
+  }
+
+  /* Light System v1.0 §3.2 — eyebrow style.
+   * Reserved for the (light) route group; uses Inter via the font-inter family. */
+  .label-eyebrow {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: hsl(20 14% 12% / 0.7);
+  }
 }
 
 /*
