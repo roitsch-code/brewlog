@@ -1,8 +1,9 @@
 /**
- * Named gradient class strings for the BrewLog redesign (spec §2.4).
+ * Named gradient values for the BrewLog redesign (spec §2.4).
  *
- * One source of truth — components import these instead of scattering
- * `bg-[radial-gradient(...)]` literals.
+ * One source of truth — components import these and apply them via inline
+ * `style={{ background: ... }}` so they don't depend on Tailwind's JIT
+ * scanning `src/lib` (it doesn't — `content` only covers app/components/pages).
  *
  * Reference images: docs/redesign/dot-refs/Splashscreen2_*.png +
  * LoadingScreen_*.png (chat); GradientBackground_*.png (hero).
@@ -11,30 +12,26 @@
 /**
  * Full chat-surface gradient. Two warm radial stops on the dark base.
  * Use as the wrapper background behind the message scroll area.
- *
- * Stops:
- *  - top-left peak  (warm-peak → warm-mid → base) ~55% radius
- *  - bottom-right (warm-mid at low alpha) ~70% radius
  */
 export const gradientChatBg =
-  "bg-[radial-gradient(ellipse_55%_45%_at_15%_10%,var(--bg-gradient-glow)_0%,var(--bg-gradient-warm)_35%,var(--bg-base)_75%),radial-gradient(ellipse_60%_50%_at_85%_90%,rgba(107,72,56,0.35)_0%,transparent_60%)] bg-[color:var(--bg-base)]";
+  "radial-gradient(ellipse 55% 45% at 15% 10%, var(--bg-gradient-glow) 0%, var(--bg-gradient-warm) 35%, var(--bg-base) 75%), radial-gradient(ellipse 60% 50% at 85% 90%, rgba(107,72,56,0.35) 0%, transparent 60%), var(--bg-base)";
 
 /**
  * Tighter hero gradient for the home feed hero card and Phase 4 brew
  * recommend candidates. Single warm stop, less drama than the chat bg.
  */
 export const gradientHeroSurface =
-  "bg-[radial-gradient(ellipse_70%_60%_at_30%_20%,var(--bg-gradient-warm)_0%,var(--bg-base)_70%)] bg-[color:var(--bg-base)]";
+  "radial-gradient(ellipse 70% 60% at 30% 20%, var(--bg-gradient-warm) 0%, var(--bg-base) 70%), var(--bg-base)";
 
 /**
  * Subtle warm-on-warm fill for the cream user message bubble — adds
  * dimensionality without breaking the flat-pill read.
  */
 export const gradientPillUser =
-  "bg-[linear-gradient(135deg,#F5ECE5_0%,#EBDFD2_100%)]";
+  "linear-gradient(135deg, #F5ECE5 0%, #EBDFD2 100%)";
 
 /**
  * Primary CTA fill (Phase 2/3 — Brew button, send arrow background).
  */
 export const gradientButtonPrimary =
-  "bg-[linear-gradient(135deg,#F1D2B6_0%,#E8C5A8_60%,#D4A98A_100%)]";
+  "linear-gradient(135deg, #F1D2B6 0%, #E8C5A8 60%, #D4A98A 100%)";
