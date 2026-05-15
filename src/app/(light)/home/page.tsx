@@ -1,33 +1,153 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, Plus, AudioLines } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+import ChatInput from "@/components/ui/light/ChatInput";
+import ChatThread from "@/components/ui/light/ChatThread";
+import type { Session } from "@/lib/types/session";
 
 /**
- * BTTS Home — Starter state (specs/home.md §11.1).
+ * BTTS Home (specs/home.md §0, §11).
  *
- * PR2b: static layout for the Starter view.
- * PR2c: Burger becomes interactive — tap opens the Navigation Overlay
- *       (§7). All other input-bar elements stay non-interactive until
- *       PR2d–f wire composition, attachments, and voice.
+ * PR2b: static Starter view.
+ * PR2c: Burger opens the Navigation Overlay.
+ * PR2d: chat input wired to /api/explore-agent. Send / receive / stream.
+ *       The Hero slot switches from Starter (§11.1) to Live-thread (§11.2)
+ *       once the user starts composing or has sent at least one message.
  *
- * Layout (specs/home.md §11.0 — Hero-slot geometry):
- *   - Header (sticky-top role): pt-12 + h-11 content + pb-3 breathing
- *   - Hero slot (flex-1, flex items-center): Starter vertically centred
- *   - Input bar (sticky-bottom role): pt-3 + h-11 content + safe-area pb
+ * Out of PR2d scope (deferred):
+ *   - Voice / transcript review (PR2f)
+ *   - Attachment + Reference Coffee (PR2g, PR2h)
+ *   - Action Pills (PR2i)
+ *   - Real Haiku Starter (PR2j)
+ *   - Persistence / 30-min idle reset (PR2k)
+ *   - Past Conversations view (PR2l)
  */
+
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const STARTER_TEXT =
+  "Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?";
+
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [recentSessions, setRecentSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [interacted, setInteracted] = useState(false);
+
+  // Fetch recent sessions once so /api/explore-agent has the personal
+  // recipe context. Same shape as /explore consumes.
+  useEffect(() => {
+    fetch("/api/sessions?limit=5", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: Session[]) => {
+        if (Array.isArray(data)) setRecentSessions(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const showStarter = messages.length === 0 && !interacted;
+
+  const handleSend = async (text: string) => {
+    const userMsg: ChatMessage = { role: "user", content: text };
+    const next = [...messages, userMsg];
+    setMessages(next);
+    setLoading(true);
+    setInteracted(true);
+
+    try {
+      const res = await fetch("/api/explore-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: next, recentSessions }),
+      });
+
+      if (!res.ok || !res.body) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Sorry, I couldn't get a response. Try again." },
+        ]);
+        return;
+      }
+
+      // Seed an empty assistant entry that delta events progressively fill.
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let carry = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        carry += decoder.decode(value, { stream: true });
+
+        // SSE frames are "event: NAME\ndata: JSON\n\n".
+        let idx;
+        while ((idx = carry.indexOf("\n\n")) !== -1) {
+          const block = carry.slice(0, idx);
+          carry = carry.slice(idx + 2);
+
+          let event = "message";
+          let data = "";
+          for (const line of block.split("\n")) {
+            if (line.startsWith("event: ")) event = line.slice(7);
+            else if (line.startsWith("data: ")) data += line.slice(6);
+          }
+
+          if (event === "delta") {
+            try {
+              const payload = JSON.parse(data) as { text?: string };
+              if (payload.text) {
+                setMessages((prev) => {
+                  const copy = prev.slice();
+                  const lastIdx = copy.length - 1;
+                  const last = copy[lastIdx];
+                  if (last?.role === "assistant") {
+                    copy[lastIdx] = { ...last, content: last.content + payload.text };
+                  }
+                  return copy;
+                });
+              }
+            } catch {
+              /* malformed event — skip */
+            }
+          } else if (event === "retract") {
+            // Agent started speaking, then decided to call a tool — drop
+            // whatever it streamed before the tool call.
+            setMessages((prev) => {
+              const copy = prev.slice();
+              const lastIdx = copy.length - 1;
+              const last = copy[lastIdx];
+              if (last?.role === "assistant") {
+                copy[lastIdx] = { ...last, content: "" };
+              }
+              return copy;
+            });
+          }
+          // status / done events ignored in PR2d — status messages and
+          // navigation actions land in PR2i with the Action Pills work.
+        }
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Couldn't reach BTTS. Check your connection." },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
-      <main className="flex min-h-dvh flex-col">
-        {/* Header — specs/home.md §1.
-            Title is plain text (no Glass, no border, no pill). Burger
-            is a Glass pill with hairline border that opens the
-            Navigation Overlay when tapped. */}
-        <header className="flex items-center justify-between pl-5 pr-5 pt-12 pb-3">
+      <main className="flex h-dvh flex-col">
+        <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
           <h1 className="font-inter text-[14px] font-medium text-light-foreground/60">
             Better taste than sorry
           </h1>
@@ -41,37 +161,28 @@ export default function HomePage() {
           </button>
         </header>
 
-        {/* Hero slot — specs/home.md §11.0 + §8.1.
-            Vertically centred in the slot between Header and Input Bar.
-            Fraunces 40/600, left-aligned at pl-5, foreground at full
-            opacity. Hardcoded Starter from §8.1 until PR2j wires real
-            Haiku generation. */}
-        <section className="flex flex-1 items-center pl-5 pr-5">
-          <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
-            Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?
-          </p>
+        {/* Hero slot — §11.0. flex-1 + min-h-0 + overflow-y-auto so a long
+            thread scrolls inside the slot rather than pushing the input
+            bar off the viewport. PR2e refines with the top-edge fade. */}
+        <section className="flex-1 min-h-0 overflow-y-auto">
+          {showStarter ? (
+            <div className="flex h-full items-center px-5">
+              <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
+                {STARTER_TEXT}
+              </p>
+            </div>
+          ) : (
+            <div className="flex min-h-full flex-col justify-end">
+              <ChatThread messages={messages} loading={loading} />
+            </div>
+          )}
         </section>
 
-        {/* Input bar — specs/home.md §2.1 (idle state).
-            Static visual scaffolding. Plus, pill, and waveform are not
-            interactive until PR2d–f. */}
-        <footer className="flex items-center gap-3 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <div
-            aria-label="Attach"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
-          >
-            <Plus className="h-5 w-5" strokeWidth={1.5} />
-          </div>
-          <div className="flex h-11 flex-1 items-center justify-between rounded-full border border-light-foreground/10 bg-light-card-default pl-5 pr-3 backdrop-blur-[14px] backdrop-saturate-150">
-            <span className="font-inter text-[15px] font-normal text-light-muted-foreground">
-              Ask anything…
-            </span>
-            <AudioLines
-              className="mr-2 h-5 w-5 text-light-foreground/60"
-              strokeWidth={1.5}
-            />
-          </div>
-        </footer>
+        <ChatInput
+          loading={loading}
+          onSend={handleSend}
+          onComposeStart={() => setInteracted(true)}
+        />
       </main>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
