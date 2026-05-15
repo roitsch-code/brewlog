@@ -28,6 +28,7 @@ import type { Session } from "@/lib/types/session";
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string;
 }
 
 const STARTER_TEXT =
@@ -53,18 +54,30 @@ export default function HomePage() {
 
   const showStarter = messages.length === 0 && !interacted;
 
-  const handleSend = async (text: string) => {
-    const userMsg: ChatMessage = { role: "user", content: text };
+  const handleSend = async (text: string, imageUrl?: string) => {
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: text,
+      ...(imageUrl ? { imageUrl } : {}),
+    };
     const next = [...messages, userMsg];
     setMessages(next);
     setLoading(true);
     setInteracted(true);
 
     try {
+      // Strip imageUrl from the messages we ship — the agent receives
+      // the latest image via the top-level attachedImageUrl field, which
+      // it fetches+base64s once on the server side.
+      const apiMessages = next.map(({ role, content }) => ({ role, content }));
       const res = await fetch("/api/explore-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, recentSessions }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          recentSessions,
+          ...(imageUrl ? { attachedImageUrl: imageUrl } : {}),
+        }),
       });
 
       if (!res.ok || !res.body) {
