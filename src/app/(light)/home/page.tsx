@@ -3,46 +3,56 @@
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
-import ChatInput from "@/components/ui/light/ChatInput";
-import ChatThread from "@/components/ui/light/ChatThread";
+import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
+import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
 import type { Session } from "@/lib/types/session";
+import type { NavAction } from "@/app/api/explore-agent/route";
 
 /**
- * BTTS Home (specs/home.md §0, §11).
+ * BTTS Home (specs/home.md §0, §8, §11).
  *
- * PR2b: static Starter view.
- * PR2c: Burger opens the Navigation Overlay.
- * PR2d: chat input wired to /api/explore-agent. Send / receive / stream.
- *       The Hero slot switches from Starter (§11.1) to Live-thread (§11.2)
- *       once the user starts composing or has sent at least one message.
+ * State derives the Hero-slot content:
+ *   - showStarter — the daily editorial Haiku (§8) when no thread
+ *     exists and the user hasn't started composing.
+ *   - otherwise — the live conversation thread.
  *
- * Out of PR2d scope (deferred):
- *   - Voice / transcript review (PR2f)
- *   - Attachment + Reference Coffee (PR2g, PR2h)
- *   - Action Pills (PR2i)
- *   - Real Haiku Starter (PR2j)
- *   - Persistence / 30-min idle reset (PR2k)
- *   - Past Conversations view (PR2l)
+ * Starter (§8.2):
+ *   - One Haiku call per calendar day, cached in localStorage under
+ *     `brewlog.starter.<YYYY-MM-DD>`.
+ *   - On mount we check today's cache; if missing, fetch from
+ *     /api/greeting and store. Failures fall back to the hardcoded
+ *     welcome line.
+ *
+ * Compose flow now passes a SendPayload (text + optional photo URL +
+ * optional coffee reference). The coffee reference is folded into the
+ * last user message as an inline `[Coffee: roaster · name]` tag (same
+ * pattern /explore uses) so /api/explore-agent surfaces it without
+ * needing a new field.
+ *
+ * Action Pills (§6): the SSE `done` event carries a `actions` array;
+ * we attach it to the last assistant message so ChatThread can render
+ * the pills under the response.
  */
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-  imageUrl?: string;
-}
+const FALLBACK_STARTER = "Welcome to Better Taste Than Sorry.";
 
-const STARTER_TEXT =
-  "Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?";
+function todayKey(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [interacted, setInteracted] = useState(false);
+  const [starter, setStarter] = useState<string>(FALLBACK_STARTER);
 
-  // Fetch recent sessions once so /api/explore-agent has the personal
-  // recipe context. Same shape as /explore consumes.
+  // Recent sessions for the agent's personal-context block.
   useEffect(() => {
     fetch("/api/sessions?limit=5", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : []))
@@ -52,13 +62,48 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
+  // Daily Starter — read cache, fetch if today's slot is empty.
+  useEffect(() => {
+    const key = `brewlog.starter.${todayKey()}`;
+    try {
+      const cached = window.localStorage.getItem(key);
+      if (cached) {
+        setStarter(cached);
+        return;
+      }
+    } catch {
+      /* private mode etc. — fall through to fetch */
+    }
+
+    fetch("/api/greeting", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { text?: string } | null) => {
+        const text = data?.text?.trim();
+        if (!text) return;
+        setStarter(text);
+        try {
+          window.localStorage.setItem(key, text);
+        } catch {
+          /* ignore quota / private-mode errors */
+        }
+      })
+      .catch(() => {
+        /* keep fallback */
+      });
+  }, []);
+
   const showStarter = messages.length === 0 && !interacted;
 
-  const handleSend = async (text: string, imageUrl?: string) => {
-    const userMsg: ChatMessage = {
+  const handleSend = async ({ text, imageUrl, coffeeRef }: SendPayload) => {
+    const userMsg: Message = {
       role: "user",
       content: text,
       ...(imageUrl ? { imageUrl } : {}),
+      ...(coffeeRef ? { coffeeRef } : {}),
     };
     const next = [...messages, userMsg];
     setMessages(next);
@@ -66,10 +111,20 @@ export default function HomePage() {
     setInteracted(true);
 
     try {
-      // Strip imageUrl from the messages we ship — the agent receives
-      // the latest image via the top-level attachedImageUrl field, which
-      // it fetches+base64s once on the server side.
-      const apiMessages = next.map(({ role, content }) => ({ role, content }));
+      // Inline the coffee reference into the last user turn — same
+      // pattern /explore uses so /api/explore-agent picks it up
+      // without a new API field.
+      const apiMessages = next.map((m, idx) => {
+        if (idx === next.length - 1 && coffeeRef) {
+          const tag = `[Coffee: ${coffeeRef.roaster} ${coffeeRef.name}]`;
+          return {
+            role: m.role,
+            content: m.content ? `${tag}\n${m.content}` : tag,
+          };
+        }
+        return { role: m.role, content: m.content };
+      });
+
       const res = await fetch("/api/explore-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,7 +143,6 @@ export default function HomePage() {
         return;
       }
 
-      // Seed an empty assistant entry that delta events progressively fill.
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       const reader = res.body.getReader();
@@ -100,7 +154,6 @@ export default function HomePage() {
         if (done) break;
         carry += decoder.decode(value, { stream: true });
 
-        // SSE frames are "event: NAME\ndata: JSON\n\n".
         let idx;
         while ((idx = carry.indexOf("\n\n")) !== -1) {
           const block = carry.slice(0, idx);
@@ -128,11 +181,9 @@ export default function HomePage() {
                 });
               }
             } catch {
-              /* malformed event — skip */
+              /* malformed — skip */
             }
           } else if (event === "retract") {
-            // Agent started speaking, then decided to call a tool — drop
-            // whatever it streamed before the tool call.
             setMessages((prev) => {
               const copy = prev.slice();
               const lastIdx = copy.length - 1;
@@ -142,9 +193,24 @@ export default function HomePage() {
               }
               return copy;
             });
+          } else if (event === "done") {
+            try {
+              const payload = JSON.parse(data) as { actions?: NavAction[] };
+              if (payload.actions && payload.actions.length > 0) {
+                setMessages((prev) => {
+                  const copy = prev.slice();
+                  const lastIdx = copy.length - 1;
+                  const last = copy[lastIdx];
+                  if (last?.role === "assistant") {
+                    copy[lastIdx] = { ...last, actions: payload.actions };
+                  }
+                  return copy;
+                });
+              }
+            } catch {
+              /* skip */
+            }
           }
-          // status / done events ignored in PR2d — status messages and
-          // navigation actions land in PR2i with the Action Pills work.
         }
       }
     } catch {
@@ -174,14 +240,11 @@ export default function HomePage() {
           </button>
         </header>
 
-        {/* Hero slot — §11.0. flex-1 + min-h-0 hold the height; ChatThread
-            owns its own scrollable container (§4.4 fade + §4.5 stick-
-            to-bottom auto-scroll). */}
         <section className="flex-1 min-h-0">
           {showStarter ? (
             <div className="flex h-full items-center px-5">
               <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
-                {STARTER_TEXT}
+                {starter}
               </p>
             </div>
           ) : (

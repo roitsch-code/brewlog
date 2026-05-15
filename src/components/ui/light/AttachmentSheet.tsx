@@ -1,34 +1,38 @@
 "use client";
 
-import { Camera as CameraIcon, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Coffee as CoffeeIcon } from "lucide-react";
 
 /**
- * BTTS `+`-Sheet — specs/home.md §5.1.
+ * BTTS `+`-Sheet — specs/home.md §5.1 (post-PR2g revision).
  *
- * Glass bottom-sheet that floats above the input bar, anchored to the
- * left so it visually drops out of the `+` button below. Tap-outside
- * dismisses without selection.
+ * Original spec had three options (Camera, Photo library, Reference
+ * coffee). On iOS WebKit `<input type="file" accept="image/*">` always
+ * shows the system action sheet when there's no `capture` attribute —
+ * so splitting Camera and Photo library at our level produced a double
+ * sheet (ours then iOS's). Collapsed to a single "Photo" entry that
+ * defers to the iOS picker for source choice (camera vs. library vs.
+ * files), and a "Reference coffee" entry that opens the BTTS picker
+ * (§5.5).
  *
- * Two options in PR2g — Camera and Photo library. The "Reference
- * coffee" row from §5.4 + the Reference Coffee Picker (§5.5) land in
- * PR2h, which extracts the picker UI from the existing /explore page.
+ * Reference coffee is disabled when the user's library is empty
+ * (§5.4).
  */
 
 interface AttachmentSheetProps {
   onClose: () => void;
-  onPickCamera: () => void;
-  onPickLibrary: () => void;
+  onPickPhoto: () => void;
+  onPickCoffee: () => void;
+  coffeeLibraryEmpty?: boolean;
 }
 
 export default function AttachmentSheet({
   onClose,
-  onPickCamera,
-  onPickLibrary,
+  onPickPhoto,
+  onPickCoffee,
+  coffeeLibraryEmpty = false,
 }: AttachmentSheetProps) {
   return (
     <>
-      {/* Tap-outside backdrop — invisible full-screen layer. Click closes
-          the sheet without selecting anything. */}
       <button
         type="button"
         aria-label="Close attachments"
@@ -39,22 +43,23 @@ export default function AttachmentSheet({
       <div className="relative z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/10 bg-light-card-default p-2 backdrop-blur-[14px] backdrop-saturate-150">
         <button
           type="button"
-          onClick={onPickCamera}
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left"
-        >
-          <CameraIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
-          <span className="font-inter text-[15px] font-medium text-light-foreground">
-            Camera
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={onPickLibrary}
+          onClick={onPickPhoto}
           className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left"
         >
           <ImageIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
           <span className="font-inter text-[15px] font-medium text-light-foreground">
-            Photo library
+            Photo
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={onPickCoffee}
+          disabled={coffeeLibraryEmpty}
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left disabled:opacity-40"
+        >
+          <CoffeeIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
+          <span className="font-inter text-[15px] font-medium text-light-foreground">
+            {coffeeLibraryEmpty ? "Reference coffee (library empty)" : "Reference coffee"}
           </span>
         </button>
       </div>
