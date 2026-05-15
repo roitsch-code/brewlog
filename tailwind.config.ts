@@ -39,12 +39,27 @@ const config: Config = {
           accent: "#E8C5A8",
           edge: "rgba(255,235,220,0.08)",
         },
+        // Light System v1.0 — specs/design-system-v1.0.md §2.3, §2.4.
+        // Prefixed `light-` so they don't collide with Dark tokens or Tailwind
+        // defaults. Foreground entries use `<alpha-value>` so opacity modifiers
+        // (`text-light-foreground/70`, etc.) compile per spec §3.2.
+        light: {
+          foreground: "hsl(20 14% 12% / <alpha-value>)",
+          "muted-foreground": "hsl(20 8% 45% / <alpha-value>)",
+          "card-default": "hsl(36 55% 96% / 0.55)",
+          "card-selected": "hsl(28 22% 84% / 0.7)",
+        },
       },
       fontFamily: {
         serif: ["var(--font-instrument-serif)", "Georgia", "serif"],
         display: ["var(--font-instrument-serif)", "Georgia", "serif"],
         sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "var(--font-jetbrains-mono)", "Fira Code", "monospace"],
+        // Light System v1.0 §3.1 — Fraunces (hero serif) + Inter (body sans).
+        // Scoped to (light) consumers via explicit `font-fraunces` / `font-inter`
+        // classes so Dark routes keep their existing typography unchanged.
+        fraunces: ["var(--font-fraunces)", "ui-serif", "Georgia", "serif"],
+        inter: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         sm: "8px",
@@ -57,6 +72,12 @@ const config: Config = {
       boxShadow: {
         "glow-subtle": "0 0 60px rgba(232,197,168,0.08)",
         "glow-strong": "0 0 90px rgba(232,197,168,0.18)",
+        // Light System v1.0 §2.3, §4.3 — pressed-card inset shadow.
+        "light-card-pressed": "inset 0 2px 4px rgba(60, 40, 30, 0.12)",
+      },
+      backdropBlur: {
+        // Light System v1.0 §2.3 — glass blur on cards/sheets/overlays.
+        "light-card": "14px",
       },
       transitionTimingFunction: {
         spring: "cubic-bezier(0.32, 0.72, 0, 1)",
