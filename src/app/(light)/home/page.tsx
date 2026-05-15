@@ -161,10 +161,10 @@ export default function HomePage() {
           </button>
         </header>
 
-        {/* Hero slot — §11.0. flex-1 + min-h-0 + overflow-y-auto so a long
-            thread scrolls inside the slot rather than pushing the input
-            bar off the viewport. PR2e refines with the top-edge fade. */}
-        <section className="flex-1 min-h-0 overflow-y-auto">
+        {/* Hero slot — §11.0. flex-1 + min-h-0 hold the height; ChatThread
+            owns its own scrollable container (§4.4 fade + §4.5 stick-
+            to-bottom auto-scroll). */}
+        <section className="flex-1 min-h-0">
           {showStarter ? (
             <div className="flex h-full items-center px-5">
               <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
@@ -172,9 +172,7 @@ export default function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="flex min-h-full flex-col justify-end">
-              <ChatThread messages={messages} loading={loading} />
-            </div>
+            <ChatThread messages={messages} loading={loading} />
           )}
         </section>
 
