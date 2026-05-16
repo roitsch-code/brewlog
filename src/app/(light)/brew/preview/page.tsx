@@ -5,7 +5,7 @@ import StepScan from "@/components/flow/StepScan";
 import LightStepMode from "@/components/flow/LightStepMode";
 import LightStepContext from "@/components/flow/LightStepContext";
 import LightStepRecommend from "@/components/flow/LightStepRecommend";
-import StepBrew from "@/components/flow/StepBrew";
+import LightStepBrew from "@/components/flow/LightStepBrew";
 import LightStepLog from "@/components/flow/LightStepLog";
 import LightStepSummary from "@/components/flow/LightStepSummary";
 
@@ -36,7 +36,7 @@ export default function BrewPreviewPage() {
       {step === "mode" && <LightStepMode />}
       {step === "context" && <LightStepContext />}
       {step === "recommend" && <LightStepRecommend />}
-      {step === "brew" && <StepBrew />}
+      {step === "brew" && <LightStepBrew />}
       {step === "log" && <LightStepLog />}
       {step === "summary" && <LightStepSummary />}
     </>
