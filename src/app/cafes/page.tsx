@@ -2,11 +2,16 @@
 import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import type { CafeSummary } from "@/lib/types/cafes";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import StarRating from "@/components/ui/StarRating";
 
-type Tab = "cafes" | "coffees";
+// CafeMap pulls in Leaflet which assumes a browser `window` — lazy-
+// load client-side only so the SSR render doesn't crash.
+const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
+
+type Tab = "map" | "cafes" | "coffees";
 
 function formatRelativeDate(ms: number): string {
   const diff = Date.now() - ms;
@@ -60,8 +65,11 @@ function deriveCafeCoffees(sessions: Session[]): CafeCoffee[] {
 
 export default function CafesPage() {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") === "coffees" ? "coffees" : "cafes";
+  const tabParam = searchParams.get("tab");
+  const initialTab: Tab =
+    tabParam === "map" ? "map" : tabParam === "coffees" ? "coffees" : "cafes";
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const router = useRouter();
 
   const [cafes, setCafes] = useState<CafeSummary[]>([]);
   const [cafesLoading, setCafesLoading] = useState(true);
@@ -69,8 +77,6 @@ export default function CafesPage() {
   const [externalSessions, setExternalSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionsFetched, setSessionsFetched] = useState(false);
-
-  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/cafes", { cache: "no-store" })
@@ -95,6 +101,7 @@ export default function CafesPage() {
   const totalVisits = cafes.reduce((sum: number, cafe: CafeSummary) => sum + cafe.visits, 0);
 
   const tabs: { id: Tab; label: string }[] = [
+    { id: "map", label: "Map" },
     { id: "cafes", label: "Cafés" },
     { id: "coffees", label: "Coffees" },
   ];
@@ -139,6 +146,12 @@ export default function CafesPage() {
       </div>
 
       <div className="flex-1 px-5">
+        {activeTab === "map" && (
+          <CafeMap
+            cafes={cafes}
+            onSelect={(cafe) => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)}
+          />
+        )}
         {activeTab === "cafes" && (
           <CafesTab cafes={cafes} loading={cafesLoading} onSelect={cafe => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)} />
         )}
