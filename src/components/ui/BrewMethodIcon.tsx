@@ -17,9 +17,14 @@ export function brewIconSrc(method?: string): string {
 
 export default function BrewMethodIcon({ method, className = "w-6 h-6" }: BrewMethodIconProps) {
   return (
+    // data-brew-method-icon is the hook globals.css uses under
+    // [data-light-scope] to invert the white-stroke icon assets to
+    // anthracite for the (light) route group. Dark routes get the
+    // original white art unchanged.
     <img
       src={brewIconSrc(method)}
       alt={method ?? "Brew device"}
+      data-brew-method-icon=""
       className={`object-contain opacity-80 ${className}`}
     />
   );
