@@ -7,6 +7,13 @@
 // notes in any session are skipped — Phase 4 variety fallback will
 // pick them up later.
 //
+// IMPORTANT: the production Docker image is a Next.js standalone build
+// — @anthropic-ai/sdk is bundled into the compiled API routes but is
+// NOT present as a top-level node_modules entry that an external
+// script can import. This file therefore calls the Anthropic Messages
+// API over plain fetch — no SDK dependency, only `pg` (which IS in
+// the standalone node_modules thanks to Drizzle's tracer).
+//
 // Run from the VPS (where DATABASE_URL + ANTHROPIC_API_KEY are set):
 //   docker cp scripts brewlog-app-1:/app/ \
 //     && docker compose exec app node scripts/backfill-field-zones.mjs
@@ -14,10 +21,13 @@
 // Cost: ~$0.0001 per coffee, one-shot. With ~21 rows, ~$0.002 total.
 
 import pg from "pg";
-import Anthropic from "@anthropic-ai/sdk";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+if (!ANTHROPIC_API_KEY) {
+  console.error("ANTHROPIC_API_KEY env var missing");
+  process.exit(1);
+}
 
 const VALID_ZONE_IDS = new Set([
   "fruity-bright",
@@ -87,17 +97,35 @@ function validateResponse(parsed) {
   return parsed;
 }
 
-async function mapNotes(notes) {
-  const response = await anthropic.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 256,
-    temperature: 0,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: `Notes: ${JSON.stringify(notes)}` }],
+async function callAnthropic(notes) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 256,
+      temperature: 0,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: `Notes: ${JSON.stringify(notes)}` }],
+    }),
   });
-  const block = response.content[0];
-  if (!block || block.type !== "text") return null;
-  const parsed = validateResponse(extractJson(block.text));
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}: ${errBody.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const block = Array.isArray(data?.content) ? data.content.find((b) => b.type === "text") : null;
+  return block?.text ?? null;
+}
+
+async function mapNotes(notes) {
+  const text = await callAnthropic(notes);
+  if (!text) return null;
+  const parsed = validateResponse(extractJson(text));
   if (!parsed || parsed.zones.length === 0) return null;
 
   // Normalise weights to sum 1.0 (mirrors mapNotesToZones.ts).
