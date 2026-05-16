@@ -26,7 +26,7 @@ const ROASTER_QA_LOCATION_CHIPS = ["Germany", "Netherlands", "UK", "USA", "Denma
 const ROASTER_QA_STYLE_CHIPS = ["Very light", "Light", "Light-medium", "Medium", "Varies"];
 
 export default function StepScan() {
-  const { draft, setCoffee, setMode, setStep, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications } = useFlowStore();
+  const { draft, setCoffee, setMode, setStep, setFieldZones, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications } = useFlowStore();
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModeChoice>("home");
@@ -133,6 +133,10 @@ export default function StepScan() {
         aiExtracted: true,
         tastingNotesFromBag: result.extracted.tastingNotesFromBag ?? [],
       });
+      // Generative Field v1.1 — capture the server-mapped composition
+      // so LightFlowShell can paint the brew flow in this coffee's
+      // colours. null is valid (= use Default).
+      setFieldZones(result.fieldZones ?? null);
       checkLibraryMatch(result.extracted.name, result.extracted.roaster);
 
       // If roaster is unknown, auto-generate its profile immediately — no Q&A interruption

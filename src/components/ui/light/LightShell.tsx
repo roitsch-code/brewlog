@@ -1,29 +1,38 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { FieldProvider } from "@/lib/field/FieldContext";
+import Field from "./Field";
 
 /**
- * Light System v1.0 — route-scoped shell.
+ * Light System v1.0 + v1.1 — route-scoped shell.
  *
  * Applies the three anchors from specs/design-system-v1.0.md §1:
- *   - The Field (§2.1) — fixed atmospheric background, sandwich structure
- *   - The Voice (§3) — Inter as body default, Fraunces opt-in via `font-fraunces`
- *   - Foreground (§2.4) — warm near-black at full opacity, inherited by children
+ *   - The Field (§2.1 / v1.1 §7) — fixed atmospheric background,
+ *     now coffee-driven via FieldContext. Default composition
+ *     renders identical to the v1.0 static gradient when no page
+ *     overrides via useFieldConfig.
+ *   - The Voice (§3) — Inter as body default, Fraunces opt-in via
+ *     `font-fraunces`.
+ *   - Foreground (§2.4) — warm near-black at full opacity, inherited.
  *
- * Lives at the (light) route group root. Dark routes are unaffected — they
- * continue to render under the legacy root layout's body bg / Geist stack.
+ * Why a client component: FieldProvider owns useState for the
+ * current FieldConfig (pages set it via useFieldConfig). Marking
+ * "use client" here scopes that React state to the (light) tree;
+ * Dark routes outside this group keep their server-render path.
  *
- * The Field's <div absolute inset-[-10%] /> bleeds 10% past the viewport so
- * the 60px blur halo has room to land outside the visible area (§2.1).
+ * Field placement: rendered inside the FieldProvider but at the
+ * same DOM level as children, so the fixed -z-10 sandwich paints
+ * behind every (light) view. Pages don't render their own Field —
+ * they update the context.
  */
 export default function LightShell({ children }: { children: ReactNode }) {
   return (
-    <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      >
-        <div className="absolute inset-[-10%] bg-brew-field" />
+    <FieldProvider>
+      <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">
+        <Field />
+        {children}
       </div>
-      {children}
-    </div>
+    </FieldProvider>
   );
 }

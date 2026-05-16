@@ -105,6 +105,7 @@ export interface BagAnalysisResult {
   clarifications: string[];
   isCoffeeBag: boolean;
   roasterPrior?: RoasterPriorSummary; // populated server-side after roaster lookup
+  fieldZones?: import("@/lib/field/types").FieldZones | null; // v1.1 Generative Field — server-computed from tastingNotesFromBag; null when notes are empty
 }
 
 export async function analyzeBagImage(imageBase64: string, mimeType: string): Promise<{ result: BagAnalysisResult; usage: { input_tokens: number; output_tokens: number } }> {

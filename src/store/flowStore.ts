@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { DraftSession, SessionMode, CoffeeIdentity, SessionContext, Recommendation, BrewLog, TasteResult, ExternalPlace } from "@/lib/types/session";
+import type { FieldZones } from "@/lib/field/types";
 
 export type FlowStep =
   | "scan"         // Photo + AI extraction + clarification (always first)
@@ -14,6 +15,12 @@ export type FlowStep =
 interface FlowState {
   step: FlowStep;
   draft: DraftSession;
+  /** Generative Field v1.1 — coffee's Zone composition for this in-flight brew.
+   * Populated from /api/analyze-bag's `fieldZones` field at scan-complete.
+   * Lives in-memory only (sessionStorage-persisted with the rest of the store
+   * but NOT written into sessions.coffee on session save — that's a coffees
+   * property per spec §10.4 anti-pattern). null = use Default Field. */
+  fieldZones: FieldZones | null;
   skipScan: boolean;         // true when entering via "brew again" (no scan step)
   isAnalyzing: boolean;
   isRecommending: boolean;
@@ -30,6 +37,7 @@ interface FlowState {
   setRecommendation: (rec: Recommendation) => void;
   setBrew: (brew: BrewLog) => void;
   setResult: (result: TasteResult) => void;
+  setFieldZones: (zones: FieldZones | null) => void;
   setIsAnalyzing: (v: boolean) => void;
   setIsRecommending: (v: boolean) => void;
   setRecommendError: (err: string | null) => void;
@@ -54,6 +62,7 @@ export const useFlowStore = create<FlowState>()(
     (set) => ({
       step: "scan",
       draft: initialDraft,
+      fieldZones: null,
       skipScan: false,
       isAnalyzing: false,
       isRecommending: false,
@@ -70,6 +79,7 @@ export const useFlowStore = create<FlowState>()(
       setRecommendation: (recommendation) => set((s) => ({ draft: { ...s.draft, recommendation } })),
       setBrew: (brew) => set((s) => ({ draft: { ...s.draft, brew } })),
       setResult: (result) => set((s) => ({ draft: { ...s.draft, result } })),
+      setFieldZones: (fieldZones) => set({ fieldZones }),
       setIsAnalyzing: (v) => set({ isAnalyzing: v }),
       setIsRecommending: (v) => set({ isRecommending: v }),
       setRecommendError: (err) => set({ recommendError: err }),
@@ -77,7 +87,7 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, skipScan: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
       name: "brew-flow",

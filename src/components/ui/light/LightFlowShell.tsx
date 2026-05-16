@@ -1,9 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useFlowStore, type FlowStep } from "@/store/flowStore";
+import { useFieldConfig } from "@/lib/field/FieldContext";
+import { DEFAULT_FIELD_ZONES } from "@/lib/field/defaultZones";
 import CTA from "./CTA";
 
 /**
@@ -30,6 +32,20 @@ const HOME_STEPS: FlowStep[] = ["scan", "context", "recommend", "brew", "log", "
 const BREW_AGAIN_STEPS: FlowStep[] = ["context", "recommend", "brew", "log", "summary"];
 const EXTERNAL_STEPS: FlowStep[] = ["scan", "log", "summary"];
 
+// Generative Field v1.1 §8.1 — per-step rotation across the flow. Scan
+// runs at 0° (coffee unknown until extraction completes); each
+// subsequent step adds 25° so the seven-step flow drifts 125° total —
+// "same room, different time of day", never "different room".
+const STEP_ROTATION: Record<FlowStep, number> = {
+  scan: 0,
+  mode: 0,
+  context: 25,
+  recommend: 50,
+  brew: 75,
+  log: 100,
+  summary: 125,
+};
+
 interface LightFlowShellProps {
   children: ReactNode;
   onBack?: () => void;
@@ -47,8 +63,20 @@ export default function LightFlowShell({
   nextDisabled,
   nextLoading,
 }: LightFlowShellProps) {
-  const { step, draft, skipScan } = useFlowStore();
+  const { step, draft, skipScan, fieldZones } = useFlowStore();
   const router = useRouter();
+
+  // Drive the application-wide Field renderer with this brew's coffee
+  // composition and the current step's rotation. fieldZones === null
+  // (no scan yet, or scan returned no notes) falls through to Default.
+  const fieldConfig = useMemo(
+    () => ({
+      fieldZones: fieldZones ?? DEFAULT_FIELD_ZONES,
+      rotation: STEP_ROTATION[step as FlowStep] ?? 0,
+    }),
+    [fieldZones, step],
+  );
+  useFieldConfig(fieldConfig);
 
   const steps =
     draft.mode === "external"
