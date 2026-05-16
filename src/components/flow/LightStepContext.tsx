@@ -7,36 +7,37 @@ import Hero from "@/components/ui/light/Hero";
 import Section from "@/components/ui/light/Section";
 import Footnote from "@/components/ui/light/Footnote";
 import Card, { CardTitle, CardSubText, CardIcon } from "@/components/ui/light/Card";
-import Chip from "@/components/ui/light/Chip";
-import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
-import { Brain, FlaskConical, Moon, Users, Snowflake } from "lucide-react";
+import { Brain, FlaskConical, Moon, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
 
 /**
- * Light System v1.0 fork of /components/flow/StepContext.tsx.
+ * Light System fork of /components/flow/StepContext.tsx.
  *
- * Same flow logic — reads/writes the same flowStore, calls the same
- * /api/recommend, hands off via the same `setStep("recommend")`. Only
- * the visual layer changes: Dark surfaces (`bg-brew-surface`,
- * `text-white`) become Light primitives (Card, Section, Footnote,
- * Hero, CTA).
+ * Composition follows lovable-v7/src/pages/Index.tsx verbatim for the
+ * non-data-model elements (icons, footnote copy, section order, card
+ * layout). Strict-Lovable deviations from the live Dark Brew Context:
+ *   - TIME: 2 cards (Quick, Normal) — Unhurried dropped from UI.
+ *     The /api/recommend prompt still supports "unhurried" if a
+ *     session ever ships it, but this UI no longer offers the choice.
+ *   - WATER: 2 cards (Tap only, Championship) — Diluted dropped.
+ *   - APPROACH: 2 cards only (Claude picks / I'll choose). The Dark
+ *     expanding method list and Drip Assist toggle are removed.
+ *     `preferredMethod` and `dripAssist` are never set from this UI;
+ *     /api/recommend handles undefined gracefully.
  *
- * Mounted ONLY by /app/(light)/brew/preview/page.tsx during migration.
- * The Dark StepContext at /components/flow/StepContext.tsx is the live
- * production component until the Light cut-over (Phase 5 of the plan).
+ * Kept beyond the Vorlage (functional augmentations):
+ *   - Brew memory block at the top — surfaces this coffee's prior
+ *     written summary + what-to-explore when /api/coffees/:id has
+ *     one. Lovable has no equivalent; the value is too high to drop.
+ *   - Hero eyebrow includes the coffee name ("CONTEXT · <name>")
+ *     per Markus-feedback (PR #65). Lovable's eyebrow is just
+ *     "Context".
  *
- * Spec deviations flagged for review:
- *   - Section 3 (Time, 3 options) and Section 7 (Water, 3 options)
- *     render as 3-column equal-width rows. Spec §5.2 mandates 2-col
- *     grids with even card counts; the cleaner fix would be either
- *     splitting or adding a wildcard, but both alter the data sent to
- *     /api/recommend. Deferred — flagged in PR description.
- *   - Section 4 (Goal, 5 options) renders 2-col with an orphan on
- *     row 3. Same constraint as above.
- *   - Section 6 (Brewing approach) keeps its expanding method list as
- *     a vertical list of full-width method rows, not card-grid. The
- *     section is fundamentally hierarchical (2-card mode toggle that
- *     reveals a 12-option list) and doesn't fit the §5 grid pattern.
+ * Deferred to a separate PR (touches /api/recommend prompt):
+ *   - GOAL: Lovable adds "Aromatic / Floral" and renames IDs to
+ *     bright/sweet/bold. Both require prompt updates + sample-
+ *     validation per CLAUDE.md hard rule. This file keeps the
+ *     current 5-ID set unchanged.
  */
 
 async function getRecentSessions(limit: number): Promise<Session[]> {
@@ -45,15 +46,16 @@ async function getRecentSessions(limit: number): Promise<Session[]> {
   return (await res.json()) as Session[];
 }
 
-// Sunrise icon without the upward arrow — matches the Dark version's
-// SunriseIcon byte-for-byte. The chevron read as a navigation cue at
-// card size, so the icon's arrow is stripped (Spec §9.2 custom-SVG
-// pattern, Lucide conventions).
-function SunriseIcon({ className }: { className?: string }) {
+/**
+ * Sunrise without the upward arrow — Lovable v7's geometric variant.
+ * Path data lifted verbatim from lovable-v7/src/pages/Index.tsx so the
+ * cards read identically. Replaces the earlier lucide-derived sunrise
+ * which had a thicker, busier silhouette.
+ */
+function SunriseNoArrow({ className }: { className?: string }) {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="2 6 20 20"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
@@ -62,37 +64,36 @@ function SunriseIcon({ className }: { className?: string }) {
       aria-hidden
       className={className}
     >
-      <path d="M12 8v2" />
-      <path d="m4.93 10.93 1.41 1.41" />
-      <path d="M2 18h2" />
-      <path d="M20 18h2" />
-      <path d="m19.07 10.93-1.41 1.41" />
-      <path d="M22 22H2" />
-      <path d="M16 18a4 4 0 0 0-8 0" />
+      <path d="M4 17 L20 17" />
+      <path d="M7 17 A5 5 0 0 1 17 17" />
+      <path d="M4 12 L6 14" />
+      <path d="M7 9 L8.5 10.5" />
+      <path d="M12 7 L12 9" />
+      <path d="M17 9 L15.5 10.5" />
+      <path d="M20 12 L18 14" />
     </svg>
   );
 }
 
 const OCCASIONS = [
-  { id: "morning-ritual", label: "Morning Ritual", Icon: SunriseIcon, footnote: "A slower, deliberate pour that anchors the start of a day." },
-  { id: "focus", label: "Deep Focus", Icon: Brain, footnote: "A clean, alert cup for sustained concentration." },
-  { id: "social", label: "Social", Icon: Users, footnote: "Brewing for a guest or two — bigger batch, conversational pace." },
-  { id: "after-dinner", label: "After Dinner", Icon: Moon, footnote: "A digestive cup — lower volume, gentle finish." },
-  { id: "experiment", label: "Experiment", Icon: FlaskConical, footnote: "Push parameters — championship recipes, single-variable changes." },
-  { id: "summer-time", label: "Summer Time", Icon: Snowflake, footnote: "Iced or flash-chilled — bright, aromatic, cold-friendly." },
+  { id: "morning-ritual", label: "Morning Ritual", Icon: SunriseNoArrow, footnote: "A slower, deliberate pour that anchors the start of a day." },
+  { id: "focus", label: "Deep Focus", Icon: Brain, footnote: "A clean, mid-strength cup engineered for sustained attention." },
+  { id: "social", label: "Social", Icon: Users, footnote: "A forgiving recipe that holds its character as it cools." },
+  { id: "after-dinner", label: "After Dinner", Icon: Moon, footnote: "A heavier, dessert-leaning brew that closes the day with body and sweetness." },
+  { id: "experiment", label: "Experiment", Icon: FlaskConical, footnote: "The recipe will push ratios, methods or sequences you haven’t tried on this coffee." },
+  { id: "summer-time", label: "Summer Time", Icon: CupSoda, footnote: "Bright and refreshing, leaning into clarity and travelling well over ice." },
 ];
 
 const AMOUNTS = [
   { id: "small", label: "Small", sub: "350 ml", footnote: "A single cup — focused tasting, faster brew." },
-  { id: "big", label: "Big", sub: "520 ml", footnote: "Bigger batch for the morning — long, attentive pour." },
-  { id: "custom", label: "Custom", sub: "enter ml", footnote: null },
-  { id: "surprise", label: "Surprise me", sub: "Claude picks", footnote: "Claude picks everything freely — a 120 ml AeroPress concentrate, a 4:6 experiment, or something untried." },
+  { id: "big", label: "Big", sub: "520 ml", footnote: "A mug or two to share." },
+  { id: "custom", label: "Custom", sub: "enter ml", footnote: "Set your own target in millilitres." },
+  { id: "surprise", label: "Surprise me", sub: "Claude picks", footnote: "Claude picks the volume to match this coffee." },
 ];
 
 const TIMES = [
   { id: "quick", label: "Quick", sub: "~2 min" },
   { id: "normal", label: "Normal", sub: "~5 min" },
-  { id: "unhurried", label: "Unhurried", sub: "7 min+" },
 ];
 
 const GOALS = [
@@ -100,29 +101,24 @@ const GOALS = [
   { id: "high-clarity", label: "Bright / Clarity", sub: "Zone-1 emphasis" },
   { id: "sweetness-forward", label: "Sweet", sub: "Zone-2 emphasis" },
   { id: "body-forward", label: "Bold / Body", sub: "mouthfeel emphasis" },
-  { id: "explore", label: "Explore", sub: "wildcard / championship" },
+  { id: "explore", label: "Explore", sub: "Wildcard" },
 ];
 
-const DEFAULT_GRINDERS = ["Niche Zero", "Comandante C40"];
-
-const METHODS = [
-  { id: "V60", label: "V60", sub: "Hario cone" },
-  { id: "Orea Fast", label: "Orea Fast", sub: "fast drip, max ~500 ml" },
-  { id: "Orea Apex", label: "Orea Apex", sub: "clarity & brightness" },
-  { id: "Orea Classic", label: "Orea Classic", sub: "sweetness focus" },
-  { id: "Orea Open", label: "Orea Open", sub: "open bed, max flow, max ~500 ml" },
-  { id: "Kalita Wave", label: "Kalita Wave", sub: "even bed, max ~500 ml" },
-  { id: "Origami (cone)", label: "Origami (cone)", sub: "ceramic, V60-like clarity, max ~500 ml" },
-  { id: "Origami (wave)", label: "Origami (wave)", sub: "ceramic, Kalita-like sweetness, max ~500 ml" },
-  { id: "Chemex", label: "Chemex", sub: "clean & bright, max ~600 ml" },
-  { id: "AeroPress", label: "AeroPress", sub: "max 230 ml · or concentrate" },
-  { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 400 ml" },
-  { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, ≥ 500 ml" },
+const GRINDERS = [
+  { id: "Niche Zero", label: "Niche Zero", sub: "° values" },
+  { id: "Comandante C40", label: "Comandante C40", sub: "click values" },
 ];
 
-const DRIP_ASSIST_COMPATIBLE = new Set<string>([
-  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
-]);
+type ApproachId = "claude-picks" | "ill-choose";
+const APPROACHES: ReadonlyArray<{ id: ApproachId; label: string; sub: string; footnote: string }> = [
+  { id: "claude-picks", label: "Claude picks", sub: "Best method for this coffee", footnote: "Claude picks the best method for this coffee & context." },
+  { id: "ill-choose", label: "I’ll choose", sub: "Claude dials in the recipe", footnote: "You set the method; Claude tunes everything else." },
+];
+
+const WATERS = [
+  { id: "tap", label: "Tap only", sub: "~300 ppm", footnote: "Above SCA ceiling. Recipe will adjust accordingly." },
+  { id: "championship", label: "Championship", sub: "~50 ppm", footnote: "Soft, mineral-light water — what most pros brew with." },
+];
 
 interface CoffeeMemory {
   writtenSummary?: string;
@@ -133,21 +129,18 @@ export default function LightStepContext() {
   const { draft, setContext, setStep, setIsRecommending, setRecommendError } = useFlowStore();
   const ctx = (draft.context || {}) as Partial<SessionContext>;
   const [customMl, setCustomMl] = useState<string>("");
-  const [grinders, setGrinders] = useState<string[]>(DEFAULT_GRINDERS);
-  const [brewMode, setBrewMode] = useState<"ai" | "manual" | null>(null);
+  // Tracks which approach card is selected. Drives the footnote only;
+  // /api/recommend never receives a manual preferredMethod from this
+  // UI (strict-Lovable: method list removed).
+  const [approach, setApproach] = useState<ApproachId | null>(null);
+  const [grinderId, setGrinderId] = useState<string | null>(ctx.grinder ?? null);
   const [coffeeMemory, setCoffeeMemory] = useState<CoffeeMemory | null>(null);
 
+  // Sync local grinder selection with whatever lands in ctx (rehydrate
+  // from store when the page is re-entered mid-session).
   useEffect(() => {
-    fetch("/api/preferences", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((prefs: { grinder?: string } | null) => {
-        if (prefs?.grinder) {
-          const known = new Set([prefs.grinder, ...DEFAULT_GRINDERS]);
-          setGrinders(Array.from(known));
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (ctx.grinder && ctx.grinder !== grinderId) setGrinderId(ctx.grinder);
+  }, [ctx.grinder, grinderId]);
 
   useEffect(() => {
     const coffeeId = draft.coffee?.coffeeId;
@@ -220,6 +213,8 @@ export default function LightStepContext() {
 
   const selectedOccasion = OCCASIONS.find((o) => o.id === ctx.occasion);
   const selectedAmount = AMOUNTS.find((a) => a.id === ctx.amount);
+  const selectedApproach = APPROACHES.find((a) => a.id === approach);
+  const selectedWater = WATERS.find((w) => w.id === ctx.waterSource);
 
   return (
     <LightFlowShell onNext={handleNext} nextDisabled={!isComplete} nextLabel="Get my recipe">
@@ -228,7 +223,6 @@ export default function LightStepContext() {
         question={<>What&rsquo;s the vibe?</>}
       />
 
-      {/* Brew memory — only when this coffee has prior history. */}
       {coffeeMemory && (coffeeMemory.writtenSummary || coffeeMemory.whatToExplore) && (
         <div className="mb-10 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4 space-y-3">
           {coffeeMemory.writtenSummary && (
@@ -251,7 +245,7 @@ export default function LightStepContext() {
       )}
 
       <div className="space-y-10">
-        {/* Occasion — Hybrid Footnote (default + per-card). */}
+        {/* OCCASION — Hybrid footnote (default text + per-card). */}
         <Section
           eyebrow="Occasion"
           footnote={
@@ -278,12 +272,11 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* Amount — Reactive Footnote + Form-C input when "custom" selected. */}
+        {/* AMOUNT — Reactive footnote (all 4 cards). Custom swaps the
+            Sub-Text slot for an inline number input when selected. */}
         <Section
-          eyebrow="How much?"
-          footnote={
-            selectedAmount?.footnote ? <Footnote>{selectedAmount.footnote}</Footnote> : null
-          }
+          eyebrow="Amount"
+          footnote={selectedAmount?.footnote ? <Footnote>{selectedAmount.footnote}</Footnote> : null}
         >
           <div className="grid grid-cols-2 gap-3">
             {AMOUNTS.map((a) => {
@@ -298,19 +291,19 @@ export default function LightStepContext() {
                     <CardTitle>{a.label}</CardTitle>
                     {a.id === "custom" && selected ? (
                       <div
-                        className="flex items-baseline gap-1"
+                        className="inline-flex items-baseline gap-1"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <input
                           type="number"
                           inputMode="numeric"
-                          min={50}
-                          max={900}
+                          min={100}
+                          max={1000}
                           value={customMl}
                           onChange={(e) => setCustomMl(e.target.value)}
-                          placeholder="220"
+                          placeholder="350"
                           autoFocus
-                          className="w-14 bg-transparent text-center text-[15px] font-medium text-light-foreground outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-14 bg-transparent text-center text-[15px] font-medium leading-tight text-light-foreground outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span className="text-[12px] text-light-muted-foreground">ml</span>
                       </div>
@@ -324,11 +317,11 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* Time — 3 options, equal-width row. */}
-        <Section eyebrow="Time available?">
-          <div className="grid grid-cols-3 gap-3">
+        {/* TIME — 2 cards only (Lovable strict). No footnote. */}
+        <Section eyebrow="Time">
+          <div className="grid grid-cols-2 gap-3">
             {TIMES.map((t) => (
-              <div key={t.id} className="h-[88px]">
+              <div key={t.id} className="h-[104px]">
                 <Card
                   selected={ctx.timeAvailable === t.id}
                   onClick={() => toggleField("timeAvailable", t.id)}
@@ -342,18 +335,18 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* Goal — 5 options in 2-col, orphan on row 3. Educational Footnote. */}
+        {/* GOAL — current 5-ID set preserved. Educational footnote.
+            Aromatic + ID rename moved to a follow-up PR (touches the
+            /api/recommend prompt — Hard Rule validation). */}
         <Section
           eyebrow="Goal"
           footnote={
-            <Footnote>
-              Your taste direction for this brew. Method selection is driven by science — every brewer in your equipment is eligible; the goal sharpens which is best for THIS coffee.
-            </Footnote>
+            <Footnote>The goal defines which method works best for THIS coffee.</Footnote>
           }
         >
           <div className="grid grid-cols-2 gap-3">
             {GOALS.map((g) => (
-              <div key={g.id} className="h-[88px]">
+              <div key={g.id} className="h-[104px]">
                 <Card
                   selected={ctx.intent === g.id}
                   onClick={() => toggleField("intent", g.id)}
@@ -367,183 +360,60 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* Grinder — Chips (compact, not card-grid). */}
-        <Section
-          eyebrow="Grinder"
-          footnote={
-            ctx.grinder ? (
-              <Footnote>
-                {ctx.grinder.toLowerCase().includes("niche")
-                  ? "Recipe will use Niche° values."
-                  : "Recipe will use click values."}
-              </Footnote>
-            ) : null
-          }
-        >
-          <div className="flex flex-wrap gap-2">
-            {grinders.map((g) => (
-              <Chip
-                key={g}
-                selected={ctx.grinder === g}
-                onClick={() => updateCtx({ grinder: ctx.grinder === g ? "" : g })}
-              >
-                {g}
-              </Chip>
+        {/* GRINDER — Cards (Lovable), not Chips. No footnote. */}
+        <Section eyebrow="Grinder">
+          <div className="grid grid-cols-2 gap-3">
+            {GRINDERS.map((g) => (
+              <div key={g.id} className="h-[104px]">
+                <Card
+                  selected={grinderId === g.id}
+                  onClick={() => {
+                    const next = grinderId === g.id ? null : g.id;
+                    setGrinderId(next);
+                    updateCtx({ grinder: next ?? "" });
+                  }}
+                  ariaLabel={g.label}
+                >
+                  <CardTitle>{g.label}</CardTitle>
+                  <CardSubText>{g.sub}</CardSubText>
+                </Card>
+              </div>
             ))}
           </div>
         </Section>
 
-        {/* Brewing approach — 2-card mode toggle + expanding method list. */}
+        {/* BREWING APPROACH — 2 cards only (Lovable strict). Method
+            list + Drip Assist toggle removed. preferredMethod and
+            dripAssist are never set by this UI; /api/recommend
+            handles undefined as "Claude picks freely". */}
         <Section
           eyebrow="Brewing approach"
-          footnote={
-            brewMode === "manual" && ctx.preferredMethod ? (
-              <Footnote>
-                {ctx.preferredMethod}
-                {ctx.dripAssist &&
-                ctx.preferredMethod !== "V60" &&
-                DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod)
-                  ? " + Drip Assist"
-                  : ""}{" "}
-                locked in — Claude will dial in the full recipe for it.
-              </Footnote>
-            ) : brewMode === "manual" ? (
-              <Footnote>Tap a method to lock it in.</Footnote>
-            ) : brewMode === "ai" ? (
-              <Footnote>Claude picks the best method for this coffee &amp; context — and explains why.</Footnote>
-            ) : (
-              <Footnote>Pick a method below, or let Claude decide.</Footnote>
-            )
-          }
+          footnote={selectedApproach ? <Footnote>{selectedApproach.footnote}</Footnote> : null}
         >
           <div className="grid grid-cols-2 gap-3">
-            <div className="h-[88px]">
-              <Card
-                selected={brewMode === "ai"}
-                onClick={() => {
-                  setBrewMode("ai");
-                  setContext({ ...ctx, preferredMethod: "", dripAssist: false } as SessionContext);
-                }}
-                ariaLabel="Claude picks"
-              >
-                <CardTitle>Claude picks</CardTitle>
-                <CardSubText>Best method for this coffee</CardSubText>
-              </Card>
-            </div>
-            <div className="h-[88px]">
-              <Card
-                selected={brewMode === "manual"}
-                onClick={() => setBrewMode("manual")}
-                ariaLabel="I'll choose"
-              >
-                <CardTitle>I&rsquo;ll choose</CardTitle>
-                <CardSubText>Claude dials in the recipe</CardSubText>
-              </Card>
-            </div>
-          </div>
-
-          {/* Method list — expands when manual mode is active. */}
-          <div
-            className={`overflow-hidden transition-all duration-300 ${
-              brewMode === "manual" ? "max-h-[1100px] opacity-100 mt-3" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="flex flex-col gap-2">
-              {METHODS.map((m) => {
-                const selected = ctx.preferredMethod === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      const newMethod = ctx.preferredMethod === m.id ? "" : m.id;
-                      setContext({
-                        ...ctx,
-                        preferredMethod: newMethod,
-                        dripAssist: DRIP_ASSIST_COMPATIBLE.has(newMethod) ? ctx.dripAssist : false,
-                      } as SessionContext);
-                    }}
-                    aria-pressed={selected}
-                    className={`flex items-center justify-between rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all ${
-                      selected
-                        ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
-                        : "bg-light-card-default"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <BrewMethodIcon method={m.id} className="w-8 h-8 shrink-0 text-light-foreground" />
-                      <span className="text-[15px] font-medium text-light-foreground">{m.label}</span>
-                    </div>
-                    <span className="text-[12px] text-light-muted-foreground">{m.sub}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {ctx.preferredMethod && DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) && (
-              <button
-                type="button"
-                onClick={() => updateCtx({ dripAssist: !ctx.dripAssist })}
-                aria-pressed={!!ctx.dripAssist}
-                className={`flex items-center justify-between w-full mt-2 rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all text-left ${
-                  ctx.dripAssist
-                    ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
-                    : "bg-light-card-default"
-                }`}
-              >
-                <div>
-                  <p className="text-[15px] font-medium text-light-foreground">With Drip Assist</p>
-                  <p className="text-[12px] text-light-muted-foreground mt-0.5">
-                    Hario disc — steadier pour for any pour-over
-                  </p>
-                </div>
-                <div
-                  className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                    ctx.dripAssist ? "bg-light-foreground" : "border border-light-foreground/30"
-                  }`}
+            {APPROACHES.map((a) => (
+              <div key={a.id} className="h-[104px]">
+                <Card
+                  selected={approach === a.id}
+                  onClick={() => setApproach((prev) => (prev === a.id ? null : a.id))}
+                  ariaLabel={a.label}
                 >
-                  {ctx.dripAssist && (
-                    <svg
-                      className="w-3.5 h-3.5 text-[hsl(36_55%_96%)]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={3}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
-            )}
+                  <CardTitle>{a.label}</CardTitle>
+                  <CardSubText>{a.sub}</CardSubText>
+                </Card>
+              </div>
+            ))}
           </div>
         </Section>
 
-        {/* Water — 3 options, equal-width row. Reactive Footnote. */}
+        {/* WATER — 2 cards only (Lovable strict). Diluted dropped. */}
         <Section
           eyebrow="Water"
-          footnote={
-            ctx.waterSource === "diluted" ? (
-              <Footnote>Equal parts tap and distilled water. SCA optimal range.</Footnote>
-            ) : ctx.waterSource === "tap" ? (
-              <Footnote>Above SCA ceiling. Recipe will adjust accordingly.</Footnote>
-            ) : ctx.waterSource === "championship" ? (
-              <Footnote>40–80 ppm TDS — championship water. Sharpest aromatic expression.</Footnote>
-            ) : null
-          }
+          footnote={selectedWater?.footnote ? <Footnote>{selectedWater.footnote}</Footnote> : null}
         >
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { id: "tap", label: "Tap only", sub: "~300 ppm" },
-              { id: "diluted", label: "Diluted", sub: "~150 ppm" },
-              { id: "championship", label: "Championship", sub: "50 ppm" },
-            ].map((w) => (
-              <div key={w.id} className="h-[88px]">
+          <div className="grid grid-cols-2 gap-3">
+            {WATERS.map((w) => (
+              <div key={w.id} className="h-[104px]">
                 <Card
                   selected={ctx.waterSource === w.id}
                   onClick={() => toggleField("waterSource", w.id)}
