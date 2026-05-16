@@ -47,10 +47,17 @@ async function getRecentSessions(limit: number): Promise<Session[]> {
 }
 
 /**
- * Sunrise without the upward arrow — Lovable v7's geometric variant.
- * Path data lifted verbatim from lovable-v7/src/pages/Index.tsx so the
- * cards read identically. Replaces the earlier lucide-derived sunrise
- * which had a thicker, busier silhouette.
+ * Sunrise without the upward arrow. Spec §9.2 wants the chevron
+ * removed because at card size it reads as a navigation cue.
+ *
+ * Lovable's source variant (lovable-v7/src/pages/Index.tsx) compresses
+ * the geometry to y=7..17 of the 24×24 viewBox — only 40% of the
+ * vertical space — which renders visibly smaller than the lucide
+ * icons next to it (Brain, Moon, Users, FlaskConical) that fill the
+ * full box. Fix: keep the same artistic intent (rays + horizon + sun
+ * arc, no arrow) but use the lucide Sunrise paths sans the arrow
+ * chevron, which span the full box and visually match the other
+ * occasion icons.
  */
 function SunriseNoArrow({ className }: { className?: string }) {
   return (
@@ -64,13 +71,13 @@ function SunriseNoArrow({ className }: { className?: string }) {
       aria-hidden
       className={className}
     >
-      <path d="M4 17 L20 17" />
-      <path d="M7 17 A5 5 0 0 1 17 17" />
-      <path d="M4 12 L6 14" />
-      <path d="M7 9 L8.5 10.5" />
-      <path d="M12 7 L12 9" />
-      <path d="M17 9 L15.5 10.5" />
-      <path d="M20 12 L18 14" />
+      <path d="M12 2v8" />
+      <path d="m4.93 10.93 1.41 1.41" />
+      <path d="M2 18h2" />
+      <path d="M20 18h2" />
+      <path d="m19.07 10.93-1.41 1.41" />
+      <path d="M22 22H2" />
+      <path d="M16 18a4 4 0 0 0-8 0" />
     </svg>
   );
 }
