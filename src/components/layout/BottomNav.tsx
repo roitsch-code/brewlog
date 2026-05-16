@@ -13,13 +13,13 @@ const tabs = [
 ];
 
 // Allowlist of Dark routes that still show the legacy BottomNav. The
-// new BTTS Light surfaces (/, /past-conversations) are intentionally
-// outside this list — they own their own bottom UI via the input bar
-// (Home) or no bottom UI (Past Conversations). "/" used to be the
-// Dark diary feed and was in this list; that page was retired when
-// Light Home moved to "/".
+// new BTTS Light surfaces (/, /past-conversations, /coffees,
+// /coffees/[id]) are intentionally outside this list — they own
+// their own NavigationOverlay burger and shouldn't carry the legacy
+// nav too. /cafes/* and /taste are still Dark and keep BottomNav
+// until their own Light migration round.
 const EXACT_SHOW = ["/taste"];
-const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
+const PREFIX_SHOW = ["/library", "/cafes"];
 
 /**
  * BrewLog bottom navigation — DOT-inspired 4+1 split.

@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Menu } from "lucide-react";
 import type { Coffee } from "@/lib/types/coffee";
 import type { CoffeeIdentity } from "@/lib/types/session";
 import StarRating from "@/components/ui/light/StarRating";
+import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { useFlowStore } from "@/store/flowStore";
 
 type Filter = "recent" | "favorites" | "roaster";
@@ -17,6 +18,7 @@ export default function CoffeesPage() {
   const [retryCount, setRetryCount] = useState(0);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("recent");
+  const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const { reset, setCoffee, setStep, setMode, setSkipScan, setFieldZones } = useFlowStore();
 
@@ -99,17 +101,21 @@ export default function CoffeesPage() {
 
       {/* Header */}
       <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
-        <Link href="/library" className="flex items-center gap-1 text-light-muted-foreground text-sm mb-3 w-fit">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          Library
-        </Link>
-        <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Coffee Library</h1>
+        <div className="flex items-start justify-between mb-2">
+          <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Coffee Library</h1>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="h-10 w-10 -mr-2 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
+          >
+            <Menu className="h-5 w-5" strokeWidth={1.5} />
+          </button>
+        </div>
         {loading ? (
           <div className="h-4 w-48 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 rounded-full animate-pulse mt-2" />
         ) : !error && coffees.length > 0 ? (
-          <p className="text-light-muted-foreground text-sm mt-1.5">
+          <p className="text-light-muted-foreground text-sm">
             <span className="text-light-foreground">{sessionTotal.toLocaleString()}</span> sessions ·{" "}
             <span className="text-light-foreground">{coffees.length.toLocaleString()}</span> coffees ·{" "}
             <span className="text-light-foreground">{roasterCount.toLocaleString()}</span> roasters
@@ -259,6 +265,8 @@ export default function CoffeesPage() {
           </div>
         )}
       </div>
+
+      <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }

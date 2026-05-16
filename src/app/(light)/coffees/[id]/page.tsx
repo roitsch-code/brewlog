@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Menu } from "lucide-react";
 import type { Coffee } from "@/lib/types/coffee";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
 import StarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
+import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { useFlowStore } from "@/store/flowStore";
 
 interface RoasterInfo {
@@ -30,6 +32,7 @@ export default function CoffeeDetailPage() {
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesDraft, setNotesDraft] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const notesRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -175,15 +178,28 @@ export default function CoffeeDetailPage() {
           </div>
         )}
 
-        {/* Back button */}
+        {/* Back button — return to /coffees list */}
         <button
           onClick={() => router.push("/coffees")}
+          aria-label="Back to library"
           className="absolute left-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
+        </button>
+
+        {/* Burger menu — opens NavigationOverlay (Markus: every Light
+            surface should have it, BottomNav is gone for /coffees). */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+          className="absolute right-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
+          style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
+        >
+          <Menu className="w-5 h-5" strokeWidth={1.5} />
         </button>
 
         {/* Title overlay */}
@@ -427,6 +443,8 @@ export default function CoffeeDetailPage() {
           ))
         )}
       </div>
+
+      <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }
