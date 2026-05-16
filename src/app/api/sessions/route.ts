@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
+import { FieldZonesSchema } from "@/lib/field/schema";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -61,6 +62,10 @@ const SessionPostSchema = z.object({
     craft: z.enum(["off", "solid", "exceptional"]).optional(),
     fit: z.enum(["not-my-style", "neutral", "my-kind"]).optional(),
   }).optional(),
+  // Generative Field v1.1 — top-level (NOT on coffee). Persisted to
+  // coffees.field_zones on first insert; ignored on subsequent saves
+  // so re-scans of the same bag don't drift the coffee's Field.
+  fieldZones: FieldZonesSchema.nullable().optional(),
 });
 
 export const dynamic = "force-dynamic";
@@ -106,7 +111,11 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid session data", details: parsed.error.flatten() }, { status: 400 });
     }
-    const data = parsed.data as Omit<Session, "id">;
+    // Extract the top-level fieldZones (v1.1 Generative Field) before
+    // narrowing the rest to Session-shape — fieldZones is routed to
+    // the coffees table separately, not into sessions.coffee JSONB.
+    const { fieldZones: incomingFieldZones, ...sessionData } = parsed.data;
+    const data = sessionData as Omit<Session, "id">;
     const sessionId = randomUUID();
     const createdAtMs = Date.now();
     const createdAt = new Date(data.createdAt);
@@ -157,6 +166,11 @@ export async function POST(req: NextRequest) {
           ratingSum: hasRating ? String(newRating) : "0",
           ratingCount: hasRating ? 1 : 0,
           avgRating: hasRating ? String(newRating) : undefined,
+          // Generative Field v1.1 — persist the in-flight composition
+          // computed by /api/analyze-bag for this coffee. Null is fine;
+          // render falls back to Default until a future re-scan with
+          // notes succeeds.
+          fieldZones: incomingFieldZones ?? undefined,
         });
       } else {
         const sessionIds = [...(existing.sessionIds ?? []), sessionId];
@@ -166,17 +180,27 @@ export async function POST(req: NextRequest) {
         const ratingCount = prevCount + (hasRating ? 1 : 0);
         const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null;
 
+        // Field zones policy: write only if the existing row has no
+        // composition yet (organic backfill — first time this coffee
+        // gets a non-null fieldZones from any session). Don't overwrite
+        // an already-computed Field; spec §10.4 says invalidation is a
+        // separate concern (re-scan path), not a save-time concern.
+        const updates: Record<string, unknown> = {
+          sessionCount: sessionIds.length,
+          sessionIds,
+          ratingSum: String(ratingSum),
+          ratingCount,
+          avgRating: avgRating != null ? String(avgRating) : null,
+          bagPhotoUrl: existing.bagPhotoUrl ?? data.coffee.bagPhotoUrl ?? null,
+          latestRoastDate: data.coffee.roastDate ?? existing.latestRoastDate,
+        };
+        if (existing.fieldZones == null && incomingFieldZones != null) {
+          updates.fieldZones = incomingFieldZones;
+        }
+
         await db
           .update(coffees)
-          .set({
-            sessionCount: sessionIds.length,
-            sessionIds,
-            ratingSum: String(ratingSum),
-            ratingCount,
-            avgRating: avgRating != null ? String(avgRating) : null,
-            bagPhotoUrl: existing.bagPhotoUrl ?? data.coffee.bagPhotoUrl ?? null,
-            latestRoastDate: data.coffee.roastDate ?? existing.latestRoastDate,
-          })
+          .set(updates)
           .where(sql`${coffees.id} = ${coffeeKey}`);
       }
     }

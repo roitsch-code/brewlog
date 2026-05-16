@@ -42,6 +42,9 @@ export default function StepSummary() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...draft,
+          // Top-level (not on coffee, per spec §10.4 anti-pattern).
+          // Server writes to coffees.field_zones, NOT sessions.coffee.
+          fieldZones: useFlowStore.getState().fieldZones,
           type: "coffee",
           createdAt: new Date().toISOString(),
         }),

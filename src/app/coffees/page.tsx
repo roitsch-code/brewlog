@@ -18,7 +18,7 @@ export default function CoffeesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("recent");
   const router = useRouter();
-  const { reset, setCoffee, setStep, setMode, setSkipScan } = useFlowStore();
+  const { reset, setCoffee, setStep, setMode, setSkipScan, setFieldZones } = useFlowStore();
 
   const brewThis = (coffee: Coffee) => {
     // Synthesize a CoffeeIdentity from the aggregate. roastLevel isn't stored
@@ -37,6 +37,9 @@ export default function CoffeesPage() {
     };
     reset();
     setCoffee(identity);
+    // Generative Field v1.1 — lift this coffee's persisted Field
+    // composition for the Brew Again flow.
+    setFieldZones(coffee.fieldZones ?? null);
     setMode("home");
     setSkipScan(true);
     setStep("context");

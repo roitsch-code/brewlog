@@ -37,6 +37,9 @@ interface CoffeeRow {
   process: string;
   latestRoastDate?: string;
   bagPhotoUrl?: string;
+  // Generative Field v1.1 — present on the /api/coffees/[id] response
+  // via rowToCoffee, used for the Brew Again Field lift.
+  fieldZones?: import("@/lib/field/types").FieldZones | null;
 }
 
 function destinationToPath(action: NavAction): string {
@@ -88,7 +91,7 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
 
 export default function ActionPill({ action }: { action: NavAction }) {
   const router = useRouter();
-  const { reset, setCoffee, setMode, setSkipScan, setStep } = useFlowStore();
+  const { reset, setCoffee, setMode, setSkipScan, setStep, setFieldZones } = useFlowStore();
 
   const handleClick = async () => {
     if (action.destination === "brew_again" && action.id) {
@@ -112,6 +115,10 @@ export default function ActionPill({ action }: { action: NavAction }) {
             };
             reset();
             setCoffee(identity);
+            // Generative Field v1.1 — Brew Again from Home: lift the
+            // persisted Field composition. The /api/coffees/[id]
+            // response now carries fieldZones via rowToCoffee.
+            setFieldZones(row.fieldZones ?? null);
             setMode("home");
             setSkipScan(true);
             setStep("context");
