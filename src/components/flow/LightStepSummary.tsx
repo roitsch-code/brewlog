@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Chip from "@/components/ui/light/Chip";
 import LightStarRating from "@/components/ui/light/StarRating";
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 
 /**

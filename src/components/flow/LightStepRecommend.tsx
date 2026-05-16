@@ -7,7 +7,7 @@ import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
 import CTA from "@/components/ui/light/CTA";
 import { formatSeconds } from "@/lib/utils/formatTime";
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { getLoadingHints, COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
