@@ -18,7 +18,7 @@ const tabs = [
 // (Home) or no bottom UI (Past Conversations). "/" used to be the
 // Dark diary feed and was in this list; that page was retired when
 // Light Home moved to "/".
-const EXACT_SHOW = ["/taste", "/match"];
+const EXACT_SHOW = ["/taste"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 /**

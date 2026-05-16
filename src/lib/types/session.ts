@@ -1,4 +1,4 @@
-export type SessionMode = "home" | "external" | "match";
+export type SessionMode = "home" | "external";
 export type SessionType = "coffee" | "wine";
 
 export interface CoffeeIdentity {
