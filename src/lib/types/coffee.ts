@@ -24,4 +24,8 @@ export interface Coffee {
    * mapped from tasting notes; rendering falls back to Default in that
    * case. See specs/design-system-v1.1-generative-field.md §10. */
   fieldZones?: FieldZones | null;
+  /** User-marked "currently in rotation" flag. Surfaced in the
+   * /api/greeting library snapshot so the daily Haiku starter
+   * prioritises rotation bags. */
+  inRotation?: boolean;
 }

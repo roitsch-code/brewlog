@@ -225,13 +225,46 @@ export default function CoffeeDetailPage() {
       </div>
 
       {/* Brew this — jumps straight to the brew context step with this coffee preloaded */}
-      <div className="px-5 pt-4">
+      <div className="px-5 pt-4 space-y-2">
         <button
           type="button"
           onClick={brewThis}
           className="w-full py-3.5 rounded-2xl text-sm font-medium bg-brew-accent text-brew-accent-fg active:scale-[0.98] transition-transform"
         >
           Brew this
+        </button>
+        {/* Rotation toggle — marks this bag as "currently in rotation".
+            The /api/greeting library snapshot uses this signal so the
+            daily Haiku starter prioritises rotation bags over the rest
+            of the library. Optimistic update + best-effort PATCH. */}
+        <button
+          type="button"
+          onClick={async () => {
+            if (!coffee) return;
+            const next = !coffee.inRotation;
+            setCoffee((prev) => (prev ? { ...prev, inRotation: next } : prev));
+            try {
+              const res = await fetch(`/api/coffees/${coffee.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ inRotation: next }),
+              });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            } catch {
+              // Revert on failure
+              setCoffee((prev) => (prev ? { ...prev, inRotation: !next } : prev));
+            }
+          }}
+          className={`w-full py-3 rounded-2xl text-sm flex items-center justify-center gap-2 border transition-transform active:scale-[0.98] ${
+            coffee.inRotation
+              ? "bg-brew-accent/10 border-brew-accent/40 text-brew-accent"
+              : "bg-brew-surface border-brew-border text-brew-muted"
+          }`}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={coffee.inRotation ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+          {coffee.inRotation ? "In rotation" : "Add to rotation"}
         </button>
       </div>
 

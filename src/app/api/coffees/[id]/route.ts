@@ -18,9 +18,14 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
+// Either field is optional; PATCH must include at least one.
 const PatchSchema = z.object({
-  personalNotes: z.string().max(5000),
-});
+  personalNotes: z.string().max(5000).optional(),
+  inRotation: z.boolean().optional(),
+}).refine(
+  (v) => v.personalNotes !== undefined || v.inRotation !== undefined,
+  { message: "must provide personalNotes or inRotation" },
+);
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -31,7 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
     const rows = await db.select({ id: coffees.id }).from(coffees).where(eq(coffees.id, params.id)).limit(1);
     if (rows.length === 0) return NextResponse.json(null, { status: 404 });
-    await db.update(coffees).set({ personalNotes: parsed.data.personalNotes }).where(eq(coffees.id, params.id));
+    const updates: Record<string, unknown> = {};
+    if (parsed.data.personalNotes !== undefined) updates.personalNotes = parsed.data.personalNotes;
+    if (parsed.data.inRotation !== undefined) updates.inRotation = parsed.data.inRotation;
+    await db.update(coffees).set(updates).where(eq(coffees.id, params.id));
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("coffee PATCH error:", err);

@@ -7,6 +7,7 @@ import {
   jsonb,
   numeric,
   serial,
+  boolean,
   doublePrecision,
   index,
   uuid,
@@ -78,6 +79,10 @@ export const coffees = pgTable("coffees", {
   // per coffee from tasting notes by Haiku; null until first mapped.
   // Shape: src/lib/field/types.ts FieldZones.
   fieldZones: jsonb("field_zones"),
+  // User-marked "currently in rotation" flag. Surfaced in the
+  // /api/greeting library snapshot so the daily Haiku starter
+  // prioritises rotation bags. Toggled from /coffees/[id].
+  inRotation: boolean("in_rotation").notNull().default(false),
 });
 
 export const preferences = pgTable("preferences", {
