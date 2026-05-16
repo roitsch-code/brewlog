@@ -7,6 +7,7 @@ import Hero from "@/components/ui/light/Hero";
 import Section from "@/components/ui/light/Section";
 import Footnote from "@/components/ui/light/Footnote";
 import Card, { CardTitle, CardSubText, CardIcon } from "@/components/ui/light/Card";
+import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { Brain, FlaskConical, Moon, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
 
@@ -123,8 +124,33 @@ const GRINDERS = [
 type ApproachId = "claude-picks" | "ill-choose";
 const APPROACHES: ReadonlyArray<{ id: ApproachId; label: string; sub: string; footnote: string }> = [
   { id: "claude-picks", label: "Claude picks", sub: "Best method for this coffee", footnote: "Claude picks the best method for this coffee & context." },
-  { id: "ill-choose", label: "I’ll choose", sub: "Claude dials in the recipe", footnote: "You set the method; Claude tunes everything else." },
+  { id: "ill-choose", label: "I’ll choose", sub: "Claude dials in the recipe", footnote: "Pick a method below to lock it in." },
 ];
+
+// Restored from the Dark version after the strict-Lovable cut left
+// "I'll choose" with nothing to actually choose (Markus' /brew/preview
+// feedback). Same 12 brewers as Dark StepContext, same Drip-Assist
+// compatibility set (immersion / pressure / batch brewers are
+// excluded — the Hario disc only controls pour rate, no effect when
+// there's no pouring phase).
+const METHODS = [
+  { id: "V60", label: "V60", sub: "Hario cone" },
+  { id: "Orea Fast", label: "Orea Fast", sub: "fast drip, max ~500 ml" },
+  { id: "Orea Apex", label: "Orea Apex", sub: "clarity & brightness" },
+  { id: "Orea Classic", label: "Orea Classic", sub: "sweetness focus" },
+  { id: "Orea Open", label: "Orea Open", sub: "open bed, max flow, max ~500 ml" },
+  { id: "Kalita Wave", label: "Kalita Wave", sub: "even bed, max ~500 ml" },
+  { id: "Origami (cone)", label: "Origami (cone)", sub: "ceramic, V60-like clarity, max ~500 ml" },
+  { id: "Origami (wave)", label: "Origami (wave)", sub: "ceramic, Kalita-like sweetness, max ~500 ml" },
+  { id: "Chemex", label: "Chemex", sub: "clean & bright, max ~600 ml" },
+  { id: "AeroPress", label: "AeroPress", sub: "max 230 ml · or concentrate" },
+  { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 400 ml" },
+  { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, ≥ 500 ml" },
+];
+
+const DRIP_ASSIST_COMPATIBLE = new Set<string>([
+  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
+]);
 
 const WATERS = [
   { id: "tap", label: "Tap only", sub: "~300 ppm", footnote: "Above SCA ceiling. Recipe will adjust accordingly." },
@@ -224,7 +250,6 @@ export default function LightStepContext() {
 
   const selectedOccasion = OCCASIONS.find((o) => o.id === ctx.occasion);
   const selectedAmount = AMOUNTS.find((a) => a.id === ctx.amount);
-  const selectedApproach = APPROACHES.find((a) => a.id === approach);
   const selectedWater = WATERS.find((w) => w.id === ctx.waterSource);
 
   return (
@@ -395,20 +420,48 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* BREWING APPROACH — 2 cards only (Lovable strict). Method
-            list + Drip Assist toggle removed. preferredMethod and
-            dripAssist are never set by this UI; /api/recommend
-            handles undefined as "Claude picks freely". */}
+        {/* BREWING APPROACH — 2 cards + expanding method list (restored
+            after Markus' /brew/preview feedback: "I'll choose" had
+            nothing to actually choose). When "ill-choose" is active,
+            a vertical method list expands below; selecting a Drip-
+            Assist-compatible brewer reveals the toggle row. Selecting
+            "Claude picks" (or toggling "I'll choose" off) clears any
+            manual preferredMethod + dripAssist so the recipe prompt
+            doesn't carry stale state. */}
         <Section
           eyebrow="Brewing approach"
-          footnote={selectedApproach ? <Footnote>{selectedApproach.footnote}</Footnote> : null}
+          footnote={
+            approach === "ill-choose" ? (
+              ctx.preferredMethod ? (
+                <Footnote>
+                  {ctx.preferredMethod}
+                  {ctx.dripAssist &&
+                  DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) &&
+                  ctx.preferredMethod !== "V60"
+                    ? " + Drip Assist"
+                    : ""}{" "}
+                  locked in — Claude will dial in the full recipe for it.
+                </Footnote>
+              ) : (
+                <Footnote>Pick a method below to lock it in.</Footnote>
+              )
+            ) : approach === "claude-picks" ? (
+              <Footnote>{APPROACHES[0].footnote}</Footnote>
+            ) : null
+          }
         >
           <div className="grid grid-cols-2 gap-3">
             {APPROACHES.map((a) => (
               <div key={a.id} className="h-[104px]">
                 <Card
                   selected={approach === a.id}
-                  onClick={() => setApproach((prev) => (prev === a.id ? null : a.id))}
+                  onClick={() => {
+                    const next = approach === a.id ? null : a.id;
+                    setApproach(next);
+                    if (next !== "ill-choose") {
+                      updateCtx({ preferredMethod: "", dripAssist: false });
+                    }
+                  }}
                   ariaLabel={a.label}
                 >
                   <CardTitle>{a.label}</CardTitle>
@@ -416,6 +469,86 @@ export default function LightStepContext() {
                 </Card>
               </div>
             ))}
+          </div>
+
+          {/* Method list — expands when "I'll choose" is active */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              approach === "ill-choose" ? "max-h-[1100px] opacity-100 mt-3" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="flex flex-col gap-2">
+              {METHODS.map((m) => {
+                const selected = ctx.preferredMethod === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      const newMethod = ctx.preferredMethod === m.id ? "" : m.id;
+                      updateCtx({
+                        preferredMethod: newMethod,
+                        dripAssist: DRIP_ASSIST_COMPATIBLE.has(newMethod) ? ctx.dripAssist : false,
+                      });
+                    }}
+                    aria-pressed={selected}
+                    className={`flex items-center justify-between rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all ${
+                      selected
+                        ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
+                        : "bg-light-card-default"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BrewMethodIcon method={m.id} className="w-8 h-8 shrink-0 text-light-foreground" />
+                      <span className="text-[15px] font-medium text-light-foreground">{m.label}</span>
+                    </div>
+                    <span className="text-[12px] text-light-muted-foreground">{m.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {ctx.preferredMethod && DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) && (
+              <button
+                type="button"
+                onClick={() => updateCtx({ dripAssist: !ctx.dripAssist })}
+                aria-pressed={!!ctx.dripAssist}
+                className={`flex items-center justify-between w-full mt-2 rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all text-left ${
+                  ctx.dripAssist
+                    ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
+                    : "bg-light-card-default"
+                }`}
+              >
+                <div>
+                  <p className="text-[15px] font-medium text-light-foreground">With Drip Assist</p>
+                  <p className="text-[12px] text-light-muted-foreground mt-0.5">
+                    Hario disc — steadier pour for any pour-over
+                  </p>
+                </div>
+                <div
+                  className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                    ctx.dripAssist ? "bg-light-foreground" : "border border-light-foreground/30"
+                  }`}
+                >
+                  {ctx.dripAssist && (
+                    <svg
+                      className="w-3.5 h-3.5 text-[hsl(36_55%_96%)]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </button>
+            )}
           </div>
         </Section>
 
