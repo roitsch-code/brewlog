@@ -199,7 +199,7 @@ export default function LightStepLog() {
             <Section eyebrow="Flow">
               <div className="flex flex-wrap gap-2">
                 {FLOW_OPTIONS.map((o) => (
-                  <Chip key={o} size="sm" selected={flow === o} onClick={() => setFlow((prev) => (prev === o ? "" : o))}>
+                  <Chip key={o} selected={flow === o} onClick={() => setFlow((prev) => (prev === o ? "" : o))}>
                     {FLOW_LABELS[o]}
                   </Chip>
                 ))}
@@ -209,7 +209,7 @@ export default function LightStepLog() {
             <Section eyebrow="Timing">
               <div className="flex flex-wrap gap-2">
                 {TIMING_OPTIONS.map((o) => (
-                  <Chip key={o} size="sm" selected={timing === o} onClick={() => setTiming((prev) => (prev === o ? "" : o))}>
+                  <Chip key={o} selected={timing === o} onClick={() => setTiming((prev) => (prev === o ? "" : o))}>
                     {TIMING_LABELS[o]}
                   </Chip>
                 ))}
@@ -237,7 +237,7 @@ export default function LightStepLog() {
             <Section eyebrow="Agitation">
               <div className="flex flex-wrap gap-2">
                 {AGITATION_OPTIONS.map((o) => (
-                  <Chip key={o} size="sm" selected={followedAgitation === o} onClick={() => setFollowedAgitation((prev) => (prev === o ? "" : o))}>
+                  <Chip key={o} selected={followedAgitation === o} onClick={() => setFollowedAgitation((prev) => (prev === o ? "" : o))}>
                     {AGITATION_LABELS[o]}
                   </Chip>
                 ))}
