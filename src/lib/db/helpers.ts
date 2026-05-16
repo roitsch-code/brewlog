@@ -27,6 +27,7 @@ export function rowToCoffee(r: typeof coffees.$inferSelect): Coffee {
     // JSONB column is `unknown` at the Drizzle level; trust the write
     // path (validated by FieldZonesSchema before insert) and cast.
     fieldZones: (r.fieldZones as FieldZones | null) ?? null,
+    inRotation: r.inRotation ?? false,
   };
 }
 

@@ -16,6 +16,9 @@ export interface CompactCoffee {
   commonNotes?: string[];
   /** 2–4 sentence AI brew memory generated weekly by /api/coffees/compact. */
   writtenSummary?: string;
+  /** User-marked "currently in rotation". /api/greeting prioritises
+   * rotation bags in the library snapshot. */
+  inRotation?: boolean;
 }
 
 export async function loadCoffeeLibraryCompact(limit = 30): Promise<CompactCoffee[]> {
@@ -40,6 +43,7 @@ export async function loadCoffeeLibraryCompact(limit = 30): Promise<CompactCoffe
           ? r.commonNotes
           : undefined,
       writtenSummary: r.writtenSummary ?? undefined,
+      inRotation: r.inRotation ?? false,
     }));
   } catch (err) {
     console.error("loadCoffeeLibraryCompact error:", err);
@@ -69,7 +73,8 @@ export function formatLibraryForPrompt(library: CompactCoffee[]): string {
           : c.sessionCount > 0
             ? `${c.sessionCount} sessions`
             : "unbrewed";
-      const headline = `- ${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${relativeRoastDate(c.latestRoastDate)} | ${usage}`;
+      const rotationMark = c.inRotation ? "★ IN ROTATION | " : "";
+      const headline = `- ${rotationMark}${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${relativeRoastDate(c.latestRoastDate)} | ${usage}`;
       // Tasting history (only present after the weekly cron has summarised
       // at least 2 sessions of this coffee — see /api/coffees/compact).
       const tastingLine =

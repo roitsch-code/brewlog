@@ -47,6 +47,11 @@ COFFEE-HISTORY DISCIPLINE
 - "unbrewed" entries are the only ones you may describe as untouched.
 - For a brewed coffee you may invite a return ("worth revisiting", "ready for another round") — not a first try.
 
+ROTATION DISCIPLINE
+- Library lines prefixed with "★ IN ROTATION" are the user's active rotation — bags they consider current. Treat these as the primary candidates for the day's invitation.
+- If the library has ANY rotation entries, prefer one of them over a non-rotation entry, unless a recent brew makes a non-rotation reference more natural.
+- "★ IN ROTATION" is a prefix marker, not part of the coffee name — never echo it back in the sentence.
+
 EXAMPLES (style only — do not copy)
 - Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?
 - Quiet afternoon. The Friedhats Wush Wush hasn't moved in a week.
