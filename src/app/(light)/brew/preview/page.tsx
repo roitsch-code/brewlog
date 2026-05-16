@@ -7,7 +7,7 @@ import LightStepContext from "@/components/flow/LightStepContext";
 import LightStepRecommend from "@/components/flow/LightStepRecommend";
 import StepBrew from "@/components/flow/StepBrew";
 import LightStepLog from "@/components/flow/LightStepLog";
-import StepSummary from "@/components/flow/StepSummary";
+import LightStepSummary from "@/components/flow/LightStepSummary";
 
 /**
  * Light migration parallel route.
@@ -38,7 +38,7 @@ export default function BrewPreviewPage() {
       {step === "recommend" && <LightStepRecommend />}
       {step === "brew" && <StepBrew />}
       {step === "log" && <LightStepLog />}
-      {step === "summary" && <StepSummary />}
+      {step === "summary" && <LightStepSummary />}
     </>
   );
 }
