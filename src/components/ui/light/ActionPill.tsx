@@ -128,7 +128,7 @@ export default function ActionPill({ action }: { action: NavAction }) {
       type="button"
       onClick={() => void handleClick()}
       title={action.reason}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-light-foreground/10 bg-light-card-default px-4 font-inter text-[13px] font-medium text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-light-foreground/25 bg-light-card-default px-4 font-chivo text-[13px] font-medium text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
     >
       <ActionPillIcon destination={action.destination} />
       {action.label}

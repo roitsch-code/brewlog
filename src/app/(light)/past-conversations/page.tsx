@@ -68,14 +68,14 @@ export default function PastConversationsPage() {
     <>
       <main className="flex h-dvh flex-col">
         <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
-          <h1 className="font-inter text-[14px] font-medium text-light-foreground/60">
+          <h1 className="font-chivo text-[14px] font-medium text-light-foreground/60">
             Past conversations
           </h1>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -83,9 +83,9 @@ export default function PastConversationsPage() {
 
         <section className="flex-1 min-h-0 overflow-y-auto px-5 py-5">
           {loading ? (
-            <p className="font-inter text-[15px] text-light-muted-foreground">Loading…</p>
+            <p className="font-chivo text-[15px] text-light-muted-foreground">Loading…</p>
           ) : rows.length === 0 ? (
-            <p className="font-inter text-[15px] text-light-muted-foreground">
+            <p className="font-chivo text-[15px] text-light-muted-foreground">
               No archived conversations yet. Send a message on Home, leave the app idle for 30
               minutes, and it lands here.
             </p>
@@ -96,13 +96,13 @@ export default function PastConversationsPage() {
                   <div className="flex items-stretch gap-2">
                     <Link
                       href={`/past-conversations/${row.id}`}
-                      className="flex flex-1 items-center gap-3 rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150"
+                      className="flex flex-1 items-center gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150"
                     >
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="font-inter text-[12px] font-normal text-light-muted-foreground">
+                        <span className="font-chivo text-[12px] font-normal text-light-muted-foreground">
                           {formatDate(row.lastMessageAt)} · {row.messageCount} turns
                         </span>
-                        <span className="line-clamp-2 break-words font-inter text-[15px] font-medium text-light-foreground">
+                        <span className="line-clamp-2 break-words font-chivo text-[15px] font-medium text-light-foreground">
                           {row.firstUserMessage || "(empty thread)"}
                         </span>
                       </div>
@@ -115,7 +115,7 @@ export default function PastConversationsPage() {
                       type="button"
                       onClick={() => void handleDelete(row.id)}
                       aria-label="Delete conversation"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                     </button>

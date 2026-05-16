@@ -39,13 +39,17 @@ const config: Config = {
           accent: "#E8C5A8",
           edge: "rgba(255,235,220,0.08)",
         },
-        // Light System v1.0 — specs/design-system-v1.0.md §2.3, §2.4.
-        // Prefixed `light-` so they don't collide with Dark tokens or Tailwind
-        // defaults. Foreground entries use `<alpha-value>` so opacity modifiers
-        // (`text-light-foreground/70`, etc.) compile per spec §3.2.
+        // Light System tokens — neutral-anthracite revision.
+        // Background (Field gradient + Glass pills) stays warm cream from
+        // v1.0 §2.1 / §2.3. Foreground text shifts from the warm brown
+        // `hsl(20 14% 12%)` to a neutral anthracite for sharper reading.
+        // Borders use the same anthracite at higher opacity so the
+        // interactive-surface outlines (Chat input pill, Action Pills,
+        // Burger, +, Send, Coffee chip) are clearly defined against the
+        // cream Glass.
         light: {
-          foreground: "hsl(20 14% 12% / <alpha-value>)",
-          "muted-foreground": "hsl(20 8% 45% / <alpha-value>)",
+          foreground: "hsl(0 0% 14% / <alpha-value>)",
+          "muted-foreground": "hsl(0 0% 40% / <alpha-value>)",
           "card-default": "hsl(36 55% 96% / 0.55)",
           "card-selected": "hsl(28 22% 84% / 0.7)",
         },
@@ -55,11 +59,11 @@ const config: Config = {
         display: ["var(--font-instrument-serif)", "Georgia", "serif"],
         sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "var(--font-jetbrains-mono)", "Fira Code", "monospace"],
-        // Light System v1.0 §3.1 — Fraunces (hero serif) + Inter (body sans).
-        // Scoped to (light) consumers via explicit `font-fraunces` / `font-inter`
+        // Light System — Fraunces (hero serif) + Chivo (body sans).
+        // Scoped to (light) consumers via explicit `font-fraunces` / `font-chivo`
         // classes so Dark routes keep their existing typography unchanged.
         fraunces: ["var(--font-fraunces)", "ui-serif", "Georgia", "serif"],
-        inter: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        chivo: ["var(--font-chivo)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       borderRadius: {
         sm: "8px",

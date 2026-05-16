@@ -63,7 +63,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
         type="button"
         onClick={onClose}
         aria-label="Close menu"
-        className="absolute right-5 top-12 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+        className="absolute right-5 top-12 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>
@@ -77,7 +77,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
               key={item.label}
               href={item.href}
               onClick={onClose}
-              className="font-inter text-[24px] font-medium text-light-foreground"
+              className="font-chivo text-[24px] font-medium text-light-foreground"
             >
               {item.label}
             </Link>
@@ -85,7 +85,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
             <span
               key={item.label}
               aria-disabled="true"
-              className="font-inter text-[24px] font-medium text-light-foreground/40"
+              className="font-chivo text-[24px] font-medium text-light-foreground/40"
             >
               {item.label}
             </span>
