@@ -56,7 +56,7 @@ const ROASTER_QA_LOCATION_CHIPS = ["Germany", "Netherlands", "UK", "USA", "Denma
 const ROASTER_QA_STYLE_CHIPS = ["Very light", "Light", "Light-medium", "Medium", "Varies"];
 
 export default function LightStepScan() {
-  const { draft, setCoffee, setMode, setStep, setFieldZones, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications } = useFlowStore();
+  const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset } = useFlowStore();
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModeChoice | null>(null);
@@ -907,15 +907,41 @@ export default function LightStepScan() {
           )}
         </div>
 
-        {/* Library match notice */}
+        {/* Library match notice — tap = Brew Again with this coffee's
+            persisted identity + fieldZones + brew history. The Dark
+            version was a plain <a href="/coffees/[id]"> that just took
+            the user to the Library detail page (Markus' feedback:
+            "doesn't work" — the navigation broke flow without giving
+            any benefit). Now it short-circuits straight to Context
+            using the saved row, identical to the Brew-Again entry
+            from /coffees/[id] and the Home ActionPill carousel. */}
         {libraryMatch && (
-          <a
-            href={`/coffees/${libraryMatch.id}`}
-            className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-all active:scale-[0.98]"
-            style={{ background: "rgba(212,184,150,0.08)", borderColor: "rgba(212,184,150,0.25)" }}
+          <button
+            type="button"
+            onClick={() => {
+              const m = libraryMatch;
+              reset();
+              setCoffee({
+                roaster: m.roaster,
+                name: m.name,
+                origin: m.origin,
+                process: m.process,
+                roastLevel: "Light",
+                roastDate: m.latestRoastDate,
+                bagPhotoUrl: m.bagPhotoUrl,
+                aiExtracted: false,
+                coffeeId: m.id,
+              });
+              setFieldZones(m.fieldZones ?? null);
+              setMode("home");
+              setSkipScan(true);
+              setStep("context");
+            }}
+            className="w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-all active:scale-[0.98] text-left"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
           >
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-widest mb-0.5" style={{ color: "var(--primary)" }}>You&apos;ve had this before</p>
+              <p className="label-eyebrow mb-0.5">You&apos;ve had this before</p>
               <p className="text-sm truncate" style={{ color: "var(--foreground)" }}>
                 {libraryMatch.name}
                 {libraryMatch.avgRating != null ? ` · ${libraryMatch.avgRating.toFixed(1)}★` : ""}
@@ -925,8 +951,8 @@ export default function LightStepScan() {
                 <p className="text-xs mt-0.5 truncate" style={{ color: "var(--muted-foreground)" }}>&ldquo;{libraryMatch.personalNotes}&rdquo;</p>
               )}
             </div>
-            <span className="text-xs shrink-0" style={{ color: "var(--muted-foreground)" }}>Library →</span>
-          </a>
+            <span className="text-xs shrink-0" style={{ color: "var(--muted-foreground)" }}>Brew again →</span>
+          </button>
         )}
 
         {/* THEN CHOOSE */}
