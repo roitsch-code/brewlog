@@ -5,6 +5,7 @@ import { getRoasterPrior, canonicalRoasterSlug } from "@/lib/roasters/priors";
 import { db } from "@/lib/db/client";
 import { roasters } from "@/lib/db/schema";
 import type { RoasterPrior } from "@/lib/roasters/priors";
+import { mapNotesToZones } from "@/lib/field/mapNotesToZones";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,13 @@ export async function POST(req: NextRequest) {
     const mimeType = file.type || "image/jpeg";
 
     const { result } = await analyzeBagImage(base64, mimeType);
+
+    // Field-zone mapping runs in parallel with the roaster-prior lookup —
+    // both are sequential add-ons to the bag extraction, neither blocks
+    // the other. mapNotesToZones swallows errors and returns null, so a
+    // Haiku outage doesn't fail the scan; clients fall back to Default.
+    const notes = result.extracted.tastingNotesFromBag ?? [];
+    const fieldZonesPromise = notes.length > 0 ? mapNotesToZones(notes) : Promise.resolve(null);
 
     // Roaster prior lookup: user-saved Firestore record takes priority over built-in list.
     // Fallback priors carry no real signal and are omitted to avoid noise.
@@ -67,7 +75,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ...result, roasterPrior });
+    const fieldZones = await fieldZonesPromise;
+    return NextResponse.json({ ...result, roasterPrior, fieldZones });
   } catch (err) {
     console.error("analyze-bag error:", err);
     return NextResponse.json({ error: "Analysis failed" }, { status: 500 });

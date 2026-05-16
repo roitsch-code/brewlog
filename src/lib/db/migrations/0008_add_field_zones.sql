@@ -1,0 +1,22 @@
+-- Generative Field v1.1 — add field_zones JSONB to coffees.
+--
+-- Stores a coffee's perceptual Field composition (see specs/design-
+-- system-v1.1-generative-field.md §10). Computed once per coffee by
+-- Haiku from tasting notes, persisted here, read at render time.
+--
+-- Value shape:
+--   {
+--     "version": 1,
+--     "zones": [{ "id": "floral", "weight": 0.45 }, ...],   // 1–3 entries
+--     "modifiers": { "saturation": 5, "lightness": 10 },
+--     "source": "tasting-notes" | "variety-implied" | "default",
+--     "computedAt": "2026-05-16T17:00:00.000Z"
+--   }
+--
+-- `null` means "not computed yet — render Default Field".
+--
+-- Run on the VPS after deploy:
+--   cat src/lib/db/migrations/0008_add_field_zones.sql \
+--     | docker compose exec -T postgres psql -U brewlog -d brewlog
+
+ALTER TABLE coffees ADD COLUMN IF NOT EXISTS field_zones jsonb;

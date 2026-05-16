@@ -73,6 +73,11 @@ export const coffees = pgTable("coffees", {
   commonNotes: jsonb("common_notes").$type<string[]>(),
   whatToExplore: text("what_to_explore"),
   personalNotes: text("personal_notes"),
+  // Generative Field v1.1 — perceptual Field composition for this coffee
+  // (see specs/design-system-v1.1-generative-field.md §10). Computed once
+  // per coffee from tasting notes by Haiku; null until first mapped.
+  // Shape: src/lib/field/types.ts FieldZones.
+  fieldZones: jsonb("field_zones"),
 });
 
 export const preferences = pgTable("preferences", {
