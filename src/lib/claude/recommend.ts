@@ -75,9 +75,10 @@ GOAL VOCABULARY:
 - "high-clarity" → clarity-forward. Methods/recipes that minimize bed agitation and maximize Zone-1 expression. Ethiopian washed, Kenyan, Gesha naturally fit; the goal sharpens the choice.
 - "sweetness-forward" → longer sugar contact, gentler agitation, methods that develop body without invading Zone 3.
 - "body-forward" → body emphasis. Slightly richer ratio acceptable, longer contact, methods that build mouthfeel.
+- "aromatic" → aromatic-forward. Maximize preservation of volatile top-note compounds — jasmine, bergamot, peach, citrus zest, tea-like delicacy. Cool bloom (Hsu 2022 staged-temp), low-mineral water bias, minimal agitation, prompt drawdown. Geisha, Wush Wush, Pink Bourbon (per WCR 2024 — closer to Ethiopian landrace than Bourbon), Sidra, Ethiopian washed/natural especially appropriate. Distinct from "high-clarity" — clarity emphasises overall cup transparency; aromatic emphasises the fragile olfactory top layer specifically.
 - "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open, Turbo V60) are especially appropriate here — but they are NOT exclusive to this goal.
 
-OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity" or "body-forward", build to the goal, not the process default.
+OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity", "body-forward", or "aromatic", build to the goal, not the process default.
 
 OCCASION ROUTING (physical/temporal only, never taste-direction):
 - "summer-time" = iced coffee; route to Japanese Iced V60, Japanese Iced Kalita, AeroPress Iced, or Hoffmann Immersion Iced (Clever Dripper); "amount" = final drink including melted ice

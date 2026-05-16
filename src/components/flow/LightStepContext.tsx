@@ -33,11 +33,14 @@ import type { Session, SessionContext } from "@/lib/types/session";
  *     per Markus-feedback (PR #65). Lovable's eyebrow is just
  *     "Context".
  *
- * Deferred to a separate PR (touches /api/recommend prompt):
- *   - GOAL: Lovable adds "Aromatic / Floral" and renames IDs to
- *     bright/sweet/bold. Both require prompt updates + sample-
- *     validation per CLAUDE.md hard rule. This file keeps the
- *     current 5-ID set unchanged.
+ * GOAL preserves the existing 4 ID strings (balanced/high-clarity/
+ * sweetness-forward/body-forward/explore) and adds Lovable's 6th
+ * card "Aromatic / Floral" as new id `aromatic`. Renaming the
+ * existing IDs to Lovable's bright/sweet/bold scheme would change
+ * historical-session interpretation without functional benefit, so
+ * it's been deferred indefinitely. The /api/recommend prompt grew
+ * a sixth GOAL VOCABULARY entry to accept "aromatic" — see the
+ * companion change in src/lib/claude/recommend.ts.
  */
 
 async function getRecentSessions(limit: number): Promise<Session[]> {
@@ -101,6 +104,7 @@ const GOALS = [
   { id: "high-clarity", label: "Bright / Clarity", sub: "Zone-1 emphasis" },
   { id: "sweetness-forward", label: "Sweet", sub: "Zone-2 emphasis" },
   { id: "body-forward", label: "Bold / Body", sub: "mouthfeel emphasis" },
+  { id: "aromatic", label: "Aromatic / Floral", sub: "volatile & delicate emphasis" },
   { id: "explore", label: "Explore", sub: "Wildcard" },
 ];
 
@@ -335,9 +339,11 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* GOAL — current 5-ID set preserved. Educational footnote.
-            Aromatic + ID rename moved to a follow-up PR (touches the
-            /api/recommend prompt — Hard Rule validation). */}
+        {/* GOAL — 6 cards (Lovable parity). Educational footnote.
+            Existing 5 IDs are kept; Aromatic / Floral added as the
+            new id "aromatic" — recognised by the /api/recommend
+            prompt (companion change in src/lib/claude/recommend.ts).
+            ID rename to bright/sweet/bold deferred indefinitely. */}
         <Section
           eyebrow="Goal"
           footnote={
