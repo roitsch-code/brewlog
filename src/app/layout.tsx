@@ -35,7 +35,7 @@ const fraunces = Fraunces({
 
 const chivo = Chivo({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["200", "400", "500", "600"],
   variable: "--font-chivo",
   display: "swap",
 });
