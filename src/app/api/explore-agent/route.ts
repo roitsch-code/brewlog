@@ -27,6 +27,7 @@ export interface NavAction {
   destination:
     | "coffee_library"
     | "coffee_detail"
+    | "brew_again"
     | "cafe_map"
     | "cafe_detail"
     | "taste_profile"
@@ -62,6 +63,7 @@ Mention capabilities only when relevant — don't pitch them unprompted.
 | Situation | Destination |
 |-----------|-------------|
 | You mention a specific coffee **bag** from the user's library | coffee_detail (use the coffee's id from context) |
+| The user explicitly wants to **brew a specific bag again** — "brew the Jaime Sanchez again", "make me the cherry one", "I want the DAK Bourbon" | brew_again (use the coffee's id from context) — this lands the user in Step 3 (Context) of the brew flow with the bag already selected |
 | You reference several of their coffee bags, or suggest browsing their bag collection | coffee_library |
 | You recommend visiting a specific **café, roastery, or physical place** | cafe_detail — opens the Explore Nearby map |
 | General "what's near me" or map exploration | cafe_map — opens the Explore Nearby map |
@@ -185,12 +187,12 @@ const TOOLS: Anthropic.Tool[] = [
       properties: {
         destination: {
           type: "string",
-          enum: ["coffee_library", "coffee_detail", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
-          description: "Which part of BrewLog to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit.",
+          enum: ["coffee_library", "coffee_detail", "brew_again", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
+          description: "Which part of BrewLog to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit. Use brew_again when the user explicitly wants to start a brew flow with a specific bag from their library — drops them into Step 3 (Context) with the bag pre-selected.",
         },
         label: {
           type: "string",
-          description: "Short action label shown on the button, e.g. 'View El Congo in library' or 'Open RVTC on the map'",
+          description: "Short action label shown on the button, e.g. 'View El Congo in library', 'Brew Jaime Sanchez again', or 'Open RVTC on the map'",
         },
         reason: {
           type: "string",
