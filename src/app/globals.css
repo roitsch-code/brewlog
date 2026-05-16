@@ -230,6 +230,18 @@
     outline: none;
     border-color: inherit;
   }
+
+  /* Light System — invert BrewMethodIcon assets for the warm cream Field.
+   * The /brew-icons/*.png + chemex.svg are all drawn with white strokes
+   * (designed for the Dark canvas). On Light they read as faint ghosts.
+   * `filter: brightness(0)` collapses every opaque pixel to pure black
+   * while preserving alpha, so the white-line drawings become anthracite
+   * line drawings. opacity-80 already on the <img> matches the warm
+   * foreground/80 weight elsewhere. Dark routes never carry
+   * [data-light-scope] so they keep the original white art. */
+  [data-light-scope] [data-brew-method-icon] {
+    filter: brightness(0);
+  }
 }
 
 /*
