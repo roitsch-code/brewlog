@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
+import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
 import { db } from "@/lib/db/client";
 import { sessions } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
@@ -32,6 +32,20 @@ RULES
 - Reference one concrete signal from the context if it's there — a specific roaster from yesterday's brew, a coffee they haven't touched in a while, the time of day — and turn it into an invitation, not a report.
 - If the user has no recent brews and an empty library, fall back to a quiet welcome.
 - No emojis, no markdown, no second sentence, no preamble like "Here's your greeting:".
+
+TIME-OF-DAY DISCIPLINE
+- The context block tells you the current time of day. Use that label or omit time entirely — never invent a different one.
+  • "morning" → "Good morning", "Morning", "Early start"
+  • "midday" / "afternoon" → "Quiet afternoon", "Midday lull"
+  • "evening" → "Evening already", "End of the day"
+  • "late-night" → "Late night", "Past midnight"
+- NEVER say "late night" when the context says evening. NEVER say "morning" when the context says afternoon. Etc.
+
+COFFEE-HISTORY DISCIPLINE
+- Each library line shows session count and average rating ("3.8★ over 5") or "unbrewed" when the bag has never been brewed.
+- A coffee with session count > 0 HAS been brewed. Never say "haven't brewed yet" or "untried" for those.
+- "unbrewed" entries are the only ones you may describe as untouched.
+- For a brewed coffee you may invite a return ("worth revisiting", "ready for another round") — not a first try.
 
 EXAMPLES (style only — do not copy)
 - Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?
@@ -71,7 +85,9 @@ export async function POST(req: NextRequest) {
       rowToSession(row as Parameters<typeof rowToSession>[0])
     );
 
-    const hour = new Date().getHours();
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
     const timeOfDay =
       hour < 5 ? "late-night"
       : hour < 11 ? "morning"
@@ -79,6 +95,7 @@ export async function POST(req: NextRequest) {
       : hour < 18 ? "afternoon"
       : hour < 22 ? "evening"
       : "late-night";
+    const localHHMM = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 
     const recentLines = recentSessions
       .slice(0, 3)
@@ -90,15 +107,21 @@ export async function POST(req: NextRequest) {
       })
       .filter(Boolean);
 
-    const libraryLines = library.slice(0, 4).map((c) => `- ${c.roaster} ${c.name}`.trim());
+    // formatLibraryForPrompt renders each line as
+    //   - ROASTER — NAME | ORIGIN PROCESS | roasted Xd ago | X.X★ over N
+    // so Haiku sees session counts + ratings and won't claim a brewed
+    // coffee is "untried" — the earlier bare roaster+name line gave
+    // Haiku no signal, so it hallucinated "haven't brewed yet" on a
+    // bag that had 1+ saved sessions.
+    const libraryBlock = formatLibraryForPrompt(library);
 
     const userBlock = [
-      `Time of day: ${timeOfDay} (hour ${hour}, local time)`,
+      `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
       recentLines.length > 0
         ? `Recent brews:\n${recentLines.join("\n")}`
         : "Recent brews: none in the last few days.",
-      libraryLines.length > 0
-        ? `Library snapshot:\n${libraryLines.join("\n")}`
+      libraryBlock.length > 0
+        ? `Library snapshot (with usage):\n${libraryBlock}`
         : "Library snapshot: empty.",
     ].join("\n\n");
 

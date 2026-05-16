@@ -127,7 +127,11 @@ export default function HomePage() {
 
   // Daily Starter — cached per calendar day in localStorage.
   useEffect(() => {
-    const key = `brewlog.starter.${todayKey()}`;
+    // Cache version bumped (v2) to invalidate the day's starter after the
+    // /api/greeting prompt fix (time-of-day + library-usage signals).
+    // Old `brewlog.starter.<date>` entries are orphaned in localStorage —
+    // harmless, just unused.
+    const key = `brewlog.starter.v2.${todayKey()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {
