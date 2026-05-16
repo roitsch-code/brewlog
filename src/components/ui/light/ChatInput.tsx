@@ -72,13 +72,20 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Compact coffee list for the picker — fetched once on mount.
+  // Sorted by firstSeenAt DESC so the most-recently-scanned bag is at
+  // the top (matches the /coffees library page's default sort, and
+  // matches user expectation: "what did I just add" is what you
+  // usually want to reference).
   useEffect(() => {
     fetch("/api/coffees", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : []))
-      .then((data: { id: string; roaster: string; name: string }[]) => {
+      .then((data: { id: string; roaster: string; name: string; firstSeenAt?: string }[]) => {
         if (Array.isArray(data)) {
+          const sorted = [...data].sort((a, b) =>
+            (b.firstSeenAt || "").localeCompare(a.firstSeenAt || "")
+          );
           setCoffeeList(
-            data
+            sorted
               .filter((c) => c?.id && c?.name && c?.roaster)
               .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }))
           );
