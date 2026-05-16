@@ -182,7 +182,9 @@ export default function StepContext() {
     <FlowShell onNext={handleNext} nextDisabled={!isComplete} nextLabel="Get My Recipe">
       <div className="px-5 py-4 flex flex-col gap-8">
         <div>
-          <p className="text-brew-muted text-xs tracking-widest uppercase mb-2">Context</p>
+          <p className="text-brew-muted text-xs tracking-widest uppercase mb-2">
+            Context{draft.coffee?.name ? ` · ${draft.coffee.name}` : ""}
+          </p>
           <h1 className="font-display text-2xl text-white">What&apos;s the vibe?</h1>
         </div>
 
