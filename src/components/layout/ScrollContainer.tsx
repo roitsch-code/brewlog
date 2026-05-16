@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 // children in app/layout.tsx without a Suspense boundary, so any
 // useSearchParams() reference triggers an SSG bailout and breaks the
 // production build for every page.
-const EXACT_SHOW = ["/", "/taste", "/match"];
+const EXACT_SHOW = ["/taste", "/match"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 export default function ScrollContainer({ children }: { children: React.ReactNode }) {

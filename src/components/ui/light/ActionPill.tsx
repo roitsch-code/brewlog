@@ -58,30 +58,31 @@ function destinationToPath(action: NavAction): string {
     case "match":
       return "/match";
     case "home":
-      return "/home";
+      return "/";
     default:
-      return "/home";
+      return "/";
   }
 }
 
 function ActionPillIcon({ destination }: { destination: NavAction["destination"] }) {
-  const cls = "h-4 w-4 text-light-foreground/80";
+  // Cream icon on the anthracite pill body — same colour as the label.
+  const cls = "h-4 w-4 text-[hsl(30_40%_97%)]";
   switch (destination) {
     case "coffee_library":
-      return <BookOpen className={cls} strokeWidth={1.5} />;
+      return <BookOpen className={cls} strokeWidth={1.75} />;
     case "coffee_detail":
-      return <Coffee className={cls} strokeWidth={1.5} />;
+      return <Coffee className={cls} strokeWidth={1.75} />;
     case "brew_again":
-      return <RotateCcw className={cls} strokeWidth={1.5} />;
+      return <RotateCcw className={cls} strokeWidth={1.75} />;
     case "cafe_map":
     case "cafe_detail":
-      return <MapPin className={cls} strokeWidth={1.5} />;
+      return <MapPin className={cls} strokeWidth={1.75} />;
     case "taste_profile":
-      return <User className={cls} strokeWidth={1.5} />;
+      return <User className={cls} strokeWidth={1.75} />;
     case "match":
-      return <Crosshair className={cls} strokeWidth={1.5} />;
+      return <Crosshair className={cls} strokeWidth={1.75} />;
     default:
-      return <Globe className={cls} strokeWidth={1.5} />;
+      return <Globe className={cls} strokeWidth={1.75} />;
   }
 }
 
@@ -123,12 +124,16 @@ export default function ActionPill({ action }: { action: NavAction }) {
     router.push(destinationToPath(action));
   };
 
+  // Filled-anthracite treatment so Action Pills don't visually echo the
+  // cream Glass user bubbles — they read as "do this" CTAs rather than
+  // another speech bubble. (Spec §6.1 specified Glass; user feedback in
+  // the anthracite revision asked for clearer differentiation.)
   return (
     <button
       type="button"
       onClick={() => void handleClick()}
       title={action.reason}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-light-foreground/25 bg-light-card-default px-4 font-chivo text-[13px] font-medium text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-[hsl(30_40%_97%)] shadow-sm active:opacity-90"
     >
       <ActionPillIcon destination={action.destination} />
       {action.label}

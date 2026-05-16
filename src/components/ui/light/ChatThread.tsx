@@ -155,7 +155,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
               </div>
             ) : (
               (m.content || (m.actions && m.actions.length > 0)) && (
-                <div key={i} className="space-y-3">
+                <div key={i} className="max-w-[80%] space-y-3">
                   {m.content &&
                     m.content.split(/\n\n+/).map((para, j) => (
                       <p
