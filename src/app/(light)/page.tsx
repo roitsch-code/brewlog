@@ -52,6 +52,24 @@ function todayKey(): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Bucket the current hour into the same time-of-day labels the
+ * /api/greeting prompt uses (morning / midday / afternoon / evening /
+ * late-night). The Starter cache key includes this bucket so a
+ * starter generated at 11:30 doesn't keep saying "Quiet afternoon"
+ * when the user re-opens at 20:45 — Markus' bug. Five regenerations
+ * per active day max; ~$0.0005 in Haiku cost, structurally trivial.
+ */
+function timeBucket(): string {
+  const hour = new Date().getHours();
+  if (hour < 5) return "late-night";
+  if (hour < 11) return "morning";
+  if (hour < 14) return "midday";
+  if (hour < 18) return "afternoon";
+  if (hour < 22) return "evening";
+  return "late-night";
+}
+
 interface ActiveConversationResponse {
   conversation: {
     id: string;
@@ -127,11 +145,14 @@ export default function HomePage() {
 
   // Daily Starter — cached per calendar day in localStorage.
   useEffect(() => {
-    // Cache version bumped (v2) to invalidate the day's starter after the
-    // /api/greeting prompt fix (time-of-day + library-usage signals).
-    // Old `brewlog.starter.<date>` entries are orphaned in localStorage —
-    // harmless, just unused.
-    const key = `brewlog.starter.v2.${todayKey()}`;
+    // Cache version bumped (v3) + time-of-day bucket appended so the
+    // starter regenerates when the user crosses a tod boundary
+    // (morning → midday → afternoon → evening → late-night). Earlier
+    // bug: opening the app at 11:00 cached a "morning" line that
+    // showed all day even when re-opened at 20:45. Old
+    // `brewlog.starter.v2.<date>` entries are orphaned in
+    // localStorage — harmless.
+    const key = `brewlog.starter.v3.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {
