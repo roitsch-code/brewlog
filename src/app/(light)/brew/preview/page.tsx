@@ -1,7 +1,7 @@
 "use client";
 
 import { useFlowStore } from "@/store/flowStore";
-import StepScan from "@/components/flow/StepScan";
+import LightStepScan from "@/components/flow/LightStepScan";
 import LightStepMode from "@/components/flow/LightStepMode";
 import LightStepContext from "@/components/flow/LightStepContext";
 import LightStepRecommend from "@/components/flow/LightStepRecommend";
@@ -32,7 +32,7 @@ export default function BrewPreviewPage() {
 
   return (
     <>
-      {step === "scan" && <StepScan />}
+      {step === "scan" && <LightStepScan />}
       {step === "mode" && <LightStepMode />}
       {step === "context" && <LightStepContext />}
       {step === "recommend" && <LightStepRecommend />}
