@@ -464,7 +464,7 @@ function SensoryRow({
       <p className="label-eyebrow px-1">{label}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
-          <Chip key={o.id} size="sm" selected={value === o.id} onClick={() => onChange(value === o.id ? "" : o.id)}>
+          <Chip key={o.id} selected={value === o.id} onClick={() => onChange(value === o.id ? "" : o.id)}>
             {o.label}
           </Chip>
         ))}
@@ -486,10 +486,10 @@ function SensoryToggle({
     <div className="flex items-center justify-between">
       <span className="text-[14px] text-light-foreground/80">{label}</span>
       <div className="flex gap-2">
-        <Chip size="sm" selected={value === true} onClick={() => onChange(value === true ? null : true)}>
+        <Chip selected={value === true} onClick={() => onChange(value === true ? null : true)}>
           Yes
         </Chip>
-        <Chip size="sm" selected={value === false} onClick={() => onChange(value === false ? null : false)}>
+        <Chip selected={value === false} onClick={() => onChange(value === false ? null : false)}>
           No
         </Chip>
       </div>
