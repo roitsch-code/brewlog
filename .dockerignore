@@ -1,0 +1,34 @@
+# Docker build context — keep it tight.
+# Everything `COPY . .` pulls in lands inside the production image and
+# inside Next.js's build worker scan path. Add only what's verified
+# unneeded for `next build` or runtime.
+
+# Lovable v7 reference export — kept in git as a design source of
+# truth, but never bundled. Without this exclude, Next.js's build
+# worker scans lovable-v7/src/App.tsx, fails to resolve its Vite-only
+# dependencies (react-router-dom, @radix-ui/*, @tanstack/react-query)
+# and the deploy crashes with exit code 1 (deploy #183, May 2026).
+lovable-v7/
+
+# Node + build caches — re-created inside the builder stage from a
+# clean `npm ci`. Stale local artifacts must not leak in.
+node_modules/
+.next/
+out/
+
+# Local git + editor state.
+.git/
+.DS_Store
+.vscode/
+.idea/
+
+# Local env files — secrets are injected via docker-compose env_file
+# or runtime env vars, never baked into the image.
+.env
+.env.local
+.env.development
+.env.development.local
+
+# Logs.
+*.log
+npm-debug.log*
