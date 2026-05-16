@@ -13,10 +13,12 @@ const tabs = [
 ];
 
 // Allowlist of Dark routes that still show the legacy BottomNav. The
-// new BTTS Light surfaces (/home, /past-conversations) are
-// intentionally outside this list — they own their own bottom UI via
-// the input bar (Home) or no bottom UI (Past Conversations).
-const EXACT_SHOW = ["/", "/taste", "/match"];
+// new BTTS Light surfaces (/, /past-conversations) are intentionally
+// outside this list — they own their own bottom UI via the input bar
+// (Home) or no bottom UI (Past Conversations). "/" used to be the
+// Dark diary feed and was in this list; that page was retired when
+// Light Home moved to "/".
+const EXACT_SHOW = ["/taste", "/match"];
 const PREFIX_SHOW = ["/library", "/coffees", "/cafes"];
 
 /**
