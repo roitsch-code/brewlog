@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import PhotoUpload from "@/components/ui/PhotoUpload";
@@ -64,6 +64,13 @@ export default function LightStepScan() {
   const [analysisResult, setAnalysisResult] = useState<BagAnalysisResult | null>(null);
   const [freeText, setFreeText] = useState("");
   const [scanError, setScanError] = useState<string | null>(null);
+
+  // Light-only — the Photo card triggers iOS's native picker directly
+  // (Markus' feedback: skip the Camera/Library two-step UX from
+  // PhotoUpload's empty state, jump straight to Fotomediathek / Foto
+  // aufnehmen / Datei auswählen). Hidden <input type="file"> without
+  // `capture` so iOS shows the full menu.
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   // Manual coffee entry
   const [showManualForm, setShowManualForm] = useState(false);
@@ -416,16 +423,40 @@ export default function LightStepScan() {
           <h1 className="font-display text-2xl" style={{ color: "var(--foreground)" }}>What are you brewing today?</h1>
         </div>
 
+        {/* Hidden file input for the Photo card — no `capture` attr so
+            iOS opens its full native picker (Photo Library / Take
+            Photo / Choose File). */}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handlePhoto(file);
+            e.target.value = "";
+          }}
+        />
+
         {/* Input method cards */}
         <div className="flex flex-col gap-3">
-          {/* Photo — primary large card */}
+          {/* Photo — primary large card. Tap triggers iOS picker
+              directly; the inputMethod state stays in sync so the
+              extracted-info expansion below renders after a successful
+              file pick. Tapping again re-opens the picker (lets the
+              user re-select before any file has been chosen). */}
           <button
             type="button"
-            onClick={() => { setInputMethod(inputMethod === "photo" ? null : "photo"); setShowManualForm(false); }}
+            onClick={() => {
+              setInputMethod("photo");
+              setShowManualForm(false);
+              photoInputRef.current?.click();
+            }}
             className="w-full rounded-2xl border p-5 text-left transition-all active:scale-[0.98]"
             style={{
-              background: inputMethod === "photo" ? "#2A241C" : "var(--card)",
+              background: inputMethod === "photo" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
               borderColor: inputMethod === "photo" ? "var(--primary)" : "var(--border)",
+              boxShadow: inputMethod === "photo" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
             }}
           >
             <Camera size={24} style={{ color: "var(--primary)", marginBottom: "12px" }} />
@@ -436,7 +467,14 @@ export default function LightStepScan() {
           {/* Photo upload + analysis (expanded when photo selected) */}
           {inputMethod === "photo" && (
             <div className="flex flex-col gap-4">
-              <PhotoUpload onFile={handlePhoto} preview={preview || undefined} loading={isAnalyzing} />
+              {/* PhotoUpload's empty-state UI (Camera + Library buttons)
+                  is hidden in the Light path — the Photo card above
+                  triggers the iOS picker directly. We still render
+                  PhotoUpload for the preview + Retake / Choose-other
+                  buttons once a file is in flight. */}
+              {(preview || isAnalyzing) && (
+                <PhotoUpload onFile={handlePhoto} preview={preview || undefined} loading={isAnalyzing} />
+              )}
               {scanError && !isAnalyzing && (
                 <p className="text-red-400 text-sm text-center">{scanError}</p>
               )}
@@ -712,8 +750,9 @@ export default function LightStepScan() {
               onClick={() => { setInputMethod(inputMethod === "manual" ? null : "manual"); setShowManualForm(inputMethod !== "manual"); loadRoasters(); }}
               className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
               style={{
-                background: inputMethod === "manual" ? "#2A241C" : "var(--card)",
+                background: inputMethod === "manual" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
                 borderColor: inputMethod === "manual" ? "var(--primary)" : "var(--border)",
+                boxShadow: inputMethod === "manual" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
               }}
             >
               <PenLine size={20} style={{ color: "var(--primary)" }} />
@@ -724,8 +763,9 @@ export default function LightStepScan() {
               onClick={() => setInputMethod(inputMethod === "link" ? null : "link")}
               className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
               style={{
-                background: inputMethod === "link" ? "#2A241C" : "var(--card)",
+                background: inputMethod === "link" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
                 borderColor: inputMethod === "link" ? "var(--primary)" : "var(--border)",
+                boxShadow: inputMethod === "link" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
               }}
             >
               <Link2 size={20} style={{ color: "var(--primary)" }} />
@@ -895,8 +935,9 @@ export default function LightStepScan() {
                 onClick={() => setSelectedMode(m.id)}
                 className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl border py-3 px-2 transition-all active:scale-[0.98]"
                 style={{
-                  background: selectedMode === m.id ? "#2A241C" : "var(--card)",
+                  background: selectedMode === m.id ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
                   borderColor: selectedMode === m.id ? "var(--primary)" : "var(--border)",
+                  boxShadow: selectedMode === m.id ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
                 }}
               >
                 <m.Icon size={20} style={{ color: selectedMode === m.id ? "var(--primary)" : "var(--muted-foreground)" }} />
