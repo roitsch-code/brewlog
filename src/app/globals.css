@@ -213,6 +213,23 @@
     letter-spacing: 0.14em;
     color: hsl(0 0% 14% / 0.7);
   }
+
+  /* Light System — suppress @tailwindcss/forms blue focus ring inside the
+   * (light) route group. The forms plugin applies a 2px ring-blue-500
+   * box-shadow on focus to every <input>/<textarea>/<select>; that ring
+   * is a hard visual mismatch on the warm Light field. Suppress globally
+   * for anything inside [data-light-scope] so individual components don't
+   * have to repeat focus:outline-none focus:ring-0 on every field. */
+  [data-light-scope] input:focus,
+  [data-light-scope] textarea:focus,
+  [data-light-scope] select:focus {
+    --tw-ring-color: transparent;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+    box-shadow: none;
+    outline: none;
+    border-color: inherit;
+  }
 }
 
 /*
