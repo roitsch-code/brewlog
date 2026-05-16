@@ -907,37 +907,18 @@ export default function LightStepScan() {
           )}
         </div>
 
-        {/* Library match notice — tap = Brew Again with this coffee's
-            persisted identity + fieldZones + brew history. The Dark
-            version was a plain <a href="/coffees/[id]"> that just took
-            the user to the Library detail page (Markus' feedback:
-            "doesn't work" — the navigation broke flow without giving
-            any benefit). Now it short-circuits straight to Context
-            using the saved row, identical to the Brew-Again entry
-            from /coffees/[id] and the Home ActionPill carousel. */}
+        {/* Library match notice — original Dark behaviour restored:
+            navigates to /coffees/[id] so the user can read the prior
+            brew history before deciding whether to use this coffee.
+            Visual was the issue Markus flagged ("sieht scheisse aus"):
+            the previous peach-on-cream background (rgba 0.08) was
+            invisible. Now uses the standard light-glass surface plus
+            label-eyebrow so the pill reads as a clear card on the
+            Field. */}
         {libraryMatch && (
-          <button
-            type="button"
-            onClick={() => {
-              const m = libraryMatch;
-              reset();
-              setCoffee({
-                roaster: m.roaster,
-                name: m.name,
-                origin: m.origin,
-                process: m.process,
-                roastLevel: "Light",
-                roastDate: m.latestRoastDate,
-                bagPhotoUrl: m.bagPhotoUrl,
-                aiExtracted: false,
-                coffeeId: m.id,
-              });
-              setFieldZones(m.fieldZones ?? null);
-              setMode("home");
-              setSkipScan(true);
-              setStep("context");
-            }}
-            className="w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-all active:scale-[0.98] text-left"
+          <a
+            href={`/coffees/${libraryMatch.id}`}
+            className="w-full flex items-center justify-between gap-3 rounded-2xl px-4 py-3 border transition-all active:scale-[0.98] text-left no-underline"
             style={{ background: "var(--card)", borderColor: "var(--border)" }}
           >
             <div className="min-w-0">
@@ -951,8 +932,8 @@ export default function LightStepScan() {
                 <p className="text-xs mt-0.5 truncate" style={{ color: "var(--muted-foreground)" }}>&ldquo;{libraryMatch.personalNotes}&rdquo;</p>
               )}
             </div>
-            <span className="text-xs shrink-0" style={{ color: "var(--muted-foreground)" }}>Brew again →</span>
-          </button>
+            <span className="text-xs shrink-0" style={{ color: "var(--muted-foreground)" }}>Library →</span>
+          </a>
         )}
 
         {/* THEN CHOOSE */}
