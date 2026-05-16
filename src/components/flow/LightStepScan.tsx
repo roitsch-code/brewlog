@@ -59,7 +59,7 @@ export default function LightStepScan() {
   const { draft, setCoffee, setMode, setStep, setFieldZones, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications } = useFlowStore();
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
-  const [selectedMode, setSelectedMode] = useState<ModeChoice>("home");
+  const [selectedMode, setSelectedMode] = useState<ModeChoice | null>(null);
   const [clarificationIndex, setClarificationIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<BagAnalysisResult | null>(null);
   const [freeText, setFreeText] = useState("");
@@ -399,9 +399,14 @@ export default function LightStepScan() {
   const hasCoffeeInfo = !!(draft.coffee?.name || draft.coffee?.roaster || draft.coffee?.origin)
     || !!(showManualForm && (manualRoaster || manualName || manualOrigin));
 
-  const canProceed = hasCoffeeInfo;
+  // Continue is gated on BOTH having coffee info AND picking a mode —
+  // mode no longer defaults to "home" so the user has to make an
+  // explicit choice (Markus' feedback: pre-selected Brew-at-home was
+  // confusing).
+  const canProceed = hasCoffeeInfo && selectedMode !== null;
 
   const nextStep = () => {
+    if (!selectedMode) return;
     if (showManualForm && (manualRoaster || manualName || manualOrigin)) {
       applyManualForm();
     }
@@ -419,8 +424,8 @@ export default function LightStepScan() {
       <div className="px-5 py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
         {/* Header */}
         <div>
-          <p className="label-mono mb-2" style={{ color: "var(--muted-foreground)" }}>New Session</p>
-          <h1 className="font-display text-2xl" style={{ color: "var(--foreground)" }}>What are you brewing today?</h1>
+          <p className="label-eyebrow mb-2" style={{ color: "var(--muted-foreground)" }}>New Session</p>
+          <h1 className="font-fraunces text-2xl" style={{ color: "var(--foreground)" }}>What are you brewing today?</h1>
         </div>
 
         {/* Hidden file input for the Photo card — no `capture` attr so
@@ -482,7 +487,7 @@ export default function LightStepScan() {
               {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzing && (
                 <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="label-mono" style={{ color: "var(--muted-foreground)" }}>Identified</span>
+                    <span className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Identified</span>
                     <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Tap to correct</span>
                   </div>
                   {draft.coffee.roaster !== undefined && (
@@ -570,7 +575,7 @@ export default function LightStepScan() {
               {/* Roaster profile loading */}
               {!isAnalyzing && isGeneratingRoaster && (
                 <div className="rounded-2xl p-4" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                  <p className="label-mono mb-1" style={{ color: "var(--muted-foreground)" }}>Roaster Intelligence</p>
+                  <p className="label-eyebrow mb-1" style={{ color: "var(--muted-foreground)" }}>Roaster Intelligence</p>
                   <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Looking up roaster profile…</p>
                 </div>
               )}
@@ -776,7 +781,7 @@ export default function LightStepScan() {
           {/* Manual form (expanded when manual selected) */}
           {inputMethod === "manual" && (
             <div className="rounded-2xl p-4 space-y-4" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <p className="label-mono" style={{ color: "var(--muted-foreground)" }}>Coffee Details</p>
+              <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Coffee Details</p>
               <div className="space-y-3">
                 <RoasterInput
                   value={manualRoaster}
@@ -832,7 +837,7 @@ export default function LightStepScan() {
           {/* Link paste (expanded when link selected) */}
           {inputMethod === "link" && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <p className="label-mono" style={{ color: "var(--muted-foreground)" }}>Paste a product URL</p>
+              <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Paste a product URL</p>
               <div className="flex gap-2">
                 <input
                   type="url"
@@ -859,7 +864,7 @@ export default function LightStepScan() {
               {/* Show extracted info after URL scan */}
               {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzingUrl && inputMethod === "link" && (
                 <div className="rounded-xl p-3 space-y-2" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
-                  <p className="label-mono" style={{ color: "var(--muted-foreground)" }}>Extracted</p>
+                  <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Extracted</p>
                   {draft.coffee.roaster && <p className="text-sm" style={{ color: "var(--foreground)" }}>{draft.coffee.roaster}</p>}
                   {draft.coffee.name && <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{draft.coffee.name}</p>}
                   {draft.coffee.origin && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.origin}</p>}
@@ -926,7 +931,7 @@ export default function LightStepScan() {
 
         {/* THEN CHOOSE */}
         <div>
-          <p className="label-mono mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
+          <p className="label-eyebrow mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
           <div className="flex gap-2">
             {SCAN_MODES.map(m => (
               <button
@@ -1003,7 +1008,7 @@ function RoasterProfileCard({
           <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-1">
             Roaster Intelligence
           </p>
-          <p className="font-display text-lg text-light-foreground leading-tight">{prior.name}</p>
+          <p className="font-fraunces text-lg text-light-foreground leading-tight">{prior.name}</p>
           {prior.region && (
             <p className="text-light-muted-foreground text-xs mt-0.5">{prior.region}</p>
           )}
