@@ -1,4 +1,5 @@
 import type { Coffee } from "@/lib/types/coffee";
+import type { FieldZones } from "@/lib/field/types";
 import type { Session } from "@/lib/types/session";
 import { coffees, sessions } from "@/lib/db/schema";
 
@@ -23,6 +24,9 @@ export function rowToCoffee(r: typeof coffees.$inferSelect): Coffee {
     commonNotes: r.commonNotes ?? undefined,
     whatToExplore: r.whatToExplore ?? undefined,
     personalNotes: r.personalNotes ?? undefined,
+    // JSONB column is `unknown` at the Drizzle level; trust the write
+    // path (validated by FieldZonesSchema before insert) and cast.
+    fieldZones: (r.fieldZones as FieldZones | null) ?? null,
   };
 }
 

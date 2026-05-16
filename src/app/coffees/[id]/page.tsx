@@ -24,7 +24,7 @@ export default function CoffeeDetailPage() {
   const [roasterGenerating, setRoasterGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { reset, setCoffee: setFlowCoffee, setStep, setMode, setSkipScan } = useFlowStore();
+  const { reset, setCoffee: setFlowCoffee, setStep, setMode, setSkipScan, setFieldZones } = useFlowStore();
 
   // Personal notes state
   const [editingNotes, setEditingNotes] = useState(false);
@@ -147,6 +147,10 @@ export default function CoffeeDetailPage() {
     };
     reset();
     setFlowCoffee({ ...identity, coffeeId: coffee.id });
+    // Generative Field v1.1 — Brew Again path: lift the persisted
+    // composition so the flow paints in this coffee's colours rather
+    // than the Default fallback.
+    setFieldZones(coffee.fieldZones ?? null);
     setMode("home");
     setSkipScan(true);
     setStep("context");
