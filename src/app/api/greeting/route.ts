@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
     await req.json().catch(() => ({} as RequestBody));
 
     const [library, recentRows] = await Promise.all([
-      loadCoffeeLibraryCompact(30).catch(() => []),
+      // Only the last few bags in active rotation — the Haiku biases
+      // toward what the user is brewing right now, not their full
+      // historical library.
+      loadCoffeeLibraryCompact(4).catch(() => []),
       db
         .select()
         .from(sessions)
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
       })
       .filter(Boolean);
 
-    const libraryLines = library.slice(0, 8).map((c) => `- ${c.roaster} ${c.name}`.trim());
+    const libraryLines = library.slice(0, 4).map((c) => `- ${c.roaster} ${c.name}`.trim());
 
     const userBlock = [
       `Time of day: ${timeOfDay} (hour ${hour}, local time)`,
