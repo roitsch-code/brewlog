@@ -4,8 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import type { Coffee } from "@/lib/types/coffee";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
-import StarRating from "@/components/ui/StarRating";
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import StarRating from "@/components/ui/light/StarRating";
+import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { useFlowStore } from "@/store/flowStore";
 
@@ -100,9 +100,9 @@ export default function CoffeeDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col">
+      <div className="min-h-svh bg-transparent flex flex-col">
         <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.5rem)" }}>
-          <button onClick={() => router.push("/coffees")} className="text-brew-muted text-sm">← Library</button>
+          <button onClick={() => router.push("/coffees")} className="text-light-muted-foreground text-sm">← Library</button>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <CoffeeBeanGlow size={64} />
@@ -113,9 +113,9 @@ export default function CoffeeDetailPage() {
 
   if (!coffee) {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center gap-4">
-        <p className="text-brew-muted">Coffee not found</p>
-        <button onClick={() => router.push("/coffees")} className="text-white underline">Back to library</button>
+      <div className="min-h-svh bg-transparent flex flex-col items-center justify-center gap-4">
+        <p className="text-light-muted-foreground">Coffee not found</p>
+        <button onClick={() => router.push("/coffees")} className="text-light-foreground underline">Back to library</button>
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function CoffeeDetailPage() {
   };
 
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col">
+    <div className="min-h-svh bg-transparent flex flex-col">
       {/* Hero */}
       <div className="relative">
         {coffee.bagPhotoUrl ? (
@@ -168,8 +168,8 @@ export default function CoffeeDetailPage() {
             <div className="absolute inset-0 card-scrim" />
           </div>
         ) : (
-          <div className="h-40 bg-brew-surface flex items-center justify-center">
-            <svg className="w-12 h-12 text-brew-muted opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+          <div className="h-40 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center">
+            <svg className="w-12 h-12 text-light-muted-foreground opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15a3.75 3.75 0 01-3.75 3.75H7.95A3.75 3.75 0 014.2 15m15.6 0H4.2m15.6 0H4.2" />
             </svg>
           </div>
@@ -178,7 +178,7 @@ export default function CoffeeDetailPage() {
         {/* Back button */}
         <button
           onClick={() => router.push("/coffees")}
-          className="absolute left-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white"
+          className="absolute left-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -189,12 +189,12 @@ export default function CoffeeDetailPage() {
         {/* Title overlay */}
         <div className={`${coffee.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
           {coffee.process && (
-            <p className="text-white/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+            <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
           )}
-          <h1 className="font-display text-3xl text-white">{coffee.name}</h1>
-          <p className="text-white/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
+          <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
+          <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
           {roastDate && (
-            <p className="text-white/40 text-xs mt-0.5">
+            <p className="text-light-foreground/40 text-xs mt-0.5">
               Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
             </p>
           )}
@@ -202,24 +202,24 @@ export default function CoffeeDetailPage() {
       </div>
 
       {/* Stats row */}
-      <div className="px-5 py-4 flex items-center gap-6 border-b border-brew-border">
+      <div className="px-5 py-4 flex items-center gap-6 border-b border-light-foreground/15">
         <div className="text-center">
-          <p className="font-mono-num text-2xl text-white font-medium">{coffee.sessionCount}</p>
-          <p className="text-brew-muted text-xs uppercase tracking-widest mt-0.5">Brew{coffee.sessionCount !== 1 ? "s" : ""}</p>
+          <p className="font-mono-num text-2xl text-light-foreground font-medium">{coffee.sessionCount}</p>
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest mt-0.5">Brew{coffee.sessionCount !== 1 ? "s" : ""}</p>
         </div>
         {coffee.avgRating != null && coffee.avgRating > 0 && (
           <div className="flex flex-col items-center">
             <StarRating value={coffee.avgRating} readonly size="sm" />
-            <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Avg Rating</p>
+            <p className="text-light-muted-foreground text-xs uppercase tracking-widest mt-1">Avg Rating</p>
           </div>
         )}
         {coffee.bestMethod && (
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1.5">
               <BrewMethodIcon method={coffee.bestMethod} className="w-5 h-5" />
-              <p className="text-white text-sm font-medium">{coffee.bestMethod}</p>
+              <p className="text-light-foreground text-sm font-medium">{coffee.bestMethod}</p>
             </div>
-            <p className="text-brew-muted text-xs uppercase tracking-widest mt-0.5">Best Method</p>
+            <p className="text-light-muted-foreground text-xs uppercase tracking-widest mt-0.5">Best Method</p>
           </div>
         )}
       </div>
@@ -229,7 +229,7 @@ export default function CoffeeDetailPage() {
         <button
           type="button"
           onClick={brewThis}
-          className="w-full py-3.5 rounded-2xl text-sm font-medium bg-brew-accent text-brew-accent-fg active:scale-[0.98] transition-transform"
+          className="w-full py-3.5 rounded-2xl text-sm font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98] transition-transform"
         >
           Brew this
         </button>
@@ -257,8 +257,8 @@ export default function CoffeeDetailPage() {
           }}
           className={`w-full py-3 rounded-2xl text-sm flex items-center justify-center gap-2 border transition-transform active:scale-[0.98] ${
             coffee.inRotation
-              ? "bg-brew-accent/10 border-brew-accent/40 text-brew-accent"
-              : "bg-brew-surface border-brew-border text-brew-muted"
+              ? "bg-light-foreground/10 border-light-foreground/40 text-light-foreground"
+              : "bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border-light-foreground/15 text-light-muted-foreground"
           }`}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill={coffee.inRotation ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -270,8 +270,8 @@ export default function CoffeeDetailPage() {
 
       {/* Coffee scan details */}
       {(roastDate || variety || roastLevel || region || tastingNotes.length > 0 || commonNotes.length > 0) && (
-        <div className="px-5 py-4 border-b border-brew-border space-y-2">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-3">Coffee Details</p>
+        <div className="px-5 py-4 border-b border-light-foreground/15 space-y-2">
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-3">Coffee Details</p>
           {variety && <DetailRow label="Variety" value={variety} />}
           {roastLevel && <DetailRow label="Roast" value={roastLevel} />}
           {region && <DetailRow label="Region" value={region} />}
@@ -283,10 +283,10 @@ export default function CoffeeDetailPage() {
           )}
           {tastingNotes.length > 0 && (
             <div className="flex items-baseline gap-3 pt-0.5">
-              <span className="text-brew-muted text-sm shrink-0 w-24">Bag notes</span>
+              <span className="text-light-muted-foreground text-sm shrink-0 w-24">Bag notes</span>
               <div className="flex flex-wrap gap-1.5">
                 {tastingNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full border border-brew-border text-white/60">
+                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full border border-light-foreground/15 text-light-foreground/60">
                     {note}
                   </span>
                 ))}
@@ -295,10 +295,10 @@ export default function CoffeeDetailPage() {
           )}
           {commonNotes.length > 0 && (
             <div className="flex items-baseline gap-3 pt-0.5">
-              <span className="text-brew-muted text-sm shrink-0 w-24">You taste</span>
+              <span className="text-light-muted-foreground text-sm shrink-0 w-24">You taste</span>
               <div className="flex flex-wrap gap-1.5">
                 {commonNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full bg-white/10 text-white/80">
+                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full bg-light-foreground/8 text-light-foreground/80">
                     {note}
                   </span>
                 ))}
@@ -310,18 +310,18 @@ export default function CoffeeDetailPage() {
 
       {/* Roaster info */}
       {(roasterInfo || roasterGenerating) && (
-        <div className="px-5 py-4 border-b border-brew-border">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Roaster</p>
+        <div className="px-5 py-4 border-b border-light-foreground/15">
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-2">Roaster</p>
           {roasterGenerating ? (
-            <p className="text-brew-muted text-sm italic">Researching roaster…</p>
+            <p className="text-light-muted-foreground text-sm italic">Researching roaster…</p>
           ) : roasterInfo ? (
             <>
               {roasterInfo.region && (
-                <p className="text-brew-muted text-xs mb-1.5">{roasterInfo.region}</p>
+                <p className="text-light-muted-foreground text-xs mb-1.5">{roasterInfo.region}</p>
               )}
-              <p className="text-white/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
+              <p className="text-light-foreground/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
               {roasterInfo.notes && (
-                <p className="text-white/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
+                <p className="text-light-foreground/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
               )}
             </>
           ) : null}
@@ -329,9 +329,9 @@ export default function CoffeeDetailPage() {
       )}
 
       {/* Personal notes */}
-      <div className="px-5 py-4 border-b border-brew-border">
+      <div className="px-5 py-4 border-b border-light-foreground/15">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-brew-muted text-xs uppercase tracking-widest">Your Notes</p>
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest">Your Notes</p>
           {!editingNotes && (
             <button
               onClick={() => {
@@ -339,7 +339,7 @@ export default function CoffeeDetailPage() {
                 setEditingNotes(true);
                 setTimeout(() => notesRef.current?.focus(), 50);
               }}
-              className="text-brew-muted text-xs hover:text-white transition-colors"
+              className="text-light-muted-foreground text-xs hover:text-light-foreground transition-colors"
             >
               {coffee.personalNotes ? "Edit" : "+ Add"}
             </button>
@@ -353,7 +353,7 @@ export default function CoffeeDetailPage() {
               onChange={e => setNotesDraft(e.target.value)}
               placeholder="Would you buy this again? Anything worth remembering…"
               rows={4}
-              className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-white text-sm resize-none placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+              className="w-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-3 text-light-foreground text-sm resize-none placeholder:text-light-muted-foreground focus:outline-none focus:border-white/30"
             />
             <div className="flex gap-2">
               <button
@@ -372,32 +372,32 @@ export default function CoffeeDetailPage() {
                     setNotesSaving(false);
                   }
                 }}
-                className="flex-1 py-2.5 rounded-2xl text-sm font-medium bg-brew-accent/20 text-brew-accent border border-brew-accent/30 disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-2xl text-sm font-medium bg-light-foreground/20 text-light-foreground border border-light-foreground/30 disabled:opacity-50"
               >
                 {notesSaving ? "Saving…" : "Save"}
               </button>
               <button
                 onClick={() => setEditingNotes(false)}
-                className="flex-1 py-2.5 rounded-2xl text-sm border border-brew-border text-brew-muted"
+                className="flex-1 py-2.5 rounded-2xl text-sm border border-light-foreground/15 text-light-muted-foreground"
               >
                 Cancel
               </button>
             </div>
           </div>
         ) : coffee.personalNotes ? (
-          <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{coffee.personalNotes}</p>
+          <p className="text-light-foreground/80 text-sm leading-relaxed whitespace-pre-wrap">{coffee.personalNotes}</p>
         ) : (
-          <p className="text-brew-muted text-sm italic">No notes yet.</p>
+          <p className="text-light-muted-foreground text-sm italic">No notes yet.</p>
         )}
       </div>
 
       {/* Brew memory */}
       {coffee.writtenSummary && (
-        <div className="px-5 py-4 border-b border-brew-border">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">Brew memory</p>
-          <p className="text-white/80 text-sm leading-relaxed">{coffee.writtenSummary}</p>
+        <div className="px-5 py-4 border-b border-light-foreground/15">
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-2">Brew memory</p>
+          <p className="text-light-foreground/80 text-sm leading-relaxed">{coffee.writtenSummary}</p>
           {coffee.lastSummarizedAt && (
-            <p className="text-white/20 text-xs mt-2">
+            <p className="text-light-foreground/20 text-xs mt-2">
               Updated {new Date(coffee.lastSummarizedAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
             </p>
           )}
@@ -406,17 +406,17 @@ export default function CoffeeDetailPage() {
 
       {/* What to explore */}
       {coffee.whatToExplore && (
-        <div className="px-5 py-4 border-b border-brew-border">
-          <p className="text-brew-muted text-xs uppercase tracking-widest mb-2">What to explore</p>
-          <p className="text-white/80 text-sm leading-relaxed">{coffee.whatToExplore}</p>
+        <div className="px-5 py-4 border-b border-light-foreground/15">
+          <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-2">What to explore</p>
+          <p className="text-light-foreground/80 text-sm leading-relaxed">{coffee.whatToExplore}</p>
         </div>
       )}
 
       {/* Sessions */}
       <div className="px-5 py-5 flex flex-col gap-4 pb-safe pb-8">
-        <p className="text-brew-muted text-xs uppercase tracking-widest">All Brews</p>
+        <p className="text-light-muted-foreground text-xs uppercase tracking-widest">All Brews</p>
         {sessions.length === 0 ? (
-          <p className="text-brew-muted text-sm">No sessions found.</p>
+          <p className="text-light-muted-foreground text-sm">No sessions found.</p>
         ) : (
           sessions.map(s => (
             <SessionCard
@@ -434,8 +434,8 @@ export default function CoffeeDetailPage() {
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-brew-muted text-sm shrink-0">{label}</span>
-      <span className="text-white/80 text-sm text-right">{value}</span>
+      <span className="text-light-muted-foreground text-sm shrink-0">{label}</span>
+      <span className="text-light-foreground/80 text-sm text-right">{value}</span>
     </div>
   );
 }
