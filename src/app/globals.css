@@ -259,6 +259,28 @@
     --input: hsl(0 0% 14% / 0.15);
   }
 
+  /* Light System — invert the shared CoffeeBeanGlow SVG inside the
+   * (light) route group. The component hardcodes #E8C5A8 (warm peach)
+   * across every stroke layer — perfect on the Dark canvas, invisible
+   * on the warm cream Light Field. PhotoUpload uses it during the
+   * "Reading label…" overlay and we can't fork PhotoUpload just for
+   * the bean colour, so flip it at the CSS layer.
+   *
+   * `filter: brightness(0)` collapses every opaque pixel to pure black
+   * while preserving alpha — peach turns to anthracite, the blurred
+   * halo reads as soft ink bleed, the same effect as the dedicated
+   * LightCoffeeBeanGlow component.
+   *
+   * Targeted via `filter` on the inner #cbg-glow filter container —
+   * the original CoffeeBeanGlow uses `filter="url(#cbg-glow)"` and
+   * has a wrapping <defs> with that id. Our selector matches the
+   * <svg> by its glow filter so the LightCoffeeBeanGlow (#lcbg-glow)
+   * is unaffected (it's already anthracite).
+   */
+  [data-light-scope] svg:has(> defs > filter#cbg-glow) {
+    filter: brightness(0);
+  }
+
   /* Light System — invert BrewMethodIcon assets for the warm cream Field.
    * The /brew-icons/*.png + chemex.svg are all drawn with white strokes
    * (designed for the Dark canvas). On Light they read as faint ghosts.
