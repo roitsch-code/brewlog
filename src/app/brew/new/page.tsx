@@ -7,7 +7,6 @@ import StepRecommend from "@/components/flow/StepRecommend";
 import StepBrew from "@/components/flow/StepBrew";
 import StepLog from "@/components/flow/StepLog";
 import StepSummary from "@/components/flow/StepSummary";
-import StepMatchResult from "@/components/flow/StepMatchResult";
 
 export default function NewBrewPage() {
   const { step } = useFlowStore();
@@ -21,7 +20,6 @@ export default function NewBrewPage() {
       {step === "brew" && <StepBrew />}
       {step === "log" && <StepLog />}
       {step === "summary" && <StepSummary />}
-      {step === "match_result" && <StepMatchResult />}
     </>
   );
 }

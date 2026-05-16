@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 const HOME_STEPS:    FlowStep[] = ["scan", "context", "recommend", "brew", "log", "summary"];
 const BREW_AGAIN_STEPS: FlowStep[] = ["context", "recommend", "brew", "log", "summary"];
 const EXTERNAL_STEPS: FlowStep[] = ["scan", "log", "summary"];
-const MATCH_STEPS:   FlowStep[] = ["scan", "match_result"];
 
 interface FlowShellProps {
   children: React.ReactNode;
@@ -28,7 +27,6 @@ export default function FlowShell({
   const router = useRouter();
 
   const steps =
-    draft.mode === "match"    ? MATCH_STEPS :
     draft.mode === "external" ? EXTERNAL_STEPS :
     skipScan                  ? BREW_AGAIN_STEPS :
     HOME_STEPS;

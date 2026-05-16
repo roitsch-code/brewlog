@@ -6,15 +6,14 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/Chip";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
-import { Camera, PenLine, Link2, Coffee, ShoppingBag, Target } from "lucide-react";
+import { Camera, PenLine, Link2, Coffee, ShoppingBag } from "lucide-react";
 
 type InputMethod = "photo" | "manual" | "link";
-type ModeChoice = "home" | "external" | "match";
+type ModeChoice = "home" | "external";
 
 const SCAN_MODES: { id: ModeChoice; label: string; Icon: React.ElementType }[] = [
   { id: "home", label: "Brew at home", Icon: Coffee },
   { id: "external", label: "Coffee shop", Icon: ShoppingBag },
-  { id: "match", label: "Check match", Icon: Target },
 ];
 
 const PROCESSES = ["Natural", "Washed", "Honey", "Anaerobic", "Other"];
@@ -367,8 +366,7 @@ export default function StepScan() {
     }
     setMode(selectedMode);
     if (selectedMode === "home") setStep("context");
-    else if (selectedMode === "external") setStep("mode");
-    else setStep("match_result");
+    else setStep("mode");
   };
 
   // Roaster prior to show — from scan result or manual entry lookup

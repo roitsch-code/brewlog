@@ -4,13 +4,12 @@ import type { DraftSession, SessionMode, CoffeeIdentity, SessionContext, Recomme
 
 export type FlowStep =
   | "scan"         // Photo + AI extraction + clarification (always first)
-  | "mode"         // Home Brew / Coffee Shop / Check Match (after scan)
+  | "mode"         // Home Brew / Coffee Shop (after scan)
   | "context"      // Occasion, amount, time, mood (home only)
   | "recommend"    // AI recommendation (home only)
   | "brew"         // Recipe card + timer
   | "log"          // Taste documentation
-  | "summary"      // Save
-  | "match_result"; // Taste-match result (match mode only)
+  | "summary";     // Save
 
 interface FlowState {
   step: FlowStep;

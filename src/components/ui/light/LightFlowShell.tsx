@@ -29,7 +29,6 @@ import CTA from "./CTA";
 const HOME_STEPS: FlowStep[] = ["scan", "context", "recommend", "brew", "log", "summary"];
 const BREW_AGAIN_STEPS: FlowStep[] = ["context", "recommend", "brew", "log", "summary"];
 const EXTERNAL_STEPS: FlowStep[] = ["scan", "log", "summary"];
-const MATCH_STEPS: FlowStep[] = ["scan", "match_result"];
 
 interface LightFlowShellProps {
   children: ReactNode;
@@ -52,13 +51,11 @@ export default function LightFlowShell({
   const router = useRouter();
 
   const steps =
-    draft.mode === "match"
-      ? MATCH_STEPS
-      : draft.mode === "external"
-        ? EXTERNAL_STEPS
-        : skipScan
-          ? BREW_AGAIN_STEPS
-          : HOME_STEPS;
+    draft.mode === "external"
+      ? EXTERNAL_STEPS
+      : skipScan
+        ? BREW_AGAIN_STEPS
+        : HOME_STEPS;
 
   const currentIndex = steps.indexOf(step as FlowStep);
 

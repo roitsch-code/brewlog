@@ -8,7 +8,6 @@ import StepRecommend from "@/components/flow/StepRecommend";
 import StepBrew from "@/components/flow/StepBrew";
 import StepLog from "@/components/flow/StepLog";
 import StepSummary from "@/components/flow/StepSummary";
-import StepMatchResult from "@/components/flow/StepMatchResult";
 
 /**
  * Light migration parallel route.
@@ -40,7 +39,6 @@ export default function BrewPreviewPage() {
       {step === "brew" && <StepBrew />}
       {step === "log" && <StepLog />}
       {step === "summary" && <StepSummary />}
-      {step === "match_result" && <StepMatchResult />}
     </>
   );
 }

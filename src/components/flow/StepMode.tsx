@@ -17,12 +17,6 @@ const MODES = [
     sub: "Visiting a café? Document what you had and how it tasted.",
     img: "/images/mode-external.jpg",
   },
-  {
-    id: "match" as const,
-    label: "Check Match",
-    sub: "Considering a purchase? See how well this coffee fits your taste profile.",
-    img: "/images/mode-home.jpg", // reuse until a dedicated image is added
-  },
 ];
 
 export default function StepMode() {
@@ -35,14 +29,12 @@ export default function StepMode() {
 
   const effectivePlaceName = placeSearch.trim() || placeManual.trim();
 
-  const choose = (mode: "home" | "external" | "match") => {
+  const choose = (mode: "home" | "external") => {
     setMode(mode);
     if (mode === "home") {
       setStep("context");
-    } else if (mode === "external") {
-      setShowPlaceEntry(true);
     } else {
-      setStep("match_result");
+      setShowPlaceEntry(true);
     }
   };
 
