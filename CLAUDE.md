@@ -30,23 +30,29 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 ### Pages (`src/app/`)
 
-| Route | Purpose |
-|-------|---------|
-| `page.tsx` | Home — session diary feed, "New Brew" / "Brew Again" entry |
-| `layout.tsx` | Root layout: auth check, PWA meta tags |
-| `login/page.tsx` | Passkey (WebAuthn) login UI |
-| `onboarding/page.tsx` | First-run equipment / grinder / preferences wizard |
-| `brew/new/page.tsx` | Multi-step brew flow entry point |
-| `brew/[id]/page.tsx` | Edit / review an existing session |
-| `coffees/page.tsx` | Coffee library — searchable list |
-| `coffees/[id]/page.tsx` | Coffee detail: rating history, brew signatures, notes |
-| `cafes/page.tsx` | Café map + place search |
-| `cafes/place/[slug]/page.tsx` | Individual café detail (menu, coffees tasted) |
-| `cafes/coffee/[id]/page.tsx` | Coffee tasted at an external location |
-| `taste/page.tsx` | Taste profile + AI-written summary |
-| `match/page.tsx` | Guided taste-match flow vs past sessions |
-| `explore/page.tsx` | Conversational AI + map explorer |
-| `library/page.tsx` | Navigation hub to library, sessions, insights |
+Routes are split between the **`(light)` route group** (BTTS Light theme — Cream background, Fraunces/Chivo, anthracite foreground, generative Field) and the legacy **Dark** surfaces still pending migration. The `(light)` segment is URL-invisible — `/coffees` resolves through `(light)/coffees/page.tsx`. `LightShell` wraps everything in the group and sets the `[data-light-scope]` data attribute used by the CSS shim in `globals.css`.
+
+| Route | Theme | Purpose |
+|-------|-------|---------|
+| `(light)/page.tsx` | Light | Home BTTS — daily greeting, Action Pill (Brew-Again candidates), inline AI chat over `/api/explore-agent` |
+| `(light)/layout.tsx` | — | Wraps `(light)` group in `LightShell` (sets `[data-light-scope]`) |
+| `(light)/past-conversations/page.tsx` | Light | Conversation history list (archived chats) |
+| `(light)/past-conversations/[id]/page.tsx` | Light | Single past conversation thread (read-only replay) |
+| `(light)/brew/new/page.tsx` | Light | Multi-step brew flow — routes `flowStore.step` to the right `LightStep*` component |
+| `(light)/coffees/page.tsx` | Light | Coffee library — searchable list (burger top-right, no BottomNav) |
+| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + Brew-this CTA + rotation star toggle + rating history + brew signatures |
+| `layout.tsx` | — | Root layout: auth check, PWA meta tags, font preloads |
+| `login/page.tsx` | Dark | Passkey (WebAuthn) login UI |
+| `onboarding/page.tsx` | Dark | First-run equipment / grinder / preferences wizard |
+| `brew/[id]/page.tsx` | Dark | Read-only session detail (reached from SessionCard on /home diary) |
+| `cafes/page.tsx` | Dark | Café Library — tabbed list (Cafés + Coffees tasted out) |
+| `cafes/map/page.tsx` | Dark *(intentional)* | Nearby — full-screen Leaflet map (CartoCDN dark tiles); needs `h-dvh flex flex-col` + `flex-1 min-h-0` so Leaflet gets a non-zero container |
+| `cafes/place/[slug]/page.tsx` | Dark | Individual café detail (menu, coffees tasted) |
+| `cafes/coffee/[id]/page.tsx` | Dark | Coffee tasted at an external location |
+| `taste/page.tsx` | Dark | Taste profile + AI-written summary + RadarChart |
+| `library/page.tsx` | Dark | Navigation hub (small, low-traffic) |
+
+Removed in the BTTS Light arc: legacy `page.tsx` (Dark home, replaced by `(light)/page.tsx`), `match/page.tsx` + `/api/match` (taste-match flow folded into `/api/explore-agent`), `explore/page.tsx` (replaced by inline chat on home). See HANDOVER.md for the punch-list of Dark routes still pending Light migration.
 
 ### API Routes (`src/app/api/`)
 
@@ -70,9 +76,13 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 | `analyze-url` | Scrape & analyze a coffee product page URL |
 | `brew-insight` | AI terrain/pattern one-liner for post-brew screen |
 | `taste-summary` | AI written summary of taste evolution across sessions |
-| `match` | Taste scoring — find similar past sessions |
-| `explore` | AMA conversational exploration with sources |
-| `explore-agent` | ★ Agent loop with tool-use (`search_places`, `fetch_page`, `analyze_image`, `suggest_navigation`) backing /explore |
+| `greeting` | ★ Haiku daily-starter for the BTTS Home — time-of-day-aware, references rotation bags. Cached client-side by `(date, time-bucket)` |
+| `conversations` | GET list / POST new conversation |
+| `conversations/[id]` | GET / PUT / DELETE individual conversation thread |
+| `conversations/active` | GET the currently-active conversation (live thread on /home) |
+| `conversations/archive` | POST → move the active conversation to past-conversations |
+| `explore` | AMA conversational exploration with sources (legacy; no page consumer left) |
+| `explore-agent` | ★ Agent loop with tool-use (`search_places`, `fetch_page`, `analyze_image`, `suggest_navigation`) — powers the inline chat on `(light)/page.tsx` |
 | `research` | Weekly deep-research cron agent (Ofelia) |
 | `preferences` | GET / POST user preferences (equipment, grinder, location) |
 | `roasters` | GET / POST roaster profiles |
@@ -94,26 +104,29 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 **Flow steps (`src/components/flow/`):**
 
+All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `StepContext`, `StepRecommend`, `StepBrew`, `StepLog`, `StepSummary`, `StepMatchResult`) were deleted in PR #95 (~4,300 lines) when `/brew/new` cut over to Light.
+
 | Component | Purpose |
 |-----------|---------|
-| `FlowShell.tsx` | Step router + nav shell |
-| `StepMode.tsx` | Home Brew / Coffee Shop / Taste Match selector |
-| `StepScan.tsx` | Camera / photo upload + AI bag extraction + clarification |
-| `StepContext.tsx` | Occasion, water amount, time, mood, equipment |
-| `StepRecommend.tsx` | 2–4 AI recipe candidates with reasoning |
-| `StepBrew.tsx` | ★ Circular timer + real-time pour guide |
-| `StepLog.tsx` | Post-brew: flavor wheel, star rating, tasting notes |
-| `StepSummary.tsx` | Review + save session |
-| `StepMatchResult.tsx` | Taste-match results vs past sessions |
+| `LightStepMode.tsx` | Home Brew / Coffee Shop / Taste Match selector |
+| `LightStepScan.tsx` | ★ Camera / photo upload / URL / manual + AI bag extraction + roaster Q&A (1400+ lines — biggest step) |
+| `LightStepContext.tsx` | Occasion, water amount, time, mood, equipment, aromatic goal |
+| `LightStepRecommend.tsx` | 2–4 AI recipe candidates with reasoning |
+| `LightStepBrew.tsx` | ★ Circular timer + real-time pour guide (Web Audio cue + vibrate on step change) |
+| `LightStepLog.tsx` | Post-brew: flavor wheel, star rating, tasting notes |
+| `LightStepSummary.tsx` | Review + save session |
 
-**UI primitives (`src/components/ui/`):**
-`Button`, `CircularTimer`, `CoffeeBeanGlow`, `Chip`, `FlavorWheel`, `BrewMethodIcon`, `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `RadarChart`, `StarRating`, `ThinkingDots`, `WaveformBars` (audio-level visualizer for voice capture)
+**Light UI primitives (`src/components/ui/light/`):**
+`LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders `composeFieldGradient(zones, rotation)` fixed -z-10), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork).
+
+**Dark UI primitives (`src/components/ui/`):**
+`Button`, `Chip`, `CoffeeBeanGlow`, `FlavorWheel` (still Dark inside `LightStepLog` — opt-in, deferred), `BrewMethodIcon` (inverted via `[data-light-scope] { filter: brightness(0) }` shim instead of forking), `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `RadarChart`, `StarRating`, `ThinkingDots`, `WaveformBars`.
 
 **Layout (`src/components/layout/`):**
-`BottomNav`, `ScrollContainer`, `BottomSpacer`
+`BottomNav` (allowlist: `/taste`, `/library`, `/cafes` only — Light routes opt out), `ScrollContainer`, `BottomSpacer`
 
-**Session:** `SessionCard`
-**Cafés:** `CafeMap` (Leaflet)
+**Session:** `SessionCard` (Dark, used on home diary feed)
+**Cafés:** `CafeMap` (Leaflet — consumed by `/cafes/map`)
 
 ### `src/lib/`
 
@@ -149,9 +162,25 @@ lib/
 │   ├── 0001_add_places.sql                # creates places table; historic seed data, irrelevant in prod
 │   ├── 0002_add_place_coords.sql          # lat/lng columns on places
 │   ├── 0004_add_cologne_places.sql        # (0003 is intentionally absent)
-│   └── 0005_cologne_specialty_places.sql
+│   ├── 0005_cologne_specialty_places.sql
+│   ├── 0006_add_what_to_explore.sql       # preferences column for explore prompts
+│   ├── 0007_add_conversations.sql         # conversations + conversation_messages tables
+│   ├── 0008_add_field_zones.sql           # coffees.field_zones jsonb (Field v1.1 persistence)
+│   └── 0009_add_in_rotation.sql           # coffees.in_rotation boolean (rotation marker)
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
+│   # Applying schema/code that references a new column BEFORE running the migration on the VPS
+│   # makes Drizzle SELECT 500 (column-strict). Always migrate VPS first, deploy code second.
 │   # The real places dataset (6,202 rows, verified 2026-05-09) lives only in Production; no seed file in Git.
+├── field/                     # ★ Generative Field v1.1 — coffee-driven background gradient
+│   ├── types.ts               # FieldZone, FieldZoneId, FieldConfig types
+│   ├── zones.ts               # 6-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel)
+│   ├── defaultZones.ts        # Fallback composition for coffees with no Field yet
+│   ├── composeGradient.ts     # zones + rotation → CSS radial/conic gradient sandwich
+│   ├── schema.ts              # Zod schema for persisted field_zones
+│   ├── mapNotesToZones.ts     # Haiku call: tasting notes → weighted zone composition
+│   └── FieldContext.tsx       # React Context Provider + useFieldConfig() hook
+│   # Consumed by <Field> (src/components/ui/light/Field.tsx) and LightFlowShell.
+│   # LightFlowShell rotates 25° per brew step (scan 0° → context 25° → recommend 50° → brew 75° → log 100° → summary 125°).
 ├── knowledge/
 │   ├── insights.ts / news.ts / hints.ts / questions.ts / alerts.ts
 │   ├── recipes/            # ★ Structured recipe corpus — 7 WBrC/WAC champions (Kasuya 2016, Du 2019, Hsu 2022, Medina 2023, Wölfl 2024, Peng 2025, Stanica WAC 2024) + 11 reference recipes (Hoffmann V60/Clever/AeroPress/Moccamaster/Iced, Kasuya 4:6, Rolf, Gagné, Perger, Rao, Hatakeyama, Wallgren, Turbo). Full pour mechanics with per-step durations, staged temperatures, attribution, sources, verified flag. selectRecipes() injected into /recommend per turn.
@@ -175,8 +204,8 @@ lib/
 |------|---------|
 | `src/store/flowStore.ts` | ★ Zustand brew flow state (sessionStorage-persisted) |
 | `src/hooks/useWakeLock.ts` | Keep screen on during active brew |
-| `src/hooks/useVoiceCapture.ts` | Mic recording + level metering for /explore voice input |
-| `src/hooks/useVoicePlayback.ts` | Streaming TTS playback for /explore voice output |
+| `src/hooks/useVoiceCapture.ts` | Mic recording + level metering for inline-chat voice input (BTTS Home) |
+| `src/hooks/useVoicePlayback.ts` | Streaming TTS playback for inline-chat voice output (BTTS Home) |
 | `src/middleware.ts` | Auth check + redirects |
 | `.claude/hooks/session-start.sh` | Web Claude Code session bootstrap — runs `npm install` so tools work on cold start (gated on `$CLAUDE_CODE_REMOTE`) |
 | `scripts/seed-insights.mjs` | Populate knowledge base (run once on new installs) |
@@ -184,11 +213,21 @@ lib/
 | `scripts/migrate-storage-to-s3.mjs` | One-time local storage → S3 migration |
 | `scripts/rebuild-coffees-table.mjs` | Recompute coffee aggregates |
 | `scripts/geocode-places.mjs` | Geocode places.address via Nominatim (OSM); ~2 hrs for 6k+ rows due to 1 req/s rate limit |
+| `scripts/backfill-field-zones.mjs` | One-shot — call Haiku Messages API over plain `fetch` to map `coffees.tastingNotes` → `field_zones`. Ran on prod 2026-05 (23/23). Uses raw `fetch` because the Next.js standalone Docker image does not expose `@anthropic-ai/sdk` in `node_modules`. |
 | `docker-compose.yml` | 4-service stack: postgres, app, caddy, ofelia |
+| `.dockerignore` | Excludes `lovable-v7/`, `node_modules`, `.next`, `.env*` — `lovable-v7/` was dragging react-router-dom into the Next.js build context and failing the deploy. |
+| `lovable-v7/` | Read-only design reference (Lovable v7 export). Excluded from Docker build context. |
+| `HANDOVER.md` | In-flight project state — what shipped, what's next, pitfalls discovered. Read at session start for context above and beyond CLAUDE.md. |
 
 ### Database tables (Drizzle + Postgres)
 
-`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages` (11 tables).
+
+Recent column additions on `coffees`:
+- `field_zones jsonb` (migration 0008) — persisted Field composition per coffee
+- `in_rotation boolean NOT NULL DEFAULT false` (migration 0009) — star toggle for "currently brewing this bag"
+
+Both migrations applied manually on the VPS — see migration NOTE above.
 
 ### Key dependencies
 
@@ -211,6 +250,36 @@ lib/
 ## Current Status — Snapshot May 2026
 
 ### ✅ Done
+**BTTS Light migration (PR #65 → #103)**
+- Whole brew flow + Home + Coffee Library now run under the `(light)` route group with the BTTS Light theme — Cream background, Fraunces 40px hero, Chivo body, anthracite foreground, generative Field background.
+- Light primitives stack: `LightShell`, `LightFlowShell`, `Field`, `Card`, `Section`, `Footnote`, `Chip`, `Hero`, `CTA`, `CTAWarmth`, `ActionPill`, `ChatInput`, `ChatThread`, `NavigationOverlay`, `StarRating`, `CircularTimer` (fork), `CoffeeBeanGlow` (fork).
+- Atomic cut-over (PR #95) renamed `(light)/brew/preview` → `(light)/brew/new` and deleted ~4,300 lines of Dark step code (`Step*.tsx` + `FlowShell.tsx` + Dark `CircularTimer`).
+- `[data-light-scope]` CSS shim in `globals.css` adapts un-migrated Dark components (BrewMethodIcon via `filter: brightness(0)`; `var(--card)` tokens; CoffeeBeanGlow inversion) without forking the components.
+- Dark surfaces still pending Light migration: `/cafes`, `/cafes/place/[slug]`, `/cafes/coffee/[id]`, `/taste`, `/brew/[id]`, `/login`, `/onboarding`, `/library`. `/cafes/map` stays Dark intentionally (dark CartoCDN tiles). See HANDOVER.md punch list.
+
+**Generative Field v1.1 (PRs #78 → #100)**
+- Each coffee gets its own background gradient composition derived from tasting notes.
+- 6-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel); composition stored as weighted JSON in `coffees.field_zones`.
+- Haiku call (`src/lib/field/mapNotesToZones.ts`) maps tasting notes → zone weights on first scan.
+- `LightFlowShell` rotates Field 25° per brew step (scan 0°, mode 0°, context 25°, recommend 50°, brew 75°, log 100°, summary 125°) — visual progress signal.
+- Brew-Again paths (ActionPill on home, `/coffees` list, `/coffees/[id]`) lift `fieldZones` from `coffees.field_zones` so the cup-specific Field travels with the user into the flow.
+- Backfill (`scripts/backfill-field-zones.mjs`) ran on production: 23/23 existing coffees mapped (no skips).
+- Variety fallback (Phase 4 — derive Field from variety knowledge for coffees without tasting notes) deferred as currently moot.
+
+**Coffee Rotation marker (PR #97)**
+- `coffees.in_rotation boolean` column — user-toggleable "currently brewing this bag" flag.
+- Star toggle on `/coffees/[id]` (optimistic PATCH).
+- Greeting prompt's library snapshot prefixes rotation entries with `★ IN ROTATION |`; `ROTATION DISCIPLINE` block in the system prompt instructs Haiku to prefer rotation bags as the day's invitation.
+
+**Greeting Haiku (PR #87, #96)**
+- Time-of-day discipline block in the system prompt (fixed "Late night" at 18:44).
+- Library snapshot uses `formatLibraryForPrompt` (with rotation prefix + usage signal) instead of bare roaster+name.
+- localStorage cache keyed by `brewlog.starter.v3.<date>.<bucket>` — regenerates 5× per day at tod-bucket boundaries instead of once per calendar day. Bumping the version is the canonical invalidation lever for any greeting prompt change.
+
+**Nearby map split (PR #101)**
+- `/cafes/map` is now a dedicated route (full-screen Leaflet with dark CartoCDN tiles). `/cafes` is the tabbed Café Library list (Cafés + Coffees tasted out). `NavigationOverlay` "Nearby" → `/cafes/map`; "Café Library" → `/cafes`.
+- Fixed flex-collapse bug: Leaflet needs `h-dvh flex flex-col` + `flex-1 min-h-0` to get a non-zero container.
+
 **Core brew flow**
 - Full 7-step brew flow: mode → scan → context → recommend → brew → log → summary
 - AI bag photo extraction (Claude Vision → Zod-validated session)
@@ -269,7 +338,20 @@ lib/
 - Alert subscriptions + incoming webhook for coffee availability notifications
 
 ### ❌ Not Done / Known Gaps
-- Photo uploads: stored under `bags/` — old sessions scanned before this fix have no `bagPhotoUrl`
+
+**Light migration punch list** (roughly priority order — see HANDOVER.md for the live ranking):
+1. `/coffees` rotation indicator + filter — list rows don't show the star yet; "Show only rotation" toggle would scan faster
+2. `/cafes` Light migration — high-traffic, last big Library surface
+3. `/cafes/place/[slug]` + `/cafes/coffee/[id]` Light — small follow-ons after `/cafes`
+4. `/taste` Light + RadarChart Light — taste profile + AI summary
+5. FlavorWheel Light SVG — currently Dark inside `LightStepLog` (opt-in, rarely opened — deferred per migration plan)
+6. `/brew/[id]` Session Detail Light — reached via SessionCard
+7. Dark `Chip.tsx` removal — only Dark consumer left is `/brew/[id]`
+8. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through `Card` + `Chip` primitives
+9. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
+
+**Permanent gaps**
+- Photo uploads: stored under `bags/` — old sessions scanned before this convention have no `bagPhotoUrl`
 - Step alerts during background are missed — iOS suspends JS; no workaround without server-push notifications
 - Single-user app by design (no multi-user isolation needed)
 - Knowledge base needs seeding on new installs: `node scripts/seed-insights.mjs`
@@ -335,8 +417,8 @@ Cause for this rule: claimed "~33 cafés in the places table" based on counting 
 
 ### AI models
 - `claude-opus-4-7` — recommend (engineered for Opus; do NOT swap to Sonnet without re-validating outputs — see Hard Rule above)
-- `claude-sonnet-4-6` — analyze-bag, match, explore, explore-agent, escher (post-brew insight helper)
-- `claude-haiku-4-5` — brew-insight, taste-summary, research, analyze-bag/clarify, analyze-url, coffees/compact, roasters/generate, translate (tasting-notes ↔ SCA helper)
+- `claude-sonnet-4-6` — analyze-bag, explore, explore-agent, escher (post-brew insight helper)
+- `claude-haiku-4-5` — brew-insight, taste-summary, research, analyze-bag/clarify, analyze-url, coffees/compact, roasters/generate, translate (tasting-notes ↔ SCA helper), greeting (daily starter), field/mapNotesToZones (notes → Field zones)
 
 ### Git / Deploy
 - **"Done" means shipped** — merged to `main`, auto-deploy runs on Hetzner, live on the iPhone PWA. "Pushed to a feature branch" is NOT done. Stopping at a branch leaves the user staring at the still-broken app, re-reporting the bug, and re-fixing what is already fixed. That is chaos and it is not acceptable.
