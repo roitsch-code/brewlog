@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useFlowStore, type FlowStep } from "@/store/flowStore";
@@ -77,6 +77,16 @@ export default function LightFlowShell({
     [fieldZones, step],
   );
   useFieldConfig(fieldConfig);
+
+  // Reset scroll to the top on every step transition. Without this,
+  // tapping Continue from a long Scan screen lands the user
+  // mid-Context with the eyebrow off-screen. Each step is a fresh
+  // page in the user's mental model — they should always see the
+  // Hero first. `instant` avoids the smooth animation that would
+  // jar the field rotation transition.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [step]);
 
   const steps =
     draft.mode === "external"
