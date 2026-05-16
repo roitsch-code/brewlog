@@ -333,14 +333,14 @@ export default function HomePage() {
     <>
       <main className="flex h-dvh flex-col">
         <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
-          <h1 className="font-inter text-[14px] font-medium text-light-foreground/60">
+          <h1 className="font-chivo text-[14px] font-medium text-light-foreground/60">
             Better taste than sorry
           </h1>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>

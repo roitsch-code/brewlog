@@ -40,14 +40,14 @@ export default function AttachmentSheet({
         className="fixed inset-0 z-40 cursor-default"
       />
 
-      <div className="relative z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/10 bg-light-card-default p-2 backdrop-blur-[14px] backdrop-saturate-150">
+      <div className="relative z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/25 bg-light-card-default p-2 backdrop-blur-[14px] backdrop-saturate-150">
         <button
           type="button"
           onClick={onPickPhoto}
           className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left"
         >
           <ImageIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
-          <span className="font-inter text-[15px] font-medium text-light-foreground">
+          <span className="font-chivo text-[15px] font-medium text-light-foreground">
             Photo
           </span>
         </button>
@@ -58,7 +58,7 @@ export default function AttachmentSheet({
           className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left disabled:opacity-40"
         >
           <CoffeeIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
-          <span className="font-inter text-[15px] font-medium text-light-foreground">
+          <span className="font-chivo text-[15px] font-medium text-light-foreground">
             {coffeeLibraryEmpty ? "Reference coffee (library empty)" : "Reference coffee"}
           </span>
         </button>

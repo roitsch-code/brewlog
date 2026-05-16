@@ -123,7 +123,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
             m.role === "user" ? (
               <div key={i} className="flex flex-col items-end gap-2">
                 {m.imageUrl && (
-                  <div className="max-w-[80%] overflow-hidden rounded-2xl border border-light-foreground/10 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150">
+                  <div className="max-w-[80%] overflow-hidden rounded-2xl border border-light-foreground/25 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={m.imageUrl}
@@ -133,21 +133,21 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                   </div>
                 )}
                 {m.coffeeRef && (
-                  <div className="flex max-w-[80%] items-start gap-3 rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                  <div className="flex max-w-[80%] items-start gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
                     <CoffeeIcon className="mt-0.5 h-5 w-5 shrink-0 text-light-foreground/80" strokeWidth={1.5} />
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="line-clamp-2 break-words font-inter text-[13px] font-normal text-light-muted-foreground">
+                      <span className="line-clamp-2 break-words font-chivo text-[13px] font-normal text-light-muted-foreground">
                         {m.coffeeRef.roaster}
                       </span>
-                      <span className="break-words font-inter text-[15px] font-medium text-light-foreground">
+                      <span className="break-words font-chivo text-[15px] font-medium text-light-foreground">
                         {m.coffeeRef.name}
                       </span>
                     </div>
                   </div>
                 )}
                 {m.content && (
-                  <div className="max-w-[80%] rounded-2xl border border-light-foreground/10 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
-                    <p className="whitespace-pre-wrap font-inter text-[15px] font-normal text-light-foreground">
+                  <div className="max-w-[80%] rounded-2xl bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                    <p className="whitespace-pre-wrap font-chivo text-[15px] font-normal text-light-foreground">
                       {m.content}
                     </p>
                   </div>
@@ -160,7 +160,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                     m.content.split(/\n\n+/).map((para, j) => (
                       <p
                         key={j}
-                        className="whitespace-pre-wrap font-inter text-[15px] font-normal leading-[1.5] text-light-foreground"
+                        className="whitespace-pre-wrap font-chivo text-[15px] font-normal leading-[1.5] text-light-foreground"
                       >
                         {renderInlineMarkdown(para)}
                       </p>

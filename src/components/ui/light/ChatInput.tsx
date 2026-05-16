@@ -232,7 +232,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
         {(voiceError || uploadError) && (
           <div
             role="alert"
-            className="mb-2 rounded-2xl border border-light-foreground/10 bg-light-card-default px-3 py-2 font-inter text-[13px] text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
+            className="mb-2 rounded-2xl border border-light-foreground/25 bg-light-card-default px-3 py-2 font-chivo text-[13px] text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
           >
             {voiceError ?? uploadError}
           </div>
@@ -279,7 +279,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               onClick={() => voice.cancel()}
               disabled={isTranscribing}
               aria-label="Cancel recording"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -289,7 +289,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               onClick={clearComposition}
               disabled={loading || uploadingImage}
               aria-label={loading ? "Sending" : "Clear"}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -298,16 +298,16 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               type="button"
               onClick={openSheet}
               aria-label="Attach"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
             >
               <Plus className="h-5 w-5" strokeWidth={1.5} />
             </button>
           )}
 
           {loading ? (
-            <div className="h-11 flex-1 rounded-full border border-light-foreground/10 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150" />
+            <div className="h-11 flex-1 rounded-full border border-light-foreground/25 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150" />
           ) : isVoiceActive ? (
-            <div className="flex h-11 flex-1 items-center gap-2 rounded-full border border-light-foreground/10 bg-light-card-default pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
+            <div className="flex h-11 flex-1 items-center gap-2 rounded-full border border-light-foreground/25 bg-light-card-default pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
               <WaveformBars
                 getLevel={voice.getLevel}
                 color="hsl(20 14% 12%)"
@@ -334,7 +334,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               )}
             </div>
           ) : (
-            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl border border-light-foreground/10 bg-light-card-default py-1.5 pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
+            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl border border-light-foreground/25 bg-light-card-default py-1.5 pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
               {(attachedImageUrl || uploadingImage) && (
                 <div className="relative h-20 w-20">
                   {attachedImageUrl ? (
@@ -365,16 +365,16 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                 </div>
               )}
               {attachedCoffee && (
-                <div className="flex max-w-full items-start gap-2 rounded-xl border border-light-foreground/10 bg-light-card-default px-2.5 py-1.5">
+                <div className="flex max-w-full items-start gap-2 rounded-xl border border-light-foreground/25 bg-light-card-default px-2.5 py-1.5">
                   <CoffeeIcon
                     className="mt-0.5 h-3.5 w-3.5 shrink-0 text-light-foreground/80"
                     strokeWidth={1.5}
                   />
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="line-clamp-1 break-words font-inter text-[11px] font-normal text-light-muted-foreground">
+                    <span className="line-clamp-1 break-words font-chivo text-[11px] font-normal text-light-muted-foreground">
                       {attachedCoffee.roaster}
                     </span>
-                    <span className="line-clamp-2 break-words font-inter text-[13px] font-medium text-light-foreground">
+                    <span className="line-clamp-2 break-words font-chivo text-[13px] font-medium text-light-foreground">
                       {attachedCoffee.name}
                     </span>
                   </div>
@@ -400,12 +400,12 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                     onInput={handleInput}
                     onFocus={handleFocus}
                     onPaste={handlePaste}
-                    className="block min-h-8 w-full whitespace-pre-wrap break-words font-inter text-[16px] font-normal leading-[2rem] text-light-foreground focus:outline-none"
+                    className="block min-h-8 w-full whitespace-pre-wrap break-words font-chivo text-[16px] font-normal leading-[2rem] text-light-foreground focus:outline-none"
                   />
                   {!hasText && (
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute left-0 top-0 font-inter text-[16px] font-normal leading-[2rem] text-light-muted-foreground"
+                      className="pointer-events-none absolute left-0 top-0 font-chivo text-[16px] font-normal leading-[2rem] text-light-muted-foreground"
                     >
                       Ask anything…
                     </span>

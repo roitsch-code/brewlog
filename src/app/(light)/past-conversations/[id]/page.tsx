@@ -94,18 +94,18 @@ export default function PastConversationDetailPage() {
             type="button"
             onClick={() => router.push("/past-conversations")}
             aria-label="Back"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <h1 className="font-inter text-[14px] font-medium text-light-foreground/60">
+          <h1 className="font-chivo text-[14px] font-medium text-light-foreground/60">
             {data ? formatDate(data.conversation.lastMessageAt) : "Conversation"}
           </h1>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/10 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -114,11 +114,11 @@ export default function PastConversationDetailPage() {
         <section className="flex-1 min-h-0">
           {loading ? (
             <div className="flex h-full items-center px-5">
-              <p className="font-inter text-[15px] text-light-muted-foreground">Loading…</p>
+              <p className="font-chivo text-[15px] text-light-muted-foreground">Loading…</p>
             </div>
           ) : error ? (
             <div className="flex h-full items-center px-5">
-              <p className="font-inter text-[15px] text-light-muted-foreground">{error}</p>
+              <p className="font-chivo text-[15px] text-light-muted-foreground">{error}</p>
             </div>
           ) : (
             <ChatThread messages={messages} loading={false} />
