@@ -231,6 +231,34 @@
     border-color: inherit;
   }
 
+  /* Light System — Dark-token shim for legacy CSS variables used inside
+   * the brew flow's complex steps (StepScan especially) that style
+   * surfaces via `style={{ background: "var(--card)" }}` etc. Overriding
+   * the seven base tokens for [data-light-scope] consumers means the
+   * existing inline styles resolve to Light values without rewriting
+   * every style object. Dark routes never carry the scope, so their
+   * :root values stay authoritative.
+   *
+   * Mapping rationale: the Dark palette emphasises peach-on-near-black
+   * contrast; the Light palette emphasises anthracite-on-warm-cream.
+   * --primary loses its peach character (no equivalent in the Light
+   * palette) and maps to plain foreground; --primary-foreground inverts
+   * to cream so anything painted ON --primary still reads as inverse.
+   */
+  [data-light-scope] {
+    --foreground: hsl(0 0% 14%);
+    --muted-foreground: hsl(0 0% 40%);
+    --card: hsl(36 55% 96% / 0.55);
+    --card-foreground: hsl(0 0% 14%);
+    --border: hsl(0 0% 14% / 0.15);
+    --primary: hsl(0 0% 14%);
+    --primary-foreground: hsl(36 55% 96%);
+    --secondary: hsl(36 55% 96% / 0.55);
+    --secondary-foreground: hsl(0 0% 14%);
+    --ring: transparent;
+    --input: hsl(0 0% 14% / 0.15);
+  }
+
   /* Light System — invert BrewMethodIcon assets for the warm cream Field.
    * The /brew-icons/*.png + chemex.svg are all drawn with white strokes
    * (designed for the Dark canvas). On Light they read as faint ghosts.
