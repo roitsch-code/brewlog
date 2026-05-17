@@ -324,7 +324,7 @@ export default function CoffeeDetailPage() {
               <span className="text-light-muted-foreground text-sm shrink-0 w-24">Bag notes</span>
               <div className="flex flex-wrap gap-1.5">
                 {tastingNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full border border-light-foreground/15 text-light-foreground/60">
+                  <span key={note} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
                     {note}
                   </span>
                 ))}
@@ -336,7 +336,7 @@ export default function CoffeeDetailPage() {
               <span className="text-light-muted-foreground text-sm shrink-0 w-24">You taste</span>
               <div className="flex flex-wrap gap-1.5">
                 {commonNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2 py-0.5 rounded-full bg-light-foreground/8 text-light-foreground/80">
+                  <span key={note} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
                     {note}
                   </span>
                 ))}

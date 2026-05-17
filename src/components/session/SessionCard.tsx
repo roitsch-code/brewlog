@@ -63,15 +63,26 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
 
   if (deleting) return null;
   const isOpen = offset >= DELETE_THRESHOLD;
+  // Fade the delete button in as the swipe progresses. At rest (offset
+  // 0) it's fully transparent so it doesn't bleed through the
+  // translucent cream card and confuse the user about whether it's a
+  // design element. By the time the user has dragged past the
+  // threshold the button is fully opaque and tappable.
+  const swipeProgress = Math.min(offset / DELETE_THRESHOLD, 1);
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15">
-      {/* Delete button behind */}
-      <div className="absolute inset-y-0 right-0 flex items-stretch rounded-r-2xl overflow-hidden">
+      {/* Delete button behind — hidden at rest, fades in during swipe */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-stretch rounded-r-2xl overflow-hidden"
+        style={{ opacity: swipeProgress, transition: startXRef.current === null ? "opacity 0.2s ease" : "none" }}
+        aria-hidden={!isOpen}
+      >
         <button
           type="button"
           onClick={handleDelete}
           aria-label="Delete session"
+          tabIndex={isOpen ? 0 : -1}
           className="w-20 flex flex-col items-center justify-center gap-1 text-[hsl(36_55%_96%)] active:opacity-80 bg-[hsl(12_70%_45%)]"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,13 +127,15 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
           </p>
         )}
 
-        {/* Flavor notes */}
+        {/* Flavor notes — standard bordered chip (matches the rest of
+            the Light surfaces). Solid-fill 8% bg was invisible against
+            the cream card. */}
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-3">
             {tags.map(tag => (
               <span
                 key={tag}
-                className="text-xs capitalize px-2.5 py-0.5 rounded-full bg-light-foreground/8 text-light-foreground/80"
+                className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75"
               >
                 {tag}
               </span>
