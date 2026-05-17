@@ -39,11 +39,11 @@ export default function CafesMapPage() {
         className="shrink-0 px-5 pb-3 flex items-center justify-between"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}
       >
-        <Link href="/library" className="flex items-center gap-1 text-brew-muted text-sm">
+        <Link href="/cafes" className="flex items-center gap-1 text-brew-muted text-sm">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
-          Library
+          Cafés
         </Link>
         <h1 className="font-display text-lg text-white">Nearby</h1>
         <Link href="/cafes" className="text-brew-muted text-xs">
