@@ -332,7 +332,7 @@ export default function CoffeeDetailPage() {
               <span className="text-light-muted-foreground text-sm shrink-0 w-24">Bag notes</span>
               <div className="flex flex-wrap gap-1.5">
                 {tastingNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
+                  <span key={note} className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight capitalize backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground">
                     {note}
                   </span>
                 ))}
@@ -344,7 +344,7 @@ export default function CoffeeDetailPage() {
               <span className="text-light-muted-foreground text-sm shrink-0 w-24">You taste</span>
               <div className="flex flex-wrap gap-1.5">
                 {commonNotes.map(note => (
-                  <span key={note} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
+                  <span key={note} className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight capitalize backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground">
                     {note}
                   </span>
                 ))}
