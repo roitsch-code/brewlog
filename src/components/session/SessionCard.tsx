@@ -71,7 +71,7 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
   const swipeProgress = Math.min(offset / DELETE_THRESHOLD, 1);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15">
+    <div className="relative overflow-hidden rounded-2xl bg-[hsl(36_55%_96%/0.30)] backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15">
       {/* Delete button behind — hidden at rest, fades in during swipe */}
       <div
         className="absolute inset-y-0 right-0 flex items-stretch rounded-r-2xl overflow-hidden"
@@ -105,7 +105,7 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
           if (isOpen) { setOffset(0); return; }
           router.push(`/brew/${session.id}`);
         }}
-        className="relative bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 rounded-2xl px-4 py-3.5 cursor-pointer active:scale-[0.99] transition-transform"
+        className="relative bg-[hsl(36_55%_96%/0.30)] backdrop-blur-light-card backdrop-saturate-150 rounded-2xl px-4 py-3.5 cursor-pointer active:scale-[0.99] transition-transform"
       >
         {/* Headline row — brew method + rating */}
         <div className="flex items-start justify-between gap-3">
