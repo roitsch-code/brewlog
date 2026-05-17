@@ -199,42 +199,42 @@ export default function CoffeesPage() {
           <div className="flex flex-col gap-2">
             {filteredCoffees.map(coffee => {
               const sub = [coffee.origin, coffee.process].filter(Boolean).join(" · ");
+              const brewCount = coffee.sessionCount;
+              const brewLabel = brewCount > 0 ? `${brewCount} brew${brewCount === 1 ? "" : "s"}` : null;
               return (
                 <div
                   key={coffee.id}
-                  className="flex items-center gap-3 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl p-3 w-full"
+                  className="flex items-stretch bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl overflow-hidden w-full"
                 >
-                  {/* Tap target — opens detail page */}
+                  {/* Tap target — opens detail page. Full-card click area
+                      uses items-stretch so the photo fills the left edge
+                      flush with the card border, no padding gap. */}
                   <button
                     type="button"
                     onClick={() => router.push(`/coffees/${coffee.id}`)}
-                    className="flex items-center gap-3 flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
+                    className="flex items-stretch flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
                   >
-                    {/* Thumbnail */}
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 shrink-0">
+                    {/* Photo — full-height left strip (w-24 = 96px).
+                        Bag photos are portrait-ish; this gives more of
+                        the label visible than a 56px circular thumb. */}
+                    <div className="relative w-24 shrink-0 bg-light-card-default">
                       {coffee.bagPhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
+                        <img src={coffee.bagPhotoUrl} alt={coffee.name} className="absolute inset-0 w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <svg className="w-6 h-6 text-light-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-7 h-7 text-light-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636" />
                           </svg>
                         </div>
                       )}
-                      {/* Session count badge */}
-                      <div className="absolute top-0.5 right-0.5 bg-light-foreground rounded-full w-4 h-4 flex items-center justify-center">
-                        <span className="text-[hsl(36_55%_96%)] font-mono-num" style={{ fontSize: "8px" }}>{coffee.sessionCount}</span>
-                      </div>
                     </div>
 
                     {/* Text */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        {coffee.roaster && (
-                          <p className="text-light-muted-foreground text-xs truncate mb-0.5 flex-1">{coffee.roaster}</p>
-                        )}
-                      </div>
+                    <div className="flex-1 min-w-0 px-3.5 py-3">
+                      {coffee.roaster && (
+                        <p className="text-light-muted-foreground text-xs truncate mb-0.5">{coffee.roaster}</p>
+                      )}
                       <div className="flex items-center gap-1.5">
                         {coffee.inRotation && (
                           <svg
@@ -260,11 +260,21 @@ export default function CoffeesPage() {
                           Roasted {new Date(coffee.latestRoastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
                       )}
-                      {coffee.avgRating != null && coffee.avgRating > 0 && (
-                        <div className="mt-1.5">
-                          <StarRating value={coffee.avgRating} readonly size="sm" />
+                      {/* Rating + brew count share one row. brew count
+                          replaces the tiny 8px badge that used to sit on
+                          the thumbnail and was effectively unreadable. */}
+                      {(coffee.avgRating != null && coffee.avgRating > 0) || brewLabel ? (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          {coffee.avgRating != null && coffee.avgRating > 0 && (
+                            <StarRating value={coffee.avgRating} readonly size="sm" />
+                          )}
+                          {brewLabel && (
+                            <span className="text-light-muted-foreground text-xs">
+                              {coffee.avgRating != null && coffee.avgRating > 0 ? "· " : ""}{brewLabel}
+                            </span>
+                          )}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </button>
 
@@ -273,14 +283,16 @@ export default function CoffeesPage() {
                       until the user marks the coffee in rotation on the
                       detail page. */}
                   {coffee.inRotation && (
-                    <button
-                      type="button"
-                      onClick={() => brewThis(coffee)}
-                      aria-label={`Brew ${coffee.name}`}
-                      className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
-                    >
-                      Brew
-                    </button>
+                    <div className="flex items-center pr-3">
+                      <button
+                        type="button"
+                        onClick={() => brewThis(coffee)}
+                        aria-label={`Brew ${coffee.name}`}
+                        className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
+                      >
+                        Brew
+                      </button>
+                    </div>
                   )}
                 </div>
               );
