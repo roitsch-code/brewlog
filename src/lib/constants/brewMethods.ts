@@ -12,7 +12,15 @@ export interface BrewMethod {
 export const BREW_METHODS: BrewMethod[] = [
   { id: "v60", label: "V60", emoji: "☕", defaultTemp: 98, defaultDose: 23, defaultWater: 350, defaultTimeSec: 210, category: "pour-over" },
   { id: "v60-drip-assist", label: "V60 + Drip Assist", emoji: "☕", defaultTemp: 98, defaultDose: 34, defaultWater: 520, defaultTimeSec: 240, category: "pour-over" },
-  { id: "orea", label: "Orea V4", emoji: "⬡", defaultTemp: 94, defaultDose: 17, defaultWater: 270, defaultTimeSec: 150, category: "pour-over" },
+  // Orea V4 — same brewer body, four interchangeable bottoms. Each
+  // bottom changes flow rate dramatically (Apex most restrictive →
+  // Open fastest), so each gets its own picker entry + icon. Defaults
+  // skew with the bottom's character: Apex / Classic target clarity-
+  // forward dialing, Open / Fast push faster contact time.
+  { id: "orea-classic", label: "Orea Classic", emoji: "⬡", defaultTemp: 94, defaultDose: 17, defaultWater: 270, defaultTimeSec: 150, category: "pour-over" },
+  { id: "orea-open",    label: "Orea Open",    emoji: "⬡", defaultTemp: 94, defaultDose: 17, defaultWater: 270, defaultTimeSec: 140, category: "pour-over" },
+  { id: "orea-apex",    label: "Orea Apex",    emoji: "⬡", defaultTemp: 95, defaultDose: 17, defaultWater: 255, defaultTimeSec: 165, category: "pour-over" },
+  { id: "orea-fast",    label: "Orea Fast",    emoji: "⬡", defaultTemp: 93, defaultDose: 17, defaultWater: 270, defaultTimeSec: 140, category: "pour-over" },
   { id: "origami-cone", label: "Origami (cone)", emoji: "◇", defaultTemp: 96, defaultDose: 17, defaultWater: 255, defaultTimeSec: 180, category: "pour-over" },
   { id: "origami-wave", label: "Origami (wave)", emoji: "◇", defaultTemp: 94, defaultDose: 17, defaultWater: 255, defaultTimeSec: 200, category: "pour-over" },
   { id: "kalita", label: "Kalita Wave", emoji: "△", defaultTemp: 94, defaultDose: 15, defaultWater: 250, defaultTimeSec: 210, category: "pour-over" },
