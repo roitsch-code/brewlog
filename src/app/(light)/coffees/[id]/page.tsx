@@ -11,6 +11,7 @@ import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { useFlowStore } from "@/store/flowStore";
 import { useFieldConfig } from "@/lib/field/FieldContext";
+import { rememberSessionField } from "@/lib/field/cache";
 
 interface RoasterInfo {
   region?: string;
@@ -89,6 +90,13 @@ export default function CoffeeDetailPage() {
                     const bMs = (b as Session & { createdAtMs?: number }).createdAtMs ?? new Date(b.createdAt).getTime();
                     return bMs - aMs;
                   }));
+                  // Pre-warm the Field cache for every session of this
+                  // coffee so a downstream /brew/[id] navigation paints
+                  // the coffee's Field immediately on mount instead of
+                  // flashing through default for the coffee fetch.
+                  if (found.fieldZones) {
+                    coffeeSessions.forEach(s => rememberSessionField(s.id, found.fieldZones));
+                  }
                 })
                 .catch(() => {})
             : Promise.resolve(),

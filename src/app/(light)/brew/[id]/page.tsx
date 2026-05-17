@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
@@ -10,6 +10,7 @@ import type { Session } from "@/lib/types/session";
 import type { Coffee } from "@/lib/types/coffee";
 import { formatDate, formatSeconds } from "@/lib/utils/formatTime";
 import { useFieldConfig } from "@/lib/field/FieldContext";
+import { recallSessionField, rememberSessionField } from "@/lib/field/cache";
 
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,13 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+
+  // Read the Field cache synchronously on mount — written by
+  // /coffees/[id] when it loads. If the user navigated here from
+  // there, this returns the cup's fieldZones immediately, so the
+  // page paints in the right colours from frame 1 instead of
+  // flashing default for the coffee fetch's ~300ms.
+  const cachedFieldZones = useMemo(() => recallSessionField(id), [id]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -31,7 +39,12 @@ export default function SessionDetailPage() {
         const coffeeId = s.coffee?.coffeeId;
         if (coffeeId) {
           const cRes = await fetch(`/api/coffees/${coffeeId}`, { cache: "no-store", signal: controller.signal });
-          if (cRes.ok) setCoffee(await cRes.json());
+          if (cRes.ok) {
+            const c: Coffee = await cRes.json();
+            setCoffee(c);
+            // Refresh the cache so subsequent visits hit the latest.
+            rememberSessionField(id, c.fieldZones);
+          }
         }
       } catch {
         setSession(null);
@@ -43,9 +56,12 @@ export default function SessionDetailPage() {
     return () => { clearTimeout(timer); controller.abort(); };
   }, [id]);
 
-  // Adopt this coffee's Field composition (same pattern as the Brew-Again
-  // paths). Falls back to default Field if coffee or fieldZones missing.
-  useFieldConfig(coffee?.fieldZones ? { fieldZones: coffee.fieldZones, rotation: 0 } : null);
+  // Adopt this coffee's Field composition. Prefer the freshly-fetched
+  // coffee, fall back to the session-storage cache primed by
+  // /coffees/[id], and finally to null (default Field) if neither
+  // source has fieldZones yet.
+  const activeFieldZones = coffee?.fieldZones ?? cachedFieldZones;
+  useFieldConfig(activeFieldZones ? { fieldZones: activeFieldZones, rotation: 0 } : null);
 
   if (loading) {
     return (
