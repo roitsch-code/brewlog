@@ -4,6 +4,7 @@ import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/light/Chip";
+import Card, { CardIcon, CardTitle, CardSubText } from "@/components/ui/light/Card";
 import Hero from "@/components/ui/light/Hero";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
@@ -442,29 +443,24 @@ export default function LightStepScan() {
 
         {/* Input method cards */}
         <div className="flex flex-col gap-3">
-          {/* Photo — primary large card. Tap triggers iOS picker
-              directly; the inputMethod state stays in sync so the
-              extracted-info expansion below renders after a successful
-              file pick. Tapping again re-opens the picker (lets the
-              user re-select before any file has been chosen). */}
-          <button
-            type="button"
-            onClick={() => {
-              setInputMethod("photo");
-              setShowManualForm(false);
-              photoInputRef.current?.click();
-            }}
-            className="w-full rounded-2xl border p-5 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
-            style={{
-              background: inputMethod === "photo" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
-              borderColor: inputMethod === "photo" ? "var(--primary)" : "var(--border)",
-              boxShadow: inputMethod === "photo" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
-            }}
-          >
-            <Camera size={24} style={{ color: "var(--primary)" }} />
-            <p className="font-medium text-sm" style={{ color: "var(--foreground)" }}>Take a photo or choose from library</p>
-            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Claude reads the label and extracts all details</p>
-          </button>
+          {/* Photo — primary large card. Tap triggers iOS picker directly;
+              the inputMethod state stays in sync so the extracted-info
+              expansion below renders after a successful file pick. */}
+          <div className="h-[120px]">
+            <Card
+              selected={inputMethod === "photo"}
+              onClick={() => {
+                setInputMethod("photo");
+                setShowManualForm(false);
+                photoInputRef.current?.click();
+              }}
+              ariaLabel="Take a photo or choose from library"
+            >
+              <CardIcon><Camera className="h-6 w-6" strokeWidth={1.5} /></CardIcon>
+              <CardTitle>Take a photo or choose from library</CardTitle>
+              <CardSubText>Claude reads the label and extracts all details</CardSubText>
+            </Card>
+          </div>
 
           {/* Photo upload + analysis (expanded when photo selected) */}
           {inputMethod === "photo" && (
@@ -739,32 +735,26 @@ export default function LightStepScan() {
 
           {/* Secondary: Manual + Link (side by side) */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => { setInputMethod(inputMethod === "manual" ? null : "manual"); setShowManualForm(inputMethod !== "manual"); loadRoasters(); }}
-              className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
-              style={{
-                background: inputMethod === "manual" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
-                borderColor: inputMethod === "manual" ? "var(--primary)" : "var(--border)",
-                boxShadow: inputMethod === "manual" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
-              }}
-            >
-              <PenLine size={20} style={{ color: "var(--primary)" }} />
-              <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Enter manually</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMethod(inputMethod === "link" ? null : "link")}
-              className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
-              style={{
-                background: inputMethod === "link" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
-                borderColor: inputMethod === "link" ? "var(--primary)" : "var(--border)",
-                boxShadow: inputMethod === "link" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
-              }}
-            >
-              <Link2 size={20} style={{ color: "var(--primary)" }} />
-              <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Paste a link</span>
-            </button>
+            <div className="h-[88px]">
+              <Card
+                selected={inputMethod === "manual"}
+                onClick={() => { setInputMethod(inputMethod === "manual" ? null : "manual"); setShowManualForm(inputMethod !== "manual"); loadRoasters(); }}
+                ariaLabel="Enter manually"
+              >
+                <CardIcon><PenLine className="h-5 w-5" strokeWidth={1.5} /></CardIcon>
+                <CardTitle>Enter manually</CardTitle>
+              </Card>
+            </div>
+            <div className="h-[88px]">
+              <Card
+                selected={inputMethod === "link"}
+                onClick={() => setInputMethod(inputMethod === "link" ? null : "link")}
+                ariaLabel="Paste a link"
+              >
+                <CardIcon><Link2 className="h-5 w-5" strokeWidth={1.5} /></CardIcon>
+                <CardTitle>Paste a link</CardTitle>
+              </Card>
+            </div>
           </div>
 
           {/* Manual form (expanded when manual selected) */}
@@ -948,23 +938,16 @@ export default function LightStepScan() {
           <p className="label-eyebrow mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
           <div className="grid grid-cols-2 gap-3">
             {SCAN_MODES.map(m => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setSelectedMode(m.id)}
-                className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
-                style={{
-                  background: selectedMode === m.id ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
-                  borderColor: selectedMode === m.id ? "var(--primary)" : "var(--border)",
-                  boxShadow: selectedMode === m.id ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
-                }}
-              >
-                <m.Icon size={20} style={{ color: selectedMode === m.id ? "var(--primary)" : "var(--muted-foreground)" }} />
-                <span className="text-sm font-medium"
-                  style={{ color: selectedMode === m.id ? "var(--primary)" : "var(--muted-foreground)" }}>
-                  {m.label}
-                </span>
-              </button>
+              <div key={m.id} className="h-[88px]">
+                <Card
+                  selected={selectedMode === m.id}
+                  onClick={() => setSelectedMode(m.id)}
+                  ariaLabel={m.label}
+                >
+                  <CardIcon><m.Icon className="h-5 w-5" strokeWidth={1.5} /></CardIcon>
+                  <CardTitle>{m.label}</CardTitle>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
