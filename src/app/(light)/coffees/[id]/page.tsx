@@ -240,19 +240,16 @@ export default function CoffeeDetailPage() {
         )}
       </div>
 
-      {/* Brew this — jumps straight to the brew context step with this coffee preloaded */}
+      {/* Action hierarchy — rotation first, then brew.
+          A coffee must be in rotation before it can be brewed: if it's
+          not in rotation the bag is gone or set aside, so the "Brew
+          this" shortcut is hidden until the user opts the bag in. */}
       <div className="px-5 pt-4 space-y-2">
-        <button
-          type="button"
-          onClick={brewThis}
-          className="w-full py-3.5 rounded-2xl text-sm font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98] transition-transform"
-        >
-          Brew this
-        </button>
         {/* Rotation toggle — marks this bag as "currently in rotation".
             The /api/greeting library snapshot uses this signal so the
             daily Haiku starter prioritises rotation bags over the rest
-            of the library. Optimistic update + best-effort PATCH. */}
+            of the library. Primary CTA when not in rotation; quieter
+            state pill once active. Optimistic update + best-effort PATCH. */}
         <button
           type="button"
           onClick={async () => {
@@ -267,14 +264,13 @@ export default function CoffeeDetailPage() {
               });
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
             } catch {
-              // Revert on failure
               setCoffee((prev) => (prev ? { ...prev, inRotation: !next } : prev));
             }
           }}
-          className={`w-full py-3 rounded-2xl text-sm flex items-center justify-center gap-2 border transition-transform active:scale-[0.98] ${
+          className={`w-full py-3.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${
             coffee.inRotation
-              ? "bg-light-foreground/10 border-light-foreground/40 text-light-foreground"
-              : "bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border-light-foreground/15 text-light-muted-foreground"
+              ? "bg-light-foreground/10 border border-light-foreground/40 text-light-foreground"
+              : "bg-light-foreground text-[hsl(36_55%_96%)]"
           }`}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill={coffee.inRotation ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -282,6 +278,15 @@ export default function CoffeeDetailPage() {
           </svg>
           {coffee.inRotation ? "In rotation" : "Add to rotation"}
         </button>
+        {coffee.inRotation && (
+          <button
+            type="button"
+            onClick={brewThis}
+            className="w-full py-3.5 rounded-2xl text-sm font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98] transition-transform"
+          >
+            Brew this
+          </button>
+        )}
       </div>
 
       {/* Coffee scan details */}

@@ -230,10 +230,28 @@ export default function CoffeesPage() {
 
                     {/* Text */}
                     <div className="flex-1 min-w-0">
-                      {coffee.roaster && (
-                        <p className="text-light-muted-foreground text-xs truncate mb-0.5">{coffee.roaster}</p>
-                      )}
-                      <p className="text-light-foreground text-sm font-medium leading-snug truncate">{coffee.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        {coffee.roaster && (
+                          <p className="text-light-muted-foreground text-xs truncate mb-0.5 flex-1">{coffee.roaster}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {coffee.inRotation && (
+                          <svg
+                            className="w-3.5 h-3.5 shrink-0 text-light-foreground"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            stroke="currentColor"
+                            strokeWidth={1.75}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-label="In rotation"
+                          >
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                          </svg>
+                        )}
+                        <p className="text-light-foreground text-sm font-medium leading-snug truncate">{coffee.name}</p>
+                      </div>
                       {sub && (
                         <p className="text-light-muted-foreground text-xs truncate mt-0.5">{sub}</p>
                       )}
@@ -250,15 +268,20 @@ export default function CoffeesPage() {
                     </div>
                   </button>
 
-                  {/* Brew this — jumps to the brew context step with this coffee preloaded */}
-                  <button
-                    type="button"
-                    onClick={() => brewThis(coffee)}
-                    aria-label={`Brew ${coffee.name}`}
-                    className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
-                  >
-                    Brew
-                  </button>
+                  {/* Brew this — gated on rotation: an unrotated bag is
+                      assumed to be off the counter, so the shortcut hides
+                      until the user marks the coffee in rotation on the
+                      detail page. */}
+                  {coffee.inRotation && (
+                    <button
+                      type="button"
+                      onClick={() => brewThis(coffee)}
+                      aria-label={`Brew ${coffee.name}`}
+                      className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
+                    >
+                      Brew
+                    </button>
+                  )}
                 </div>
               );
             })}
