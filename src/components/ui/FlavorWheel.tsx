@@ -410,6 +410,18 @@ export default function FlavorWheel({
         });
       })}
 
+      {/* Ring divider between inner (category) and outer (sub-category)
+          rings. Punctuates the transition so the eye reads the two
+          rings as distinct levels of the hierarchy instead of flowing
+          straight from "Floral" into "Tea / Citrus". Same divider
+          cream as the radial separators, matched stroke weight. */}
+      <circle
+        cx={cx} cy={cy} r={rInner}
+        fill="none"
+        stroke={PALETTE.divider}
+        strokeWidth={subLineW}
+      />
+
       {/* ── center circle ── */}
       <circle
         cx={cx} cy={cy} r={rCenter - 1}
