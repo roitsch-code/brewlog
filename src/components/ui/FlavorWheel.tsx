@@ -222,9 +222,11 @@ export default function FlavorWheel({
   const baseFontSize = Math.max(6.5 * s, 5.8);
   const subFontSize  = Math.max(5.5 * s, 5.0);
 
-  // Gap line widths (in viewBox units)
-  const catLineW = 1.8 * s;
-  const subLineW = 1.2 * s;
+  // Gap line widths (in viewBox units). Kept delicate to pair with
+  // the label typography — too-thick dividers fought visually with
+  // the sans-serif weight of the labels.
+  const catLineW = 0.8 * s;
+  const subLineW = 0.5 * s;
 
   return (
     <svg
