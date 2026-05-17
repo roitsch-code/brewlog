@@ -157,9 +157,9 @@ export default function LoginPage() {
     return (
       <div className="min-h-svh bg-transparent flex flex-col items-center justify-center gap-6">
         <CoffeeBeanGlow size={72} />
-        <p className="font-fraunces text-light-foreground/60 text-lg leading-tight text-center whitespace-pre-line">
-          {"Better taste\nthan sorry."}
-        </p>
+        <h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground text-center">
+          Better taste<br />than sorry.
+        </h1>
       </div>
     );
   }
@@ -217,9 +217,9 @@ export default function LoginPage() {
     <div className="min-h-svh bg-transparent flex flex-col items-center justify-center px-8 gap-10">
       <div className="flex flex-col items-center gap-4">
         <CoffeeBeanGlow size={72} />
-        <p className="font-fraunces text-light-foreground/60 text-lg leading-tight text-center whitespace-pre-line">
-          {"Better taste\nthan sorry."}
-        </p>
+        <h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground text-center">
+          Better taste<br />than sorry.
+        </h1>
       </div>
 
       <div className="w-full max-w-xs flex flex-col gap-4">
