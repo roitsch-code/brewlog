@@ -245,23 +245,6 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
           </div>
         )}
 
-        {loading && (
-          <div className="mb-3 flex items-center gap-2 pl-14" aria-label="Thinking">
-            <span
-              className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
-              style={{ animationDuration: "1200ms" }}
-            />
-            <span
-              className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
-              style={{ animationDuration: "1200ms", animationDelay: "150ms" }}
-            />
-            <span
-              className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
-              style={{ animationDuration: "1200ms", animationDelay: "300ms" }}
-            />
-          </div>
-        )}
-
         {sheetOpen && (
           <AttachmentSheet
             onClose={() => setSheetOpen(false)}
