@@ -1,6 +1,75 @@
 "use client";
 import { SCA_WHEEL, SCA_CATEGORIES } from "@/lib/constants/scaFlavorWheel";
 
+/**
+ * SCA Coffee Flavor Wheel — Light System rendering.
+ *
+ * The wheel is intrinsically monochrome (see scaFlavorWheel.ts: every
+ * category's `shade` field is a near-identical dark gray). Category
+ * differentiation comes from the icon glyphs + label opacity + a
+ * tonal lift for active / has-selection states, not from per-category
+ * brand colors. That made the Light port mostly a palette inversion:
+ *
+ *   - Canvas transparent so the page's Field gradient shows through
+ *     the SVG instead of being covered by a solid panel.
+ *   - Default segment fill = cream-glass at 55% — same token as the
+ *     rest of the Light surfaces (Card, Chip, NavigationOverlay).
+ *   - Has-selection segment fills a step darker (taupe) so the user
+ *     can scan which categories already have picks.
+ *   - Active segment uses low-opacity anthracite to read as a "press
+ *     focus" without going harsh.
+ *   - Text + icons swap from white to anthracite.
+ *
+ * Icons in the ICONS map use `currentColor`; the wrapping <g> sets
+ * `color` so the whole icon palette tracks the theme without
+ * touching individual fill/stroke attributes.
+ *
+ * `/taste` (still Dark) keeps consuming this component — it now
+ * shows a Light-themed wheel on a Dark background until that page
+ * gets its own Light migration. Acceptable transient per user
+ * direction ("Taste ist egal").
+ */
+
+// ─── palette ──────────────────────────────────────────────────────────────────
+
+const PALETTE = {
+  // Canvas: transparent — Field paints behind. The outermost background
+  // circle uses this so the SVG composes against whatever the parent
+  // route's Field renders.
+  canvas: "transparent",
+  // Radial dividers between segments: warm cream slightly darker than
+  // the card-default so they read as separation lines without competing
+  // with the labels.
+  divider: "hsl(30 60% 92%)",
+  // Category segments
+  panelDefault: "hsl(36 55% 96% / 0.55)",
+  panelHasSel: "hsl(30 30% 80% / 0.70)",
+  panelActive: "hsl(0 0% 14% / 0.18)",
+  // Sub-category segments (outer ring) — same hue, lower fill weight
+  // so the category ring stays primary visually.
+  subPanel: "hsl(36 55% 96%)",
+  subPanelOpacityDefault: 0.35,
+  subPanelOpacityActive: 0.65,
+  // Center circle
+  center: "hsl(36 55% 96%)",
+  centerStroke: "hsl(0 0% 14% / 0.15)",
+  centerLabel: "hsl(0 0% 14% / 0.45)",
+  // Text + icons (anthracite)
+  text: "hsl(0 0% 14%)",
+  icon: "hsl(0 0% 14%)",
+  iconOpacity: 0.55,
+  textOpacityActive: 0.95,
+  textOpacityHasSel: 0.85,
+  textOpacityDefault: 0.65,
+  subTextOpacityActive: 0.80,
+  subTextOpacityDefault: 0.42,
+  // Radar polygon (profile mode)
+  radarFill: "hsl(0 0% 14% / 0.10)",
+  radarStroke: "hsl(0 0% 14%)",
+  radarStrokeOpacity: 0.72,
+  radarDot: "hsl(0 0% 14%)",
+};
+
 // ─── geometry helpers ─────────────────────────────────────────────────────────
 
 function polar(cx: number, cy: number, r: number, angle: number) {
@@ -38,36 +107,38 @@ function radialRotation(midAngleRad: number): number {
 // ─── tiny category icons ──────────────────────────────────────────────────────
 // Each icon is a small SVG group centered at (0,0) in a ±3.5 unit coordinate
 // space. Rendered at the icon position inside each inner-ring segment.
+// All strokes/fills use currentColor so the wrapping <g color={...}>
+// drives the theme.
 
 const ICONS: Record<string, React.ReactNode> = {
   "Fruity": (
-    <g fill="white" opacity={0.55}>
+    <g fill="currentColor">
       <circle cx={-1.7} cy={0.6}  r={1.1} />
       <circle cx={1.7}  cy={0.6}  r={1.1} />
       <circle cx={0}    cy={-1.7} r={1.1} />
     </g>
   ),
   "Floral": (
-    <g stroke="white" strokeWidth={0.65} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.65} fill="none">
       <line x1={0} y1={-3.2} x2={0} y2={3.2} />
       <line x1={-2.8} y1={-1.6} x2={2.8} y2={1.6} />
       <line x1={-2.8} y1={1.6}  x2={2.8} y2={-1.6} />
-      <circle cx={0} cy={0} r={0.85} fill="white" stroke="none" />
+      <circle cx={0} cy={0} r={0.85} fill="currentColor" stroke="none" />
     </g>
   ),
   "Sweet": (
-    <g fill="white" opacity={0.55}>
+    <g fill="currentColor">
       <path d="M0,-3.2 C1.9,-0.5 2,1.5 0,3.2 C-2,1.5-1.9,-0.5 0,-3.2Z" />
     </g>
   ),
   "Nutty & Cocoa": (
-    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.7} fill="none">
       <ellipse cx={0} cy={0} rx={1.8} ry={3} />
       <path d="M0,-3 C0.9,-1 0.9,1 0,3 M0,-3 C-0.9,-1-0.9,1 0,3" />
     </g>
   ),
   "Spices": (
-    <g stroke="white" strokeWidth={0.65} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.65} fill="none">
       <line x1={0} y1={-3.2} x2={0} y2={3.2} />
       <line x1={-3.2} y1={0} x2={3.2} y2={0} />
       <line x1={-2.3} y1={-2.3} x2={2.3} y2={2.3} />
@@ -75,27 +146,27 @@ const ICONS: Record<string, React.ReactNode> = {
     </g>
   ),
   "Roasted": (
-    <g fill="white" opacity={0.55}>
+    <g fill="currentColor">
       <rect x={-3.2} y={0.5}   width={1.5} height={2.8} rx={0.3} />
       <rect x={-0.8} y={-1}    width={1.5} height={4.3} rx={0.3} />
       <rect x={1.7}  y={-2.8}  width={1.5} height={6.1} rx={0.3} />
     </g>
   ),
   "Sour & Fermented": (
-    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.7} fill="none">
       <path d="M-3.2,0 C-1.5,-2.5 1.5,-2.5 3.2,0" />
       <path d="M-3.2,0 C-1.5,2.5 1.5,2.5 3.2,0" />
-      <circle cx={0} cy={0} r={0.7} fill="white" stroke="none" />
+      <circle cx={0} cy={0} r={0.7} fill="currentColor" stroke="none" />
     </g>
   ),
   "Herbal & Green": (
-    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.7} fill="none">
       <path d="M0,3.2 C2.2,0.5 2.5,-2 0,-3.2 C-2.5,-2-2.2,0.5 0,3.2Z" />
       <line x1={0} y1={-2.8} x2={0} y2={3.2} />
     </g>
   ),
   "Savory": (
-    <g stroke="white" strokeWidth={0.7} fill="none" opacity={0.55}>
+    <g stroke="currentColor" strokeWidth={0.7} fill="none">
       <path d="M-3,0.6 C-2.5,-2.4 2.5,-2.4 3,0.6Z" />
       <rect x={-0.9} y={0.6} width={1.8} height={2.8} />
     </g>
@@ -160,11 +231,11 @@ export default function FlavorWheel({
       aria-label="SCA Coffee Flavor Wheel"
       style={{ display: "block" }}
     >
-      {/* ── background ── */}
-      <circle cx={cx} cy={cy} r={rOuter + 2} fill="#111" />
+      {/* ── background ── transparent so the Field shows through ── */}
+      <circle cx={cx} cy={cy} r={rOuter + 2} fill={PALETTE.canvas} />
 
       {SCA_CATEGORIES.map((cat, i) => {
-        const { shade, subcategories } = SCA_WHEEL[cat];
+        const { subcategories } = SCA_WHEEL[cat];
         const isActive = activeCategory === cat;
         const hasSel   = selectedFlavors.some(f =>
           Object.values(subcategories).flat().includes(f)
@@ -175,15 +246,14 @@ export default function FlavorWheel({
         const catEnd   = slice * (i + 1) - Math.PI / 2;
         const midAngle = (catStart + catEnd) / 2;
 
-        // Fill: slightly brighter when active or has selections
-        const fill = isActive ? "#484848"
-          : hasSel   ? "#363636"
-          : shade;
+        const fill = isActive ? PALETTE.panelActive
+          : hasSel ? PALETTE.panelHasSel
+          : PALETTE.panelDefault;
 
         // ── Inner ring: category segment ──
         const catPath = annularSector(cx, cy, rInner, rCenter, catStart, catEnd);
 
-        // Text rotation (radial, corrected — no +90° bug)
+        // Text rotation (radial)
         const textRotDeg = radialRotation(midAngle);
 
         // Icon position (upright, just translated)
@@ -193,6 +263,10 @@ export default function FlavorWheel({
         // All labels (single-word and multi-line) sit at textR, above the icon
         const labelParts = cat.includes(" & ") ? cat.split(" & ") : null;
         const labelPos = polar(cx, cy, textR, midAngle);
+
+        const textOpacity = isActive ? PALETTE.textOpacityActive
+          : hasSel ? PALETTE.textOpacityHasSel
+          : PALETTE.textOpacityDefault;
 
         // Sub-categories
         const subKeys  = Object.keys(subcategories);
@@ -209,10 +283,11 @@ export default function FlavorWheel({
               onClick={isSelect ? () => onCategorySelect?.(isActive ? null : cat) : undefined}
             />
 
-            {/* Tiny icon (upright, not rotated) */}
+            {/* Tiny icon (upright, not rotated). color drives currentColor in ICONS. */}
             <g
               transform={`translate(${iconPos.x},${iconPos.y}) scale(${iconScale})`}
-              style={{ pointerEvents: "none" }}
+              style={{ pointerEvents: "none", color: PALETTE.icon }}
+              opacity={PALETTE.iconOpacity}
             >
               {ICONS[cat]}
             </g>
@@ -226,8 +301,8 @@ export default function FlavorWheel({
                 fontSize={baseFontSize * 0.88}
                 fontFamily="sans-serif"
                 fontWeight={isActive ? "700" : "500"}
-                fill="white"
-                fillOpacity={isActive ? 0.95 : hasSel ? 0.85 : 0.65}
+                fill={PALETTE.text}
+                fillOpacity={textOpacity}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 transform={`rotate(${textRotDeg},${labelPos.x},${labelPos.y})`}
@@ -243,8 +318,8 @@ export default function FlavorWheel({
                 fontSize={baseFontSize}
                 fontFamily="sans-serif"
                 fontWeight={isActive ? "700" : "500"}
-                fill="white"
-                fillOpacity={isActive ? 0.95 : hasSel ? 0.85 : 0.65}
+                fill={PALETTE.text}
+                fillOpacity={textOpacity}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 transform={`rotate(${textRotDeg},${labelPos.x},${labelPos.y})`}
@@ -261,7 +336,6 @@ export default function FlavorWheel({
               const subMid   = (subStart + subEnd) / 2;
 
               const subPath  = annularSector(cx, cy, rOuter, rInner, subStart, subEnd);
-              const subFill  = isActive ? "#323232" : "#1a1a1a";
               const subPos   = polar(cx, cy, subTextR, subMid);
               const subRot   = radialRotation(subMid);
 
@@ -269,8 +343,8 @@ export default function FlavorWheel({
                 <g key={sub}>
                   <path
                     d={subPath}
-                    fill={subFill}
-                    fillOpacity={isActive ? 0.95 : 0.8}
+                    fill={PALETTE.subPanel}
+                    fillOpacity={isActive ? PALETTE.subPanelOpacityActive : PALETTE.subPanelOpacityDefault}
                     stroke="none"
                   />
                   <text
@@ -278,8 +352,8 @@ export default function FlavorWheel({
                     y={subPos.y}
                     fontSize={subFontSize}
                     fontFamily="sans-serif"
-                    fill="white"
-                    fillOpacity={isActive ? 0.75 : 0.38}
+                    fill={PALETTE.text}
+                    fillOpacity={isActive ? PALETTE.subTextOpacityActive : PALETTE.subTextOpacityDefault}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     transform={`rotate(${subRot},${subPos.x},${subPos.y})`}
@@ -303,7 +377,7 @@ export default function FlavorWheel({
         return (
           <line key={`cdiv-${i}`}
             x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-            stroke="#111" strokeWidth={catLineW}
+            stroke={PALETTE.divider} strokeWidth={catLineW}
           />
         );
       })}
@@ -320,7 +394,7 @@ export default function FlavorWheel({
           return (
             <line key={`sdiv-${cat}-${si}`}
               x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke="#111" strokeWidth={subLineW}
+              stroke={PALETTE.divider} strokeWidth={subLineW}
             />
           );
         });
@@ -329,8 +403,8 @@ export default function FlavorWheel({
       {/* ── center circle ── */}
       <circle
         cx={cx} cy={cy} r={rCenter - 1}
-        fill="#0e0e0e"
-        stroke="rgba(255,255,255,0.12)"
+        fill={PALETTE.center}
+        stroke={PALETTE.centerStroke}
         strokeWidth="0.8"
         style={isSelect && activeCategory ? { cursor: "pointer" } : undefined}
         onClick={isSelect && activeCategory ? () => onCategorySelect?.(null) : undefined}
@@ -339,7 +413,7 @@ export default function FlavorWheel({
         x={cx} y={cy}
         fontSize={Math.max(7.5 * s, 6.5)}
         fontFamily="sans-serif"
-        fill="rgba(255,255,255,0.35)"
+        fill={PALETTE.centerLabel}
         textAnchor="middle"
         dominantBaseline="middle"
         style={{ pointerEvents: "none", letterSpacing: "0.05em" }}
@@ -364,15 +438,15 @@ export default function FlavorWheel({
           <g>
             <polygon
               points={pointStr}
-              fill="rgba(240,237,232,0.13)"
-              stroke="#F0EDE8"
+              fill={PALETTE.radarFill}
+              stroke={PALETTE.radarStroke}
               strokeWidth="1.4"
-              strokeOpacity="0.72"
+              strokeOpacity={PALETTE.radarStrokeOpacity}
             />
             {vertices.map((v, i) => {
               const val = profileData.find(d => d.label === SCA_CATEGORIES[i])?.value ?? 0;
               if (val < 5) return null;
-              return <circle key={SCA_CATEGORIES[i]} cx={v.x} cy={v.y} r={2.5 * s} fill="#F0EDE8" />;
+              return <circle key={SCA_CATEGORIES[i]} cx={v.x} cy={v.y} r={2.5 * s} fill={PALETTE.radarDot} />;
             })}
           </g>
         );
