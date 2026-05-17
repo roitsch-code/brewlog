@@ -24,11 +24,10 @@ import { BREW_METHODS } from "@/lib/constants/brewMethods";
  *   - Card primitive for the "Would brew again" Yes / No pair
  *   - Inline Light-glass inputs and textareas
  *
- * FlavorWheel stays Dark for v1 — the SVG component carries its own
- * palette and migrating it cleanly is its own scope (see
- * /root/.claude/plans/was-denkst-du-kriegen-golden-dusk.md Phase 6).
- * The wheel rarely opens (most users tap QUICK_FLAVORS chips), so the
- * Dark-on-Light contrast is acknowledged as jarring-but-rare.
+ * FlavorWheel was Dark for v1 but is now Light-themed — palette
+ * inverted in place (canvas transparent, cream-glass panels,
+ * anthracite text + icons) so it composes against the page's Field
+ * gradient like the rest of the Light surfaces.
  *
  * Mounted ONLY by /app/(light)/brew/preview/page.tsx during migration.
  * Dark /components/flow/StepLog.tsx stays untouched until cut-over.
