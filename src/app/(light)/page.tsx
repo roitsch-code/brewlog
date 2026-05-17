@@ -361,8 +361,8 @@ export default function HomePage() {
     <>
       <main className="flex h-dvh flex-col">
         <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
-          <h1 className="font-fraunces text-3xl leading-none text-light-foreground">
-            Better taste than sorry.
+          <h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground">
+            Better taste<br />than sorry.
           </h1>
           <button
             type="button"
