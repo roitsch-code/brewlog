@@ -274,7 +274,7 @@ Both migrations applied manually on the VPS — see migration NOTE above.
 **Greeting Haiku (PR #87, #96)**
 - Time-of-day discipline block in the system prompt (fixed "Late night" at 18:44).
 - Library snapshot uses `formatLibraryForPrompt` (with rotation prefix + usage signal) instead of bare roaster+name.
-- localStorage cache keyed by `brewlog.starter.v3.<date>.<bucket>` — regenerates 5× per day at tod-bucket boundaries instead of once per calendar day. Bumping the version is the canonical invalidation lever for any greeting prompt change.
+- localStorage cache keyed by `brewlog.starter.v4.<date>.<bucket>` — regenerates 5× per day at tod-bucket boundaries instead of once per calendar day. Bumping the version is the canonical invalidation lever for any greeting prompt change.
 
 **Nearby map split (PR #101)**
 - `/cafes/map` is now a dedicated route (full-screen Leaflet with dark CartoCDN tiles). `/cafes` is the tabbed Café Library list (Cafés + Coffees tasted out). `NavigationOverlay` "Nearby" → `/cafes/map`; "Café Library" → `/cafes`.

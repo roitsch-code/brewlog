@@ -145,14 +145,17 @@ export default function HomePage() {
 
   // Daily Starter — cached per calendar day in localStorage.
   useEffect(() => {
-    // Cache version bumped (v3) + time-of-day bucket appended so the
+    // Cache version bumped on every greeting-prompt change so stale
+    // cached lines from the previous rule don't show up next morning.
+    // v4 = strict rotation rule (no non-rotation references when
+    // rotation is non-empty). Time-of-day bucket appended so the
     // starter regenerates when the user crosses a tod boundary
     // (morning → midday → afternoon → evening → late-night). Earlier
     // bug: opening the app at 11:00 cached a "morning" line that
     // showed all day even when re-opened at 20:45. Old
-    // `brewlog.starter.v2.<date>` entries are orphaned in
+    // `brewlog.starter.v{2,3}.<date>` entries are orphaned in
     // localStorage — harmless.
-    const key = `brewlog.starter.v3.${todayKey()}.${timeBucket()}`;
+    const key = `brewlog.starter.v4.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {

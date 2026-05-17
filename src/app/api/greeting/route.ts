@@ -48,8 +48,10 @@ COFFEE-HISTORY DISCIPLINE
 - For a brewed coffee you may invite a return ("worth revisiting", "ready for another round") — not a first try.
 
 ROTATION DISCIPLINE
-- Library lines prefixed with "★ IN ROTATION" are the user's active rotation — bags they consider current. Treat these as the primary candidates for the day's invitation.
-- If the library has ANY rotation entries, prefer one of them over a non-rotation entry, unless a recent brew makes a non-rotation reference more natural.
+- Library lines prefixed with "★ IN ROTATION" are the user's active rotation — the bags they currently have access to (think: they're traveling and only some bags came along).
+- If the library shows ANY "★ IN ROTATION" entries, the day's invitation MUST name a rotation entry. NEVER reference a non-rotation bag — not as the invitation, not as a recent-brew mention, not in passing. Non-rotation bags are out of reach right now; naming them is useless.
+- This holds even when a recent brew was a non-rotation bag (café visit, end-of-bag, etc.). Drop the recent-brew angle entirely and reach into the rotation for an invitation.
+- Only when the library shows ZERO rotation entries may you reference a non-rotation bag.
 - "★ IN ROTATION" is a prefix marker, not part of the coffee name — never echo it back in the sentence.
 
 EXAMPLES (style only — do not copy)

@@ -30,7 +30,7 @@ All seven steps migrated and cut over. `/brew/new` resolves through `(light)/bre
 ### Greeting Haiku — bug fixes
 - Time-of-day discipline added to the prompt (no more "Late night" at 18:44)
 - Library snapshot uses `formatLibraryForPrompt` (with usage signal) instead of bare roaster+name
-- localStorage cache keyed by `brewlog.starter.v3.<date>.<bucket>` — regenerates 5x per day at tod-bucket boundaries instead of once per calendar day
+- localStorage cache keyed by `brewlog.starter.v4.<date>.<bucket>` — regenerates 5x per day at tod-bucket boundaries instead of once per calendar day
 - `/api/greeting` (src/app/api/greeting/route.ts) already passes time-of-day + library snapshot + rotation prefix
 
 ### Coffee Library Light migration ✅ (PR #102)
@@ -88,7 +88,7 @@ Roughly in priority order. Numbers are Markus' tentative ranking from earlier in
 - **`min-h-full flex flex-col` does not give children definite height.** `flex-1` inside collapses to 0. Leaflet container needed `h-dvh flex flex-col` + `flex-1 min-h-0` (PR #101).
 - **The `[data-light-scope]` CSS shim** in globals.css catches inline `var(--card)` etc. for un-migrated components inside the Light tree — but NOT hardcoded hex values like `#2A241C`. Those need explicit Light tokens at the source.
 - **CSS `filter: brightness(0)` under `[data-light-scope]`** is the trick used to invert hardcoded-white SVGs (BrewMethodIcon assets, original CoffeeBeanGlow) without forking the components.
-- **localStorage starter cache.** Versioned key `brewlog.starter.v3.<date>.<bucket>`. Bumping the version is the canonical invalidation. If you change the greeting prompt, bump the cache to `v4`.
+- **localStorage starter cache.** Versioned key `brewlog.starter.v4.<date>.<bucket>`. Bumping the version is the canonical invalidation. If you change the greeting prompt, bump the cache to `v5`.
 - **Hard Rule on AI behavior changes.** Any prompt / model / schema-enum change to `/api/recommend`, `/api/greeting`, `/api/match`, etc. needs sample-before-after outputs per `CLAUDE.md`. Cannot validate from this remote env — Markus runs on the deployed PWA.
 - **Auto-deploy** is GitHub Actions → SSH → Hetzner (`.github/workflows/deploy.yml`). Direct push to `main` blocked; PR-only workflow with `enable_pr_auto_merge` (mergeMethod SQUASH).
 - **Manual migrations.** SQL files in `src/lib/db/migrations/` are NOT auto-applied. Run on VPS per CLAUDE.md: `cat src/lib/db/migrations/00XX_*.sql | docker compose exec -T postgres psql -U brewlog -d brewlog`. The Drizzle journal only tracks `0000_init`.
