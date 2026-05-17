@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { JetBrains_Mono, Instrument_Serif, Fraunces, Chivo } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/layout/BottomNav";
 import ScrollContainer from "@/components/layout/ScrollContainer";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -70,13 +68,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120.png" />
       </head>
       <body className="antialiased">
-        {/* Scroll container fills viewport; fixed nav sits above it */}
         <ScrollContainer>
           {children}
         </ScrollContainer>
-        <Suspense fallback={null}>
-          <BottomNav />
-        </Suspense>
       </body>
     </html>
   );

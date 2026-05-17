@@ -59,16 +59,6 @@
   /* Font stacks */
   --font-primary: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
   --font-secondary: var(--font-geist-sans), 'Geist', sans-serif;
-  /* Nav safe area — browser/Safari uses full env() which includes phantom toolbar in PWA */
-  --nav-bottom-padding: env(safe-area-inset-bottom);
-}
-
-/* In PWA standalone mode, env(safe-area-inset-bottom) includes the phantom Safari
-   URL bar (~49px) that doesn't exist. Override to just the home indicator (34px). */
-@media (display-mode: standalone) {
-  :root {
-    --nav-bottom-padding: 8px;
-  }
 }
 
 @layer base {

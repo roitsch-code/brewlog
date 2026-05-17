@@ -1,30 +1,23 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
-// Mirrors the BottomNav show rule. Now empty -- every route in the
-// original allowlist has migrated to the (light) route group and owns
-// its own NavigationOverlay burger. ScrollContainer therefore reserves
-// no bottom padding by default; pages that need bottom-anchored UI
-// (eg /brew/new during a flow) handle their own safe-area accounting.
-//
-// Critical: do NOT use useSearchParams() here. ScrollContainer wraps
-// children in app/layout.tsx without a Suspense boundary, so any
-// useSearchParams() reference triggers an SSG bailout and breaks the
-// production build for every page.
-const EXACT_SHOW: string[] = [];
-const PREFIX_SHOW: string[] = [];
-
+/**
+ * Root viewport wrapper — owns 100dvh height and a single hidden scroll
+ * axis. Pages render inside this container so the scroll bar is always
+ * at the same place and the iOS PWA never gets a phantom Safari URL bar
+ * eating into the bottom.
+ *
+ * Pages that need bottom-anchored UI (e.g. the brew flow's footer CTAs)
+ * handle their own safe-area accounting via env(safe-area-inset-bottom).
+ * No global bottom-padding reserve here — the legacy BottomNav was
+ * retired with the last of the Light migration (PR #136).
+ */
 export default function ScrollContainer({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const showNav = EXACT_SHOW.includes(pathname) || PREFIX_SHOW.some(p => pathname.startsWith(p));
   return (
     <div
       style={{
         height: "100dvh",
         overflowY: "auto",
         overflowX: "hidden",
-        paddingBottom: showNav ? "calc(78px + env(safe-area-inset-bottom))" : "0",
       }}
       className="[&::-webkit-scrollbar]:hidden"
     >
