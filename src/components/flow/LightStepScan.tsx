@@ -6,7 +6,7 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/light/Chip";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
-import { Camera, PenLine, Link2, Coffee, ShoppingBag } from "lucide-react";
+import { Camera, PenLine, Link2, Coffee, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 
 /**
  * Light System fork of /components/flow/StepScan.tsx.
@@ -457,16 +457,16 @@ export default function LightStepScan() {
               setShowManualForm(false);
               photoInputRef.current?.click();
             }}
-            className="w-full rounded-2xl border p-5 text-left transition-all active:scale-[0.98]"
+            className="w-full rounded-2xl border p-5 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
             style={{
               background: inputMethod === "photo" ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
               borderColor: inputMethod === "photo" ? "var(--primary)" : "var(--border)",
               boxShadow: inputMethod === "photo" ? "inset 0 2px 4px rgba(60,40,30,0.12)" : undefined,
             }}
           >
-            <Camera size={24} style={{ color: "var(--primary)", marginBottom: "12px" }} />
+            <Camera size={24} style={{ color: "var(--primary)" }} />
             <p className="font-medium text-sm" style={{ color: "var(--foreground)" }}>Take a photo or choose from library</p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Claude reads the label and extracts all details</p>
+            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Claude reads the label and extracts all details</p>
           </button>
 
           {/* Photo upload + analysis (expanded when photo selected) */}
@@ -838,7 +838,7 @@ export default function LightStepScan() {
           {inputMethod === "link" && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
               <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Paste a product URL</p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <input
                   type="url"
                   value={urlInput}
@@ -852,10 +852,15 @@ export default function LightStepScan() {
                   type="button"
                   onClick={handleUrlAnalyze}
                   disabled={!urlInput.trim() || isAnalyzingUrl}
-                  className="px-4 py-3 rounded-2xl text-sm font-medium active:scale-95 transition-all disabled:opacity-40"
+                  aria-label={isAnalyzingUrl ? "Scanning" : "Scan URL"}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:scale-95 transition-all disabled:opacity-40"
                   style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
                 >
-                  {isAnalyzingUrl ? "…" : "Scan"}
+                  {isAnalyzingUrl ? (
+                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                  ) : (
+                    <ArrowRight className="h-5 w-5" strokeWidth={2} />
+                  )}
                 </button>
               </div>
               {urlError && (
@@ -939,13 +944,13 @@ export default function LightStepScan() {
         {/* THEN CHOOSE */}
         <div>
           <p className="label-eyebrow mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {SCAN_MODES.map(m => (
               <button
                 key={m.id}
                 type="button"
                 onClick={() => setSelectedMode(m.id)}
-                className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl border py-3 px-2 transition-all active:scale-[0.98]"
+                className="rounded-2xl border p-4 text-center flex flex-col items-center gap-2 transition-all active:scale-[0.98]"
                 style={{
                   background: selectedMode === m.id ? "hsl(28 22% 84% / 0.7)" : "var(--card)",
                   borderColor: selectedMode === m.id ? "var(--primary)" : "var(--border)",
@@ -953,7 +958,7 @@ export default function LightStepScan() {
                 }}
               >
                 <m.Icon size={20} style={{ color: selectedMode === m.id ? "var(--primary)" : "var(--muted-foreground)" }} />
-                <span className="text-xs font-medium text-center leading-tight"
+                <span className="text-sm font-medium"
                   style={{ color: selectedMode === m.id ? "var(--primary)" : "var(--muted-foreground)" }}>
                   {m.label}
                 </span>
