@@ -157,7 +157,9 @@ export default function LoginPage() {
     return (
       <div className="min-h-svh bg-transparent flex flex-col items-center justify-center gap-6">
         <CoffeeBeanGlow size={72} />
-        <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
+        <p className="font-fraunces text-light-foreground/60 text-lg leading-tight text-center whitespace-pre-line">
+          {"Better taste\nthan sorry."}
+        </p>
       </div>
     );
   }
@@ -168,7 +170,9 @@ export default function LoginPage() {
       <div className="min-h-svh bg-transparent flex flex-col items-center justify-center px-8 gap-10">
         <div className="flex flex-col items-center gap-4">
           <CoffeeBeanGlow size={56} />
-          <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
+          <p className="font-fraunces text-light-foreground/60 text-lg leading-tight text-center whitespace-pre-line">
+            {"Better taste\nthan sorry."}
+          </p>
         </div>
 
         <div className="w-full max-w-xs flex flex-col gap-4">
@@ -186,7 +190,7 @@ export default function LoginPage() {
           <button
             onClick={handlePin}
             disabled={pin.length < 4 || working}
-            className="w-full py-4 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
+            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
           >
             {working ? "Checking…" : "Unlock"}
           </button>
@@ -213,7 +217,9 @@ export default function LoginPage() {
     <div className="min-h-svh bg-transparent flex flex-col items-center justify-center px-8 gap-10">
       <div className="flex flex-col items-center gap-4">
         <CoffeeBeanGlow size={72} />
-        <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
+        <p className="font-fraunces text-light-foreground/60 text-lg leading-tight text-center whitespace-pre-line">
+          {"Better taste\nthan sorry."}
+        </p>
       </div>
 
       <div className="w-full max-w-xs flex flex-col gap-4">
@@ -225,7 +231,7 @@ export default function LoginPage() {
           <button
             onClick={handleRegister}
             disabled={working}
-            className="w-full py-5 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Setting up…" : "Set up Face ID"}
@@ -234,7 +240,7 @@ export default function LoginPage() {
           <button
             onClick={triggerFaceID}
             disabled={working}
-            className="w-full py-5 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Verifying…" : "Use Face ID"}
