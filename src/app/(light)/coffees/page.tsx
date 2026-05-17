@@ -275,7 +275,7 @@ export default function CoffeesPage() {
                       Renders even when the coffee is not in rotation —
                       count still shows, button just hides. */}
                   {(brewLabel || coffee.inRotation) && (
-                    <div className="flex flex-col items-end justify-center gap-1.5 pr-3 shrink-0">
+                    <div className="flex flex-col items-center justify-center gap-1.5 pr-3 shrink-0">
                       {brewLabel && (
                         <span className="text-light-muted-foreground text-[11px] whitespace-nowrap">{brewLabel}</span>
                       )}
