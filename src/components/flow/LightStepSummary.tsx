@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import { useRouter } from "next/navigation";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
-import Chip from "@/components/ui/light/Chip";
 import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
@@ -261,11 +260,14 @@ export default function LightStepSummary() {
         )}
 
         {result?.flavorNotes && result.flavorNotes.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {result.flavorNotes.map((f) => (
-              <Chip key={f} size="sm" selected>
+              <span
+                key={f}
+                className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight capitalize backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground"
+              >
                 {f}
-              </Chip>
+              </span>
             ))}
           </div>
         )}
