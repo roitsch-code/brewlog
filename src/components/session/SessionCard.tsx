@@ -127,15 +127,15 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
           </p>
         )}
 
-        {/* Flavor notes — standard bordered chip (matches the rest of
-            the Light surfaces). Solid-fill 8% bg was invisible against
-            the cream card. */}
+        {/* Flavor notes — matches the Chip primitive default look
+            used in LightStepLog (taste log) so static tags and
+            interactive chips share one visual language. */}
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-3">
             {tags.map(tag => (
               <span
                 key={tag}
-                className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75"
+                className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight capitalize backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground"
               >
                 {tag}
               </span>

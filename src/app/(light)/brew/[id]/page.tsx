@@ -89,7 +89,21 @@ export default function SessionDetailPage() {
   const method = brew?.methodUsed || recommendation?.primaryMethod || "Brew";
   const recipe = recommendation?.primaryRecipe;
 
-  const backTarget = sessionCoffee?.coffeeId ? `/coffees/${sessionCoffee.coffeeId}` : "/coffees";
+  // Back resolution — prefer the deterministic /coffees/[id] target so
+  // the user lands on the exact detail page they came from, regardless
+  // of browser history (deep links, multi-tab use). The fetched
+  // coffee.id is the canonical source; sessionCoffee.coffeeId is the
+  // older fallback (some legacy sessions persisted CoffeeIdentity
+  // without coffeeId). If neither resolves, fall back to router.back()
+  // — typical for external/cafe sessions that have no library coffee.
+  const targetCoffeeId = coffee?.id ?? sessionCoffee?.coffeeId;
+  const handleBack = () => {
+    if (targetCoffeeId) {
+      router.push(`/coffees/${targetCoffeeId}`);
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <div className="min-h-svh bg-transparent flex flex-col">
@@ -117,7 +131,7 @@ export default function SessionDetailPage() {
 
         {/* Back */}
         <button
-          onClick={() => router.push(backTarget)}
+          onClick={handleBack}
           aria-label="Back"
           className="absolute left-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
@@ -209,7 +223,7 @@ export default function SessionDetailPage() {
           {result.flavorNotes?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {result.flavorNotes.map(f => (
-                <span key={f} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
+                <span key={f} className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight capitalize backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground">
                   {f}
                 </span>
               ))}
@@ -238,7 +252,7 @@ export default function SessionDetailPage() {
 
       {/* Delete */}
       <div className="px-5 py-6 pb-safe pb-8">
-        <DeleteButton sessionId={session.id} onDeleted={() => router.push(backTarget)} />
+        <DeleteButton sessionId={session.id} onDeleted={handleBack} />
       </div>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
@@ -266,7 +280,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-xs px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
+    <span className="inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground">
       {children}
     </span>
   );
