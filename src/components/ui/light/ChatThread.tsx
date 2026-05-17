@@ -98,6 +98,14 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
 
   const tailContent = messages[messages.length - 1]?.content ?? "";
 
+  // Show the thinking bubble while we're waiting AND no assistant text has
+  // started arriving yet. Once streaming begins, the assistant prose
+  // replaces the bubble — keeping both would look like two responses.
+  const lastMsg = messages[messages.length - 1];
+  const showThinking =
+    loading &&
+    (!lastMsg || lastMsg.role !== "assistant" || lastMsg.content.length === 0);
+
   useEffect(() => {
     if (!stickToBottomRef.current) return;
     const el = scrollRef.current;
@@ -119,6 +127,25 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
     >
       <div className="flex min-h-full flex-col justify-end">
         <div className="flex w-full flex-col gap-3 px-5 py-5">
+          {showThinking && (
+            <div
+              className="flex h-9 w-fit items-center gap-2 rounded-2xl bg-light-card-default px-4 backdrop-blur-[14px] backdrop-saturate-150 order-last"
+              aria-label="Thinking"
+            >
+              <span
+                className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
+                style={{ animationDuration: "1200ms" }}
+              />
+              <span
+                className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
+                style={{ animationDuration: "1200ms", animationDelay: "150ms" }}
+              />
+              <span
+                className="h-2 w-2 animate-pulse rounded-full bg-light-foreground/60"
+                style={{ animationDuration: "1200ms", animationDelay: "300ms" }}
+              />
+            </div>
+          )}
           {messages.map((m, i) =>
             m.role === "user" ? (
               <div key={i} className="flex flex-col items-end gap-2">
