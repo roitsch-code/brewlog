@@ -68,7 +68,7 @@ export default function PastConversationsPage() {
     <>
       <main className="flex h-dvh flex-col">
         <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
-          <h1 className="font-chivo text-[14px] font-medium text-light-foreground/60">
+          <h1 className="font-fraunces text-3xl leading-none text-light-foreground">
             Past conversations
           </h1>
           <button
