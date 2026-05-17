@@ -168,7 +168,18 @@ export default function CoffeeDetailPage() {
           <div className="relative h-72">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 card-scrim" />
+            {/* Cream-to-transparent scrim so the anthracite title stays
+                readable over a bag photo of any colour. The dark
+                card-scrim utility is for the dark theme — using it here
+                left anthracite text painted on near-black, illegible. */}
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
+              }}
+            />
           </div>
         ) : (
           <div className="h-40 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center">
