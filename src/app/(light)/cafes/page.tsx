@@ -154,7 +154,14 @@ export default function CafesPage() {
           <CoffeesTab
             coffees={cafeCoffees}
             loading={sessionsLoading}
-            onSelect={key => router.push(`/cafes/coffee/${key}`)}
+            onSelect={(key, coffeeId) => {
+              // Prefer the Coffee Library detail page when the bag has
+              // a library row (coffeeId set on the persisted CoffeeIdentity).
+              // Falls back to the cafe-only synthetic detail for coffees
+              // that were tasted out but never logged at home.
+              if (coffeeId) router.push(`/coffees/${coffeeId}`);
+              else router.push(`/cafes/coffee/${key}`);
+            }}
           />
         )}
       </div>
@@ -226,7 +233,7 @@ function CafesTab({ cafes, loading, onSelect }: { cafes: CafeSummary[]; loading:
 
 /* ── Coffees tab — Coffee-Library-style cards with full-bleed photo on left ── */
 
-function CoffeesTab({ coffees, loading, onSelect }: { coffees: CafeCoffee[]; loading: boolean; onSelect: (key: string) => void }) {
+function CoffeesTab({ coffees, loading, onSelect }: { coffees: CafeCoffee[]; loading: boolean; onSelect: (key: string, coffeeId: string | undefined) => void }) {
   if (loading) return <LoadingSkeletons />;
   if (coffees.length === 0) return (
     <EmptyState
@@ -249,7 +256,7 @@ function CoffeesTab({ coffees, loading, onSelect }: { coffees: CafeCoffee[]; loa
           >
             <button
               type="button"
-              onClick={() => onSelect(key)}
+              onClick={() => onSelect(key, coffee.coffeeId)}
               className="flex items-stretch flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
             >
               {/* Photo strip — full card height, same dimensions as the
