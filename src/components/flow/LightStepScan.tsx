@@ -487,12 +487,13 @@ export default function LightStepScan() {
                     <span className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Identified</span>
                     <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Tap to correct</span>
                   </div>
-                  {draft.coffee.roaster !== undefined && (
-                    <EditableRow label="Roaster" value={draft.coffee.roaster || ""} onChange={v => setCoffee({ roaster: v })} suggestions={existingRoasters} />
-                  )}
-                  {draft.coffee.name !== undefined && (
-                    <EditableRow label="Coffee" value={draft.coffee.name || ""} onChange={v => setCoffee({ name: v })} />
-                  )}
+                  {/* Roaster + Coffee always shown so the user can shorten
+                      a long name (e.g. "El Congo by Carlos Montero – Don
+                      Eli" → "El Congo") or add a missing roaster on a
+                      photo-extracted bag. Both rows are tap-to-edit and
+                      now show a pencil icon to advertise that. */}
+                  <EditableRow label="Roaster" value={draft.coffee.roaster || ""} onChange={v => setCoffee({ roaster: v })} suggestions={existingRoasters} />
+                  <EditableRow label="Coffee" value={draft.coffee.name || ""} onChange={v => setCoffee({ name: v })} />
                   {draft.coffee.origin !== undefined && (
                     <EditableRow
                       label="Origin"
@@ -1398,8 +1399,20 @@ function EditableRow({ label, value, onChange, suggestions }: { label: string; v
       className="w-full flex items-baseline justify-between gap-4 group text-left"
     >
       <span className="text-light-muted-foreground text-sm shrink-0">{label}</span>
-      <span className="text-light-foreground text-sm text-right group-active:text-light-foreground transition-colors underline underline-offset-2 decoration-white/20">
-        {value || <span className="text-light-muted-foreground italic">tap to add</span>}
+      <span className="flex items-baseline gap-1.5 text-right min-w-0">
+        <span className="text-light-foreground text-sm group-active:text-light-foreground transition-colors underline underline-offset-2 decoration-light-foreground/30 truncate">
+          {value || <span className="text-light-muted-foreground italic">tap to edit</span>}
+        </span>
+        <svg
+          className="w-3 h-3 shrink-0 text-light-muted-foreground/60"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+        </svg>
       </span>
     </button>
   );
