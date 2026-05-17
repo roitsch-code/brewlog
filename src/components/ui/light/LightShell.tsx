@@ -49,9 +49,9 @@ export default function LightShell({ children }: { children: ReactNode }) {
         <div
           className="pointer-events-none fixed top-0 left-0 right-0 z-[5]"
           style={{
-            height: "calc(env(safe-area-inset-top) + 1.5rem)",
+            height: "calc(env(safe-area-inset-top) + 2.5rem)",
             background:
-              "linear-gradient(to bottom, hsl(36 55% 96% / 0.85) 0%, hsl(36 55% 96% / 0.85) 60%, transparent 100%)",
+              "linear-gradient(to bottom, hsl(36 55% 96% / 0.85) 0%, hsl(36 55% 96% / 0.85) 50%, hsl(36 55% 96% / 0.35) 75%, transparent 100%)",
           }}
         />
         {children}
