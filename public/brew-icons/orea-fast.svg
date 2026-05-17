@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Orea V4 Fast (Flat) — outer rim + inner ring + 8 short radial bars between them -->
+  <circle cx="50" cy="50" r="42" />
+  <circle cx="50" cy="50" r="18" />
+  <g stroke-width="3" stroke-linecap="round">
+    <g transform="rotate(0 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(45 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(90 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(135 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(180 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(225 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(270 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+    <g transform="rotate(315 50 50)"><line x1="50" y1="22" x2="50" y2="32" /></g>
+  </g>
+</svg>

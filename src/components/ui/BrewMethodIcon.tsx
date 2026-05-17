@@ -10,7 +10,16 @@ export function brewIconSrc(method?: string): string {
   if (m.includes("kalita"))                                     return "/brew-icons/kalita.png";
   if (m.includes("chemex"))                                     return "/brew-icons/chemex.svg";
   if (m.includes("clever"))                                     return "/brew-icons/clever-dripper.png";
-  if (m.includes("orea"))                                       return "/brew-icons/orea-v4.png";
+  // Orea V4 — four bottom variants share the same brewer body but
+  // visually differ from above. Each gets a top-down filter-plate
+  // icon. Legacy sessions whose method was just "Orea V4 Wide" or
+  // "Orea" with no bottom keyword fall through to Classic.
+  if (m.includes("orea")) {
+    if (m.includes("open")) return "/brew-icons/orea-open.svg";
+    if (m.includes("apex")) return "/brew-icons/orea-apex.svg";
+    if (m.includes("fast")) return "/brew-icons/orea-fast.svg";
+    return "/brew-icons/orea-classic.svg";
+  }
   if (m.includes("moccamaster") || m.includes("mocca"))         return "/brew-icons/moccamaster.png";
   return "/brew-icons/v60.png";
 }
