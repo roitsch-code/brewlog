@@ -85,7 +85,14 @@
 
   html {
     height: 100%;
-    background-color: #0E0B0A;
+    /* Cream canvas — the BTTS Light baseline. Dark routes still paint
+       body as solid #0E0B0A which covers this entirely, so they're
+       unaffected. The reason this is cream and not dark: viewportFit:
+       cover extends the PWA webview under the iOS/Android system
+       status bar. If the Field gradient is thin or transparent in
+       its uppermost pixels, the html canvas shows through there —
+       cream is the right fallback for the Light app, dark was not. */
+    background-color: #F3E5DC;
   }
 
   body {
