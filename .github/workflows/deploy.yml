@@ -14,5 +14,22 @@ jobs:
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          # Defensive sequence:
+          #   1. fetch + hard reset to origin/main
+          #   2. build new app image (existing container still runs — no downtime yet)
+          #   3. nuke any container belonging to the app service. covers
+          #      both the well-named "brewlog-app-1" and any
+          #      "<hash>_brewlog-app-1" half-renamed leftover from a
+          #      previous recreate that failed midway (the race that bit
+          #      us when manual `docker compose up -d app` overlapped
+          #      with a workflow run — see HANDOVER.md). Postgres + Caddy
+          #      + Ofelia containers untouched.
+          #   4. start the app service fresh.
           ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "cd ${{ secrets.DEPLOY_PATH }} && git fetch origin main && git reset --hard origin/main && docker compose build app && docker compose up -d app"
+            "set -e; cd ${{ secrets.DEPLOY_PATH }} \
+             && git fetch origin main \
+             && git reset --hard origin/main \
+             && docker compose build app \
+             && (docker ps -aq --filter 'label=com.docker.compose.project=brewlog' --filter 'label=com.docker.compose.service=app' | xargs -r docker rm -f) \
+             && (docker ps -aq --filter 'name=brewlog-app' | xargs -r docker rm -f) \
+             && docker compose up -d app"
