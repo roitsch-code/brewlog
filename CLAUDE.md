@@ -30,7 +30,9 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 ### Pages (`src/app/`)
 
-Routes are split between the **`(light)` route group** (BTTS Light theme — Cream background, Fraunces/Chivo, anthracite foreground, generative Field) and the legacy **Dark** surfaces still pending migration. The `(light)` segment is URL-invisible — `/coffees` resolves through `(light)/coffees/page.tsx`. `LightShell` wraps everything in the group and sets the `[data-light-scope]` data attribute used by the CSS shim in `globals.css`.
+Light migration is **complete** as of PRs #134–#137. Every visited route lives inside the **`(light)` route group** (BTTS Light theme — Cream background, Fraunces/Chivo, anthracite foreground, generative Field) and inherits `LightShell` from `(light)/layout.tsx`. The `(light)` segment is URL-invisible — `/coffees` resolves through `(light)/coffees/page.tsx`. `LightShell` sets the `[data-light-scope]` data attribute used by the CSS shim in `globals.css`.
+
+The single remaining Dark route is `cafes/map/page.tsx` and that's intentional (dark Leaflet tiles).
 
 | Route | Theme | Purpose |
 |-------|-------|---------|
@@ -39,20 +41,20 @@ Routes are split between the **`(light)` route group** (BTTS Light theme — Cre
 | `(light)/past-conversations/page.tsx` | Light | Conversation history list (archived chats) |
 | `(light)/past-conversations/[id]/page.tsx` | Light | Single past conversation thread (read-only replay) |
 | `(light)/brew/new/page.tsx` | Light | Multi-step brew flow — routes `flowStore.step` to the right `LightStep*` component |
-| `(light)/coffees/page.tsx` | Light | Coffee library — searchable list (burger top-right, no BottomNav) |
-| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + Brew-this CTA + rotation star toggle + rating history + brew signatures |
-| `layout.tsx` | — | Root layout: auth check, PWA meta tags, font preloads |
-| `login/page.tsx` | Dark | Passkey (WebAuthn) login UI |
-| `onboarding/page.tsx` | Dark | First-run equipment / grinder / preferences wizard |
-| `brew/[id]/page.tsx` | Dark | Read-only session detail (reached from SessionCard on /home diary) |
-| `cafes/page.tsx` | Dark | Café Library — tabbed list (Cafés + Coffees tasted out) |
+| `(light)/brew/[id]/page.tsx` | Light | Read-only session detail — Brew-method as headline, Field of the linked coffee, sections for recipe / brew notes / taste / reasoning |
+| `(light)/coffees/page.tsx` | Light | Coffee library — searchable list with full-bleed bag-photo card (96 px left strip), brew count over Brew CTA in the right column |
+| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + rotation toggle + gated Brew CTA + rating history + brew signatures |
+| `(light)/cafes/page.tsx` | Light | Café Library — tabbed list (Cafés + Coffees tasted out), photo-strip cards in the Coffees tab |
+| `(light)/cafes/place/[slug]/page.tsx` | Light | Single café detail + inline session edit panel |
+| `(light)/cafes/coffee/[id]/page.tsx` | Light | Coffee tasted at an external location, cross-links to library coffee via `coffeeId` |
+| `(light)/taste/page.tsx` | Light | Taste profile — Avg rating + rated count + AI summary + FlavorWheel (profile mode) + top flavors / rating trend / body / acidity / origins / processes / methods |
+| `(light)/login/page.tsx` | Light | Passkey (WebAuthn) login UI + PIN fallback + reset path |
+| `(light)/onboarding/page.tsx` | Light | First-run equipment + grinder wizard (uses the Chip primitive) |
+| `layout.tsx` | — | Root layout: PWA meta tags, font preloads, `<ScrollContainer>` wrapper |
+| `loading.tsx` | Light | Global loading state — Light CoffeeBeanGlow on inline cream bg (renders before LightShell mounts) |
 | `cafes/map/page.tsx` | Dark *(intentional)* | Nearby — full-screen Leaflet map (CartoCDN dark tiles); needs `h-dvh flex flex-col` + `flex-1 min-h-0` so Leaflet gets a non-zero container |
-| `cafes/place/[slug]/page.tsx` | Dark | Individual café detail (menu, coffees tasted) |
-| `cafes/coffee/[id]/page.tsx` | Dark | Coffee tasted at an external location |
-| `taste/page.tsx` | Dark | Taste profile + AI-written summary + RadarChart |
-| `library/page.tsx` | Dark | Navigation hub (small, low-traffic) |
 
-Removed in the BTTS Light arc: legacy `page.tsx` (Dark home, replaced by `(light)/page.tsx`), `match/page.tsx` + `/api/match` (taste-match flow folded into `/api/explore-agent`), `explore/page.tsx` (replaced by inline chat on home). See HANDOVER.md for the punch-list of Dark routes still pending Light migration.
+Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/page.tsx` + `/api/match` (folded into `/api/explore-agent`), `explore/page.tsx` (replaced by inline chat on home), `library/page.tsx` (the Coffee Library / Café Library picker — redundant once `NavigationOverlay` gained direct entries for both).
 
 ### API Routes (`src/app/api/`)
 
@@ -119,13 +121,15 @@ All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `Ste
 **Light UI primitives (`src/components/ui/light/`):**
 `LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders `composeFieldGradient(zones, rotation)` fixed -z-10), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork).
 
-**Dark UI primitives (`src/components/ui/`):**
-`Button`, `Chip`, `CoffeeBeanGlow`, `FlavorWheel` (still Dark inside `LightStepLog` — opt-in, deferred), `BrewMethodIcon` (inverted via `[data-light-scope] { filter: brightness(0) }` shim instead of forking), `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `RadarChart`, `StarRating`, `ThinkingDots`, `WaveformBars`.
+**Shared / Dark-era UI primitives (`src/components/ui/`):**
+`Button`, `CoffeeBeanGlow` (kept for `PhotoUpload`; CSS shim `[data-light-scope] { filter: brightness(0) }` inverts it to anthracite at the consumer), `FlavorWheel` (now Light palette in place — canvas transparent, cream-glass panels, anthracite text/icons), `BrewMethodIcon` (inverted via the same shim), `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `StarRating` (still consumed by `CafeMap` only), `ThinkingDots`, `WaveformBars`.
+
+Removed during the Light cleanup (PR #137): `BottomNav`, Dark `Chip`, `RadarChart` — all orphaned once their consumers migrated.
 
 **Layout (`src/components/layout/`):**
-`BottomNav` (allowlist: `/taste`, `/library`, `/cafes` only — Light routes opt out), `ScrollContainer`, `BottomSpacer`
+`ScrollContainer` (root 100dvh wrapper with hidden scroll — no more allowlist, no nav-padding reserve), `BottomSpacer`
 
-**Session:** `SessionCard` (Dark, used on home diary feed)
+**Session:** `SessionCard` (Light, consumed only by `/coffees/[id]` All-brews list — Brew-method as headline, Field's cream-glass cards, swipe-to-delete with rust-red destructive button)
 **Cafés:** `CafeMap` (Leaflet — consumed by `/cafes/map`)
 
 ### `src/lib/`
@@ -178,8 +182,12 @@ lib/
 │   ├── composeGradient.ts     # zones + rotation → CSS radial/conic gradient sandwich
 │   ├── schema.ts              # Zod schema for persisted field_zones
 │   ├── mapNotesToZones.ts     # Haiku call: tasting notes → weighted zone composition
+│   ├── cache.ts               # sessionStorage cache keyed by session id — /coffees/[id] pre-warms,
+│   │                            /brew/[id] reads on mount so the cup's Field paints from frame 1
+│   │                            instead of flashing default while the coffee fetch resolves
 │   └── FieldContext.tsx       # React Context Provider + useFieldConfig() hook
-│   # Consumed by <Field> (src/components/ui/light/Field.tsx) and LightFlowShell.
+│   # Consumed by <Field> (src/components/ui/light/Field.tsx), LightFlowShell, and the
+│   # /coffees/[id] + /brew/[id] detail pages (which both call useFieldConfig directly).
 │   # LightFlowShell rotates 25° per brew step (scan 0° → context 25° → recommend 50° → brew 75° → log 100° → summary 125°).
 ├── knowledge/
 │   ├── insights.ts / news.ts / hints.ts / questions.ts / alerts.ts
@@ -250,12 +258,36 @@ Both migrations applied manually on the VPS — see migration NOTE above.
 ## Current Status — Snapshot May 2026
 
 ### ✅ Done
-**BTTS Light migration (PR #65 → #103)**
-- Whole brew flow + Home + Coffee Library now run under the `(light)` route group with the BTTS Light theme — Cream background, Fraunces 40px hero, Chivo body, anthracite foreground, generative Field background.
+**BTTS Light migration — complete (PR #65 → #137)**
+- Every visited surface lives in the `(light)` route group with the BTTS Light theme — Cream background, Fraunces 40 px hero, Chivo body, anthracite foreground, generative Field background.
 - Light primitives stack: `LightShell`, `LightFlowShell`, `Field`, `Card`, `Section`, `Footnote`, `Chip`, `Hero`, `CTA`, `CTAWarmth`, `ActionPill`, `ChatInput`, `ChatThread`, `NavigationOverlay`, `StarRating`, `CircularTimer` (fork), `CoffeeBeanGlow` (fork).
 - Atomic cut-over (PR #95) renamed `(light)/brew/preview` → `(light)/brew/new` and deleted ~4,300 lines of Dark step code (`Step*.tsx` + `FlowShell.tsx` + Dark `CircularTimer`).
-- `[data-light-scope]` CSS shim in `globals.css` adapts un-migrated Dark components (BrewMethodIcon via `filter: brightness(0)`; `var(--card)` tokens; CoffeeBeanGlow inversion) without forking the components.
-- Dark surfaces still pending Light migration: `/cafes`, `/cafes/place/[slug]`, `/cafes/coffee/[id]`, `/taste`, `/brew/[id]`, `/login`, `/onboarding`, `/library`. `/cafes/map` stays Dark intentionally (dark CartoCDN tiles). See HANDOVER.md punch list.
+- `[data-light-scope]` CSS shim in `globals.css` adapts shared Dark-era components (`BrewMethodIcon`, original `CoffeeBeanGlow`) via `filter: brightness(0)` so they read as anthracite inside the Light tree without being forked.
+- Migrated this arc (Sep–May 2026): `/brew/[id]` (#122), `/coffees/[id]` Field adoption (#123), SessionCard rewrite (#120), `/cafes` + `/cafes/place/[slug]` + `/cafes/coffee/[id]` (#134), `/login` + `/onboarding` (#135), `/taste` (#136). Only `/cafes/map` remains Dark — intentional for the dark CartoCDN tiles.
+- Cleanup pass (#137): removed `BottomNav`, `RadarChart`, Dark `Chip` (all orphaned post-migration); `loading.tsx` flipped to Light with explicit cream bg so route transitions don't flash dark; `ScrollContainer` simplified (no allowlist, no nav-padding reserve); `--nav-bottom-padding` CSS var dropped.
+- PWA chrome aligned (#113–#119): `themeColor: #D4B8C9` (mauve) on viewport + `manifest.json`, `manifest.background_color: #F3E5DC` (cream so the splash matches the Field base), `appleWebApp.statusBarStyle: "default"`, `html { background-color: #F3E5DC }` so the Light cream is the baseline even if the Field gradient is thin at the very top pixels.
+
+**UI polish across the Light surfaces**
+- Chip vocabulary unified across SessionCard, `/coffees/[id]`, `/brew/[id]`, `LightStepSummary`, Café Library, Café detail — all static tags now share the `Chip` primitive's default cream-glass look (`px-3 py-1.5`, 12 px, `bg-light-card-default` + backdrop blur, anthracite text). Bordered outline variant was a regression noticed in #124 and reverted in #126.
+- Coffee Library card architecture (#127, #132, #133): full-bleed 96 px bag-photo strip on the left, content middle, right column with brew count over the Brew CTA (centered, not edge-aligned). Brew CTA gated on `inRotation` so out-of-rotation rows don't dangle an action they shouldn't trigger (#117).
+- Coffee Detail (`/coffees/[id]`) reads its coffee's Field via `useFieldConfig` (#123). Hero scrim flipped to cream-to-transparent (#121) so anthracite titles stay legible against any bag photo. Rotation toggle gates the "Brew this" CTA (#117) — out-of-rotation = bag-not-on-counter, no shortcut shown.
+- SessionCard (`/coffees/[id]` All-brews list) rewritten as a Light card (#120): brew method headline + recipe meta (date · dose · water · time) + flavor chips; swipe-to-delete button fades in proportional to swipe progress (#124) so it doesn't bleed through the translucent cream at rest.
+- Brew Session Detail (`/brew/[id]`) inherits the cup's Field via `lib/field/cache.ts` (#125) — `/coffees/[id]` pre-warms the cache for all its sessions when it loads, `/brew/[id]` reads synchronously on mount, so navigating between the two paints the same Field with no flash through default. Back arrow routes to `/coffees/[coffeeId]` (#126) instead of the library root, with router.back() as a fallback for legacy sessions whose `CoffeeIdentity` was persisted before `coffeeId` existed.
+
+**FlavorWheel Light palette (#128–#131)**
+- Direct conversion (no theme prop). The wheel is intrinsically monochrome — `scaFlavorWheel.ts` gives every category a near-identical dark gray, so differentiation comes from icons + label opacity + active/has-sel tonal lifts, not from per-category brand color.
+- Canvas → transparent so the Field paints through. Category segments → cream-glass at 55 % (`bg-light-card-default` token), taupe lift for has-selection, anthracite press at 18 % alpha for active. Outer sub-category ring mirrors the same three states at slightly weaker alpha so the inner ring stays primary. Whole-wedge tonal state — tapping a category darkens both rings together.
+- Thin cream ring divider between inner and outer rings (#130); divider stroke weights dropped to 0.8 / 0.5 viewport units (#131) to match the label typography weight.
+- Icons refactored to `currentColor` with the wrapping `<g>` setting `color`, single icon-path source.
+
+**Generative Field v1.1 (PRs #78 → #100)**
+- Each coffee gets its own background gradient composition derived from tasting notes.
+- 6-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel); composition stored as weighted JSON in `coffees.field_zones`.
+- Haiku call (`src/lib/field/mapNotesToZones.ts`) maps tasting notes → zone weights on first scan.
+- `LightFlowShell` rotates Field 25° per brew step (scan 0°, mode 0°, context 25°, recommend 50°, brew 75°, log 100°, summary 125°) — visual progress signal.
+- Brew-Again paths (ActionPill on home, `/coffees` list, `/coffees/[id]`) lift `fieldZones` from `coffees.field_zones` so the cup-specific Field travels with the user into the flow.
+- Backfill (`scripts/backfill-field-zones.mjs`) ran on production: 23/23 existing coffees mapped (no skips).
+- Variety fallback (Phase 4 — derive Field from variety knowledge for coffees without tasting notes) deferred as currently moot.
 
 **Generative Field v1.1 (PRs #78 → #100)**
 - Each coffee gets its own background gradient composition derived from tasting notes.
@@ -339,16 +371,10 @@ Both migrations applied manually on the VPS — see migration NOTE above.
 
 ### ❌ Not Done / Known Gaps
 
-**Light migration punch list** (roughly priority order — see HANDOVER.md for the live ranking):
-1. `/coffees` rotation indicator + filter — list rows don't show the star yet; "Show only rotation" toggle would scan faster
-2. `/cafes` Light migration — high-traffic, last big Library surface
-3. `/cafes/place/[slug]` + `/cafes/coffee/[id]` Light — small follow-ons after `/cafes`
-4. `/taste` Light + RadarChart Light — taste profile + AI summary
-5. FlavorWheel Light SVG — currently Dark inside `LightStepLog` (opt-in, rarely opened — deferred per migration plan)
-6. `/brew/[id]` Session Detail Light — reached via SessionCard
-7. Dark `Chip.tsx` removal — only Dark consumer left is `/brew/[id]`
-8. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through `Card` + `Chip` primitives
-9. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
+**Open items** (post-Light-migration; live ranking lives in HANDOVER.md):
+1. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
+2. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
+3. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
 
 **Permanent gaps**
 - Photo uploads: stored under `bags/` — old sessions scanned before this convention have no `bagPhotoUrl`
