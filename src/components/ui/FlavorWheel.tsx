@@ -41,15 +41,17 @@ const PALETTE = {
   // the card-default so they read as separation lines without competing
   // with the labels.
   divider: "hsl(30 60% 92%)",
-  // Category segments
+  // Inner ring — category segments
   panelDefault: "hsl(36 55% 96% / 0.55)",
   panelHasSel: "hsl(30 30% 80% / 0.70)",
   panelActive: "hsl(0 0% 14% / 0.18)",
-  // Sub-category segments (outer ring) — same hue, lower fill weight
-  // so the category ring stays primary visually.
-  subPanel: "hsl(36 55% 96%)",
-  subPanelOpacityDefault: 0.35,
-  subPanelOpacityActive: 0.65,
+  // Outer ring — sub-category segments. Mirrors the inner ring's three
+  // tonal states (default cream-glass, taupe has-sel, anthracite press)
+  // at slightly weaker alpha so the inner ring stays the primary read.
+  // Whole-wedge active treatment: tapping a category darkens both rings.
+  subPanelDefault: "hsl(36 55% 96% / 0.55)",
+  subPanelHasSel: "hsl(30 30% 80% / 0.50)",
+  subPanelActive: "hsl(0 0% 14% / 0.12)",
   // Center circle
   center: "hsl(36 55% 96%)",
   centerStroke: "hsl(0 0% 14% / 0.15)",
@@ -61,8 +63,8 @@ const PALETTE = {
   textOpacityActive: 0.95,
   textOpacityHasSel: 0.85,
   textOpacityDefault: 0.65,
-  subTextOpacityActive: 0.80,
-  subTextOpacityDefault: 0.42,
+  subTextOpacityActive: 0.85,
+  subTextOpacityDefault: 0.55,
   // Radar polygon (profile mode)
   radarFill: "hsl(0 0% 14% / 0.10)",
   radarStroke: "hsl(0 0% 14%)",
@@ -329,7 +331,9 @@ export default function FlavorWheel({
               </text>
             )}
 
-            {/* Sub-category ring */}
+            {/* Sub-category ring — fill mirrors the inner-ring state of
+                the parent category so the whole pie-wedge reacts together
+                (active and has-sel both ripple through). */}
             {subKeys.map((sub, si) => {
               const subStart = catStart + subSlice * si;
               const subEnd   = catStart + subSlice * (si + 1);
@@ -339,12 +343,15 @@ export default function FlavorWheel({
               const subPos   = polar(cx, cy, subTextR, subMid);
               const subRot   = radialRotation(subMid);
 
+              const subFill = isActive ? PALETTE.subPanelActive
+                : hasSel ? PALETTE.subPanelHasSel
+                : PALETTE.subPanelDefault;
+
               return (
                 <g key={sub}>
                   <path
                     d={subPath}
-                    fill={PALETTE.subPanel}
-                    fillOpacity={isActive ? PALETTE.subPanelOpacityActive : PALETTE.subPanelOpacityDefault}
+                    fill={subFill}
                     stroke="none"
                   />
                   <text
@@ -368,12 +375,15 @@ export default function FlavorWheel({
         );
       })}
 
-      {/* ── Even-width radial dividers — drawn on top of segments ── */}
+      {/* ── Even-width radial dividers — drawn on top of segments.
+          End exactly at rOuter (was rOuter + 2): with the transparent
+          canvas the overshoot painted cream spikes beyond the wheel
+          edge against the Field gradient. ── */}
       {/* Category boundaries: full height rCenter → rOuter */}
       {SCA_CATEGORIES.map((_, i) => {
         const angle = slice * i - Math.PI / 2;
         const p1 = polar(cx, cy, rCenter, angle);
-        const p2 = polar(cx, cy, rOuter + 2, angle);
+        const p2 = polar(cx, cy, rOuter, angle);
         return (
           <line key={`cdiv-${i}`}
             x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
@@ -390,7 +400,7 @@ export default function FlavorWheel({
         return subKeys.slice(1).map((_, si) => {
           const angle = catStart + subSlice * (si + 1);
           const p1 = polar(cx, cy, rInner, angle);
-          const p2 = polar(cx, cy, rOuter + 2, angle);
+          const p2 = polar(cx, cy, rOuter, angle);
           return (
             <line key={`sdiv-${cat}-${si}`}
               x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
