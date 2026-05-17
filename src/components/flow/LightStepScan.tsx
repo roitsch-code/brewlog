@@ -652,10 +652,7 @@ export default function LightStepScan() {
                             <div className="mt-2 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {msg.chips.map(chip => (
-                                  <button key={chip} onClick={() => handleRoasterQAAnswer(chip)}
-                                    className="px-3 py-1.5 rounded-full border text-sm active:scale-95 transition-all"
-                                    style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
-                                  >{chip}</button>
+                                  <Chip key={chip} onClick={() => handleRoasterQAAnswer(chip)}>{chip}</Chip>
                                 ))}
                               </div>
                               <div className="flex gap-2">
@@ -707,15 +704,9 @@ export default function LightStepScan() {
                             <div className="mt-2 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {msg.chips.map(chip => (
-                                  <button key={chip} onClick={() => handleClarificationAnswer(chip)}
-                                    className="px-3 py-1.5 rounded-full border text-sm active:scale-95 transition-all"
-                                    style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
-                                  >{chip}</button>
+                                  <Chip key={chip} onClick={() => handleClarificationAnswer(chip)}>{chip}</Chip>
                                 ))}
-                                <button onClick={() => handleClarificationAnswer("Not sure")}
-                                  className="px-3 py-1.5 rounded-full border text-sm active:scale-95 transition-all"
-                                  style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
-                                >Not sure</button>
+                                <Chip onClick={() => handleClarificationAnswer("Not sure")}>Not sure</Chip>
                               </div>
                               <div className="flex gap-2">
                                 <input type="text" value={freeText}
@@ -838,22 +829,25 @@ export default function LightStepScan() {
           {inputMethod === "link" && (
             <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
               <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Paste a product URL</p>
-              <div className="flex items-center gap-2">
+              <div
+                className="flex items-center gap-1 rounded-2xl pl-4 pr-1.5 py-1.5"
+                style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
+              >
                 <input
                   type="url"
                   value={urlInput}
                   onChange={e => { setUrlInput(e.target.value); setUrlError(null); }}
                   onKeyDown={e => e.key === "Enter" && urlInput.trim() && handleUrlAnalyze()}
                   placeholder="https://..."
-                  className="flex-1 rounded-2xl px-4 py-3 text-base focus:outline-none"
-                  style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "16px" }}
+                  className="flex-1 min-w-0 bg-transparent text-base focus:outline-none"
+                  style={{ color: "var(--foreground)", fontSize: "16px" }}
                 />
                 <button
                   type="button"
                   onClick={handleUrlAnalyze}
                   disabled={!urlInput.trim() || isAnalyzingUrl}
                   aria-label={isAnalyzingUrl ? "Scanning" : "Scan URL"}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:scale-95 transition-all disabled:opacity-40"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full active:scale-95 transition-all disabled:opacity-40"
                   style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
                 >
                   {isAnalyzingUrl ? (
@@ -868,12 +862,25 @@ export default function LightStepScan() {
               )}
               {/* Show extracted info after URL scan */}
               {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzingUrl && inputMethod === "link" && (
-                <div className="rounded-xl p-3 space-y-2" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
-                  <p className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Extracted</p>
-                  {draft.coffee.roaster && <p className="text-sm" style={{ color: "var(--foreground)" }}>{draft.coffee.roaster}</p>}
-                  {draft.coffee.name && <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{draft.coffee.name}</p>}
-                  {draft.coffee.origin && <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.origin}</p>}
+                <div className="rounded-2xl p-4" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+                  <p className="label-eyebrow mb-2" style={{ color: "var(--muted-foreground)" }}>Extracted</p>
+                  {draft.coffee.roaster && (
+                    <p className="text-xs mb-1" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.roaster}</p>
+                  )}
+                  {draft.coffee.name && (
+                    <p className="font-fraunces text-lg leading-tight" style={{ color: "var(--foreground)" }}>{draft.coffee.name}</p>
+                  )}
+                  {draft.coffee.origin && (
+                    <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.origin}</p>
+                  )}
                 </div>
+              )}
+              {/* Roaster prior — surfaces curated/DB profile for the URL path
+                  too. Previously only the photo path rendered this; URL
+                  scans hit a Q&A even for well-known roasters because the
+                  endpoint never looked up the prior. */}
+              {manualRoasterPrior && !isAnalyzingUrl && inputMethod === "link" && (
+                <RoasterProfileCard prior={manualRoasterPrior} compact />
               )}
               {/* Roaster Q&A after URL scan */}
               {roasterQA && !isAnalyzingUrl && (
@@ -889,10 +896,7 @@ export default function LightStepScan() {
                             <div className="mt-2 space-y-2">
                               <div className="flex flex-wrap gap-2">
                                 {msg.chips.map(chip => (
-                                  <button key={chip} onClick={() => handleRoasterQAAnswer(chip)}
-                                    className="px-3 py-1.5 rounded-full border text-sm active:scale-95 transition-all"
-                                    style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
-                                  >{chip}</button>
+                                  <Chip key={chip} onClick={() => handleRoasterQAAnswer(chip)}>{chip}</Chip>
                                 ))}
                               </div>
                             </div>

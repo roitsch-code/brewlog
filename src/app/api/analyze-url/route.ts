@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { eq, sql } from "drizzle-orm";
 import { parseClaudeJson, z } from "@/lib/claude/parseJson";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
+import { getRoasterPrior, canonicalRoasterSlug } from "@/lib/roasters/priors";
+import { db } from "@/lib/db/client";
+import { roasters } from "@/lib/db/schema";
+import type { RoasterPrior } from "@/lib/roasters/priors";
 
 export const dynamic = "force-dynamic";
 
@@ -99,14 +104,59 @@ export async function POST(req: Request) {
       );
     }
 
-    // Return same shape as analyze-bag
+    // Roaster prior lookup — mirror analyze-bag so the URL path benefits
+    // from the same DB + built-in priors. Without this every URL scan
+    // triggered the "I don't know X yet" Q&A even for well-known roasters
+    // like Hoppenworth & Ploch.
+    let roasterPrior: ReturnType<typeof toPriorSummary> | null = null;
+    if (extracted.roaster) {
+      let prior: RoasterPrior | null = null;
+      try {
+        const slug = canonicalRoasterSlug(extracted.roaster);
+        const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
+        if (direct.length > 0) {
+          prior = direct[0].data as RoasterPrior;
+        } else {
+          const viaAlias = await db
+            .select()
+            .from(roasters)
+            .where(sql`${roasters.aliases} @> ${JSON.stringify([slug])}::jsonb`)
+            .limit(1);
+          if (viaAlias.length > 0) prior = viaAlias[0].data as RoasterPrior;
+        }
+      } catch {}
+
+      if (!prior) {
+        const builtIn = getRoasterPrior(extracted.roaster);
+        if (builtIn.confidence !== "fallback") prior = builtIn;
+      }
+
+      if (prior) roasterPrior = toPriorSummary(prior);
+    }
+
     return NextResponse.json({
       extracted,
       clarifications: [],
-      roasterPrior: null,
+      roasterPrior,
     });
   } catch (err) {
     console.error("[analyze-url]", err);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
+}
+
+function toPriorSummary(prior: RoasterPrior) {
+  return {
+    name: prior.name,
+    region: prior.region,
+    styleSummary: prior.styleSummary,
+    roastTendency: prior.roastTendency,
+    clarityVsSweetnessBias: prior.clarityVsSweetnessBias,
+    tempBias: prior.tempBias,
+    ratioBias: prior.ratioBias,
+    methodAffinities: prior.methodAffinities,
+    extractionRisks: prior.extractionRisks,
+    notes: prior.notes,
+    confidence: prior.confidence,
+  };
 }
