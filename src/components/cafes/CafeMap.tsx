@@ -489,8 +489,12 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
     <div className="relative w-full h-full">
       <div ref={containerRef} className="absolute inset-0" />
 
-      {/* Search input */}
-      <div className="absolute top-4 left-4 right-4 z-[1000]">
+      {/* Search input — pushed below the floating page header (Nearby +
+          burger live above this in the page layout). */}
+      <div
+        className="absolute left-4 right-4 z-[1000]"
+        style={{ top: "calc(env(safe-area-inset-top) + 4.75rem)" }}
+      >
         <div className="relative flex items-center max-w-xs mx-auto">
           <svg className="absolute left-3 w-3.5 h-3.5 text-light-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" />
@@ -607,42 +611,42 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
         </div>
       )}
 
-      {/* Curated place card */}
+      {/* Curated place card — same shape as the visited card so taps feel
+          consistent: meta on the left, close + single primary action on
+          the right. Visited / not-visited reads from the pin colour, so
+          no redundant text label here. */}
       {placeSelected && (
         <div className="absolute bottom-4 left-4 right-4 z-[1000]">
           <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl p-4">
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-light-foreground font-medium leading-tight truncate">{placeSelected.name}</p>
-                <p className="text-light-muted-foreground text-xs mt-0.5">{placeSelected.city}</p>
-                <p className="text-light-muted-foreground text-xs mt-1.5">
-                  {visitedNames.has(normalizeName(placeSelected.name)) ? "Visited" : "Not visited yet"}
-                </p>
+                <p className="text-light-muted-foreground text-xs mt-0.5 truncate">{placeSelected.city}</p>
+                {placeSelected.address && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center mt-2 text-xs text-light-muted-foreground active:scale-95 transition-transform"
+                  >
+                    Open in Maps ↗
+                  </a>
+                )}
               </div>
-              <button type="button" onClick={clearPlaceSelected} className="text-light-muted-foreground p-0.5 active:scale-95 transition-transform shrink-0" aria-label="Close">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="flex items-center gap-2 mt-3">
-              <button
-                type="button"
-                onClick={() => setVisitModalPlace(placeSelected)}
-                className="flex-1 h-10 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold active:scale-[0.98] transition-transform"
-              >
-                I&apos;ve been here
-              </button>
-              {placeSelected.address && (
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-10 px-4 rounded-full border border-light-foreground/20 text-light-foreground text-xs font-medium flex items-center bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 active:scale-[0.98] transition-transform"
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <button type="button" onClick={clearPlaceSelected} className="text-light-muted-foreground p-0.5 active:scale-95 transition-transform" aria-label="Close">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisitModalPlace(placeSelected)}
+                  className="bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform whitespace-nowrap"
                 >
-                  Maps ↗
-                </a>
-              )}
+                  I&apos;ve been here
+                </button>
+              </div>
             </div>
           </div>
         </div>
