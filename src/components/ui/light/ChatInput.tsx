@@ -235,7 +235,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
 
   return (
     <>
-      <footer className="flex flex-col px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+      <footer className="flex flex-col px-5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
         {(voiceError || uploadError) && (
           <div
             role="alert"
