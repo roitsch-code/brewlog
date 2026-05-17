@@ -260,38 +260,35 @@ export default function CoffeesPage() {
                           Roasted {new Date(coffee.latestRoastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                         </p>
                       )}
-                      {/* Rating + brew count share one row. brew count
-                          replaces the tiny 8px badge that used to sit on
-                          the thumbnail and was effectively unreadable. */}
-                      {(coffee.avgRating != null && coffee.avgRating > 0) || brewLabel ? (
-                        <div className="mt-1.5 flex items-center gap-2">
-                          {coffee.avgRating != null && coffee.avgRating > 0 && (
-                            <StarRating value={coffee.avgRating} readonly size="sm" />
-                          )}
-                          {brewLabel && (
-                            <span className="text-light-muted-foreground text-xs">
-                              {coffee.avgRating != null && coffee.avgRating > 0 ? "· " : ""}{brewLabel}
-                            </span>
-                          )}
+                      {/* Rating row — brew count moved to the right
+                          column above the Brew CTA so the two pieces of
+                          meta about the same coffee live together. */}
+                      {coffee.avgRating != null && coffee.avgRating > 0 && (
+                        <div className="mt-1.5">
+                          <StarRating value={coffee.avgRating} readonly size="sm" />
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   </button>
 
-                  {/* Brew this — gated on rotation: an unrotated bag is
-                      assumed to be off the counter, so the shortcut hides
-                      until the user marks the coffee in rotation on the
-                      detail page. */}
-                  {coffee.inRotation && (
-                    <div className="flex items-center pr-3">
-                      <button
-                        type="button"
-                        onClick={() => brewThis(coffee)}
-                        aria-label={`Brew ${coffee.name}`}
-                        className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
-                      >
-                        Brew
-                      </button>
+                  {/* Right column: brew-count meta over the Brew CTA.
+                      Renders even when the coffee is not in rotation —
+                      count still shows, button just hides. */}
+                  {(brewLabel || coffee.inRotation) && (
+                    <div className="flex flex-col items-end justify-center gap-1.5 pr-3 shrink-0">
+                      {brewLabel && (
+                        <span className="text-light-muted-foreground text-[11px] whitespace-nowrap">{brewLabel}</span>
+                      )}
+                      {coffee.inRotation && (
+                        <button
+                          type="button"
+                          onClick={() => brewThis(coffee)}
+                          aria-label={`Brew ${coffee.name}`}
+                          className="shrink-0 px-3 py-2 rounded-full text-xs font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-95 transition-transform"
+                        >
+                          Brew
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
