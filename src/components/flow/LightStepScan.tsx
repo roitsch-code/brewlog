@@ -4,6 +4,7 @@ import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/light/Chip";
+import Hero from "@/components/ui/light/Hero";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
 import { Camera, PenLine, Link2, Coffee, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
@@ -422,11 +423,7 @@ export default function LightStepScan() {
   return (
     <LightFlowShell onNext={canProceed ? nextStep : undefined} nextDisabled={!canProceed} nextLabel="Continue →">
       <div className="px-5 py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
-        {/* Header */}
-        <div>
-          <p className="label-eyebrow mb-2" style={{ color: "var(--muted-foreground)" }}>New Session</p>
-          <h1 className="font-fraunces text-2xl" style={{ color: "var(--foreground)" }}>What are you brewing today?</h1>
-        </div>
+        <Hero eyebrow="New Session" question={<>What are you brewing today?</>} />
 
         {/* Hidden file input for the Photo card — no `capture` attr so
             iOS opens its full native picker (Photo Library / Take
