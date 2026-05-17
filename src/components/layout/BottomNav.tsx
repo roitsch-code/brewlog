@@ -12,14 +12,15 @@ const tabs = [
   { href: "/taste", label: "Taste", Icon: Radar },
 ];
 
-// Allowlist of Dark routes that still show the legacy BottomNav. The
-// new BTTS Light surfaces (/, /past-conversations, /coffees,
-// /coffees/[id]) are intentionally outside this list — they own
-// their own NavigationOverlay burger and shouldn't carry the legacy
-// nav too. /cafes/* and /taste are still Dark and keep BottomNav
-// until their own Light migration round.
-const EXACT_SHOW = ["/taste"];
-const PREFIX_SHOW = ["/library", "/cafes"];
+// Allowlist of Dark routes that still show the legacy BottomNav. Now
+// empty -- every route in the original allowlist (/taste, /library,
+// /cafes/*) has migrated to the (light) route group with its own
+// NavigationOverlay burger, and double-mounting the legacy nav under
+// the burger was the visible regression on /cafes and /taste. The
+// component itself stays mounted in the root layout for the moment;
+// final removal lives in the end-of-migration cleanup PR.
+const EXACT_SHOW: string[] = [];
+const PREFIX_SHOW: string[] = [];
 
 /**
  * BrewLog bottom navigation — DOT-inspired 4+1 split.

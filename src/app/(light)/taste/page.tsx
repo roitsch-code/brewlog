@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Menu } from "lucide-react";
 import type { Session } from "@/lib/types/session";
 import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
+import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 
 interface TasteStats {
   radarData: { label: string; value: number }[];
@@ -22,7 +24,6 @@ function computeStats(sessions: Session[]): TasteStats {
   const rated = sessions.filter(s => s.result?.rating);
   const totalSessions = rated.length;
 
-  // Flavor category radar — keyed to 7 SCA top-level categories
   const categoryCount: Record<string, number> = {};
   const flavorCount: Record<string, number> = {};
 
@@ -41,13 +42,11 @@ function computeStats(sessions: Session[]): TasteStats {
     value: Math.round(((categoryCount[cat] || 0) / maxCat) * 100),
   }));
 
-  // Top flavors
   const topFlavors = Object.entries(flavorCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([name, count]) => ({ name, count }));
 
-  // Body distribution
   const bodyDist: Record<string, number> = {};
   const acidityDist: Record<string, number> = {};
   rated.forEach(s => {
@@ -55,7 +54,6 @@ function computeStats(sessions: Session[]): TasteStats {
     if (s.result?.acidity) acidityDist[s.result.acidity] = (acidityDist[s.result.acidity] || 0) + 1;
   });
 
-  // Top origins by avg rating
   const originData: Record<string, { sum: number; count: number }> = {};
   const processData: Record<string, { sum: number; count: number }> = {};
   const methodData: Record<string, { sum: number; count: number }> = {};
@@ -90,12 +88,10 @@ function computeStats(sessions: Session[]): TasteStats {
   const topProcesses = toRanked(processData);
   const topMethods = toRanked(methodData);
 
-  // Overall avg rating
   const avgRating = totalSessions > 0
     ? Math.round((rated.reduce((sum, s) => sum + (s.result?.rating || 0), 0) / totalSessions) * 10) / 10
     : 0;
 
-  // Rating trend by month (last 6 months)
   const byMonth: Record<string, { sum: number; count: number }> = {};
   rated.forEach(s => {
     const d = (s as Session & { createdAtMs?: number }).createdAtMs
@@ -123,6 +119,7 @@ export default function TastePage() {
   const [summary, setSummary] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{type: string; text: string; tag: string}>>([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -133,7 +130,6 @@ export default function TastePage() {
       .then((sessions: Session[]) => {
         const s = computeStats(Array.isArray(sessions) ? sessions : []);
         setStats(s);
-        // Fetch AI narrative once we have stats
         if (s.totalSessions >= 3) {
           setSummaryLoading(true);
           fetch("/api/taste-summary", {
@@ -155,26 +151,28 @@ export default function TastePage() {
 
   if (loading) {
     return (
-      <div className="min-h-full bg-brew-bg flex flex-col">
-        <Header />
+      <div className="min-h-full bg-transparent flex flex-col">
+        <Header onMenu={() => setMenuOpen(true)} />
         <div className="flex-1 flex items-center justify-center">
           <CoffeeBeanGlow size={64} />
         </div>
+        <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
     );
   }
 
   if (!stats || stats.totalSessions === 0) {
     return (
-      <div className="min-h-full bg-brew-bg flex flex-col">
-        <Header />
+      <div className="min-h-full bg-transparent flex flex-col">
+        <Header onMenu={() => setMenuOpen(true)} />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
-          <svg className="w-12 h-12 text-brew-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-12 h-12 text-light-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.5V21M7.5 9V21M12 6v15M16.5 10.5V21M21 7.5V21" />
           </svg>
-          <p className="font-display text-2xl text-white">No data yet</p>
-          <p className="text-brew-muted text-sm">Log and rate a few brews to see your taste profile.</p>
+          <p className="font-fraunces text-2xl text-light-foreground">No data yet</p>
+          <p className="text-light-muted-foreground text-sm">Log and rate a few brews to see your taste profile.</p>
         </div>
+        <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
     );
   }
@@ -183,35 +181,35 @@ export default function TastePage() {
   const trendMax = Math.max(5, ...stats.ratingTrend.map(t => t.avg));
 
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col">
-      <Header />
+    <div className="min-h-svh bg-transparent flex flex-col">
+      <Header onMenu={() => setMenuOpen(true)} />
 
       <div className="px-5 pb-12 flex flex-col gap-8">
         {/* Summary stat */}
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <p className="font-mono-num text-4xl text-white font-medium">{stats.avgRating}</p>
-            <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Avg Rating</p>
+            <p className="font-mono-num text-4xl text-light-foreground font-medium">{stats.avgRating}</p>
+            <p className="text-light-muted-foreground text-xs uppercase tracking-widest mt-1">Avg Rating</p>
           </div>
-          <div className="w-px h-10 bg-brew-border" />
+          <div className="w-px h-10 bg-light-foreground/15" />
           <div className="text-center">
-            <p className="font-mono-num text-4xl text-white font-medium">{stats.totalSessions}</p>
-            <p className="text-brew-muted text-xs uppercase tracking-widest mt-1">Rated Brews</p>
+            <p className="font-mono-num text-4xl text-light-foreground font-medium">{stats.totalSessions}</p>
+            <p className="text-light-muted-foreground text-xs uppercase tracking-widest mt-1">Rated Brews</p>
           </div>
-          <p className="text-white/20 text-xs ml-auto self-end">All time</p>
+          <p className="text-light-muted-foreground/60 text-xs ml-auto self-end">All time</p>
         </div>
 
         {/* AI narrative summary */}
         {(summaryLoading || summary) && (
-          <div className="bg-brew-surface rounded-2xl px-4 py-4 border border-brew-border/40">
+          <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
             {summaryLoading && !summary ? (
               <div className="space-y-2">
-                <div className="h-3 bg-brew-elevated rounded-full w-full animate-pulse" />
-                <div className="h-3 bg-brew-elevated rounded-full w-5/6 animate-pulse" />
-                <div className="h-3 bg-brew-elevated rounded-full w-4/6 animate-pulse" />
+                <div className="h-3 bg-light-foreground/10 rounded-full w-full animate-pulse" />
+                <div className="h-3 bg-light-foreground/10 rounded-full w-5/6 animate-pulse" />
+                <div className="h-3 bg-light-foreground/10 rounded-full w-4/6 animate-pulse" />
               </div>
             ) : (
-              <p className="text-white/80 text-sm leading-relaxed">{summary}</p>
+              <p className="text-light-foreground/85 text-sm leading-relaxed">{summary}</p>
             )}
           </div>
         )}
@@ -229,14 +227,14 @@ export default function TastePage() {
             <div className="space-y-2">
               {stats.topFlavors.map(f => (
                 <div key={f.name} className="flex items-center gap-3">
-                  <span className="text-white text-sm w-28 shrink-0">{f.name}</span>
-                  <div className="flex-1 h-1.5 bg-brew-surface rounded-full overflow-hidden">
+                  <span className="text-light-foreground text-sm w-28 shrink-0 capitalize">{f.name}</span>
+                  <div className="flex-1 h-1.5 bg-light-foreground/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-brew-accent rounded-full transition-all"
+                      className="h-full bg-light-foreground rounded-full transition-all"
                       style={{ width: `${(f.count / maxFlavor) * 100}%` }}
                     />
                   </div>
-                  <span className="text-brew-muted text-xs w-5 text-right">{f.count}</span>
+                  <span className="text-light-muted-foreground text-xs w-5 text-right">{f.count}</span>
                 </div>
               ))}
             </div>
@@ -249,14 +247,14 @@ export default function TastePage() {
             <div className="flex items-end gap-2 h-24">
               {stats.ratingTrend.map(t => (
                 <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-brew-muted text-xs">{t.avg}</span>
-                  <div className="w-full bg-brew-surface rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
+                  <span className="text-light-muted-foreground text-xs">{t.avg}</span>
+                  <div className="w-full bg-light-foreground/10 rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
                     <div
-                      className="w-full bg-brew-accent rounded-t-lg transition-all"
+                      className="w-full bg-light-foreground rounded-t-lg transition-all"
                       style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
                     />
                   </div>
-                  <span className="text-brew-muted text-xs">{t.label}</span>
+                  <span className="text-light-muted-foreground text-xs">{t.label}</span>
                 </div>
               ))}
             </div>
@@ -303,27 +301,36 @@ export default function TastePage() {
           <Section title="Explore Next">
             <div className="space-y-3">
               {suggestions.map((s, i) => (
-                <div key={i} className="bg-brew-surface rounded-2xl px-4 py-3 border border-brew-border/40">
-                  <span className="text-brew-accent text-xs font-mono-num uppercase tracking-wide bg-brew-accent/10 px-2 py-1 rounded-lg inline-block mb-2">{s.tag}</span>
-                  <p className="text-white/70 text-sm leading-relaxed">{s.text}</p>
+                <div key={i} className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-3">
+                  <span className="text-light-foreground/80 text-xs font-medium uppercase tracking-wide bg-light-foreground/10 px-2 py-1 rounded-lg inline-block mb-2">{s.tag}</span>
+                  <p className="text-light-foreground/80 text-sm leading-relaxed">{s.text}</p>
                 </div>
               ))}
             </div>
           </Section>
         )}
       </div>
+
+      <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 }
 
-function Header() {
+function Header({ onMenu }: { onMenu: () => void }) {
   return (
-    <div className="px-5 pb-4 flex items-center justify-between" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.5rem)' }}>
+    <div className="px-5 pb-4 flex items-start justify-between gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}>
       <div>
-        <h1 className="font-display text-3xl text-white leading-none">Taste Profile</h1>
-        <p className="text-brew-muted text-sm">What you love, over time</p>
+        <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Taste Profile</h1>
+        <p className="text-light-muted-foreground text-sm mt-1.5">What you love, over time</p>
       </div>
-      
+      <button
+        type="button"
+        onClick={onMenu}
+        aria-label="Open menu"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
+      >
+        <Menu className="h-5 w-5" strokeWidth={1.5} />
+      </button>
     </div>
   );
 }
@@ -331,7 +338,7 @@ function Header() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-brew-muted text-xs uppercase tracking-widest">{title}</h3>
+      <h3 className="text-light-muted-foreground text-xs uppercase tracking-widest">{title}</h3>
       {children}
     </div>
   );
@@ -343,11 +350,11 @@ function DistBar({ data, total }: { data: Record<string, number>; total: number 
       {Object.entries(data).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
         <div key={k}>
           <div className="flex justify-between text-xs mb-0.5">
-            <span className="text-white/60 capitalize">{k}</span>
-            <span className="text-brew-muted">{Math.round((v / total) * 100)}%</span>
+            <span className="text-light-foreground/85 capitalize">{k}</span>
+            <span className="text-light-muted-foreground">{Math.round((v / total) * 100)}%</span>
           </div>
-          <div className="h-1 bg-brew-surface rounded-full overflow-hidden">
-            <div className="h-full bg-brew-accent rounded-full" style={{ width: `${(v / total) * 100}%` }} />
+          <div className="h-1 bg-light-foreground/10 rounded-full overflow-hidden">
+            <div className="h-full bg-light-foreground rounded-full" style={{ width: `${(v / total) * 100}%` }} />
           </div>
         </div>
       ))}
@@ -360,10 +367,10 @@ function RankedList({ items }: { items: { name: string; avg: number; count: numb
     <div className="space-y-2">
       {items.map((item, i) => (
         <div key={item.name} className="flex items-center gap-3">
-          <span className="font-mono-num text-brew-muted text-xs w-4">{i + 1}</span>
-          <span className="text-white text-sm flex-1 truncate">{item.name}</span>
-          <span className="font-mono-num text-brew-accent text-sm">{item.avg}</span>
-          <span className="text-brew-subtle text-xs">×{item.count}</span>
+          <span className="font-mono-num text-light-muted-foreground text-xs w-4">{i + 1}</span>
+          <span className="text-light-foreground text-sm flex-1 truncate">{item.name}</span>
+          <span className="font-mono-num text-light-foreground text-sm font-medium">{item.avg}</span>
+          <span className="text-light-muted-foreground/60 text-xs">×{item.count}</span>
         </div>
       ))}
     </div>
