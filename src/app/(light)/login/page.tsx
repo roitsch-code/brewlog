@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
-import CoffeeBeanGlow from "@/components/ui/CoffeeBeanGlow";
+import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 
 type Mode = "loading" | "login" | "register" | "pin";
 
@@ -155,9 +155,9 @@ export default function LoginPage() {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (mode === "loading") {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center gap-6">
+      <div className="min-h-svh bg-transparent flex flex-col items-center justify-center gap-6">
         <CoffeeBeanGlow size={72} />
-        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+        <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
       </div>
     );
   }
@@ -165,10 +165,10 @@ export default function LoginPage() {
   // ── PIN entry ────────────────────────────────────────────────────────────
   if (mode === "pin") {
     return (
-      <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+      <div className="min-h-svh bg-transparent flex flex-col items-center justify-center px-8 gap-10">
         <div className="flex flex-col items-center gap-4">
           <CoffeeBeanGlow size={56} />
-          <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+          <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
         </div>
 
         <div className="w-full max-w-xs flex flex-col gap-4">
@@ -179,27 +179,27 @@ export default function LoginPage() {
             placeholder="PIN"
             value={pin}
             onChange={e => setPin(e.target.value)}
-            className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-4 text-white text-center text-2xl tracking-widest placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+            className="w-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/20 rounded-2xl px-4 py-4 text-light-foreground text-center text-2xl tracking-widest placeholder:text-light-muted-foreground focus:outline-none focus:border-light-foreground/40"
             autoFocus
           />
-          {pinError && <p className="text-red-400 text-sm text-center">{pinError}</p>}
+          {pinError && <p className="text-[hsl(12_70%_45%)] text-sm text-center">{pinError}</p>}
           <button
             onClick={handlePin}
             disabled={pin.length < 4 || working}
-            className="w-full py-4 rounded-2xl bg-brew-accent text-black font-semibold text-base disabled:opacity-40 active:scale-95 transition-all"
+            className="w-full py-4 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
           >
             {working ? "Checking…" : "Unlock"}
           </button>
           <button
             onClick={() => { setMode("login"); setPin(""); setPinError(""); }}
-            className="text-brew-muted text-sm text-center py-2"
+            className="text-light-muted-foreground text-sm text-center py-2"
           >
             ← Use Face ID
           </button>
           <button
             onClick={handleResetPasskey}
             disabled={pin.length < 4 || working}
-            className="text-brew-muted text-xs text-center py-2 underline-offset-4 hover:underline disabled:opacity-40"
+            className="text-light-muted-foreground text-xs text-center py-2 underline-offset-4 hover:underline disabled:opacity-40"
           >
             Reset Face ID on this device
           </button>
@@ -210,22 +210,22 @@ export default function LoginPage() {
 
   // ── Face ID (login or register) ──────────────────────────────────────────
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col items-center justify-center px-8 gap-10">
+    <div className="min-h-svh bg-transparent flex flex-col items-center justify-center px-8 gap-10">
       <div className="flex flex-col items-center gap-4">
         <CoffeeBeanGlow size={72} />
-        <p className="font-display text-white/40 text-sm tracking-widest uppercase">BrewLog</p>
+        <p className="font-fraunces text-light-foreground/50 text-sm tracking-widest uppercase">BrewLog</p>
       </div>
 
       <div className="w-full max-w-xs flex flex-col gap-4">
         {error && (
-          <p className="text-amber-400 text-sm text-center leading-relaxed">{error}</p>
+          <p className="text-light-foreground/75 text-sm text-center leading-relaxed">{error}</p>
         )}
 
         {mode === "register" ? (
           <button
             onClick={handleRegister}
             disabled={working}
-            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+            className="w-full py-5 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Setting up…" : "Set up Face ID"}
@@ -234,7 +234,7 @@ export default function LoginPage() {
           <button
             onClick={triggerFaceID}
             disabled={working}
-            className="w-full py-5 rounded-2xl bg-brew-accent text-black font-semibold text-base flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-60"
+            className="w-full py-5 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Verifying…" : "Use Face ID"}
@@ -243,7 +243,7 @@ export default function LoginPage() {
 
         <button
           onClick={() => setMode("pin")}
-          className="text-brew-muted text-sm text-center py-2"
+          className="text-light-muted-foreground text-sm text-center py-2"
         >
           Use PIN instead
         </button>
@@ -269,6 +269,6 @@ function FaceIDIcon() {
 
 function Spinner() {
   return (
-    <div className="w-5 h-5 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+    <div className="w-5 h-5 rounded-full border-2 border-[hsl(36_55%_96%)]/30 border-t-[hsl(36_55%_96%)] animate-spin" />
   );
 }

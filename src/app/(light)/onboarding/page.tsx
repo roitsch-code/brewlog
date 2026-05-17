@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { UserPreferences } from "@/lib/types/preferences";
+import Chip from "@/components/ui/light/Chip";
 
 async function savePreferences(prefs: UserPreferences): Promise<void> {
   await fetch("/api/preferences", {
@@ -60,64 +60,54 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-svh bg-brew-bg flex flex-col px-5">
-      <div className="pt-safe pt-12 pb-8">
-        <p className="text-brew-accent text-xs tracking-widest uppercase font-medium mb-3">Setup</p>
-        <h1 className="font-display text-4xl text-white leading-tight">
+    <div className="min-h-svh bg-transparent flex flex-col px-5">
+      <div className="pb-8" style={{ paddingTop: "calc(env(safe-area-inset-top) + 3rem)" }}>
+        <p className="text-light-muted-foreground text-xs tracking-widest uppercase font-medium mb-3">Setup</p>
+        <h1 className="font-fraunces text-4xl text-light-foreground leading-tight whitespace-pre-line">
           {step === "equipment" ? "What's in\nyour kitchen?" : "Your grinder"}
         </h1>
       </div>
 
       {step === "equipment" ? (
         <div className="flex-1 flex flex-col gap-6 pb-safe">
-          <p className="text-white/60 text-sm">Select everything you own — tap to toggle</p>
+          <p className="text-light-muted-foreground text-sm">Select everything you own — tap to toggle</p>
           <div className="flex flex-wrap gap-2">
             {EQUIPMENT_OPTIONS.map(e => {
               const selected = equipment.includes(e.id);
               return (
-                <button
+                <Chip
                   key={e.id}
-                  type="button"
+                  selected={selected}
                   onClick={() => toggleEquipment(e.id)}
-                  className={`px-4 py-2.5 rounded-full border text-sm font-medium transition-all active:scale-95 ${
-                    selected
-                      ? "border-brew-accent bg-brew-accent/15 text-brew-accent"
-                      : "border-brew-border text-white/60"
-                  }`}
                 >
-                  {selected && <span className="mr-1.5">✓</span>}{e.label}
-                </button>
+                  {e.label}
+                </Chip>
               );
             })}
           </div>
-          <div className="mt-auto pb-safe pt-4">
+          <div className="mt-auto pt-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}>
             <button
               type="button"
               onClick={() => setStep("grinder")}
               disabled={equipment.length === 0}
-              className="w-full h-14 rounded-full bg-white text-black font-semibold text-base active:scale-95 transition-all disabled:opacity-30"
+              className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-30"
             >
               Next →
             </button>
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col gap-6">
-          <p className="text-white/60 text-sm">Select your primary grinder</p>
+        <div className="flex-1 flex flex-col gap-6 pb-safe">
+          <p className="text-light-muted-foreground text-sm">Select your primary grinder</p>
           <div className="flex flex-wrap gap-2">
             {GRINDER_OPTIONS.map(g => (
-              <button
+              <Chip
                 key={g}
-                type="button"
+                selected={grinder === g}
                 onClick={() => setGrinder(prev => prev === g ? "" : g)}
-                className={`px-4 py-2.5 rounded-full border text-sm font-medium transition-all active:scale-95 ${
-                  grinder === g
-                    ? "border-brew-accent bg-brew-accent/15 text-brew-accent"
-                    : "border-brew-border text-white/60"
-                }`}
               >
-                {grinder === g && <span className="mr-1.5">✓</span>}{g}
-              </button>
+                {g}
+              </Chip>
             ))}
           </div>
 
@@ -127,16 +117,16 @@ export default function OnboardingPage() {
               value={grinderCustom}
               onChange={e => setGrinderCustom(e.target.value)}
               placeholder="Enter your grinder model..."
-              className="w-full bg-brew-surface border border-brew-border rounded-2xl px-4 py-3 text-white text-base placeholder:text-brew-muted focus:outline-none focus:border-white/30"
+              className="w-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/20 rounded-2xl px-4 py-3 text-light-foreground text-base placeholder:text-light-muted-foreground focus:outline-none focus:border-light-foreground/40"
               autoFocus
             />
           )}
 
-          <div className="mt-auto pb-safe pt-4 flex gap-3">
+          <div className="mt-auto pt-4 flex gap-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}>
             <button
               type="button"
               onClick={() => setStep("equipment")}
-              className="h-14 px-6 rounded-full bg-brew-surface border border-brew-border text-white font-medium active:scale-95 transition-all"
+              className="h-14 px-6 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/20 text-light-foreground font-medium active:scale-[0.98] transition-transform"
             >
               Back
             </button>
@@ -144,7 +134,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 h-14 rounded-full bg-white text-black font-semibold text-base active:scale-95 transition-all disabled:opacity-60"
+              className="flex-1 h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               {saving ? "Saving..." : "Start Brewing"}
             </button>
