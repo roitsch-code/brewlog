@@ -101,13 +101,13 @@ export default function CoffeesPage() {
 
       {/* Header */}
       <div className="px-5 pb-4" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}>
-        <div className="flex items-start justify-between mb-2">
-          <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Coffee Library</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="font-fraunces text-3xl leading-none text-light-foreground">Coffee Library</h1>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="h-10 w-10 -mr-2 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
