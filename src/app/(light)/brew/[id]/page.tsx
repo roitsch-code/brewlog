@@ -193,7 +193,7 @@ export default function SessionDetailPage() {
           {result.flavorNotes?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {result.flavorNotes.map(f => (
-                <span key={f} className="text-xs capitalize px-2.5 py-0.5 rounded-full bg-light-foreground/8 text-light-foreground/80">
+                <span key={f} className="text-xs capitalize px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
                   {f}
                 </span>
               ))}
@@ -250,7 +250,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-xs px-2.5 py-0.5 rounded-full border border-light-foreground/15 text-light-foreground/75">
+    <span className="text-xs px-2.5 py-0.5 rounded-full border border-light-foreground/20 text-light-foreground/75">
       {children}
     </span>
   );
