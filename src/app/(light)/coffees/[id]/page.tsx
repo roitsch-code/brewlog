@@ -10,6 +10,7 @@ import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { useFlowStore } from "@/store/flowStore";
+import { useFieldConfig } from "@/lib/field/FieldContext";
 
 interface RoasterInfo {
   region?: string;
@@ -100,6 +101,11 @@ export default function CoffeeDetailPage() {
     }
     load();
   }, [id]);
+
+  // Adopt this coffee's Field composition so the page paints in its
+  // cup-specific colours, matching the brew-session detail and the
+  // brew flow's "Brew Again" path.
+  useFieldConfig(coffee?.fieldZones ? { fieldZones: coffee.fieldZones, rotation: 0 } : null);
 
   if (loading) {
     return (
