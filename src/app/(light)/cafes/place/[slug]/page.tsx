@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Menu } from "lucide-react";
+import { Menu, ThumbsUp, ThumbsDown } from "lucide-react";
 import type { Session } from "@/lib/types/session";
+import type { CafeVisit, CafeVisitRating } from "@/lib/types/cafes";
 import StarRating from "@/components/ui/light/StarRating";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { BREW_METHODS } from "@/lib/constants/brewMethods";
@@ -29,8 +30,11 @@ export default function CafeDetailPage() {
   const cafeName = decodeURIComponent(params.slug as string);
 
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [visits, setVisits] = useState<CafeVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [visitModalOpen, setVisitModalOpen] = useState(false);
+  const [visitSaving, setVisitSaving] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editMethod, setEditMethod] = useState("");
@@ -42,17 +46,50 @@ export default function CafeDetailPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/sessions?mode=external&limit=200", { cache: "no-store" })
-      .then(r => r.json())
-      .then((data: Session[]) => {
-        const filtered = Array.isArray(data)
-          ? data.filter(s => s.place?.name === cafeName)
-          : [];
-        setSessions(filtered);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/sessions?mode=external&limit=200", { cache: "no-store" })
+        .then(r => r.json())
+        .then((data: Session[]) => {
+          const filtered = Array.isArray(data)
+            ? data.filter(s => s.place?.name === cafeName)
+            : [];
+          setSessions(filtered);
+        })
+        .catch(() => {}),
+      fetch(`/api/cafe-visits?cafeName=${encodeURIComponent(cafeName)}`, { cache: "no-store" })
+        .then(r => r.json())
+        .then((data: CafeVisit[]) => setVisits(Array.isArray(data) ? data : []))
+        .catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, [cafeName]);
+
+  async function saveVisit(rating: CafeVisitRating) {
+    setVisitSaving(true);
+    try {
+      const location = sessions[0]?.place?.location;
+      const res = await fetch("/api/cafe-visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cafeName, location, rating }),
+      });
+      if (res.ok) {
+        const created: CafeVisit = await res.json();
+        setVisits(prev => [created, ...prev]);
+        setVisitModalOpen(false);
+      }
+    } finally {
+      setVisitSaving(false);
+    }
+  }
+
+  async function deleteVisit(id: string) {
+    try {
+      await fetch(`/api/cafe-visits/${id}`, { method: "DELETE" });
+      setVisits(prev => prev.filter(v => v.id !== id));
+    } catch {
+      // leave as-is on error
+    }
+  }
 
   function startEdit(s: Session) {
     setEditingId(s.id);
@@ -156,9 +193,9 @@ export default function CafeDetailPage() {
 
         {/* Stats + Open in Maps */}
         <div className="flex items-center gap-3 mt-2 flex-wrap">
-          {!loading && sessions.length > 0 && (
+          {!loading && (sessions.length > 0 || visits.length > 0) && (
             <p className="text-light-muted-foreground text-sm">
-              <span className="text-light-foreground">{sessions.length}</span> visit{sessions.length !== 1 ? "s" : ""}
+              <span className="text-light-foreground">{sessions.length + visits.length}</span> visit{(sessions.length + visits.length) !== 1 ? "s" : ""}
               {avgRating != null && (
                 <>
                   {" · "}
@@ -180,6 +217,16 @@ export default function CafeDetailPage() {
             Open in Maps
           </a>
         </div>
+
+        {/* "I've been here" — visit without logging a brew. opens a modal
+            with a binary thumb rating (come back / won't return). */}
+        <button
+          type="button"
+          onClick={() => setVisitModalOpen(true)}
+          className="mt-3 w-full h-12 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-sm font-medium active:scale-[0.98] transition-transform"
+        >
+          I&apos;ve been here
+        </button>
       </div>
 
       {/* Sessions list */}
@@ -190,13 +237,18 @@ export default function CafeDetailPage() {
               <div key={i} className="h-24 rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 animate-pulse" />
             ))}
           </div>
-        ) : sessions.length === 0 ? (
+        ) : sessions.length === 0 && visits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[50vh] text-center gap-3">
             <p className="text-light-foreground font-medium">No sessions found</p>
-            <p className="text-light-muted-foreground text-sm">No visits logged for this café.</p>
+            <p className="text-light-muted-foreground text-sm">Tap &ldquo;I&apos;ve been here&rdquo; above to log a visit, or log a brew with this café selected.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
+            {/* Visit-only cards first (compact), sessions next. Both
+                sorted desc by recency within their own group. */}
+            {visits.map(v => (
+              <VisitCard key={v.id} visit={v} onDelete={() => deleteVisit(v.id)} />
+            ))}
             {sessions.map(s => {
               const method = s.brew?.methodUsed || s.place?.methodServed;
               const coffeeKey = s.coffee?.name && s.coffee?.roaster
@@ -357,6 +409,90 @@ export default function CafeDetailPage() {
       </div>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      {/* "I've been here" rating modal — binary thumbs (come back / won't
+          return). Saves to /api/cafe-visits and prepends to the list. */}
+      {visitModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-5"
+          style={{ background: "rgba(28,22,19,0.45)" }}
+          onClick={() => !visitSaving && setVisitModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-[hsl(36_55%_96%)] rounded-3xl p-6 space-y-4 mb-6 sm:mb-0"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="space-y-1">
+              <h2 className="font-fraunces text-2xl text-light-foreground leading-tight">How was it?</h2>
+              <p className="text-light-muted-foreground text-sm">{cafeName}</p>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                disabled={visitSaving}
+                onClick={() => saveVisit("come-back")}
+                className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+              >
+                <ThumbsUp className="w-5 h-5" strokeWidth={1.75} />
+                Would come back
+              </button>
+              <button
+                type="button"
+                disabled={visitSaving}
+                onClick={() => saveVisit("wont-return")}
+                className="w-full h-14 rounded-full border border-light-foreground/25 text-light-foreground font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150"
+              >
+                <ThumbsDown className="w-5 h-5" strokeWidth={1.75} />
+                Won&apos;t see me again
+              </button>
+            </div>
+            <button
+              type="button"
+              disabled={visitSaving}
+              onClick={() => setVisitModalOpen(false)}
+              className="w-full text-light-muted-foreground text-sm py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VisitCard({ visit, onDelete }: { visit: CafeVisit; onDelete: () => void }) {
+  const isPositive = visit.rating === "come-back";
+  const date = formatRelativeDate(visit.visitedAt);
+  return (
+    <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          {isPositive ? (
+            <ThumbsUp className="w-4 h-4 shrink-0 text-light-foreground" strokeWidth={1.75} />
+          ) : (
+            <ThumbsDown className="w-4 h-4 shrink-0 text-light-muted-foreground" strokeWidth={1.75} />
+          )}
+          <span className="text-light-foreground text-sm font-medium truncate">
+            {isPositive ? "Would come back" : "Won't see me again"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-light-muted-foreground text-xs">{date}</span>
+          <button
+            onClick={onDelete}
+            aria-label="Delete visit"
+            className="p-1 text-light-muted-foreground/70 active:text-light-foreground transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      {visit.notes && (
+        <p className="text-light-muted-foreground text-sm mt-2 leading-relaxed">{visit.notes}</p>
+      )}
     </div>
   );
 }

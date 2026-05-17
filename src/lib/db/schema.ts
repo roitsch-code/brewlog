@@ -85,6 +85,19 @@ export const coffees = pgTable("coffees", {
   inRotation: boolean("in_rotation").notNull().default(false),
 });
 
+// "I've been here" — visit-only café record without a brew session.
+// rating is intentionally binary ('come-back' | 'wont-return') since
+// there's no brew context for a star rating. See migration 0011.
+export const cafeVisits = pgTable("cafe_visits", {
+  id: text("id").primaryKey(),
+  cafeName: text("cafe_name").notNull(),
+  location: text("location"),
+  rating: text("rating").$type<"come-back" | "wont-return">().notNull(),
+  notes: text("notes"),
+  visitedAt: timestamp("visited_at", { withTimezone: true }).notNull().defaultNow(),
+  visitedAtMs: bigint("visited_at_ms", { mode: "number" }).notNull(),
+});
+
 export const preferences = pgTable("preferences", {
   key: text("key").primaryKey(),
   data: jsonb("data").notNull(),
