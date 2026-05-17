@@ -100,6 +100,8 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `questions` | GET suggestion questions for explore mode |
 | `alerts` | GET / POST coffee availability alert subscriptions |
 | `webhooks/coffee-alert` | Incoming webhook for coffee availability notifications |
+| `cafe-visits` | GET / POST — visit-only café logs with binary thumbs rating (independent of brew sessions) |
+| `cafe-visits/[id]` | DELETE — remove a logged visit |
 | `admin/seed` | Populate knowledge base (run once on new installs) |
 
 ### Components
@@ -170,7 +172,9 @@ lib/
 │   ├── 0006_add_what_to_explore.sql       # preferences column for explore prompts
 │   ├── 0007_add_conversations.sql         # conversations + conversation_messages tables
 │   ├── 0008_add_field_zones.sql           # coffees.field_zones jsonb (Field v1.1 persistence)
-│   └── 0009_add_in_rotation.sql           # coffees.in_rotation boolean (rotation marker)
+│   ├── 0009_add_in_rotation.sql           # coffees.in_rotation boolean (rotation marker)
+│   ├── 0010_rename_rvtc.sql                # bulk rename "Rösterei Vier / The Commonage" → "RVTC"
+│   └── 0011_add_cafe_visits.sql            # cafe_visits table — visit-only logs + binary thumbs rating
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
 │   # Applying schema/code that references a new column BEFORE running the migration on the VPS
 │   # makes Drizzle SELECT 500 (column-strict). Always migrate VPS first, deploy code second.
@@ -229,13 +233,15 @@ lib/
 
 ### Database tables (Drizzle + Postgres)
 
-`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages` (11 tables).
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits` (12 tables).
 
-Recent column additions on `coffees`:
-- `field_zones jsonb` (migration 0008) — persisted Field composition per coffee
-- `in_rotation boolean NOT NULL DEFAULT false` (migration 0009) — star toggle for "currently brewing this bag"
+Recent additions:
+- `coffees.field_zones jsonb` (migration 0008) — persisted Field composition per coffee
+- `coffees.in_rotation boolean NOT NULL DEFAULT false` (migration 0009) — star toggle for "currently brewing this bag"
+- **Migration 0010** (applied 2026-05) — bulk-rename roaster variants `"Rösterei Vier / The Commonage"` / `"RVTC – Rösterei Vier / The Commonage"` → `"RVTC"` across coffees + sessions JSONB + roasters priors cache.
+- **Migration 0011 + new `cafe_visits` table** (applied 2026-05) — schema: `id`, `cafe_name`, `location`, `rating` ('come-back' | 'wont-return'), `notes`, `visited_at`, `visited_at_ms`. Visit-only café logs without an attached brew session. Binary thumbs rating since there's no brew context for stars. Aggregated into `/api/cafes` so visit-only places appear in the Café Library.
 
-Both migrations applied manually on the VPS — see migration NOTE above.
+All migrations applied manually on the VPS — see migration NOTE above.
 
 ### Key dependencies
 
@@ -273,6 +279,15 @@ Both migrations applied manually on the VPS — see migration NOTE above.
 - Coffee Detail (`/coffees/[id]`) reads its coffee's Field via `useFieldConfig` (#123). Hero scrim flipped to cream-to-transparent (#121) so anthracite titles stay legible against any bag photo. Rotation toggle gates the "Brew this" CTA (#117) — out-of-rotation = bag-not-on-counter, no shortcut shown.
 - SessionCard (`/coffees/[id]` All-brews list) rewritten as a Light card (#120): brew method headline + recipe meta (date · dose · water · time) + flavor chips; swipe-to-delete button fades in proportional to swipe progress (#124) so it doesn't bleed through the translucent cream at rest.
 - Brew Session Detail (`/brew/[id]`) inherits the cup's Field via `lib/field/cache.ts` (#125) — `/coffees/[id]` pre-warms the cache for all its sessions when it loads, `/brew/[id]` reads synchronously on mount, so navigating between the two paints the same Field with no flash through default. Back arrow routes to `/coffees/[coffeeId]` (#126) instead of the library root, with router.back() as a fallback for legacy sessions whose `CoffeeIdentity` was persisted before `coffeeId` existed.
+
+**Late-May follow-ups (PR #139 → #145)**
+- Login wordmark renders as the Home hero ("Better taste / than sorry." in Fraunces 3xl, full anthracite) across all three login states (#139, #140). Login CTAs (Use Face ID / Unlock / Set up Face ID) are pill-shaped (rounded-full + h-14) matching the onboarding primary buttons.
+- SessionCard background dropped from 55 % to 30 % cream (#139) so the flavor chips inside (still at 55 %) pop visibly against the card — fixes the white-on-white screenshot.
+- Café Coffees-tab cross-link (#141): tapping a coffee that exists in the library routes to `/coffees/[coffeeId]` instead of the café-specific aggregate. Café-only coffees still land on `/cafes/coffee/[key]`.
+- Scan edit affordance (#143): the `EditableRow` rows on the bag confirmation step always render with a visible underline + pencil icon. Roaster + Coffee rows always show (were `!== undefined`-gated, so unextracted bags had no editable rows). Lets the user shorten long names like "El Congo by Carlos Montero – Don Eli" → "El Congo" at scan time.
+- Orea V4 four-bottom variants (#144): new SVGs `orea-classic.svg` / `orea-open.svg` / `orea-apex.svg` / `orea-fast.svg` in `public/brew-icons/`. `BrewMethodIcon.brewIconSrc` switches on the variant keyword inside the orea branch; legacy "Orea V4 Wide" falls back to Classic. `BREW_METHODS` replaced the single `orea` entry with four kebab-case ids aligned to the `LightStepContext` picker labels.
+- **"I've been here" mode (#145)** — `cafe_visits` table + `/api/cafe-visits` + modal on `/cafes/place/[slug]` with binary thumbs rating. Visits appear in the café's timeline alongside brew sessions, and roll into `/api/cafes` so visit-only places appear in the Café Library.
+- Database renames (#142, migration 0010 applied 2026-05): all variants of `Rösterei Vier / The Commonage` collapsed to `RVTC` across `coffees.roaster`, `sessions.coffee.roaster` JSONB, and the `roasters` priors cache.
 
 **FlavorWheel Light palette (#128–#131)**
 - Direct conversion (no theme prop). The wheel is intrinsically monochrome — `scaFlavorWheel.ts` gives every category a near-identical dark gray, so differentiation comes from icons + label opacity + active/has-sel tonal lifts, not from per-category brand color.
@@ -371,10 +386,14 @@ Both migrations applied manually on the VPS — see migration NOTE above.
 
 ### ❌ Not Done / Known Gaps
 
-**Open items** (post-Light-migration; live ranking lives in HANDOVER.md):
-1. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
-2. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
-3. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
+**Open items** (live ranking lives in HANDOVER.md):
+1. **`/cafes/map` Light pass** — currently Dark with CartoCDN dark tiles + default Leaflet blue markers. Sticks out hard against the rest of the Light app. Owner: next session. Sketch in HANDOVER.md.
+2. **`/cafes/map` "I've been here" entry point** — coupled with map work. Once the user can search a brand-new place and tap it, expose the "I've been here" modal directly from the map without first going through `/cafes/place/[slug]`.
+3. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
+4. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
+5. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
+6. **Cafe visit notes edit UI** — `cafe_visits.notes` column exists but UI only lets you delete + re-add, no inline edit. Cheap follow-up.
+7. **Deploy workflow harden** — May 2026 deploy hit a Docker name conflict when manual `up -d` raced with GitHub Action. `deploy.yml` should add `docker compose down` (or `up --remove-orphans --force-recreate`) before bringing app back up.
 
 **Permanent gaps**
 - Photo uploads: stored under `bags/` — old sessions scanned before this convention have no `bagPhotoUrl`
