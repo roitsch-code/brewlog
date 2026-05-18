@@ -262,7 +262,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
           onChange={handleInputChange}
         />
 
-        <div className="flex items-end gap-3">
+        <div className="flex items-center gap-3">
           {isVoiceActive ? (
             <button
               type="button"
