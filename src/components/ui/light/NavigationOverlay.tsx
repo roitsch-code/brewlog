@@ -63,12 +63,17 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
       className="fixed inset-0 z-[2100] bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150"
     >
       {/* Close button — same coordinates as the Burger that opened it
-          (§7.1: "mirroring placement so thumb knows where to look"). */}
+          (§7.1: "mirroring placement so thumb knows where to look").
+          Pages anchor their burger at `calc(safe-area-inset-top + 1.25rem)`
+          from the top and `px-5` (20px) from the right, so mirror those
+          exactly here. The old `top-12` (48px, no safe-area) drifted
+          ~20px above the burger on any notched device. */}
       <button
         type="button"
         onClick={onClose}
         aria-label="Close menu"
-        className="absolute right-5 top-12 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+        style={{ top: "calc(env(safe-area-inset-top) + 1.25rem)" }}
+        className="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>
