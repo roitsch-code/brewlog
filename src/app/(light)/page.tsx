@@ -41,7 +41,6 @@ import type { NavAction } from "@/app/api/explore-agent/route";
  *     POST so they survive across sessions.
  */
 
-const FALLBACK_STARTER = "Welcome to Better Taste Than Sorry.";
 const IDLE_WINDOW_MS = 30 * 60 * 1000;
 
 function todayKey(): string {
@@ -96,7 +95,11 @@ export default function HomePage() {
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
   const [interacted, setInteracted] = useState(false);
-  const [starter, setStarter] = useState<string>(FALLBACK_STARTER);
+  // Empty initial — the daily Starter is the AI-generated greeting from
+  // /api/greeting (cached per (date, time-bucket) in localStorage). No
+  // hardcoded placeholder: the slot stays empty until the real line
+  // lands, which is better UX than flashing a generic "Welcome…" string.
+  const [starter, setStarter] = useState<string>("");
   const conversationIdRef = useRef<string | null>(null);
 
   // Recent sessions for the agent's personal-context block.
@@ -377,9 +380,11 @@ export default function HomePage() {
         <section className="flex-1 min-h-0">
           {showStarter ? (
             <div className="flex h-full items-center px-5">
-              <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
-                {starter}
-              </p>
+              {starter && (
+                <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
+                  {starter}
+                </p>
+              )}
             </div>
           ) : (
             <ChatThread messages={messages} loading={loading} />
