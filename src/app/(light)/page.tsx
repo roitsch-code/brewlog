@@ -363,7 +363,10 @@ export default function HomePage() {
   return (
     <>
       <main className="flex h-dvh flex-col">
-        <header className="flex shrink-0 items-center justify-between pl-5 pr-5 pt-12 pb-3">
+        <header
+          className="flex shrink-0 items-start justify-between px-5 pb-3"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}
+        >
           <h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground">
             Better taste<br />than sorry.
           </h1>
