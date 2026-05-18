@@ -55,7 +55,12 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
       role="dialog"
       aria-modal="true"
       aria-label="Navigation"
-      className="fixed inset-0 z-50 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150"
+      // z must clear every floating chrome layer in the app. The map's
+      // header / scrim / search / popup cards live at z-1000..1100, and
+      // the visit-modal sheet sits at z-2000 inside CafeMap.tsx, so the
+      // old z-50 left the menu opening behind the map UI. z-[2100] keeps
+      // top-level navigation on top of everything.
+      className="fixed inset-0 z-[2100] bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150"
     >
       {/* Close button — same coordinates as the Burger that opened it
           (§7.1: "mirroring placement so thumb knows where to look"). */}
