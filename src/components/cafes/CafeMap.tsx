@@ -616,42 +616,47 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
         </div>
       )}
 
-      {/* Curated place card — same shape as the visited card so taps feel
-          consistent: meta on the left, close + single primary action on
-          the right. Visited / not-visited reads from the pin colour, so
-          no redundant text label here. */}
+      {/* Curated place card — meta on top, bottom action row pairs the
+          Maps link with the "I've been here" pill on the same vertical
+          centre line. Close X anchored to the top-right corner so it
+          doesn't push the pill above the Maps link. */}
       {placeSelected && (
         <div className="absolute bottom-4 left-4 right-4 z-[1000]">
-          <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-light-foreground font-medium leading-tight truncate">{placeSelected.name}</p>
-                <p className="text-light-muted-foreground text-xs mt-0.5 truncate">{placeSelected.city}</p>
-                {placeSelected.address && (
-                  <a
-                    href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center mt-2 text-xs text-light-muted-foreground active:scale-95 transition-transform"
-                  >
-                    Open in Maps ↗
-                  </a>
-                )}
-              </div>
-              <div className="flex flex-col items-end gap-2 shrink-0">
-                <button type="button" onClick={clearPlaceSelected} className="text-light-muted-foreground p-0.5 active:scale-95 transition-transform" aria-label="Close">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setVisitModalPlace(placeSelected)}
-                  className="bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform whitespace-nowrap"
+          <div className="relative bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl p-4">
+            <button
+              type="button"
+              onClick={clearPlaceSelected}
+              aria-label="Close"
+              className="absolute top-3 right-3 text-light-muted-foreground p-0.5 active:scale-95 transition-transform"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="pr-8 min-w-0">
+              <p className="text-light-foreground font-medium leading-tight truncate">{placeSelected.name}</p>
+              <p className="text-light-muted-foreground text-xs mt-0.5 truncate">{placeSelected.city}</p>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 mt-3">
+              {placeSelected.address ? (
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(placeSelected.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-xs text-light-muted-foreground active:scale-95 transition-transform"
                 >
-                  I&apos;ve been here
-                </button>
-              </div>
+                  Open in Maps ↗
+                </a>
+              ) : <span />}
+              <button
+                type="button"
+                onClick={() => setVisitModalPlace(placeSelected)}
+                className="bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform whitespace-nowrap"
+              >
+                I&apos;ve been here
+              </button>
             </div>
           </div>
         </div>
