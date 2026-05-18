@@ -31,29 +31,6 @@ export default function LightShell({ children }: { children: ReactNode }) {
     <FieldProvider>
       <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">
         <Field />
-        {/* Status-bar scrim — unifies the iOS PWA status-bar zone across
-         * every Light route. The Field below can vary from cream → pink
-         * → orange (especially with brew-flow rotation, or when the
-         * coffee-driven Field hits a warm zone), and the map page paints
-         * Positron tiles all the way to y=0. Without this scrim the
-         * system clock + icons sit on a different colour patch per page.
-         *
-         * Cream at ~85% opacity through the safe-area, fading to
-         * transparent over a 1.5rem buffer below. Page headers start at
-         * `safe-area + ~1.25rem` so they sit at the very tail of the
-         * fade — anthracite text reads cleanly against the soft cream
-         * wash. Fixed + pointer-events-none so the scrim floats over
-         * the Field (z=-10) and ordinary page content but stays out of
-         * the way of taps. Floating chrome that owns z >= 1000 (the
-         * map's burger + Nearby title) paints above the scrim. */}
-        <div
-          className="pointer-events-none fixed top-0 left-0 right-0 z-[5]"
-          style={{
-            height: "calc(env(safe-area-inset-top) + 2.5rem)",
-            background:
-              "linear-gradient(to bottom, hsl(36 55% 96% / 0.85) 0%, hsl(36 55% 96% / 0.85) 50%, hsl(36 55% 96% / 0.35) 75%, transparent 100%)",
-          }}
-        />
         {children}
       </div>
     </FieldProvider>
