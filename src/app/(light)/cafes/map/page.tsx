@@ -38,10 +38,19 @@ export default function CafesMapPage() {
         />
       </div>
 
+      {/* Top scrim — cream → transparent fade so the title reads cleanly
+          against the tiles without a hard banner edge. */}
+      <div
+        className="pointer-events-none absolute top-0 left-0 right-0 z-[1099]"
+        style={{
+          height: "calc(env(safe-area-inset-top) + 7rem)",
+          background:
+            "linear-gradient(to bottom, hsl(36 55% 96% / 0.88) 0%, hsl(36 55% 96% / 0.45) 55%, transparent 100%)",
+        }}
+      />
+
       {/* Floating header — Coffee Library layout (title left, burger right).
-          The status-bar scrim now lives in LightShell so every Light route
-          shares the same cream wash up top; the header sits directly on
-          the warm-tinted tiles below it. */}
+          Sits on top of the scrim so the map shows through softly behind. */}
       <div
         className="absolute top-0 left-0 right-0 z-[1100] px-5 flex items-center justify-between"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}
