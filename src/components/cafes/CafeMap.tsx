@@ -114,7 +114,6 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
   placesRef.current = places;
   const [search, setSearch] = useState(initialSearch ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? "");
-  const [locating, setLocating] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [locatingUser, setLocatingUser] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
@@ -178,6 +177,10 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
   useEffect(() => {
     if (!containerRef.current) return;
     let cancelled = false;
+    // Tracks whether GPS resolved fast enough to position the user. The
+    // pin-loop fallback (fit to visited cafés) must NOT override an
+    // already-located map even if it finishes after GPS came in.
+    let userLocated = false;
 
     (async () => {
       const L = (await import("leaflet")).default;
@@ -254,32 +257,37 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
         );
       };
 
-      // Request GPS first — map opens at the user's actual location.
-      // 5s timeout so a slow fix doesn't block the map indefinitely.
-      const userPos = await new Promise<{ lat: number; lng: number } | null>(resolve => {
-        const timer = setTimeout(() => resolve(null), 5000);
-        navigator.geolocation.getCurrentPosition(
-          pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
-          () => { clearTimeout(timer); resolve(null); },
-          { enableHighAccuracy: true, timeout: 5000 }
-        );
-      });
-
-      // Reveal the map regardless of whether GPS succeeded or the component
-      // was cancelled — setLocating(false) must come before the cancelled
-      // check so the overlay never gets stuck on screen.
-      setLocating(false);
+      // Show the map immediately at a sensible default view. The map is
+      // interactive from this moment — no blocking overlay, no waiting on
+      // GPS. GPS, the tile fetch, and the visited-café geocoding all run
+      // in parallel from here. Previous flow awaited GPS before revealing
+      // the map, which caused freezes when the iOS permission dialog held
+      // JS / setTimeout was throttled / the dynamic import was slow.
+      map.setView([51.22, 6.78], 12);
       setMapReady(true);
-      // Let the overlay leave the DOM before Leaflet recalculates its size.
+      // Force Leaflet to measure its container — sizing can be wrong on
+      // the first paint after Suspense-style chunk reveal.
       setTimeout(() => { if (mapRef.current) mapRef.current.invalidateSize(); }, 50);
 
-      if (cancelled) return;
-
-      if (userPos) {
-        map.setView([userPos.lat, userPos.lng], 14);
+      // GPS request — async, doesn't block anything. When it resolves,
+      // pan to the user and drop the pulse marker. If it fails or is
+      // denied (or the 5s soft-timeout fires), the pin-loop fallback
+      // below takes over.
+      (async () => {
+        const userPos = await new Promise<{ lat: number; lng: number } | null>(resolve => {
+          const timer = setTimeout(() => resolve(null), 5000);
+          navigator.geolocation.getCurrentPosition(
+            pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+            () => { clearTimeout(timer); resolve(null); },
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        });
+        if (cancelled || !userPos || !mapRef.current) return;
+        userLocated = true;
+        mapRef.current.setView([userPos.lat, userPos.lng], 14);
         userMarkerRef.current?.remove();
-        userMarkerRef.current = L.marker([userPos.lat, userPos.lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
-      }
+        userMarkerRef.current = L.marker([userPos.lat, userPos.lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(mapRef.current);
+      })();
 
       // Geocode visited café pins in background — map is already visible
       const placed: LMarker[] = [];
@@ -306,17 +314,21 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
         markersRef.current = placed;
       }
 
-      // If GPS was unavailable, fall back to fitting visited café pins
-      if (!cancelled && !userPos) {
+      // After all pins drop: if GPS still hasn't located the user, fit
+      // to the visited pins so the user at least sees their own cafés.
+      // Otherwise the default Cologne view stays.
+      if (!cancelled && !userLocated) {
         if (placed.length === 1) {
           map.setView(placed[0].getLatLng(), 14);
         } else if (placed.length > 1) {
           map.fitBounds(L.featureGroup(placed).getBounds().pad(0.25));
-        } else {
-          map.setView([51.22, 6.78], 12);
         }
       }
-    })();
+    })().catch(err => {
+      // Dynamic import or Leaflet init failed — keep the page usable
+      // (header + search work even without a map) and surface the cause.
+      console.error("CafeMap init failed:", err);
+    });
 
     return () => {
       cancelled = true;
@@ -563,13 +575,6 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       {locateError && (
         <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-full px-3 py-1 text-xs text-light-muted-foreground whitespace-nowrap">
           {locateError}
-        </div>
-      )}
-
-      {/* Initial loading overlay */}
-      {locating && (
-        <div className="absolute inset-0 bg-[hsl(36_55%_96%)] flex items-center justify-center z-10">
-          <p className="text-light-muted-foreground text-sm">Finding your location…</p>
         </div>
       )}
 
