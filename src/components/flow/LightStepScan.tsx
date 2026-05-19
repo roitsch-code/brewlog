@@ -312,14 +312,29 @@ export default function LightStepScan() {
         setUrlError(data.error || "Could not extract details from that page.");
         return;
       }
-      const { extracted, roasterPrior } = data as {
+      const { extracted, clarifications, roasterPrior } = data as {
         extracted: Record<string, unknown>;
+        clarifications?: string[];
         roasterPrior: RoasterPriorSummary | null;
       };
       const clean = Object.fromEntries(
         Object.entries(extracted).filter(([, v]) => v !== null && v !== undefined)
       ) as Parameters<typeof setCoffee>[0];
       setCoffee({ ...clean, aiExtracted: true });
+
+      // Mirror the photo-flow shape so the shared clarification handler
+      // (handleClarificationAnswer) can read clarifications and tick the
+      // index from a single source. confidence/isCoffeeBag are unused for
+      // URL but kept to satisfy the type contract.
+      const urlClarifications = clarifications ?? [];
+      setAnalysisResult({
+        extracted: clean as BagAnalysisResult["extracted"],
+        confidence: {},
+        clarifications: urlClarifications,
+        isCoffeeBag: true,
+        roasterPrior: roasterPrior ?? undefined,
+      });
+
       checkLibraryMatch(
         typeof extracted.name === "string" ? extracted.name : undefined,
         typeof extracted.roaster === "string" ? extracted.roaster : undefined
@@ -328,6 +343,17 @@ export default function LightStepScan() {
         setManualRoasterPrior(roasterPrior);
       } else if (extracted.roaster && typeof extracted.roaster === "string") {
         startRoasterQA(extracted.roaster);
+      }
+
+      // Surface the first clarification — chips for known categories
+      // (altitude/variety/notes), free-text fallback otherwise.
+      if (urlClarifications.length > 0) {
+        addClarificationMessage({
+          role: "assistant",
+          text: urlClarifications[0],
+          chips: getClarificationChips(urlClarifications[0]),
+        });
+        setClarificationIndex(0);
       }
     } catch {
       setUrlError("Network error — check your connection and try again.");
@@ -684,52 +710,6 @@ export default function LightStepScan() {
                   ))}
                 </div>
               )}
-              {/* Clarification chat */}
-              {clarificationMessages.length > 0 && (
-                <div className="space-y-3">
-                  {clarificationMessages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
-                      {msg.role === "assistant" ? (
-                        <div className="max-w-[80%]">
-                          <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ background: "var(--card)" }}>
-                            <p className="text-sm" style={{ color: "var(--foreground)" }}>{msg.text}</p>
-                          </div>
-                          {msg.chips && i === clarificationMessages.length - 1 && (
-                            <div className="mt-2 space-y-2">
-                              <div className="flex flex-wrap gap-2">
-                                {msg.chips.map(chip => (
-                                  <Chip key={chip} onClick={() => handleClarificationAnswer(chip)}>{chip}</Chip>
-                                ))}
-                                <Chip onClick={() => handleClarificationAnswer("Not sure")}>Not sure</Chip>
-                              </div>
-                              <div className="flex gap-2">
-                                <input type="text" value={freeText}
-                                  onChange={e => setFreeText(e.target.value)}
-                                  onKeyDown={e => e.key === "Enter" && freeText.trim() && handleClarificationAnswer(freeText.trim())}
-                                  placeholder="Or type your answer..."
-                                  className="flex-1 rounded-2xl px-3 py-2 text-base focus:outline-none"
-                                  style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                                />
-                                {freeText.trim() && (
-                                  <button onClick={() => handleClarificationAnswer(freeText.trim())}
-                                    className="px-3 py-2 rounded-xl text-sm font-medium active:scale-95 transition-all"
-                                    style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-                                  >↵</button>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="rounded-2xl rounded-tr-sm px-4 py-3 max-w-[60%]"
-                          style={{ background: "rgba(212,184,150,0.15)", border: "1px solid rgba(212,184,150,0.25)" }}>
-                          <p className="text-sm" style={{ color: "var(--foreground)" }}>{msg.text}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -903,6 +883,56 @@ export default function LightStepScan() {
             </div>
           )}
         </div>
+
+        {/* Clarification chat — shared between photo + URL flows so both
+            paths get the same follow-up Q&A treatment. Reads from the
+            flow-store clarificationMessages, which the photo and link
+            handlers both populate via addClarificationMessage. */}
+        {clarificationMessages.length > 0 && (
+          <div className="space-y-3">
+            {clarificationMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === "assistant" ? "justify-start" : "justify-end"}`}>
+                {msg.role === "assistant" ? (
+                  <div className="max-w-[80%]">
+                    <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ background: "var(--card)" }}>
+                      <p className="text-sm" style={{ color: "var(--foreground)" }}>{msg.text}</p>
+                    </div>
+                    {msg.chips && i === clarificationMessages.length - 1 && (
+                      <div className="mt-2 space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          {msg.chips.map(chip => (
+                            <Chip key={chip} onClick={() => handleClarificationAnswer(chip)}>{chip}</Chip>
+                          ))}
+                          <Chip onClick={() => handleClarificationAnswer("Not sure")}>Not sure</Chip>
+                        </div>
+                        <div className="flex gap-2">
+                          <input type="text" value={freeText}
+                            onChange={e => setFreeText(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && freeText.trim() && handleClarificationAnswer(freeText.trim())}
+                            placeholder="Or type your answer..."
+                            className="flex-1 rounded-2xl px-3 py-2 text-base focus:outline-none"
+                            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                          />
+                          {freeText.trim() && (
+                            <button onClick={() => handleClarificationAnswer(freeText.trim())}
+                              className="px-3 py-2 rounded-xl text-sm font-medium active:scale-95 transition-all"
+                              style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
+                            >↵</button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl rounded-tr-sm px-4 py-3 max-w-[60%]"
+                    style={{ background: "rgba(212,184,150,0.15)", border: "1px solid rgba(212,184,150,0.25)" }}>
+                    <p className="text-sm" style={{ color: "var(--foreground)" }}>{msg.text}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Library match notice — original Dark behaviour restored:
             navigates to /coffees/[id] so the user can read the prior
