@@ -279,10 +279,15 @@ function LivePourSequence({
             <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
               <span className="text-[12px] text-light-muted-foreground">{nextStep!.label}</span>
               <span
-                className={`font-mono-num text-[14px] font-medium ${
+                // key={nextCountdown} so React replaces the DOM node on every
+                // tick. Otherwise the infinite opacity pulse can be mid-cycle
+                // when the digit changes (6 → 5), and iOS Safari leaves the
+                // previous glyph faintly visible behind the new one.
+                key={nextCountdown}
+                className={`font-mono-num text-[14px] ${
                   nextCountdown <= 5
-                    ? "text-light-foreground animate-countdown-pulse"
-                    : "text-light-muted-foreground"
+                    ? "font-bold text-light-foreground animate-countdown-pulse"
+                    : "font-medium text-light-muted-foreground"
                 }`}
               >
                 in 0:{String(nextCountdown).padStart(2, "0")}
@@ -551,10 +556,13 @@ function ProseStepGuide({
               Next: {effectiveSteps[currentIdx + 1]}
             </span>
             <span
-              className={`font-mono-num text-[14px] font-medium ${
+              // see comment on the pour-countdown span above — same reason
+              // for keying on the tick.
+              key={nextCountdown}
+              className={`font-mono-num text-[14px] ${
                 nextCountdown <= 5
-                  ? "text-light-foreground animate-countdown-pulse"
-                  : "text-light-muted-foreground"
+                  ? "font-bold text-light-foreground animate-countdown-pulse"
+                  : "font-medium text-light-muted-foreground"
               }`}
             >
               {nextCountdown}s
