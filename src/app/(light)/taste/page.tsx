@@ -199,19 +199,23 @@ export default function TastePage() {
           <p className="text-light-muted-foreground/60 text-xs ml-auto self-end">All time</p>
         </div>
 
-        {/* AI narrative summary */}
+        {/* AI narrative summary — section title is the old header subline,
+            which has nowhere else to live since the Light System convention
+            is headline-only (no sub-lines). */}
         {(summaryLoading || summary) && (
-          <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-            {summaryLoading && !summary ? (
-              <div className="space-y-2">
-                <div className="h-3 bg-light-foreground/10 rounded-full w-full animate-pulse" />
-                <div className="h-3 bg-light-foreground/10 rounded-full w-5/6 animate-pulse" />
-                <div className="h-3 bg-light-foreground/10 rounded-full w-4/6 animate-pulse" />
-              </div>
-            ) : (
-              <p className="text-light-foreground/85 text-sm leading-relaxed">{summary}</p>
-            )}
-          </div>
+          <Section title="What you love, over time">
+            <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
+              {summaryLoading && !summary ? (
+                <div className="space-y-2">
+                  <div className="h-3 bg-light-foreground/10 rounded-full w-full animate-pulse" />
+                  <div className="h-3 bg-light-foreground/10 rounded-full w-5/6 animate-pulse" />
+                  <div className="h-3 bg-light-foreground/10 rounded-full w-4/6 animate-pulse" />
+                </div>
+              ) : (
+                <p className="text-light-foreground/85 text-sm leading-relaxed">{summary}</p>
+              )}
+            </div>
+          </Section>
         )}
 
         {/* Flavor Profile — SCA wheel with radar overlay */}
@@ -321,7 +325,6 @@ function Header({ onMenu }: { onMenu: () => void }) {
     <div className="px-5 pb-4 flex items-start justify-between gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}>
       <div>
         <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Taste Profile</h1>
-        <p className="text-light-muted-foreground text-sm mt-1.5">What you love, over time</p>
       </div>
       <button
         type="button"
