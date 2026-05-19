@@ -427,6 +427,113 @@ export default function LightStepScan() {
   const hasCoffeeInfo = !!(draft.coffee?.name || draft.coffee?.roaster || draft.coffee?.origin)
     || !!(showManualForm && (manualRoaster || manualName || manualOrigin));
 
+  // Shared "Identified" editable panel — rendered by BOTH the photo and
+  // URL flows so the user sees the full set of extracted/inferred fields
+  // (and can correct any of them) regardless of which scan path they
+  // chose. Before this lived inline inside the photo branch only; the URL
+  // branch had a much smaller "Extracted" preview card and the rest of
+  // the fields were silently hidden until later steps.
+  const identifiedPanel = (
+    <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+      <div className="flex items-center justify-between mb-1">
+        <span className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Identified</span>
+        <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Tap to correct</span>
+      </div>
+      {/* Roaster + Coffee always shown so the user can shorten a long
+          name (e.g. "El Congo by Carlos Montero – Don Eli" → "El Congo")
+          or add a missing roaster on a photo-extracted bag. */}
+      <EditableRow label="Roaster" value={draft.coffee?.roaster || ""} onChange={v => setCoffee({ roaster: v })} suggestions={existingRoasters} />
+      <EditableRow label="Coffee" value={draft.coffee?.name || ""} onChange={v => setCoffee({ name: v })} />
+      {draft.coffee?.origin !== undefined && (
+        <EditableRow
+          label="Origin"
+          value={[draft.coffee.origin, draft.coffee.region].filter(Boolean).join(" · ")}
+          onChange={v => {
+            const parts = v.split("·").map(s => s.trim());
+            setCoffee({ origin: parts[0] || "", region: parts[1] || undefined });
+          }}
+        />
+      )}
+      {draft.coffee?.farm !== undefined && (
+        <EditableRow label="Farm" value={draft.coffee.farm || ""} onChange={v => setCoffee({ farm: v || undefined })} />
+      )}
+      {draft.coffee?.process && (
+        <div>
+          <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Process</p>
+          <div className="flex flex-wrap gap-2">
+            {PROCESSES.map(p => <Chip key={p} selected={draft.coffee?.process === p} onClick={() => setCoffee({ process: p })} size="sm">{p}</Chip>)}
+          </div>
+        </div>
+      )}
+      {draft.coffee?.roastLevel && (
+        <div>
+          <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Roast Level</p>
+          <div className="flex flex-wrap gap-2">
+            {ROAST_LEVELS.map(r => <Chip key={r} selected={draft.coffee?.roastLevel === r} onClick={() => setCoffee({ roastLevel: r })} size="sm">{r}</Chip>)}
+          </div>
+        </div>
+      )}
+      {draft.coffee?.variety !== undefined && (
+        <EditableRow label="Variety" value={draft.coffee.variety || ""} onChange={v => setCoffee({ variety: v })} />
+      )}
+      {draft.coffee?.fermentationStyle !== undefined && (
+        <EditableRow label="Fermentation" value={draft.coffee.fermentationStyle || ""} onChange={v => setCoffee({ fermentationStyle: v || undefined })} />
+      )}
+      {draft.coffee?.altitudeMeters !== undefined && (
+        <EditableRow
+          label="Altitude (m)"
+          value={draft.coffee.altitudeMeters ? String(draft.coffee.altitudeMeters) : ""}
+          onChange={v => {
+            const n = parseInt(v, 10);
+            setCoffee({ altitudeMeters: Number.isFinite(n) ? n : undefined });
+          }}
+        />
+      )}
+      {draft.coffee?.cuppingScore !== undefined && (
+        <EditableRow
+          label="Cupping Score"
+          value={draft.coffee.cuppingScore ? String(draft.coffee.cuppingScore) : ""}
+          onChange={v => {
+            const n = parseFloat(v);
+            setCoffee({ cuppingScore: Number.isFinite(n) ? n : undefined });
+          }}
+        />
+      )}
+      <div>
+        <div className="flex items-baseline justify-between mb-2">
+          <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Roast Date</p>
+          {!draft.coffee?.roastDate && (
+            <span className="text-[10px]" style={{ color: "var(--primary)" }}>Improves bloom timing</span>
+          )}
+        </div>
+        <RoastDateInput
+          value={draft.coffee?.roastDate}
+          onChange={v => setCoffee({ roastDate: v })}
+        />
+      </div>
+      {(draft.coffee?.tastingNotesFromBag !== undefined) && (
+        <div>
+          <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Tasting Notes from Bag</p>
+          {(draft.coffee.tastingNotesFromBag?.length ?? 0) > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {draft.coffee.tastingNotesFromBag!.map(n => (
+                <span key={n} className="px-2.5 py-1 rounded-full border text-xs capitalize" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>{n}</span>
+              ))}
+            </div>
+          ) : (
+            <input
+              type="text"
+              placeholder="e.g. Toffee, Nectarine, Plum"
+              className="w-full rounded-2xl px-3 py-2 text-base focus:outline-none"
+              style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+              onChange={e => setCoffee({ tastingNotesFromBag: e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(Boolean) : [] })}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   // Continue is gated on BOTH having coffee info AND picking a mode —
   // mode no longer defaults to "home" so the user has to make an
   // explicit choice (Markus' feedback: pre-selected Brew-at-home was
@@ -502,96 +609,9 @@ export default function LightStepScan() {
               {scanError && !isAnalyzing && (
                 <p className="text-red-400 text-sm text-center">{scanError}</p>
               )}
-              {/* Extracted info */}
-              {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzing && (
-                <div className="rounded-2xl p-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="label-eyebrow" style={{ color: "var(--muted-foreground)" }}>Identified</span>
-                    <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Tap to correct</span>
-                  </div>
-                  {/* Roaster + Coffee always shown so the user can shorten
-                      a long name (e.g. "El Congo by Carlos Montero – Don
-                      Eli" → "El Congo") or add a missing roaster on a
-                      photo-extracted bag. Both rows are tap-to-edit and
-                      now show a pencil icon to advertise that. */}
-                  <EditableRow label="Roaster" value={draft.coffee.roaster || ""} onChange={v => setCoffee({ roaster: v })} suggestions={existingRoasters} />
-                  <EditableRow label="Coffee" value={draft.coffee.name || ""} onChange={v => setCoffee({ name: v })} />
-                  {draft.coffee.origin !== undefined && (
-                    <EditableRow
-                      label="Origin"
-                      value={[draft.coffee.origin, draft.coffee.region].filter(Boolean).join(" · ")}
-                      onChange={v => {
-                        const parts = v.split("·").map(s => s.trim());
-                        setCoffee({ origin: parts[0] || "", region: parts[1] || undefined });
-                      }}
-                    />
-                  )}
-                  {draft.coffee.process && (
-                    <div>
-                      <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Process</p>
-                      <div className="flex flex-wrap gap-2">
-                        {PROCESSES.map(p => <Chip key={p} selected={draft.coffee?.process === p} onClick={() => setCoffee({ process: p })} size="sm">{p}</Chip>)}
-                      </div>
-                    </div>
-                  )}
-                  {draft.coffee.roastLevel && (
-                    <div>
-                      <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Roast Level</p>
-                      <div className="flex flex-wrap gap-2">
-                        {ROAST_LEVELS.map(r => <Chip key={r} selected={draft.coffee?.roastLevel === r} onClick={() => setCoffee({ roastLevel: r })} size="sm">{r}</Chip>)}
-                      </div>
-                    </div>
-                  )}
-                  {draft.coffee.variety !== undefined && (
-                    <EditableRow label="Variety" value={draft.coffee.variety || ""} onChange={v => setCoffee({ variety: v })} />
-                  )}
-                  {draft.coffee.fermentationStyle !== undefined && (
-                    <EditableRow label="Fermentation" value={draft.coffee.fermentationStyle || ""} onChange={v => setCoffee({ fermentationStyle: v || undefined })} />
-                  )}
-                  {draft.coffee.cuppingScore !== undefined && (
-                    <EditableRow
-                      label="Cupping Score"
-                      value={draft.coffee.cuppingScore ? String(draft.coffee.cuppingScore) : ""}
-                      onChange={v => {
-                        const n = parseFloat(v);
-                        setCoffee({ cuppingScore: Number.isFinite(n) ? n : undefined });
-                      }}
-                    />
-                  )}
-                  <div>
-                    <div className="flex items-baseline justify-between mb-2">
-                      <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Roast Date</p>
-                      {!draft.coffee?.roastDate && (
-                        <span className="text-[10px]" style={{ color: "var(--primary)" }}>Improves bloom timing</span>
-                      )}
-                    </div>
-                    <RoastDateInput
-                      value={draft.coffee?.roastDate}
-                      onChange={v => setCoffee({ roastDate: v })}
-                    />
-                  </div>
-                  {(draft.coffee.tastingNotesFromBag !== undefined) && (
-                    <div>
-                      <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Tasting Notes from Bag</p>
-                      {(draft.coffee.tastingNotesFromBag?.length ?? 0) > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {draft.coffee.tastingNotesFromBag!.map(n => (
-                            <span key={n} className="px-2.5 py-1 rounded-full border text-xs capitalize" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>{n}</span>
-                          ))}
-                        </div>
-                      ) : (
-                        <input
-                          type="text"
-                          placeholder="e.g. Toffee, Nectarine, Plum"
-                          className="w-full rounded-2xl px-3 py-2 text-base focus:outline-none"
-                          style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-                          onChange={e => setCoffee({ tastingNotesFromBag: e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(Boolean) : [] })}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Extracted info — full editable panel, shared between
+                  photo + URL flows (see `identifiedPanel` above). */}
+              {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzing && identifiedPanel}
               {/* Roaster profile loading */}
               {!isAnalyzing && isGeneratingRoaster && (
                 <div className="rounded-2xl p-4" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
@@ -828,21 +848,12 @@ export default function LightStepScan() {
               {urlError && (
                 <p className="text-xs" style={{ color: "var(--color-error-foreground)" }}>{urlError}</p>
               )}
-              {/* Show extracted info after URL scan */}
-              {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzingUrl && inputMethod === "link" && (
-                <div className="rounded-2xl p-4" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
-                  <p className="label-eyebrow mb-2" style={{ color: "var(--muted-foreground)" }}>Extracted</p>
-                  {draft.coffee.roaster && (
-                    <p className="text-xs mb-1" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.roaster}</p>
-                  )}
-                  {draft.coffee.name && (
-                    <p className="font-fraunces text-lg leading-tight" style={{ color: "var(--foreground)" }}>{draft.coffee.name}</p>
-                  )}
-                  {draft.coffee.origin && (
-                    <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{draft.coffee.origin}</p>
-                  )}
-                </div>
-              )}
+              {/* Full editable panel after URL scan — same component
+                  the photo flow renders, so the user sees and can
+                  correct every field that was extracted (roaster, name,
+                  origin, process, roast level, variety, fermentation,
+                  farm, altitude, cupping score, roast date, bag notes). */}
+              {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzingUrl && inputMethod === "link" && identifiedPanel}
               {/* Roaster prior — surfaces curated/DB profile for the URL path
                   too. Previously only the photo path rendered this; URL
                   scans hit a Q&A even for well-known roasters because the
