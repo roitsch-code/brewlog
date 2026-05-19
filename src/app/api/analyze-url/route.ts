@@ -11,17 +11,24 @@ import type { RoasterPrior } from "@/lib/roasters/priors";
 export const dynamic = "force-dynamic";
 
 const UrlExtractSchema = z.object({
-  roaster: z.string().optional(),
-  name: z.string().optional(),
-  origin: z.string().optional(),
-  region: z.string().optional(),
-  variety: z.string().optional(),
-  process: z.string().optional(),
-  fermentationStyle: z.string().optional(),
-  roastLevel: z.string().optional(),
-  roastDate: z.string().optional(),
-  cuppingScore: z.number().optional(),
-  tastingNotesFromBag: z.array(z.string()).optional(),
+  extracted: z
+    .object({
+      roaster: z.string().optional(),
+      name: z.string().optional(),
+      origin: z.string().optional(),
+      region: z.string().optional(),
+      farm: z.string().optional(),
+      variety: z.string().optional(),
+      process: z.string().optional(),
+      fermentationStyle: z.string().optional(),
+      roastLevel: z.string().optional(),
+      roastDate: z.string().optional(),
+      altitudeMeters: z.number().optional(),
+      cuppingScore: z.number().optional(),
+      tastingNotesFromBag: z.array(z.string()).optional(),
+    })
+    .passthrough(),
+  clarifications: z.array(z.string()).optional(),
 });
 
 export async function POST(req: Request) {
@@ -82,11 +89,44 @@ export async function POST(req: Request) {
     const client = new Anthropic();
     const response = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 512,
+      max_tokens: 768,
       messages: [
         {
           role: "user",
-          content: `Extract coffee product details from this webpage text. Return ONLY a valid JSON object with these fields (omit any fields you cannot find with confidence): roaster (string), name (string), origin (string), region (string), variety (string), process (string — Natural/Washed/Honey/Anaerobic), fermentationStyle (string — the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol), roastLevel (string — Light/Medium-Light/Medium/Dark), roastDate (ISO date string YYYY-MM-DD if found), cuppingScore (number — SCA / Q-grade if printed, e.g. 87.5), tastingNotesFromBag (array of short flavor note strings).\n\nWebpage text:\n${text}`,
+          content: `Extract coffee product details from this webpage text. Return ONLY a valid JSON object with this exact shape:
+
+{
+  "extracted": {
+    "roaster": string,
+    "name": string,
+    "origin": string,
+    "region": string,
+    "farm": string,
+    "variety": string,
+    "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other",
+    "fermentationStyle": string,
+    "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark",
+    "roastDate": "YYYY-MM-DD",
+    "altitudeMeters": number,
+    "cuppingScore": number,
+    "tastingNotesFromBag": string[]
+  },
+  "clarifications": string[]
+}
+
+Inside "extracted": omit any field you cannot find with confidence (do not return null — just omit). fermentationStyle is the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol. cuppingScore is the SCA / Q-grade if printed (e.g. 87.5). altitudeMeters is the grow elevation in metres (e.g. 1750).
+
+"clarifications": list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) altitude if unknown, (4) region/farm if unclear. Examples:
+- "I couldn't spot a variety on the page — is it listed anywhere, or do you know it?"
+- "No tasting notes were visible — what flavour descriptors does the roaster use?"
+- "The page doesn't mention altitude — do you know the elevation at \${farm or origin}?"
+
+NEVER ask about roast date (the user enters this via a dedicated date picker in the UI) or cupping score (optional, often unavailable — leave the field omitted if not printed). Return [] if every important field is already known.
+
+Return ONLY valid JSON, no markdown.
+
+Webpage text:
+${text}`,
         },
       ],
     });
@@ -96,8 +136,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "AI did not return text" }, { status: 500 });
     }
 
-    const extracted = parseClaudeJson(content.text, UrlExtractSchema);
-    if (!extracted) {
+    const parsed = parseClaudeJson(content.text, UrlExtractSchema);
+    if (!parsed) {
       return NextResponse.json(
         { error: "Could not extract coffee details from that page. Try entering manually." },
         { status: 422 }
@@ -109,10 +149,10 @@ export async function POST(req: Request) {
     // triggered the "I don't know X yet" Q&A even for well-known roasters
     // like Hoppenworth & Ploch.
     let roasterPrior: ReturnType<typeof toPriorSummary> | null = null;
-    if (extracted.roaster) {
+    if (parsed.extracted.roaster) {
       let prior: RoasterPrior | null = null;
       try {
-        const slug = canonicalRoasterSlug(extracted.roaster);
+        const slug = canonicalRoasterSlug(parsed.extracted.roaster);
         const direct = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
         if (direct.length > 0) {
           prior = direct[0].data as RoasterPrior;
@@ -127,7 +167,7 @@ export async function POST(req: Request) {
       } catch {}
 
       if (!prior) {
-        const builtIn = getRoasterPrior(extracted.roaster);
+        const builtIn = getRoasterPrior(parsed.extracted.roaster);
         if (builtIn.confidence !== "fallback") prior = builtIn;
       }
 
@@ -135,8 +175,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      extracted,
-      clarifications: [],
+      extracted: parsed.extracted,
+      clarifications: parsed.clarifications ?? [],
       roasterPrior,
     });
   } catch (err) {
