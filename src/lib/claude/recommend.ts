@@ -560,7 +560,7 @@ export async function generateRecommendation(
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
-      ? `target exactly ${context.customWaterMl}ml — the user typed this exact number, NEVER alter it. Dose at 1:15. Capacity tensions with the chosen method are handled separately (see HARD CAPACITY CONSTRAINT / USER OVERRIDE block below). When the user has locked a method that's near or past the vessel's comfortable max for this volume, honor BOTH the method and the ml — flag the trade-off in reasoning, do not silently clamp the water.`
+      ? `target exactly ${context.customWaterMl}ml for BOTH candidates — tolerance is ±30ml, never more. The user typed this exact number. Reference recipes from the corpus (Kasuya 4:6, Hoffmann Better 1 Cup, Wölfl Orea Fast, etc.) supply the TECHNIQUE and ratio, NOT absolute numbers — scale the dose proportionally so waterGrams lands within 30ml of ${context.customWaterMl}. Default ratio 1:15 (so ${Math.round((context.customWaterMl ?? 350) / 15)}g dose / ${context.customWaterMl}g water). If a specific reference recipe calls for a different ratio (e.g. 1:14 for Wölfl, 1:16 for Medina), use its ratio but still scale to ~${context.customWaterMl}ml. Capacity tensions with the chosen method are handled separately (see HARD CAPACITY CONSTRAINT / USER OVERRIDE block). When the user has locked a method that's near or past the vessel's comfortable max for this volume, honor BOTH the method and the ml — flag the trade-off in reasoning, do not silently clamp the water.`
       : "target ~350g water / 23g dose",
     surprise:
       "SURPRISE MODE: full creative freedom on method and recipe — hard capacity limits still apply. Be adventurous.",
