@@ -560,7 +560,7 @@ export async function generateRecommendation(
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
-      ? `target exactly ${context.customWaterMl}ml. Apply capacity limits: AeroPress only if ≤230ml, Clever only if ≤400ml, Moccamaster only if ≥500ml. Dose at 1:15.`
+      ? `target exactly ${context.customWaterMl}ml — the user typed this exact number, NEVER alter it. Dose at 1:15. Capacity tensions with the chosen method are handled separately (see HARD CAPACITY CONSTRAINT / USER OVERRIDE block below). When the user has locked a method that's near or past the vessel's comfortable max for this volume, honor BOTH the method and the ml — flag the trade-off in reasoning, do not silently clamp the water.`
       : "target ~350g water / 23g dose",
     surprise:
       "SURPRISE MODE: full creative freedom on method and recipe — hard capacity limits still apply. Be adventurous.",
@@ -599,6 +599,10 @@ export async function generateRecommendation(
       ? "past peak, flavors softening"
       : "likely stale";
 
+  const lockedMethodBase = (context.preferredMethod ?? "")
+    .replace(/\s*\+\s*Drip Assist\s*$/i, "")
+    .trim();
+
   const capacityConstraint = (() => {
     const ml =
       context.amount === "custom"
@@ -609,14 +613,36 @@ export async function generateRecommendation(
         ? 350
         : null;
     if (!ml) return "";
-    const violations: string[] = [];
-    if (ml > 230) violations.push("AeroPress (max 230ml)");
-    if (ml > 400) violations.push("Clever Dripper (max 400ml)");
-    if (ml > 450) violations.push("Origami Air M (30g dose limit → max ~450ml)");
-    if (ml < 500) violations.push("Moccamaster (batch only, min 500ml)");
-    return violations.length
-      ? `\nHARD CAPACITY CONSTRAINT — target ${ml}ml: FORBIDDEN methods: ${violations.join(", ")}.`
-      : "";
+    type Violation = { method: string; reason: string };
+    const allViolations: Violation[] = [];
+    if (ml > 230) allViolations.push({ method: "AeroPress", reason: "max 230ml" });
+    if (ml > 400) allViolations.push({ method: "Clever Dripper", reason: "max 400ml" });
+    if (ml > 450) allViolations.push({ method: "Origami Air M", reason: "30g dose limit → max ~450ml" });
+    if (ml < 500) allViolations.push({ method: "Moccamaster", reason: "batch only, min 500ml" });
+
+    // If the user has explicitly locked a method that would normally be
+    // forbidden at this volume, exempt it — both their method choice and
+    // their volume are absolute user instructions. Note the trade-off but
+    // honor both. Without this exemption the AI silently swapped the
+    // method or clamped the ml (Markus' "450ml + Clever → recipe came
+    // back at 360ml" report).
+    const lockedLower = lockedMethodBase.toLowerCase();
+    const lockedViolation = lockedLower
+      ? allViolations.find((v) => v.method.toLowerCase() === lockedLower)
+      : undefined;
+    const enforced = lockedViolation
+      ? allViolations.filter((v) => v !== lockedViolation)
+      : allViolations;
+
+    const violationStrs = enforced.map((v) => `${v.method} (${v.reason})`);
+    let block = "";
+    if (violationStrs.length) {
+      block += `\nHARD CAPACITY CONSTRAINT — target ${ml}ml: FORBIDDEN methods: ${violationStrs.join(", ")}.`;
+    }
+    if (lockedViolation) {
+      block += `\nUSER OVERRIDE: ${lockedViolation.method} would normally be forbidden at ${ml}ml (${lockedViolation.reason}), but the user has explicitly locked ${lockedViolation.method} as preferredMethod AND typed this exact volume. Both are absolute user instructions — use ${lockedViolation.method} at exactly ${ml}ml. The vessel will be at its physical edge; mention the trade-off in reasoning (e.g. "pouring ${ml}ml in a ${lockedViolation.method.toLowerCase()} — fill close to the rim, slow pours") but DO NOT swap the method or change the ml.`;
+    }
+    return block;
   })();
 
   const DRIP_ASSIST_COMPATIBLE = new Set([
@@ -633,7 +659,7 @@ export async function generateRecommendation(
           : DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod)
             ? ` The user is NOT using the Drip Assist this session — use bare ${context.preferredMethod} only. Do NOT add "+ Drip Assist" to the method name.`
             : "";
-        return `\nLOCKED METHOD: "${label}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee or capacity, and explain clearly.${assistRule}`;
+        return `\nLOCKED METHOD: "${label}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.${assistRule}`;
       })()
     : context.dripAssist
       ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a Drip-Assist-compatible pour-over (V60, Orea, Kalita, or Chemex; Origami is NOT compatible — too wide) for at least one candidate and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
