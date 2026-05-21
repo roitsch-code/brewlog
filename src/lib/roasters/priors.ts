@@ -85,7 +85,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Loses complexity if over-agitated",
     ],
     notes:
-      "Low agitation tolerance is the key signal here. Orea Apex or V60 without the Drip Assist is ideal — the Drip Assist adds turbulence that can muddy the clarity profile. Championship water (55–75 ppm) is worth considering for competition lots.",
+      "Low agitation tolerance is the key signal here. Orea Apex or bare V60 with minimal pour agitation is ideal — anything that adds turbulence can muddy the clarity profile. Championship water (55–75 ppm) is worth considering for competition lots.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -130,7 +130,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Agitation-sensitive — swirl rather than stir on bloom",
     ],
     notes:
-      "April sits at the very edge of light roasting. These coffees demand active technique. Championship water (55–75 ppm) can be transformative. The Wölfl method or Orea Apex without the Drip Assist is the natural home. Avoid Clever or long immersion — extraction clarity is the whole point.",
+      "April sits at the very edge of light roasting. These coffees demand active technique. Championship water (55–75 ppm) can be transformative. The Wölfl method or Orea Apex is the natural home. Avoid Clever or long immersion — extraction clarity is the whole point.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -175,7 +175,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Too thin at 1:17+ ratios",
     ],
     notes:
-      "Clarity is the product. Orea Apex or V60 without Drip Assist. Minimal agitation. Diluted or championship water to protect delicate floral notes from mineral interference. Kasuya 4:6 can work well if the user wants to tune acid/sweetness balance across phases.",
+      "Clarity is the product. Orea Apex or bare V60. Minimal agitation. Diluted or championship water to protect delicate floral notes from mineral interference. Kasuya 4:6 can work well if the user wants to tune acid/sweetness balance across phases.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -458,7 +458,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["Orea V4", "V60", "V60 + Drip Assist"],
+    methodAffinities: ["Orea V4", "V60"],
     extractionRisks: [
       "Sour and thin if under-extracted — roasts are light so full extraction is essential",
       "Loses nuance and clarity with heavy agitation or turbulence",
@@ -562,10 +562,9 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     extractionRisks: [
       "Under-extraction risk is significant — passive technique will disappoint",
       "Aggressive stir at bloom can cause agitation bitterness on very light lots",
-      "Drip Assist turbulence can muddy the clarity aesthetic",
     ],
     notes:
-      "Do not use Drip Assist with The Barn coffees unless you want a more forgiving experience at the cost of transparency. Orea Apex or bare V60. High temp mandatory. Championship water opens up complexity. Kasuya 4:6 is excellent for exploring acid/sweet balance.",
+      "Orea Apex or bare V60 are the natural picks — minimal agitation preserves transparency. High temp mandatory. Championship water opens up complexity. Kasuya 4:6 is excellent for exploring acid/sweet balance.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -587,7 +586,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Washed lots flat below 93°C",
     ],
     notes:
-      "Sweetness is the through-line. Orea Classic brings out the best of their naturals. V60 + Drip Assist works well for washed lots. Standard ratio and temp.",
+      "Sweetness is the through-line. Orea Classic brings out the best of their naturals. V60 works well for washed lots. Standard ratio and temp.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -836,7 +835,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Fines migration can muddy clarity on aggressive agitation",
     ],
     notes:
-      "Championship-grade coffees. Orea Apex or V60 without Drip Assist. Championship water can reveal additional complexity. Kasuya 4:6 is excellent for phase-by-phase exploration of these coffees.",
+      "Championship-grade coffees. Orea Apex or bare V60. Championship water can reveal additional complexity. Kasuya 4:6 is excellent for phase-by-phase exploration of these coffees.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -1068,7 +1067,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "moderate",
     tempBias: "standard",
     ratioBias: "standard",
-    methodAffinities: ["V60", "V60 + Drip Assist", "Clever Dripper"],
+    methodAffinities: ["V60", "Clever Dripper"],
     extractionRisks: ["Naturals can over-extract if agitated too much"],
     notes:
       "Local Düsseldorf roaster. Sweetness-forward light roast with fruit-forward character. Naturals and washed both represented.",
@@ -1110,7 +1109,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["V60", "Orea V4", "V60 + Drip Assist"],
+    methodAffinities: ["V60", "Orea V4"],
     extractionRisks: [
       "Very easy to under-extract — roast is deliberately light",
       "Loses nuance fast with heavy agitation",
@@ -1132,7 +1131,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "standard",
     ratioBias: "standard",
-    methodAffinities: ["V60", "V60 + Drip Assist", "Orea V4"],
+    methodAffinities: ["V60", "Orea V4"],
     extractionRisks: ["Light roasts can read sour if under-extracted — ensure full bloom and even saturation"],
     notes:
       "Treat as a precision light-roast lab coffee. 94–96°C, 1:15–1:16, gentle agitation. Give the bloom time.",
@@ -1151,7 +1150,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "moderate",
     tempBias: "standard",
     ratioBias: "standard",
-    methodAffinities: ["V60", "V60 + Drip Assist", "Clever Dripper"],
+    methodAffinities: ["V60", "Clever Dripper"],
     extractionRisks: ["Sweetness-forward profile can tip bitter if over-extracted"],
     notes:
       "Local Düsseldorf roaster. Sweetness bias, approachable specialty.",

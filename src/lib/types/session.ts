@@ -29,8 +29,9 @@ export interface SessionContext {
   moodPreference: string; // strong | balanced | light | sweet | curious
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
   waterSource?: string; // "tap" | "diluted" — tap = ~300ppm, diluted = 1:1 tap+distilled = ~150ppm
-  preferredMethod?: string; // optional method lock-in: "V60 + Drip Assist" | "Orea Fast" | etc.
-  dripAssist?: boolean; // Hario Drip Assist disc in use; orthogonal to preferredMethod — applies to any pour-over brewer
+  preferredMethod?: string; // optional method lock-in: "V60" | "Orea Fast" | etc.
+  /** @deprecated Drip Assist support was removed; legacy sessions still reference this. Do not surface in current UI / prompts. */
+  dripAssist?: boolean;
   intent?: string;
   // "explore" | "safest" | "high-clarity" | "sweetness-forward"
   // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
@@ -92,7 +93,8 @@ export interface BrewLog {
   methodUsed?: string;
   doseGrams?: number;   // dose used (external sessions; home sessions use recommendation)
   waterGrams?: number;  // water used (external sessions; home sessions use recommendation)
-  dripAssist?: boolean; // mirrors SessionContext.dripAssist — logs whether the Assist was actually used
+  /** @deprecated Drip Assist support was removed; legacy sessions still reference this. */
+  dripAssist?: boolean;
   followedRecipe?: boolean;
   modifications?: string;
   actualTimeSec?: number;

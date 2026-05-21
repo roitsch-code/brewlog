@@ -31,11 +31,7 @@ export default function LightStepBrew() {
   const method = draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
   const recipe = rec?.candidates?.find((c) => c.method === method)?.recipe ?? rec?.primaryRecipe;
 
-  const dripAssist =
-    draft.brew?.dripAssist ?? draft.context?.dripAssist ?? /drip assist/i.test(method);
-
-  const methodLabel =
-    dripAssist && !/drip assist/i.test(method) ? `${method} + Drip Assist` : method;
+  const methodLabel = method;
 
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
@@ -59,13 +55,12 @@ export default function LightStepBrew() {
       setBrew({
         ...draft.brew,
         methodUsed: method,
-        dripAssist,
         followedRecipe: true,
         actualTimeSec: actualSec ?? elapsed,
       });
       setStep("log");
     },
-    [draft.brew, method, dripAssist, elapsed, setBrew, setStep, disableWakeLock],
+    [draft.brew, method, elapsed, setBrew, setStep, disableWakeLock],
   );
 
   const handleTimerComplete = useCallback(
@@ -73,12 +68,11 @@ export default function LightStepBrew() {
       setBrew({
         ...draft.brew,
         methodUsed: method,
-        dripAssist,
         followedRecipe: true,
         actualTimeSec: e,
       });
     },
-    [draft.brew, method, dripAssist, setBrew],
+    [draft.brew, method, setBrew],
   );
 
   const steps =
@@ -116,7 +110,6 @@ export default function LightStepBrew() {
             targetTimeSec={recipe.targetTimeSec}
             started={started}
             process={draft.coffee?.process}
-            dripAssist={dripAssist}
           />
         )}
 
@@ -142,7 +135,6 @@ interface LivePourSequenceProps {
   targetTimeSec: number;
   started: boolean;
   process?: string;
-  dripAssist?: boolean;
 }
 
 function LivePourSequence({
@@ -151,7 +143,6 @@ function LivePourSequence({
   targetTimeSec,
   started,
   process,
-  dripAssist,
 }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
@@ -256,7 +247,7 @@ function LivePourSequence({
               )}
               {activeStep.action === "pour" && (
                 <p className="text-[12px] text-light-muted-foreground mt-2">
-                  {dripAssist ? "Outer ring · 3.5–5 g/s" : "Slow spiral from centre outward"}
+                  Slow spiral from centre outward
                 </p>
               )}
               {activeStep.action === "final" && (

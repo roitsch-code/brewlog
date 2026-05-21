@@ -14,7 +14,6 @@ async function savePreferences(prefs: UserPreferences): Promise<void> {
 
 const EQUIPMENT_OPTIONS = [
   { id: "V60", label: "V60" },
-  { id: "V60 + Drip Assist", label: "V60 + Drip Assist" },
   { id: "OreaV4", label: "Orea V4" },
   { id: "Kalita", label: "Kalita Wave" },
   { id: "CleverDripper", label: "Clever Dripper" },

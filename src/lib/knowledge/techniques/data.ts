@@ -258,7 +258,7 @@ export const TECHNIQUES: Technique[] = [
     mechanism:
       "A standard pour from a kettle creates a stream that punches into the puck — even a gentle pour disturbs the top layer enough to migrate fines and create channels. The Melodrip's perforated disc breaks the stream into many tiny droplets that hit the bed simultaneously across the whole surface. The bed stays compositionally intact; if you've layered multiple roasts (Peng) or want pristine clarity (delicate Geisha), the technique preserves the structure.",
     whenToUse:
-      "Demonstration brewing with layered roasts. Top-shelf delicate coffees where any agitation flattens the cup. The Hario Drip Assist is a similar tool with slightly different geometry — good substitute when Melodrip isn't available.",
+      "Demonstration brewing with layered roasts. Top-shelf delicate coffees where any agitation flattens the cup.",
     contraindications: [
       "Body-forward goals — eliminates the agitation that develops body",
       "Naturals — usually want some agitation to develop sweetness",

@@ -108,15 +108,11 @@ export default function LightStepRecommend() {
   const active = candidates[selectedIdx];
   const activeRecipe = active?.recipe;
   const activeMethod = active?.method;
-  const activeMethodLabel =
-    activeMethod && draft.context?.dripAssist && !/drip assist/i.test(activeMethod)
-      ? `${activeMethod} + Drip Assist`
-      : activeMethod;
+  const activeMethodLabel = activeMethod;
 
   const handleUse = () => {
     if (!activeMethod || !activeRecipe) return;
-    const dripAssist = draft.context?.dripAssist ?? /drip assist/i.test(activeMethod);
-    setBrew({ methodUsed: activeMethodLabel ?? activeMethod, dripAssist, followedRecipe: true });
+    setBrew({ methodUsed: activeMethodLabel ?? activeMethod, followedRecipe: true });
     setStep("brew");
   };
 

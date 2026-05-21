@@ -269,7 +269,6 @@ export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
     const target = s.recommendation?.primaryRecipe?.targetTimeSec;
     const actual = s.brew?.actualTimeSec;
     const flow = s.brew?.flow && s.brew.flow !== "na" ? s.brew.flow : null;
-    const dripAssist = s.brew?.dripAssist === true;
     const waterSource = s.context?.waterSource;
     const rating = s.result?.rating;
     const flavors = s.result?.flavorNotes?.slice(0, 3).join(", ");
@@ -295,7 +294,6 @@ export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
       parts.push(`(${flow})`);
     }
 
-    if (dripAssist) parts.push("+Drip Assist");
     if (waterSource) parts.push(`water:${waterSource}`);
     if (rating != null) parts.push(`${rating}★`);
     if (flavors) parts.push(`[${flavors}]`);
