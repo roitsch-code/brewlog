@@ -322,7 +322,7 @@ export default function TastePage() {
 
 function Header({ onMenu }: { onMenu: () => void }) {
   return (
-    <div className="px-5 pb-4 flex items-start justify-between gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}>
+    <div className="px-5 pb-4 flex items-center justify-between gap-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)' }}>
       <div>
         <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Taste Profile</h1>
       </div>
