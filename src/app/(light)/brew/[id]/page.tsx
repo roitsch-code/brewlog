@@ -206,7 +206,6 @@ export default function SessionDetailPage() {
             {brew.flow && <Pill>Flow: {brew.flow}</Pill>}
             {brew.timing && <Pill>Timing: {brew.timing}</Pill>}
             {brew.followedAgitation && <Pill>Agitation: {brew.followedAgitation}</Pill>}
-            {brew.dripAssist != null && <Pill>{brew.dripAssist ? "Drip Assist" : "No Assist"}</Pill>}
           </div>
           {brew.modifications && (
             <p className="text-light-muted-foreground text-sm mt-3 leading-relaxed">{brew.modifications}</p>

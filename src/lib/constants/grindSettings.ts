@@ -11,10 +11,7 @@ export interface GrindSetting {
 }
 
 export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
-  { method: "V60 + Drip Assist", process: "Washed", niche: { min: 403, max: 408 } },
-  { method: "V60 + Drip Assist", process: "Honey", niche: { min: 405, max: 410 } },
-  { method: "V60 + Drip Assist", process: "Natural", niche: { min: 406, max: 412 } },
-  { method: "V60 (no Assist)", niche: { min: 396, max: 406 } },
+  { method: "V60", niche: { min: 396, max: 406 } },
   { method: "Orea V4", niche: { min: 401, max: 411 } },
   { method: "Origami Dripper", process: "Washed", niche: { min: 401, max: 407 } },
   { method: "Origami Dripper", process: "Honey", niche: { min: 403, max: 408 } },
@@ -28,6 +25,11 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
 
 export const GRIND_FOOTNOTE =
   "Comandante C40 MK2 uses clicks, not degrees. Adjust grind coarser/finer to fix flow timing — never use temperature for that; temperature controls extraction chemistry only.";
+
+// Methods removed from the active set (legacy data only; do not surface
+// in current UI / prompts):
+//   - "V60 + Drip Assist" (3 variants) — removed because Markus stopped
+//     using the disc and the AI was over-recommending it.
 
 export function formatGrindSettingsForPrompt(): string {
   const lines = NICHE_GRIND_SETTINGS.map((s) => {

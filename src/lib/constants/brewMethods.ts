@@ -11,7 +11,6 @@ export interface BrewMethod {
 
 export const BREW_METHODS: BrewMethod[] = [
   { id: "v60", label: "V60", emoji: "☕", defaultTemp: 98, defaultDose: 23, defaultWater: 350, defaultTimeSec: 210, category: "pour-over" },
-  { id: "v60-drip-assist", label: "V60 + Drip Assist", emoji: "☕", defaultTemp: 98, defaultDose: 34, defaultWater: 520, defaultTimeSec: 240, category: "pour-over" },
   // Orea V4 — same brewer body, four interchangeable bottoms. Each
   // bottom changes flow rate dramatically (Apex most restrictive →
   // Open fastest), so each gets its own picker entry + icon. Defaults

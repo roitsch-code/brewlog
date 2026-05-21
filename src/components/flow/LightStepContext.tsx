@@ -22,7 +22,7 @@ import type { Session, SessionContext } from "@/lib/types/session";
  *     session ever ships it, but this UI no longer offers the choice.
  *   - WATER: 2 cards (Tap only, Championship) — Diluted dropped.
  *   - APPROACH: 2 cards only (Claude picks / I'll choose). The Dark
- *     expanding method list and Drip Assist toggle are removed.
+ *     expanding method list is removed.
  *     `preferredMethod` and `dripAssist` are never set from this UI;
  *     /api/recommend handles undefined gracefully.
  *
@@ -147,10 +147,6 @@ const METHODS = [
   { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 400 ml" },
   { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, ≥ 500 ml" },
 ];
-
-const DRIP_ASSIST_COMPATIBLE = new Set<string>([
-  "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
-]);
 
 const WATERS = [
   { id: "tap", label: "Tap only", sub: "~300 ppm", footnote: "Above SCA ceiling. Recipe will adjust accordingly." },
@@ -423,24 +419,17 @@ export default function LightStepContext() {
         {/* BREWING APPROACH — 2 cards + expanding method list (restored
             after Markus' /brew/preview feedback: "I'll choose" had
             nothing to actually choose). When "ill-choose" is active,
-            a vertical method list expands below; selecting a Drip-
-            Assist-compatible brewer reveals the toggle row. Selecting
-            "Claude picks" (or toggling "I'll choose" off) clears any
-            manual preferredMethod + dripAssist so the recipe prompt
-            doesn't carry stale state. */}
+            a vertical method list expands below. Selecting "Claude
+            picks" (or toggling "I'll choose" off) clears any manual
+            preferredMethod so the recipe prompt doesn't carry stale
+            state. */}
         <Section
           eyebrow="Brewing approach"
           footnote={
             approach === "ill-choose" ? (
               ctx.preferredMethod ? (
                 <Footnote>
-                  {ctx.preferredMethod}
-                  {ctx.dripAssist &&
-                  DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) &&
-                  ctx.preferredMethod !== "V60"
-                    ? " + Drip Assist"
-                    : ""}{" "}
-                  locked in — Claude will dial in the full recipe for it.
+                  {ctx.preferredMethod} locked in — Claude will dial in the full recipe for it.
                 </Footnote>
               ) : (
                 <Footnote>Pick a method below to lock it in.</Footnote>
@@ -459,7 +448,7 @@ export default function LightStepContext() {
                     const next = approach === a.id ? null : a.id;
                     setApproach(next);
                     if (next !== "ill-choose") {
-                      updateCtx({ preferredMethod: "", dripAssist: false });
+                      updateCtx({ preferredMethod: "" });
                     }
                   }}
                   ariaLabel={a.label}
@@ -486,10 +475,7 @@ export default function LightStepContext() {
                     type="button"
                     onClick={() => {
                       const newMethod = ctx.preferredMethod === m.id ? "" : m.id;
-                      updateCtx({
-                        preferredMethod: newMethod,
-                        dripAssist: DRIP_ASSIST_COMPATIBLE.has(newMethod) ? ctx.dripAssist : false,
-                      });
+                      updateCtx({ preferredMethod: newMethod });
                     }}
                     aria-pressed={selected}
                     className={`flex items-center justify-between rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all ${
@@ -508,47 +494,6 @@ export default function LightStepContext() {
               })}
             </div>
 
-            {ctx.preferredMethod && DRIP_ASSIST_COMPATIBLE.has(ctx.preferredMethod) && (
-              <button
-                type="button"
-                onClick={() => updateCtx({ dripAssist: !ctx.dripAssist })}
-                aria-pressed={!!ctx.dripAssist}
-                className={`flex items-center justify-between w-full mt-2 rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all text-left ${
-                  ctx.dripAssist
-                    ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
-                    : "bg-light-card-default"
-                }`}
-              >
-                <div>
-                  <p className="text-[15px] font-medium text-light-foreground">With Drip Assist</p>
-                  <p className="text-[12px] text-light-muted-foreground mt-0.5">
-                    Hario disc — steadier pour for any pour-over
-                  </p>
-                </div>
-                <div
-                  className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                    ctx.dripAssist ? "bg-light-foreground" : "border border-light-foreground/30"
-                  }`}
-                >
-                  {ctx.dripAssist && (
-                    <svg
-                      className="w-3.5 h-3.5 text-[hsl(36_55%_96%)]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={3}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </button>
-            )}
           </div>
         </Section>
 

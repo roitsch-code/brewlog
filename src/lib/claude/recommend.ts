@@ -138,13 +138,9 @@ Rule: the more delicate the coffee (light washed, high-altitude, Ethiopian), the
 
 AGITATION MECHANICS (Perger — Coffee Compass / WBC methodology):
 Turbulence increases contact between water and grounds — raises extraction yield.
-The Drip Assist disc creates turbulence from its perforations. It is an agitation mechanism, not only
-  a flow controller. This is why Drip Assist recipes run 2–3°C hotter: more agitation at lower temp
-  pulls Zone 3 compounds before Zone 2 sweetness fully develops.
 Channeling (water finding fast paths through the bed): creates striped extraction — some grounds
   over-extracted (harsh, bitter), others under (sour, flat). Result: "confusing cup — I can't tell
   if it's sour or bitter." Causes: center-only pouring, uneven bed setup, fines migration.
-  Drip Assist eliminates outer-ring vs. center differential — it is a specific channeling solution.
 Bloom agitation: purpose is even wetting and CO₂ release. Vigorous stir for washed (stable uniform
   bed) = better extraction uniformity. Gentle swirl for natural (irregular fermentation-residue bed)
   = avoids creating channels.
@@ -202,26 +198,26 @@ A curated style prior will appear in the message if available.
 - If user brew history contradicts the prior → trust the history
 - If no history for this roaster → apply the prior with stated confidence
 - If prior says "clarity-focused" → consider clarity methods in the portfolio
-- If prior says "agitation-sensitive" → avoid Drip Assist for clarity lots; use Orea Apex or bare V60
+- If prior says "agitation-sensitive" → use Orea Apex or bare V60 with minimal pour agitation
 - Always be explicit about whether and how the prior influenced portfolio choices
 
 LAYER 4 — CONSTRAINTS (NON-NEGOTIABLE physical limits)
 HARD CAPACITY LIMITS — never exceed, even in experiment mode:
-- V60 size 2 + Hario Drip Assist: max ~600ml water
+- V60 size 2: max ~600ml water
 - Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max ~500ml
 - Origami Dripper (size M): max ~500ml
 - Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
 - Kalita Wave: max ~500ml
-- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. NOT compatible with Hario Drip Assist (Origami's bed is too wide for the disc — disc geometry does not seat). Reserve 34g:520ml brews for V60 or Orea.
+- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Reserve 34g:520ml brews for V60 or Orea.
 - AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
 - Moccamaster: batch ONLY; minimum 500ml. NEVER for single-cup amounts.
 - Grinder: Niche Zero (° — NEVER clicks!) | Comandante C40 MK2 (clicks — NEVER °)
 - Grind size output: ONE specific value. No ranges. Ever.
-- Kettle: Fellow Corvo EKG — must return to base between pours (Drip Assist)
+- Kettle: Fellow Corvo EKG — must return to base between pours
 
 Time constraints:
 - "quick" (~2 min): AeroPress, Turbo V60, Peng. targetTimeSec ≤ 150.
-- "normal" (~5 min): V60 Drip Assist, Kalita, Orea, Clever. targetTimeSec 240–300.
+- "normal" (~5 min): V60, Kalita, Orea, Clever. targetTimeSec 240–300.
 - "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
 
 LAYER 5 — HISTORY & LEARNING
@@ -281,32 +277,15 @@ Portfolio rules (non-negotiable):
 EQUIPMENT RULES — these must be followed exactly
 ═══════════════════════════════════════════════════════════════
 
-DRIP ASSIST — CRITICAL RULES (apply whenever the user is pouring through a Hario Drip Assist
-on ANY pour-over brewer — V60, Orea, Kalita, or Chemex. The Assist is a perforated disc that
-controls flow rate regardless of the brewer beneath it; rules are identical across brewers,
-only the grind reference shifts with the brewer (see NICHE° GRIND REFERENCE)):
-1. Start temp +2–3°C higher than without Assist (heat loss from transfers)
-   Washed: 98–99°C | Natural: 95–96°C | Honey: 97°C
-2. Kettle back on base after EVERY pour (Stagg EKG holds set temperature — stays ready instantly)
-3. Bloom agitation at 0:10: vigorous stir 3–5× for Washed; gentle swirl for Natural/Honey
-4. Niche° with Drip Assist on V60: Washed 403–408° | Honey 405–410° | Natural 406–412°
-   For Orea/Kalita/Chemex + Drip Assist: start from the brewer's own Niche° range and go 1–2° finer
-   (the disc slows flow, so you can afford slightly tighter grind).
-5. Pour sequence outer ring at 3.5–5 g/s = 30–45s per 150g pour
-6. Big (520ml): 34g:520ml (1:15.3) | Bloom 70g → 220g → 370g → 520g | ~4:30 (targetTimeSec: 270)
-7. Small (350ml): 23g:350ml (1:15.2) | Bloom 50g → 150g → 250g → 350g | ~3:30
-
 POUR COUNT ADAPTATION (standard: 4 pours — adapt when justified):
 - Sweet mood + Natural/Honey: use 5 pours
 - Quick time: use 3 pours
 - Very fresh (<8 days): prefer 5 pours (CO₂ management)
 - Older coffee (>22 days): prefer 3 pours (minimal CO₂, avoid over-agitation)
-- Never exceed 5 pours total for Drip Assist
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
-- V60 (no Assist): Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
-- V60 + Drip Assist: same rules as above
+- V60: Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
 - Kalita Wave: SWIRL ONLY — never stir (flat bed channels if disturbed)
 - Orea Classic: gentle swirl at bloom, gentle swirl after final pour. No vigorous stir.
 - Orea Apex: light stir 1–2× at bloom ONLY. No post-bloom agitation (clarity focus).
@@ -345,21 +324,19 @@ ORIGAMI DRIPPER — dedicated rules:
    - Kalita wave filter (sweetness / body): flatter bed, slower drawdown, more even extraction.
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
-2. NOT compatible with Hario Drip Assist — Origami's bed is too wide; the disc does not seat on either filter shape. There is no Origami + Drip Assist configuration; the brewer always pours directly.
-3. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
-4. Niche° — Conical: 398–408° | Wave: 398–406°
-5. Agitation:
+2. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
+3. Niche° — Conical: 398–408° | Wave: 398–406°
+4. Agitation:
    - Conical: same as V60 — Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
    - Wave: SWIRL ONLY at bloom (same as Kalita — ribs + flat bed channel if stirred)
-6. Reference recipes (1:15 ratio, 4 milestones):
+5. Reference recipes (1:15 ratio, 4 milestones):
    - Small (17g:255g): Bloom 35g → 105g → 180g → 255g | ~3:00 (targetTimeSec: 180)
    - Standard (20g:300g): Bloom 40g → 125g → 215g → 300g | ~3:10 (targetTimeSec: 190)
    - Big (22g:330g): Bloom 45g → 135g → 235g → 330g | ~3:20 (targetTimeSec: 200)
-7. Max practical volume: 500 ml. Minimum: 200 ml.
-   NEVER pull targetTimeSec from V60 + Drip Assist Big or Chemex — those rules don't apply here.
+6. Max practical volume: 500 ml. Minimum: 200 ml.
 
 NICHE° GRIND REFERENCE:
-V60 + Drip Assist: 403–412° | V60 without Assist: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
+V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
@@ -525,7 +502,7 @@ export async function generateRecommendation(
 
   const PERCOLATION_METHODS = new Set([
     "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
-    "kalita", "kalita wave", "chemex", "drip assist", "v60 + drip assist",
+    "kalita", "kalita wave", "chemex",
     "turbo v60", "peng", "4:6", "kasuya",
     "origami", "origami air", "origami air m",
   ]);
@@ -556,7 +533,7 @@ export async function generateRecommendation(
     small:
       "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex, Origami Air M (23g < 30g dose limit ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60 (with or without Drip Assist), Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water / 34g dose (1:15.3). Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -601,9 +578,7 @@ export async function generateRecommendation(
       ? "past peak, flavors softening"
       : "likely stale";
 
-  const lockedMethodBase = (context.preferredMethod ?? "")
-    .replace(/\s*\+\s*Drip Assist\s*$/i, "")
-    .trim();
+  const lockedMethodBase = (context.preferredMethod ?? "").trim();
 
   const capacityConstraint = (() => {
     const ml =
@@ -647,25 +622,9 @@ export async function generateRecommendation(
     return block;
   })();
 
-  const DRIP_ASSIST_COMPATIBLE = new Set([
-    "V60", "Orea Fast", "Orea Apex", "Orea Classic", "Orea Open", "Kalita Wave", "Chemex",
-  ]);
   const methodNote = context.preferredMethod
-    ? (() => {
-        const withAssist = context.dripAssist && DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod);
-        const label = withAssist
-          ? `${context.preferredMethod} + Drip Assist`
-          : context.preferredMethod;
-        const assistRule = withAssist
-          ? ` The user is pouring through a Hario Drip Assist — apply the DRIP ASSIST critical rules from the system prompt (temp +2–3°C, outer-ring 3.5–5 g/s, bloom agitation per process, Niche° adjustment). The method name you return MUST include "+ Drip Assist" (e.g. "Orea Classic + Drip Assist").`
-          : DRIP_ASSIST_COMPATIBLE.has(context.preferredMethod)
-            ? ` The user is NOT using the Drip Assist this session — use bare ${context.preferredMethod} only. Do NOT add "+ Drip Assist" to the method name.`
-            : "";
-        return `\nLOCKED METHOD: "${label}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.${assistRule}`;
-      })()
-    : context.dripAssist
-      ? `\nDRIP ASSIST AVAILABLE: the user has a Hario Drip Assist and wants to use it this brew — pick a Drip-Assist-compatible pour-over (V60, Orea, Kalita, or Chemex; Origami is NOT compatible — too wide) for at least one candidate and apply the DRIP ASSIST critical rules. The method name you return MUST include "+ Drip Assist".`
-      : "";
+    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.`
+    : "";
 
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;

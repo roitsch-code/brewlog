@@ -99,7 +99,7 @@ When browsing a roaster's product listing:
 
 ## Filter Brewing Expertise
 
-V60 (Hario, Orea V4), AeroPress, Clever Dripper, Kalita Wave, Chemex, Moccamaster, Drip Assist. Deep understanding of percolation vs. immersion.
+V60 (Hario, Orea V4), AeroPress, Clever Dripper, Kalita Wave, Chemex, Moccamaster. Deep understanding of percolation vs. immersion.
 
 **Orea V4 bottoms (four interchangeable flow plates — slowest → fastest):**
 - **Apex** — 8 inward-pointing triangular teeth. Most restricted flow, slowest drawdown of the four. Use for maximum contact time, body, and sweetness development on light-medium roasts. Light stir at bloom ONLY; no post-bloom agitation (clarity focus).

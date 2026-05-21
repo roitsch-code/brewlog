@@ -108,12 +108,10 @@ export const COFFEE_HINTS: string[] = [
   "Leveling the coffee bed before pouring is crucial for even saturation — tilt, tap, or Weiss Distribution Technique.",
   "WDT (Weiss Distribution Technique) uses a thin needle to break up clumps before tamping or brewing.",
   "Percolation (water flowing through bed) vs. immersion (bed soaking) extract differently — immersion is more forgiving.",
-  "Turbulence from a Drip Assist creates more even extraction than a hand pour for the same recipe.",
   "The 'sweet spot' on the extraction/strength matrix is where your palate finds balance — it varies by coffee.",
 
   // Equipment
   "The V60's large opening and angled ribs encourage fast, even drawdown — it rewards technique.",
-  "Hario's 'Drip Assist' divides the pour into 8 slow streams — it mimics machine consistency.",
   "The Orea V4's modular base system changes flow rate dramatically — Apex bottom is the most restrictive.",
   "AeroPress uses pressure + immersion — it's the most forgiving brewer for imperfect grind or water.",
   "AeroPress inverted method eliminates dripping during steep — same result, more control.",
