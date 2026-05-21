@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#F7C9A0"/>
+      <stop offset="0.45" stop-color="#F0B8C4"/>
+      <stop offset="1"    stop-color="#C8556E"/>
+    </linearGradient>
+    <radialGradient id="cloudApricot" cx="0.22" cy="0.22" r="0.55">
+      <stop offset="0"    stop-color="#F7C9A0" stop-opacity="0.95"/>
+      <stop offset="0.6"  stop-color="#F7C9A0" stop-opacity="0.25"/>
+      <stop offset="1"    stop-color="#F7C9A0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cloudRose" cx="0.78" cy="0.42" r="0.5">
+      <stop offset="0"    stop-color="#F0B8C4" stop-opacity="0.9"/>
+      <stop offset="0.65" stop-color="#F0B8C4" stop-opacity="0.2"/>
+      <stop offset="1"    stop-color="#F0B8C4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cloudBerry" cx="0.5" cy="0.92" r="0.6">
+      <stop offset="0"    stop-color="#C8556E" stop-opacity="0.85"/>
+      <stop offset="0.6"  stop-color="#C8556E" stop-opacity="0.25"/>
+      <stop offset="1"    stop-color="#C8556E" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="cloudApricotDeep" cx="0.12" cy="0.78" r="0.45">
+      <stop offset="0"    stop-color="#E89A6F" stop-opacity="0.7"/>
+      <stop offset="0.65" stop-color="#E89A6F" stop-opacity="0.18"/>
+      <stop offset="1"    stop-color="#E89A6F" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="highlight" cx="0.5" cy="0.42" r="0.7">
+      <stop offset="0"    stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="0.7"  stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#base)"/>
+  <rect width="1024" height="1024" fill="url(#cloudApricot)"/>
+  <rect width="1024" height="1024" fill="url(#cloudApricotDeep)"/>
+  <rect width="1024" height="1024" fill="url(#cloudRose)"/>
+  <rect width="1024" height="1024" fill="url(#cloudBerry)"/>
+  <rect width="1024" height="1024" fill="url(#highlight)"/>
+  <path d="M678.05 631.48Q678.05 678.88 640.04 710.64Q602.02 742.40 528.95 742.40L358.78 742.40Q352.86 742.40 349.40 739.77Q345.95 737.13 345.95 731.54Q345.95 722.65 358.13 719.69L379.19 716.07Q388.41 714.09 393.01 709.16Q397.62 704.22 397.62 695.66L397.62 328.34Q397.62 319.45 393.84 314.51Q390.05 309.58 381.82 307.93L358.13 304.31Q345.95 302.01 345.95 292.46Q345.95 286.54 349.40 284.07Q352.86 281.60 358.78 281.60L490.44 281.60Q543.76 281.60 580.30 298.39Q616.83 315.17 635.76 344.63Q654.68 374.09 654.68 412.93Q654.68 445.84 638.88 471.52Q623.09 497.19 590.34 512.16Q557.59 527.14 505.91 527.14L531.58 517.60Q578.32 517.60 611.07 532.24Q643.82 546.89 660.94 572.56Q678.05 598.24 678.05 631.48M509.20 534.05L421.98 534.05L421.98 511.67L507.56 511.67Q541.79 511.67 566.31 499.99Q590.83 488.30 604 465.92Q617.16 443.54 617.16 413.26Q617.16 381.33 603.01 356.81Q588.85 332.29 560.05 318.13Q531.25 303.98 487.48 303.98L435.47 303.98L435.47 694.35Q435.47 706.52 443.04 712.61Q450.61 718.70 466.41 718.70L522.70 718.70Q562.85 718.70 588.85 707.51Q614.86 696.32 627.69 676.24Q640.53 656.16 640.53 630.16Q640.53 587.70 608.11 560.88Q575.69 534.05 509.20 534.05" fill="#1F1B1A"/>
+</svg>
