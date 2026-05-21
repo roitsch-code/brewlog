@@ -379,7 +379,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                 </div>
               )}
               <div className="flex items-end gap-1">
-                <div className="relative min-h-8 flex-1">
+                <div className="relative min-h-8 min-w-0 flex-1">
                   <div
                     ref={editorRef}
                     contentEditable
@@ -390,6 +390,10 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                     onInput={handleInput}
                     onFocus={handleFocus}
                     onPaste={handlePaste}
+                    // overflow-wrap: anywhere → unbreakable strings (long
+                    // URLs, no-space tokens) wrap inside the pill instead
+                    // of pushing the editor wider than its container.
+                    style={{ overflowWrap: "anywhere" }}
                     className="block min-h-8 w-full whitespace-pre-wrap break-words font-chivo text-[16px] font-normal leading-[2rem] text-light-foreground focus:outline-none"
                   />
                   {!hasText && (
