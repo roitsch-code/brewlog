@@ -26,6 +26,7 @@ export type {
 
 export { CHAMPIONSHIP_RECIPES } from "./championship";
 export { REFERENCE_RECIPES } from "./reference";
+export { EXPANDED_RECIPES } from "./expanded";
 
 export {
   ALL_RECIPES,

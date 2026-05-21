@@ -7,10 +7,12 @@ import type {
 } from "./types";
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
+import { EXPANDED_RECIPES } from "./expanded";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
   ...REFERENCE_RECIPES,
+  ...EXPANDED_RECIPES,
 ];
 
 /**
