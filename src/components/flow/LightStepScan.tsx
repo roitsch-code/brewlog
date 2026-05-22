@@ -1209,6 +1209,21 @@ function GenerateRoasterForm({
             />
           </div>
 
+          {/* Location / region — the AI's web research sometimes pins the
+              wrong city (e.g. Serra Coffee Company → "Gilgit, Pakistan"
+              instead of "Algarve, Portugal"). Always editable so the user
+              can correct it without falling back to the Q&A flow. */}
+          <div className="space-y-1.5">
+            <p className="text-light-muted-foreground text-xs">Location</p>
+            <input
+              type="text"
+              value={draft.region ?? ""}
+              onChange={e => setDraft(d => ({ ...d, region: e.target.value || undefined }))}
+              placeholder="e.g. Algarve, Portugal"
+              className="w-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-3 py-2 text-light-foreground text-sm placeholder:text-light-muted-foreground focus:outline-none focus:border-white/30"
+            />
+          </div>
+
           {/* Roast tendency */}
           <div className="space-y-1.5">
             <p className="text-light-muted-foreground text-xs">Roast tendency</p>
