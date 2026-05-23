@@ -335,6 +335,16 @@ ORIGAMI DRIPPER — dedicated rules:
    - Big (22g:330g): Bloom 45g → 135g → 235g → 330g | ~3:20 (targetTimeSec: 200)
 6. Max practical volume: 500 ml. Minimum: 200 ml.
 
+OREA V4 — dedicated rules:
+1. One brewer body, four interchangeable bottom plates that change flow rate dramatically.
+   Slowest → fastest: Apex → Classic → Fast → Open.
+   - Orea Apex (most restricted, slowest): clarity / maximum contact time. Delicate light-medium lots.
+   - Orea Classic (medium, default): versatile, sweetness-forward. The general-purpose bottom.
+   - Orea Fast (fast, turbulent): the Wölfl 2024 WAC bottom. Clean cup on naturals via short bed-contact + turbulent pours.
+   - Orea Open (fastest, open bed): maximum bypass / lightest body, or a forgiving target for very fine grinds.
+2. The candidate's method field MUST name the specific bottom — use exactly "Orea Fast", "Orea Classic", "Orea Apex", or "Orea Open". NEVER return the generic "Orea V4 Wide" or bare "Orea": the user owns all four bottoms and needs to know which one to fit. A recipe whose name references a bottom (e.g. "Wölfl-adapted Orea Fast") MUST set method to that exact bottom ("Orea Fast").
+3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
+
 NICHE° GRIND REFERENCE:
 V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
