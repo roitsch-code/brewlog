@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
+import { loadUserProfile } from "@/lib/claude/userProfile";
 import { db } from "@/lib/db/client";
 import { sessions } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
@@ -11,53 +12,61 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /**
- * BTTS Conversation Starter (specs/home.md §8) — daily editorial Haiku.
+ * BTTS Conversation Starter (specs/home.md §8) — daily editorial line.
  *
- * Generates a single 8–16 word sentence based on the user's recent
- * brew context: roaster they brewed yesterday, library snapshot, time
- * of day. One call per calendar day; the client caches the result in
- * localStorage keyed by date and only re-fetches at midnight.
+ * Generates a single warm sentence that makes ONE science-grounded
+ * brewing suggestion from the user's active rotation: a specific bag +
+ * a method + a short reason (origin/process fit, time of day, an
+ * expert/championship reference). One call per (date, time-bucket);
+ * cached client-side in localStorage.
  *
  * Returns `{ text }` on success. Errors surface as 500; the client
- * keeps the previous day's cached text rather than rendering nothing.
+ * keeps the previous cached text rather than rendering nothing.
  */
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const SYSTEM_PROMPT = `You are writing the opening line of a personal coffee app each morning. One short editorial sentence — 8 to 16 words. Direct, warm, specific. You speak to the user as a writer would open a letter, not as a chatbot.
+const SYSTEM_PROMPT = `You are writing the opening line of a personal coffee app each morning. ONE short, warm sentence that makes a smart, specific brewing suggestion for today — a real recommendation a knowledgeable barista friend would text you, grounded in coffee science. Not a status report, not a generic greeting.
+
+THE SHAPE (this is the whole point)
+Pair a specific bag from the user's rotation with a brewing method, and give a one-clause reason. Examples of the target voice (style only — never copy):
+- "Burundi in the Clever Dripper — that'd be a smart next move for its body."
+- "Warm afternoon — why not take the La Coipa over ice with a Japanese iced V60?"
+- "Hoffmann swears by the V60 for Ethiopians; worth trying yours that way today."
+- "The washed Kenya is built for clarity — bare V60, gentle pours, let it sing."
 
 RULES
-- Exactly one sentence. A trailing question mark is fine when natural; never an exclamation mark.
-- 8 to 16 words.
-- Reference one concrete signal from the context if it's there — a specific roaster from yesterday's brew, a coffee they haven't touched in a while, the time of day — and turn it into an invitation, not a report.
-- If the user has no recent brews and an empty library, fall back to a quiet welcome.
-- No emojis, no markdown, no second sentence, no preamble like "Here's your greeting:".
+- One sentence, 10 to 22 words. A trailing question mark is fine; never an exclamation mark.
+- Name ONE specific bag from the rotation AND ONE brewing method the user actually owns (see Equipment). The pairing must be defensible by the science below.
+- Give a short reason — origin/process fit, time of day, or an expert/championship reference. Keep it to one clause.
+- No emojis, no markdown, no second sentence, no preamble like "Here's your greeting:". Return the sentence only.
+
+BREWING SCIENCE — pair intelligently (this is what makes it smart, not random):
+- Washed light African (Ethiopia, Kenya, Burundi, Rwanda): clarity-forward. Bare V60, Origami cone, or Chemex. Hoffmann's V60 is the canonical move for Ethiopians. High temp, gentle agitation.
+- Naturals & honeys: sweetness/body-forward. Clever Dripper (immersion sweetness), Origami wave, or Kalita. Lower-ish temp, fewer pours.
+- Dense high-grown or competition lots: Kasuya 4:6 to tune acidity vs sweetness across the pour, or a high-extraction V60.
+- Experimental/anaerobic: short bed-contact + turbulence keeps it clean — Orea Fast (Wölfl 2024 WAC method).
+- Hot weather / warm afternoon or midday: suggest iced — Japanese iced V60/Kalita (brew hot onto ice, keeps aromatics) or an iced AeroPress concentrate. Best on fruit-forward naturals/honeys.
+- Body-forward mood or a chocolatey/nutty bag: immersion (Clever) or Origami wave.
+Only suggest a method the user owns. Only suggest a bag in the rotation. Never invent a brewer or a bean.
 
 TIME-OF-DAY DISCIPLINE
 - The context block tells you the current time of day. Use that label or omit time entirely — never invent a different one.
   • "morning" → "Good morning", "Morning", "Early start"
-  • "midday" / "afternoon" → "Quiet afternoon", "Midday lull"
+  • "midday" / "afternoon" → "Quiet afternoon", "Midday lull", "Warm afternoon"
   • "evening" → "Evening already", "End of the day"
   • "late-night" → "Late night", "Past midnight"
-- NEVER say "late night" when the context says evening. NEVER say "morning" when the context says afternoon. Etc.
+- NEVER say "late night" when the context says evening, etc.
 
 COFFEE-HISTORY DISCIPLINE
-- Each library line shows session count and average rating ("3.8★ over 5") or "unbrewed" when the bag has never been brewed.
-- A coffee with session count > 0 HAS been brewed. Never say "haven't brewed yet" or "untried" for those.
-- "unbrewed" entries are the only ones you may describe as untouched.
-- For a brewed coffee you may invite a return ("worth revisiting", "ready for another round") — not a first try.
+- Each library line shows session count and average rating ("3.8★ over 5") or "unbrewed".
+- A coffee with session count > 0 HAS been brewed — never call it "untried". You may still recommend brewing it a new way.
+- "unbrewed" entries are the only ones you may frame as a first try.
 
 ROTATION DISCIPLINE
-- Library lines prefixed with "★ IN ROTATION" are the user's active rotation — the bags they currently have access to (think: they're traveling and only some bags came along).
-- If the library shows ANY "★ IN ROTATION" entries, the day's invitation MUST name a rotation entry. NEVER reference a non-rotation bag — not as the invitation, not as a recent-brew mention, not in passing. Non-rotation bags are out of reach right now; naming them is useless.
-- This holds even when a recent brew was a non-rotation bag (café visit, end-of-bag, etc.). Drop the recent-brew angle entirely and reach into the rotation for an invitation.
-- Only when the library shows ZERO rotation entries may you reference a non-rotation bag.
-- "★ IN ROTATION" is a prefix marker, not part of the coffee name — never echo it back in the sentence.
-
-EXAMPLES (style only — do not copy)
-- Good morning. DAK Coffee Roasters yesterday — try Process or anything new today?
-- Quiet afternoon. The Friedhats Wush Wush hasn't moved in a week.
-- Evening already — the Pacas you brewed at lunch is calling for a second round.
+- Library lines prefixed with "★ IN ROTATION" are the bags the user currently has access to. The suggestion MUST name a rotation bag. NEVER reference a non-rotation bag — it's out of reach.
+- Only when the library shows ZERO rotation entries may you reference a non-rotation bag, or fall back to a quiet welcome if the library is empty.
+- "★ IN ROTATION" is a prefix marker, not part of the name — never echo it back.
 
 Return the sentence only.`;
 
@@ -76,8 +85,8 @@ export async function POST(req: NextRequest) {
     // payloads, so a malformed body doesn't 400 here.
     await req.json().catch(() => ({} as RequestBody));
 
-    const [library, recentRows] = await Promise.all([
-      // Only the last few bags in active rotation — the Haiku biases
+    const [library, recentRows, profile] = await Promise.all([
+      // Only the last few bags in active rotation — the line biases
       // toward what the user is brewing right now, not their full
       // historical library.
       loadCoffeeLibraryCompact(4).catch(() => []),
@@ -87,6 +96,7 @@ export async function POST(req: NextRequest) {
         .orderBy(desc(sessions.createdAtMs))
         .limit(5)
         .catch(() => []),
+      loadUserProfile().catch(() => null),
     ]);
     const recentSessions = (recentRows as unknown[]).map((row) =>
       rowToSession(row as Parameters<typeof rowToSession>[0])
@@ -122,19 +132,24 @@ export async function POST(req: NextRequest) {
     // bag that had 1+ saved sessions.
     const libraryBlock = formatLibraryForPrompt(library);
 
+    const equipment = profile?.equipment?.length
+      ? profile.equipment.join(", ")
+      : "V60, Orea V4, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex";
+
     const userBlock = [
       `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
+      `Brewers the user owns (only suggest from these): ${equipment}.`,
       recentLines.length > 0
         ? `Recent brews:\n${recentLines.join("\n")}`
         : "Recent brews: none in the last few days.",
       libraryBlock.length > 0
-        ? `Library snapshot (with usage):\n${libraryBlock}`
+        ? `Library snapshot (★ IN ROTATION = available now; lines show ORIGIN PROCESS so you can pair a method):\n${libraryBlock}`
         : "Library snapshot: empty.",
     ].join("\n\n");
 
     const completion = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 80,
+      max_tokens: 120,
       temperature: 0.7,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userBlock }],
