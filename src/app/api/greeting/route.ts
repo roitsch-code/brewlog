@@ -34,8 +34,8 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
  * is strictly optional context and must never block the greeting.
  */
 async function fetchWeather(): Promise<string | null> {
-  const lat = process.env.WEATHER_LATITUDE ?? "50.9375";
-  const lon = process.env.WEATHER_LONGITUDE ?? "6.9603";
+  const lat = process.env.WEATHER_LATITUDE ?? "51.2277";
+  const lon = process.env.WEATHER_LONGITUDE ?? "6.7735";
   try {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
