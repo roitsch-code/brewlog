@@ -90,10 +90,16 @@ export default function LightStepBrew() {
             <p className="label-eyebrow mb-3">{methodLabel}</p>
             <div className="grid grid-cols-4 gap-2 text-center">
               <MiniStat label="Dose" value={`${recipe.doseGrams}g`} />
-              <MiniStat label="Water" value={`${recipe.waterGrams}g`} />
+              <MiniStat label={recipe.iceGrams ? "Hot" : "Water"} value={`${recipe.waterGrams}g`} />
               <MiniStat label="Temp" value={`${recipe.waterTempC}°`} />
               <MiniStat label="Grind" value={stripGrindPrefix(recipe.grindSize)} />
             </div>
+            {recipe.iceGrams != null && recipe.iceGrams > 0 && (
+              <div className="mt-2 grid grid-cols-2 gap-2 text-center border-t border-light-foreground/10 pt-2">
+                <MiniStat label="Ice" value={`${recipe.iceGrams}g`} />
+                <MiniStat label="Final cup" value={`${recipe.waterGrams + recipe.iceGrams}g`} />
+              </div>
+            )}
           </div>
         )}
 

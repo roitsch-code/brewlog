@@ -40,6 +40,9 @@ export interface SessionContext {
 export interface BrewRecipe {
   doseGrams: number;
   waterGrams: number;
+  /** Iced brews only — grams of ice the hot brew drains onto. The final
+   * drink volume ≈ waterGrams + iceGrams. Undefined for hot brews. */
+  iceGrams?: number;
   waterTempC: number;
   grindSize: string;
   targetTimeSec: number;

@@ -208,9 +208,15 @@ export default function LightStepRecommend() {
         <div className="mt-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5 space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center">
             <RecipeStat label="Dose" value={`${activeRecipe.doseGrams}g`} />
-            <RecipeStat label="Water" value={`${activeRecipe.waterGrams}g`} />
+            <RecipeStat label={activeRecipe.iceGrams ? "Hot Water" : "Water"} value={`${activeRecipe.waterGrams}g`} />
             <RecipeStat label="Temp" value={`${activeRecipe.waterTempC}°C`} />
           </div>
+          {activeRecipe.iceGrams != null && activeRecipe.iceGrams > 0 && (
+            <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
+              <RecipeStat label="Ice" value={`${activeRecipe.iceGrams}g`} />
+              <RecipeStat label="Final cup" value={`${activeRecipe.waterGrams + activeRecipe.iceGrams}g`} />
+            </div>
+          )}
           <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
             <RecipeStat label="Grind" value={activeRecipe.grindSize} />
             <RecipeStat label="Time" value={formatSeconds(activeRecipe.targetTimeSec)} />
