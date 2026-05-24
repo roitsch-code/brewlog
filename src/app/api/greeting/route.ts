@@ -26,6 +26,50 @@ export const maxDuration = 30;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+/**
+ * Fetch today's weather for the user's location via Open-Meteo (free,
+ * keyless). Coordinates come from WEATHER_LATITUDE / WEATHER_LONGITUDE
+ * env vars, defaulting to Cologne (the app's home region). Returns a
+ * short prompt-ready line, or null on any failure / timeout — weather
+ * is strictly optional context and must never block the greeting.
+ */
+async function fetchWeather(): Promise<string | null> {
+  const lat = process.env.WEATHER_LATITUDE ?? "50.9375";
+  const lon = process.env.WEATHER_LONGITUDE ?? "6.9603";
+  try {
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min` +
+      `&timezone=auto&forecast_days=1`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const nowC = data?.current?.temperature_2m;
+    const maxC = data?.daily?.temperature_2m_max?.[0];
+    const code = data?.current?.weather_code;
+    if (nowC == null) return null;
+    const cond = describeWeatherCode(code);
+    const parts = [`currently ${Math.round(nowC)}°C${cond ? `, ${cond}` : ""}`];
+    if (maxC != null) parts.push(`today's high ${Math.round(maxC)}°C`);
+    return parts.join(", ");
+  } catch {
+    return null;
+  }
+}
+
+/** Coarse WMO weather-code → label. Only what's useful for a coffee line. */
+function describeWeatherCode(code: unknown): string {
+  const c = typeof code === "number" ? code : -1;
+  if (c === 0) return "clear";
+  if (c <= 3) return "partly cloudy";
+  if (c <= 48) return "foggy";
+  if (c <= 67) return "rainy";
+  if (c <= 77) return "snowy";
+  if (c <= 82) return "showers";
+  if (c <= 99) return "stormy";
+  return "";
+}
+
 const SYSTEM_PROMPT = `You are writing the opening line of a personal coffee app each morning. ONE short, warm sentence that makes a smart, specific brewing suggestion for today — a real recommendation a knowledgeable barista friend would text you, grounded in coffee science. Not a status report, not a generic greeting.
 
 THE SHAPE (this is the whole point)
@@ -85,7 +129,7 @@ export async function POST(req: NextRequest) {
     // payloads, so a malformed body doesn't 400 here.
     await req.json().catch(() => ({} as RequestBody));
 
-    const [library, recentRows, profile] = await Promise.all([
+    const [library, recentRows, profile, weather] = await Promise.all([
       // Only the last few bags in active rotation — the line biases
       // toward what the user is brewing right now, not their full
       // historical library.
@@ -97,6 +141,7 @@ export async function POST(req: NextRequest) {
         .limit(5)
         .catch(() => []),
       loadUserProfile().catch(() => null),
+      fetchWeather(),
     ]);
     const recentSessions = (recentRows as unknown[]).map((row) =>
       rowToSession(row as Parameters<typeof rowToSession>[0])
@@ -138,6 +183,9 @@ export async function POST(req: NextRequest) {
 
     const userBlock = [
       `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
+      weather
+        ? `Weather (${weather}). OPTIONAL — use only if it genuinely changes the smart call (notably warm ≥26°C → iced is the move; otherwise ignore weather entirely and don't mention it).`
+        : "Weather: unavailable — recommend on bean/method/science alone.",
       `Brewers the user owns (only suggest from these): ${equipment}.`,
       recentLines.length > 0
         ? `Recent brews:\n${recentLines.join("\n")}`
