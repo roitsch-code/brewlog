@@ -42,16 +42,23 @@ export async function pendingCount(): Promise<number> {
 
 let flushing = false;
 
-/** POST every queued session. Returns how many were successfully flushed.
- * Leaves entries in the queue on network/5xx errors for a later retry;
- * drops entries the server rejects as invalid (4xx) so they can't wedge
- * the queue forever. */
-export async function flushQueue(): Promise<number> {
-  if (flushing) return 0;
+export interface FlushResult {
+  flushed: number;
+  remaining: number;
+  /** Reason the queue still has entries, for surfacing in the UI. */
+  lastError?: string;
+}
+
+/** POST every queued session. Stops at the first failure (network or
+ * non-2xx) and leaves the rest queued — a brew is never silently dropped,
+ * so a stuck item stays visible and retryable rather than vanishing. */
+export async function flushQueue(): Promise<FlushResult> {
+  if (flushing) return { flushed: 0, remaining: await pendingCount() };
   flushing = true;
+  let flushed = 0;
+  let lastError: string | undefined;
   try {
     const pending = await getPendingSessions();
-    let flushed = 0;
     for (const item of pending) {
       try {
         const res = await fetch("/api/sessions", {
@@ -62,18 +69,18 @@ export async function flushQueue(): Promise<number> {
         if (res.ok) {
           await idbDelete(STORE_QUEUE, item.clientId);
           flushed++;
-        } else if (res.status >= 400 && res.status < 500) {
-          // Permanently rejected — drop it so the queue can drain.
-          await idbDelete(STORE_QUEUE, item.clientId);
+        } else {
+          const text = await res.text().catch(() => "");
+          lastError = `HTTP ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`;
+          break;
         }
-        // 5xx: leave queued, try again next flush.
-      } catch {
-        // Network error — stop; we're likely offline again.
+      } catch (e) {
+        lastError = e instanceof Error ? e.message : "network error";
         break;
       }
     }
-    return flushed;
   } finally {
     flushing = false;
   }
+  return { flushed, remaining: await pendingCount(), lastError };
 }
