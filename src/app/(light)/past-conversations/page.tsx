@@ -72,7 +72,7 @@ export default function PastConversationsPage() {
           style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}
         >
           <h1 className="font-fraunces text-3xl leading-none text-light-foreground">
-            Past conversations
+            Past Conversations
           </h1>
           <button
             type="button"
