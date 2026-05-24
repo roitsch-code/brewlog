@@ -4,6 +4,26 @@
 
 ---
 
+## Latest — Offline Brew Mode (PR #184 → #185, 2026-05-24) ✅ shipped + verified on device
+
+Re-brew a **known** coffee with no network. The brew process was already client-only (timer, pour guide, tasting log; pour math is local); the only offline-breaking pieces were fetching a recipe (`/api/recommend`) and saving (`/api/sessions`). Both closed by reusing a past recipe + queuing the save.
+
+- **#184** — the feature:
+  - `src/lib/storage/idb.ts` — tiny IndexedDB wrapper, DB `brewlog-offline`, stores `brewable` + `pendingSessions`.
+  - `src/lib/storage/offlineLibrary.ts` — caches each coffee's identity + Field zones + **top-2 best-rated** deduped recipes. Warmed in the background on online `/coffees` loads (full-feed fetch) and per-coffee on `/coffees/[id]`.
+  - `src/lib/storage/saveQueue.ts` — parks the POST body when offline; flush drains it and **never drops a brew** on a failed POST.
+  - `src/lib/flow/brewAgain.ts` — shared entry: `startBrewAgain()` (online → Step "context") / `startBrewAgainOffline()` (seed cached recipe → Step "brew"). Now used by `/coffees`, `/coffees/[id]`, `ActionPill`.
+  - `src/hooks/useOnline.ts`, `src/app/(light)/offline/page.tsx` (SW document fallback), `next.config.mjs` `fallbacks.document`.
+  - `flowStore` → **localStorage** (was sessionStorage) so a mid-brew reload survives. `NavigationOverlay` "New Session" now calls `reset()`.
+  - Offline recipe picker opens **inline on the `/coffees` list** (a sheet), NOT via `/coffees/[id]` — that route is server-rendered (ƒ in the build), so its RSC isn't reliably cached offline; `/coffees` + `/brew/new` are precached.
+- **#185** — the sync fix (first cut didn't sync): iOS PWAs fire the `online` event unreliably (so does next-pwa `reloadOnOnline`). New `ConnectionStatus` component (rendered by `LightShell`) drives the flush off `navigator.onLine` re-checked on **mount + `visibilitychange`**, and surfaces Offline / Syncing / "didn't sync — tap to retry".
+
+**Markus verified on the deployed PWA:** offline brew works, and after #185 the save syncs on reconnect. ("Funktioniert.")
+
+**Caveat:** the cache only holds coffees opened online at least once. Open the Coffee Library online once after any fresh install to populate it.
+
+---
+
 ## Top priority for next session
 
 **`/cafes/map` polish + integration with "I've been here".** The map page is the single sore thumb left: it still renders dark CartoCDN tiles with default Leaflet blue markers while everything around it is Light cream + anthracite. Two coupled jobs:
@@ -107,6 +127,8 @@ conversations + conversation_messages → BTTS chat history
 
 - **Docker name conflict on parallel `up -d`.** Manual `docker compose up -d app` while a GitHub Action is running the same command races. Resolution: `docker rm -f brewlog-app-1 && docker compose up -d app`. Future deploys should harden the workflow (open item #6).
 - **iOS PWA caches `apple-mobile-web-app-status-bar-style` at install time.** Changing the meta tag does not update an already-installed PWA on iPhone. User has to delete the PWA from the home screen AND clear Safari → Advanced → Website Data for the domain, then re-install.
+- **iOS PWA `online`/`offline` events are unreliable.** A reconnect frequently never fires `online`, so anything waiting on that event (a React `online` state, next-pwa `reloadOnOnline`) silently doesn't run. This cost a round-trip on the offline-sync feature (#184's flush didn't fire → #185). Fix pattern: re-check `navigator.onLine` (accurate when READ) on `visibilitychange` / app foreground and on mount — don't rely on the event alone. See `ConnectionStatus.tsx`.
+- **App Router dynamic routes aren't reliably available offline.** A `[id]` route is server-rendered (ƒ in the build output), so its RSC payload is only SW-cached for ids visited online — navigating to an unvisited id offline falls to the `/offline` fallback. Keep offline entry points on precached static routes (`/coffees`, `/brew/new`); that's why the offline recipe picker is an inline sheet on the list, not a detail-page navigation.
 - **Tailwind only scans `src/{app,components,pages}`.** `src/lib/**` is NOT in `tailwind.config.ts` `content`. Utility classes that live only in lib are silently never generated. If you need a shared visual constant in lib, export it as a raw CSS value and apply via inline `style={{ background: ... }}` at the call site.
 - **html canvas default.** `html { background-color: #F3E5DC }` (cream). `body { background-color: #0E0B0A }` by default, dropped to `transparent` only when `body:has([data-light-scope="true"])` matches. Light routes therefore show the cream canvas behind the Field; the legacy Dark `cafes/map` keeps its dark body. `loading.tsx` explicitly sets `background: #F3E5DC` inline because it renders BEFORE LightShell mounts.
 - **Next.js standalone Docker image** does NOT expose `@anthropic-ai/sdk` as `node_modules/@anthropic-ai`. Backfill script started failing with `ERR_MODULE_NOT_FOUND` until rewritten to call the Messages API over plain `fetch`. `pg` IS in standalone deps (traced via Drizzle).
@@ -142,6 +164,7 @@ src/
 │   │   ├── taste/page.tsx
 │   │   ├── login/page.tsx      ← Fraunces 3xl wordmark + pill CTAs
 │   │   ├── onboarding/page.tsx
+│   │   ├── offline/page.tsx     ← NEW — SW document fallback (#184)
 │   │   └── past-conversations/
 │   ├── cafes/map/page.tsx      ← Only Dark route left (next session's target)
 │   ├── api/
@@ -154,7 +177,7 @@ src/
 ├── components/
 │   ├── flow/                   ← LightStep*.tsx (seven brew steps)
 │   ├── ui/
-│   │   ├── light/              ← Light primitives
+│   │   ├── light/              ← Light primitives (+ ConnectionStatus.tsx, NEW #185 — offline/sync pill)
 │   │   ├── FlavorWheel.tsx     ← Light palette in place
 │   │   ├── BrewMethodIcon.tsx  ← Routes Orea variants to specific SVGs
 │   │   ├── PhotoUpload.tsx     ← Uses Dark CoffeeBeanGlow + CSS-shim invert
@@ -168,13 +191,17 @@ src/
 ├── lib/
 │   ├── field/                  ← v1.1 zones + cache.ts (coffee↔brew Field carry)
 │   ├── claude/                 ← recommend.ts, analyzeBag.ts, …
+│   ├── storage/                ← s3.ts + idb.ts / offlineLibrary.ts / saveQueue.ts (NEW — offline brew, #184)
+│   ├── flow/brewAgain.ts       ← NEW — shared Brew-Again entry (online + offline)
 │   ├── db/
 │   │   ├── schema.ts           ← + cafeVisits table
 │   │   ├── helpers.ts
 │   │   └── migrations/         ← 0000..0011 (0010 + 0011 applied 2026-05)
 │   └── types/                  ← + CafeVisit, CafeVisitRating in cafes.ts
+├── hooks/
+│   └── useOnline.ts            ← NEW — connectivity boolean
 └── store/
-    └── flowStore.ts
+    └── flowStore.ts            ← localStorage-persisted (was sessionStorage, #184)
 public/brew-icons/
 ├── orea-classic.svg            ← NEW (#144)
 ├── orea-open.svg                ← NEW
