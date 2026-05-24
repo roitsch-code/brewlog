@@ -150,13 +150,13 @@ export default function HomePage() {
   useEffect(() => {
     // Cache version bumped on every greeting-prompt change so stale
     // cached lines from the previous rule don't show up next morning.
-    // v5 = science-grounded brewing recommendation (bag + method +
-    // reason) instead of a plain time/rotation greeting. Time-of-day
+    // v6 = science-grounded recommendation + optional live weather
+    // (Open-Meteo) so a hot day can steer toward iced. Time-of-day
     // bucket appended so the starter regenerates when the user crosses
     // a tod boundary (morning → midday → afternoon → evening →
-    // late-night). Old `brewlog.starter.v{2,3,4}.<date>` entries are
+    // late-night). Old `brewlog.starter.v{2..5}.<date>` entries are
     // orphaned in localStorage — harmless.
-    const key = `brewlog.starter.v5.${todayKey()}.${timeBucket()}`;
+    const key = `brewlog.starter.v6.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {
