@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
-import { useFlowStore } from "@/store/flowStore";
+import { startBrewAgain } from "@/lib/flow/brewAgain";
 import type { CoffeeIdentity } from "@/lib/types/session";
 
 /**
@@ -91,7 +91,6 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
 
 export default function ActionPill({ action }: { action: NavAction }) {
   const router = useRouter();
-  const { reset, setCoffee, setMode, setSkipScan, setStep, setFieldZones } = useFlowStore();
 
   const handleClick = async () => {
     if (action.destination === "brew_again" && action.id) {
@@ -113,15 +112,10 @@ export default function ActionPill({ action }: { action: NavAction }) {
               aiExtracted: false,
               coffeeId: row.id,
             };
-            reset();
-            setCoffee(identity);
             // Generative Field v1.1 — Brew Again from Home: lift the
             // persisted Field composition. The /api/coffees/[id]
             // response now carries fieldZones via rowToCoffee.
-            setFieldZones(row.fieldZones ?? null);
-            setMode("home");
-            setSkipScan(true);
-            setStep("context");
+            startBrewAgain(identity, row.fieldZones ?? null);
           }
         }
       } catch {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import { useRouter } from "next/navigation";
+import { enqueueSession } from "@/lib/storage/saveQueue";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
@@ -37,6 +38,7 @@ export default function LightStepSummary() {
   const { draft, reset } = useFlowStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedOffline, setSavedOffline] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [terrain, setTerrain] = useState<string | null>(null);
   const [adjustment, setAdjustment] = useState<string | null>(null);
@@ -61,41 +63,72 @@ export default function LightStepSummary() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const finishSaved = (offline: boolean) => {
+    setSavedOffline(offline);
+    setSaved(true);
+    setTimeout(() => {
+      reset();
+      router.push("/");
+    }, 1500);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setSaveError(null);
+    const body = {
+      ...draft,
+      fieldZones: useFlowStore.getState().fieldZones,
+      type: "coffee" as const,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Offline → queue immediately and sync on reconnect (LightShell flushes).
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      try {
+        await enqueueSession(body);
+        finishSaved(true);
+      } catch (err) {
+        console.error("Offline queue error:", err);
+        setSaveError("Couldn't save offline — please try again");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...draft,
-          fieldZones: useFlowStore.getState().fieldZones,
-          type: "coffee",
-          createdAt: new Date().toISOString(),
-        }),
+        body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as {
+      if (res.ok) {
+        finishSaved(false);
+      } else {
+        // Server rejected the save while online — surface it, allow retry.
+        const errBody = (await res.json().catch(() => ({}))) as {
           error?: string;
           details?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
         };
-        const fieldErrors = body.details?.fieldErrors ?? {};
+        const fieldErrors = errBody.details?.fieldErrors ?? {};
         const firstField = Object.entries(fieldErrors).find(([, msgs]) => msgs && msgs.length > 0);
         const detailMsg = firstField
           ? `${firstField[0]}: ${firstField[1][0]}`
-          : body.details?.formErrors?.[0];
-        const baseMsg = body.error || `Save failed (${res.status})`;
-        throw new Error(detailMsg ? `${baseMsg} — ${detailMsg}` : baseMsg);
+          : errBody.details?.formErrors?.[0];
+        const baseMsg = errBody.error || `Save failed (${res.status})`;
+        setSaveError(detailMsg ? `${baseMsg} — ${detailMsg}` : baseMsg);
       }
-      setSaved(true);
-      setTimeout(() => {
-        reset();
-        router.push("/");
-      }, 1500);
     } catch (err) {
-      console.error("Session save error:", err);
-      setSaveError(err instanceof Error ? err.message : "Failed to save — please try again");
+      // Network failure (dropped connection mid-save) → queue rather than
+      // lose the brew.
+      console.error("Session save network error:", err);
+      try {
+        await enqueueSession(body);
+        finishSaved(true);
+      } catch (queueErr) {
+        console.error("Offline queue error:", queueErr);
+        setSaveError("Failed to save — please try again");
+      }
     } finally {
       setSaving(false);
     }
@@ -134,7 +167,9 @@ export default function LightStepSummary() {
         </div>
         <div className="text-center">
           <p className="font-fraunces text-[32px] leading-tight text-light-foreground">Logged</p>
-          <p className="text-[13px] text-light-muted-foreground mt-1">Session saved to your diary</p>
+          <p className="text-[13px] text-light-muted-foreground mt-1">
+            {savedOffline ? "Saved offline — will sync when you're back online" : "Session saved to your diary"}
+          </p>
         </div>
       </div>
     );
