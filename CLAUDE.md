@@ -50,6 +50,7 @@ The single remaining Dark route is `cafes/map/page.tsx` and that's intentional (
 | `(light)/taste/page.tsx` | Light | Taste profile — Avg rating + rated count + AI summary + FlavorWheel (profile mode) + top flavors / rating trend / body / acidity / origins / processes / methods |
 | `(light)/login/page.tsx` | Light | Passkey (WebAuthn) login UI + PIN fallback + reset path |
 | `(light)/onboarding/page.tsx` | Light | First-run equipment + grinder wizard (uses the Chip primitive) |
+| `(light)/offline/page.tsx` | Light | Service-worker document fallback (`next.config.mjs` `fallbacks.document`). Shown when an uncached route is opened offline; links to `/coffees`. Safety net — the real offline path lives in the precached `/coffees` + `/brew/new` shell. |
 | `layout.tsx` | — | Root layout: PWA meta tags, font preloads, `<ScrollContainer>` wrapper |
 | `loading.tsx` | Light | Global loading state — Light CoffeeBeanGlow on inline cream bg (renders before LightShell mounts) |
 | `cafes/map/page.tsx` | Dark *(intentional)* | Nearby — full-screen Leaflet map (CartoCDN dark tiles); needs `h-dvh flex flex-col` + `flex-1 min-h-0` so Leaflet gets a non-zero container |
@@ -121,7 +122,7 @@ All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `Ste
 | `LightStepSummary.tsx` | Review + save session |
 
 **Light UI primitives (`src/components/ui/light/`):**
-`LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders `composeFieldGradient(zones, rotation)` fixed -z-10), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork).
+`LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders `composeFieldGradient(zones, rotation)` fixed -z-10), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork), `ConnectionStatus` (top-center pill rendered by `LightShell` — shows Offline / Syncing / "didn't sync — tap to retry"; owns the offline-save flush, re-checking `navigator.onLine` on mount + `visibilitychange` rather than the unreliable iOS online event).
 
 **Shared / Dark-era UI primitives (`src/components/ui/`):**
 `Button`, `CoffeeBeanGlow` (kept for `PhotoUpload`; CSS shim `[data-light-scope] { filter: brightness(0) }` inverts it to anthracite at the consumer), `FlavorWheel` (now Light palette in place — canvas transparent, cream-glass panels, anthracite text/icons), `BrewMethodIcon` (inverted via the same shim), `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `StarRating` (still consumed by `CafeMap` only), `ThinkingDots`, `WaveformBars`.
@@ -204,7 +205,13 @@ lib/
 │   └── grindSettings.ts    # ★ Single source of Niche Zero degrees — replaces hardcoded copies in CLAUDE.md / docs / prompts
 ├── theme/
 │   └── gradients.ts        # Shared gradient tokens (CSS strings) used across pages
-├── storage/s3.ts           # Hetzner Object Storage (S3-compatible)
+├── storage/
+│   ├── s3.ts               # Hetzner Object Storage (S3-compatible)
+│   ├── idb.ts              # ★ Tiny promise-based IndexedDB wrapper — DB `brewlog-offline`, two stores (brewable, pendingSessions). Backs the offline brew feature.
+│   ├── offlineLibrary.ts   # ★ Caches coffees + their TOP-2 best-rated recipes (deduped) for offline re-brew. Warmed in background on online /coffees loads.
+│   └── saveQueue.ts        # ★ Offline save queue — parks the /api/sessions POST body in IDB; flushQueue() drains it (never drops a brew on failure).
+├── flow/
+│   └── brewAgain.ts        # ★ Shared "Brew Again" entry — startBrewAgain() (online → Step "context") + startBrewAgainOffline() (seed cached recipe → Step "brew"). Used by /coffees list, /coffees/[id], ActionPill.
 └── utils/
     ├── cn.ts / safeFetch.ts / formatTime.ts / pourSequence.ts
     └── pourSequence.test.mjs  # node --test suite for pour math
@@ -214,7 +221,8 @@ lib/
 
 | File | Purpose |
 |------|---------|
-| `src/store/flowStore.ts` | ★ Zustand brew flow state (sessionStorage-persisted) |
+| `src/store/flowStore.ts` | ★ Zustand brew flow state (**localStorage**-persisted since the offline work — survives a mid-brew reload; "New Session" in `NavigationOverlay` calls `reset()` so it never resumes a stale draft) |
+| `src/hooks/useOnline.ts` | Connectivity boolean (seeds `true` for SSR, then `navigator.onLine` + online/offline events). Used by the `/coffees` pages for the offline read path. |
 | `src/hooks/useWakeLock.ts` | Keep screen on during active brew |
 | `src/hooks/useVoiceCapture.ts` | Mic recording + level metering for inline-chat voice input (BTTS Home) |
 | `src/hooks/useVoicePlayback.ts` | Streaming TTS playback for inline-chat voice output (BTTS Home) |
@@ -264,6 +272,17 @@ All migrations applied manually on the VPS — see migration NOTE above.
 ## Current Status — Snapshot May 2026
 
 ### ✅ Done
+**Offline Brew Mode — re-brew a known coffee without a network (PR #184 + #185)**
+- The brew process itself was already client-only (timer, pour guide, tasting log — no network; pour math is local). The two gaps were getting a recipe (the `/api/recommend` Opus gate) and saving (`/api/sessions` POST). Offline mode closes both by **reusing a previously-brewed recipe** and **queuing the save**.
+- **Scope:** offline you open a coffee from the locally-cached library, pick one of its **two best-rated** past recipes (auto-used if there's only one), brew with the full timer + pour guide, log, and the save is buffered + auto-synced on reconnect. NO offline AI, NO offline bag scan, NO brand-new coffees offline. Online flow is **unchanged** (KI still generates fresh recipes) — the recipe picker is offline-only, so the validated Opus path is untouched.
+- **Cache (`src/lib/storage/offlineLibrary.ts`, IndexedDB):** per coffee, its richest identity + Field zones + up to 2 deduped best-rated recipes, derived from the session feed. Warmed in the background on every online `/coffees` load (full-feed fetch → top-2 per coffee) and refreshed per-coffee on `/coffees/[id]`. Never blocks the visible list.
+- **Offline entry:** `/coffees` reads from cache when offline; tapping a coffee opens an **inline recipe-picker sheet on the list** (NOT the detail route — `/coffees/[id]` is server-rendered, so its RSC isn't reliably cached offline, whereas `/coffees` + `/brew/new` are precached). Picking seeds the flow via `startBrewAgainOffline()` and jumps straight to Step "brew", skipping context + recommend. `/coffees/[id]` also has an offline slim view (picker) for the case it IS cached.
+- **Save queue (`src/lib/storage/saveQueue.ts`):** `LightStepSummary` enqueues the exact POST body when offline (or on a network throw); success screen says "saved offline — will sync". `flushQueue()` drains it and **never drops a brew** on failure (a stuck save stays visible + retryable).
+- **Sync trigger (`ConnectionStatus`, the fix in #185):** iOS Safari PWAs fire the `online`/`offline` events unreliably (so does next-pwa's `reloadOnOnline`), so flushing is driven off `navigator.onLine` re-checked on **mount + `visibilitychange`** (reopening / foregrounding the app reliably fires) — the `online` event is a bonus trigger only. The pill surfaces Offline / Syncing / "didn't sync — tap to retry".
+- **Durability:** `flowStore` persists to `localStorage` (was `sessionStorage`) so a mid-brew reload doesn't lose the draft. `NavigationOverlay`'s "New Session" calls `reset()` so a fresh session never resumes a stale draft.
+- **PWA:** `next.config.mjs` `fallbacks.document: "/offline"` catches uncached offline navigations. App shell (`/`, `/coffees`, `/brew/new`) precached via the existing `cacheOnFrontEndNav`.
+- **Cache caveat:** the offline cache only contains coffees whose library/detail you opened online at least once. A coffee never seen online won't be brewable offline (list empty-state / `/offline` handle it gracefully).
+
 **BTTS Light migration — complete (PR #65 → #137)**
 - Every visited surface lives in the `(light)` route group with the BTTS Light theme — Cream background, Fraunces 40 px hero, Chivo body, anthracite foreground, generative Field background.
 - Light primitives stack: `LightShell`, `LightFlowShell`, `Field`, `Card`, `Section`, `Footnote`, `Chip`, `Hero`, `CTA`, `CTAWarmth`, `ActionPill`, `ChatInput`, `ChatThread`, `NavigationOverlay`, `StarRating`, `CircularTimer` (fork), `CoffeeBeanGlow` (fork).
@@ -347,7 +366,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 - Session GET: single indexed query on `createdAtMs DESC`
 - Coffee library with detail pages (rating history, brew signatures, notes)
 - Roaster profiles with AI-generated style summaries
-- Zustand flow store with sessionStorage persistence
+- Zustand flow store with localStorage persistence (survives a mid-brew reload — see Offline Brew Mode)
 
 **AI features**
 - Brew recipe generation: 2–4 candidates with reasoning (`recommend.ts`)
