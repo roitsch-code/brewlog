@@ -66,7 +66,7 @@ async function getRecentSessions(limit: number): Promise<Session[]> {
 function SunriseNoArrow({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="2 6 20 20"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
@@ -75,7 +75,7 @@ function SunriseNoArrow({ className }: { className?: string }) {
       aria-hidden
       className={className}
     >
-      <path d="M12 2v8" />
+      <path d="M12 8v2" />
       <path d="m4.93 10.93 1.41 1.41" />
       <path d="M2 18h2" />
       <path d="M20 18h2" />
