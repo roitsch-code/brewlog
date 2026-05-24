@@ -90,8 +90,12 @@ export const useFlowStore = create<FlowState>()(
         set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
+      // localStorage (not sessionStorage) so an in-flight brew survives a
+      // reload — critical offline, where an interrupted brew would
+      // otherwise be lost. "New Session" calls reset() so it never resumes
+      // a stale draft.
       name: "brew-flow",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import Link from "next/link";
+import { useFlowStore } from "@/store/flowStore";
 
 /**
  * BTTS Navigation Overlay (specs/home.md §7).
@@ -86,7 +87,13 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
             <Link
               key={item.label}
               href={item.href}
-              onClick={onClose}
+              onClick={() => {
+                // "New Session" must always start fresh — the flow store
+                // is persisted (localStorage), so without a reset this
+                // would resume a stale interrupted draft.
+                if (item.href === "/brew/new") useFlowStore.getState().reset();
+                onClose();
+              }}
               className="font-chivo text-[24px] font-medium text-light-foreground"
             >
               {item.label}

@@ -9,9 +9,16 @@ import StarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
-import { useFlowStore } from "@/store/flowStore";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { rememberSessionField } from "@/lib/field/cache";
+import { useOnline } from "@/hooks/useOnline";
+import { startBrewAgain, startBrewAgainOffline } from "@/lib/flow/brewAgain";
+import {
+  cacheBrewableCoffee,
+  getBrewableCoffee,
+  type BrewableCoffee,
+  type BrewableRecipe,
+} from "@/lib/storage/offlineLibrary";
 
 interface RoasterInfo {
   region?: string;
@@ -27,8 +34,9 @@ export default function CoffeeDetailPage() {
   const [roasterInfo, setRoasterInfo] = useState<RoasterInfo | null>(null);
   const [roasterGenerating, setRoasterGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [offlineCoffee, setOfflineCoffee] = useState<BrewableCoffee | null>(null);
   const router = useRouter();
-  const { reset, setCoffee: setFlowCoffee, setStep, setMode, setSkipScan, setFieldZones } = useFlowStore();
+  const online = useOnline();
 
   // Personal notes state
   const [editingNotes, setEditingNotes] = useState(false);
@@ -39,6 +47,13 @@ export default function CoffeeDetailPage() {
 
   useEffect(() => {
     async function load() {
+      // Offline — render this coffee from the local re-brew cache.
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        const cached = await getBrewableCoffee(id);
+        setOfflineCoffee(cached);
+        setLoading(false);
+        return;
+      }
       try {
         const coffeeRes = await fetch(`/api/coffees/${id}`, { cache: "no-store" });
         if (!coffeeRes.ok) { setLoading(false); return; }
@@ -97,6 +112,8 @@ export default function CoffeeDetailPage() {
                   if (found.fieldZones) {
                     coffeeSessions.forEach(s => rememberSessionField(s.id, found.fieldZones));
                   }
+                  // Warm the offline re-brew cache for this coffee.
+                  void cacheBrewableCoffee(found, coffeeSessions);
                 })
                 .catch(() => {})
             : Promise.resolve(),
@@ -108,12 +125,13 @@ export default function CoffeeDetailPage() {
       }
     }
     load();
-  }, [id]);
+  }, [id, online]);
 
   // Adopt this coffee's Field composition so the page paints in its
   // cup-specific colours, matching the brew-session detail and the
-  // brew flow's "Brew Again" path.
-  useFieldConfig(coffee?.fieldZones ? { fieldZones: coffee.fieldZones, rotation: 0 } : null);
+  // brew flow's "Brew Again" path. Offline, lift it from the cache.
+  const activeFieldZones = coffee?.fieldZones ?? offlineCoffee?.fieldZones ?? null;
+  useFieldConfig(activeFieldZones ? { fieldZones: activeFieldZones, rotation: 0 } : null);
 
   if (loading) {
     return (
@@ -126,6 +144,12 @@ export default function CoffeeDetailPage() {
         </div>
       </div>
     );
+  }
+
+  // Offline — slim detail with the re-brew recipe picker (the network
+  // sections like roaster info and notes editing aren't available).
+  if (!coffee && offlineCoffee) {
+    return <OfflineCoffeeDetail coffee={offlineCoffee} router={router} />;
   }
 
   if (!coffee) {
@@ -156,26 +180,20 @@ export default function CoffeeDetailPage() {
     // Prefer the most-recent scanned CoffeeIdentity (has variety, tasting notes,
     // roast level). Fall back to the aggregate if the coffee somehow has no
     // sessions yet — defaults match the user's profile (light roast).
-    const identity: CoffeeIdentity = latestCoffee ?? {
-      roaster: coffee.roaster,
-      name: coffee.name,
-      origin: coffee.origin,
-      process: coffee.process,
-      roastLevel: "Light",
-      roastDate: coffee.latestRoastDate,
-      bagPhotoUrl: coffee.bagPhotoUrl,
-      aiExtracted: false,
-      coffeeId: coffee.id,
-    };
-    reset();
-    setFlowCoffee({ ...identity, coffeeId: coffee.id });
-    // Generative Field v1.1 — Brew Again path: lift the persisted
-    // composition so the flow paints in this coffee's colours rather
-    // than the Default fallback.
-    setFieldZones(coffee.fieldZones ?? null);
-    setMode("home");
-    setSkipScan(true);
-    setStep("context");
+    const identity: CoffeeIdentity = latestCoffee
+      ? { ...latestCoffee, coffeeId: coffee.id }
+      : {
+          roaster: coffee.roaster,
+          name: coffee.name,
+          origin: coffee.origin,
+          process: coffee.process,
+          roastLevel: "Light",
+          roastDate: coffee.latestRoastDate,
+          bagPhotoUrl: coffee.bagPhotoUrl,
+          aiExtracted: false,
+          coffeeId: coffee.id,
+        };
+    startBrewAgain(identity, coffee.fieldZones ?? null);
     router.push("/brew/new");
   };
 
@@ -494,6 +512,102 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-light-muted-foreground text-sm shrink-0">{label}</span>
       <span className="text-light-foreground/80 text-sm text-right">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * Offline coffee detail — the re-brew recipe picker. Shows up to the two
+ * best-rated cached recipes; tapping one seeds the flow store and jumps
+ * straight to the brew timer (skipping the AI recommend step).
+ */
+function OfflineCoffeeDetail({
+  coffee,
+  router,
+}: {
+  coffee: BrewableCoffee;
+  router: { push: (href: string) => void };
+}) {
+  const { identity, fieldZones, recipes } = coffee;
+  const origin = identity.origin;
+
+  const start = (recipe: BrewableRecipe) => {
+    startBrewAgainOffline(identity, fieldZones, recipe);
+    router.push("/brew/new");
+  };
+
+  return (
+    <div className="min-h-svh bg-transparent flex flex-col">
+      <div className="relative">
+        {identity.bagPhotoUrl ? (
+          <div className="relative h-72">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={identity.bagPhotoUrl} alt={identity.name} className="w-full h-full object-cover" />
+            <div
+              aria-hidden
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
+              }}
+            />
+          </div>
+        ) : (
+          <div className="h-40 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150" />
+        )}
+
+        <button
+          onClick={() => router.push("/coffees")}
+          aria-label="Back to library"
+          className="absolute left-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
+          style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div className={`${identity.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
+          {identity.process && (
+            <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{identity.process}</p>
+          )}
+          <h1 className="font-fraunces text-3xl text-light-foreground">{identity.name}</h1>
+          <p className="text-light-foreground/60 text-sm mt-1">
+            {identity.roaster}{origin ? ` · ${origin}` : ""}
+          </p>
+        </div>
+      </div>
+
+      <div className="px-5 pt-5 pb-8 space-y-3">
+        <p className="text-light-muted-foreground text-xs uppercase tracking-widest">
+          {recipes.length > 1 ? "Brew again — pick a recipe" : "Brew again"}
+        </p>
+        {recipes.length === 0 ? (
+          <p className="text-light-muted-foreground text-sm">No saved recipe to brew offline.</p>
+        ) : (
+          recipes.map((r, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => start(r)}
+              className="w-full text-left rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 p-4 active:scale-[0.99] transition-transform"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <BrewMethodIcon method={r.method} className="w-4 h-4 shrink-0 text-light-foreground" />
+                  <span className="text-light-foreground text-sm font-medium truncate">{r.method}</span>
+                </div>
+                {typeof r.rating === "number" && r.rating > 0 && (
+                  <StarRating value={r.rating} readonly size="sm" />
+                )}
+              </div>
+              <p className="text-light-muted-foreground text-xs mt-1.5">
+                {r.recipe.doseGrams}g / {r.recipe.waterGrams}g · {r.recipe.waterTempC}°C
+              </p>
+            </button>
+          ))
+        )}
+      </div>
     </div>
   );
 }

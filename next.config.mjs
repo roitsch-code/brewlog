@@ -46,6 +46,12 @@ export default withPWA({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
+  // Offline document fallback — an uncached navigation while offline lands
+  // on /offline instead of a browser error page. The brew shell (/coffees,
+  // /brew/new) is precached via cacheOnFrontEndNav, so this is a safety net.
+  fallbacks: {
+    document: "/offline",
+  },
   workboxOptions: {
     disableDevLogs: true,
   },

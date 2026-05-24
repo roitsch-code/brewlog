@@ -3,12 +3,45 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import type { Coffee } from "@/lib/types/coffee";
-import type { CoffeeIdentity } from "@/lib/types/session";
+import type { CoffeeIdentity, Session } from "@/lib/types/session";
 import StarRating from "@/components/ui/light/StarRating";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
-import { useFlowStore } from "@/store/flowStore";
+import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
+import { useOnline } from "@/hooks/useOnline";
+import { startBrewAgain, startBrewAgainOffline } from "@/lib/flow/brewAgain";
+import {
+  cacheBrewableLibrary,
+  getBrewableLibrary,
+  type BrewableCoffee,
+  type BrewableRecipe,
+} from "@/lib/storage/offlineLibrary";
 
 type Filter = "recent" | "favorites" | "roaster";
+
+/** Map a cached brewable coffee to the Coffee shape the list renders, so
+ * the offline view reuses the same card markup. avgRating is derived from
+ * the cached recipes' ratings; inRotation stays false offline (the quick
+ * "Brew" button is online-only — offline you pick a recipe on the detail
+ * page). */
+function brewableToCoffee(b: BrewableCoffee): Coffee {
+  const ratings = b.recipes.map((r) => r.rating).filter((n): n is number => typeof n === "number");
+  const avgRating = ratings.length ? ratings.reduce((s, n) => s + n, 0) / ratings.length : undefined;
+  return {
+    id: b.id,
+    roaster: b.identity.roaster,
+    name: b.identity.name,
+    origin: b.identity.origin,
+    process: b.identity.process,
+    firstSeenAt: "",
+    sessionCount: b.sessionCount,
+    sessionIds: [],
+    avgRating,
+    bagPhotoUrl: b.identity.bagPhotoUrl,
+    latestRoastDate: b.identity.roastDate,
+    fieldZones: b.fieldZones,
+    inRotation: false,
+  };
+}
 
 export default function CoffeesPage() {
   const [coffees, setCoffees] = useState<Coffee[]>([]);
@@ -19,13 +52,21 @@ export default function CoffeesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("recent");
   const [menuOpen, setMenuOpen] = useState(false);
+  // Offline: raw cache (with recipes) kept alongside the mapped list, plus
+  // the id of the coffee whose re-brew picker is open. Navigating to the
+  // detail route offline is unreliable (its RSC payload may be uncached),
+  // so the picker opens inline on the list — which is reliably precached.
+  const [offlineLib, setOfflineLib] = useState<BrewableCoffee[]>([]);
+  const [pickerId, setPickerId] = useState<string | null>(null);
   const router = useRouter();
-  const { reset, setCoffee, setStep, setMode, setSkipScan, setFieldZones } = useFlowStore();
+  const online = useOnline();
 
+  // Online "Brew" shortcut — synthesize a CoffeeIdentity from the aggregate
+  // (roastLevel isn't on the Coffee row, default "Light" per the user's
+  // profile) and start the AI flow at Step "context". Offline this button
+  // doesn't render (inRotation is false); you pick a recipe on the detail
+  // page instead.
   const brewThis = (coffee: Coffee) => {
-    // Synthesize a CoffeeIdentity from the aggregate. roastLevel isn't stored
-    // on the Coffee row — default to "Light" (matches the user's profile).
-    // Downstream /recommend gets the rest from preferences + history.
     const identity: CoffeeIdentity = {
       roaster: coffee.roaster,
       name: coffee.name,
@@ -37,34 +78,58 @@ export default function CoffeesPage() {
       aiExtracted: false,
       coffeeId: coffee.id,
     };
-    reset();
-    setCoffee(identity);
-    // Generative Field v1.1 — lift this coffee's persisted Field
-    // composition for the Brew Again flow.
-    setFieldZones(coffee.fieldZones ?? null);
-    setMode("home");
-    setSkipScan(true);
-    setStep("context");
+    startBrewAgain(identity, coffee.fieldZones ?? null);
     router.push("/brew/new");
   };
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(false);
+
+    // Offline — render the locally cached library (only coffees that have a
+    // re-brewable recipe).
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      getBrewableLibrary().then((lib) => {
+        if (cancelled) return;
+        const brewable = lib.filter((b) => b.recipes.length > 0);
+        setOfflineLib(brewable);
+        setCoffees(brewable.map(brewableToCoffee));
+        setLoading(false);
+      });
+      return () => { cancelled = true; };
+    }
+
+    const coffeesP = fetch("/api/coffees", { cache: "no-store" })
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<Coffee[]>; });
+
+    // Render the list as soon as coffees load — don't block on the cache warm.
+    coffeesP
+      .then((data) => {
+        if (cancelled) return;
+        setCoffees([...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || "")));
+      })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    fetch("/api/sessions?count=true&mode=home", { cache: "no-store" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ total: number } | null>) : null))
+      .then((count) => { if (!cancelled && count?.total != null) setTotalSessions(count.total); })
+      .catch(() => {});
+
+    // Warm the offline re-brew cache in the background (full feed → top-2
+    // recipes per coffee). Never blocks the visible list.
     Promise.all([
-      fetch("/api/coffees", { cache: "no-store" })
-        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-        .then((data: Coffee[]) => {
-          const sorted = [...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || ""));
-          setCoffees(sorted);
-        })
-        .catch(() => setError(true)),
-      fetch("/api/sessions?count=true&mode=home", { cache: "no-store" })
-        .then(r => r.ok ? r.json() : null)
-        .then((d: { total: number } | null) => { if (d?.total != null) setTotalSessions(d.total); })
-        .catch(() => {}),
-    ]).finally(() => setLoading(false));
-  }, [retryCount]);
+      coffeesP,
+      fetch("/api/sessions?limit=300", { cache: "no-store" })
+        .then((r) => (r.ok ? (r.json() as Promise<Session[]>) : []))
+        .catch((): Session[] => []),
+    ])
+      .then(([data, sessions]) => cacheBrewableLibrary(data, sessions))
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [retryCount, online]);
 
   const sessionTotal = totalSessions ?? coffees.reduce((s, c) => s + c.sessionCount, 0);
   const roasterCount = useMemo(() => new Set(coffees.map(c => c.roaster).filter(Boolean)).size, [coffees]);
@@ -211,7 +276,7 @@ export default function CoffeesPage() {
                       flush with the card border, no padding gap. */}
                   <button
                     type="button"
-                    onClick={() => router.push(`/coffees/${coffee.id}`)}
+                    onClick={() => (online ? router.push(`/coffees/${coffee.id}`) : setPickerId(coffee.id))}
                     className="flex items-stretch flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
                   >
                     {/* Photo — full-height left strip (w-24 = 96px).
@@ -299,6 +364,77 @@ export default function CoffeesPage() {
       </div>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      {pickerId && (
+        <OfflineRecipePicker
+          coffee={offlineLib.find((b) => b.id === pickerId) ?? null}
+          onClose={() => setPickerId(null)}
+          onPick={(b, r) => {
+            startBrewAgainOffline(b.identity, b.fieldZones, r);
+            router.push("/brew/new");
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Offline re-brew picker — a bottom sheet that opens from the library list
+ * when offline (the detail route may not be cached). Shows the up-to-two
+ * best-rated cached recipes; picking one seeds the flow and jumps to brew.
+ */
+function OfflineRecipePicker({
+  coffee,
+  onClose,
+  onPick,
+}: {
+  coffee: BrewableCoffee | null;
+  onClose: () => void;
+  onPick: (coffee: BrewableCoffee, recipe: BrewableRecipe) => void;
+}) {
+  if (!coffee) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pick a recipe"
+      className="fixed inset-0 z-[2100] flex items-end justify-center bg-light-foreground/20 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md m-3 rounded-3xl bg-light-card-default backdrop-blur-[20px] backdrop-saturate-150 border border-light-foreground/15 p-5"
+        style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+      >
+        <p className="font-fraunces text-xl text-light-foreground leading-tight">{coffee.identity.name}</p>
+        <p className="text-light-muted-foreground text-xs mb-4">
+          {coffee.recipes.length > 1 ? "Pick a recipe to brew" : "Brew again"}
+        </p>
+        <div className="space-y-2.5">
+          {coffee.recipes.map((r, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onPick(coffee, r)}
+              className="w-full text-left rounded-2xl bg-light-card-default border border-light-foreground/15 p-3.5 active:scale-[0.99] transition-transform"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <BrewMethodIcon method={r.method} className="w-4 h-4 shrink-0 text-light-foreground" />
+                  <span className="text-light-foreground text-sm font-medium truncate">{r.method}</span>
+                </div>
+                {typeof r.rating === "number" && r.rating > 0 && (
+                  <StarRating value={r.rating} readonly size="sm" />
+                )}
+              </div>
+              <p className="text-light-muted-foreground text-xs mt-1.5">
+                {r.recipe.doseGrams}g / {r.recipe.waterGrams}g · {r.recipe.waterTempC}°C
+              </p>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
