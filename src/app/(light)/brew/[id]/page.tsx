@@ -184,9 +184,15 @@ export default function SessionDetailPage() {
         <Section title="Recipe">
           <div className="grid grid-cols-3 gap-3">
             <Stat label="Dose" value={`${recipe.doseGrams}g`} />
-            <Stat label="Water" value={`${recipe.waterGrams}g`} />
+            <Stat label={recipe.iceGrams ? "Hot Water" : "Water"} value={`${recipe.waterGrams}g`} />
             <Stat label="Temp" value={`${recipe.waterTempC}°C`} />
           </div>
+          {recipe.iceGrams != null && recipe.iceGrams > 0 && (
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Stat label="Ice" value={`${recipe.iceGrams}g`} />
+              <Stat label="Final cup" value={`${recipe.waterGrams + recipe.iceGrams}g`} />
+            </div>
+          )}
           {recipe.pourSequence && (
             <p className="text-light-muted-foreground text-sm mt-3 leading-relaxed">{recipe.pourSequence}</p>
           )}
