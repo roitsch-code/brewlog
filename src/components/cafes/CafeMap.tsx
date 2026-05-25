@@ -109,9 +109,6 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
   const [selected, setSelected] = useState<CafeSummary | null>(null);
   const [placeSelected, setPlaceSelected] = useState<Place | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
-  // Always-current places ref so locate-me (inside [] effect) can read latest places
-  const placesRef = useRef(places);
-  placesRef.current = places;
   const [search, setSearch] = useState(initialSearch ?? "");
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch ?? "");
   const [mapReady, setMapReady] = useState(false);
@@ -144,16 +141,13 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
   }, [search]);
 
   const filteredPlaces = useMemo(() => {
+    // `places` is already the server-matched set (by ?q= or ?near=), so we
+    // only drop rows still missing coords — re-filtering by substring here
+    // would wrongly exclude cross-field token matches like "Kolo Berlin".
     if (nearbyIds != null)
       return places.filter(p => nearbyIds.has(p.id) && p.lat != null && p.lng != null);
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase();
-      return places.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.city.toLowerCase().includes(q) ||
-        (p.address ?? "").toLowerCase().includes(q)
-      );
-    }
+    if (debouncedSearch.trim())
+      return places.filter(p => p.lat != null && p.lng != null);
     return [];
   }, [places, debouncedSearch, nearbyIds]);
 
@@ -162,13 +156,20 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
     [filteredPlaces]
   );
 
-  // Fetch curated places
+  // Fetch curated places on demand — by search term, never the whole table.
+  // Locate-me owns `places` while in nearby mode, so skip the search fetch
+  // there to avoid clobbering its results.
   useEffect(() => {
-    fetch("/api/places")
+    if (nearbyIds != null) return;
+    const term = debouncedSearch.trim();
+    if (!term) { setPlaces([]); return; }
+    let cancelled = false;
+    fetch(`/api/places?q=${encodeURIComponent(term)}`)
       .then(r => r.json())
-      .then((data: Place[]) => setPlaces(data))
+      .then((data: Place[]) => { if (!cancelled) setPlaces(data); })
       .catch(() => {});
-  }, []);
+    return () => { cancelled = true; };
+  }, [debouncedSearch, nearbyIds]);
 
   // Initialize Leaflet + visited café pins — runs once on mount.
   // Cafes data is read from cafesRef so this effect doesn't need cafes as a dep
@@ -206,15 +207,23 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       locateMeFnRef.current = () => {
         setLocatingUser(true);
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
+          async (pos) => {
             const { latitude: lat, longitude: lng } = pos.coords;
 
             userMarkerRef.current?.remove();
             userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
 
-            const allPlaces = placesRef.current.filter(p => p.lat != null && p.lng != null);
+            // Ask the server for the nearest resolved places — no full-table
+            // download, the distance ranking happens in SQL.
+            let nearby: Place[] = [];
+            try {
+              const res = await fetch(`/api/places?near=${lat},${lng}`);
+              nearby = await res.json();
+            } catch { /* network error — treated as no results below */ }
 
-            if (allPlaces.length === 0) {
+            const resolved = nearby.filter(p => p.lat != null && p.lng != null);
+
+            if (resolved.length === 0) {
               map.flyTo([lat, lng], 15);
               setLocateError("No cafés in database for this area yet");
               setTimeout(() => setLocateError(null), 3000);
@@ -222,14 +231,12 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
               return;
             }
 
-            // Sort all curated places by distance from user
-            const sorted = allPlaces
+            // Small city mode: nearest place <50 km away and whole city fits in 25 → show all
+            const sorted = resolved
               .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
               .sort((a, b) => a.dist - b.dist);
-
-            // Small city mode: nearest place <50 km away and whole city fits in 25 → show all
             const nearestCity = sorted[0].p.city;
-            const cityPlaces = allPlaces.filter(
+            const cityPlaces = resolved.filter(
               p => p.city.toLowerCase() === nearestCity.toLowerCase()
             );
             const toShow =
@@ -237,6 +244,7 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
                 ? cityPlaces
                 : sorted.slice(0, 25).map(x => x.p);
 
+            setPlaces(resolved);
             setNearbyIds(new Set(toShow.map(p => p.id)));
 
             // Fit map to user location + all nearby spots
