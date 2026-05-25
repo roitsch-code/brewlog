@@ -7,7 +7,11 @@ import { createSession, setSessionCookie } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
-const pinAttempts = new Map<string, { count: number; lockedUntil: number }>();
+// Single-user app: a global PIN lockout instead of a per-IP one. The previous
+// per-IP key used x-forwarded-for, which a client can spoof to rotate keys and
+// sidestep the limit entirely. One owner means one counter is both simpler and
+// not bypassable.
+let pinAttempts: { count: number; lockedUntil: number } = { count: 0, lockedUntil: 0 };
 const PIN_MAX_ATTEMPTS = 5;
 const PIN_LOCKOUT_MS = 60_000;
 const CHALLENGE_KEY = "default";
@@ -18,11 +22,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     if (body.type === "pin") {
-      const ip = req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? "unknown";
       const now = Date.now();
-      const record = pinAttempts.get(ip);
 
-      if (record && record.lockedUntil > now) {
+      if (pinAttempts.lockedUntil > now) {
         return NextResponse.json({ error: "Too many attempts. Try again in 60 seconds." }, { status: 429 });
       }
 
@@ -30,16 +32,15 @@ export async function POST(req: NextRequest) {
       if (!expected) return NextResponse.json({ error: "PIN not configured" }, { status: 400 });
 
       if (body.pin !== expected) {
-        const attempts = record && record.lockedUntil <= now ? record.count + 1 : 1;
-        if (attempts >= PIN_MAX_ATTEMPTS) {
-          pinAttempts.set(ip, { count: attempts, lockedUntil: now + PIN_LOCKOUT_MS });
-        } else {
-          pinAttempts.set(ip, { count: attempts, lockedUntil: 0 });
-        }
+        const attempts = pinAttempts.count + 1;
+        pinAttempts = {
+          count: attempts,
+          lockedUntil: attempts >= PIN_MAX_ATTEMPTS ? now + PIN_LOCKOUT_MS : 0,
+        };
         return NextResponse.json({ error: "Wrong PIN" }, { status: 401 });
       }
 
-      pinAttempts.delete(ip);
+      pinAttempts = { count: 0, lockedUntil: 0 };
       const token = await createSession();
       setSessionCookie(token);
       return NextResponse.json({ verified: true });
