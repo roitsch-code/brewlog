@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { coffees, roasters } from "@/lib/db/schema";
 import { rowToCoffee } from "@/lib/db/helpers";
@@ -27,10 +27,19 @@ export async function GET(req: NextRequest) {
       const roasterNames = Array.from(new Set(all.map(c => c.roaster).filter(Boolean)));
       const summaries: Record<string, RoasterSummary> = {};
 
+      // Load every matching roaster row in a single query (was one query per
+      // roaster — an N+1 that grew with the library).
+      const slugByName = new Map(
+        roasterNames.map(name => [name, name.toLowerCase().trim().replace(/\s+/g, "-")])
+      );
+      const slugs = Array.from(new Set(slugByName.values()));
+      const savedRows = slugs.length > 0
+        ? await db.select().from(roasters).where(inArray(roasters.slug, slugs))
+        : [];
+      const savedBySlug = new Map(savedRows.map(r => [r.slug, r]));
+
       for (const name of roasterNames) {
-        const slug = name.toLowerCase().trim().replace(/\s+/g, "-");
-        const roasterRows = await db.select().from(roasters).where(eq(roasters.slug, slug)).limit(1);
-        const saved = roasterRows[0];
+        const saved = savedBySlug.get(slugByName.get(name)!);
         if (saved) {
           summaries[name] = {
             region: saved.region ?? undefined,
