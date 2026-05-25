@@ -54,6 +54,28 @@ function buildQueries(name: string, address: string | null, city: string): strin
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
+  // Nearby mode (map locate-me): nearest resolved places to a lat,lng pair,
+  // ranked by great-circle distance in SQL. The client no longer needs the
+  // whole table to work out what's close.
+  const near = searchParams.get("near");
+  if (near) {
+    const [latStr, lngStr] = near.split(",");
+    const lat = parseFloat(latStr);
+    const lng = parseFloat(lngStr);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return Response.json([]);
+    const rows = await db
+      .select()
+      .from(places)
+      .where(sql`${places.lat} IS NOT NULL AND ${places.lng} IS NOT NULL`)
+      .orderBy(
+        // LEAST(1, …) guards acos against float drift past 1.0 (→ NaN).
+        sql`6371 * acos(LEAST(1, cos(radians(${lat})) * cos(radians(${places.lat})) * cos(radians(${places.lng}) - radians(${lng})) + sin(radians(${lat})) * sin(radians(${places.lat}))))`,
+      )
+      .limit(50);
+    return Response.json(rows);
+  }
+
   const q = searchParams.get("q")?.trim() ?? "";
 
   // Split on whitespace so a search like "Kolo Berlin" requires BOTH "Kolo"
@@ -61,30 +83,32 @@ export async function GET(req: Request) {
   // looking for the literal string "Kolo Berlin" in a single column.
   const tokens = q.split(/\s+/).filter(Boolean);
 
-  const rows = tokens.length > 0
-    ? await db.select().from(places).where(
-        sql.join(
-          tokens.map((t) => {
-            const pat = `%${t}%`;
-            return sql`(${places.name} ILIKE ${pat} OR ${places.city} ILIKE ${pat} OR ${places.address} ILIKE ${pat})`;
-          }),
-          sql` AND `,
-        ),
-      ).orderBy(asc(places.city), asc(places.name))
-    : await db.select().from(places).orderBy(asc(places.city), asc(places.name));
+  // No query and no near → empty. The map loads on demand (search or
+  // locate-me); the old no-arg branch returned all 6k rows as multi-MB JSON
+  // that nothing rendered until the user interacted.
+  if (tokens.length === 0) return Response.json([]);
+
+  const rows = await db.select().from(places).where(
+    sql.join(
+      tokens.map((t) => {
+        const pat = `%${t}%`;
+        return sql`(${places.name} ILIKE ${pat} OR ${places.city} ILIKE ${pat} OR ${places.address} ILIKE ${pat})`;
+      }),
+      sql` AND `,
+    ),
+  ).orderBy(asc(places.city), asc(places.name));
   const unresolved = rows.filter(p => p.lat == null || p.lng == null);
 
-  // Geocode any unresolved places in the background — newest IDs first so
-  // recently-added cities get coords on the next load without delaying this response.
-  // Previously this was synchronous (5 × 1.1s = 5.5s+ delay), which meant
-  // locate-me fired before places were loaded and showed "No cafés in this area".
+  // Geocode matched-but-unresolved places in the background — newest IDs first
+  // so a freshly-added café gets coords on a later search without delaying
+  // this response.
   if (unresolved.length > 0) {
     const toGeocode = [...unresolved].sort((a, b) => b.id - a.id).slice(0, 5);
     (async () => {
       for (const place of toGeocode) {
         let coords: { lat: number; lng: number } | null = null;
-        for (const q of buildQueries(place.name, place.address, place.city)) {
-          coords = await nominatim(q);
+        for (const query of buildQueries(place.name, place.address, place.city)) {
+          coords = await nominatim(query);
           if (coords) break;
         }
         if (coords) {
