@@ -120,6 +120,20 @@ export async function POST(req: NextRequest) {
     const createdAtMs = Date.now();
     const createdAt = new Date(data.createdAt);
 
+    // Idempotency for the offline save queue: if a reconnect re-POSTs a brew
+    // whose insert already succeeded (the response was lost on a flaky link),
+    // the body carries the same client-set createdAt. Return the existing row
+    // instead of inserting a duplicate. A single user never logs two real
+    // brews on the same millisecond, so createdAt is a safe dedup key.
+    const dupe = await db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(eq(sessions.createdAt, createdAt))
+      .limit(1);
+    if (dupe[0]) {
+      return NextResponse.json({ id: dupe[0].id });
+    }
+
     await db.insert(sessions).values({
       id: sessionId,
       type: data.type,
