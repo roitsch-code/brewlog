@@ -14,6 +14,7 @@ import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
+import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -233,6 +234,9 @@ const TOOLS: Anthropic.Tool[] = [
 // ── Tool implementations ─────────────────────────────────────────────────────
 
 async function fetchPage(url: string): Promise<string> {
+  const safe = await assertSafeHttpsUrl(url);
+  if (!safe.ok) return safe.error ?? "URL blocked";
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
 
@@ -319,6 +323,9 @@ async function fetchPage(url: string): Promise<string> {
 async function fetchImageAsBase64(
   url: string
 ): Promise<{ data: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" }> {
+  const safe = await assertSafeHttpsUrl(url);
+  if (!safe.ok) throw new Error(safe.error ?? "URL blocked");
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
