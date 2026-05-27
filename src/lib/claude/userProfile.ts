@@ -23,7 +23,7 @@ const CANONICAL_PROFILE = `**Equipment:**
 - Primary brewer: V60 size 2 (daily driver)
 - Other brewers: Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex
 - Kettle: Fellow Stagg EKG (gooseneck, precise temp control, 60-min hold)
-- Water: Tap ~300 ppm TDS daily; diluted 1:1 with distilled ~150 ppm; championship water 44–55 ppm
+- Water: BWT Bestmax Premium V filter (bypass 0) turns ~370 ppm Düsseldorf tap into ~220 ppm TDS (GH 5–6 °dH, KH 4 °dH) — the daily driver, fine straight for naturals & honeys. For washed/floral coffees a 1:2 blend (BWT-filtered + distilled) gives ~73 ppm TDS (KH ~1.3 °dH) for maximum clarity — ideal for championship methods (Peng, Kasuya, Wölfl)
 
 **Taste preferences:**
 - Likes: silky, balanced, floral/fruity light roasts — elegant, not wild

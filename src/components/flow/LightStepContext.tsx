@@ -149,8 +149,8 @@ const METHODS = [
 ];
 
 const WATERS = [
-  { id: "tap", label: "Tap only", sub: "~300 ppm", footnote: "Above SCA ceiling. Recipe will adjust accordingly." },
-  { id: "championship", label: "Championship", sub: "~50 ppm", footnote: "Soft, mineral-light water — what most pros brew with." },
+  { id: "tap", label: "BWT filtered", sub: "~220 ppm", footnote: "Daily driver — great for naturals & honeys." },
+  { id: "championship", label: "Clarity blend", sub: "~73 ppm", footnote: "1:2 filtered + distilled — washed florals & championship methods." },
 ];
 
 interface CoffeeMemory {

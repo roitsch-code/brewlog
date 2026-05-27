@@ -28,7 +28,7 @@ export interface SessionContext {
   timeAvailable: string; // quick | normal | unhurried
   moodPreference: string; // strong | balanced | light | sweet | curious
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
-  waterSource?: string; // "tap" | "diluted" — tap = ~300ppm, diluted = 1:1 tap+distilled = ~150ppm
+  waterSource?: string; // "tap" = BWT-filtered daily ~220ppm | "championship" = 1:2 filtered+distilled clarity blend ~73ppm
   preferredMethod?: string; // optional method lock-in: "V60" | "Orea Fast" | etc.
   /** @deprecated Drip Assist support was removed; legacy sessions still reference this. Do not surface in current UI / prompts. */
   dripAssist?: boolean;

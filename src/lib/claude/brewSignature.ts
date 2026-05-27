@@ -11,7 +11,7 @@ export interface BrewSignature {
   method: string;             // v60-drip-assist | v60 | orea | clever | kalita | aeropress | chemex | moccamaster | other
   grindSetting: string;       // raw string (actual used)
   grindNumeric: number | null;
-  waterPpm: number;           // tap=300, diluted=150, championship=70
+  waterPpm: number;           // BWT-filtered daily=220, diluted(legacy)=150, clarity blend=73
   tempC: number | null;       // actual temp
   ratio: number | null;       // dose / water
   freshnessZone: string;      // too-fresh | peak | past-peak | stale | unknown
@@ -91,9 +91,9 @@ function computeRatingWeight(rawRating: number, craft?: string, fit?: string): n
 }
 
 function waterPpmFromSource(source?: string): number {
-  if (source === "championship") return 70;
-  if (source === "diluted") return 150;
-  return 300; // tap default
+  if (source === "championship") return 73; // 1:2 BWT-filtered + distilled clarity blend
+  if (source === "diluted") return 150;     // legacy value
+  return 220; // BWT-filtered daily water
 }
 
 // ─── Main builders ────────────────────────────────────────────────────────────
