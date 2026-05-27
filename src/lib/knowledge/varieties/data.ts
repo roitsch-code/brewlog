@@ -532,7 +532,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     density: "high",
     solubility: "high",
     brewingTendencies:
-      "Can handle higher temperatures than other delicate varieties — 96–98°C is fine, often desirable. Slower extraction at the same grind compared to Ethiopian — may need a finer grind than expected. Diluted water mandatory at this user's tap profile (300 ppm tap mutes blackcurrant).",
+      "Can handle higher temperatures than other delicate varieties — 96–98°C is fine, often desirable. Slower extraction at the same grind compared to Ethiopian — may need a finer grind than expected. The clarity blend is worth it here — at the daily 220 ppm filtered water the blackcurrant reads muted; the 1:2 blend (~73 ppm) lifts it.",
     commonProcessings: ["washed"],
     pairsWellWithRecipes: [
       "perger-high-extraction-v60",

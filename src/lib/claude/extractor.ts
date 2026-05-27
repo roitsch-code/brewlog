@@ -58,14 +58,14 @@ function findWaterCorrelation(
   if (diff > 0.5) {
     return {
       variable: "water source", tier: 1,
-      finding: `diluted or softer water appears ${countLabel(good.filter(s => s.waterPpm <= 150).length)} in the stronger cups, tap water more often in the weaker ones`,
+      finding: `the softer clarity-blend water appears ${countLabel(good.filter(s => s.waterPpm <= 150).length)} in the stronger cups, the harder daily water more often in the weaker ones`,
       significance: diff > 0.7 ? "strong" : "moderate",
     };
   }
   if (diff < -0.5) {
     return {
       variable: "water source", tier: 1,
-      finding: "tap and diluted water appear similarly across good and poor cups — water source does not seem to be a distinguishing factor here",
+      finding: "the daily and clarity-blend waters appear similarly across good and poor cups — water source does not seem to be a distinguishing factor here",
       significance: "none",
     };
   }
@@ -73,10 +73,10 @@ function findWaterCorrelation(
   const allDiluted = [...good, ...poor].filter(s => s.waterPpm <= 150).length;
   const total = good.length + poor.length;
   if (allDiluted === total) {
-    return { variable: "water source", tier: 1, finding: "all sessions used diluted water — no variation to assess", significance: "none" };
+    return { variable: "water source", tier: 1, finding: "all sessions used the softer clarity-blend water — no variation to assess", significance: "none" };
   }
   if (allDiluted === 0) {
-    return { variable: "water source", tier: 1, finding: "all sessions used tap water — no variation to assess", significance: "none" };
+    return { variable: "water source", tier: 1, finding: "all sessions used the harder daily water — no variation to assess", significance: "none" };
   }
   return {
     variable: "water source", tier: 1,

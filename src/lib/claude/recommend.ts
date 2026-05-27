@@ -128,13 +128,14 @@ A harsh cup means Zone 3 invaded (over-extraction or excess late agitation).
 WATER CHEMISTRY (Hendon — Water for Coffee):
 Magnesium (Mg²⁺): Enhances extraction of organic acids and aromatics — brighter, more complex cups.
 Calcium (Ca²⁺): Adds body. Less flavor complexity gain than magnesium.
-Bicarbonate (HCO₃⁻): Acid buffer. At ~300ppm (this user's tap water), it actively mutes brightness
-  and rounds acidity. Especially damaging for high-clarity coffees (Ethiopian washed, Kenyan).
-  State this clearly when recommending clarity candidates: tap water suppresses what this coffee offers.
-The 1:1 dilution (~150ppm) removes most of this suppression — a meaningful quality difference.
-Championship water (~50ppm): nearly zero buffering; delicate florals become prominent.
+Bicarbonate (HCO₃⁻ ≈ KH): Acid buffer. This user's daily water is BWT-filtered to ~220ppm TDS
+  (KH 4°dH) — moderate buffering that rounds acidity and gently mutes the brightest florals.
+  Fine for naturals and honeys; for high-clarity coffees (Ethiopian washed, Kenyan) it caps the ceiling.
+The clarity blend (1:2 BWT-filtered + distilled, ~73ppm TDS, KH ~1.3°dH): near-zero buffering;
+  delicate florals and acids become prominent. State this clearly when a clarity candidate would
+  benefit — a washed Guji on the daily 220ppm water and on the 73ppm blend are genuinely different cups.
 Rule: the more delicate the coffee (light washed, high-altitude, Ethiopian), the more water quality
-  determines the ceiling. A washed Guji on tap water and on diluted water are genuinely different cups.
+  determines the ceiling — steer the user toward the clarity blend for those.
 
 AGITATION MECHANICS (Perger — Coffee Compass / WBC methodology):
 Turbulence increases contact between water and grounds — raises extraction yield.
@@ -389,10 +390,9 @@ CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and 
 - Orea Open: 17g:270ml | 95–97°C | 402–409° | bloom → gentle swirl → 3 pours, no agitation, fast open-bed drawdown → ~2:45 (targetTimeSec: 165)
 - Turbo V60: 15g:250ml | 100°C | 391–396° | bloom → stir 2–3× at 0:10 → 2 fast pours → ~2:00
 
-WATER NOTES:
-- "championship" (~50ppm) = ultra-soft, highlights delicate florals — ideal for competition-style brews
-- "diluted" (1:1 tap+distilled, ~150ppm) = SCA optimal — prefer for delicate light roasts
-- "tap" (~300ppm) = above SCA ceiling — mutes flavors; note this in relevant candidates
+WATER NOTES (this user's actual setup):
+- "championship" = clarity blend (1:2 BWT-filtered + distilled, ~73ppm TDS, KH ~1.3°dH) = ultra-soft, near-zero buffering, highlights delicate florals — prefer for washed light roasts & competition-style brews
+- "tap" = BWT-filtered daily water (~220ppm TDS, GH 5–6°dH, KH 4°dH) = moderate buffering — great for naturals & honeys; for delicate washed coffees note the clarity blend would lift brightness
 
 TIMING RULE:
 Drawdown end = total time = DONE. Never add a separate "total time" line.
@@ -565,9 +565,11 @@ export async function generateRecommendation(
     : `Grinder: ${sessionGrinder} → grindSize must be ONE specific click count (e.g. "26"). NO ranges. NEVER Niche°.`;
 
   const waterNote =
-    context.waterSource === "diluted"
-      ? "Diluted water (1:1 tap+distilled = ~150ppm, SCA optimal) — prefer for delicate light roasts"
-      : "Tap water only (~300ppm, above SCA ceiling) — note this in candidates where water quality is relevant";
+    context.waterSource === "championship"
+      ? "Clarity blend (1:2 BWT-filtered + distilled = ~73ppm TDS, KH ~1.3°dH) — near-zero buffering, ideal for washed florals & championship methods"
+      : context.waterSource === "diluted"
+      ? "Diluted blend (legacy, ~150ppm) — soft, SCA-optimal for delicate light roasts"
+      : "BWT-filtered daily water (~220ppm TDS, GH 5–6°dH, KH 4°dH) — moderate buffering; for delicate washed coffees note the clarity blend would lift brightness";
 
   const daysOld = coffee.roastDate
     ? Math.floor(

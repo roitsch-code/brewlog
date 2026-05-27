@@ -519,7 +519,7 @@ Cause for this rule: claimed "~33 cafés in the places table" based on counting 
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
-| Water (daily) | Tap ~300 ppm | Diluted: 1:1 tap+distilled ~150 ppm |
+| **Water** | BWT Bestmax Premium V (bypass 0): ~370 ppm Düsseldorf tap → **~220 ppm** filtered (GH 5–6 / KH 4 °dH), daily driver for naturals/honeys · **clarity blend** 1:2 filtered+distilled = **~73 ppm** (KH ~1.3 °dH) for washed florals & championship methods (Peng/Kasuya/Wölfl) |
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
 **Grind quick ref:** @./docs/grind-settings.md
