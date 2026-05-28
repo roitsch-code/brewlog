@@ -85,7 +85,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Loses complexity if over-agitated",
     ],
     notes:
-      "Low agitation tolerance is the key signal here. Orea Apex or bare V60 with minimal pour agitation is ideal — anything that adds turbulence can muddy the clarity profile. Championship water (55–75 ppm) is worth considering for competition lots.",
+      "Low agitation tolerance is the key signal here. Orea Apex or bare V60 with minimal pour agitation is ideal — anything that adds turbulence can muddy the clarity profile. Championship water is worth considering for competition lots.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -103,7 +103,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     ratioBias: "lean",
     methodAffinities: ["V60", "Orea Apex", "Orea Classic"],
     extractionRisks: [
-      "Under-extraction at standard temps — these need 97–99°C",
+      "Under-extraction at standard temps — these reward higher water temperatures",
       "Flat cup if water mineral content is too high",
     ],
     notes:
@@ -130,7 +130,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Agitation-sensitive — swirl rather than stir on bloom",
     ],
     notes:
-      "April sits at the very edge of light roasting. These coffees demand active technique. Championship water (55–75 ppm) can be transformative. The Wölfl method or Orea Apex is the natural home. Avoid Clever or long immersion — extraction clarity is the whole point.",
+      "April sits at the very edge of light roasting. These coffees demand active technique. Championship water can be transformative. The Wölfl method or Orea Apex is the natural home. Avoid Clever or long immersion — extraction clarity is the whole point.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -170,9 +170,9 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     ratioBias: "lean",
     methodAffinities: ["Orea Apex", "V60", "Kasuya 4:6"],
     extractionRisks: [
-      "Under-extraction at 93–95°C — 97–99°C needed",
+      "Under-extraction at lower temperatures — rewards higher water temperatures",
       "Fines migration risk with aggressive stir — use light swirl on bloom",
-      "Too thin at 1:17+ ratios",
+      "Can taste thin at leaner ratios",
     ],
     notes:
       "Clarity is the product. Orea Apex or bare V60. Minimal agitation. Diluted or championship water to protect delicate floral notes from mineral interference. Kasuya 4:6 can work well if the user wants to tune acid/sweetness balance across phases.",
@@ -332,7 +332,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     name: "Square Mile Coffee Roasters",
     region: "London, UK",
     styleSummary:
-      "Light to light-medium, balanced and terroir-expressive. Founded by World Barista Champions. Sweetness-forward bias with strong clarity. Naturals and washed both excellent.",
+      "Light to light-medium, balanced and terroir-expressive. London specialty roastery. Sweetness-forward bias with strong clarity. Naturals and washed both excellent.",
     roastTendency: "light",
     solubilityBias: "moderate",
     clarityVsSweetnessBias: "sweetness",
@@ -464,7 +464,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Loses nuance and clarity with heavy agitation or turbulence",
     ],
     notes:
-      "High temp (96–98°C), lean ratio (1:16–1:17), minimal agitation. Long bloom (45s+). Championship water worth trying on premium lots. Give it time — these coffees open up as they cool.",
+      "High temp, lean ratio, minimal agitation. Extended bloom. Championship water worth trying on premium lots. Give it time — these coffees open up as they cool.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -583,7 +583,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     methodAffinities: ["V60", "Orea Classic"],
     extractionRisks: [
       "Naturals can taste jammy in extended Clever steep",
-      "Washed lots flat below 93°C",
+      "Washed lots flat at low temperatures",
     ],
     notes:
       "Sweetness is the through-line. Orea Classic brings out the best of their naturals. V60 works well for washed lots. Standard ratio and temp.",
@@ -603,7 +603,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     tempBias: "standard",
     ratioBias: "standard",
     methodAffinities: ["V60", "Clever Dripper"],
-    extractionRisks: ["Bitter if pushed past 97°C on medium-light lots"],
+    extractionRisks: ["Bitter if temperature pushed too high on medium-light lots"],
     notes:
       "Reliable and approachable. Standard V60 or Clever Dripper. No extreme adjustments needed.",
     confidence: "curated",
@@ -728,7 +728,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     name: "Tanat",
     region: "Paris, France",
     styleSummary:
-      "Renowned Paris specialty roaster, formerly known as Kawa Coffee Roasters. Founded 2016. Named Europe's best independent coffee shop in 2024. Precise roasting, high-quality traceable beans, light-medium clarity-forward with elegant terroir expression.",
+      "Renowned Paris specialty roaster, formerly known as Kawa Coffee Roasters. Precise roasting, high-quality traceable beans, light-medium clarity-forward with elegant terroir expression.",
     roastTendency: "light-medium",
     solubilityBias: "moderate",
     clarityVsSweetnessBias: "clarity",
@@ -748,7 +748,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     name: "Nomad Coffee",
     region: "Barcelona, Spain",
     styleSummary:
-      "Light-medium, sweetness and clarity, terroir philosophy. World Barista Championship-connected. Wide origin range with excellent quality control.",
+      "Light-medium, sweetness and clarity, terroir philosophy. Wide origin range with excellent quality control.",
     roastTendency: "light-medium",
     solubilityBias: "moderate",
     clarityVsSweetnessBias: "balanced",
@@ -822,7 +822,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     name: "Gardelli Specialty Coffees",
     region: "Forlì, Italy",
     styleSummary:
-      "Light, competition-level, terroir purity. Multiple World Brewing Championship finalist. Coffees are meticulously sourced and roasted for maximum expression. Often unusual varieties.",
+      "Light, competition-level, terroir purity. Coffees are meticulously sourced and roasted for maximum expression. Often unusual varieties.",
     roastTendency: "light",
     solubilityBias: "high",
     clarityVsSweetnessBias: "clarity",
@@ -882,7 +882,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     name: "Hard Beans",
     region: "Opole, Poland",
     styleSummary:
-      "Light to light-medium, competition-focused, clarity and sweetness. Award-winning Polish roaster with strong competition pedigree.",
+      "Light to light-medium, competition-focused, clarity and sweetness. Polish specialty roaster.",
     roastTendency: "light",
     solubilityBias: "moderate",
     clarityVsSweetnessBias: "balanced",
@@ -1115,7 +1115,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Loses nuance fast with heavy agitation",
     ],
     notes:
-      "High temp (96–98°C), lean ratio (1:16–1:17), minimal agitation. Needs full extraction to avoid sourness. Their coffees reward patience and precision.",
+      "High temp, lean ratio, minimal agitation. Needs full extraction to avoid sourness. Their coffees reward patience and precision.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -1134,7 +1134,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     methodAffinities: ["V60", "Orea V4"],
     extractionRisks: ["Light roasts can read sour if under-extracted — ensure full bloom and even saturation"],
     notes:
-      "Treat as a precision light-roast lab coffee. 94–96°C, 1:15–1:16, gentle agitation. Give the bloom time.",
+      "Treat as a precision light-roast lab coffee. Standard temp, standard ratio, gentle agitation. Give the bloom time.",
     confidence: "inferred",
     disclaimer: DISCLAIMER,
   },
