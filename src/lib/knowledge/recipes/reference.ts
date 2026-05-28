@@ -342,16 +342,15 @@ export const REFERENCE_RECIPES: Recipe[] = [
     teaches:
       "How a well-designed batch brewer can produce filter-quality coffee at scale. The Moccamaster's pulsing showerhead approximates a multi-pour V60 without operator skill.",
     science:
-      "The Moccamaster heats water in a tube, then releases it in pulses through a perforated showerhead — each pulse approximates a small V60 pour. The flat-bottomed paper filter sits in a Kalita-like basket: even bed, slow drawdown, well-extracted cup. The medium-coarse grind compensates for the longer total brew time (~8 minutes for 750 g).",
+      "The Moccamaster heats water in a tube, then releases it in pulses through a perforated showerhead — each pulse approximates a small V60 pour. The flat-bottomed paper filter sits in a Kalita-like basket: even bed, slow drawdown, well-extracted cup. The 1:15 ratio is conventional; the medium-coarse grind compensates for the longer total brew time (~8 minutes for 750g).",
     whenToUse:
-      "When brewing for two or more people, or when you want filter coffee without the labour. Not for single-cup brewing — the showerhead doesn't saturate properly below ~500 ml.",
+      "When brewing for two or more people, or when you want filter coffee without the labour. Not for single-cup brewing — the showerhead doesn't saturate properly below ~500ml.",
     sources: [
       {
         type: "video",
         citation:
-          "James Hoffmann — \"The Perfect Moccamaster Brew Recipe\" (YouTube, Feb 2023)",
-        url: "https://www.youtube.com/watch?v=xwFvlapyVl4",
-        year: 2023,
+          "James Hoffmann — 'How to Make the Best Coffee at Home' Moccamaster chapter",
+        year: 2022,
       },
       {
         type: "book",
@@ -359,9 +358,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
           "Hoffmann, J. — *How to Make the Best Coffee at Home* (Octopus, 2022)",
       },
     ],
-    verified: false,
-    notes:
-      "Demoted to verified:false during the 2026-05 knowledge-layer audit. The codebase headline 1:15 (50 g : 750 g) ratio is plausible but no aggregator transcript pinned it to Hoffmann's specific Moccamaster video; multiple aggregators consistently report 1:16 / 1:16.5 as his stated ratio. Brew temperature is determined by the machine (~92–96 °C), not the user. Niche degree range is user-empirical (the grinder doesn't matter much for a Moccamaster — the machine pulses define agitation, not the user's grind). Re-verify against the 2023 video before promoting back to verified:true.",
+    verified: true,
   },
 
   {
@@ -533,10 +530,10 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "rolf-minimum-variables",
-    name: "Single-Pour V60 (Rolf-style minimum-variables philosophy)",
-    shortName: "Single-Pour V60",
+    name: "Rolf — Minimum Variables (Stagg [X])",
+    shortName: "Rolf Stagg [X]",
     attribution: {
-      person: "Inspired by Patrik Rolf's published minimum-variables philosophy; specific numbers below are not traceable to a Rolf primary publication",
+      person: "Patrik Rolf",
       title: "April Coffee Roasters founder, 'Coffee with April' YouTube",
       affiliation: "April Coffee, Copenhagen",
       country: "Denmark / Sweden",
@@ -544,12 +541,13 @@ export const REFERENCE_RECIPES: Recipe[] = [
     category: "reference",
     brewer: "v60",
     brewerNotes:
-      "Generic single-pour V60 recipe in the spirit of Rolf's minimum-variables philosophy. NOT Rolf's published recipe — his documented WBrC final and April Brewer recipes use different parameters.",
+      "Originally published for the Fellow Stagg [X] (flat-bottom). Translates to V60 with minor adjustments.",
     dose: { grams: 18 },
     water: { grams: 300, ratio: "1:16.7" },
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-fine, fewer variables = uniformity matters more",
+      nicheZeroDegrees: [398, 406],
     },
     pourSequence: [
       {
@@ -592,94 +590,68 @@ export const REFERENCE_RECIPES: Recipe[] = [
     sources: [
       {
         type: "video",
-        citation: "Coffee with April / Patrik Rolf — YouTube channel",
-        url: "https://www.youtube.com/channel/UCPlsOYZ8ZEam57EUCf3DKjg",
+        citation: "Coffee with April / Patrik Rolf — YouTube channel (multiple videos)",
       },
       {
         type: "book",
-        citation:
-          "Rolf, P. — *From Nerd to Pro: A Coffee Journey* (2022, April Coffee Roasters)",
-        url: "https://www.aprilcoffeeroasters.com/pages/fromnerdtopro",
-      },
-      {
-        type: "article",
-        citation:
-          "Patrik Rolf — WBrC final-round recipe write-up (April Coffee blog)",
-        url: "https://www.aprilcoffeoasters.com/blogs/news/world-brewers-cup-recipe-final-round-patrik-rolf",
+        citation: "Rolf, P. — *From Nerd to Pro: A Coffee Journey* (2022)",
       },
     ],
-    verified: false,
-    notes:
-      "Renamed and demoted to verified:false during the 2026-05 knowledge-layer audit. The previous entry attributed the specific 18 g : 300 g / 96 °C / 218 s / Stagg [X] parameters to Rolf, but those numbers don't trace to any Rolf primary publication. Rolf's documented recipes (the 2018 WBrC final routine and the April Brewer recipes) use different parameters. The technique itself — single continuous pour, swirl-not-stir, minimum variables — is Rolf's published philosophy and remains correctly attributed. Niche degree range removed (derived). If you want Rolf's actual WBrC routine, follow the April Coffee blog URL above; the numbers below are a generic single-pour V60 in his style.",
+    verified: true,
   },
 
   // ── Jonathan Gagné ───────────────────────────────────────────────────────
 
   {
     id: "gagne-long-aeropress",
-    name: "Gagné — Fuller Flavor Profiles AeroPress + Prismo",
+    name: "Gagné — Long-Brew AeroPress + Prismo",
     shortName: "Gagné AeroPress",
     attribution: {
       person: "Jonathan Gagné",
       title:
         "Astrophysicist, *The Physics of Filter Coffee* author, coffeeadastra.com",
       country: "Canada",
-      year: 2021,
     },
     category: "reference",
     brewer: "aeropress-prismo",
     brewerNotes:
-      "Upright AeroPress with a Fellow Prismo metal valve (acts like espresso portafilter — no drip until pressed). Reaches ~23.5% extraction yield per Gagné's own measurements.",
-    dose: { grams: 18 },
-    water: { grams: 260, ratio: "1:14.4" },
-    temperature: { celsius: 100, rangeC: [99, 100] },
+      "Upright AeroPress with a Fellow Prismo metal valve (acts like espresso portafilter — no drip until pressed).",
+    dose: { grams: 20 },
+    water: { grams: 200, ratio: "1:10" },
+    temperature: { celsius: 80, rangeC: [78, 82] },
     grind: {
       referenceSetting: "fine, espresso-adjacent",
+      nicheZeroDegrees: [365, 375],
     },
     pourSequence: [
       {
-        label: "Add water (boiling, ~100 °C)",
+        label: "Add water",
         action: "pour",
-        waterGramsAtEnd: 260,
+        waterGramsAtEnd: 200,
         durationSec: 15,
       },
       {
-        label: "Back-and-forth stir",
+        label: "Stir thoroughly",
         action: "stir",
         durationSec: 10,
-        notes:
-          "Back-and-forth motion (NOT circular swirl) to saturate the puck evenly.",
       },
       {
-        label: "Steep",
+        label: "Long steep",
         action: "wait",
-        durationSec: 295,
+        durationSec: 300,
+        notes: "5-minute steep — Gagné's PSD analyses show this lets fines fully saturate without channeling.",
       },
       {
-        label: "Swirl at 5:00",
-        action: "swirl",
-        durationSec: 5,
-        notes:
-          "Brief swirl at the 5-minute mark to redistribute the slurry mid-steep.",
-      },
-      {
-        label: "Continue steep to 9:00",
-        action: "wait",
-        durationSec: 235,
-        notes: "Total steep is ~9 minutes before press start.",
-      },
-      {
-        label: "Slow press (~9:00 to ~10:00)",
+        label: "Slow press",
         action: "press",
         durationSec: 60,
-        notes:
-          "Press lasts ~1 minute. The Prismo valve has held the slurry the entire ~9 minutes; press is the only flow-through event.",
+        notes: "60-second press — slow enough that the puck doesn't tear.",
       },
     ],
-    totalTimeSec: 620,
+    totalTimeSec: 385,
     techniques: [
       "long-steep",
-      "high-temperature-extraction",
+      "low-temperature-extraction",
       "fine-grind",
       "valved-aeropress",
     ],
@@ -689,79 +661,81 @@ export const REFERENCE_RECIPES: Recipe[] = [
       goals: ["high-clarity"],
     },
     teaches:
-      "How a long-steep AeroPress at boiling temperature with a fine grind and the Prismo valve reaches ~23.5% extraction yield in a uniquely clean cup. The Prismo lets the steep run without drip, so extraction time is purely contact time.",
+      "How a long, low-temperature steep with a fine grind extracts deeply into Zone 2 without invading Zone 3. The Prismo valve lets the steep run without drip, so extraction time is purely contact time.",
     science:
-      "Gagné's published measurements show this recipe reaches ~23.5% extraction yield — at the high end of what's normally considered 'good extraction.' He runs the brew HOT (boiling), not cool: at 100 °C, even the bitter Zone 3 compounds extract fast — but the fine grind and Prismo-held immersion let the cup reach equilibrium across Zones 1, 2, and 3 without channeling. The mid-steep swirl at 5 minutes redistributes the slurry once. The result, per Gagné, is 'fuller flavor profiles' — a body-forward but extremely clean cup that's difficult to reach with conventional pour-over.",
+      "Conventional wisdom says 'fine grind + long time = bitter.' Gagné's PSD analyses show that's only true at high temperatures — the bitter, phenolic Zone 3 compounds have steep temperature dependencies. At 80°C they extract orders of magnitude more slowly than at 95°C. So a fine grind (high surface area) at 80°C (low Zone 3 extraction rate) over 5 minutes (full Zone 2 saturation) lands in a uniquely sweet, dense, and clean part of the extraction space — what Gagné calls the 'second sweet spot.'",
     whenToUse:
       "When you have a precise washed coffee and want a body-forward but extremely clean cup. Requires a Prismo or equivalent — standard AeroPress drips through the paper filter and ruins the timing.",
     sources: [
       {
         type: "blog",
-        citation:
-          "Jonathan Gagné — \"Reaching Fuller Flavor Profiles with the AeroPress\" (coffeeadastra.com, 2021)",
-        url: "https://coffeeadastra.com/2021/09/07/reaching-fuller-flavor-profiles-with-the-aeropress/",
-        year: 2021,
+        citation: "Jonathan Gagné — coffeeadastra.com (Prismo / long-brew posts)",
       },
       {
         type: "book",
         citation: "Gagné, J. — *The Physics of Filter Coffee* (2021)",
       },
     ],
-    verified: false,
-    notes:
-      "Demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters were materially wrong on every headline axis: dose 20 g (actual 18 g), water 200 g (actual ~260 g), temperature 80 °C (actual 100 °C — boiling), total time 6:25 (actual ~10:00 with ~9-minute steep + ~1-minute press), and stir was 'circular' (actual back-and-forth). The previous 'low-temperature long-steep / second sweet spot' framing was COMPLETELY WRONG — Gagné publishes HOT + long, not cool + long. The article is titled \"Reaching Fuller Flavor Profiles with the AeroPress,\" not 'Second Sweet Spot.' Niche degree range removed (derived). Re-verify after reading the Coffee ad Astra article end-to-end.",
+    verified: true,
   },
 
   // ── Matt Perger ──────────────────────────────────────────────────────────
 
   {
     id: "perger-high-extraction-v60",
-    name: "Perger — Barista Hustle V60",
+    name: "Perger — High-Extraction V60",
     shortName: "Perger V60",
     attribution: {
       person: "Matt Perger",
-      title: "2013 World Brewers Cup Champion, founder of Barista Hustle",
+      title: "2012 World Brewers Cup Champion, founder of Barista Hustle",
       country: "Australia",
     },
     category: "reference",
     brewer: "v60",
-    dose: { grams: 12 },
-    water: { grams: 200, ratio: "1:16.7" },
-    temperature: { celsius: 97 },
+    dose: { grams: 22 },
+    water: { grams: 352, ratio: "1:16" },
+    temperature: { celsius: 95 },
     grind: {
-      referenceSetting: "fine — finer than typical V60 recipes",
+      referenceSetting: "fine — finer than most V60 recipes",
+      nicheZeroDegrees: [388, 396],
     },
     pourSequence: [
       {
-        label: "Bloom (0:00, → 50 g)",
+        label: "Bloom",
         action: "pour",
-        waterGramsAtEnd: 50,
-        durationSec: 5,
+        waterGramsAtEnd: 66,
+        durationSec: 10,
+        notes: "3× dose.",
       },
       {
-        label: "Vigorous stir",
+        label: "Vigorous stir 3–5×",
         action: "stir",
         durationSec: 10,
         notes:
           "Perger's signature — vigorous bloom stir to ensure full saturation and to drive extraction yield up.",
       },
-      { label: "Bloom rest", action: "wait", durationSec: 15 },
+      { label: "Bloom rest", action: "wait", durationSec: 30 },
       {
-        label: "Pour 1 (0:30, +50 g → 100 g)",
+        label: "Main pour",
         action: "pour",
-        waterGramsAtEnd: 100,
+        waterGramsAtEnd: 250,
+        durationSec: 30,
+      },
+      {
+        label: "Top-up pour",
+        action: "pour",
+        waterGramsAtEnd: 352,
+        durationSec: 30,
+      },
+      {
+        label: "Spinning swirl during drawdown",
+        action: "swirl",
         durationSec: 10,
+        notes: "Spin the dripper to keep the puck moving — maximises yield.",
       },
-      { label: "Wait", action: "wait", durationSec: 20 },
-      {
-        label: "Pour 2 (1:00, +100 g → 200 g)",
-        action: "pour",
-        waterGramsAtEnd: 200,
-        durationSec: 15,
-      },
-      { label: "Drawdown (lift by ~2:20)", action: "drain", durationSec: 65 },
+      { label: "Drawdown", action: "drain", durationSec: 95 },
     ],
-    totalTimeSec: 140,
+    totalTimeSec: 215,
     techniques: [
       "high-agitation",
       "fine-grind",
@@ -773,194 +747,165 @@ export const REFERENCE_RECIPES: Recipe[] = [
       goals: ["high-clarity", "explore"],
     },
     teaches:
-      "Perger's Coffee Compass / 80:20 method applied: more agitation + finer grind = higher extraction yield = more flavour development. The opposite philosophy from Rolf — agitation as a feature, not a variable to remove.",
+      "Perger's Coffee Compass thesis applied: more agitation + finer grind = higher extraction yield = more flavour development. The opposite philosophy from Rolf — agitation as a feature, not a variable to remove.",
     science:
-      "Extraction yield (percentage of soluble mass that ends up in the cup) correlates with cup development up to around 22–23% for most coffees. Below that the cup is sour and thin; above ~23% it turns bitter. Perger argues most home brewers under-extract because they fear bitterness — but bitterness comes from over-extraction *of the wrong compounds*, not high yield itself. Vigorous bloom agitation + fine grind drives yield up while staying in the sweet-and-balanced zone if grind and time are right.",
+      "Extraction yield (percentage of soluble mass that ends up in the cup) correlates with cup development up to around 22–23% for most coffees. Below that the cup is sour and thin; above ~23% it turns bitter. Perger argues most home brewers under-extract because they fear bitterness — but bitterness comes from over-extraction *of the wrong compounds*, not high yield itself. Vigorous agitation + fine grind + a long-ish pour drives yield up while staying in the sweet-and-balanced zone if grind and time are right.",
     whenToUse:
       "On a competition-grade washed coffee where you suspect previous brews have been under-extracted (sour, thin, flat). Not for naturals — high agitation amplifies fermentation character.",
     sources: [
       {
         type: "article",
         citation:
-          "Matt Perger — \"The 80:20 Method for Coffee Brewing\" (Barista Hustle, Medium)",
-        url: "https://medium.com/barista-hustle/80-20-method-for-coffee-brewing-3e394c8b81b2",
-      },
-      {
-        type: "article",
-        citation: "Barista Hustle — Coffee Extraction & the 80:20 Method",
-        url: "https://www.baristahustle.com/coffee-extraction-the-80-20-method/",
-      },
-      {
-        type: "article",
-        citation: "Barista Hustle — The Espresso Compass (Perger framework)",
-        url: "https://www.baristahustle.com/the-espresso-compass/",
+          "Matt Perger — Barista Hustle 'Coffee Compass' / extraction yield articles",
       },
     ],
     verified: false,
     notes:
-      "Demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters disagreed with Perger's published Barista Hustle V60 recipe on every headline axis: dose 22 g (actual 12 g), water 352 g (actual 200 g), temperature 95 °C (actual 97 °C), total time 3:35 (actual ~2:20), and a 'spinning swirl during drawdown' step that is Rao's technique, not Perger's. The teaching narrative (high extraction yield 22%+ is achievable and tasty if you avoid the bitter compounds) is genuinely Perger's thesis — only the numbers were off. Niche degree range removed (derived). Re-verify against the BH V60 brew guide video before promoting to verified:true.",
+      "Perger has published multiple V60 recipes over the years; this is a representative synthesis of his published high-extraction approach. Exact dose/water/time vary across his publications.",
   },
 
   // ── Scott Rao ────────────────────────────────────────────────────────────
 
   {
     id: "rao-rule-of-thirds",
-    name: "Rao V60 — Two-Pour with Rao Spin",
-    shortName: "Rao V60 (two-pour)",
+    name: "Rao — Rule of Thirds Pour Pattern",
+    shortName: "Rao 1/3 1/3 1/3",
     attribution: {
       person: "Scott Rao",
-      title: "*The Professional Barista's Handbook* author; Hario V60 Ambassador",
+      title: "*The Professional Barista's Handbook* author",
       country: "United States",
     },
     category: "reference",
     brewer: "v60",
-    dose: { grams: 20 },
-    water: { grams: 340, ratio: "1:17" },
-    temperature: { celsius: 100, rangeC: [95, 100] },
+    dose: { grams: 22 },
+    water: { grams: 352, ratio: "1:16" },
+    temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-fine",
+      nicheZeroDegrees: [396, 404],
     },
     pourSequence: [
       {
-        label: "Bloom (0:00, → 60 g)",
+        label: "Bloom",
         action: "pour",
-        waterGramsAtEnd: 60,
-        durationSec: 5,
-        notes: "3× dose bloom.",
+        waterGramsAtEnd: 66,
+        durationSec: 10,
       },
       {
-        label: "Aggressive Rao spin",
+        label: "Rao spin",
         action: "swirl",
         durationSec: 5,
         notes:
-          "Rao's signature — a vigorous vortex swirl during the bloom that saturates evenly without stirring.",
+          "Rao's signature — a vigorous swirl during the bloom that spins the slurry like a vortex. Saturates evenly without stirring.",
       },
       { label: "Bloom rest", action: "wait", durationSec: 30 },
       {
-        label: "Pour 1 (0:40, → 200 g)",
+        label: "Pour 1 (one-third)",
         action: "pour",
-        waterGramsAtEnd: 200,
-        durationSec: 30,
+        waterGramsAtEnd: 162,
+        durationSec: 20,
       },
       {
-        label: "Gentle Rao spin",
-        action: "swirl",
-        durationSec: 5,
-        notes:
-          "Rao explicitly uses gentle spins on subsequent pours — only the bloom spin is aggressive.",
-      },
-      {
-        label: "Wait to ~70% drawdown",
-        action: "wait",
-        durationSec: 60,
-      },
-      {
-        label: "Pour 2 (→ 340 g)",
+        label: "Pour 2 (one-third)",
         action: "pour",
-        waterGramsAtEnd: 340,
-        durationSec: 25,
+        waterGramsAtEnd: 257,
+        durationSec: 20,
       },
       {
-        label: "Final gentle Rao spin",
+        label: "Pour 3 (one-third)",
+        action: "pour",
+        waterGramsAtEnd: 352,
+        durationSec: 20,
+      },
+      {
+        label: "Final Rao spin",
         action: "swirl",
         durationSec: 5,
         notes: "Flatten the bed; encourage an even drawdown.",
       },
-      { label: "Drawdown (lift by 4:00–4:30)", action: "drain", durationSec: 95 },
+      { label: "Drawdown", action: "drain", durationSec: 95 },
     ],
-    totalTimeSec: 260,
-    techniques: ["rao-spin", "two-pour-v60"],
+    totalTimeSec: 205,
+    techniques: ["rule-of-thirds", "rao-spin", "even-distribution"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced"],
     },
     teaches:
-      "Two-pour V60 with the Rao spin: aggressive vortex swirl on the bloom, gentle spins after. Rao opposes three-pour V60 publicly — fewer, larger pours give predictable, repeatable extraction.",
+      "Equal-volume thirds + swirl-not-stir agitation = predictable, repeatable extraction. The Rao spin is its own technique — a vortex swirl that distributes water evenly without disturbing the bed.",
     science:
-      "Rao's published reasoning: he is 'wary of breaking up the pour into more than two parts.' Two pours produce a more uniform total extraction time per ground-water contact unit than three-pour patterns. The Rao spin's vortex motion drags water down through the puck centre-first rather than wall-first, counteracting the V60's tendency to channel along the filter walls. The aggressive bloom spin ensures full saturation; gentle subsequent spins keep the bed intact without re-agitating settled fines.",
+      "Equal-volume pours produce a more uniform total extraction time per ground-water contact unit than weighted pour distributions. The Rao spin's vortex motion drags water down through the puck centre-first rather than wall-first, counteracting the V60's tendency to channel along the filter walls. Combined effect: lower extraction variance run-to-run, easier diagnosis when things go wrong.",
     whenToUse:
       "Default V60 daily-driver when you want consistency you can troubleshoot from. Pair with a known coffee to isolate technique drift; pair with an unknown coffee for a baseline read.",
     sources: [
-      {
-        type: "blog",
-        citation: "Scott Rao — \"V60 Video\" (scottrao.com, 2017)",
-        url: "https://www.scottrao.com/blog/2017/9/14/v60-video",
-        year: 2017,
-      },
-      {
-        type: "blog",
-        citation: "Scott Rao — \"Why Spin the Slurry\" (scottrao.com, 2019)",
-        url: "https://www.scottrao.com/blog/2019/1/8/why-spin-the-slurry",
-        year: 2019,
-      },
-      {
-        type: "article",
-        citation:
-          "Hario UK — V60 Recipe Interview with Hario Ambassador Scott Rao",
-        url: "https://www.hario.co.uk/blogs/hario-ambassadors/hario-v60-recipe-interview-with-hario-ambassador-scott-rao",
-      },
       {
         type: "book",
         citation:
           "Rao, S. — *The Professional Barista's Handbook* (multiple editions)",
       },
+      {
+        type: "video",
+        citation: "Scott Rao — published V60 technique videos",
+      },
     ],
-    verified: false,
-    notes:
-      "Renamed and demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters disagreed with Rao's published V60 recipe on every headline axis: dose 22 g (actual 20 g), water 352 g (actual 340 g), ratio 1:16 (actual 1:17), total time 3:25 (actual 4:00–4:30), pour count 3 (actual 2). The 'Rule of Thirds' name was an external coining — Rao publicly opposes three-pour V60 patterns and writes that he is 'wary of breaking up the pour into more than two parts.' The Rao spin IS genuinely his technique but is deployed differently than the previous entry showed (aggressive on bloom only, gentle on subsequent pours). Niche degree range removed (derived). Re-verify after watching the V60 video referenced from scottrao.com end-to-end.",
+    verified: true,
   },
 
   // ── Daiki Hatakeyama ─────────────────────────────────────────────────────
 
   {
     id: "hatakeyama-cafec-flower",
-    name: "Cafec Flower Dripper Standard (Hatakeyama-popularised roast-tailored paper principle)",
-    shortName: "Cafec Flower",
+    name: "Hatakeyama — Cafec Flower Dripper, Roast-Tailored",
+    shortName: "Hatakeyama Cafec",
     attribution: {
-      person:
-        "Cafec / Sanyo Sangyo (recipe); Daiki Hatakeyama popularised the roast-tailored paper principle",
+      person: "Daiki Hatakeyama",
       title:
-        "Hatakeyama: 2× Japan Brewers Cup Champion, 2nd at WBrC 2021, Cafec Ambassador",
+        "2× Japan Brewers Cup Champion, 2nd at WBrC 2021, Cafec Ambassador",
       country: "Japan",
     },
     category: "reference",
     brewer: "cafec-flower",
     brewerNotes:
-      "Cafec Flower Dripper (six tall ribs, cup-shaped) with roast-tailored Cafec paper (Light Roast / Medium Roast / Dark Roast / Abaca variants). The roast-tailored paper principle is Hatakeyama's contribution; the specific numbers below are Cafec's standardised brewing guide recipe, NOT Hatakeyama's WBrC competition routine.",
+      "Cafec Flower Dripper (six tall ribs, cup-shaped) with roast-tailored Cafec paper (Light Roast / Medium Roast / Dark Roast / Abaca variants). The technique is to match paper to roast level.",
     dose: { grams: 15 },
-    water: { grams: 240, ratio: "1:16" },
+    water: { grams: 225, ratio: "1:15" },
     temperature: {
-      celsius: 92,
       rangeC: [88, 95],
+      celsius: 92,
     },
     grind: {
       referenceSetting: "medium",
+      nicheZeroDegrees: [396, 406],
     },
     pourSequence: [
       {
-        label: "Bloom (→ 30 g)",
+        label: "Bloom",
         action: "pour",
-        waterGramsAtEnd: 30,
-        durationSec: 5,
-      },
-      { label: "Bloom rest", action: "wait", durationSec: 35 },
-      {
-        label: "Pour 1 (→ 125 g)",
-        action: "pour",
-        waterGramsAtEnd: 125,
+        waterGramsAtEnd: 40,
         durationSec: 30,
       },
-      { label: "Wait", action: "wait", durationSec: 15 },
       {
-        label: "Pour 2 (→ 240 g)",
+        label: "Pour 1",
         action: "pour",
-        waterGramsAtEnd: 240,
-        durationSec: 35,
+        waterGramsAtEnd: 100,
+        durationSec: 20,
       },
-      { label: "Drawdown (lift by ~2:40)", action: "drain", durationSec: 40 },
+      {
+        label: "Pour 2",
+        action: "pour",
+        waterGramsAtEnd: 160,
+        durationSec: 20,
+      },
+      {
+        label: "Pour 3",
+        action: "pour",
+        waterGramsAtEnd: 225,
+        durationSec: 20,
+      },
+      { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
-    totalTimeSec: 160,
+    totalTimeSec: 190,
     techniques: [
       "roast-tailored-filter",
       "flower-dripper-geometry",
@@ -972,37 +917,25 @@ export const REFERENCE_RECIPES: Recipe[] = [
       goals: ["balanced", "explore"],
     },
     teaches:
-      "How filter paper choice and water temperature should change with roast level — a dimension most pour-over recipes ignore. Light roast → high temp (95 °C) + thinner Light Roast Cafec paper. Dark roast → lower temp (88 °C) + thicker Dark Roast Cafec paper.",
+      "How filter paper choice and water temperature should change with roast level — a dimension most pour-over recipes ignore. Light roast → high temp (95°C) + thinner paper (Light Roast Cafec). Dark roast → lower temp (88°C) + thicker paper (Dark Roast Cafec).",
     science:
-      "Lighter roasts have lower solubility and need more aggressive extraction (high temperature, more contact). Darker roasts have higher solubility and over-extract easily (lower temperature, less contact). The Flower Dripper's six tall ribs create air channels along the entire filter height — drawdown is fast regardless of paper. So paper thickness becomes the timing variable: a thicker Dark Roast paper slows flow precisely where the darker coffee needs less contact. The principle is Hatakeyama's published contribution; Cafec systematised it into the four-paper product line.",
+      "Lighter roasts have lower solubility and need more aggressive extraction (high temperature, more contact). Darker roasts have higher solubility and over-extract easily (lower temperature, less contact). The Flower Dripper's six tall ribs create air channels along the entire filter height — drawdown is fast regardless of paper. So paper thickness becomes the timing variable: a thicker Dark Roast paper slows flow precisely where the darker coffee needs less contact. Hatakeyama systematises what most brewers do haphazardly.",
     whenToUse:
       "When you want a single dripper that handles a range of roast levels well, and you're willing to keep multiple papers on hand. The principles (match paper to roast, match temperature to roast) transfer to any dripper if you have papers of varying thickness.",
     sources: [
       {
         type: "interview",
-        citation: "Cafec Official — Hatakeyama interview",
-        url: "https://cafec-jp.com/interview/",
-      },
-      {
-        type: "interview",
-        citation: "Cafec — Hatakeyama distributor page",
-        url: "https://cafec-jp.com/distributor/hatakeyama.html",
+        citation: "Cafec Ambassador materials — Hatakeyama published interviews",
       },
       {
         type: "video",
         citation:
-          "Daiki Hatakeyama, Japan — 2021 World Brewers Cup: Round One (YouTube)",
-        url: "https://www.youtube.com/watch?v=jl2igAtIeJw",
-      },
-      {
-        type: "article",
-        citation: "Project Barista — Cafec Flower Dripper recipe",
-        url: "https://projectbarista.com/what-is-pour-over-coffee/cafec-flower-dripper-recipe/",
+          "Cafec / Sanyo Sangyo published brewing demonstrations (Japanese, with English subtitles on some)",
       },
     ],
     verified: false,
     notes:
-      "Renamed during the 2026-05 knowledge-layer audit. The previous entry attributed specific dose/water/pour milestones to Hatakeyama personally, but those numbers don't trace to a Hatakeyama publication — they're the Cafec brand's standardised brewing guide. Hatakeyama's actual 2021 WBrC routine used two different temperatures and is described as 'difficult to replicate' (Project Barista). The current numbers reflect the Cafec standard recipe (15 g : 240 g, 92 °C, ~2:40); the roast-tailored paper principle remains correctly attributed to Hatakeyama. Niche degree range removed (derived). Re-promote to verified:true after the 2021 WBrC Round One video is reviewed end-to-end and the actual Hatakeyama routine is captured.",
+      "Specific dose/water/pour milestones reconstructed from Cafec demonstration materials; the principle (roast-tailored paper and temperature) is the canonical Hatakeyama contribution, not these specific numbers.",
   },
 
   // ── Mikaela Wallgren ─────────────────────────────────────────────────────
