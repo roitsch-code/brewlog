@@ -231,10 +231,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "STANDARD orientation (not inverted). Paper filter not rinsed; brewer not preheated. Hoffmann's signature move is to seat the plunger ~1 cm into the chamber immediately after pouring — this creates an air seal that stops water from dripping through during the steep.",
     dose: { grams: 11 },
     water: { grams: 200, ratio: "1:18.2" },
-    temperature: { celsius: 100, rangeC: [85, 100] },
+    temperature: { celsius: 95, rangeC: [85, 100] },
     grind: {
-      referenceSetting:
-        "fine — finer than typical V60 / pour-over; approaching espresso range",
+      referenceSetting: "medium-fine, finer end of medium",
     },
     pourSequence: [
       {
@@ -242,44 +241,49 @@ export const REFERENCE_RECIPES: Recipe[] = [
         action: "agitate-bed",
         durationSec: 0,
         notes:
-          "Cap with paper (not rinsed), set on the cup standard-orientation. Add 11 g dose. No preheat.",
+          "Cap with rinsed paper, set on the cup standard-orientation. Add the dose. No preheat.",
       },
       {
-        label: "Pour all water (start timer)",
+        label: "Pour all water",
         action: "pour",
         waterGramsAtEnd: 200,
         durationSec: 15,
         notes:
-          "Pour 200 g quickly, aiming to wet all coffee. Centre pour after coffee is wet. Then move off the scale — no need to press on the scale.",
+          "Pour 200 g aiming to wet all grounds. No stir — saturation by pour alone.",
       },
-      { label: "Steep", action: "wait", durationSec: 105 },
       {
-        label: "Gentle swirl at 2:00",
-        action: "swirl",
+        label: "Seat the plunger",
+        action: "agitate-bed",
         durationSec: 5,
         notes:
-          "Hold both piston and base, gentle swirl — not a vortex. Knocks the ground-coffee crust down so it sinks to the bottom.",
+          "Immediately seat the plunger ~1 cm into the chamber to create an air seal — this stops water from dripping through during the steep.",
+      },
+      { label: "Steep", action: "wait", durationSec: 120 },
+      {
+        label: "Swirl",
+        action: "swirl",
+        durationSec: 5,
+        notes: "Gentle swirl at 2:00 to settle the slurry before pressing.",
       },
       { label: "Wait", action: "wait", durationSec: 30 },
       {
-        label: "Press gently (~30 s)",
+        label: "Press slowly",
         action: "press",
         durationSec: 30,
-        notes:
-          "Slow, even press — body away from the AeroPress, no leaning weight. Press until every drop is out. Pull back slightly at the end to prevent drips.",
+        notes: "Slow press from 2:30 to ~3:00.",
       },
     ],
     totalTimeSec: 180,
-    techniques: ["standard-aeropress", "lean-ratio"],
+    techniques: ["standard-aeropress-plunger-seal", "lean-ratio"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced"],
     },
     teaches:
-      "How a lean ratio (1:18 = 55 g/L) AeroPress in STANDARD orientation produces a clean, filter-style cup. Standard orientation is simpler than inverted, and the fine grind + boiling water for light roasts drives full extraction without needing a flip step.",
+      "How a lean ratio (1:18) AeroPress produces a clean, filter-style cup at default light-roast temperature (~95 °C). The standard-orientation plunger-seal trick eliminates inversion entirely — simpler to teach, fewer ways to fail.",
     science:
-      "Hoffmann's roast staircase: light roasts at boiling (100 °C) — 'you can go all the way up to boiling and I would recommend that'; medium 90–95 °C; dark <90 °C, often 85. The lean 1:18 ratio at light-roast temperature reaches sufficient extraction across Zones 1–2 in the 2-minute steep. Fine grind compensates for the short contact time. The standard orientation works because the paper + fine grind + air gap above the slurry provide enough surface tension to hold water against the filter during the 2-minute steep — no drip-blocking flip needed.",
+      "Inversion exists to prevent drip-through during the steep, but it adds a flip step that introduces variance. Hoffmann's plunger-seal achieves the same result without the flip: seating the plunger 1 cm creates a small air pocket that holds the water against the paper via atmospheric pressure. The lean 1:18 ratio sits in Zone 1–2 throughout the 2-minute steep — most of the AeroPress's bitter reputation comes from over-rich recipes (1:12 to 1:14), not the brewer itself. Hoffmann's roast staircase: 95 °C for light roasts (default), descend to 85 °C for dark — codebase previously had 85 °C as the headline, which is his dark-roast value.",
     whenToUse:
       "Daily AeroPress that drinks like a clean filter cup. Excellent for travel. Roast staircase: 95 °C default (light/medium-light), 90 °C medium, 85 °C dark.",
     sources: [
