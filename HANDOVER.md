@@ -4,7 +4,7 @@
 
 ---
 
-## In-flight — Knowledge-layer ground-truth audit (2026-05-28, ongoing)
+## Knowledge-layer ground-truth audit — substantively complete (2026-05-28)
 
 A multi-session audit triggered after the Hoffmann V60 Better 1 Cup entry in `reference.ts` was found to disagree with Hoffmann's own published recipe on three axes (temp 92 °C vs his "freshly boiled", 2 pours vs his 4 pulses, 3:30 vs his ~3:00 target). That triggered the third Hard Rule in `CLAUDE.md` (commit `aa3019b`) against fabricating brewing parameters, and a full audit of every claim in `src/lib/knowledge/`, `src/lib/roasters/priors.ts`, `src/lib/coffeeHints.ts`, and `src/lib/constants/grindSettings.ts`.
 
@@ -13,9 +13,13 @@ A multi-session audit triggered after the Hoffmann V60 Better 1 Cup entry in `re
 **Shipped this arc on branch `claude/wonderful-albattani-uLM1n`:**
 
 - `f4c83b1` Drip Assist purge (12 files + 4 assets)
-- `aa3019b` Third Hard Rule added to CLAUDE.md
+- `aa3019b` Third Hard Rule added to CLAUDE.md (fabrication prohibition)
 - `b9fc86b` Roaster priors purge — 14 insider-knowledge quantities + 5 unverified award claims removed (Friedhats, La Cabra, SEY, The Roosters, Fuglen, Five Elephant, Bonanza, Square Mile, Supreme Roastworks, April, Tanat, Nomad, Gardelli, Hard Beans)
-- `6939b3a` Hoffmann V60 1-Cup rewrite (verified from 2023 + 2024 video transcripts with URLs) + new Hedrick V60 Framework entry + 7 new techniques (`pulsed-pours-50g-blocks`, `preheat-via-hot-tap`, `bloom-time-tuning`, `laminar-vs-turbulent-pour`, `rescue-too-fine-pull-early`, `rescue-too-coarse-more-pours`, `bloom-visual-diagnostics`) + 6 new hints + `docs/coffee-experts.md` mirror
+- `6939b3a` Hoffmann V60 1-Cup rewrite + Hedrick V60 Framework entry + 7 new techniques + 6 new hints + `docs/coffee-experts.md` mirror
+- `d93a859` Recipe ground-truth PR A (quick wins) — Hoffmann Clever URL + Kasuya 4:6 standard cadence fix + Hario/book sources + Turbo V60 (Hedrick) attribution tightening
+- `9684eef` Recipe ground-truth PR B (substantial fixes) — Hoffmann AeroPress (standard not inverted; 95 °C not 85 °C; 3:00 not 2:30) + Hoffmann Iced (two-cup variant 37.5:500 + 170 g ice) + Kasuya 2016 Pour 1 = 50 g not 60 g + Medina 2023 (Origami Air S; 5 × 50 g pours) + Wölfl 2024 (Chicago not Copenhagen; 630 µm; correct 4-pour cadence) + Wallgren Kalita (15:250 not 22:330; 96 °C not 94 °C)
+- `793d9e7` Recipe ground-truth PR C (demote + rewrite/rename) — 10 entries where parameters materially diverged from the originator's actual published recipe: Hoffmann Moccamaster (ratio uncertain), Du 2019 (16 g not 20 g; 1:15 not 1:12; 3 pours not 4), Hsu 2022 (temperature uncertainty), Peng 2025 (catastrophic — 1:14 not 1:4, 96/96/80 not 96/88/80, 800 µm not medium-fine), Stanica WAC (Lisbon not Bucharest; 50+50 g extraction not 120+80 bypass; no flip step), Gagné AeroPress (HOT + long, not low-temp + long — every parameter wrong), Perger V60 (12 g not 22 g; 200 g not 352 g; drop Rao-spin step), Rao "Rule of Thirds" (renamed to Two-Pour with Rao Spin — Rao opposes 3-pour publicly), Rolf (renamed — "Minimum Variables" not traceable to a Rolf primary), Hatakeyama (renamed — numbers are generic Cafec, not Hatakeyama's WBrC routine).
+- Hard Rule strengthening (this commit) — sub-rules 5–8 added against aggregator-as-primary, `verified: true`-without-content-cross-check, peer-data audit when adjacent data is changed, and retroactive audit on rule enactment
 
 **Pivotal reframing (2026-05-28 evening):** the user (Markus) and the experts agree — grinder settings are inherently individual. Hoffmann, Hedrick, Kasuya all say "every grinder is different." So the codebase should NOT carry universal Niche degrees. Instead: build per-recipe grind settings from one empirical anchor + published cross-brewer ratios. Markus is not going to brew 50+ calibration cups.
 
@@ -24,24 +28,48 @@ A multi-session audit triggered after the Hoffmann V60 Better 1 Cup entry in `re
 - Comandante 23 clicks landed Hoffmann's claimed 3:30 on his (wrong-codebase) recipe. Niche 385° = same drawdown ish.
 - Real Hoffmann 1-Cup (100 °C + 4 pulse pours + 3:00 target) NOT yet re-brewed.
 
+**Audit status — 19 named-expert recipe entries done:**
+
+| Outcome | Count | Examples |
+|---|---|---|
+| Keep as-is | 1 | hoffmann-clever-ultimate |
+| Minor fix (URL upgrade, cadence) | 2 | kasuya-4-6-standard, turbo-v60-hedrick |
+| Substantial fix with primary URL (PR B) | 6 | hoffmann-aeropress-standard, hoffmann-immersion-iced-clever, wbrc-2016-kasuya, wbrc-2023-medina, wbrc-2024-wolfl, wallgren-kalita-sieved |
+| Demote to `verified: false` + rewrite/rename (PR C) | 10 | hoffmann-moccamaster, wbrc-2019-du, wbrc-2022-hsu, wbrc-2025-peng, wac-2024-stanica, gagne-long-aeropress, perger-high-extraction-v60, rao-rule-of-thirds, rolf-minimum-variables, hatakeyama-cafec-flower |
+
 **Pending — next session(s):**
 
 1. **520 ml brew anchor** — Markus to brew **30 g : 500 g V60, Comandante 30 clicks**, time + taste. Anchor from Wendelboe's published V60 video (`https://www.youtube.com/watch?v=r-4TjpGYZ2U` — Markus's URL; not in-session-verified yet). Niche degree TBD by what hits ~4:00 drawdown.
-2. **Source-hunt for cross-brewer scaling**, in published expert sources (Hoffmann, Hedrick, others). Specifically:
-   - Kalita Wave vs V60 — finer or coarser, by how much?
-   - Origami cone vs V60 — finer or coarser?
-   - Origami wave vs Origami cone — different from each other?
-   - Small-dose vs big-dose grind shift (one data point already: Wendelboe 20:300 → 24 clicks vs 30:500 → 30 clicks ≈ +6 clicks per doubling, per the URL Markus cited but I haven't watched).
-3. After steps 1+2: rebuild `grindSettings.ts` as a per-recipe + per-brewer framework anchored to Markus's empirical brew(s) + published ratios. NOT universal Niche degrees per brewer.
-4. **PR 4+ on the audit roadmap:** the long tail — ~234 Class C claims in `coffeeHints.ts` (historic dates, origin specifics), the 60+ recipes in `expanded.ts`, the variety priors (lowest risk — WCR-grounded), and the Class B techniques. Plan in `/root/.claude/plans/please-check-claude-md-proud-bachman.md` (ephemeral — won't survive container teardown).
+2. After step 1: rebuild `grindSettings.ts` as a per-recipe + per-brewer framework anchored to Markus's empirical brew(s) + published cross-brewer directional data (Kalita coarser than V60, Origami flow-faster, dose-up coarser — all directional, no published quantitative slopes from named experts). NOT universal Niche degrees per brewer.
+3. **Variety audit** (`src/lib/knowledge/varieties/data.ts`) — 25 entries: 8 Class A (WCR-grounded), 6 Class B (Royal Green Book only), 11 Class C (WCR-only or empty). Needs WCR catalog page-URL cross-check per variety. Lowest risk of the remaining work.
+4. **Class B techniques audit** (`techniques/data.ts`) — 7 entries with vague YouTube/blog sources need URL augmentation: Turbo (Hedrick), swirl-not-stir (Hoffmann), high-agitation (Perger), minimal-agitation (Rolf), water-first (Bailey/Hoffmann), roast-tailored filter (Hatakeyama), inverted AeroPress (community).
+5. **`coffeeHints.ts` quantitative-claim audit** — ~115 Class C quantitative hints (historic dates, origin specifics, SCA standards). Long tail; triage between "industry standard, just add URL" vs "delete".
+6. **`expanded.ts` recipes** — ~60 entries, mixed Class A/B. Heaviest source-hunting workload; likely needs its own multi-session arc.
+7. **Re-promotion to `verified: true`** — every demoted entry has notes documenting what content cross-check is needed to re-promote. Items to actually watch end-to-end (YouTube blocks WebFetch in-session): WCE Hsu 2022 finals, Origami Du 2019 walkthrough, Slow Pour Solo Dripper Peng 2025, WAC Stanica 2024, Hoffmann 2021 AeroPress, Hoffmann 2023 Moccamaster, Hoffmann 2023 Iced, BH Perger V60, Rao V60 scottrao.com video, Hatakeyama 2021 WBrC Round One.
 
-**Verified primary sources collected this session** (use the URLs, they're cited in code now):
-- Hoffmann *A Better 1 Cup V60 Technique* — `https://www.youtube.com/watch?v=1oB1oDrDkHM`
-- Hoffmann *How To Avoid A Bad Pour Over Brew* — `https://www.youtube.com/watch?v=mMwscUNKbPk`
-- Hedrick *Pourover Lesson for Advanced Brewers* (also covers his Lazy 80% framework content) — `https://www.youtube.com/watch?v=2mrLiE4ilXw`
-- European Coffee Trip *3 Essential Hario V60 Recipes* — `https://www.youtube.com/watch?v=P0mI6Ue8BKc` (third-party demo)
+**Verified primary source URLs collected this session** (all now cited in code):
+- Hoffmann *A Better 1 Cup V60 Technique* — https://www.youtube.com/watch?v=1oB1oDrDkHM
+- Hoffmann *How To Avoid A Bad Pour Over Brew* — https://www.youtube.com/watch?v=mMwscUNKbPk
+- Hoffmann *The Ultimate V60 Technique* (2019, 30:500 batch) — https://www.youtube.com/watch?v=AI4ynXzkSQo
+- Hoffmann *The Ultimate Clever Dripper Technique* (2020) — https://www.youtube.com/watch?v=RpOdennxP24
+- Hoffmann *The Ultimate AeroPress Technique* (2021, Ep. 3) — https://www.youtube.com/watch?v=j6VlT_jUVPc
+- Hoffmann *The Perfect Moccamaster Brew Recipe* (2023) — https://www.youtube.com/watch?v=xwFvlapyVl4
+- Hoffmann *Immersion Iced Coffee: A Better & Easier Technique* (2023) — https://www.youtube.com/watch?v=8uGGeV8A-BM
+- Hedrick *Pourover Lesson for Advanced Brewers* (2024, covers his Lazy 80% framework) — https://www.youtube.com/watch?v=2mrLiE4ilXw
+- European Coffee Trip *3 Essential Hario V60 Recipes* (third-party demo of Hoffmann 2019, Kasuya 4:6, Cafec Osmotic Flow) — https://www.youtube.com/watch?v=P0mI6Ue8BKc
+- Wölfl 2024 ECT walkthrough — https://europeancoffeetrip.com/winning-pour-over-recipe-martin-woelfl/ + https://www.youtube.com/watch?v=3SIFFaT1MFU
+- Peng 2025 Slow Pour Supply — https://www.slowpoursupply.co/blogs/journal/2025-world-brewers-cup-champion-george-pengs-solo-dripper-recipe + Sprudge + Solo Dripper YouTube
+- Stanica WAC 2024 — https://aeropress.com/blogs/w-a-c-aeropress-recipes/1st-george-stanica-romania-2024 + WAC archive + YouTube
+- Gagné AeroPress — https://coffeeadastra.com/2021/09/07/reaching-fuller-flavor-profiles-with-the-aeropress/
+- Perger BH — Medium 80:20 + baristahustle.com 80:20 + Espresso Compass
+- Rao V60 — https://www.scottrao.com/blog/2017/9/14/v60-video + Why Spin + Hario UK Ambassador
+- Kasuya — https://en.philocoffea.com/products/signed-book-by-tetsu-kasuya-anyone-can-make-great-coffee-the-worlds-best-4-6-method-for-getting-addicted-to-good-coffee (book) + https://www.hario-europe.com/blogs/hario-community/v60-ambassadors-tetsu-kasuya (interview)
+- Wallgren — https://www.baristamagazine.com/brewing-experiments-mikaela-wallgrens-2016-world-brewers-cup-championship-recipe/
+- Du 2019 — https://www.youtube.com/watch?v=Fl4fuM5bVQU (Origami official) + Sprudge
+- Hsu 2022 — https://www.youtube.com/watch?v=sTroaHo5zsk (WCE official)
+- Medina 2023 — https://www.youtube.com/watch?v=XQd8ddPKbXU (WCE official) + Slow Pour Supply
 
-**Branch state:** working tree clean. 4 commits ahead of `main`. No PR opened yet on GitHub — Markus has not asked.
+**Branch state:** working tree clean. 8 commits ahead of `main`. No PR opened yet on GitHub — Markus has not asked.
 
 ---
 
