@@ -147,53 +147,42 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     brewer: "origami-wave",
     brewerNotes:
       "Origami dripper with Kalita Wave 155 paper filter. The 'Sensory Flavor Cup' Du co-designed with Origami sits in the same family.",
-    dose: { grams: 20 },
-    water: { grams: 240, ratio: "1:12" },
+    dose: { grams: 16 },
+    water: { grams: 240, ratio: "1:15" },
     temperature: { celsius: 94 },
     grind: {
       referenceGrinder: "EK43",
-      referenceSetting: "medium",
-      nicheZeroDegrees: [398, 408],
+      referenceSetting: "medium (~780 µm, ≈ Comandante C40 26 clicks per published transcriptions)",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Pour 1 (0:00, doubles as bloom)",
         action: "pour",
-        waterGramsAtEnd: 40,
-        durationSec: 35,
-        notes: "2× dose. Light stir to fully saturate the wave bed.",
+        waterGramsAtEnd: 60,
+        durationSec: 10,
+        notes: "60 g pour at ~6 g/s.",
       },
+      { label: "Wait", action: "wait", durationSec: 8 },
       {
-        label: "Pour 1",
+        label: "Pour 2 (0:18)",
         action: "pour",
-        waterGramsAtEnd: 100,
+        waterGramsAtEnd: 140,
         durationSec: 20,
       },
+      { label: "Wait", action: "wait", durationSec: 18 },
       {
-        label: "Pour 2",
-        action: "pour",
-        waterGramsAtEnd: 160,
-        durationSec: 20,
-      },
-      {
-        label: "Pour 3",
-        action: "pour",
-        waterGramsAtEnd: 200,
-        durationSec: 15,
-      },
-      {
-        label: "Pour 4",
+        label: "Pour 3 (0:56, → 240 g)",
         action: "pour",
         waterGramsAtEnd: 240,
-        durationSec: 15,
+        durationSec: 20,
       },
-      { label: "Drawdown", action: "drain", durationSec: 70 },
+      { label: "Drawdown (lift by ~2:00)", action: "drain", durationSec: 34 },
     ],
-    totalTimeSec: 195,
+    totalTimeSec: 110,
     techniques: [
       "custom-mineral-water",
-      "rich-ratio",
-      "even-pour-distribution",
+      "lean-ratio",
+      "fast-brew",
       "flat-bed-extraction",
     ],
     bestFor: {
@@ -203,9 +192,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       goals: ["high-clarity", "sweetness-forward"],
     },
     teaches:
-      "How a rich brewing ratio (1:12) combined with custom low-mineral water can produce extreme clarity without sacrificing sweetness. The flat Origami wave bed evens extraction across the puck.",
+      "How an extremely fast, lean (1:15) brew on Origami Wave with custom low-mineral water produces clarity-first cups in under 2 minutes. Three pours, no bloom hold — the first pour is the bloom.",
     science:
-      "Du's water (4 ppm Ca²⁺, 15 ppm Mg²⁺, ~80 ppm TDS) is heavily magnesium-biased — magnesium binds organic acids and amplifies aromatic complexity, while the low calcium prevents the cup from gaining unwanted body that would mask florals. The 1:12 ratio runs counter to the usual 'lean = bright' rule because the low-mineral water provides almost zero buffering against acidity; concentration intensifies clarity rather than muddying it. The Origami's ribbed walls drain fast despite the wave filter's slower base flow, preventing the puck from stalling in late extraction.",
+      "Du's water (4 ppm Ca²⁺, 15 ppm Mg²⁺, ~80 ppm TDS) is heavily magnesium-biased — magnesium binds organic acids and amplifies aromatic complexity, while the low calcium prevents the cup from gaining unwanted body that would mask florals. The low-mineral water provides almost zero buffering against acidity; the fast brew preserves Zone-1 aromatic intensity before extraction can reach Zone 3. The Origami's ribbed walls drain fast despite the wave filter's slower base flow, preventing the puck from stalling.",
     whenToUse:
       "For a Gesha or top-tier washed Ethiopian where you want maximum aromatic intensity in a small cup. Requires either championship water or a careful tap-distilled blend.",
     sources: [
@@ -215,13 +204,21 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         year: 2019,
       },
       {
-        type: "interview",
-        citation: "Origami Dripper recipe collaboration materials",
+        type: "video",
+        citation:
+          "Origami official walkthrough — \"ORIGAMI COFFEE BREWER: Recipe by Du JiaNing, 2019 World Champion (Step-By-Step)\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=Fl4fuM5bVQU",
+      },
+      {
+        type: "article",
+        citation:
+          "Sprudge — Du Jianing of China is the 2019 World Brewers Cup Champion",
+        url: "https://sprudge.com/du-jianing-of-china-is-the-2019-world-brewers-cup-champion-142739.html",
       },
     ],
     verified: false,
     notes:
-      "Headline parameters (dose, water, temp, brewer, custom water spec) are well-attested. Pour sequence reconstructed from Origami collaboration write-ups and Sprudge interviews; published routine details vary slightly between sources.",
+      "Demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters (20 g : 240 g = 1:12, 4-pour structure, 195 s total) didn't trace to any Du primary source — multiple aggregator transcriptions consistently report 16 g : 240 g (1:15), 3 pours (60 / 80 / 100 g at 0 / 0:18 / 0:56), brew completing by ~1:46–2:00. The previous 'rich 1:12 ratio' teaching framing was downstream of the wrong dose and has been replaced. Niche degree range dropped (derived, not published by Du). Re-promote to verified:true after the Origami official YouTube walkthrough is reviewed end-to-end.",
   },
 
   // ── 2022 WBrC ──────────────────────────────────────────────────────────────
@@ -252,8 +249,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     },
     grind: {
       referenceGrinder: "1Zpresso ZP6",
-      referenceSetting: "medium-fine",
-      nicheZeroDegrees: [388, 396],
+      referenceSetting: "medium-fine (Hsu is the 1Zpresso ZP6 ambassador)",
     },
     pourSequence: [
       {
@@ -286,7 +282,6 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       "staged-temperature",
       "low-temp-bloom",
       "aroma-preservation",
-      "rich-ratio",
     ],
     bestFor: {
       roastLevels: ["very-light", "light"],
@@ -308,12 +303,15 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       },
       {
         type: "video",
-        citation: "World Coffee Events YouTube — official routine",
+        citation:
+          "World Coffee Events — \"Shih Yuan Hsu Sherry, Taiwan — 2022 World Brewers Cup Finals\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=sTroaHo5zsk",
+        year: 2022,
       },
     ],
     verified: false,
     notes:
-      "Dose, water, brewer, and the two staging temperatures (70°C and 95°C) are agreed across sources. The exact sequencing — how many pours follow the cool bloom, and at what intervals — varies in third-party transcriptions. The two-pour structure above is the most commonly cited reconstruction.",
+      "Demoted to verified:false during the 2026-05 knowledge-layer audit. The two staging temperatures may be 70 / 95 °C (codebase) OR 75 / 93 °C — search excerpts split on this and the WCE final video was not viewable in-session to settle it. Exact pour sequencing (number of post-bloom pours, intervals) also varies in third-party transcriptions. The two-pour structure is the most commonly cited reconstruction but could be three pours. Niche degree range removed (derived, not from Hsu). Re-promote to verified:true after the WCE final video is reviewed end-to-end and the temperature pair is confirmed.",
   },
 
   // ── 2023 WBrC ──────────────────────────────────────────────────────────────
@@ -532,23 +530,21 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "solo-dripper",
     brewerNotes:
-      "Solo dripper (PCTG plastic, 40° cone angle). Melodrip used over the cone to control agitation. Coffee: a single Panama Gesha, prepared at three different roast levels — 5g of each, layered in the brewer.",
+      "Solo dripper (PCTG plastic, 40° cone angle). Melodrip used over the cone to control agitation on the final pour. Coffee: 94.5-point natural Gesha from Mt Totumas, Panama, prepared at three different roast levels — 5 g of each (light + medium-light + medium of the same green), layered in the brewer. Water: 40 ppm low-mineral.",
     dose: { grams: 15 },
-    water: { grams: 60, ratio: "1:4" },
+    water: { grams: 210, ratio: "1:14 (excluding the 80 ml preheat which is discarded)" },
     temperature: {
       staged: [
-        { pourIndex: 0, celsius: 96, label: "hot bloom" },
-        { pourIndex: 1, celsius: 88, label: "development" },
-        { pourIndex: 2, celsius: 80, label: "aroma-preservation final pour" },
+        { pourIndex: 0, celsius: 96, label: "preheat (discarded)" },
+        { pourIndex: 1, celsius: 96, label: "pour 1 (hot)" },
+        { pourIndex: 2, celsius: 96, label: "pour 2 (hot)" },
+        { pourIndex: 3, celsius: 80, label: "pour 3 (cool, via Melodrip)" },
       ],
       rangeC: [80, 96],
     },
     grind: {
       referenceGrinder: "Comandante C40 / EK43 equivalent",
-      referenceSetting: "medium-fine",
-      nicheZeroDegrees: [386, 396],
-      description:
-        "Finer than typical V60 grind — the 1:4 ratio is concentrated enough that fine grind is essential to reach target extraction in 2 minutes.",
+      referenceSetting: "800 microns (medium-coarse)",
     },
     pourSequence: [
       {
@@ -556,56 +552,73 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         action: "agitate-bed",
         durationSec: 0,
         notes:
-          "5g light, 5g medium-light, 5g medium of the same Panama Gesha. Order of layering is part of the routine.",
+          "5 g light, 5 g medium-light, 5 g medium of the same Mt Totumas Panama Gesha. Order of layering is part of the routine.",
       },
       {
-        label: "Hot bloom (96°C, via Melodrip)",
-        action: "melodrip",
-        waterGramsAtEnd: 20,
-        durationSec: 30,
+        label: "Preheat the dripper (80 ml @ 96 °C, discarded)",
+        action: "pour",
+        waterGramsAtEnd: 0,
+        durationSec: 0,
+        notes:
+          "80 ml of 96 °C water is poured through the dripper before brewing and discarded. The brewing water count starts after this preheat.",
+      },
+      {
+        label: "Pour 1 (0:00, 30 g @ 96 °C)",
+        action: "pour",
+        waterGramsAtEnd: 30,
+        durationSec: 6,
         temperatureC: 96,
         notes:
-          "Hot bloom starts extraction across all three roast levels; the Melodrip prevents agitation that would homogenise the layered bed.",
+          "Three counter-clockwise circles over ~6 s, hitting all three roast layers.",
       },
       {
-        label: "Development pour (88°C, via Melodrip)",
-        action: "melodrip",
-        waterGramsAtEnd: 40,
-        durationSec: 30,
-        temperatureC: 88,
+        label: "Wait",
+        action: "wait",
+        durationSec: 24,
       },
       {
-        label: "Cool final pour (80°C, via Melodrip)",
-        action: "melodrip",
-        waterGramsAtEnd: 60,
+        label: "Pour 2 (0:30, +90 g → 120 g @ 96 °C)",
+        action: "pour",
+        waterGramsAtEnd: 120,
+        durationSec: 10,
+        temperatureC: 96,
+      },
+      {
+        label: "Wait",
+        action: "wait",
         durationSec: 30,
+      },
+      {
+        label: "Pour 3 (1:10, +90 g → 210 g @ 80 °C, via Melodrip)",
+        action: "melodrip",
+        waterGramsAtEnd: 210,
+        durationSec: 15,
         temperatureC: 80,
         notes:
-          "Cool final pour preserves fragile Zone 1 aromatics that would dissipate at 96°C.",
+          "Cool final pour through Melodrip preserves the fragile Zone 1 aromatics that would dissipate at 96 °C.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 30 },
+      { label: "Drawdown (lift by ~1:45)", action: "drain", durationSec: 20 },
     ],
-    totalTimeSec: 120,
+    totalTimeSec: 105,
     techniques: [
       "staged-temperature",
       "three-roast-layering",
       "melodrip-controlled-agitation",
-      "ultra-rich-ratio",
       "low-mineral-water",
       "cool-serving",
     ],
     bestFor: {
       roastLevels: ["very-light", "light", "medium-light"],
-      processes: ["washed"],
+      processes: ["washed", "natural"],
       varieties: ["Gesha", "Geisha"],
       goals: ["high-clarity", "explore"],
     },
     teaches:
-      "How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and staged temperatures isolate which extraction phase contributes which character. The Melodrip removes agitation as a variable so the layered bed stays compositionally distinct.",
+      "How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and a hot/hot/cool temperature progression with Melodrip-controlled agitation on the final pour isolates which extraction phase contributes which character.",
     science:
-      "Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using a hot bloom followed by progressively cooler pours, Peng compresses what would normally be three separate brews into one. The Melodrip (a perforated disc that diffuses pour flow) eliminates turbulence — the three layers extract in place rather than mixing. The 1:4 ratio is closer to espresso concentration than filter; the cup is served diluted to taste, or savoured neat at the 50°C serving temperature where retronasal aroma perception is at its peak.",
+      "Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using two hot pours followed by a cool final Melodrip pour, Peng compresses what would normally be three separate brews into one. The Melodrip (a perforated disc that diffuses pour flow) eliminates turbulence on the final pour — the three layers stay compositionally distinct rather than mixing late in the brew. 40 ppm low-mineral water provides almost zero buffering against acidity. The cup is served at ~50 °C where retronasal aroma perception is at its peak.",
     whenToUse:
-      "Demonstration brewing. Not a daily-driver recipe. Requires three roast levels of the same coffee — impractical for most home setups — but the principles (staged temperature, controlled agitation via Melodrip-equivalent, ultra-rich ratio with low-mineral water) transfer to single-roast brews.",
+      "Demonstration brewing. Not a daily-driver recipe. Requires three roast levels of the same coffee — impractical for most home setups — but the principles (staged temperature, controlled agitation via Melodrip on a final cool pour, low-mineral water) transfer to single-roast brews.",
     sources: [
       {
         type: "official-competition",
@@ -614,12 +627,26 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       },
       {
         type: "article",
-        citation: "Slow Pour Supply — Peng 2025 recipe write-up",
+        citation:
+          "Slow Pour Supply — George Peng's Solo Dripper Recipe (2025 World Brewers Cup Champion)",
+        url: "https://www.slowpoursupply.co/blogs/journal/2025-world-brewers-cup-champion-george-pengs-solo-dripper-recipe",
+      },
+      {
+        type: "article",
+        citation:
+          "Sprudge — How to Brew Coffee Like the 2025 World Brewers Cup Champion",
+        url: "https://sprudge.com/how-to-brew-coffee-like-the-2025-world-brewers-cup-champion-338576.html",
+      },
+      {
+        type: "video",
+        citation:
+          "Solo Dripper YouTube — \"RESEP SOLO DRIPPER JUARA DUNIA WBRC 2025\" (Peng routine walkthrough)",
+        url: "https://www.youtube.com/watch?v=2YFEbyoQvuY",
       },
     ],
     verified: false,
     notes:
-      "The headline mechanics — Solo dripper, three roast levels of one coffee, staged temperatures (96 → 80°C), Melodrip, 40 ppm low-mineral water, 50°C serving temperature — are consistently reported. The exact dripper variant is sometimes described as Origami in some sources (different drippers were used across rounds of the routine). Pour milestones are reconstructed and the precise sequencing should be checked against the official WCC video when teaching from this recipe.",
+      "Demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters were materially wrong on multiple axes: the '1:4 ratio (60 g water)' interpretation was a misread of the 3-roast layering — actual brewing water is 210 g total (1:14, not 1:4); temperature staging was '96 → 88 → 80 °C' but the actual published recipe is hot/hot/cool (96 / 96 / 80) with no 88 °C middle stage; grind was 'medium-fine' but published value is 800 µm medium-coarse; total time was 2:00 but Slow Pour Supply states ~1:45. The 80 ml preheat-and-discard step was entirely missing. Niche degree range removed (derived). Re-promote to verified:true after the Solo Dripper YouTube routine walkthrough is reviewed end-to-end.",
   },
 
   // ── 2024 World AeroPress Championship ─────────────────────────────────────
@@ -630,60 +657,93 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     shortName: "Stanica 2024",
     attribution: {
       person: "George Stanica",
-      title: "2024 World AeroPress Champion",
+      title:
+        "2024 World AeroPress Champion (championship held in Lisbon; Stanica is from Bucharest, café Boyo)",
       country: "Romania",
       year: 2024,
     },
     category: "championship",
     brewer: "aeropress",
     brewerNotes:
-      "Inverted AeroPress with Aesir paper filter. Mixed Aquacode water at 85–90 ppm TDS.",
+      "Inverted AeroPress with single rinsed Aesir paper filter. Aquacode mineral water diluted to ~85–90 ppm TDS for extraction; room-temperature 0 ppm water used for the final dilution. Coffee: Ethiopian Guji washed (Arsosala station), roasted by Olisipo, sourced via Cafe Imports.",
     dose: { grams: 18 },
-    water: { grams: 200, ratio: "1:11.1 (extraction) + bypass" },
+    water: { grams: 100, ratio: "1:5.6 (extraction; diluted to ~1:8.3 in cup)" },
     temperature: { celsius: 96 },
     grind: {
       referenceGrinder: "Comandante C40 Mk4 Red Clix",
-      referenceSetting: "58 clicks",
-      nicheZeroDegrees: [382, 388],
+      referenceSetting: "58 clicks (≈ 870 µm)",
       description:
-        "Medium-fine. Red Clix has 50 clicks per turn vs. standard 30, so 58 clicks ≈ 35 standard clicks.",
+        "Medium-coarse. Red Clix has ~50 clicks per turn vs. standard ~30, so 58 Red Clix clicks ≈ 35 standard clicks. The 870 µm figure is what the routine itself specifies; the Comandante click count is the published reference setting.",
     },
     pourSequence: [
       {
         label: "Invert and load",
         action: "invert",
         durationSec: 0,
-        notes: "Inverted orientation, 18g dose, Aesir filter in cap (off).",
+        notes:
+          "Inverted orientation throughout the brew. 18 g dose. Single rinsed Aesir paper in the cap (set aside until press).",
       },
       {
-        label: "Pour concentrate water at 96°C",
+        label: "Pour 1 (0:00, 50 g @ 96 °C)",
         action: "pour",
-        waterGramsAtEnd: 120,
-        durationSec: 15,
+        waterGramsAtEnd: 50,
+        durationSec: 10,
         temperatureC: 96,
       },
-      { label: "Stir 2–3× evenly", action: "stir", durationSec: 10 },
-      { label: "Steep", action: "wait", durationSec: 60 },
+      { label: "Bloom rest", action: "wait", durationSec: 20 },
       {
-        label: "Cap, flip, and press",
-        action: "press",
-        durationSec: 30,
+        label: "Pour 2 (0:30, +50 g → 100 g @ 96 °C)",
+        action: "pour",
+        waterGramsAtEnd: 100,
+        durationSec: 10,
+        temperatureC: 96,
       },
       {
-        label: "Add bypass water to taste",
+        label: "NSEW stir (0:42–0:52)",
+        action: "stir",
+        durationSec: 10,
+        notes:
+          "Light north-south-east-west stir, not a vortex swirl — keeps the puck uniform without channeling.",
+      },
+      { label: "Steep", action: "wait", durationSec: 28 },
+      {
+        label: "Cap and de-air (1:20)",
+        action: "agitate-bed",
+        durationSec: 15,
+        notes:
+          "Seat the cap (with rinsed Aesir filter) and gently de-air. No flip — the AeroPress is already inverted.",
+      },
+      {
+        label: "Press (~1:35, slow press over 30–40 s)",
+        action: "press",
+        durationSec: 35,
+        notes:
+          "Slow press from the already-inverted position. The press yields ~76–79 g of concentrate.",
+      },
+      {
+        label: "Dilute with warm water (~30–40 g)",
         action: "bypass",
-        waterGramsAtEnd: 200,
+        waterGramsAtEnd: 115,
         durationSec: 5,
         notes:
-          "~80g cool bypass water added directly to the cup. Separates extraction strength from final drink concentration.",
+          "Warm water dilution brings the cup from concentrate strength toward drinking strength.",
+      },
+      {
+        label: "Final dilution with room-temp 0 ppm water (~30 g)",
+        action: "bypass",
+        waterGramsAtEnd: 145,
+        durationSec: 5,
+        notes:
+          "Final ~30 g of room-temperature 0 ppm water lands the cup at ~150 g served. The two-step dilution (warm then cool) lets Stanica tune both temperature and concentration independently.",
       },
     ],
-    totalTimeSec: 120,
+    totalTimeSec: 135,
     techniques: [
       "inverted-aeropress",
       "concentrate-and-bypass",
       "high-temperature-extraction",
       "mid-mineral-water",
+      "two-step-dilution",
     ],
     bestFor: {
       roastLevels: ["light", "medium-light"],
@@ -691,20 +751,38 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       goals: ["high-clarity", "balanced", "explore"],
     },
     teaches:
-      "How concentrate-and-bypass separates extraction from dilution. You can over-pull a tight, intense concentrate at 1:6–1:11, then dial the cup back to drinking strength with cool water — the cup's flavour profile and its strength become independent controls.",
+      "How concentrate-and-bypass separates extraction from dilution. Over-pull a tight, intense concentrate at the extraction stage, then dial the cup back to drinking strength and temperature with two-step dilution (warm water + 0 ppm water).",
     science:
-      "At 1:11 extraction, the AeroPress extracts deeply into Zone 2 (sugars, maillard) without the diluted, watery cup that a 1:16 brew would produce. The bypass water then adjusts cup weight — adding water doesn't extract anything (the puck is already pressed), it only changes concentration. 85–90 ppm mineral water is the SCA sweet spot for clarity-with-body. Aesir paper retains more oils than standard AeroPress paper, pushing the cup toward filter-cup clarity rather than the typical AeroPress mouthfeel.",
+      "At 1:5.6 extraction the AeroPress extracts deeply into Zone 2 (sugars, maillard) without the diluted, watery cup that a 1:16 brew would produce. The bypass water then adjusts cup weight and temperature — adding water doesn't extract anything (the puck is already pressed), it only changes concentration. 85–90 ppm mineral water is in the SCA sweet spot for clarity-with-body. Aesir paper retains more oils than standard AeroPress paper, pushing the cup toward filter-cup clarity rather than the typical AeroPress mouthfeel.",
     whenToUse:
       "For an AeroPress brew where you want filter-style clarity at the strength of a concentrated extraction. Excellent for competition-grade light roasts where standard AeroPress recipes feel under-extracted.",
     sources: [
       {
         type: "official-competition",
-        citation: "2024 World AeroPress Championship",
+        citation: "2024 World AeroPress Championship, Lisbon",
         year: 2024,
       },
+      {
+        type: "article",
+        citation:
+          "aeropress.com — 1st place 2024 World AeroPress Championship recipe (George Stanica, Romania)",
+        url: "https://aeropress.com/blogs/w-a-c-aeropress-recipes/1st-george-stanica-romania-2024",
+      },
+      {
+        type: "article",
+        citation:
+          "World AeroPress Championship — 1st place George Stanica 2024",
+        url: "https://worldaeropresschampionship.com/pages/1st-george-stanica-romania-2024",
+      },
+      {
+        type: "video",
+        citation:
+          "World AeroPress Championship — \"1st Place 2024 World AeroPress Championship Recipe\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=1qgL4IWr3-k",
+      },
     ],
-    verified: true,
+    verified: false,
     notes:
-      "The Comandante 'Red Clix' setting (58 clicks) only translates correctly on Red Clix burrs — standard Comandante owners should use ~35 clicks as the equivalent.",
+      "Demoted to verified:false during the 2026-05 knowledge-layer audit. Previous codebase parameters were materially wrong: location was 'Bucharest' but WAC 2024 was held in Lisbon (Stanica's café Boyo is in Bucharest); water structure was '120 g extraction + 80 g bypass = 200 g' but the published recipe is 50 g + 50 g = 100 g extraction water, diluted in two stages to ~150 g final drink; pour sequence said 'cap, flip, and press' but the brewer is already inverted — there is no flip. Aesir filter is single rinsed (not 'off'). Niche degree range removed (derived from the Red Clix translation, not from Stanica). Re-promote to verified:true after the WAC official YouTube recipe is reviewed end-to-end.",
   },
 ];
