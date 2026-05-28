@@ -4,6 +4,47 @@
 
 ---
 
+## In-flight — Knowledge-layer ground-truth audit (2026-05-28, ongoing)
+
+A multi-session audit triggered after the Hoffmann V60 Better 1 Cup entry in `reference.ts` was found to disagree with Hoffmann's own published recipe on three axes (temp 92 °C vs his "freshly boiled", 2 pours vs his 4 pulses, 3:30 vs his ~3:00 target). That triggered the third Hard Rule in `CLAUDE.md` (commit `aa3019b`) against fabricating brewing parameters, and a full audit of every claim in `src/lib/knowledge/`, `src/lib/roasters/priors.ts`, `src/lib/coffeeHints.ts`, and `src/lib/constants/grindSettings.ts`.
+
+**Audit headline** — across ~302 quantitative or factual claims: 11% have a specific cited source, 11% have only vague description, 78% have no source attribution at all. Zero URLs anywhere in the codebase's `sources` arrays before this work.
+
+**Shipped this arc on branch `claude/wonderful-albattani-uLM1n`:**
+
+- `f4c83b1` Drip Assist purge (12 files + 4 assets)
+- `aa3019b` Third Hard Rule added to CLAUDE.md
+- `b9fc86b` Roaster priors purge — 14 insider-knowledge quantities + 5 unverified award claims removed (Friedhats, La Cabra, SEY, The Roosters, Fuglen, Five Elephant, Bonanza, Square Mile, Supreme Roastworks, April, Tanat, Nomad, Gardelli, Hard Beans)
+- `6939b3a` Hoffmann V60 1-Cup rewrite (verified from 2023 + 2024 video transcripts with URLs) + new Hedrick V60 Framework entry + 7 new techniques (`pulsed-pours-50g-blocks`, `preheat-via-hot-tap`, `bloom-time-tuning`, `laminar-vs-turbulent-pour`, `rescue-too-fine-pull-early`, `rescue-too-coarse-more-pours`, `bloom-visual-diagnostics`) + 6 new hints + `docs/coffee-experts.md` mirror
+
+**Pivotal reframing (2026-05-28 evening):** the user (Markus) and the experts agree — grinder settings are inherently individual. Hoffmann, Hedrick, Kasuya all say "every grinder is different." So the codebase should NOT carry universal Niche degrees. Instead: build per-recipe grind settings from one empirical anchor + published cross-brewer ratios. Markus is not going to brew 50+ calibration cups.
+
+**Anchor empirical session (2026-05-28):**
+- 1-Cup Hoffmann **with the wrong codebase recipe** (92 °C, 2 pours, 3:30 target) gave Niche 385° / Comandante 23 / clean sweet floral cup. **Not a valid Hoffmann anchor** — the recipe was wrong on the day.
+- Comandante 23 clicks landed Hoffmann's claimed 3:30 on his (wrong-codebase) recipe. Niche 385° = same drawdown ish.
+- Real Hoffmann 1-Cup (100 °C + 4 pulse pours + 3:00 target) NOT yet re-brewed.
+
+**Pending — next session(s):**
+
+1. **520 ml brew anchor** — Markus to brew **30 g : 500 g V60, Comandante 30 clicks**, time + taste. Anchor from Wendelboe's published V60 video (`https://www.youtube.com/watch?v=r-4TjpGYZ2U` — Markus's URL; not in-session-verified yet). Niche degree TBD by what hits ~4:00 drawdown.
+2. **Source-hunt for cross-brewer scaling**, in published expert sources (Hoffmann, Hedrick, others). Specifically:
+   - Kalita Wave vs V60 — finer or coarser, by how much?
+   - Origami cone vs V60 — finer or coarser?
+   - Origami wave vs Origami cone — different from each other?
+   - Small-dose vs big-dose grind shift (one data point already: Wendelboe 20:300 → 24 clicks vs 30:500 → 30 clicks ≈ +6 clicks per doubling, per the URL Markus cited but I haven't watched).
+3. After steps 1+2: rebuild `grindSettings.ts` as a per-recipe + per-brewer framework anchored to Markus's empirical brew(s) + published ratios. NOT universal Niche degrees per brewer.
+4. **PR 4+ on the audit roadmap:** the long tail — ~234 Class C claims in `coffeeHints.ts` (historic dates, origin specifics), the 60+ recipes in `expanded.ts`, the variety priors (lowest risk — WCR-grounded), and the Class B techniques. Plan in `/root/.claude/plans/please-check-claude-md-proud-bachman.md` (ephemeral — won't survive container teardown).
+
+**Verified primary sources collected this session** (use the URLs, they're cited in code now):
+- Hoffmann *A Better 1 Cup V60 Technique* — `https://www.youtube.com/watch?v=1oB1oDrDkHM`
+- Hoffmann *How To Avoid A Bad Pour Over Brew* — `https://www.youtube.com/watch?v=mMwscUNKbPk`
+- Hedrick *Pourover Lesson for Advanced Brewers* (also covers his Lazy 80% framework content) — `https://www.youtube.com/watch?v=2mrLiE4ilXw`
+- European Coffee Trip *3 Essential Hario V60 Recipes* — `https://www.youtube.com/watch?v=P0mI6Ue8BKc` (third-party demo)
+
+**Branch state:** working tree clean. 4 commits ahead of `main`. No PR opened yet on GitHub — Markus has not asked.
+
+---
+
 ## Latest — Offline Brew Mode (PR #184 → #185, 2026-05-24) ✅ shipped + verified on device
 
 Re-brew a **known** coffee with no network. The brew process was already client-only (timer, pour guide, tasting log; pour math is local); the only offline-breaking pieces were fetching a recipe (`/api/recommend`) and saving (`/api/sessions`). Both closed by reusing a past recipe + queuing the save.
