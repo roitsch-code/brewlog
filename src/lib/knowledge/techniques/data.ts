@@ -600,4 +600,239 @@ export const TECHNIQUES: Technique[] = [
     ],
     verified: true,
   },
+
+  // ── Hoffmann 2023/2024 + Hedrick 2024 additions ──────────────────────────
+
+  {
+    id: "pulsed-pours-50g-blocks",
+    name: "Pulsed Pours — 50 g Blocks",
+    shortName: "Hoffmann pulsed pours",
+    attribution: {
+      person: "James Hoffmann",
+      year: 2023,
+    },
+    category: "pour-pattern",
+    manipulates: ["bed agitation", "extraction uniformity"],
+    description:
+      "Pour water in equal pulses of ~50 g (or 20% of total brew weight), each pulse taking ~10 s, with ~10 s of bed-settling between pulses. The recipe is divisible: a 250 g brew = 5 blocks × 50 g; an 18:300 = 5 × 60 g; a 12:200 = 5 × 40 g.",
+    mechanism:
+      "Each pulse provides a controlled moment of bed agitation followed by an equal moment of bed-settling. The 10 s pause lets the bed re-form and CO2 escape before the next pulse, so each pour drives extraction without accumulating turbulence that would migrate fines to the filter walls. Hoffmann's measurements show a consistent ~5 g/s pour rate with a low spout produces the agitation needed for high extraction without channeling.",
+    whenToUse:
+      "Single-cup V60 brewing where consistency is the goal. Works across roast levels with the temperature staircase. Scales cleanly when dose changes — divide total water by 5 to find the per-pulse pour size.",
+    contraindications: [
+      "Brews requiring continuous agitation (Turbo) or zero agitation (immersion)",
+      "Very large brews (>500 g) where bed depth makes per-pulse drawdown unpredictable",
+    ],
+    compatibleBrewers: ["v60", "orea-classic", "origami-cone"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup"],
+    sources: [
+      {
+        type: "video",
+        citation: "James Hoffmann — \"A Better 1 Cup V60 Technique\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=1oB1oDrDkHM",
+        year: 2023,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "preheat-via-hot-tap",
+    name: "Preheat via Hot Tap Water",
+    shortName: "Hot-tap preheat",
+    attribution: {
+      person: "James Hoffmann",
+      year: 2023,
+    },
+    category: "pre-brew",
+    manipulates: ["bloom temperature stability", "perceived sweetness"],
+    description:
+      "Preheat the dripper and rinse the filter paper with very hot tap water rather than freshly boiled water. Hoffmann calls a boiling-water preheat wasteful — hot tap is sufficient for thermal stability when paired with a plastic V60.",
+    mechanism:
+      "Hoffmann's side-by-side measurements found preheating does NOT change measurable extraction — the refractometer reads the same with or without preheat. But the cup tastes materially different: the un-preheated bloom cools faster, the cup loses perceived sweetness, and acidity rises. The mechanism is that the bloom temperature drop affects which compounds dissolve in the first 45 s, even though end-state extraction yield converges.",
+    whenToUse:
+      "Every V60 brew where taste quality matters. Plastic V60 retains heat best — ceramic and glass need more substantial preheating (boiling water) to reach the same thermal stability.",
+    requiredEquipment: [
+      "A kitchen tap that runs uncomfortably hot to touch",
+    ],
+    compatibleBrewers: ["v60"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup"],
+    sources: [
+      {
+        type: "video",
+        citation: "James Hoffmann — \"A Better 1 Cup V60 Technique\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=1oB1oDrDkHM",
+        year: 2023,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "bloom-time-tuning",
+    name: "Bloom Time Tuning",
+    shortName: "Variable bloom",
+    attribution: {
+      person: "Lance Hedrick",
+      year: 2024,
+    },
+    category: "pre-brew",
+    manipulates: ["CO2 release", "extraction floor"],
+    description:
+      "Treat bloom time as a coffee-dependent variable, not a constant. Move it between 30 s and 2 min based on gas content, freshness, and roast — and on the visual cue of whether grounds are still floating 'high and dry' at the end of the bloom.",
+    mechanism:
+      "CO2 trapped in interstitial water inhibits extraction by creating upward channels through the bed. Off-gassing is spontaneous but rate-limited by gas content and water penetration. Hedrick's bloom-time experiment on a washed Peru and a washed Kenya found that extraction increases with bloom time, but the best-tasting cup varies by coffee: Peru peaked at a 30 s bloom; the Kenya peaked at a 2 min bloom. Visual feedback during the bloom is more reliable than a fixed clock.",
+    whenToUse:
+      "Any pour-over recipe where the coffee is unfamiliar or freshness/roast are unusual. When grounds float 'high and dry' on the bloom surface at 45 s, that signals trapped CO2 — extend by 30 s.",
+    contraindications: [
+      "Decaf: CO2 is already released during decaffeination; shorten the bloom",
+      "Old or stale coffee: little CO2 left to release; shorten the bloom and tighten the ratio",
+    ],
+    compatibleBrewers: ["v60", "orea-classic", "orea-apex", "origami-cone", "origami-wave", "kalita-wave"],
+    exemplifiedBy: ["hedrick-v60-framework"],
+    sources: [
+      {
+        type: "video",
+        citation:
+          "Lance Hedrick — \"Pourover Lesson for Advanced Brewers\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=2mrLiE4ilXw",
+        year: 2024,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "laminar-vs-turbulent-pour",
+    name: "Laminar vs Turbulent Pour",
+    shortName: "Pour stream tuning",
+    attribution: {
+      person: "Lance Hedrick",
+      year: 2024,
+    },
+    category: "agitation",
+    manipulates: ["bed agitation depth", "extraction yield"],
+    description:
+      "Choose the pour stream's break-up state deliberately. A continuous stream just below the break-up point produces maximum bed agitation; an above-break-up droplet stream produces minimal agitation. Both happen at the same kettle and pour rate — the difference is spout height and tilt.",
+    mechanism:
+      "A continuous stream transfers its kinetic energy directly into the bed at impact, driving turbulence deep through the puck. Once the stream breaks into droplets (above the break-up point), each droplet loses energy independently to surface tension and air resistance, so the energy reaching the bed is much smaller. Counter-intuitively, pouring from higher up produces LESS agitation, not more, because the stream breaks before it lands.",
+    whenToUse:
+      "Turbulent (just below break-up) is the default for normal pour-overs. Switch to laminar (lower pour or break-up droplets) when drawdown is dragging from over-agitated fines, when brewing decaf (high fines content clogs filters fast), or when you want to limit extraction on a dark roast.",
+    compatibleBrewers: ["v60", "orea-classic", "orea-apex", "kalita-wave"],
+    exemplifiedBy: ["hedrick-v60-framework"],
+    sources: [
+      {
+        type: "video",
+        citation:
+          "Lance Hedrick — \"Pourover Lesson for Advanced Brewers\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=2mrLiE4ilXw",
+        year: 2024,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "rescue-too-fine-pull-early",
+    name: "Rescue: Pull Early When Grind Is Too Fine",
+    shortName: "Pull-early rescue",
+    attribution: {
+      person: "James Hoffmann",
+      year: 2024,
+    },
+    category: "post-brew",
+    manipulates: ["effective extraction window", "cup strength"],
+    description:
+      "When the bloom signals an over-fine grind: pour the full water schedule as usual, but pull the cup (remove the carafe) at your usual brew time even if liquid is still in the cone. Then top up the resulting cup with hot water back to your expected liquid weight.",
+    mechanism:
+      "Extraction yield correlates with brew time in a usable approximation — if you stop the brew at the same clock time you usually do, your extraction is usually close to what you usually get, regardless of how much water has actually passed through. Less liquid means a stronger cup; topping up with hot water dilutes back to your usual strength. The cup is saved without making the extraction over-shoot into bitter zones.",
+    whenToUse:
+      "When the bloom is muddy/soupy (visual cue of over-fine grind) and you can predict the brew will overshoot. Reach for this when there's at least ~150 ml of liquid through the bed at your usual time — below that the brew is unsalvageable.",
+    contraindications: [
+      "Catastrophically fine grind where <100 ml passes through — the cup is too weak to dilute back",
+    ],
+    compatibleBrewers: ["v60", "orea-classic", "kalita-wave", "chemex"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup"],
+    sources: [
+      {
+        type: "video",
+        citation:
+          "James Hoffmann — \"How To Avoid A Bad Pour Over Brew\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=mMwscUNKbPk",
+        year: 2024,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "rescue-too-coarse-more-pours",
+    name: "Rescue: More Pours When Grind Is Too Coarse",
+    shortName: "More-pours rescue",
+    attribution: {
+      person: "James Hoffmann",
+      year: 2024,
+    },
+    category: "pour-pattern",
+    manipulates: ["bed agitation cycles", "extraction yield"],
+    description:
+      "When the bloom signals an over-coarse grind: convert a 5-pour recipe into a 7-pour structure, pour more aggressively (more turbulent), and let the bed fully drain between each pour. Optionally add a +25–50 mL final pour to drive extraction further at the cost of mild dilution.",
+    mechanism:
+      "Each pour-and-full-drain cycle provides a fresh moment of high-percolation extraction as water moves through a settled, intact bed. More pours = more cycles = more extraction. The aggressive pour adds turbulence that drives the water deeper into the bed during each cycle. An additional +50 mL of water further drives extraction yield up (water passed through coffee = total extracted), but adds dilution to the final cup.",
+    whenToUse:
+      "When the bloom dries out very fast or the bed cracks early — both visual cues of an over-coarse grind. The rescue handles a noticeably-but-not-extremely-coarse grind; if it's wildly coarse, the cup is unsalvageable.",
+    contraindications: [
+      "Catastrophically coarse grind — no amount of extra pours will reach normal extraction",
+      "Recipes that already use many pours; the rescue assumes a 2–5 pour starting point",
+    ],
+    compatibleBrewers: ["v60", "orea-classic", "kalita-wave", "chemex"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup"],
+    sources: [
+      {
+        type: "video",
+        citation:
+          "James Hoffmann — \"How To Avoid A Bad Pour Over Brew\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=mMwscUNKbPk",
+        year: 2024,
+      },
+    ],
+    verified: true,
+  },
+
+  {
+    id: "bloom-visual-diagnostics",
+    name: "Bloom Visual Diagnostics",
+    shortName: "Bloom diagnostics",
+    attribution: {
+      person: "James Hoffmann (Hoffmann 2024); Lance Hedrick (Hedrick 2024)",
+      year: 2024,
+    },
+    category: "pre-brew",
+    manipulates: ["grind-size diagnosis", "bloom-time diagnosis"],
+    description:
+      "Read the bloom visually to diagnose grind size and CO2 release before committing to the full pour. Three signals: a muddy or soupy bloom surface = grind is too fine; a bloom that dries out quickly with grounds crusting the wall = grind is too coarse (or beans are very fresh); grounds floating 'high and dry' above the bloom water = CO2 is still trapped, extend the bloom by 30–60 s.",
+    mechanism:
+      "An over-fine grind creates higher slurry viscosity and slower drawdown — visible as a muddy bloom surface. An over-coarse grind drains the bloom water rapidly through the bed, leaving the surface dry and exposing the filter walls. Floating grounds with a dry crust indicate CO2 bubbles still pushing grounds up — water hasn't penetrated the puck yet, so extraction can't begin properly.",
+    whenToUse:
+      "Every pour-over brew. The bloom is the first feedback signal and the only one before the cup commits; reading it gives the cheapest rescue opportunity.",
+    compatibleBrewers: ["v60", "orea-classic", "orea-apex", "origami-cone", "origami-wave", "kalita-wave", "chemex"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup", "hedrick-v60-framework"],
+    sources: [
+      {
+        type: "video",
+        citation:
+          "James Hoffmann — \"How To Avoid A Bad Pour Over Brew\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=mMwscUNKbPk",
+        year: 2024,
+      },
+      {
+        type: "video",
+        citation:
+          "Lance Hedrick — \"Pourover Lesson for Advanced Brewers\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=2mrLiE4ilXw",
+        year: 2024,
+      },
+    ],
+    verified: true,
+  },
 ];

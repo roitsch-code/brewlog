@@ -43,7 +43,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 | Recipe | Brewer | Dose : Water | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|
-| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 92°C | 396–406° | 3:30 | true |
+| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 (plastic preferred) | 15g : 250g | 100°C light / 92 medium / 83 dark | user-empirical | 3:00 | true |
 | **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96°C | 421–431° | 3:00 | true |
 | **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85°C | 377–387° | 2:30 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 431–441° | 8:00 | true |
@@ -56,10 +56,11 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g | 88–95°C (by roast) | 396–406° | 3:10 | false |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
 | **Turbo V60 (Hedrick)** | V60 | 15g : 250g | 100°C | 391–396° | 2:00 | true |
+| **Hedrick V60 Framework (Lazy 80%)** | V60 (any size) | 18g : 306g | 95°C max (light) | user-empirical / coarse | 3:00 | true |
 
 **Teaching summaries**
 
-- **Hoffmann V60 (Better 1 Cup)** — Swirl rather than stir, flatten the bed with a tap before drawdown. Both moves reduce fines migration and channeling without sacrificing extraction.
+- **Hoffmann V60 (Better 1 Cup)** — Bloom + 4 pulse pours of 50 g each (20% blocks), with ~10 s pour and ~10 s pause between each. Two counter-intuitive findings: (i) preheating with hot tap (not boiling) doesn't change measurable extraction but materially improves cup taste — the un-preheated bloom cools and the cup loses sweetness; (ii) a low spout produces more agitation than a high spout, because a high stream breaks before reaching the bed. Roast-temperature staircase: light at freshly boiled (100 °C), medium 90–95, dark 80–85.
 - **Hoffmann Ultimate Clever** — Water-first technique: pour all water first, drop coffee on top. The grounds saturate from below via buoyancy/capillary action; no mechanical agitation needed.
 - **Hoffmann AeroPress** — A low-temperature (85°C), lean-ratio (1:18) AeroPress produces a clean, filter-style cup without the bitterness people associate with the brewer.
 - **Hoffmann Moccamaster Method** — Pulsing showerhead + flat-bottomed paper filter approximates a multi-pour V60 without operator skill. 1:15 at medium-coarse grind for batches ≥500ml.
@@ -71,6 +72,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Hatakeyama Cafec Flower** — Match filter paper thickness to roast level. Light roast → thin paper (faster flow tolerable); dark roast → thick paper (slows flow where less contact is needed).
 - **Wallgren Kalita** — Sieve out fines pre-brew. Fines over-extract relative to the rest of the grind; removing them tightens the extraction distribution and produces a startlingly clean cup.
 - **Turbo V60** — 100°C + coarse grind + fast pour produces a clean, well-extracted cup in 2 minutes. Boiling water raises extraction rate; coarse grind partially cancels by reducing surface area; net = high yield in short contact.
+- **Hedrick V60 Framework** — Framework over fixed recipe. Find a baseline you can brew reliably (1:17 ratio, 95°C max, coarse grind, bloom 30 s – 2 min coffee-dependent, fewer-pours-preferred), then tune in big steps: water → grind → ratio → temperature (3–6°C, not 1–2) → bloom time → grinder. Aim for 80% of a coffee's potential fast, then iterate. Hedrick retracts his older "brew off boiling for light roasts" stance; finds 95°C cleaner without losing what he liked about 99°C.
 
 ---
 
@@ -148,7 +150,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 ## 3. Techniques
 
-18 atomic moves. Recipes are compositions of 3–6 of these. Each technique cross-references the recipes that exemplify it.
+25 atomic moves. Recipes are compositions of 3–6 of these. Each technique cross-references the recipes that exemplify it.
 
 ### 3a. Temperature
 
@@ -168,6 +170,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **minimal-agitation** | Rolf | Single continuous pour, no stir. Removes pour count and pour spacing as variables. | rolf-minimum-variables |
 | **melodrip-controlled-pouring** | Peng (2025) | Perforated disc breaks pour into many fine streams; eliminates pour-induced turbulence at the bed. | wbrc-2025-peng |
 | **water-first** | Bailey (originated); Hoffmann (popularised) | Add water first, drop coffee on top. Grounds saturate from below via buoyancy/capillary action. | hoffmann-clever-ultimate |
+| **laminar-vs-turbulent-pour** | Hedrick (2024) | Stream just below break-up = max bed agitation; above break-up = droplets, minimal agitation. Spout height is the lever. | hedrick-v60-framework |
 
 ### 3c. Pour pattern
 
@@ -175,6 +178,8 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 |---|---|---|---|
 | **phase-separated-pouring** *(4:6)* | Kasuya | First 40% (two pours) controls acid/sweet axis; last 60% (3+ pours) controls strength. | wbrc-2016-kasuya, kasuya-4-6-standard |
 | **rule-of-thirds** | Rao | Equal-volume pours after the bloom. Lower run-to-run variance. | rao-rule-of-thirds |
+| **pulsed-pours-50g-blocks** | Hoffmann (2023) | Equal 50 g pulses (20% blocks) with ~10 s pour + ~10 s pause. Each cycle = one agitation + one settle. Scales by dose. | hoffmann-v60-better-one-cup |
+| **rescue-too-coarse-more-pours** | Hoffmann (2024) | If grind too coarse: 5 pours → 7, turbulent, full drain between each; optional +50 mL final pour at small dilution cost. | hoffmann-v60-better-one-cup |
 
 ### 3d. Pre-brew
 
@@ -183,6 +188,9 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **fines-removal-sieving** | Wallgren (2016) | Discard particles <200µm pre-brew. Tightens extraction distribution. | wallgren-kalita-sieved |
 | **three-roast-layering** | Peng (2025) | Layer light/medium-light/medium of same green; each contributes different compounds. | wbrc-2025-peng |
 | **roast-tailored-filter** | Hatakeyama | Match paper thickness to roast level — light roast → thin paper, dark roast → thick paper. | hatakeyama-cafec-flower |
+| **preheat-via-hot-tap** | Hoffmann (2023) | Preheat dripper with hot tap, not boiling. Cup tastes materially sweeter even though measurable extraction doesn't change. | hoffmann-v60-better-one-cup |
+| **bloom-time-tuning** | Hedrick (2024) | Bloom time is coffee-dependent (gas, freshness, roast). Best value may be 30 s, 60 s, or 120 s — not a constant. | hedrick-v60-framework |
+| **bloom-visual-diagnostics** | Hoffmann (2024); Hedrick (2024) | Muddy bloom = grind too fine; dries fast = too coarse; high-and-dry grounds = bloom CO2 still trapped. | hoffmann-v60-better-one-cup, hedrick-v60-framework |
 
 ### 3e. Post-brew
 
@@ -190,6 +198,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 |---|---|---|---|
 | **concentrate-and-bypass** | Hoffmann; Stanica (WAC 2024) | Brew tight (1:6–1:11), dilute with cool bypass water. Separates extraction from drink concentration. | wac-2024-stanica |
 | **flash-chilling** | Hoffmann (popularised) | Brew hot, drain onto ice. Aromatics lock into liquid before they volatilise. | hoffmann-immersion-iced-clever |
+| **rescue-too-fine-pull-early** | Hoffmann (2024) | If grind too fine: pour full schedule but pull cup at usual brew time even with liquid in cone; top up with hot water to expected liquid weight. | hoffmann-v60-better-one-cup |
 
 ### 3f. Vessel-specific
 
@@ -209,7 +218,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 | Expert | Recipes | Techniques |
 |---|---|---|
-| **James Hoffmann** | Better 1 Cup, Ultimate Clever, AeroPress, Moccamaster, Immersion Iced | swirl-not-stir, water-first (popularised), concentrate-and-bypass (popularised), flash-chilling (popularised) |
+| **James Hoffmann** | Better 1 Cup, Ultimate Clever, AeroPress, Moccamaster, Immersion Iced | swirl-not-stir, pulsed-pours-50g-blocks, preheat-via-hot-tap, bloom-visual-diagnostics, rescue-too-fine-pull-early, rescue-too-coarse-more-pours, water-first (popularised), concentrate-and-bypass (popularised), flash-chilling (popularised) |
 | **Tetsu Kasuya** | WBrC 2016, 4:6 standard | phase-separated-pouring |
 | **Scott Rao** | Rule of Thirds | rao-spin, rule-of-thirds |
 | **Matt Perger** | High-Extraction V60 | high-agitation-high-extraction |
@@ -217,7 +226,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **Jonathan Gagné** | Long-Brew AeroPress + Prismo | low-temp-long-steep |
 | **Daiki Hatakeyama** | Cafec Flower (roast-tailored) | roast-tailored-filter |
 | **Mikaela Wallgren** | Kalita with Sieved Fines | fines-removal-sieving |
-| **Lance Hedrick** | Turbo V60 (popularised) | boiling-water-coarse-grind |
+| **Lance Hedrick** | Turbo V60 (popularised), Lazy 80% Framework | boiling-water-coarse-grind, bloom-time-tuning, laminar-vs-turbulent-pour, bloom-visual-diagnostics |
 | **James Bailey** | (originated water-first; Hoffmann popularised) | water-first (origin) |
 | **Sherry Hsu** | WBrC 2022 | staged-temperature |
 | **George Peng** | WBrC 2025 | staged-temperature, melodrip-controlled-pouring, three-roast-layering |

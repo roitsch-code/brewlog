@@ -118,6 +118,12 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         type: "book",
         citation: "Kasuya, T. — published 4:6 method documentation",
       },
+      {
+        type: "video",
+        citation:
+          "European Coffee Trip — \"3 Essential Hario V60 Recipes\" (third-party demo of the 4:6 framework with Comandante 23 clicks)",
+        url: "https://www.youtube.com/watch?v=P0mI6Ue8BKc",
+      },
     ],
     verified: true,
     notes:

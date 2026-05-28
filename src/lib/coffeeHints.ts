@@ -316,6 +316,14 @@ export const COFFEE_HINTS: string[] = [
   "Certifications: Rainforest Alliance, Fair Trade, and Organic all measure different things — none guarantees cup quality.",
   "Cascara (dried coffee cherry tea) has been drunk in Yemen and Bolivia for centuries — now trending in specialty cafés.",
   "Specialty coffee's 'fourth wave' focuses on radical transparency: producer payment, carbon footprint, water use per kg.",
+
+  // Brewing-diagnostic hints sourced from Hoffmann 2024 + Hedrick 2024 videos
+  "Muddy or soupy bloom? Your grind is probably too fine — Hoffmann's visual diagnostic for over-fine V60 brews.",
+  "Bloom dries out fast and grounds crust the wall? Grind likely too coarse — or beans are very fresh and need more bloom time.",
+  "Grounds floating high and dry above the bloom mean CO2 is still trapped — extend the bloom by 30–60 s before pouring (Hedrick's bloom-time tuning).",
+  "When dialling in temperature, move in 3–6 °C steps. Smaller changes are usually below your perception threshold (Hedrick).",
+  "Variable priority when a brew tastes off: water → grind → ratio → temperature → bloom time → grinder. Fix in that order before touching smaller knobs (Hedrick).",
+  "Aim for 80% of a coffee's potential on first brew, then iterate. Chasing 100% on cup 1 burns time and beans (Hedrick).",
 ];
 
 /** Returns a shuffled subset of hints for a single loading session */
