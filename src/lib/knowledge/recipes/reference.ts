@@ -135,7 +135,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     attribution: {
       person: "James Hoffmann",
       country: "United Kingdom",
-      year: 2022,
+      year: 2020,
     },
     category: "reference",
     brewer: "clever",
@@ -206,11 +206,14 @@ export const REFERENCE_RECIPES: Recipe[] = [
       {
         type: "video",
         citation:
-          "James Hoffmann — 'The Ultimate Clever Dripper Technique' (YouTube)",
-        year: 2022,
+          "James Hoffmann — \"The Ultimate Clever Dripper Technique\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=RpOdennxP24",
+        year: 2020,
       },
     ],
     verified: true,
+    notes:
+      "Temperature '96 °C' is a defensible numeric pinning of Hoffmann's 'just off-boil' wording. Technique itself is attributed by Hoffmann to James Bailey of Workshop Coffee London; Hoffmann is the populariser. Niche degree range is user-empirical, not from Hoffmann.",
   },
 
   {
@@ -451,14 +454,14 @@ export const REFERENCE_RECIPES: Recipe[] = [
         waterGramsAtEnd: 240,
         durationSec: 10,
       },
-      { label: "Wait", action: "wait", durationSec: 20 },
+      { label: "Wait", action: "wait", durationSec: 35 },
       {
         label: "Pour 5 (60% phase, 3 of 3)",
         action: "pour",
         waterGramsAtEnd: 300,
         durationSec: 10,
       },
-      { label: "Drawdown", action: "drain", durationSec: 35 },
+      { label: "Drawdown", action: "drain", durationSec: 20 },
     ],
     totalTimeSec: 210,
     techniques: ["phase-separated-pouring", "ratio-control-via-pour-count"],
@@ -476,20 +479,25 @@ export const REFERENCE_RECIPES: Recipe[] = [
     sources: [
       {
         type: "book",
-        citation: "Kasuya, T. — 4:6 Method documentation",
+        citation:
+          "Kasuya, T. — *Anyone Can Make Great Coffee: The World's Best 4:6 Method* (Philocoffea)",
+        url: "https://en.philocoffea.com/products/signed-book-by-tetsu-kasuya-anyone-can-make-great-coffee-the-worlds-best-4-6-method-for-getting-addicted-to-good-coffee",
       },
       {
-        type: "video",
-        citation: "Multiple Tetsu Kasuya / Philocoffea instructional videos",
+        type: "article",
+        citation: "Hario Europe — V60 Ambassador Q&A with Tetsu Kasuya",
+        url: "https://www.hario-europe.com/blogs/hario-community/v60-ambassadors-tetsu-kasuya",
       },
       {
         type: "video",
         citation:
-          "European Coffee Trip — \"3 Essential Hario V60 Recipes\" (third-party demo, ECT brews an 18:300 sweet-leaning variant of the 4:6 framework with Comandante 23 clicks)",
+          "European Coffee Trip — \"3 Essential Hario V60 Recipes\" (third-party demo of an 18:300 sweet-leaning variant with Comandante 23 clicks; not primary)",
         url: "https://www.youtube.com/watch?v=P0mI6Ue8BKc",
       },
     ],
     verified: true,
+    notes:
+      "Canonical pour cadence is 45-second intervals between pour starts (10 s pour + 35 s wait), with Pour 5 starting at 3:00 and lift/drawdown finishing ~3:30. The 60-60-60-60-60 'balanced' split shown is one of multiple Kasuya-documented variants — Hario's published interview also describes a 50+70 first-40% split for sweetness/acidity dial; both are legitimate. Niche degree range is user-empirical, not from Kasuya.",
   },
 
   // ── Patrik Rolf ──────────────────────────────────────────────────────────
@@ -1005,19 +1013,18 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "turbo-v60-hedrick",
-    name: "Turbo V60 (Hedrick)",
+    name: "Turbo V60 (community-derived, Hedrick-popularised)",
     shortName: "Turbo V60",
     attribution: {
-      person: "Lance Hedrick (popularised)",
-      title:
-        "Coffee educator, YouTube; technique developed in the championship community",
+      person: "Lance Hedrick (popularised); technique developed in the broader championship community",
+      title: "Coffee educator, YouTube",
       country: "United States",
     },
     category: "reference",
     brewer: "v60",
     dose: { grams: 15 },
     water: { grams: 250, ratio: "1:16.7" },
-    temperature: { celsius: 100 },
+    temperature: { celsius: 100, rangeC: [95, 100] },
     grind: {
       referenceSetting: "coarse — espresso fine WOULD choke",
       nicheZeroDegrees: [391, 396],
@@ -1064,14 +1071,20 @@ export const REFERENCE_RECIPES: Recipe[] = [
     sources: [
       {
         type: "video",
-        citation: "Lance Hedrick — YouTube (multiple Turbo V60 videos)",
+        citation: "Lance Hedrick — Turbo V60 videos on his YouTube channel (no single canonical URL identified — multiple videos cover the technique)",
+        url: "https://www.youtube.com/@LanceHedrick",
       },
       {
-        type: "article",
-        citation: "Specialty coffee community articles on Turbo brewing",
+        type: "video",
+        citation:
+          "Lance Hedrick — \"Pourover Lesson for Advanced Brewers\" (2024; Hedrick explicitly retracts his older 'brew off boiling for light roasts' stance and now teaches ≤95 °C on V60)",
+        url: "https://www.youtube.com/watch?v=2mrLiE4ilXw",
+        year: 2024,
       },
     ],
     verified: true,
+    notes:
+      "The 100 °C / coarse / fast / ~2:00 mechanic is canonical Turbo-brewing doctrine, popularised by Hedrick but not exclusively his. Hedrick's CURRENT V60 teaching (2024 framework, see `hedrick-v60-framework`) caps at 95 °C — the 100 °C entry here represents the Turbo doctrine's original framing, not Hedrick's current personal default. If you want Hedrick's current daily-driver V60, use `hedrick-v60-framework` instead. Niche degree range is user-empirical, not from Hedrick.",
   },
 
   {
