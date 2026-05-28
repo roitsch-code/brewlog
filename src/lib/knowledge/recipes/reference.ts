@@ -29,80 +29,99 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "v60",
-    brewerNotes: "Hario V60 size 02, tabbed paper filter",
+    brewerNotes:
+      "Hario V60 size 02, paper filter rinsed. Plastic V60 preferred per Hoffmann for thermal retention. Dripper preheated with very hot tap water — not boiling (Hoffmann calls boiling-water preheat wasteful). Expected liquid out: ~215–220 g from 250 g poured.",
     dose: { grams: 15 },
     water: { grams: 250, ratio: "1:16.7" },
-    temperature: { celsius: 92, rangeC: [90, 96] },
+    temperature: { celsius: 100, rangeC: [80, 100] },
     grind: {
       referenceGrinder: "Various",
-      referenceSetting: "medium-fine, like table salt",
-      nicheZeroDegrees: [396, 406],
+      referenceSetting:
+        "medium-fine — finer than most people expect, but not super fine; for light roasts you want this fine",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (→ 50 g)",
         action: "pour",
-        waterGramsAtEnd: 45,
+        waterGramsAtEnd: 50,
         durationSec: 5,
-        notes: "3× dose. Pour quickly to saturate evenly.",
+        notes:
+          "~5 g/s circular pour, spout held low (a high pour breaks the stream and dissipates energy before it hits the bed — less agitation, not more).",
       },
       {
-        label: "Swirl",
+        label: "Gentle swirl",
         action: "swirl",
         durationSec: 5,
         notes:
-          "Gentle swirl to flatten the bed — replaces a stir, avoids fines migration.",
+          "Even saturation through bulk-puck motion. Don't push grounds up the wall.",
       },
       { label: "Bloom rest", action: "wait", durationSec: 35 },
       {
-        label: "Main pour (target 60% by 1:15)",
+        label: "Pulse 1 (→ 100 g)",
+        action: "pour",
+        waterGramsAtEnd: 100,
+        durationSec: 15,
+        notes: "Circular pour, ~5 g/s, low spout.",
+      },
+      { label: "Pause", action: "wait", durationSec: 10 },
+      {
+        label: "Pulse 2 (→ 150 g)",
         action: "pour",
         waterGramsAtEnd: 150,
-        durationSec: 30,
-        notes:
-          "Pour in a steady spiral. The first 60% of the total water should be in by 1:15.",
+        durationSec: 10,
       },
+      { label: "Pause", action: "wait", durationSec: 10 },
       {
-        label: "Continuing pour",
+        label: "Pulse 3 (→ 200 g)",
+        action: "pour",
+        waterGramsAtEnd: 200,
+        durationSec: 10,
+      },
+      { label: "Pause", action: "wait", durationSec: 10 },
+      {
+        label: "Pulse 4 (→ 250 g)",
         action: "pour",
         waterGramsAtEnd: 250,
-        durationSec: 35,
-        notes: "Slower pour to 100% by ~1:45.",
+        durationSec: 10,
       },
       {
-        label: "Tap and swirl",
+        label: "Gentle swirl",
         action: "swirl",
         durationSec: 5,
-        notes:
-          "Tap the dripper on the carafe to settle fines flat; brief swirl flattens the bed for an even drawdown.",
+        notes: "Final settle before drawdown.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 95 },
+      { label: "Drawdown", action: "drain", durationSec: 55 },
     ],
-    totalTimeSec: 210,
-    techniques: [
-      "swirl-instead-of-stir",
-      "two-stage-pour",
-      "bed-flattening-tap",
-    ],
+    totalTimeSec: 180,
+    techniques: ["swirl-not-stir", "pulsed-pours-50g-blocks", "preheat-via-hot-tap"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced"],
     },
     teaches:
-      "Hoffmann's signature technique: swirl rather than stir, and flatten the bed with a tap before drawdown. Both moves reduce fines migration and channeling without sacrificing extraction.",
+      "Swirl rather than stir for bloom saturation; pulsed 50 g pours every 10 s for controlled extraction. Two counter-intuitive findings: (i) preheating doesn't change measurable extraction but materially changes taste — without preheat the bloom cools and the cup loses sweetness and gains acidity; (ii) a low spout produces MORE agitation than a high spout, because a high pour stream breaks before reaching the bed and dissipates its energy.",
     science:
-      "Stirring at bloom is the traditional way to wet a V60 puck, but it agitates fines into the slurry. Those fines then migrate to the filter walls during drawdown and create flow restrictions — uneven flow then produces uneven extraction. A swirl achieves saturation through bulk-puck motion rather than grain-on-grain agitation, keeping the fines distributed evenly. The tap-and-swirl before drawdown flattens any volcano that has formed, ensuring the last of the water passes through an even bed.",
+      "Bloom saturation via bulk-puck motion (swirl) keeps fines distributed evenly instead of dragging them to the filter walls where they form flow restrictions. The 4× 50 g pulse structure gives controlled alternation of agitation (pour) and bed-settling (10 s pause), so each pour drives a moment of extraction without accumulated turbulence. Per Hoffmann's measurement work, a ~5 g/s pour rate with a low spout produces the bed agitation needed for high extraction without channeling.",
     whenToUse:
-      "Default single-cup V60. Forgiving across roast levels and processes. Hoffmann's published recipe for daily use.",
+      "Default single-cup V60. Roast-temperature staircase per Hoffmann: light at freshly boiled (100 °C), medium 90–95, dark 80–85 (up to 90). Plastic V60-02 preferred for thermal retention; preheat with very hot tap water, not boiling.",
     sources: [
       {
         type: "video",
-        citation: "James Hoffmann — 'A Better 1 Cup V60 Technique' (YouTube)",
+        citation: "James Hoffmann — \"A Better 1 Cup V60 Technique\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=1oB1oDrDkHM",
         year: 2023,
+      },
+      {
+        type: "video",
+        citation: "James Hoffmann — \"How To Avoid A Bad Pour Over Brew\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=mMwscUNKbPk",
+        year: 2024,
       },
     ],
     verified: true,
+    notes:
+      "Hoffmann does not publish a Niche Zero degree number — Niche degrees must be calibrated empirically by the user against this recipe's ~3:00 drawdown target. The previous codebase value (Niche 396–406°) had no Hoffmann source behind it and has been removed per the third Hard Rule. Rescue moves Hoffmann published in the 2024 follow-up video: if grind too fine, pour the full 250 g on schedule but pull the cup at usual brew time and top up with hot water to ~215–220 g final; if grind slightly too coarse, expand 5 pours to 7 with more turbulent pouring and full drainage between each, optionally adding a +50 mL final pour (mild dilution cost). Visual diagnostics: muddy/soupy bloom = grind too fine; bloom dries out fast = grind too coarse or beans very fresh.",
   },
 
   {
