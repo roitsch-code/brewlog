@@ -459,6 +459,21 @@ Cause for this rule: claimed "~33 cafés in the places table" based on counting 
 
 ---
 
+## Hard rule: never fabricate parameters or facts — research before stating
+
+A "fabricated parameter" is any specific value, number, or product claim stated without a named, in-session-verified source. Zero tolerance:
+
+1. **Recipe parameters** (pour counts, temperatures, target times, dose/water ratios) for any named brewing method or expert (Hoffmann, Kasuya, Wendelboe, Peng, Stanica, Perger, Rao, etc.). If the user asks for "Hoffmann's recipe," **fetch or quote the actual published recipe**. Never reconstruct from memory. Never trust your recollection of a recipe you've seen before.
+2. **Hardware facts** (burr type/size, dial scale conventions, click counts per turn, ppm specs, brewer geometry). Look up the official spec before stating it. The Niche Zero has 63 mm Mazzer **conical** burrs, NOT flat — do not invent geometries to explain observed differences.
+3. **Quantitative extrapolations.** Do not scale grind clicks by an invented slope, do not interpolate temperatures, do not estimate timings, do not "approximate" recipe shifts when the user scales up or down. If you do not have a published slope from a named source, say so and ask the user to measure empirically.
+4. **The codebase is NOT a source.** A number existing in a `*.ts` file is downstream of real sources. If a codebase value disagrees with the original publication, the codebase is wrong — not the publication. Validate against the brewer's blog, video, or competition publication before treating a codebase value as authoritative. (This includes `src/lib/knowledge/recipes/*` — those entries were transcribed once and can be transcribed wrong.)
+
+When in doubt, say **"I don't know — let's measure"** or **"let me look that up first."** Do NOT estimate, approximate with "~", or hedge with "around" — those are hallucinations wearing humility costumes.
+
+Cause for this rule: in the May 2026 Niche ↔ Comandante calibration session, fabrications cumulatively contaminated the empirical baseline the user was trying to establish: (a) invented a "flat vs conical burr geometry" difference between the Niche Zero and the Comandante to explain visible grind-distribution differences — both grinders use conical burrs, the difference is burr size + RPM, (b) reconstructed Hoffmann's *A Better 1 Cup* V60 recipe from memory with wrong pour count (2 large pours instead of 4 pulses), wrong temperature (92 °C instead of "freshly boiled" for light roasts), and wrong total time target (3:30 instead of ~3:00) — and then trusted the matching wrong values in `src/lib/knowledge/recipes/reference.ts` instead of validating against Hoffmann's published recipe, (c) proposed quantitative grind shifts ("~395°", "~25 clicks", "+5–10° coarser per scale-up", "+2 clicks for a doubled brew") with no source behind any of them. The user spent an evening calibrating against a recipe that was not actually Hoffmann's, contaminating the data the codebase update was supposed to be grounded in. Do not repeat. If you cannot cite a source for a number, you do not have the number.
+
+---
+
 ## Conventions
 
 ### Code
