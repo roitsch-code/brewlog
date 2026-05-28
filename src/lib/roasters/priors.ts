@@ -79,7 +79,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["Orea Apex", "V60 no Assist", "Wölfl"],
+    methodAffinities: ["Orea Apex", "V60", "Wölfl"],
     extractionRisks: [
       "Sour and thin if underextracted — these coffees need efficient technique",
       "Loses complexity if over-agitated",
@@ -123,7 +123,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["V60 no Assist", "Orea Apex", "Wölfl"],
+    methodAffinities: ["V60", "Orea Apex", "Wölfl"],
     extractionRisks: [
       "Sour and underwhelming if technique is passive or temp drops",
       "Body becomes too thin with very lean ratios",
@@ -168,7 +168,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["Orea Apex", "V60 no Assist", "Kasuya 4:6"],
+    methodAffinities: ["Orea Apex", "V60", "Kasuya 4:6"],
     extractionRisks: [
       "Under-extraction at 93–95°C — 97–99°C needed",
       "Fines migration risk with aggressive stir — use light swirl on bloom",
@@ -558,7 +558,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["Orea Apex", "V60 no Assist", "Kasuya 4:6"],
+    methodAffinities: ["Orea Apex", "V60", "Kasuya 4:6"],
     extractionRisks: [
       "Under-extraction risk is significant — passive technique will disappoint",
       "Aggressive stir at bloom can cause agitation bitterness on very light lots",
@@ -829,7 +829,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
     agitationTolerance: "sensitive",
     tempBias: "high",
     ratioBias: "lean",
-    methodAffinities: ["V60 no Assist", "Orea Apex", "Kasuya 4:6"],
+    methodAffinities: ["V60", "Orea Apex", "Kasuya 4:6"],
     extractionRisks: [
       "Under-extraction is the primary risk — these need active technique",
       "Fines migration can muddy clarity on aggressive agitation",

@@ -23,7 +23,7 @@ import type { Session, SessionContext } from "@/lib/types/session";
  *   - WATER: 2 cards (Tap only, Championship) — Diluted dropped.
  *   - APPROACH: 2 cards only (Claude picks / I'll choose). The Dark
  *     expanding method list is removed.
- *     `preferredMethod` and `dripAssist` are never set from this UI;
+ *     `preferredMethod` is never set from this UI;
  *     /api/recommend handles undefined gracefully.
  *
  * Kept beyond the Vorlage (functional augmentations):
@@ -129,10 +129,7 @@ const APPROACHES: ReadonlyArray<{ id: ApproachId; label: string; sub: string; fo
 
 // Restored from the Dark version after the strict-Lovable cut left
 // "I'll choose" with nothing to actually choose (Markus' /brew/preview
-// feedback). Same 12 brewers as Dark StepContext, same Drip-Assist
-// compatibility set (immersion / pressure / batch brewers are
-// excluded — the Hario disc only controls pour rate, no effect when
-// there's no pouring phase).
+// feedback). Same 12 brewers as Dark StepContext.
 const METHODS = [
   { id: "V60", label: "V60", sub: "Hario cone" },
   { id: "Orea Fast", label: "Orea Fast", sub: "fast drip, max ~500 ml" },

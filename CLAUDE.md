@@ -376,7 +376,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 - Taste profile page with AI-written summary
 - Taste-match finder: scores past sessions against current coffee
 - **Explore chat coach upgrade (May 2026)** — `/explore` no longer relies on a hardcoded user profile. Each turn injects:
-  - **Recent recipes block** — `buildRecentRecipes()` shows the actual dose/water/ratio/Niche degrees/temp/target+actual timing/flow/Drip Assist/water source for the last 5 brews, so timing questions get answered with real numbers
+  - **Recent recipes block** — `buildRecentRecipes()` shows the actual dose/water/ratio/Niche degrees/temp/target+actual timing/flow/water source for the last 5 brews, so timing questions get answered with real numbers
   - **Live preferences block** — `loadUserProfile()` reads the `preferences` table; canonical equipment + grind settings live in a separately cached system block that invalidates only when onboarding changes
   - **Coffee library block** — `loadCoffeeLibraryCompact()` lists the last 30 bags with roast-date freshness, so "which bag should I open next?" gets a specific answer
   - **Roaster priors block** — up to 5 unique roasters from recent sessions hydrated via `getRoasterPrior()` so it can reference Friedhats' clarity bias, April's minimal-agitation rule, etc.
@@ -514,7 +514,7 @@ Cause for this rule: claimed "~33 cafés in the places table" based on counting 
 
 | Device | Details |
 |--------|---------|
-| **PRIMARY** | V60 size 2 + Hario Drip Assist |
+| **PRIMARY** | V60 size 2 |
 | Other | Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |

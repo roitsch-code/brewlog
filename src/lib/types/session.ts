@@ -30,8 +30,6 @@ export interface SessionContext {
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
   waterSource?: string; // "tap" = BWT-filtered daily ~220ppm | "championship" = 1:2 filtered+distilled clarity blend ~73ppm
   preferredMethod?: string; // optional method lock-in: "V60" | "Orea Fast" | etc.
-  /** @deprecated Drip Assist support was removed; legacy sessions still reference this. Do not surface in current UI / prompts. */
-  dripAssist?: boolean;
   intent?: string;
   // "explore" | "safest" | "high-clarity" | "sweetness-forward"
   // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
@@ -96,8 +94,6 @@ export interface BrewLog {
   methodUsed?: string;
   doseGrams?: number;   // dose used (external sessions; home sessions use recommendation)
   waterGrams?: number;  // water used (external sessions; home sessions use recommendation)
-  /** @deprecated Drip Assist support was removed; legacy sessions still reference this. */
-  dripAssist?: boolean;
   followedRecipe?: boolean;
   modifications?: string;
   actualTimeSec?: number;

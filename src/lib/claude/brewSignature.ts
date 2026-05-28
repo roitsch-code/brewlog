@@ -8,7 +8,7 @@ export interface BrewSignature {
   coffeeTypeCluster: string;  // "east-africa-natural-v60"
   originRegion: string;
   process: string;            // washed | natural | honey | anaerobic | other
-  method: string;             // v60-drip-assist | v60 | orea | clever | kalita | aeropress | chemex | moccamaster | other
+  method: string;             // v60 | orea | clever | kalita | aeropress | chemex | moccamaster | other
   grindSetting: string;       // raw string (actual used)
   grindNumeric: number | null;
   waterPpm: number;           // BWT-filtered daily=220, diluted(legacy)=150, clarity blend=73
@@ -56,7 +56,6 @@ function normalizeProcess(process: string): string {
 
 function normalizeMethod(method: string): string {
   const m = (method || "").toLowerCase();
-  if (m.includes("drip assist")) return "v60-drip-assist";
   if (m.includes("v60")) return "v60";
   if (m.includes("orea")) return "orea";
   if (m.includes("clever")) return "clever";

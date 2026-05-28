@@ -18,15 +18,14 @@ export const ALL_RECIPES: Recipe[] = [
 /**
  * Maps free-text equipment strings (preferences.equipment) to the structured
  * BrewerType used by recipes. The matcher normalises the input (lowercase,
- * stripped of spaces/punctuation/parentheses) so "V60", "V60 + Drip Assist",
- * "OreaV4", "Origami (cone)", and "CleverDripper" all resolve correctly.
+ * stripped of spaces/punctuation/parentheses) so "V60", "OreaV4",
+ * "Origami (cone)", and "CleverDripper" all resolve correctly.
  *
  * A single recipe brewer (e.g. "v60") can match multiple equipment strings.
  */
 function normaliseEquipmentKey(raw: string): string {
   return raw
     .toLowerCase()
-    .replace(/\bdrip\s*assist\b/g, "")
     .replace(/[()+\-]/g, " ")
     .replace(/\s+/g, "")
     .trim();
@@ -86,7 +85,6 @@ const EQUIPMENT_PATTERNS: Array<{
     match: (k) => k.includes("origami"),
     brewers: ["origami-cone", "origami-wave"],
   },
-  // V60 — including "+ Drip Assist" variants (drip-assist is stripped above).
   {
     match: (k) => k.includes("v60") || k.includes("hariov60"),
     brewers: ["v60"],

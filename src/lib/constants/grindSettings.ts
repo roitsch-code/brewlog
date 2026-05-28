@@ -26,11 +26,6 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
 export const GRIND_FOOTNOTE =
   "Comandante C40 MK2 uses clicks, not degrees. Adjust grind coarser/finer to fix flow timing — never use temperature for that; temperature controls extraction chemistry only.";
 
-// Methods removed from the active set (legacy data only; do not surface
-// in current UI / prompts):
-//   - "V60 + Drip Assist" (3 variants) — removed because Markus stopped
-//     using the disc and the AI was over-recommending it.
-
 export function formatGrindSettingsForPrompt(): string {
   const lines = NICHE_GRIND_SETTINGS.map((s) => {
     const head = s.process ? `${s.method} (${s.process})` : s.method;

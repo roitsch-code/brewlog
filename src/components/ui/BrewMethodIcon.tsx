@@ -5,11 +5,6 @@ interface BrewMethodIconProps {
 
 export function brewIconSrc(method?: string): string {
   const m = (method ?? "").toLowerCase();
-  // Legacy: sessions logged before Drip Assist was removed from the
-  // current set still carry "drip assist" in their methodUsed string.
-  // Fall through to plain V60 (the same brewer underneath) so they
-  // render without a missing-icon hole.
-  if (m.includes("drip assist") || m.includes("drip-assist")) return "/brew-icons/v60.png";
   if (m.includes("aeropress"))                                  return "/brew-icons/aeropress.png";
   if (m.includes("kalita"))                                     return "/brew-icons/kalita.png";
   if (m.includes("chemex"))                                     return "/brew-icons/chemex.svg";

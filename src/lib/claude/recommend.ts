@@ -243,7 +243,7 @@ What makes a strong portfolio:
 - Candidates that answer genuinely different questions — not just different methods
 - If an exploration map is present: at least one candidate should test something that has NEVER been tried
   for this coffee. "You've never used Clever Dripper for this coffee" is more valuable information
-  than "V60+DripAssist again, slightly different grind." Use the gap.
+  than "Orea Apex again, slightly different grind." Use the gap.
 - The anchor should have a specific hypothesis, not just "safest choice"
 - If the terrain shows a recurring setup underperforming, propose something different — not the same thing with minor adjustments
 - brewingLesson should explain the WHY, in Hoffmann-style plain language: the physics, the chemistry,
@@ -356,7 +356,7 @@ Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wöl
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
 Start 2–3 clicks coarser than expected. ONE specific click value, never a range.
-Starting clicks: V60+Assist Washed 25 | Natural/Honey 27 | V60 no Assist 23
+Starting clicks: V60 23
 Orea Fast/Apex 26 | Orea Classic 27 | Chemex Washed 24 | Chemex Natural/Honey 26 | AeroPress 19 | Clever 31
 Origami cone Washed 24 | Origami cone Natural/Honey 26 | Origami wave 24
 
@@ -376,12 +376,12 @@ Agitation for iced percolation (Japanese style): swirl or stir same as hot equiv
 Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
 
 CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and capacity fit. Selection is driven by whether the recipe's extraction profile matches what THIS coffee needs, not by the goal label:
-- Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
+- Peng 2025 Temp-Staging (V60): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
 - Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
 - Origami Air M clarity: 28g:420ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
 - Origami Air M sweet: 30g:450ml | Natural/Honey 93°C | 403–408° | bloom → light stir 1–2× at 0:10 → 3 pours → ~3:00 (targetTimeSec: 180)
 - Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
-- Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55ppm) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30–4:00
+- Kasuya 4:6 (V60): 20g:300ml | Water 1:3 (55ppm) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30–4:00
 - Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s (targetTimeSec: 150)
 - AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water 10s · stir 2–3× 10s · press 20s · swirl cup after adding 140g bypass water (targetTimeSec: 90)
 - Clever Extended: 20g:300ml | 92°C | 421–431° | pour water 15s · swirl 5s · steep 4:20 · swirl 5s · swirl 5s · drain 40s (targetTimeSec: 330)

@@ -5,10 +5,11 @@
  *     (targetTimeSec - drawdownReserve)
  *
  * We reserve 33% of the total brew time for the final drawdown
- * (Drip Assist disc bottleneck: ~89s at 270s total, ~69s at 210s total),
- * subtract the bloom, and evenly space the (n - 2) intervals between the
- * first pour after bloom and the final pour. That guarantees the clock
- * milestone above.
+ * (~89s at 270s total, ~69s at 210s total — empirically what a V60 paper
+ * with a medium-fine grind takes to fully draw down after the last pour
+ * lands), subtract the bloom, and evenly space the (n - 2) intervals
+ * between the first pour after bloom and the final pour. That guarantees
+ * the clock milestone above.
  */
 
 export interface PourStep {

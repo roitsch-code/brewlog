@@ -4,10 +4,7 @@
 
 | Method | Process | Niche° |
 |--------|---------|--------|
-| V60 + Drip Assist | Washed | 403–408° |
-| V60 + Drip Assist | Honey | 405–410° |
-| V60 + Drip Assist | Natural | 406–412° |
-| V60 (no Assist) | any | 396–406° |
+| V60 | any | 396–406° |
 | Orea V4 | any | 401–411° |
 | Origami Dripper | Washed | 401–407° |
 | Origami Dripper | Honey | 403–408° |

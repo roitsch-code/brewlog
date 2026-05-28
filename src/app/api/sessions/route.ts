@@ -40,7 +40,6 @@ const SessionPostSchema = z.object({
     methodUsed: z.string().max(100).optional(),
     doseGrams: z.number().min(0).max(500).optional(),
     waterGrams: z.number().min(0).max(2000).optional(),
-    dripAssist: z.boolean().optional(),
     followedRecipe: z.boolean().optional(),
     modifications: z.string().max(1000).optional(),
     actualTimeSec: z.number().min(0).max(3600).optional(),

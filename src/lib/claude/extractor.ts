@@ -264,7 +264,7 @@ function detectMissingData(signatures: BrewSignature[]): string[] {
 // ─── Exploration map builder ──────────────────────────────────────────────────
 
 const ALL_KNOWN_METHODS = [
-  "v60", "v60-drip-assist", "orea", "clever", "kalita", "aeropress", "chemex", "moccamaster",
+  "v60", "orea", "clever", "kalita", "aeropress", "chemex", "moccamaster",
 ];
 
 function buildExplorationMap(signatures: BrewSignature[]): ExplorationMap {
