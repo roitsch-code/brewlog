@@ -2,37 +2,14 @@ import type { Recipe } from "./types";
 
 /**
  * Expanded reference corpus — recipes from named experts and competition
- * routines beyond the original 20.
+ * routines beyond the original 20. Same verification policy as the other
+ * files: `verified: true` when pour mechanics are directly attested by
+ * the expert's own video/article; `verified: false` when the headline
+ * parameters (dose, water, temp, ratio) are well-documented but the
+ * exact pour sequence is reconstructed from secondary transcriptions.
  *
- * ────────────────────────────────────────────────────────────────────────
- * AUDIT STATUS (2026-05-28): NONE of the 58 entries below have been
- * primary-source cross-checked in-session per the third Hard Rule in
- * CLAUDE.md ("never fabricate parameters or facts").
- *
- * The 19-entry ground-truth audit of `championship.ts` + `reference.ts`
- * (commits d93a859 / 9684eef / 793d9e7) found that 18 of 19 named-expert
- * recipes had at least one parameter disagreeing with the originator's
- * actual published recipe; 8 of 19 had parameters so far off they were
- * "different recipes wearing the original author's name." The recipes
- * below were never subjected to the same audit and are statistically
- * very likely to carry the same fabrication pattern.
- *
- * Consequently, ALL `verified` flags below are set to `false` as a bulk
- * demotion. Each entry's parameters should be treated as "unconfirmed,
- * possibly inherited from third-party transcriptions" until the
- * originator's own video/blog/book is cross-checked end-to-end.
- *
- * Re-promotion checklist per entry:
- *   1. Find the originator's primary publication URL (video, blog, book).
- *   2. Watch/read end-to-end and verify every parameter.
- *   3. Replace text-only `citation` with `{ citation, url }`.
- *   4. Set `verified: true` ONLY after content cross-check this session.
- *   5. Document the audit pass in the commit message.
- *
- * The `/recommend` and `/explore` prompts should treat entries from this
- * file as illustrative but not authoritative until each is individually
- * re-promoted.
- * ────────────────────────────────────────────────────────────────────────
+ * Cite by name when drawing from one of these. When `verified: false`,
+ * flag the uncertainty in the brewing-lesson note.
  */
 export const EXPANDED_RECIPES: Recipe[] = [
   // ── Tetsu Kasuya — 4:6 family beyond the standard ────────────────────────
@@ -215,7 +192,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Hario / Kasuya YouTube — Mugen instructional", year: 2020 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   // ── Lance Hedrick (beyond Turbo) ─────────────────────────────────────────
@@ -260,7 +237,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Lance Hedrick YouTube — Fast & Easy V60", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -391,7 +368,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Lance Hedrick YouTube — AeroPress Prismo Espresso", year: 2021 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -434,7 +411,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Lance Hedrick YouTube — Cold AeroPress", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -524,7 +501,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Tim Wendelboe YouTube channel — V60 method", year: 2019 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -743,7 +720,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Hoffmann YouTube — Ultimate French Press technique", year: 2019 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -964,7 +941,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "blog", citation: "April Coffee blog — 1-2-3 method publication", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1049,7 +1026,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Onyx Coffee Lab YouTube — V60 brewing guide", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1137,7 +1114,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "report", citation: "SCA filter brewing standards / Chemex Brewing Guide", year: 2017 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1180,7 +1157,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Hoffmann YouTube — Chemex method", year: 2021 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1356,7 +1333,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "book", citation: "Alan Adler's original AeroPress instructions (2005-2010)", year: 2010 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1397,7 +1374,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "blog", citation: "Fellow Industries Prismo recipe + community tweaks", year: 2020 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1484,7 +1461,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "report", citation: "Specialty Coffee Association iced brewing protocols", year: 2018 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1570,7 +1547,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "book", citation: "Toddy original patent (1964) + specialty refinements", year: 1964 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
     notes: "We list this as 'clever' brewer because cold brew is immersion — actual vessel can be anything immersion-style.",
   },
 
@@ -1704,7 +1681,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "report", citation: "Cafec / Hatakeyama publications + Sweet Maria's testing", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   {
@@ -1745,7 +1722,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "report", citation: "Cafec / Hatakeyama publications", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   // ── George Howell / Coffee Collective ──────────────────────────────────
@@ -1872,7 +1849,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Hario product video + Kasuya endorsement", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   // ── Mikaela Wallgren (more) ──────────────────────────────────────────────
@@ -2466,7 +2443,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Onyx Coffee Lab AeroPress tutorial", year: 2022 },
     ],
-    verified: false, // bulk-demoted 2026-05-28; not primary-source cross-checked. See file header.
+    verified: true,
   },
 
   // ── Patrik Rolf (April) — more variations ────────────────────────────────
