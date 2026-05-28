@@ -218,64 +218,81 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "hoffmann-aeropress-standard",
-    name: "Hoffmann AeroPress — Inverted",
+    name: "Hoffmann Ultimate AeroPress — Standard",
     shortName: "Hoffmann AeroPress",
     attribution: {
       person: "James Hoffmann",
       country: "United Kingdom",
+      year: 2021,
     },
     category: "reference",
     brewer: "aeropress",
-    brewerNotes: "Inverted orientation, standard paper filter",
+    brewerNotes:
+      "STANDARD orientation (not inverted). Paper filter not rinsed; brewer not preheated. Hoffmann's signature move is to seat the plunger ~1 cm into the chamber immediately after pouring — this creates an air seal that stops water from dripping through during the steep.",
     dose: { grams: 11 },
     water: { grams: 200, ratio: "1:18.2" },
-    temperature: { celsius: 85, rangeC: [80, 90] },
+    temperature: { celsius: 95, rangeC: [85, 100] },
     grind: {
-      referenceSetting: "medium-fine, slightly coarser than espresso",
-      nicheZeroDegrees: [377, 387],
+      referenceSetting: "medium-fine, finer end of medium",
     },
     pourSequence: [
-      { label: "Invert and load", action: "invert", durationSec: 0 },
       {
-        label: "Add water",
+        label: "Load (standard orientation)",
+        action: "agitate-bed",
+        durationSec: 0,
+        notes:
+          "Cap with rinsed paper, set on the cup standard-orientation. Add the dose. No preheat.",
+      },
+      {
+        label: "Pour all water",
         action: "pour",
         waterGramsAtEnd: 200,
-        durationSec: 10,
+        durationSec: 15,
+        notes:
+          "Pour 200 g aiming to wet all grounds. No stir — saturation by pour alone.",
       },
       {
-        label: "Stir 2–3× evenly",
-        action: "stir",
-        durationSec: 10,
+        label: "Seat the plunger",
+        action: "agitate-bed",
+        durationSec: 5,
+        notes:
+          "Immediately seat the plunger ~1 cm into the chamber to create an air seal — this stops water from dripping through during the steep.",
       },
-      { label: "Steep", action: "wait", durationSec: 90 },
+      { label: "Steep", action: "wait", durationSec: 120 },
       {
-        label: "Stir to break crust",
-        action: "stir",
-        durationSec: 10,
+        label: "Swirl",
+        action: "swirl",
+        durationSec: 5,
+        notes: "Gentle swirl at 2:00 to settle the slurry before pressing.",
       },
-      { label: "Cap, flip, press slowly", action: "press", durationSec: 30 },
+      { label: "Wait", action: "wait", durationSec: 30 },
+      {
+        label: "Press slowly",
+        action: "press",
+        durationSec: 30,
+        notes: "Slow press from 2:30 to ~3:00.",
+      },
     ],
-    totalTimeSec: 150,
-    techniques: [
-      "inverted-aeropress",
-      "low-temperature-extraction",
-      "lean-ratio",
-    ],
+    totalTimeSec: 180,
+    techniques: ["standard-aeropress-plunger-seal", "lean-ratio"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced"],
     },
     teaches:
-      "How a low-temperature, lean-ratio AeroPress produces a clean, filter-style cup without the bitterness people associate with the brewer.",
+      "How a lean ratio (1:18) AeroPress produces a clean, filter-style cup at default light-roast temperature (~95 °C). The standard-orientation plunger-seal trick eliminates inversion entirely — simpler to teach, fewer ways to fail.",
     science:
-      "The AeroPress is often brewed too hot and too rich — that's where the muddy, bitter reputation comes from. At 85°C and 1:18, the brew sits in Zone 1–2 throughout the 90-second steep. The press itself is the only agitation event that matters for late extraction; pressing slowly (30 seconds) avoids forcing water through over-extracted boundary layers around grounds.",
+      "Inversion exists to prevent drip-through during the steep, but it adds a flip step that introduces variance. Hoffmann's plunger-seal achieves the same result without the flip: seating the plunger 1 cm creates a small air pocket that holds the water against the paper via atmospheric pressure. The lean 1:18 ratio sits in Zone 1–2 throughout the 2-minute steep — most of the AeroPress's bitter reputation comes from over-rich recipes (1:12 to 1:14), not the brewer itself. Hoffmann's roast staircase: 95 °C for light roasts (default), descend to 85 °C for dark — codebase previously had 85 °C as the headline, which is his dark-roast value.",
     whenToUse:
-      "A daily AeroPress that drinks like a clean filter cup. Excellent for travel because the AeroPress is forgiving on grind precision.",
+      "Daily AeroPress that drinks like a clean filter cup. Excellent for travel. Roast staircase: 95 °C default (light/medium-light), 90 °C medium, 85 °C dark.",
     sources: [
       {
         type: "video",
-        citation: "James Hoffmann — AeroPress technique videos (multiple)",
+        citation:
+          "James Hoffmann — \"The Ultimate AeroPress Technique (Episode #3)\" (YouTube, 2021)",
+        url: "https://www.youtube.com/watch?v=j6VlT_jUVPc",
+        year: 2021,
       },
     ],
     verified: true,
@@ -346,44 +363,43 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "hoffmann-immersion-iced-clever",
-    name: "Hoffmann Immersion Iced (Clever)",
+    name: "Hoffmann Immersion Iced (Clever, two-cup)",
     shortName: "Hoffmann Iced",
     attribution: {
       person: "James Hoffmann",
       country: "United Kingdom",
+      year: 2023,
     },
     category: "reference",
     brewer: "clever",
-    dose: { grams: 20 },
-    water: { grams: 250, ratio: "1:12.5 (extraction) — diluted by 200g ice in carafe" },
+    brewerNotes:
+      "Two-cup variant of Hoffmann's 2023 Immersion Iced Coffee. A single-cup variant also exists (19 g : 165 g water + 85 g ice) per Hoffmann's Facebook post.",
+    dose: { grams: 37.5 },
+    water: { grams: 500, ratio: "1:13.3 (extraction), +170 g ice in server" },
     temperature: { celsius: 95 },
     grind: {
-      referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [421, 431],
+      referenceSetting: "medium-fine, finer than pour-over but not espresso",
     },
     pourSequence: [
       {
         label: "Pour water onto coffee",
         action: "pour",
-        waterGramsAtEnd: 250,
-        durationSec: 15,
+        waterGramsAtEnd: 500,
+        durationSec: 20,
       },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
-      { label: "Steep", action: "wait", durationSec: 220 },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
+      { label: "Swirl to saturate", action: "swirl", durationSec: 10 },
+      { label: "Steep", action: "wait", durationSec: 240 },
+      { label: "Swirl to settle", action: "swirl", durationSec: 5 },
       {
         label: "Place on carafe of ice — drawdown onto ice",
         action: "drain",
-        durationSec: 55,
-        notes: "Server contains 200g ice. Hot concentrate flashes cold on contact.",
+        durationSec: 120,
+        notes:
+          "Server contains 170 g ice. Hot concentrate flashes cold on contact. Total brew time ~6:35.",
       },
     ],
-    totalTimeSec: 300,
-    techniques: [
-      "japanese-iced-immersion",
-      "flash-chilling",
-      "concentrate-and-ice",
-    ],
+    totalTimeSec: 395,
+    techniques: ["full-immersion", "flash-chilling"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
@@ -391,19 +407,29 @@ export const REFERENCE_RECIPES: Recipe[] = [
       occasions: ["summer-time", "iced"],
     },
     teaches:
-      "How flash-chilling an immersion preserves aromatics that cold-brew loses to its long extraction time. The 1:12.5 extraction concentration plus ice dilution lands at an effective 1:22 final drink — strong enough to taste under ice.",
+      "How flash-chilling an immersion preserves aromatics that cold-brew loses to its long extraction time. The hot extraction lands the full Zone 1 aromatics; the ice drop locks them in before they volatilise.",
     science:
-      "Cold brew extracts over 8–18 hours at room temperature; the long timeline lets fine bitter compounds reach equilibrium, but volatile aromatic compounds dissipate. A flash-chilled iced coffee extracts hot (full Zone 1 aromatics) and then drops below 5°C in seconds when the concentrate hits ice — the aromatics are locked into the liquid before they can volatilise. The Clever's full immersion gives a balanced extraction; the percolation alternative (Japanese Iced V60) produces a brighter, less rounded cup.",
+      "Cold brew extracts over 8–18 hours at room temperature; the long timeline lets fine bitter compounds reach equilibrium, but volatile aromatic compounds dissipate. A flash-chilled iced coffee extracts hot (full Zone 1 aromatics) and then drops below 5 °C in seconds when the concentrate hits ice — the aromatics are locked into the liquid before they can volatilise. The Clever's full immersion gives a balanced extraction; the percolation alternative (Japanese Iced V60) produces a brighter, less rounded cup.",
     whenToUse:
-      "Summer iced coffee where you want body and balance, not the sharp brightness of a percolation iced. Pairs well with milk or as a long iced drink with extra cold water.",
+      "Summer iced coffee where you want body and balance, not the sharp brightness of a percolation iced. Pairs well with milk or as a long iced drink with extra cold water. Scales down to a single-cup at 19 g : 165 g + 85 g ice for solo brewing.",
     sources: [
       {
         type: "video",
         citation:
-          "James Hoffmann — 'My Favorite Iced Coffee Recipe' (YouTube)",
+          "James Hoffmann — \"Immersion Iced Coffee: A Better & Easier Technique\" (YouTube, 2023)",
+        url: "https://www.youtube.com/watch?v=8uGGeV8A-BM",
+        year: 2023,
+      },
+      {
+        type: "article",
+        citation:
+          "James Hoffmann — Facebook post documenting the single-cup variant (19 g : 165 g + ~85 g ice)",
+        url: "https://www.facebook.com/jameshoffmanncoffee/posts/with-spring-in-full-swing-heres-my-recipe-for-the-perfect-iced-coffee-using-imme/1179893270442583/",
       },
     ],
     verified: true,
+    notes:
+      "Hoffmann teaches a 2/3 hot : 1/3 ice ratio rule in the video, but his published two-cup numbers (500 + 170 = ~75/25) and single-cup numbers (165 + 85 = ~66/34) bracket that rule rather than hit it exactly. Pick whichever scale-point matches your drink size; both are Hoffmann-attested. Niche degree omitted because Hoffmann doesn't publish one for this recipe.",
   },
 
   // ── Tetsu Kasuya (standalone 4:6, separate from his 2016 routine) ────────
@@ -928,15 +954,14 @@ export const REFERENCE_RECIPES: Recipe[] = [
     category: "reference",
     brewer: "kalita-wave",
     brewerNotes: "Kalita Wave 155 with wave paper filter",
-    dose: { grams: 22 },
-    water: { grams: 330, ratio: "1:15" },
-    temperature: { celsius: 94 },
+    dose: { grams: 15 },
+    water: { grams: 250, ratio: "1:16.7" },
+    temperature: { celsius: 96 },
     grind: {
       referenceSetting:
-        "medium, then sieved to remove fines (Kruve Two or similar)",
-      nicheZeroDegrees: [396, 406],
+        "medium, then sieved to remove fines (Wallgren famously used a cake mould + frying pan cover)",
       description:
-        "Pre-sieving removes the fines fraction (~3–5% of total mass) — the cup is markedly cleaner.",
+        "Pre-sieving removes the fines fraction — the cup is markedly cleaner. Niche degree omitted because Wallgren doesn't publish one.",
     },
     pourSequence: [
       {
@@ -944,13 +969,13 @@ export const REFERENCE_RECIPES: Recipe[] = [
         action: "agitate-bed",
         durationSec: 0,
         notes:
-          "Discard fines fraction before brewing. This is the technique's defining move.",
+          "Discard fines fraction before brewing. Wallgren's signature move.",
       },
       {
-        label: "Bloom",
+        label: "Bloom (→ 60 g)",
         action: "pour",
-        waterGramsAtEnd: 50,
-        durationSec: 35,
+        waterGramsAtEnd: 60,
+        durationSec: 10,
       },
       {
         label: "Swirl (no stir)",
@@ -959,27 +984,30 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes:
           "Kalita Wave: never stir. The flat bed channels if disturbed.",
       },
+      { label: "Bloom rest", action: "wait", durationSec: 15 },
       {
-        label: "Pour 1",
+        label: "Pour 1 (→ 125 g)",
         action: "pour",
-        waterGramsAtEnd: 150,
-        durationSec: 25,
+        waterGramsAtEnd: 125,
+        durationSec: 15,
       },
+      { label: "Wait", action: "wait", durationSec: 15 },
       {
-        label: "Pour 2",
+        label: "Pour 2 (→ 190 g)",
         action: "pour",
-        waterGramsAtEnd: 240,
-        durationSec: 25,
+        waterGramsAtEnd: 190,
+        durationSec: 15,
       },
+      { label: "Wait", action: "wait", durationSec: 15 },
       {
-        label: "Pour 3",
+        label: "Pour 3 (→ 250 g, finished by 1:45)",
         action: "pour",
-        waterGramsAtEnd: 330,
-        durationSec: 25,
+        waterGramsAtEnd: 250,
+        durationSec: 15,
       },
-      { label: "Drawdown", action: "drain", durationSec: 70 },
+      { label: "Drawdown (lift at ~2:35)", action: "drain", durationSec: 50 },
     ],
-    totalTimeSec: 215,
+    totalTimeSec: 155,
     techniques: ["fines-removal", "kalita-flat-bed", "swirl-only-agitation"],
     bestFor: {
       roastLevels: ["very-light", "light"],
@@ -995,18 +1023,30 @@ export const REFERENCE_RECIPES: Recipe[] = [
     sources: [
       {
         type: "official-competition",
-        citation: "2016 World Brewers Cup Final — runner-up routine",
+        citation: "2016 World Brewers Cup Final, Dublin — runner-up routine",
         year: 2016,
       },
       {
-        type: "interview",
+        type: "article",
         citation:
-          "The Coffee Collective / Mikaela Wallgren published interviews",
+          "Barista Magazine — Brewing Experiments: Mikaela Wallgren's 2016 World Brewers Cup Championship Recipe",
+        url: "https://www.baristamagazine.com/brewing-experiments-mikaela-wallgrens-2016-world-brewers-cup-championship-recipe/",
+      },
+      {
+        type: "article",
+        citation: "Fresh Cup — Wallgren WBrC 2016 profile",
+        url: "https://www.freshcup.com/world-brewers-cup-mikaela-wallgren-copenhagen/",
+      },
+      {
+        type: "video",
+        citation:
+          "2016 World Brewers Cup Final, runner-up routine (YouTube)",
+        url: "https://www.youtube.com/watch?v=k__bfjcAsVQ",
       },
     ],
     verified: false,
     notes:
-      "The sieving + Kalita Wave + light agitation combination is well-attested as Wallgren's signature. Specific dose/water/temperature reconstructed from Coffee Collective public materials.",
+      "Codebase previously had 22 g : 330 g (1:15), 94 °C, 3:35 total — those numbers don't trace to any Wallgren publication and appear to have been scaled up assuming a 1:15 default. Audit-corrected parameters per Barista Magazine and the YouTube runner-up routine: 15 g : 250 g (1:16.7), 96 °C (reverse-osmosis water from Copenhagen), 2:35 total brew with the pour finished by 1:45. Pour milestones between bloom and 1:45 are reconstructed from search excerpts that quote the Barista Magazine piece; keep verified:false until the WBrC 2016 final video is reviewed frame-by-frame. Wallgren's sieve famously was a homemade cake mould + frying pan cover.",
   },
 
   // ── Turbo V60 (popularised by Lance Hedrick) ─────────────────────────────

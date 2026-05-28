@@ -48,12 +48,12 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     },
     pourSequence: [
       {
-        label: "Pour 1 (acid/sweet phase, 40% — pour A)",
+        label: "Pour 1 (acid/sweet phase, 40% — pour A, doubles as bloom)",
         action: "pour",
-        waterGramsAtEnd: 60,
+        waterGramsAtEnd: 50,
         durationSec: 10,
         notes:
-          "First of two phase-1 pours. Smaller first pour = sweeter cup; larger = brighter. 60g is the balanced default.",
+          "50 g per Kasuya's published 2016 WBrC routine and his Philocoffea documentation. Smaller first pour = sweeter cup; larger = brighter.",
       },
       { label: "Rest", action: "wait", durationSec: 35 },
       {
@@ -61,6 +61,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         action: "pour",
         waterGramsAtEnd: 120,
         durationSec: 10,
+        notes: "70 g pour to bring cumulative to 120 g (= 40% of total).",
       },
       { label: "Rest", action: "wait", durationSec: 35 },
       {
@@ -76,16 +77,16 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         waterGramsAtEnd: 240,
         durationSec: 10,
       },
-      { label: "Rest", action: "wait", durationSec: 20 },
+      { label: "Rest", action: "wait", durationSec: 35 },
       {
         label: "Pour 5 (strength phase — pour 3 of 3)",
         action: "pour",
         waterGramsAtEnd: 300,
         durationSec: 10,
         notes:
-          "Fewer phase-2 pours = weaker cup; more = stronger. 3 pours is the published default.",
+          "Pour 5 starts at 3:00; lift the dripper at ~3:30. Fewer phase-2 pours = weaker cup; more = stronger. 3 pours is the published default.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 35 },
+      { label: "Drawdown / lift", action: "drain", durationSec: 20 },
     ],
     totalTimeSec: 210,
     techniques: [
@@ -319,7 +320,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
 
   {
     id: "wbrc-2023-medina",
-    name: "Medina 2023 — Conical Paper Filter",
+    name: "Medina 2023 — Origami Air S Minimum-Variables",
     shortName: "Medina 2023",
     attribution: {
       person: "Carlos Medina",
@@ -328,46 +329,56 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       year: 2023,
     },
     category: "championship",
-    brewer: "conical-paper",
+    brewer: "origami-cone",
     brewerNotes:
-      "Generic conical paper-filter brewer with Brewista kettle for precise pour control. Coffee: Natural Sidra from Café Granja la Esperanza.",
+      "Origami Air S with conical paper filter, decanted into a Sensory Cup. Brewista kettle for precise pour control. 65 ppm Ca/Mg water. Coffee: Natural Sidra from Café Granja la Esperanza, Colombia.",
     dose: { grams: 15.5 },
     water: { grams: 250, ratio: "1:16.1" },
     temperature: { celsius: 91, rangeC: [90, 92] },
     grind: {
       referenceGrinder: "EK43",
       referenceSetting: "medium",
-      nicheZeroDegrees: [398, 406],
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Pour 1 (doubles as bloom, 0:00)",
         action: "pour",
-        waterGramsAtEnd: 40,
-        durationSec: 30,
+        waterGramsAtEnd: 50,
+        durationSec: 8,
+        notes: "Circular pour, 50 g.",
       },
+      { label: "Wait", action: "wait", durationSec: 22 },
       {
-        label: "Pour 1",
+        label: "Pour 2 (0:30)",
         action: "pour",
-        waterGramsAtEnd: 110,
-        durationSec: 25,
+        waterGramsAtEnd: 100,
+        durationSec: 8,
       },
+      { label: "Wait", action: "wait", durationSec: 22 },
       {
-        label: "Pour 2",
+        label: "Pour 3 (1:00)",
         action: "pour",
-        waterGramsAtEnd: 180,
-        durationSec: 25,
+        waterGramsAtEnd: 150,
+        durationSec: 8,
       },
+      { label: "Wait", action: "wait", durationSec: 22 },
       {
-        label: "Pour 3",
+        label: "Pour 4 (1:30)",
+        action: "pour",
+        waterGramsAtEnd: 200,
+        durationSec: 8,
+      },
+      { label: "Wait", action: "wait", durationSec: 22 },
+      {
+        label: "Pour 5 (2:00)",
         action: "pour",
         waterGramsAtEnd: 250,
-        durationSec: 25,
+        durationSec: 8,
       },
-      { label: "Drawdown", action: "drain", durationSec: 105 },
+      { label: "Drawdown", action: "drain", durationSec: 32 },
     ],
-    totalTimeSec: 210,
-    techniques: ["lean-ratio", "moderate-temperature"],
+    totalTimeSec: 160,
+    techniques: ["lean-ratio", "moderate-temperature", "minimum-variables"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey"],
@@ -375,9 +386,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       goals: ["sweetness-forward", "balanced"],
     },
     teaches:
-      "How a lean ratio (1:16) at a moderate 91°C extracts the fermentation-derived sweetness of a Natural Sidra without amplifying ester sharpness.",
+      "How 5 equal 50 g pours at 30-second intervals strip technique as a variable and let a lean ratio (1:16) at moderate 91 °C do the work. Closer to a Rolf-style minimum-variables routine than a phase-separated 4:6.",
     science:
-      "Natural Sidra carries strong tropical-fermentation esters. Above ~94°C they extract aggressively and can read as winey or volatile in the cup. At 91°C with a lean ratio, the brew sits in the sugar/maillard zone of Gagné's solubility sequence for longer relative to the early aromatics, producing rounded sweetness rather than fermentation sharpness. The cleaner, longer drawdown of a conical paper filter further softens the cup compared to a metal filter.",
+      "Natural Sidra carries strong tropical-fermentation esters. Above ~94 °C they extract aggressively and can read as winey or volatile in the cup. At 91 °C with a lean ratio and even pour cadence, the brew sits in the sugar/maillard zone of Gagné's solubility sequence for longer relative to the early aromatics, producing rounded sweetness rather than fermentation sharpness. The cleaner, longer drawdown of an Origami cone with conical paper further softens the cup compared to a Wave-style flat bottom.",
     whenToUse:
       "For a Natural Sidra or expressive natural processing where you want the sweet character to lead, not the fermentation. Also a sensible default for honey-process medium-light coffees.",
     sources: [
@@ -386,10 +397,23 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         citation: "2023 World Brewers Cup Final, Athens",
         year: 2023,
       },
+      {
+        type: "video",
+        citation:
+          "World Coffee Events — \"2023 World Brewers Cup Champion Carlos's Recipe\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=XQd8ddPKbXU",
+        year: 2023,
+      },
+      {
+        type: "article",
+        citation:
+          "Slow Pour Supply — Recipe Recap: Carlos Medina's WBrC Championship Recipe",
+        url: "https://www.slowpoursupply.co/blogs/brew-recipes/recipe-recap-carlos-medina-s-representing-chile-world-brewers-cup-champion-recipe",
+      },
     ],
     verified: false,
     notes:
-      "Dose, water, temperature, and brewer category (conical paper filter) are universally agreed. Exact pour sequence is reconstructed from Slow Pour Supply and Origami interview write-ups and may not match the precise competition routine.",
+      "Pour sequence (5 × 50 g at 30 s intervals, 2:40 total) is confirmed by multiple sources quoting the Slow Pour Supply recap. Brewer category (Origami Air S with conical paper + Sensory Cup) replaces the earlier 'generic conical paper' framing. Niche degree range removed (no published source); user must calibrate empirically against the 2:40 drawdown target. Keep verified:false until the WCE finals video is reviewed end-to-end.",
   },
 
   // ── 2024 WBrC ──────────────────────────────────────────────────────────────
@@ -400,7 +424,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     shortName: "Wölfl 2024",
     attribution: {
       person: "Martin Wölfl",
-      title: "2024 World Brewers Cup Champion",
+      title: "2024 World Brewers Cup Champion (Chicago SCA Expo, April 2024)",
       affiliation: "Wildkaffee Austria, Vienna",
       country: "Austria",
       year: 2024,
@@ -408,49 +432,43 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "orea-v4-fast",
     brewerNotes:
-      "Orea V4 with the Fast bottom (predecessor to the Wide bottom — same fast-draining geometry). Coffee: Finca Maya Panama, double fermentation, from Lost Origin Coffee Labs.",
+      "Orea V4 with the Fast bottom (predecessor to the Wide bottom — same fast-draining geometry). Sibarist FAST filter paper. Coffee: natural anaerobic Geisha from Finca Maya, Panama (Lost Origin Coffee Labs).",
     dose: { grams: 17 },
     water: { grams: 270, ratio: "1:15.9" },
     temperature: { celsius: 93 },
     grind: {
       referenceGrinder: "Mazzer ZM",
-      referenceSetting: "490 microns",
-      nicheZeroDegrees: [401, 411],
-      description:
-        "Equivalent to Comandante C40 at 21–25 clicks — slightly coarser than typical Orea grind.",
+      referenceSetting: "630 microns",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (0:00, → 60 g)",
         action: "pour",
-        waterGramsAtEnd: 50,
-        durationSec: 30,
+        waterGramsAtEnd: 60,
+        durationSec: 10,
       },
+      { label: "Bloom rest", action: "wait", durationSec: 30 },
       {
-        label: "Light stir (1–2×)",
-        action: "stir",
-        durationSec: 5,
-        notes: "Wet the puck evenly; do not over-agitate.",
-      },
-      {
-        label: "Pour 1",
+        label: "Pour 2 (0:40, → 120 g)",
         action: "pour",
         waterGramsAtEnd: 120,
-        durationSec: 15,
+        durationSec: 10,
       },
+      { label: "Wait", action: "wait", durationSec: 30 },
       {
-        label: "Pour 2",
+        label: "Pour 3 (1:20, → 170 g)",
         action: "pour",
-        waterGramsAtEnd: 195,
-        durationSec: 15,
+        waterGramsAtEnd: 170,
+        durationSec: 10,
       },
+      { label: "Wait", action: "wait", durationSec: 30 },
       {
-        label: "Pour 3",
+        label: "Pour 4 (2:00, → 270 g)",
         action: "pour",
         waterGramsAtEnd: 270,
-        durationSec: 15,
+        durationSec: 20,
       },
-      { label: "Drawdown", action: "drain", durationSec: 60 },
+      { label: "Drawdown", action: "drain", durationSec: 0 },
     ],
     totalTimeSec: 140,
     techniques: [
@@ -464,25 +482,39 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       goals: ["high-clarity", "explore"],
     },
     teaches:
-      "How fast-flowing geometry combined with turbulent pours can deliver clarity on a Natural — the paradox of high agitation producing a clean cup.",
+      "How fast-flowing geometry combined with evenly-cadenced pours can deliver clarity on a natural-anaerobic Geisha — the paradox of agitation producing a clean cup.",
     science:
-      "The Orea V4 Fast geometry drains rapidly: the puck never stalls in extended contact. Combined with relatively fast, turbulent pours, total bed-contact time stays in the Zone 1–2 window (organic acids and sugars) and rarely reaches Zone 3 (bitters, phenolics). The result is clarity on a coffee — a double-fermented Natural — that would muddy under a slower, gentler approach because the fermentation esters never get extended contact time to over-extract. The 1:15.9 ratio is conventional; the technique is doing the work.",
+      "The Orea V4 Fast geometry drains rapidly: the puck never stalls in extended contact. Combined with the four 40-second-spaced pours, total bed-contact time stays in the Zone 1–2 window (organic acids and sugars) and rarely reaches Zone 3 (bitters, phenolics). The result is clarity on a coffee — a natural-anaerobic Panama Geisha — that would muddy under a slower, gentler approach because the fermentation esters never get extended contact time to over-extract. The 1:15.9 ratio is conventional; the technique and the brewer's drain speed are doing the work.",
     whenToUse:
       "For a complex Natural or anaerobic lot where you want clarity rather than fermentation amplification. Excellent on naturals with strong tropical character that would otherwise read as too winey.",
     sources: [
       {
         type: "official-competition",
-        citation: "2024 World Brewers Cup Final, Copenhagen",
+        citation:
+          "2024 World Brewers Cup Final (Chicago SCA Expo, April 2024)",
         year: 2024,
       },
       {
+        type: "article",
+        citation:
+          "European Coffee Trip — Winning Pour Over Recipe from Martin Wölfl",
+        url: "https://europeancoffeetrip.com/winning-pour-over-recipe-martin-woelfl/",
+      },
+      {
         type: "video",
-        citation: "European Coffee Trip — official Wölfl routine breakdown",
+        citation:
+          "European Coffee Trip — \"Winning POUR OVER Recipe from World Brewers Cup Champion (Martin Wölfl, Wildkaffee Austria)\" (YouTube)",
+        url: "https://www.youtube.com/watch?v=3SIFFaT1MFU",
+      },
+      {
+        type: "article",
+        citation: "Sprudge — Martin Wölfl wins the 2024 World Brewers Cup",
+        url: "https://sprudge.com/martin-wolfl-wins-the-2024-world-brewers-cup-championship-239423.html",
       },
     ],
     verified: true,
     notes:
-      "Pour milestones reconstructed from the European Coffee Trip video; exact gram targets between pours may vary by ±5g but the 4-pour structure is canonical.",
+      "Pour cadence (bloom 60 g at 0:00 / +60 g at 0:40 / +50 g at 1:20 / +100 g at 2:00) per ECT writeup. Mazzer ZM 630 microns is the published grind; Comandante / Niche translations were unsourced derivations and have been removed. City is Chicago, not Copenhagen (a long-standing codebase error). Coffee is natural anaerobic Geisha, not 'double fermentation' as previously noted.",
   },
 
   // ── 2025 WBrC ──────────────────────────────────────────────────────────────
