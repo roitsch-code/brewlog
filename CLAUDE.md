@@ -535,7 +535,7 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 
 | Device | Details |
 |--------|---------|
-| **PRIMARY** | V60 size 2 + Hario Drip Assist |
+| **PRIMARY** | V60 size 2 (Hario Drip Assist **retired** — no longer used) |
 | Other | Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
