@@ -119,9 +119,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
       "hoffmann-v60-better-one-cup",
-      "rao-rule-of-thirds",
-      "rolf-minimum-variables",
-      "wbrc-2016-kasuya",
+      "rao-rule-of-thirds",      "wbrc-2016-kasuya",
     ],
     extractionRisks: [
       "Easy to over-extract into harshness — high acidity at low extraction reads great; same coffee at high extraction can taste papery",
@@ -241,9 +239,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Treat like a Gesha or top Ethiopian — clarity methods, championship water, careful temperature. Aromatic compounds dissipate above 96°C; cap temperature at 94–95°C unless using Hsu-style staged temp.",
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",
-      "rolf-minimum-variables",
-      "hoffmann-v60-better-one-cup",
+      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
       "wbrc-2019-du",
     ],
     extractionRisks: [
@@ -368,9 +364,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     pairsWellWithRecipes: [
       "wbrc-2022-hsu",
       "wbrc-2019-du",
-      "hoffmann-v60-better-one-cup",
-      "rolf-minimum-variables",
-      "rao-rule-of-thirds",
+      "hoffmann-v60-better-one-cup",      "rao-rule-of-thirds",
     ],
     extractionRisks: [
       "High solubility = easy to over-extract into astringency",
@@ -400,9 +394,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Like a Gesha — wants clarity-forward technique, championship water if available, cap at 94–95°C. The aromatic complexity is the entire point; methods that flatten it (immersion at high temp) lose the variety.",
     commonProcessings: ["washed", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",
-      "rolf-minimum-variables",
-      "hoffmann-v60-better-one-cup",
+      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
       "wbrc-2019-du",
     ],
     extractionRisks: [
@@ -432,9 +424,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Treat like Wush Wush — clarity methods, careful temperature. The lemongrass aromatic is fragile and dissipates above 95°C.",
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",
-      "rolf-minimum-variables",
-      "hoffmann-v60-better-one-cup",
+      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
     ],
     extractionRisks: [
       "Standard delicate-coffee risks — temperature, water, agitation",
@@ -464,9 +454,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     pairsWellWithRecipes: [
       "wbrc-2023-medina",
       "wbrc-2022-hsu",
-      "wbrc-2019-du",
-      "rolf-minimum-variables",
-    ],
+      "wbrc-2019-du",    ],
     extractionRisks: [
       "Naturals over-extract into volatile/winey at high temperatures",
       "Anaerobic Sidra is intensely fermented — not for clarity goals",
@@ -500,9 +488,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     pairsWellWithRecipes: [
       "wbrc-2025-peng",
       "wbrc-2022-hsu",
-      "wbrc-2019-du",
-      "rolf-minimum-variables",
-      "hoffmann-v60-better-one-cup",
+      "wbrc-2019-du",      "hoffmann-v60-better-one-cup",
     ],
     extractionRisks: [
       "Heat above 96°C destroys the defining florals before they reach the cup",
