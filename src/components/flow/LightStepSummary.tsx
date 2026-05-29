@@ -138,6 +138,12 @@ export default function LightStepSummary() {
   const result = draft.result;
   const brew = draft.brew;
   const rec = draft.recommendation;
+  // Show the recipe the user actually selected (by candidate index), not always
+  // the primary one — falls back for legacy drafts.
+  const summaryRecipe =
+    (brew?.selectedCandidateIdx != null
+      ? rec?.candidates?.[brew.selectedCandidateIdx]?.recipe
+      : undefined) ?? rec?.primaryRecipe;
 
   // ── Saved success state ─────────────────────────────────────────────
   if (saved) {
@@ -281,14 +287,14 @@ export default function LightStepSummary() {
           </div>
         )}
 
-        {rec && brew?.methodUsed && (
+        {brew?.methodUsed && summaryRecipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <p className="label-eyebrow mb-2">Recipe</p>
             <div className="flex items-center gap-2 flex-wrap">
               <BrewMethodIcon method={brew.methodUsed} className="w-4 h-4 shrink-0 text-light-foreground" />
               <p className="text-[14px] text-light-foreground">
-                {brew.methodUsed} · {rec.primaryRecipe.doseGrams}g / {rec.primaryRecipe.waterGrams}g ·{" "}
-                {rec.primaryRecipe.waterTempC}°C
+                {brew.methodUsed} · {summaryRecipe.doseGrams}g / {summaryRecipe.waterGrams}g ·{" "}
+                {summaryRecipe.waterTempC}°C
               </p>
             </div>
           </div>

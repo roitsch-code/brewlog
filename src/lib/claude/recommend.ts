@@ -244,7 +244,7 @@ What makes a strong portfolio:
 - Candidates that answer genuinely different questions — not just different methods
 - If an exploration map is present: at least one candidate should test something that has NEVER been tried
   for this coffee. "You've never used Clever Dripper for this coffee" is more valuable information
-  than "V60+DripAssist again, slightly different grind." Use the gap.
+  than "V60 again, slightly different grind." Use the gap.
 - The anchor should have a specific hypothesis, not just "safest choice"
 - If the terrain shows a recurring setup underperforming, propose something different — not the same thing with minor adjustments
 - brewingLesson should explain the WHY, in Hoffmann-style plain language: the physics, the chemistry,

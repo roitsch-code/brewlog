@@ -28,8 +28,18 @@ import { parsePourSteps, getActiveIdx, type PourStep } from "@/lib/utils/pourSeq
 export default function LightStepBrew() {
   const { draft, setBrew, setStep } = useFlowStore();
   const rec = draft.recommendation;
-  const method = draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
-  const recipe = rec?.candidates?.find((c) => c.method === method)?.recipe ?? rec?.primaryRecipe;
+  // Read the chosen candidate by explicit index (set on the recommend screen).
+  // Two candidates can share a method, so name-matching would pick the wrong
+  // one. Fall back to name-match, then primaryRecipe, for legacy drafts.
+  const idx = draft.brew?.selectedCandidateIdx;
+  const selectedCandidate =
+    idx != null ? rec?.candidates?.[idx] : undefined;
+  const method =
+    selectedCandidate?.method || draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
+  const recipe =
+    selectedCandidate?.recipe ??
+    rec?.candidates?.find((c) => c.method === method)?.recipe ??
+    rec?.primaryRecipe;
 
   const methodLabel = method;
 

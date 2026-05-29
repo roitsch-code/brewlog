@@ -94,6 +94,15 @@ export interface Recommendation {
 
 export interface BrewLog {
   methodUsed?: string;
+  /**
+   * Index of the chosen recommendation candidate (0 = anchor, 1 = alternative,
+   * …). Set when the user taps "Brew with X" on the recommend screen. The brew/
+   * log/summary screens read the recipe by THIS index, not by method name — two
+   * candidates can share a method (e.g. both V60), and matching by name would
+   * always resolve to the first one. Legacy sessions without it fall back to
+   * method-name matching, then primaryRecipe.
+   */
+  selectedCandidateIdx?: number;
   doseGrams?: number;   // dose used (external sessions; home sessions use recommendation)
   waterGrams?: number;  // water used (external sessions; home sessions use recommendation)
   /** @deprecated Drip Assist support was removed; legacy sessions still reference this. */

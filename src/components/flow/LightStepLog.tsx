@@ -51,6 +51,12 @@ export default function LightStepLog() {
   const { draft, setBrew, setResult, setStep } = useFlowStore();
   const isExternal = draft.mode === "external";
   const rec = draft.recommendation;
+  // Recipe the user actually brewed = the candidate they selected (by index),
+  // not always the first/primary one. Falls back for legacy drafts.
+  const selIdx = draft.brew?.selectedCandidateIdx;
+  const selectedRecipe =
+    (selIdx != null ? rec?.candidates?.[selIdx]?.recipe : undefined) ??
+    rec?.primaryRecipe;
 
   const [rating, setRating] = useState(0);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
@@ -67,8 +73,8 @@ export default function LightStepLog() {
   const [fit, setFit] = useState<"not-my-style" | "neutral" | "my-kind" | null>(null);
   const [roastQuality, setRoastQuality] = useState<"poor" | "fine" | "exceptional" | null>(null);
 
-  const [grindUsed, setGrindUsed] = useState(rec?.primaryRecipe?.grindSize ?? "");
-  const [tempUsed, setTempUsed] = useState(rec?.primaryRecipe?.waterTempC?.toString() ?? "");
+  const [grindUsed, setGrindUsed] = useState(selectedRecipe?.grindSize ?? "");
+  const [tempUsed, setTempUsed] = useState(selectedRecipe?.waterTempC?.toString() ?? "");
 
   const [followedAgitation, setFollowedAgitation] = useState<"yes" | "partially" | "no" | "">("");
   const [agitationNote, setAgitationNote] = useState("");
@@ -221,14 +227,14 @@ export default function LightStepLog() {
                   label="Grind used"
                   value={grindUsed}
                   onChange={setGrindUsed}
-                  placeholder={rec?.primaryRecipe?.grindSize ?? "e.g. 406°"}
+                  placeholder={selectedRecipe?.grindSize ?? "e.g. 406°"}
                 />
                 <LabeledInput
                   label="Temp (°C)"
                   type="number"
                   value={tempUsed}
                   onChange={setTempUsed}
-                  placeholder={rec?.primaryRecipe?.waterTempC?.toString() ?? "°C"}
+                  placeholder={selectedRecipe?.waterTempC?.toString() ?? "°C"}
                 />
               </div>
             </Section>

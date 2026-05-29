@@ -87,7 +87,14 @@ export default function SessionDetailPage() {
 
   const { coffee: sessionCoffee, result, brew, recommendation, mode, place, createdAt } = session;
   const method = brew?.methodUsed || recommendation?.primaryMethod || "Brew";
-  const recipe = recommendation?.primaryRecipe;
+  // Show the candidate the user actually selected (by index), not always the
+  // primary one. Falls back to method-name match, then primaryRecipe (legacy).
+  const recipe =
+    (brew?.selectedCandidateIdx != null
+      ? recommendation?.candidates?.[brew.selectedCandidateIdx]?.recipe
+      : undefined) ??
+    recommendation?.candidates?.find((c) => c.method === method)?.recipe ??
+    recommendation?.primaryRecipe;
 
   // Back resolution — prefer the deterministic /coffees/[id] target so
   // the user lands on the exact detail page they came from, regardless
