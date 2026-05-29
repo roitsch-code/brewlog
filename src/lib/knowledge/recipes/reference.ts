@@ -136,56 +136,51 @@ export const REFERENCE_RECIPES: Recipe[] = [
     category: "reference",
     brewer: "clever",
     brewerNotes:
-      "Clever Dripper L (full-immersion brewer with valve at the base). Technique credited to James Bailey of Workshop Coffee, popularised by Hoffmann.",
+      "Clever Dripper (full-immersion brewer with valve at the base), Melitta-style #4 paper, rinsed. Water-first technique credited to Workshop Coffee (London), popularised by Hoffmann. Demo brew was 15 g : 250 g; Hoffmann's stated preference is ~60–65 g/L, so 18 g : 300 g sits in the same band.",
     dose: { grams: 18 },
     water: { grams: 300, ratio: "1:16.7" },
-    temperature: { celsius: 96, rangeC: [94, 98] },
+    temperature: { celsius: 100, rangeC: [96, 100] },
     grind: {
-      referenceSetting: "medium, slightly coarser than V60",
+      referenceSetting:
+        "medium-fine — finer than most expect for a steep brewer, close to a 2-cup V60",
       nicheZeroDegrees: [421, 431],
     },
     pourSequence: [
       {
-        label: "Water first",
+        label: "Water first (off the boil)",
         action: "pour",
         waterGramsAtEnd: 300,
         durationSec: 15,
         notes:
-          "Add all the water to the empty (sealed) brewer first. The valve seals the bottom — no drawdown yet.",
+          "Rinse the paper, then pour all the water — straight off the boil — into the sealed brewer first. The valve holds it; no drawdown yet.",
       },
       {
-        label: "Add coffee",
-        action: "agitate-bed",
-        durationSec: 5,
-        notes:
-          "Pour the ground coffee directly onto the water. The coffee floats and self-saturates without stirring.",
-      },
-      {
-        label: "Swirl",
-        action: "swirl",
-        durationSec: 5,
-        notes:
-          "Single swirl to fully submerge the floating coffee. No stirring — stirring breaks the suspension and over-agitates.",
-      },
-      { label: "Steep", action: "wait", durationSec: 120 },
-      {
-        label: "Stir to break crust",
+        label: "Add coffee + stir to mix",
         action: "stir",
         durationSec: 5,
         notes:
-          "A single stir to break the floating crust and let the slurry settle.",
+          "Drop the ground coffee onto the water and give it a little stir so there are no dry pockets — don't overdo it.",
       },
+      { label: "Steep", action: "wait", durationSec: 120, notes: "2-minute steep. Forgiving — 30 s to 2 min longer is fine." },
       {
-        label: "Place on carafe — drawdown begins",
+        label: "Break the crust",
+        action: "stir",
+        durationSec: 5,
+        notes:
+          "At 2 min, break the crust with a gentle stir (or a little shake) so the grounds fall and form a flat bed.",
+      },
+      { label: "Let grounds settle", action: "wait", durationSec: 30 },
+      {
+        label: "Place on carafe — drawdown",
         action: "drain",
-        durationSec: 30,
+        durationSec: 65,
+        notes: "Drawdown is roughly a minute (faster on a high-end grinder).",
       },
     ],
-    totalTimeSec: 180,
+    totalTimeSec: 210,
     techniques: [
       "water-first",
       "full-immersion",
-      "no-stir-bloom",
     ],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
@@ -193,20 +188,22 @@ export const REFERENCE_RECIPES: Recipe[] = [
       goals: ["balanced", "sweetness-forward", "body-forward"],
     },
     teaches:
-      "How a water-first technique eliminates the bloom agitation problem entirely. The coffee saturates from below, fines stay suspended, and the cup carries the body of an immersion with the clarity of a percolation.",
+      "How a water-first technique gives a fast, even drawdown. Pouring water before the coffee roughly halves the drawdown time versus coffee-first, because coffee-first clogs the paper. The cup carries immersion body with paper-filter clarity.",
     science:
-      "In standard pour-over, dry grounds resist wetting — the brewer pours, stirs, or swirls to overcome surface tension. Each of those moves introduces fines migration risk. Water-first reverses the relationship: the grounds drop into water and saturate through buoyancy and capillary action, with no mechanical agitation needed. Steep time (2 minutes) is enough for sugars and acids to reach equilibrium without invading Zone 3. The Clever's valve then releases the slurry — the paper filter strips the oils and most of the fines on drawdown, producing a cleaner cup than a French press without the labour of a V60.",
+      "Going water-first (a Workshop Coffee discovery) avoids the clogging that coffee-first causes on the paper, so drawdown is about twice as fast. Hoffmann pours straight off the boil; a gentle stir to mix and a single crust-break are the only agitation. A 2-minute steep reaches sugar/acid equilibrium without invading bitter Zone 3, and the technique is tolerant — a longer steep does no harm. The Clever's valve then releases the slurry through the paper, which strips oils and most fines for a cleaner cup than a French press.",
     whenToUse:
-      "Default for any coffee where you want a balanced, forgiving brew. Excellent for entertaining (no pour technique required) and for unfamiliar coffees (the technique is so consistent that the cup is a clean read on the coffee).",
+      "Default for any coffee where you want a balanced, forgiving brew. Excellent for entertaining (no pour technique required) and for unfamiliar coffees. If the cup tastes hollow, grind finer; if harsh/bitter, back off a touch.",
     sources: [
       {
-        type: "video",
+        type: "transcript",
         citation:
-          "James Hoffmann — 'The Ultimate Clever Dripper Technique' (YouTube)",
-        year: 2022,
+          "James Hoffmann — 'The Ultimate Clever Dripper Technique' (2020). Rinse paper; water first straight off the boil; add coffee + little stir; steep 2 min; break crust; wait ~30 s; drawdown ~1 min. Demo 15 g : 250 g, prefers 60–65 g/L. Transcribed in-session.",
+        year: 2020,
       },
     ],
     verified: true,
+    notes:
+      "Corrected from Hoffmann's own video: water is poured straight off the boil (was 96°C); he DOES give a little stir to mix the coffee and a crust-break stir at 2 min (the previous 'no-stir' framing was wrong); ~30 s settle + ~1 min drawdown puts total near 3:30 (was 3:00). Dose/ratio kept at 18 g : 300 g — within his stated 60–65 g/L preference; his on-camera demo used 15 g : 250 g at the same ratio band.",
   },
 
   {
@@ -357,35 +354,41 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "clever",
-    dose: { grams: 20 },
-    water: { grams: 250, ratio: "1:12.5 (extraction) — diluted by 200g ice in carafe" },
-    temperature: { celsius: 95 },
+    brewerNotes:
+      "Clever (or any immersion/steep-and-release brewer — Hario Switch, AeroPress also work). Dose is 75 g per litre of TOTAL water; total water is split ~2/3 hot brew water + 1/3 ice. Add a few drops of saline (≈20% salt solution) to the finished cup to cut perceived bitterness.",
+    dose: { grams: 37.5 },
+    water: { grams: 500, ratio: "1:13.3 (75 g/L of total water: ~330 g hot + ~170 g ice)" },
+    temperature: { celsius: 100, rangeC: [96, 100] },
     grind: {
-      referenceSetting: "medium-coarse",
+      referenceSetting:
+        "fairly fine — closer to a 2-cup pour-over than espresso; immersion tolerates it without channeling",
       nicheZeroDegrees: [421, 431],
     },
     pourSequence: [
       {
-        label: "Pour water onto coffee",
+        label: "Hot water onto coffee (~330 g, off the boil)",
         action: "pour",
-        waterGramsAtEnd: 250,
+        waterGramsAtEnd: 330,
         durationSec: 15,
+        notes:
+          "Brew as hot as you can — 2/3 of the total water (~330 g of 500 g). Preheat the brewer.",
       },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
-      { label: "Steep", action: "wait", durationSec: 220 },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
+      { label: "Mix", action: "stir", durationSec: 5, notes: "Stir/distribute to wet all the grounds." },
+      { label: "Steep", action: "wait", durationSec: 290, notes: "~5-minute steep. Tolerant: 4–7 min is fine. Fetch the ice at the 4-minute mark so it's as cold as possible." },
       {
-        label: "Place on carafe of ice — drawdown onto ice",
+        label: "Drain onto ~170 g ice",
         action: "drain",
-        durationSec: 55,
-        notes: "Server contains 200g ice. Hot concentrate flashes cold on contact.",
+        durationSec: 50,
+        notes:
+          "Server holds ~170 g ice (1/3 of total water). Hot brew flash-chills on contact; stir until the ice is gone.",
       },
+      { label: "Add saline + serve", action: "bypass", durationSec: 5, notes: "2–4 drops of 20% saline to taste; ice your glass and pour." },
     ],
-    totalTimeSec: 300,
+    totalTimeSec: 365,
     techniques: [
       "japanese-iced-immersion",
       "flash-chilling",
-      "concentrate-and-ice",
+      "saline-finish",
     ],
     bestFor: {
       roastLevels: ["light", "medium-light"],
@@ -394,19 +397,22 @@ export const REFERENCE_RECIPES: Recipe[] = [
       occasions: ["summer-time", "iced"],
     },
     teaches:
-      "How flash-chilling an immersion preserves aromatics that cold-brew loses to its long extraction time. The 1:12.5 extraction concentration plus ice dilution lands at an effective 1:22 final drink — strong enough to taste under ice.",
+      "How flash-chilling an immersion preserves aromatics that cold-brew loses to its long extraction time. Brew hot at 75 g/L of total water, split 2/3 hot + 1/3 ice, with a heavier dose to survive in-glass dilution; a few drops of saline tame the higher perceived bitterness of cold coffee.",
     science:
-      "Cold brew extracts over 8–18 hours at room temperature; the long timeline lets fine bitter compounds reach equilibrium, but volatile aromatic compounds dissipate. A flash-chilled iced coffee extracts hot (full Zone 1 aromatics) and then drops below 5°C in seconds when the concentrate hits ice — the aromatics are locked into the liquid before they can volatilise. The Clever's full immersion gives a balanced extraction; the percolation alternative (Japanese Iced V60) produces a brighter, less rounded cup.",
+      "Cold brew extracts over 8–18 hours; the long timeline lets bitter compounds equilibrate but lets volatile aromatics dissipate. A flash-chilled iced coffee extracts hot (full Zone 1 aromatics) then drops below 5°C in seconds when it hits ice — aromatics lock into the liquid before volatilising. A longer immersion steep runs the brew water cooler by the time it meets the ice, so less ice is needed and more of the total water does extraction work. The heavier 75 g/L dose compensates for the immersion's slightly weaker extraction and for in-glass dilution; saline suppresses the bitterness that cold amplifies.",
     whenToUse:
-      "Summer iced coffee where you want body and balance, not the sharp brightness of a percolation iced. Pairs well with milk or as a long iced drink with extra cold water.",
+      "Summer iced coffee where you want body and balance, not the sharp brightness of a percolation iced. Use lighter, fruitier, juicier coffees (washed Kenyan / Ethiopian shine).",
     sources: [
       {
-        type: "video",
+        type: "transcript",
         citation:
-          "James Hoffmann — 'My Favorite Iced Coffee Recipe' (YouTube)",
+          "James Hoffmann — 'A Better Way To Make Iced Filter Coffee' (2023). 75 g/L of total water, ~2/3 hot + 1/3 ice (demo 37.5 g : 330 g hot + ~170 g ice), ~5-min immersion steep, brew as hot as possible, 2–4 drops saline. Transcribed in-session.",
+        year: 2023,
       },
     ],
     verified: true,
+    notes:
+      "Corrected from Hoffmann's 2023 iced video: dose is 75 g/L of TOTAL water (~37.5 g for a 500 g drink, was 20 g), water split is ~2/3 hot + 1/3 ice (~330 g + ~170 g, was 250 g + 200 g), steep ~5 min (was 3:40), brewed as hot as possible (was 95°C), plus a saline finish. The earlier '1:12.5 + 200 g ice' figures were a different reconstruction.",
   },
 
   // ── Tetsu Kasuya (standalone 4:6, separate from his 2016 routine) ────────
