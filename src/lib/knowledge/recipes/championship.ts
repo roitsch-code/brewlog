@@ -225,7 +225,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       year: 2022,
     },
     category: "championship",
-    brewer: "flat-bottom",
+    brewer: "kalita-wave",
     brewerNotes:
       "Flat-bottom polycarbonate dripper (poor heat conductor, chosen to hold the bed temperature). The flat bed lets the coffee-bed temperature climb sharply from ~35°C to ~70°C for efficient extraction.",
     dose: { grams: 14 },
