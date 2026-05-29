@@ -12,6 +12,13 @@ import type { Recipe } from "./types";
  *                     or written publication.
  *   verified: false — mechanics reconstructed from third-party transcriptions
  *                     or older revisions of the recipe.
+ *
+ * GRIND RECALIBRATION (May 2026): `nicheZeroDegrees` is a TRANSLATION for the
+ * user's Niche Zero, re-baselined to a measured anchor (V60 single cup = 380°
+ * = Comandante 23 clicks; map ~3.3°/click). Self-created Niche translations
+ * here were shifted −21° onto the new baseline (estimate / carry-offset);
+ * real originator-published clicks (where any) are kept and the Niche derived
+ * from them. See src/lib/constants/grindSettings.ts for the anchors + map.
  */
 
 export const REFERENCE_RECIPES: Recipe[] = [
@@ -143,7 +150,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "medium-fine — finer than most expect for a steep brewer, close to a 2-cup V60",
-      nicheZeroDegrees: [421, 431],
+      nicheZeroDegrees: [400, 410],
     },
     pourSequence: [
       {
@@ -225,7 +232,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "fine — finer than a pour-over, getting close to the espresso range (for light roasts)",
-      nicheZeroDegrees: [377, 387],
+      nicheZeroDegrees: [356, 366],
     },
     pourSequence: [
       {
@@ -297,7 +304,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [431, 441],
+      nicheZeroDegrees: [410, 420],
     },
     pourSequence: [
       {
@@ -362,7 +369,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "fairly fine — closer to a 2-cup pour-over than espresso; immersion tolerates it without channeling",
-      nicheZeroDegrees: [421, 431],
+      nicheZeroDegrees: [400, 410],
     },
     pourSequence: [
       {
@@ -433,7 +440,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 92 },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
     },
     pourSequence: [
       {
@@ -628,7 +635,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 80, rangeC: [78, 82] },
     grind: {
       referenceSetting: "fine, espresso-adjacent",
-      nicheZeroDegrees: [365, 375],
+      nicheZeroDegrees: [344, 354],
     },
     pourSequence: [
       {
@@ -784,7 +791,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-fine",
-      nicheZeroDegrees: [396, 404],
+      nicheZeroDegrees: [375, 383],
     },
     pourSequence: [
       {
@@ -878,7 +885,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [396, 406],
+      nicheZeroDegrees: [375, 385],
     },
     pourSequence: [
       {
@@ -963,7 +970,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "her everyday Kalita grind, then sieved to remove fines",
-      nicheZeroDegrees: [396, 406],
+      nicheZeroDegrees: [375, 385],
       description:
         "The only change from her daily bar routine is sieving off the fines so they can't over-extract.",
     },

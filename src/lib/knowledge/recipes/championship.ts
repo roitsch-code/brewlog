@@ -17,6 +17,18 @@ import type { Recipe } from "./types";
  *
  * Sources for each entry are listed under `sources`. When a pour sequence is
  * reconstructed, `notes` records what was reconstructed and from where.
+ *
+ * GRIND RECALIBRATION (May 2026): `nicheZeroDegrees` is a TRANSLATION for the
+ * user's Niche Zero, which was re-baselined to a measured anchor (V60 single
+ * cup = 380° = Comandante 23 clicks; map ~3.3°/click). Rules applied here:
+ *   • Real, originator-published Comandante clicks are kept verbatim, and the
+ *     Niche is DERIVED from them via the user's map (Medina 26 clicks → ~390°;
+ *     Stanica 58 Red Clix ≈ 35 standard → ~420°).
+ *   • Self-created Niche translations were shifted −21° onto the new baseline
+ *     (estimate / carry-offset).
+ *   • Exceptions NOT shifted because they already land correctly on the user's
+ *     scale: Peng (≈Comandante 26) and Hsu (~1000 µm, medium-coarse).
+ * See src/lib/constants/grindSettings.ts for the anchors and the conversion.
  */
 
 export const CHAMPIONSHIP_RECIPES: Recipe[] = [
@@ -42,7 +54,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Various commercial grinders",
       referenceSetting: "medium-coarse, like coarse sea salt",
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
       description:
         "Coarser than a typical V60 grind — the longer total brew time compensates for the reduced surface area.",
     },
@@ -146,7 +158,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "EK43",
       referenceSetting: "medium (double-ground for even distribution)",
-      nicheZeroDegrees: [398, 408],
+      nicheZeroDegrees: [377, 387],
       description:
         "Du double-ground: a first coarse pass, then a second finer pass through the same hand grinder, to tighten the particle distribution.",
     },
@@ -245,6 +257,8 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       referenceSetting:
         "medium-fine (two particle sizes: ~75% at 1000µm, 25% at 800µm)",
       nicheZeroDegrees: [388, 396],
+      description:
+        "NOT shifted in the May-2026 Niche recalibration — the ~1000µm medium-coarse grind already lands correctly on the user's re-based Niche scale (~25–28 Comandante clicks).",
     },
     pourSequence: [
       {
@@ -340,7 +354,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.5) / Comandante (26 clicks)",
       referenceSetting: "medium-coarse, 850–950 microns",
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [387, 393],
+      description:
+        "Niche derived from Medina's real Comandante 26 clicks via the user's measured map (26 clicks ≈ 390°). The published 26-click figure is kept verbatim.",
     },
     pourSequence: [
       {
@@ -438,9 +454,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Mazzer ZM",
       referenceSetting: "490 microns",
-      nicheZeroDegrees: [401, 411],
+      nicheZeroDegrees: [380, 390],
       description:
-        "Equivalent to Comandante C40 at 21–25 clicks — slightly coarser than typical Orea grind.",
+        "Real grind is 490 µm on a Mazzer ZM. The Comandante/Niche figures are our translations (no originator Comandante published): ~23–26 Comandante clicks; Niche shifted −21° to the user's re-based scale (estimate, calibrate empirically).",
     },
     pourSequence: [
       {
@@ -540,10 +556,10 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     },
     grind: {
       referenceGrinder: "Comandante C40 / EK43 equivalent",
-      referenceSetting: "medium-fine",
+      referenceSetting: "medium-fine (~800µm; ~26–27 Comandante clicks per research)",
       nicheZeroDegrees: [386, 396],
       description:
-        "Finer than typical V60 grind — the 1:4 ratio is concentrated enough that fine grind is essential to reach target extraction in 2 minutes.",
+        "Finer than typical V60 grind. Niche NOT shifted in the May-2026 recalibration — [386–396°] already maps to ~25–28 Comandante clicks, consistent with Peng's reported ~26–27 clicks.",
     },
     pourSequence: [
       {
@@ -638,9 +654,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40 Mk4 Red Clix",
       referenceSetting: "58 clicks",
-      nicheZeroDegrees: [382, 388],
+      nicheZeroDegrees: [415, 425],
       description:
-        "Medium-fine. Red Clix has 50 clicks per turn vs. standard 30, so 58 clicks ≈ 35 standard clicks.",
+        "Red Clix has 50 clicks per turn vs. standard 30, so 58 Red Clix ≈ 35 standard clicks. The published 58 Red Clix is kept verbatim; Niche derived from it via the user's map (35 standard clicks ≈ 420°) — medium-coarse, as expected for an inverted-AeroPress concentrate.",
     },
     pourSequence: [
       {
