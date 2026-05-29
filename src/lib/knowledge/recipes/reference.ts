@@ -400,7 +400,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
-      goals: ["balanced", "sweetness-forward"],
+      goals: ["aromatic", "sweetness-forward"],
       occasions: ["summer-time", "iced"],
     },
     teaches:

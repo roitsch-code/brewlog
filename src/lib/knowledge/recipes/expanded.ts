@@ -50,7 +50,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey", "any"],
-      goals: ["high-clarity", "sweetness-forward"],
+      goals: ["aromatic", "sweetness-forward"],
       occasions: ["summer-time"],
     },
     teaches: "How to use phase-separated 4:6 on iced — the first two pours still dial in acidity/sweetness, the back half lands directly onto ice for flash-chill.",
@@ -402,7 +402,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["medium", "medium-light", "medium-dark"],
       processes: ["natural", "honey"],
-      goals: ["sweetness-forward", "body-forward"],
+      goals: ["aromatic", "sweetness-forward"],
       occasions: ["summer-time"],
     },
     teaches: "Cold immersion in an AeroPress for 2-4 hours produces a balanced concentrate cleaner than a Toddy — the paper filter and small slurry volume sieve fines that a Toddy bag misses.",
@@ -1452,7 +1452,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
-      goals: ["high-clarity", "balanced"],
+      goals: ["aromatic", "balanced"],
       occasions: ["summer-time"],
     },
     teaches: "Japanese Iced standard: brew hot at 1:10 onto ice that dilutes to ~1:15 final strength. Flash-chilling locks aromatics before they volatilise.",
@@ -1496,7 +1496,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey", "washed"],
-      goals: ["high-clarity", "sweetness-forward"],
+      goals: ["aromatic", "sweetness-forward"],
       occasions: ["summer-time"],
     },
     teaches: "Kalita's flat bottom makes Japanese Iced forgiving — the bed shape stays consistent, the flow rate slightly slower than V60 keeps extraction in window despite hot temp + small hot volume.",
@@ -2261,7 +2261,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
-      goals: ["balanced"],
+      goals: ["aromatic"],
       occasions: ["summer-time"],
     },
     teaches: "Mugen + iced: single-pour V60 onto ice. The Mugen paper's restricted flow plus immediate flash-chilling makes a forgiving iced recipe.",
@@ -2522,7 +2522,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey"],
-      goals: ["high-clarity"],
+      goals: ["aromatic"],
       occasions: ["summer-time"],
     },
     teaches: "Iced AeroPress in the Stanica style: brew a tight concentrate, flash-chill onto ice, dilute with cool bypass. Hits hot extraction quality + iced chill in one routine.",
@@ -2725,7 +2725,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       roastLevels: ["very-light", "light"],
       processes: ["washed", "natural"],
       varieties: ["Gesha", "Geisha"],
-      goals: ["high-clarity", "explore"],
+      goals: ["aromatic", "explore"],
     },
     teaches: "Temperature staging that goes the opposite way to a hot bloom: a room-temperature bloom, then a hot main pour, then cooler pours — descending heat to preserve aromatics and tame late bitterness.",
     science: "The cool bloom wets the bed without driving off volatiles or starting harsh extraction; the 94°C main pour does the bulk extraction; dropping to 88°C for the late pours slows extraction of bitter late-zone compounds while the bed is most saturated. The result aims at aromatic clarity in a delicate light roast.",

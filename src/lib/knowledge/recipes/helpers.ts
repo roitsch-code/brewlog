@@ -171,6 +171,8 @@ export function normaliseGoal(input?: string): Goal {
   if (!input) return "balanced";
   const n = input.toLowerCase().trim();
   if (n === "high-clarity" || n.includes("clarity")) return "high-clarity";
+  if (n === "aromatic" || n.includes("aromatic") || n.includes("floral"))
+    return "aromatic";
   if (n === "sweetness-forward" || n.includes("sweet")) return "sweetness-forward";
   if (n === "body-forward" || n.includes("body")) return "body-forward";
   if (n === "explore" || n.includes("explor") || n === "educational")
