@@ -8,11 +8,13 @@ import type {
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
+import { MARKUS_ADDITIONS } from "./markusAdditions";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
   ...REFERENCE_RECIPES,
   ...EXPANDED_RECIPES,
+  ...MARKUS_ADDITIONS,
 ];
 
 /**
