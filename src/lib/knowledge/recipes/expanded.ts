@@ -2623,55 +2623,8 @@ export const EXPANDED_RECIPES: Recipe[] = [
     verified: false,
   },
 
-  {
-    id: "medina-origami-2023",
-    name: "Medina — Origami Recipe (2023 WBrC)",
-    shortName: "Medina Origami 2023",
-    attribution: {
-      person: "Carlos Medina",
-      title: "2023 World Brewers Cup Champion",
-      country: "Chile",
-      year: 2023,
-    },
-    category: "reference",
-    brewer: "origami-cone",
-    brewerNotes:
-      "Origami Air S + Cafec Abaca cone paper filter. (Grind: ~850–950 microns / Timemore Chestnut S3 at 5.5 / Comandante at 26 clicks.) A fuller five-pour Medina routine; the championship.ts entry (conical paper) is the same brewer's competition write-up.",
-    dose: { grams: 15.5 },
-    water: { grams: 248, ratio: "1:16" },
-    temperature: { celsius: 91 },
-    grind: {
-      referenceGrinder: "Timemore Chestnut S3 (5.5) / Comandante (26 clicks)",
-      referenceSetting: "medium-coarse, 850–950 microns",
-    },
-    pourSequence: [
-      { label: "Bloom (→50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 10, notes: "Gentle circular pour at 91°C; bloom 30 s." },
-      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 0:30." },
-      { label: "Pour 2 (→100g)", action: "pour", waterGramsAtEnd: 100, durationSec: 10, notes: "Circular pour." },
-      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 1:00." },
-      { label: "Pour 3 (→150g)", action: "pour", waterGramsAtEnd: 150, durationSec: 10, notes: "Steady circular pour." },
-      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 1:30." },
-      { label: "Pour 4 (→200g)", action: "pour", waterGramsAtEnd: 200, durationSec: 10 },
-      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 2:00." },
-      { label: "Pour 5 (→248g)", action: "pour", waterGramsAtEnd: 248, durationSec: 10, notes: "Final pour at 2:00." },
-      { label: "Drawdown", action: "drain", durationSec: 40, notes: "Total brew time 2:40–3:00. Swirl the carafe before serving." },
-    ],
-    totalTimeSec: 170,
-    techniques: ["even-pulse-pouring", "lean-ratio", "moderate-temperature"],
-    bestFor: {
-      roastLevels: ["light", "medium-light"],
-      processes: ["natural", "honey", "washed"],
-      varieties: ["Sidra"],
-      goals: ["sweetness-forward", "balanced", "explore"],
-    },
-    teaches: "Five even ~50 g pours on a 30 s cadence at a lean 1:16 and moderate 91°C — metronomic extraction that draws out fermentation-derived sweetness without amplifying sharpness.",
-    science: "Equal pulses every 30 s keep the bed agitation regular and the slurry level steady, so extraction is uniform across the brew. The lean ratio and 91°C hold the cup in the sweetness band rather than the volatile-ester band, which is why it suits a Natural Sidra.",
-    whenToUse: "When you want a competition-style, repeatable Origami brew for an expressive natural or honey coffee.",
-    sources: [
-      { type: "transcript", citation: "User-provided recipe card — 'Carlos Medina, Origami Recipe, 2023 World Brewers Cup Champion' (15.5 g : 248 g, 91°C, five 50 g pours, Origami Air S + Cafec Abaca).", year: 2023 },
-    ],
-    verified: false,
-  },
+  // Medina's 2023 Origami card was consolidated into championship.ts
+  // (`wbrc-2023-medina`) to avoid two competing Medina routines.
 
   {
     id: "origami-big-batch",
