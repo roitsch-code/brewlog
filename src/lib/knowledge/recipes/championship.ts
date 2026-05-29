@@ -197,7 +197,8 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     sources: [
       {
         type: "official-competition",
-        citation: "2019 World Brewers Cup Final, Berlin",
+        citation:
+          "2019 World Brewers Cup Final — host city corrected to Boston (SCA Expo, April 2019) from the prior 'Berlin'. Basis: Du was reported as champion in a China Daily interview dated 2019-05-10, before World of Coffee Berlin (June 2019). Secondary timing evidence; pending a final cross-check against official WCE materials.",
         year: 2019,
       },
       {
@@ -208,7 +209,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Brew-relevant parameters corrected from a detailed recipe-recreation transcript that follows Du's published routine: dose 16 g (was 20 g), ratio 1:15 (was 1:12), three pours 60/140/240 (was bloom + 4 pours), ~1:45 total. Kept verified:false because the source is a third-party recreation, not Du's own footage.",
+      "Brew-relevant parameters corrected from a detailed recipe-recreation transcript that follows Du's published routine: dose 16 g (was 20 g), ratio 1:15 (was 1:12), three pours 60/140/240 (was bloom + 4 pours), ~1:45 total. Host city corrected to Boston (was 'Berlin') on secondary timing evidence — see sources, pending WCE confirmation. Kept verified:false because the source is a third-party recreation, not Du's own footage.",
   },
 
   // ── 2022 WBrC ──────────────────────────────────────────────────────────────

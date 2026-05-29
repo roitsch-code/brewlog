@@ -498,78 +498,113 @@ export const REFERENCE_RECIPES: Recipe[] = [
     verified: true,
   },
 
-  // ── Patrik Rolf ──────────────────────────────────────────────────────────
+  // ── Patrik Rolf / April Coffee ────────────────────────────────────────────
 
   {
-    id: "rolf-minimum-variables",
-    name: "Rolf — Minimum Variables (Stagg [X])",
-    shortName: "Rolf Stagg [X]",
+    id: "rolf-april-v60",
+    name: "April Coffee House V60 (Rolf)",
+    shortName: "April V60",
     attribution: {
       person: "Patrik Rolf",
       title: "April Coffee Roasters founder, 'Coffee with April' YouTube",
       affiliation: "April Coffee, Copenhagen",
       country: "Denmark / Sweden",
+      year: 2018,
     },
     category: "reference",
     brewer: "v60",
     brewerNotes:
-      "Originally published for the Fellow Stagg [X] (flat-bottom). Translates to V60 with minor adjustments.",
-    dose: { grams: 18 },
-    water: { grams: 300, ratio: "1:16.7" },
-    temperature: { celsius: 96 },
+      "Hario V60 (paper filter not specified on the source page). April's published house V60 — an agitation-forward, all-rounder recipe. Water 90–110 ppm. Coffee rested at least 7 days off roast.",
+    dose: { grams: 20 },
+    water: { grams: 300, ratio: "1:15" },
+    temperature: { celsius: 92 },
     grind: {
-      referenceSetting: "medium-fine, fewer variables = uniformity matters more",
-      nicheZeroDegrees: [398, 406],
+      referenceSetting:
+        "coarse (April's word) — calibrate the Niche empirically against the ~3:20–3:30 drawdown; April publishes no degree number",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Pour 1 (→50 g) @ 0:00",
         action: "pour",
-        waterGramsAtEnd: 60,
-        durationSec: 5,
-        notes: "3.3× dose. Pour quickly, no stir.",
+        waterGramsAtEnd: 50,
+        durationSec: 10,
+        notes:
+          "Circular pour, deliberately aggressive 'so that you agitate the grounds'. This first pour doubles as the bloom — there is no separate bloom in April's house recipe.",
       },
+      { label: "Wait → 0:40", action: "wait", durationSec: 30 },
       {
-        label: "Light swirl",
-        action: "swirl",
-        durationSec: 3,
-        notes: "Saturate the puck. No stir — stirring is the variable being removed.",
+        label: "Pour 2 (→100 g) @ 0:40",
+        action: "pour",
+        waterGramsAtEnd: 100,
+        durationSec: 10,
+        notes: "Aggressive circular pour.",
       },
-      { label: "Bloom rest", action: "wait", durationSec: 30 },
+      { label: "Wait → 1:10", action: "wait", durationSec: 20 },
       {
-        label: "Single continuous pour",
+        label: "Pour 3 (→150 g) @ 1:10",
+        action: "pour",
+        waterGramsAtEnd: 150,
+        durationSec: 10,
+        notes: "Aggressive circular pour.",
+      },
+      { label: "Wait → 1:40", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 4 (→200 g) @ 1:40",
+        action: "pour",
+        waterGramsAtEnd: 200,
+        durationSec: 10,
+        notes: "Aggressive circular pour.",
+      },
+      { label: "Wait → 2:10", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 5 (→250 g) @ 2:10",
+        action: "pour",
+        waterGramsAtEnd: 250,
+        durationSec: 10,
+        notes: "Aggressive circular pour.",
+      },
+      { label: "Wait → 2:40", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 6 (→300 g) @ 2:40",
         action: "pour",
         waterGramsAtEnd: 300,
-        durationSec: 60,
+        durationSec: 10,
         notes:
-          "One continuous pour rather than multiple discrete pours. Removes pour count and pour spacing as variables.",
+          "Final water poured slowly in a circle in the centre — no water on the edges.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 120 },
+      {
+        label: "Stir once at the end",
+        action: "stir",
+        durationSec: 5,
+        notes: "April's recipe finishes with one stir before drawdown.",
+      },
+      { label: "Drawdown", action: "drain", durationSec: 30 },
     ],
-    totalTimeSec: 218,
-    techniques: ["minimal-agitation", "continuous-pour", "no-stir"],
+    totalTimeSec: 205,
+    techniques: ["aggressive-circular-agitation", "even-interval-pulse-pouring"],
     bestFor: {
-      roastLevels: ["very-light", "light"],
-      processes: ["washed"],
-      goals: ["high-clarity"],
+      roastLevels: ["light", "medium-light", "medium"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["balanced", "explore"],
     },
     teaches:
-      "How to remove technique as a variable. A single continuous pour with no stir produces a clean, repeatable extraction profile that isolates the coffee itself as the only thing changing brew-to-brew.",
+      "April's everyday house V60 — the opposite philosophy from a minimal-agitation brew. Six even 50 g pours on a steady ~30 s cadence, each poured deliberately aggressively to agitate the bed, finished with a single stir. Agitation is treated as a feature, not a variable to remove.",
     science:
-      "Multi-pour V60 recipes introduce dozens of micro-variables: each pour's speed, spiral pattern, and intermission length affects extraction. By using one continuous pour, Rolf removes those variables — the only inputs are dose, water, temperature, grind, and total time. This is ideal for evaluating a coffee's intrinsic character or for repeatable side-by-side comparisons across coffees. Naturals can read flat under this method because the technique deliberately under-agitates.",
+      "Six evenly spaced 50 g pours keep the slurry level and the bed agitation regular across the whole brew. The deliberately aggressive circular pour drives turbulence at the bed for higher, more even extraction; finishing with one stir flattens the bed before drawdown. The 1:15 ratio at 92 °C on 90–110 ppm water is a balanced all-rounder rather than a clarity-maximising routine.",
     whenToUse:
-      "When evaluating an unfamiliar washed light roast and you want a clean read on the coffee, not your technique. Not the right choice for naturals or for sweetness-forward goals.",
+      "A reliable daily V60 for washed, honey, or natural light-to-medium coffees. Because it is agitation-forward, it is NOT the right pick for the most delicate, clarity-first coffees (Geisha, Pink Bourbon) where heavy agitation muddies the cup — use a staged-temperature or fines-sieved clarity recipe there instead.",
     sources: [
       {
-        type: "video",
-        citation: "Coffee with April / Patrik Rolf — YouTube channel (multiple videos)",
-      },
-      {
-        type: "book",
-        citation: "Rolf, P. — *From Nerd to Pro: A Coffee Journey* (2022)",
+        type: "blog",
+        citation:
+          "Patrik Rolf / April Coffee — 'How we Brew Coffee with a V60' (April Coffee blog). 20 g : 300 g, 92 °C, 90–110 ppm water, six 50 g pours at 0:00/0:40/1:10/1:40/2:10/2:40 poured aggressively in a circle, one stir at the end, total 3:20–3:30, coffee ≥7 days off roast. Read verbatim during web research.",
+        url: "https://www.aprilcoffeeroasters.com/blogs/news/how-to-brew-coffee-with-a-v60",
+        year: 2018,
       },
     ],
     verified: true,
+    notes:
+      "Replaces the prior 'Rolf — Minimum Variables (Stagg [X])' entry, which was a misattribution: no such single-continuous-pour / no-stir Rolf recipe could be found in any primary source, and that 'minimum variables' style is stylistically Scott Rao's, not Rolf's. April's actual published house V60 is the opposite — agitation-forward with six aggressive pours and a finishing stir. Headline parameters (20 g / 300 g / 92 °C / V60 / six pours) are from April's own blog, read verbatim. Caveat: the source page is internally inconsistent on total time, stating both '2:20–3:00' (general guideline) and '3:20–3:30' (the specific recipe) — the 3:20–3:30 figure is used here. Separately, Rolf's own WBrC final recipe (Coffee with April Ep. 77, 2019) is on a custom brewer, not a V60, and its exact parameters live only in the unfetchable video — not captured here.",
   },
 
   // ── Jonathan Gagné ───────────────────────────────────────────────────────
@@ -664,20 +699,20 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "v60",
-    dose: { grams: 22 },
-    water: { grams: 352, ratio: "1:16" },
-    temperature: { celsius: 95 },
+    dose: { grams: 12 },
+    water: { grams: 200, ratio: "1:16.7" },
+    temperature: { celsius: 97 },
     grind: {
-      referenceSetting: "fine — finer than most V60 recipes",
-      nicheZeroDegrees: [388, 396],
+      referenceSetting:
+        "medium-fine — Perger's reference is 'like table salt'. He publishes no Niche number; calibrate empirically against the ~2:20 drawdown.",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (→50 g)",
         action: "pour",
-        waterGramsAtEnd: 66,
+        waterGramsAtEnd: 50,
         durationSec: 10,
-        notes: "3× dose.",
+        notes: "~4× dose.",
       },
       {
         label: "Vigorous stir 3–5×",
@@ -686,28 +721,23 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes:
           "Perger's signature — vigorous bloom stir to ensure full saturation and to drive extraction yield up.",
       },
-      { label: "Bloom rest", action: "wait", durationSec: 30 },
+      { label: "Bloom rest → 0:30", action: "wait", durationSec: 10 },
       {
-        label: "Main pour",
+        label: "Pour 2 (→100 g) @ 0:30",
         action: "pour",
-        waterGramsAtEnd: 250,
-        durationSec: 30,
-      },
-      {
-        label: "Top-up pour",
-        action: "pour",
-        waterGramsAtEnd: 352,
-        durationSec: 30,
-      },
-      {
-        label: "Spinning swirl during drawdown",
-        action: "swirl",
+        waterGramsAtEnd: 100,
         durationSec: 10,
-        notes: "Spin the dripper to keep the puck moving — maximises yield.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 95 },
+      { label: "Wait → 1:00", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 3 (→200 g) @ 1:00",
+        action: "pour",
+        waterGramsAtEnd: 200,
+        durationSec: 15,
+      },
+      { label: "Drawdown", action: "drain", durationSec: 65 },
     ],
-    totalTimeSec: 215,
+    totalTimeSec: 140,
     techniques: [
       "high-agitation",
       "fine-grind",
@@ -728,12 +758,12 @@ export const REFERENCE_RECIPES: Recipe[] = [
       {
         type: "article",
         citation:
-          "Matt Perger — Barista Hustle 'Coffee Compass' / extraction yield articles",
+          "Matt Perger — Barista Hustle 'Coffee Compass' / extraction-yield articles, plus his documented V60 routine (12 g : 200 g, 97 °C, medium-fine 'table salt', bloom 50 g + vigorous stir, +50 g at 0:30, +100 g at 1:00, ~2:20). Secondary transcriptions of his video/Barista Hustle write-up — not fetched verbatim.",
       },
     ],
     verified: false,
     notes:
-      "Perger has published multiple V60 recipes over the years; this is a representative synthesis of his published high-extraction approach. Exact dose/water/time vary across his publications.",
+      "Corrected from the prior 22 g : 352 g / 95 °C / ~3:35 values, which could not be sourced to Perger and closely match a different recipe (a 22 g : 375 g / 98 °C method attributed in a coffeeadastra comment to Alessandro Galtieri, explicitly NOT Perger) — i.e. a likely misattribution. Perger's documented headline recipe is 12 g : 200 g at 97 °C with a vigorous bloom stir. Kept verified:false: the numbers come from secondary transcriptions of his video / Barista Hustle article, not a verbatim-fetched primary source. The old fabricated Niche degree range was removed per the Hard Rule.",
   },
 
   // ── Scott Rao ────────────────────────────────────────────────────────────
@@ -907,7 +937,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Specific dose/water/pour milestones reconstructed from Cafec demonstration materials; the principle (roast-tailored paper and temperature) is the canonical Hatakeyama contribution, not these specific numbers.",
+      "Two honesty flags from web research. (1) The specific numbers here (15 g : 225 g, 88–95 °C, ~3:10) could NOT be sourced to any publication, primary or secondary — treat them as an unverified reconstruction, not Hatakeyama's recipe. (2) The 'roast-tailored filter' framing is a Cafec PRODUCT concept that Hatakeyama promotes as a Cafec brand ambassador (Cafec sells roast-specific papers: Light / Medium-Dark T-90 / Dark T-83) — it is not documented as his WBrC-winning method. His actual WBrC 2021 routine (Milan; he placed 2nd / runner-up, champion was Matt Winton — he was NOT world champion) is reported, secondary-tier only, as: Cafec Flower Dripper + Abaca filter, 20 g : 260 g (~1:13), KRUVE-sieved to remove microfines, staged temperature ~90 °C (pours 1–3) dropping to ~60 °C (late pours), target ~3:00, brewed on a Colombia/Bolivia Geisha blend. The exact per-pour schedule and bloom time are NOT reliably documented. This entry is kept as a roast-tailored teaching demo and stays verified:false until a primary source can be fetched.",
   },
 
   // ── Mikaela Wallgren ─────────────────────────────────────────────────────
@@ -993,76 +1023,10 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "Corrected from Wallgren's own stage presentation: dose 15 g (was 22 g), water 250 g / 1:16.7 (was 330 g / 1:15), 96°C (was 94°C), bloom 30 s + one continuous circular pour to 1:45, total 2:35 (was bloom + 3 discrete pours, 3:35). Fines-sieving confirmed.",
   },
 
-  // ── Turbo V60 (popularised by Lance Hedrick) ─────────────────────────────
-
-  {
-    id: "turbo-v60-hedrick",
-    name: "Turbo V60 (Hedrick)",
-    shortName: "Turbo V60",
-    attribution: {
-      person: "Lance Hedrick (popularised)",
-      title:
-        "Coffee educator, YouTube; technique developed in the championship community",
-      country: "United States",
-    },
-    category: "reference",
-    brewer: "v60",
-    dose: { grams: 15 },
-    water: { grams: 250, ratio: "1:16.7" },
-    temperature: { celsius: 100 },
-    grind: {
-      referenceSetting: "coarse — espresso fine WOULD choke",
-      nicheZeroDegrees: [391, 396],
-    },
-    pourSequence: [
-      {
-        label: "Bloom",
-        action: "pour",
-        waterGramsAtEnd: 45,
-        durationSec: 5,
-      },
-      {
-        label: "Stir 2–3×",
-        action: "stir",
-        durationSec: 10,
-        notes:
-          "Turbo recipes stir at bloom — the coarse grind tolerates agitation without channeling.",
-      },
-      { label: "Bloom rest", action: "wait", durationSec: 30 },
-      {
-        label: "Fast pour to 250g",
-        action: "pour",
-        waterGramsAtEnd: 250,
-        durationSec: 35,
-        notes:
-          "Single fast pour. The coarse grind drains at ~7 g/s — finish water by ~1:10.",
-      },
-      { label: "Drawdown", action: "drain", durationSec: 40 },
-    ],
-    totalTimeSec: 120,
-    techniques: ["boiling-water", "coarse-grind", "fast-flow"],
-    bestFor: {
-      roastLevels: ["very-light", "light"],
-      processes: ["washed"],
-      goals: ["explore", "high-clarity"],
-      occasions: ["quick"],
-    },
-    teaches:
-      "How a counter-intuitive combination (100°C + coarse grind + fast pour) produces a clean, well-extracted cup in 2 minutes. Breaks the 'finer for higher extraction' rule.",
-    science:
-      "Boiling water at 100°C raises extraction rate across all zones. Coarse grind reduces surface area, slowing extraction back down — the two cancel partially, but the math works out to high yield in short time. The fast pour minimises bed-contact time, keeping the brew in Zone 1–2. Net result: a 2-minute V60 that drinks like a careful 4-minute brew. Hedrick and others have demonstrated repeatable yields above 22% on the EVE EVA refractometer.",
-    whenToUse:
-      "Quick brews where you want light-roast clarity without the time. Excellent first cup of the day. Not for dark roasts — boiling water amplifies dark-roast bitter compounds catastrophically.",
-    sources: [
-      {
-        type: "video",
-        citation: "Lance Hedrick — YouTube (multiple Turbo V60 videos)",
-      },
-      {
-        type: "article",
-        citation: "Specialty coffee community articles on Turbo brewing",
-      },
-    ],
-    verified: true,
-  },
+  // Turbo V60 (formerly attributed to Lance Hedrick) was removed: "turbo" is an
+  // espresso technique (originating in Cameron, Hendon et al., *Matter*, 2020;
+  // popularised by Hedrick ~2021), and no primary source documents a Hedrick
+  // *filter* recipe with the parameters this entry carried. The boiling-water +
+  // coarse-grind mechanism survives as a technique (see techniques/data.ts:
+  // "boiling-water-coarse-grind"), now correctly de-attributed.
 ];

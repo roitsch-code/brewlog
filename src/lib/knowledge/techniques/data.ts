@@ -51,14 +51,15 @@ export const TECHNIQUES: Technique[] = [
     name: "Boiling Water + Coarse Grind (Turbo)",
     shortName: "Turbo brewing",
     attribution: {
-      person: "Lance Hedrick (popularised); developed in the championship community",
+      person:
+        "Cameron, Hendon et al. (espresso 'turbo' origin, *Matter* 2020); Lance Hedrick (popularised ~2021). Filter 'turbo pour-over' is a community application.",
     },
     category: "temperature",
     manipulates: ["extraction rate", "total brew time"],
     description:
-      "Brew with 100°C water and a coarser-than-standard grind. Counter-intuitively produces a clean, well-extracted cup in 2 minutes.",
+      "Brew with ~100°C water and a coarser-than-standard grind. Counter-intuitively produces a clean, well-extracted cup in ~2 minutes.",
     mechanism:
-      "Boiling water raises extraction rate across all solubility zones — every soluble compound extracts faster. Coarse grind reduces surface area, slowing extraction back down. The two effects partially cancel, but the math works out to high extraction yield in short total contact time. Net result: a 2-minute brew that drinks like a careful 4-minute one. Multiple specialty practitioners have demonstrated repeatable yields above 22% on refractometer.",
+      "Boiling water raises extraction rate across all solubility zones — every soluble compound extracts faster. Coarse grind reduces surface area, slowing extraction back down. The two effects partially cancel, but the math works out to high extraction yield in short total contact time. Net result: a ~2-minute brew that drinks like a careful 4-minute one.",
     whenToUse:
       "Quick brews on light washed coffees where you want clarity without time. Excellent first cup of the day.",
     contraindications: [
@@ -66,14 +67,18 @@ export const TECHNIQUES: Technique[] = [
       "Naturals — boiling water amplifies fermentation character toward harsh",
     ],
     compatibleBrewers: ["v60", "orea-v4-fast"],
-    exemplifiedBy: ["turbo-v60-hedrick"],
+    exemplifiedBy: [],
     sources: [
       {
-        type: "video",
-        citation: "Lance Hedrick — multiple Turbo V60 YouTube videos",
+        type: "article",
+        citation:
+          "Cameron, M.I., Hendon, C.H. et al. — 'Systematically Improving Espresso: Insights from Mathematical Modeling and Experiment', *Matter* (peer-reviewed, 2020). doi:10.1016/j.matt.2019.12.019",
+        year: 2020,
       },
     ],
-    verified: true,
+    verified: false,
+    notes:
+      "De-attributed during web research. 'Turbo' originates as an ESPRESSO technique (Cameron/Hendon, *Matter* 2020) and was popularised by Lance Hedrick (~2021) — he did not invent it. The boiling-water + coarse-grind FILTER application ('turbo pour-over') is a real community method, but no primary source documents a specific Hedrick filter recipe — the former `turbo-v60-hedrick` recipe entry (15 g / 250 g / 100 °C / 2:00) carried fabricated parameters and was removed. The mechanism above is sound; specific filter parameters should be calibrated empirically, not cited as a published recipe.",
   },
 
   {
@@ -171,7 +176,6 @@ export const TECHNIQUES: Technique[] = [
     ],
     exemplifiedBy: [
       "hoffmann-v60-better-one-cup",
-      "rolf-minimum-variables",
       "rao-rule-of-thirds",
     ],
     sources: [
@@ -218,7 +222,8 @@ export const TECHNIQUES: Technique[] = [
     id: "minimal-agitation",
     name: "Minimal Agitation",
     attribution: {
-      person: "Patrik Rolf (April Coffee)",
+      person:
+        "General single-pour technique — no single documented originator. (Previously mis-attributed to Patrik Rolf; his actual April method is the opposite — agitation-forward.)",
     },
     category: "agitation",
     manipulates: ["technique repeatability", "extraction variance"],
@@ -233,14 +238,17 @@ export const TECHNIQUES: Technique[] = [
       "Sweetness-forward goals — the technique trades sweetness development for clarity",
     ],
     compatibleBrewers: ["v60", "orea-apex", "origami-cone"],
-    exemplifiedBy: ["rolf-minimum-variables"],
+    exemplifiedBy: ["wallgren-kalita-sieved"],
     sources: [
       {
-        type: "video",
-        citation: "Coffee with April / Patrik Rolf — YouTube channel",
+        type: "transcript",
+        citation:
+          "Exemplified by Mikaela Wallgren's single continuous circular pour (WBrC 2016 stage presentation) — see wallgren-kalita-sieved.",
       },
     ],
-    verified: true,
+    verified: false,
+    notes:
+      "Re-attributed during web research. This technique was previously credited to Patrik Rolf via the 'rolf-minimum-variables' recipe, but that recipe was a misattribution — Rolf's real April V60 is aggressive, agitation-forward. The minimal-agitation / single-continuous-pour idea is a legitimate, widely-used approach (a clean read on the coffee, technique removed as a variable) but has no single documented originator. The clearest exemplar in this corpus is Wallgren's one continuous gentle circular pour.",
   },
 
   {
@@ -466,7 +474,7 @@ export const TECHNIQUES: Technique[] = [
     ],
     verified: false,
     notes:
-      "Principle is canonical Hatakeyama; specific paper-thickness recommendations come from Cafec demonstration materials.",
+      "Clarified during web research: matching paper thickness to roast level is a Cafec PRODUCT concept (Cafec sells roast-specific papers: Light / Medium-Dark T-90 / Dark T-83) that Daiki Hatakeyama promotes as a Cafec brand ambassador. It is a real, teachable principle — but it is NOT documented as his WBrC 2021 competition method (his reported competition signatures were a Cafec Flower Dripper + Abaca filter, KRUVE-sieved grind, and staged 90→60 °C temperature on a Geisha blend). Treat this as a sound Cafec technique, not a verified championship routine.",
   },
 
   // ── Post-brew ────────────────────────────────────────────────────────────

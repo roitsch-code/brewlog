@@ -49,13 +49,12 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 431–441° | 8:00 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 20g : 250g (+200g ice) | 95°C | 421–431° | 5:00 | true |
 | **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 92°C | 411–421° | 3:30 | true |
-| **Rolf Minimum Variables (Stagg [X])** | V60 / Stagg [X] | 18g : 300g | 96°C | 398–406° | 3:38 | true |
+| **April House V60 (Rolf)** | V60 | 20g : 300g | 92°C | — (calibrate) | 3:20–3:30 | true |
 | **Gagné Long AeroPress** | AeroPress + Prismo | 20g : 200g | 80°C | 365–375° | 6:25 | true |
-| **Perger High-Extraction V60** | V60 | 22g : 352g | 95°C | 388–396° | 3:35 | false |
+| **Perger High-Extraction V60** | V60 | 12g : 200g | 97°C | — (calibrate) | 2:20 | false |
 | **Rao Rule of Thirds** | V60 | 22g : 352g | 96°C | 396–404° | 3:25 | true |
-| **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g | 88–95°C (by roast) | 396–406° | 3:10 | false |
+| **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g *(unsourced — flagged)* | 88–95°C (by roast) | 396–406° | 3:10 | false |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
-| **Turbo V60 (Hedrick)** | V60 | 15g : 250g | 100°C | 391–396° | 2:00 | true |
 
 **Teaching summaries**
 
@@ -64,13 +63,14 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Hoffmann AeroPress** — A low-temperature (85°C), lean-ratio (1:18) AeroPress produces a clean, filter-style cup without the bitterness people associate with the brewer.
 - **Hoffmann Moccamaster Method** — Pulsing showerhead + flat-bottomed paper filter approximates a multi-pour V60 without operator skill. 1:15 at medium-coarse grind for batches ≥500ml.
 - **Hoffmann Immersion Iced** — Flash-chilling preserves aromatics that cold-brew loses to its long extraction time. 1:12.5 hot extraction + ice dilution = effective 1:22 final drink.
-- **Rolf Minimum Variables** — Single continuous pour with no stir. Removes pour count, pour spacing, and stir count as variables — isolates the coffee itself across brews.
+- **April House V60 (Rolf)** — April's agitation-forward house recipe: six even 50g pours on a ~30s cadence, each poured deliberately aggressively, finished with one stir. The opposite of a minimal-agitation brew. (Replaces a prior "Minimum Variables" entry that was a misattribution — no such single-continuous-pour Rolf recipe exists.)
 - **Gagné Long AeroPress** — The "second sweet spot": fine grind + 80°C + 5-minute steep. Bitter Zone 3 compounds extract orders of magnitude slower at low temp; long steep saturates Zone 2 fully without invading Zone 3.
 - **Perger High-Extraction V60** — Vigorous bloom stir + fine grind + spinning swirl during drawdown drives extraction yield above 22%. Bitterness comes from over-extracting the wrong compounds, not high yield itself.
 - **Rao Rule of Thirds** — Equal-volume thirds + Rao spin (vortex swirl). Lower extraction variance run-to-run, easier to troubleshoot.
 - **Hatakeyama Cafec Flower** — Match filter paper thickness to roast level. Light roast → thin paper (faster flow tolerable); dark roast → thick paper (slows flow where less contact is needed).
 - **Wallgren Kalita** — Sieve out fines pre-brew. Fines over-extract relative to the rest of the grind; removing them tightens the extraction distribution and produces a startlingly clean cup.
-- **Turbo V60** — 100°C + coarse grind + fast pour produces a clean, well-extracted cup in 2 minutes. Boiling water raises extraction rate; coarse grind partially cancels by reducing surface area; net = high yield in short contact.
+
+> *Removed:* the **Turbo V60 (Hedrick)** entry — "turbo" is an espresso technique (Cameron/Hendon, *Matter* 2020; popularised by Hedrick ~2021), and no primary source documents a Hedrick filter recipe with the parameters it carried. The boiling-water + coarse-grind mechanism survives as a technique (§3a), de-attributed.
 
 ---
 
@@ -155,7 +155,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **staged-temperature** | Hsu (2022); Peng (2025) | Cool bloom preserves fragile aromatics; hot pours do extraction work. | wbrc-2022-hsu, wbrc-2025-peng |
-| **boiling-water-coarse-grind** *(Turbo)* | Hedrick (popularised) | 100°C raises extraction rate across all zones; coarse grind partially cancels — net is high yield in short time. | turbo-v60-hedrick |
+| **boiling-water-coarse-grind** *(Turbo)* | Cameron/Hendon (*Matter* 2020); Hedrick popularised | 100°C raises extraction rate across all zones; coarse grind partially cancels — net is high yield in short time. | *(no verified recipe — espresso-origin; filter "turbo pour-over" is a community application)* |
 | **low-temp-long-steep** *(Gagné second sweet spot)* | Gagné | Bitter Zone-3 compounds extract orders of magnitude slower at 80°C — fine grind + long steep saturates Zone 2 without Zone 3. | gagne-long-aeropress |
 
 ### 3b. Agitation
@@ -163,9 +163,9 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **rao-spin** | Rao | Vortex swirl drags water down through puck centre rather than wall-first; counteracts V60 channeling. | rao-rule-of-thirds |
-| **swirl-not-stir** | Hoffmann (popularised) | Swirl achieves saturation through bulk-puck motion, leaving fines distributed evenly. Stir agitates fines into the slurry. | hoffmann-v60-better-one-cup, rolf-minimum-variables, rao-rule-of-thirds |
+| **swirl-not-stir** | Hoffmann (popularised) | Swirl achieves saturation through bulk-puck motion, leaving fines distributed evenly. Stir agitates fines into the slurry. | hoffmann-v60-better-one-cup, rao-rule-of-thirds |
 | **high-agitation-high-extraction** | Perger | Vigorous bloom stir + fine grind + drawdown swirl drives extraction yield above 22%. | perger-high-extraction-v60 |
-| **minimal-agitation** | Rolf | Single continuous pour, no stir. Removes pour count and pour spacing as variables. | rolf-minimum-variables |
+| **minimal-agitation** | General (no single originator; **not** Rolf) | Single continuous pour, no stir. Removes pour count and pour spacing as variables. | wallgren-kalita-sieved |
 | **melodrip-controlled-pouring** | Peng (2025) | Perforated disc breaks pour into many fine streams; eliminates pour-induced turbulence at the bed. | wbrc-2025-peng |
 | **water-first** | Bailey (originated); Hoffmann (popularised) | Add water first, drop coffee on top. Grounds saturate from below via buoyancy/capillary action. | hoffmann-clever-ultimate |
 
@@ -213,11 +213,12 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **Tetsu Kasuya** | WBrC 2016, 4:6 standard | phase-separated-pouring |
 | **Scott Rao** | Rule of Thirds | rao-spin, rule-of-thirds |
 | **Matt Perger** | High-Extraction V60 | high-agitation-high-extraction |
-| **Patrik Rolf** | Minimum Variables (Stagg [X]) | minimal-agitation |
+| **Patrik Rolf** | April House V60 | (agitation-forward — none atomic) |
 | **Jonathan Gagné** | Long-Brew AeroPress + Prismo | low-temp-long-steep |
 | **Daiki Hatakeyama** | Cafec Flower (roast-tailored) | roast-tailored-filter |
 | **Mikaela Wallgren** | Kalita with Sieved Fines | fines-removal-sieving |
-| **Lance Hedrick** | Turbo V60 (popularised) | boiling-water-coarse-grind |
+| **Lance Hedrick** | (popularised the espresso "turbo"; no verified filter recipe) | boiling-water-coarse-grind (popularised) |
+| **Cameron / Hendon** | (*Matter* 2020 — espresso "turbo" origin) | boiling-water-coarse-grind (foundation) |
 | **James Bailey** | (originated water-first; Hoffmann popularised) | water-first (origin) |
 | **Sherry Hsu** | WBrC 2022 | staged-temperature |
 | **George Peng** | WBrC 2025 | staged-temperature, melodrip-controlled-pouring, three-roast-layering |
