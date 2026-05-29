@@ -321,7 +321,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
 
   {
     id: "wbrc-2023-medina",
-    name: "Medina 2023 — Conical Paper Filter",
+    name: "Medina 2023 — Origami, Five Even Pours",
     shortName: "Medina 2023",
     attribution: {
       person: "Carlos Medina",
@@ -330,56 +330,70 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       year: 2023,
     },
     category: "championship",
-    brewer: "conical-paper",
+    brewer: "origami-cone",
     brewerNotes:
-      "Generic conical paper-filter brewer with Brewista kettle for precise pour control. Coffee: Natural Sidra from Café Granja la Esperanza.",
+      "Origami Air S + Cafec Abaca cone paper filter. (Grind ~850–950 microns / Timemore Chestnut S3 at 5.5 / Comandante at 26 clicks.) Five even ~50 g pours on a 30 s cadence. Coffee: Natural Sidra from Café Granja la Esperanza.",
     dose: { grams: 15.5 },
-    water: { grams: 250, ratio: "1:16.1" },
-    temperature: { celsius: 91, rangeC: [90, 92] },
+    water: { grams: 248, ratio: "1:16" },
+    temperature: { celsius: 91 },
     grind: {
-      referenceGrinder: "EK43",
-      referenceSetting: "medium",
+      referenceGrinder: "Timemore Chestnut S3 (5.5) / Comandante (26 clicks)",
+      referenceSetting: "medium-coarse, 850–950 microns",
       nicheZeroDegrees: [398, 406],
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (→50g)",
         action: "pour",
-        waterGramsAtEnd: 40,
-        durationSec: 30,
+        waterGramsAtEnd: 50,
+        durationSec: 10,
+        notes: "Gentle circular pour at 91°C; bloom 30 s.",
       },
+      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 0:30." },
       {
-        label: "Pour 1",
+        label: "Pour 2 (→100g)",
         action: "pour",
-        waterGramsAtEnd: 110,
-        durationSec: 25,
+        waterGramsAtEnd: 100,
+        durationSec: 10,
+        notes: "Circular pour.",
       },
+      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 1:00." },
       {
-        label: "Pour 2",
+        label: "Pour 3 (→150g)",
         action: "pour",
-        waterGramsAtEnd: 180,
-        durationSec: 25,
+        waterGramsAtEnd: 150,
+        durationSec: 10,
+        notes: "Steady circular pour.",
       },
+      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 1:30." },
       {
-        label: "Pour 3",
+        label: "Pour 4 (→200g)",
         action: "pour",
-        waterGramsAtEnd: 250,
-        durationSec: 25,
+        waterGramsAtEnd: 200,
+        durationSec: 10,
       },
-      { label: "Drawdown", action: "drain", durationSec: 105 },
+      { label: "Wait", action: "wait", durationSec: 20, notes: "Until 2:00." },
+      {
+        label: "Pour 5 (→248g)",
+        action: "pour",
+        waterGramsAtEnd: 248,
+        durationSec: 10,
+        notes: "Final pour at 2:00.",
+      },
+      { label: "Drawdown", action: "drain", durationSec: 40, notes: "Total brew time 2:40–3:00. Swirl the carafe before serving." },
     ],
-    totalTimeSec: 210,
-    techniques: ["lean-ratio", "moderate-temperature"],
+    totalTimeSec: 170,
+    techniques: ["even-pulse-pouring", "lean-ratio", "moderate-temperature"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
-      processes: ["natural", "honey"],
+      processes: ["natural", "honey", "washed"],
       varieties: ["Sidra"],
       goals: ["sweetness-forward", "balanced"],
     },
     teaches:
-      "How a lean ratio (1:16) at a moderate 91°C extracts the fermentation-derived sweetness of a Natural Sidra without amplifying ester sharpness.",
+      "Five even ~50 g pours on a 30 s cadence at a lean 1:16 and moderate 91°C — metronomic extraction that draws out fermentation-derived sweetness without amplifying ester sharpness.",
     science:
-      "Natural Sidra carries strong tropical-fermentation esters. Above ~94°C they extract aggressively and can read as winey or volatile in the cup. At 91°C with a lean ratio, the brew sits in the sugar/maillard zone of Gagné's solubility sequence for longer relative to the early aromatics, producing rounded sweetness rather than fermentation sharpness. The cleaner, longer drawdown of a conical paper filter further softens the cup compared to a metal filter.",
+      "Natural Sidra carries strong tropical-fermentation esters. Above ~94°C they extract aggressively and can read as winey or volatile. At 91°C with a lean ratio, the brew sits in the sugar/maillard zone for longer relative to the early aromatics, producing rounded sweetness rather than fermentation sharpness. Equal pulses every 30 s keep the bed agitation regular and the slurry level steady, so extraction is uniform across the brew.",
     whenToUse:
       "For a Natural Sidra or expressive natural processing where you want the sweet character to lead, not the fermentation. Also a sensible default for honey-process medium-light coffees.",
     sources: [
@@ -388,10 +402,16 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         citation: "2023 World Brewers Cup Final, Athens",
         year: 2023,
       },
+      {
+        type: "transcript",
+        citation:
+          "User-provided April-style recipe card — 'Carlos Medina, Origami Recipe, 2023 World Brewers Cup Champion' (15.5 g : 248 g, 91°C, five 50 g pours, Origami Air S + Cafec Abaca). Consolidated into this entry.",
+        year: 2023,
+      },
     ],
     verified: false,
     notes:
-      "Dose, water, temperature, and brewer category (conical paper filter) are universally agreed. Exact pour sequence is reconstructed from Slow Pour Supply and Origami interview write-ups and may not match the precise competition routine.",
+      "Brewer and pour structure corrected from the recipe card: Origami Air S + Cafec Abaca cone paper (was 'generic conical paper'); five even 50 g pours on a 30 s cadence (was a reconstructed bloom + 3 pours); 248 g total (was 250 g). Kept verified:false — card provenance, not Medina's own footage.",
   },
 
   // ── 2024 WBrC ──────────────────────────────────────────────────────────────
