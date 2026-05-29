@@ -49,6 +49,13 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
   { method: "Clever Dripper", niche: { min: 395, max: 415 }, comandante: { min: 28, max: 34 }, confidence: "estimate" },
   { method: "AeroPress", niche: { min: 356, max: 366 }, comandante: { min: 16, max: 18 }, confidence: "estimate" },
   { method: "Moccamaster", niche: { min: 410, max: 420 }, comandante: { min: 32, max: 35 }, confidence: "estimate" },
+  // Kalita Wave: flat bed, three small holes — runs around the V60 baseline,
+  // a touch coarser to keep the bed from stalling. Chemex: thick filter +
+  // restricted drain → medium-coarse to avoid over-extraction on the slow flow.
+  // Both added May 2026 for the Markus-Additions recipes; estimates off the V60
+  // anchor + grind feel, not directly measured.
+  { method: "Kalita Wave", niche: { min: 384, max: 394 }, comandante: { min: 24, max: 27 }, confidence: "estimate" },
+  { method: "Chemex", niche: { min: 398, max: 410 }, comandante: { min: 28, max: 32 }, confidence: "estimate" },
   // Peng champ grind is anchored to his published ~Comandante 26 (≈390°), NOT the
   // blanket −21° shift, which would have wrongly driven it to ~19 clicks.
   { method: "Peng 2025 (Championship)", niche: { min: 385, max: 395 }, comandante: { min: 25, max: 28 }, confidence: "recipe-anchored" },

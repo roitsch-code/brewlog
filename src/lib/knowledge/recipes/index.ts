@@ -27,10 +27,12 @@ export type {
 export { CHAMPIONSHIP_RECIPES } from "./championship";
 export { REFERENCE_RECIPES } from "./reference";
 export { EXPANDED_RECIPES } from "./expanded";
+export { MARKUS_ADDITIONS } from "./markusAdditions";
 
 export {
   ALL_RECIPES,
   brewersAvailableFromEquipment,
+  brewersFromMethod,
   normaliseRoastLevel,
   normaliseProcess,
   normaliseGoal,

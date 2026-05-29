@@ -307,7 +307,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       roastLevels: ["very-light", "light"],
       processes: ["washed", "natural"],
       varieties: ["Gesha", "Geisha", "Ethiopia Heirloom"],
-      goals: ["high-clarity"],
+      goals: ["aromatic"],
     },
     teaches:
       "How temperature staging isolates aromatic preservation from extraction efficiency. A cool bloom captures volatile florals before they evaporate; a hot extraction then extracts the remaining sugars and acids.",
@@ -608,7 +608,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       roastLevels: ["very-light", "light", "medium-light"],
       processes: ["washed"],
       varieties: ["Gesha", "Geisha"],
-      goals: ["high-clarity", "explore"],
+      goals: ["aromatic", "explore"],
     },
     teaches:
       "How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and staged temperatures isolate which extraction phase contributes which character. The Melodrip removes agitation as a variable so the layered bed stays compositionally distinct.",

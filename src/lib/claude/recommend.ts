@@ -16,6 +16,7 @@ import {
   selectRecipes,
   formatRecipesForPrompt,
   brewersAvailableFromEquipment,
+  brewersFromMethod,
   normaliseRoastLevel,
   normaliseProcess,
   normaliseGoal,
@@ -692,9 +693,13 @@ export async function generateRecommendation(
             : undefined;
 
   const brewersAvailable = brewersAvailableFromEquipment(preferences.equipment);
+  // If the user locked a method in the flow, hard-filter recipe selection to
+  // that method so the prompt only carries recipes for the brewer they chose.
+  const lockedBrewers = brewersFromMethod(context.preferredMethod);
   const selectedRecipes = selectRecipes(
     {
       brewersAvailable,
+      lockedBrewers,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
       variety: coffee.variety,

@@ -27,6 +27,8 @@ Two relationships fall out of those points:
 | Origami Dripper | Natural | 383–388° | 24–25 | estimate |
 | Clever Dripper | any | 395–415° | 28–34 | estimate |
 | AeroPress | any | 356–366° | 16–18 | estimate |
+| Kalita Wave | any | 384–394° | 24–27 | estimate |
+| Chemex | any | 398–410° | 28–32 | estimate |
 | Moccamaster | any | 410–420° | 32–35 | estimate |
 | Peng 2025 (Championship) | any | 385–395° | 25–28 | recipe-anchored (≈Comandante 26) |
 | Kasuya 4:6 | any | 390–400° | 26–29 | estimate |

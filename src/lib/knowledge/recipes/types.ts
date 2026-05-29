@@ -52,6 +52,7 @@ export type Goal =
   | "high-clarity"
   | "sweetness-forward"
   | "body-forward"
+  | "aromatic"
   | "explore";
 
 /** A specific in-recipe pour temperature, when the recipe stages temperature. */
