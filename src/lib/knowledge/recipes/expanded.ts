@@ -32,7 +32,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [403, 413],
+      nicheZeroDegrees: [382, 392],
     },
     pourSequence: [
       { label: "Place ice in server", action: "wait", durationSec: 0, notes: "120g ice in lower carafe — final drink = hot brew + melted ice ≈ 300g" },
@@ -78,7 +78,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 300, ratio: "1:15" },
     temperature: { celsius: 92 },
     grind: {
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
     },
     pourSequence: [
       { label: "Pour 1 (60g, balanced)", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -123,7 +123,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 300, ratio: "1:15" },
     temperature: { celsius: 95, rangeC: [94, 96] },
     grind: {
-      nicheZeroDegrees: [403, 411],
+      nicheZeroDegrees: [382, 390],
       description: "Slightly finer than standard 4:6 — extracts the denser light roast",
     },
     pourSequence: [
@@ -171,7 +171,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:16.7" },
     temperature: { celsius: 93 },
     grind: {
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
       description: "Slightly coarser than standard V60 — the Mugen filter slows drawdown",
     },
     pourSequence: [
@@ -213,7 +213,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 256, ratio: "1:16" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [391, 398],
+      nicheZeroDegrees: [370, 377],
       description: "Medium-fine — encourages high extraction in shorter time",
     },
     pourSequence: [
@@ -255,7 +255,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 340, ratio: "1:17" },
     temperature: { celsius: 99, rangeC: [98, 100] },
     grind: {
-      nicheZeroDegrees: [385, 393],
+      nicheZeroDegrees: [364, 372],
       description: "Fine — pushes EY past 22%",
     },
     pourSequence: [
@@ -301,7 +301,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 360, ratio: "1:16.4" },
     temperature: { celsius: 93 },
     grind: {
-      nicheZeroDegrees: [428, 438],
+      nicheZeroDegrees: [407, 417],
       description: "Coarse — long steep needs the surface area pulled back",
     },
     pourSequence: [
@@ -345,7 +345,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 60, ratio: "1:3.3 (concentrate)" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [338, 348],
+      nicheZeroDegrees: [317, 327],
       description: "Espresso-fine — needs Prismo's seal to hold pressure",
     },
     pourSequence: [
@@ -386,7 +386,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 260, ratio: "1:11.8" },
     temperature: { celsius: 5, rangeC: [3, 8] },
     grind: {
-      nicheZeroDegrees: [377, 385],
+      nicheZeroDegrees: [356, 364],
       description: "Standard AeroPress grind — cold extracts slower so no need to go finer",
     },
     pourSequence: [
@@ -429,7 +429,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 220, ratio: "1:10 ext + 1:5 bypass" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [388, 396],
+      nicheZeroDegrees: [367, 375],
       description: "Slightly finer than standard — concentrate brewing wants extraction depth",
     },
     pourSequence: [
@@ -475,7 +475,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "EK43",
       referenceSetting: "8 setting",
-      nicheZeroDegrees: [393, 401],
+      nicheZeroDegrees: [372, 380],
       description: "Medium-fine, slightly coarser than Hoffmann's V60",
     },
     pourSequence: [
@@ -519,7 +519,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 200, ratio: "1:16.7" },
     temperature: { celsius: 88 },
     grind: {
-      nicheZeroDegrees: [377, 385],
+      nicheZeroDegrees: [356, 364],
       description: "Standard AeroPress filter grind — medium",
     },
     pourSequence: [
@@ -561,7 +561,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 300, ratio: "1:16.7" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
       description: "Slightly finer than V60 — flat bottom needs the lift",
     },
     pourSequence: [
@@ -608,7 +608,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 270, ratio: "1:15" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [393, 401],
+      nicheZeroDegrees: [372, 380],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -651,7 +651,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 280, ratio: "1:15.6" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [395, 403],
+      nicheZeroDegrees: [374, 382],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -696,7 +696,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 500, ratio: "1:16.7" },
     temperature: { celsius: 99 },
     grind: {
-      nicheZeroDegrees: [438, 448],
+      nicheZeroDegrees: [417, 427],
       description: "Coarse — French Press paper-less filter needs more particle size",
     },
     pourSequence: [
@@ -738,7 +738,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 300, ratio: "1:16.7" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [398, 408],
+      nicheZeroDegrees: [377, 387],
       description: "Slight refinement vs Better 1 Cup — slightly coarser to slow drawdown",
     },
     pourSequence: [
@@ -781,7 +781,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 500, ratio: "1:16.7" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [403, 413],
+      nicheZeroDegrees: [382, 392],
       description: "Slightly coarser than single-cup — bigger bed extracts longer",
     },
     pourSequence: [
@@ -828,7 +828,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 374, ratio: "1:17" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [403, 411],
+      nicheZeroDegrees: [382, 390],
       description: "Medium — Stagg's holes are designed to slow flow vs a V60",
     },
     pourSequence: [
@@ -872,7 +872,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 352, ratio: "1:16" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -919,7 +919,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:16.7" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Pour 1 (to 50g, bloom)", action: "pour", waterGramsAtEnd: 50, durationSec: 5 },
@@ -960,7 +960,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 280, ratio: "1:15.6" },
     temperature: { celsius: 93 },
     grind: {
-      nicheZeroDegrees: [400, 408],
+      nicheZeroDegrees: [379, 387],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 5 },
@@ -1002,7 +1002,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 360, ratio: "1:16.4" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [395, 405],
+      nicheZeroDegrees: [374, 384],
     },
     pourSequence: [
       { label: "Bloom (66g)", action: "pour", waterGramsAtEnd: 66, durationSec: 8, notes: "3x dose bloom" },
@@ -1045,7 +1045,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 360, ratio: "1:16.4" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [398, 408],
+      nicheZeroDegrees: [377, 387],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -1090,7 +1090,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 510, ratio: "1:17" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [403, 413],
+      nicheZeroDegrees: [382, 392],
       description: "Medium-coarse — Chemex's thick paper slows flow already; over-grinding stalls",
     },
     pourSequence: [
@@ -1132,7 +1132,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 500, ratio: "1:16.7" },
     temperature: { celsius: 99 },
     grind: {
-      nicheZeroDegrees: [403, 413],
+      nicheZeroDegrees: [382, 392],
     },
     pourSequence: [
       { label: "Rinse paper, discard rinse water", action: "wait", durationSec: 30, notes: "Chemex paper needs thorough rinse" },
@@ -1175,7 +1175,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 510, ratio: "1:17" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
       description: "Medium-coarse — same as standard 4:6 grind, adapted to Chemex",
     },
     pourSequence: [
@@ -1224,7 +1224,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:16.7" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [403, 411],
+      nicheZeroDegrees: [382, 390],
     },
     pourSequence: [
       { label: "Bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 8 },
@@ -1265,7 +1265,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 320, ratio: "1:16" },
     temperature: { celsius: 97 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -1310,7 +1310,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 120, ratio: "1:7 ext + bypass" },
     temperature: { celsius: 85 },
     grind: {
-      nicheZeroDegrees: [377, 385],
+      nicheZeroDegrees: [356, 364],
     },
     pourSequence: [
       { label: "Standard setup, add coffee", action: "wait", durationSec: 0 },
@@ -1351,7 +1351,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 80, ratio: "1:5" },
     temperature: { celsius: 93 },
     grind: {
-      nicheZeroDegrees: [357, 367],
+      nicheZeroDegrees: [336, 346],
       description: "Espresso-fine — Prismo's seal needs the resistance",
     },
     pourSequence: [
@@ -1392,7 +1392,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 220, ratio: "1:12.9" },
     temperature: { celsius: 80 },
     grind: {
-      nicheZeroDegrees: [365, 375],
+      nicheZeroDegrees: [344, 354],
       description: "Fine — long steep needs finer grind to fully extract before pressing",
     },
     pourSequence: [
@@ -1436,7 +1436,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 180, ratio: "1:10 hot + ice" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [393, 401],
+      nicheZeroDegrees: [372, 380],
       description: "Slightly finer than hot V60 — compensates for shorter contact",
     },
     pourSequence: [
@@ -1480,7 +1480,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 220, ratio: "1:10 hot + ice" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [398, 408],
+      nicheZeroDegrees: [377, 387],
     },
     pourSequence: [
       { label: "Place 150g ice in server", action: "wait", durationSec: 0 },
@@ -1524,7 +1524,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 800, ratio: "1:8 concentrate" },
     temperature: { celsius: 22, rangeC: [18, 25] },
     grind: {
-      nicheZeroDegrees: [443, 458],
+      nicheZeroDegrees: [422, 437],
       description: "Very coarse — cold extraction wants minimal surface area to avoid muddy fines",
     },
     pourSequence: [
@@ -1570,7 +1570,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 240, ratio: "1:15" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [400, 408],
+      nicheZeroDegrees: [379, 387],
     },
     pourSequence: [
       { label: "Bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 6 },
@@ -1612,7 +1612,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 280, ratio: "1:15.6" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -1658,7 +1658,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 225, ratio: "1:15" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [400, 408],
+      nicheZeroDegrees: [379, 387],
     },
     pourSequence: [
       { label: "Bloom (45g)", action: "pour", waterGramsAtEnd: 45, durationSec: 6 },
@@ -1700,7 +1700,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 225, ratio: "1:15" },
     temperature: { celsius: 88, rangeC: [86, 90] },
     grind: {
-      nicheZeroDegrees: [411, 421],
+      nicheZeroDegrees: [390, 400],
     },
     pourSequence: [
       { label: "Bloom (45g)", action: "pour", waterGramsAtEnd: 45, durationSec: 6 },
@@ -1743,7 +1743,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 350, ratio: "1:16.7" },
     temperature: { celsius: 92 },
     grind: {
-      nicheZeroDegrees: [400, 410],
+      nicheZeroDegrees: [379, 389],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -1783,7 +1783,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 280, ratio: "1:16.5" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [398, 408],
+      nicheZeroDegrees: [377, 387],
     },
     pourSequence: [
       { label: "Bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 6 },
@@ -1827,7 +1827,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 256, ratio: "1:16" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [403, 413],
+      nicheZeroDegrees: [382, 392],
     },
     pourSequence: [
       { label: "Close valve, bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 8 },
@@ -1870,7 +1870,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 300, ratio: "1:16.7" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [395, 403],
+      nicheZeroDegrees: [374, 382],
       description: "Sieve out particles <200µm before brewing",
     },
     pourSequence: [
@@ -1916,7 +1916,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 180, ratio: "1:15" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [388, 398],
+      nicheZeroDegrees: [367, 377],
       description: "Fine — Solo's restricted flow needs the resistance",
     },
     pourSequence: [
@@ -1958,7 +1958,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 200, ratio: "1:13.3" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [365, 372],
+      nicheZeroDegrees: [344, 351],
       description: "Espresso-fine for AeroPress — only works with very short total time",
     },
     pourSequence: [
@@ -2002,7 +2002,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:17.9" },
     temperature: { celsius: 93 },
     grind: {
-      nicheZeroDegrees: [390, 400],
+      nicheZeroDegrees: [369, 379],
     },
     pourSequence: [
       { label: "Bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 5 },
@@ -2044,7 +2044,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 220, ratio: "1:16.9" },
     temperature: { celsius: 92 },
     grind: {
-      nicheZeroDegrees: [388, 396],
+      nicheZeroDegrees: [367, 375],
     },
     pourSequence: [
       { label: "Bloom (35g)", action: "pour", waterGramsAtEnd: 35, durationSec: 5 },
@@ -2084,7 +2084,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 200, ratio: "1:13.3" },
     temperature: { celsius: 88 },
     grind: {
-      nicheZeroDegrees: [368, 378],
+      nicheZeroDegrees: [347, 357],
     },
     pourSequence: [
       { label: "Setup inverted, add coffee", action: "invert", durationSec: 0 },
@@ -2126,7 +2126,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 320, ratio: "1:16" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (50g)", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -2168,7 +2168,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 900, ratio: "1:15" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [428, 438],
+      nicheZeroDegrees: [407, 417],
       description: "Coarser than single-cup V60 — batch volume needs grind pulled back",
     },
     pourSequence: [
@@ -2208,7 +2208,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 800, ratio: "1:16" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [428, 438],
+      nicheZeroDegrees: [407, 417],
     },
     pourSequence: [
       { label: "Pour 800g into reservoir, start", action: "pour", waterGramsAtEnd: 800, durationSec: 5 },
@@ -2249,7 +2249,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 180, ratio: "1:12 hot" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [408, 418],
+      nicheZeroDegrees: [387, 397],
     },
     pourSequence: [
       { label: "Place 120g ice in server", action: "wait", durationSec: 0 },
@@ -2291,7 +2291,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 320, ratio: "1:16" },
     temperature: { celsius: 97 },
     grind: {
-      nicheZeroDegrees: [388, 396],
+      nicheZeroDegrees: [367, 375],
     },
     pourSequence: [
       { label: "Bloom (60g)", action: "pour", waterGramsAtEnd: 60, durationSec: 8 },
@@ -2334,7 +2334,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:16.7" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (35g)", action: "pour", waterGramsAtEnd: 35, durationSec: 5 },
@@ -2379,7 +2379,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 200, ratio: "1:12.5" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [378, 388],
+      nicheZeroDegrees: [357, 367],
     },
     pourSequence: [
       { label: "Standard (not inverted), add coffee", action: "wait", durationSec: 0 },
@@ -2421,7 +2421,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 250, ratio: "1:14.7" },
     temperature: { celsius: 94 },
     grind: {
-      nicheZeroDegrees: [375, 383],
+      nicheZeroDegrees: [354, 362],
     },
     pourSequence: [
       { label: "Setup inverted, add coffee", action: "invert", durationSec: 0 },
@@ -2463,7 +2463,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 230, ratio: "1:16.4" },
     temperature: { celsius: 96 },
     grind: {
-      nicheZeroDegrees: [398, 406],
+      nicheZeroDegrees: [377, 385],
     },
     pourSequence: [
       { label: "Bloom (40g)", action: "pour", waterGramsAtEnd: 40, durationSec: 6 },
@@ -2506,7 +2506,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     water: { grams: 110, ratio: "1:6.9 ext" },
     temperature: { celsius: 95 },
     grind: {
-      nicheZeroDegrees: [368, 378],
+      nicheZeroDegrees: [347, 357],
     },
     pourSequence: [
       { label: "Place 120g ice in mug/server", action: "wait", durationSec: 0 },
@@ -2557,6 +2557,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.0) / Comandante C40 (27 clicks)",
       referenceSetting: "medium, 750–850 microns",
+      nicheZeroDegrees: [389, 397],
+      description:
+        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
     },
     pourSequence: [
       { label: "Pour 1 (bloom, →100g)", action: "pour", waterGramsAtEnd: 100, durationSec: 10, notes: "Pour aggressively in a circular motion within 10 s." },
@@ -2597,6 +2600,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.5) / Comandante C40 (25 clicks)",
       referenceSetting: "medium-coarse, ~850 microns",
+      nicheZeroDegrees: [383, 391],
+      description:
+        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
     },
     pourSequence: [
       { label: "Bloom (→30g)", action: "pour", waterGramsAtEnd: 30, durationSec: 10, notes: "Circular laminar pour, spout as close to the bed as possible." },
@@ -2643,6 +2649,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.0) / 1Zpresso JX-Pro (3.30 rot) / Comandante (23 clicks)",
       referenceSetting: "medium, 750–850 microns",
+      nicheZeroDegrees: [376, 384],
+      description:
+        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
     },
     pourSequence: [
       { label: "Bloom (→60g)", action: "pour", waterGramsAtEnd: 60, durationSec: 10, notes: "Circular pour; bloom 45 s." },
@@ -2696,6 +2705,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (6.0–6.5) / Comandante C40 (28–30 clicks) / 1Zpresso K-Ultra (7.5–8.0)",
       referenceSetting: "medium-coarse, 800–900 microns",
+      nicheZeroDegrees: [396, 404],
+      description:
+        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
     },
     pourSequence: [
       { label: "Bloom (→55g, room temp)", action: "pour", waterGramsAtEnd: 55, durationSec: 10, temperatureC: 22, notes: "Room-temperature water, circular motion." },
@@ -2741,6 +2753,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.0) / Comandante C40 (25–28 clicks)",
       referenceSetting: "medium, 750–850 microns",
+      nicheZeroDegrees: [387, 397],
+      description:
+        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
     },
     pourSequence: [
       { label: "Invert and load", action: "invert", durationSec: 0, notes: "Inverted position; add grounds, shake to level the bed." },
