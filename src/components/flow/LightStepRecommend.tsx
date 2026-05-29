@@ -112,7 +112,11 @@ export default function LightStepRecommend() {
 
   const handleUse = () => {
     if (!activeMethod || !activeRecipe) return;
-    setBrew({ methodUsed: activeMethodLabel ?? activeMethod, followedRecipe: true });
+    setBrew({
+      methodUsed: activeMethodLabel ?? activeMethod,
+      selectedCandidateIdx: selectedIdx,
+      followedRecipe: true,
+    });
     setStep("brew");
   };
 
