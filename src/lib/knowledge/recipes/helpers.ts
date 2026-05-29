@@ -190,6 +190,23 @@ export interface RecipeSelectionInput {
   goal: Goal;
   occasion?: string;
   maxWaterMl?: number;
+  /**
+   * When the user locks a specific brew method in the flow (preferredMethod),
+   * pass the resolved BrewerType(s) here. Selection is then HARD-FILTERED to
+   * those brewers and the per-brewer diversity cap is lifted — the user wants
+   * the best recipes *for that method*, not a portfolio across their kit.
+   */
+  lockedBrewers?: Set<BrewerType>;
+}
+
+/**
+ * Resolve the flow's preferredMethod string ("V60", "Orea Fast", "Chemex",
+ * "Origami (wave)", …) to the BrewerType(s) it should match. Reuses the same
+ * normalisation as equipment matching so the vocabularies stay in sync.
+ */
+export function brewersFromMethod(method?: string): Set<BrewerType> {
+  if (!method || !method.trim()) return new Set();
+  return brewersAvailableFromEquipment([method]);
 }
 
 export interface ScoredRecipe {
@@ -257,14 +274,10 @@ function scoreRecipe(
     reasons.push(`occasion match`);
   }
 
-  if (recipe.category === "championship") {
-    score += 1;
-    reasons.push("championship pedigree");
-  }
-
-  if (recipe.verified) {
-    score += 0.5;
-  }
+  // No pedigree or verification bonus: every recipe is ranked purely on how
+  // well it matches the brew context (roast / process / variety / goal /
+  // occasion). All 133 recipes — championship, reference, and the Markus
+  // additions — compete on equal footing, best-match wins.
 
   return { recipe, score, reasons };
 }
@@ -278,12 +291,23 @@ export function selectRecipes(
   input: RecipeSelectionInput,
   limit = 5
 ): ScoredRecipe[] {
+  const locked = input.lockedBrewers && input.lockedBrewers.size > 0
+    ? input.lockedBrewers
+    : null;
+
   const scored = ALL_RECIPES
+    // When a method is locked, hard-filter to recipes for that method only.
+    .filter((r) => (locked ? locked.has(r.brewer) : true))
     .map((r) => scoreRecipe(r, input))
     .filter((s): s is ScoredRecipe => s !== null)
     .sort((a, b) => b.score - a.score);
 
-  // Diversity: only one recipe per brewer.
+  // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer
+  // cap; the user chose the brewer, they want the strongest matches on it).
+  if (locked) return scored.slice(0, limit);
+
+  // No lock → diversity portfolio: only one recipe per brewer, so the AI sees
+  // a varied set across the user's kit rather than five V60s.
   const seenBrewers = new Set<BrewerType>();
   const result: ScoredRecipe[] = [];
   for (const s of scored) {
