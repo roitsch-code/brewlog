@@ -139,53 +139,46 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "origami-wave",
     brewerNotes:
-      "Origami dripper with Kalita Wave 155 paper filter. The 'Sensory Flavor Cup' Du co-designed with Origami sits in the same family.",
-    dose: { grams: 20 },
-    water: { grams: 240, ratio: "1:12" },
+      "Origami dripper with a Kalita Wave filter (the wave fits the Origami's 20 ribs, giving a thin, even bed and a fast, clear drawdown). Coffee: a 90+ washed Gesha from Gesha Village, Ethiopia. Du double-ground — a first coarse pass then a second finer pass through the same hand grinder — for a more even particle distribution.",
+    dose: { grams: 16 },
+    water: { grams: 240, ratio: "1:15" },
     temperature: { celsius: 94 },
     grind: {
       referenceGrinder: "EK43",
-      referenceSetting: "medium",
+      referenceSetting: "medium (double-ground for even distribution)",
       nicheZeroDegrees: [398, 408],
+      description:
+        "Du double-ground: a first coarse pass, then a second finer pass through the same hand grinder, to tighten the particle distribution.",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Pour 1 (bloom)",
         action: "pour",
-        waterGramsAtEnd: 40,
-        durationSec: 35,
-        notes: "2× dose. Light stir to fully saturate the wave bed.",
+        waterGramsAtEnd: 60,
+        durationSec: 10,
+        notes: "~6 g/s; doubles as the bloom.",
       },
-      {
-        label: "Pour 1",
-        action: "pour",
-        waterGramsAtEnd: 100,
-        durationSec: 20,
-      },
+      { label: "Rest", action: "wait", durationSec: 10 },
       {
         label: "Pour 2",
         action: "pour",
-        waterGramsAtEnd: 160,
+        waterGramsAtEnd: 140,
         durationSec: 20,
+        notes: "Slower pour, ~4 g/s (80 g over 20 s).",
       },
+      { label: "Rest (let the bed draw to a moist surface)", action: "wait", durationSec: 20 },
       {
         label: "Pour 3",
         action: "pour",
-        waterGramsAtEnd: 200,
-        durationSec: 15,
-      },
-      {
-        label: "Pour 4",
-        action: "pour",
         waterGramsAtEnd: 240,
-        durationSec: 15,
+        durationSec: 20,
+        notes: "Medium speed, ~5 g/s (100 g over 20 s).",
       },
-      { label: "Drawdown", action: "drain", durationSec: 70 },
+      { label: "Drawdown", action: "drain", durationSec: 25 },
     ],
-    totalTimeSec: 195,
+    totalTimeSec: 105,
     techniques: [
       "custom-mineral-water",
-      "rich-ratio",
       "even-pour-distribution",
       "flat-bed-extraction",
     ],
@@ -196,11 +189,11 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       goals: ["high-clarity", "sweetness-forward"],
     },
     teaches:
-      "How a rich brewing ratio (1:12) combined with custom low-mineral water can produce extreme clarity without sacrificing sweetness. The flat Origami wave bed evens extraction across the puck.",
+      "How a thin, fast-draining bed (Origami + Kalita-wave filter) plus a tightened particle distribution (double grind) produces extreme clarity. The quick drawdown keeps total contact time short, so acidity stays vivid.",
     science:
-      "Du's water (4 ppm Ca²⁺, 15 ppm Mg²⁺, ~80 ppm TDS) is heavily magnesium-biased — magnesium binds organic acids and amplifies aromatic complexity, while the low calcium prevents the cup from gaining unwanted body that would mask florals. The 1:12 ratio runs counter to the usual 'lean = bright' rule because the low-mineral water provides almost zero buffering against acidity; concentration intensifies clarity rather than muddying it. The Origami's ribbed walls drain fast despite the wave filter's slower base flow, preventing the puck from stalling in late extraction.",
+      "The wave filter in the wide-mouthed Origami spreads the grounds into a shallow, flat bed and the Origami's ribs keep the walls draining fast — extraction is even and quick rather than deep. Du's double grind narrows the particle spread, so fines don't over-extract while boulders under-extract. Combined with low-mineral competition water (magnesium-biased, low buffering), the 1:15 cup reads as bright and transparent on a ~1:45 drawdown.",
     whenToUse:
-      "For a Gesha or top-tier washed Ethiopian where you want maximum aromatic intensity in a small cup. Requires either championship water or a careful tap-distilled blend.",
+      "For a Gesha or top-tier washed Ethiopian where you want maximum aromatic clarity. The Origami + Kalita-wave pairing and the quick three-pour rhythm are the transferable parts; the championship water is optional.",
     sources: [
       {
         type: "official-competition",
@@ -208,13 +201,14 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         year: 2019,
       },
       {
-        type: "interview",
-        citation: "Origami Dripper recipe collaboration materials",
+        type: "transcript",
+        citation:
+          "Recipe-recreation walkthrough recounting Du's routine step by step (16 g : 240 g, 94 °C, three pours 60/140/240, Origami + Kalita-wave filter, double grind) — transcribed in-session.",
       },
     ],
     verified: false,
     notes:
-      "Headline parameters (dose, water, temp, brewer, custom water spec) are well-attested. Pour sequence reconstructed from Origami collaboration write-ups and Sprudge interviews; published routine details vary slightly between sources.",
+      "Brew-relevant parameters corrected from a detailed recipe-recreation transcript that follows Du's published routine: dose 16 g (was 20 g), ratio 1:15 (was 1:12), three pours 60/140/240 (was bloom + 4 pours), ~1:45 total. Kept verified:false because the source is a third-party recreation, not Du's own footage.",
   },
 
   // ── 2022 WBrC ──────────────────────────────────────────────────────────────
@@ -231,48 +225,61 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       year: 2022,
     },
     category: "championship",
-    brewer: "v60",
-    brewerNotes: "Hario V60 size 02 with tabbed paper filter",
+    brewer: "flat-bottom",
+    brewerNotes:
+      "Flat-bottom polycarbonate dripper (poor heat conductor, chosen to hold the bed temperature). The flat bed lets the coffee-bed temperature climb sharply from ~35°C to ~70°C for efficient extraction.",
     dose: { grams: 14 },
-    water: { grams: 200, ratio: "1:14.3" },
+    water: { grams: 200, ratio: "1:14" },
     temperature: {
       staged: [
-        { pourIndex: 0, celsius: 70, label: "low-temp bloom" },
+        { pourIndex: 0, celsius: 70, label: "low-temp first pour" },
         { pourIndex: 1, celsius: 95, label: "extraction" },
         { pourIndex: 2, celsius: 95, label: "extraction" },
+        { pourIndex: 3, celsius: 95, label: "extraction" },
       ],
       rangeC: [70, 95],
     },
     grind: {
       referenceGrinder: "1Zpresso ZP6",
-      referenceSetting: "medium-fine",
+      referenceSetting:
+        "medium-fine (two particle sizes: ~75% at 1000µm, 25% at 800µm)",
       nicheZeroDegrees: [388, 396],
     },
     pourSequence: [
       {
-        label: "Cool bloom (70°C)",
+        label: "Pour 1 — cool (70°C)",
         action: "pour",
-        waterGramsAtEnd: 30,
-        durationSec: 40,
+        waterGramsAtEnd: 50,
+        durationSec: 10,
         temperatureC: 70,
         notes:
-          "Low-temperature bloom preserves the most volatile floral aromatics — they would otherwise dissipate before the cup reaches you.",
+          "50 g every 30 s, four times. The first pour is cool (70°C) to preserve volatile floral aromatics and accentuate malic brightness.",
       },
-      {
-        label: "Pour 1 (95°C)",
-        action: "pour",
-        waterGramsAtEnd: 110,
-        durationSec: 25,
-        temperatureC: 95,
-      },
+      { label: "Rest", action: "wait", durationSec: 20 },
       {
         label: "Pour 2 (95°C)",
         action: "pour",
-        waterGramsAtEnd: 200,
-        durationSec: 25,
+        waterGramsAtEnd: 100,
+        durationSec: 10,
         temperatureC: 95,
       },
-      { label: "Drawdown", action: "drain", durationSec: 60 },
+      { label: "Rest", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 3 (95°C)",
+        action: "pour",
+        waterGramsAtEnd: 150,
+        durationSec: 10,
+        temperatureC: 95,
+      },
+      { label: "Rest", action: "wait", durationSec: 20 },
+      {
+        label: "Pour 4 (95°C)",
+        action: "pour",
+        waterGramsAtEnd: 200,
+        durationSec: 10,
+        temperatureC: 95,
+      },
+      { label: "Drawdown", action: "drain", durationSec: 50 },
     ],
     totalTimeSec: 150,
     techniques: [
@@ -290,7 +297,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     teaches:
       "How temperature staging isolates aromatic preservation from extraction efficiency. A cool bloom captures volatile florals before they evaporate; a hot extraction then extracts the remaining sugars and acids.",
     science:
-      "The most fragile aromatic compounds in coffee (linalool, geraniol, jasmine lactones) volatilise above ~90°C. A standard 95°C bloom drives them off into the steam before they enter solution. By blooming at 70°C, Hsu keeps these compounds in the liquid phase — they dissolve into the water as it heats from contact with the puck. The subsequent hot pours then do the bulk extraction work for sugars and balancing acids. The 14g dose at 1:14.3 keeps the cup concentrated enough to read those preserved florals clearly.",
+      "The most fragile aromatic compounds in coffee (linalool, geraniol, jasmine lactones) volatilise above ~90°C. A standard 95°C first pour drives them off into the steam before they enter solution. By starting at 70°C, Hsu keeps these compounds in the liquid phase — they dissolve as the water heats from contact with the puck — and the cooler first pour also accentuates malic brightness. The subsequent 95°C pours then do the bulk extraction for sugars and balancing acids. Four equal 50 g pours on a 30 s cadence keep agitation regular; the 14 g dose at 1:14 keeps the cup concentrated enough to read those preserved florals clearly.",
     whenToUse:
       "For competition-grade washed Gesha or top-shelf Ethiopian where aromatic preservation is the entire point of the brew. Requires a kettle that can hold two temperatures (Stagg EKG works — set 95°C primary, manually cool a pre-poured 70°C portion).",
     sources: [
@@ -300,13 +307,14 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         year: 2022,
       },
       {
-        type: "video",
-        citation: "World Coffee Events YouTube — official routine",
+        type: "transcript",
+        citation:
+          "Hsu's own WCE stage presentation — '14 grams, 200 grams of water, ratio 1 to 14… 50 grams of water added every 30 seconds, a total of four times'; first pour 70°C then 95°C; flat-bottom polycarbonate dripper. Transcribed in-session.",
       },
     ],
-    verified: false,
+    verified: true,
     notes:
-      "Dose, water, brewer, and the two staging temperatures (70°C and 95°C) are agreed across sources. The exact sequencing — how many pours follow the cool bloom, and at what intervals — varies in third-party transcriptions. The two-pour structure above is the most commonly cited reconstruction.",
+      "Corrected from Hsu's own stage presentation: 4 × 50 g pours on a 30 s cadence (50/100/150/200), not bloom + two pours; brewer is a flat-bottom polycarbonate dripper, not a V60. First pour 70°C, remaining pours 95°C. She also split the grind ~75% at 1000µm / 25% at 800µm (a micron detail, out of brew-parameter scope).",
   },
 
   // ── 2023 WBrC ──────────────────────────────────────────────────────────────
@@ -402,10 +410,10 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "orea-v4-fast",
     brewerNotes:
-      "Orea V4 with the Fast bottom (predecessor to the Wide bottom — same fast-draining geometry). Coffee: Finca Maya Panama, double fermentation, from Lost Origin Coffee Labs.",
+      "Orea V4 Narrow body with the Fast bottom, Sibarist Fast paper filter. (The V4 comes in two bodies — Wide 73° and Narrow 65° — and four interchangeable bottoms: Fast/Classic/Open/Apex. Wölfl used the Narrow body + Fast bottom.) A needling/WDT tool opens the bed before brewing and a Melodrip diffuses each pour to minimise turbulence. Coffee on stage: a Panama Gesha from Lost Origin Coffee Labs.",
     dose: { grams: 17 },
     water: { grams: 270, ratio: "1:15.9" },
-    temperature: { celsius: 93 },
+    temperature: { celsius: 93, rangeC: [93, 95] },
     grind: {
       referenceGrinder: "Mazzer ZM",
       referenceSetting: "490 microns",
@@ -415,38 +423,41 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     },
     pourSequence: [
       {
-        label: "Bloom",
-        action: "pour",
-        waterGramsAtEnd: 50,
-        durationSec: 30,
+        label: "WDT / needle the dry bed",
+        action: "agitate-bed",
+        durationSec: 0,
+        notes: "Open the top of the grounds so they saturate faster — more sweetness, clarity, transparency.",
       },
       {
-        label: "Light stir (1–2×)",
-        action: "stir",
-        durationSec: 5,
-        notes: "Wet the puck evenly; do not over-agitate.",
+        label: "Bloom (via Melodrip)",
+        action: "melodrip",
+        waterGramsAtEnd: 60,
+        durationSec: 40,
+        notes: "Long 40 s bloom for full saturation; Melodrip keeps turbulence low.",
       },
       {
-        label: "Pour 1",
-        action: "pour",
+        label: "Pour 2 (via Melodrip)",
+        action: "melodrip",
         waterGramsAtEnd: 120,
-        durationSec: 15,
+        durationSec: 10,
       },
+      { label: "Rest", action: "wait", durationSec: 30 },
       {
-        label: "Pour 2",
-        action: "pour",
-        waterGramsAtEnd: 195,
-        durationSec: 15,
+        label: "Pour 3 — at 1:20 (via Melodrip)",
+        action: "melodrip",
+        waterGramsAtEnd: 170,
+        durationSec: 10,
       },
+      { label: "Rest", action: "wait", durationSec: 30 },
       {
-        label: "Pour 3",
-        action: "pour",
+        label: "Pour 4 — at 2:00 (via Melodrip)",
+        action: "melodrip",
         waterGramsAtEnd: 270,
         durationSec: 15,
       },
-      { label: "Drawdown", action: "drain", durationSec: 60 },
+      { label: "Drawdown", action: "drain", durationSec: 10 },
     ],
-    totalTimeSec: 140,
+    totalTimeSec: 145,
     techniques: [
       "fast-flow-dripper",
       "turbulent-pours",
@@ -470,13 +481,14 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         year: 2024,
       },
       {
-        type: "video",
-        citation: "European Coffee Trip — official Wölfl routine breakdown",
+        type: "transcript",
+        citation:
+          "Wölfl brewing his winning recipe on camera in his studio — 17 g : 270 mL, 93 °C, Orea V4 (Narrow) + Fast bottom, Sibarist Fast paper, Melodrip + needle tool. 'Bloom 40 seconds with 60 mL… top up to 120… third step at 1:20 to 170… after 2 minutes last step from 170 to 270… total ~2:20–2:25.' Transcribed in-session.",
       },
     ],
     verified: true,
     notes:
-      "Pour milestones reconstructed from the European Coffee Trip video; exact gram targets between pours may vary by ±5g but the 4-pour structure is canonical.",
+      "Corrected from Wölfl's own studio walkthrough: bloom is 60 mL over 40 s (was 50 g / 30 s); pour milestones are 60/120/170/270 (was 50/120/195/270); he uses a Melodrip and a WDT/needle tool, NOT a stir. Raise temperature to 95 °C for more intensity.",
   },
 
   // ── 2025 WBrC ──────────────────────────────────────────────────────────────
@@ -496,11 +508,11 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     brewerNotes:
       "Solo dripper (PCTG plastic, 40° cone angle). Melodrip used over the cone to control agitation. Coffee: a single Panama Gesha, prepared at three different roast levels — 5g of each, layered in the brewer.",
     dose: { grams: 15 },
-    water: { grams: 60, ratio: "1:4" },
+    water: { grams: 210, ratio: "1:14" },
     temperature: {
       staged: [
         { pourIndex: 0, celsius: 96, label: "hot bloom" },
-        { pourIndex: 1, celsius: 88, label: "development" },
+        { pourIndex: 1, celsius: 96, label: "development" },
         { pourIndex: 2, celsius: 80, label: "aroma-preservation final pour" },
       ],
       rangeC: [80, 96],
@@ -523,36 +535,35 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       {
         label: "Hot bloom (96°C, via Melodrip)",
         action: "melodrip",
-        waterGramsAtEnd: 20,
+        waterGramsAtEnd: 30,
         durationSec: 30,
         temperatureC: 96,
         notes:
           "Hot bloom starts extraction across all three roast levels; the Melodrip prevents agitation that would homogenise the layered bed.",
       },
       {
-        label: "Development pour (88°C, via Melodrip)",
+        label: "Development pour (96°C, via Melodrip)",
         action: "melodrip",
-        waterGramsAtEnd: 40,
-        durationSec: 30,
-        temperatureC: 88,
+        waterGramsAtEnd: 120,
+        durationSec: 25,
+        temperatureC: 96,
       },
       {
         label: "Cool final pour (80°C, via Melodrip)",
         action: "melodrip",
-        waterGramsAtEnd: 60,
-        durationSec: 30,
+        waterGramsAtEnd: 210,
+        durationSec: 25,
         temperatureC: 80,
         notes:
           "Cool final pour preserves fragile Zone 1 aromatics that would dissipate at 96°C.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 30 },
+      { label: "Drawdown", action: "drain", durationSec: 25 },
     ],
-    totalTimeSec: 120,
+    totalTimeSec: 105,
     techniques: [
       "staged-temperature",
       "three-roast-layering",
       "melodrip-controlled-agitation",
-      "ultra-rich-ratio",
       "low-mineral-water",
       "cool-serving",
     ],
@@ -565,9 +576,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     teaches:
       "How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and staged temperatures isolate which extraction phase contributes which character. The Melodrip removes agitation as a variable so the layered bed stays compositionally distinct.",
     science:
-      "Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using a hot bloom followed by progressively cooler pours, Peng compresses what would normally be three separate brews into one. The Melodrip (a perforated disc that diffuses pour flow) eliminates turbulence — the three layers extract in place rather than mixing. The 1:4 ratio is closer to espresso concentration than filter; the cup is served diluted to taste, or savoured neat at the 50°C serving temperature where retronasal aroma perception is at its peak.",
+      "Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using a hot bloom followed by progressively cooler pours, Peng compresses what would normally be three separate brews into one. The Melodrip (a perforated disc that diffuses pour flow) eliminates turbulence — the three layers extract in place rather than mixing. The cup is brewed on low-mineral water and served cool (~50°C), where retronasal aroma perception is at its peak.",
     whenToUse:
-      "Demonstration brewing. Not a daily-driver recipe. Requires three roast levels of the same coffee — impractical for most home setups — but the principles (staged temperature, controlled agitation via Melodrip-equivalent, ultra-rich ratio with low-mineral water) transfer to single-roast brews.",
+      "Demonstration brewing. Not a daily-driver recipe. Requires three roast levels of the same coffee — impractical for most home setups — but the principles (staged temperature, controlled agitation via Melodrip-equivalent, low-mineral water, cool serving) transfer to single-roast brews.",
     sources: [
       {
         type: "official-competition",
@@ -581,7 +592,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "The headline mechanics — Solo dripper, three roast levels of one coffee, staged temperatures (96 → 80°C), Melodrip, 40 ppm low-mineral water, 50°C serving temperature — are consistently reported. The exact dripper variant is sometimes described as Origami in some sources (different drippers were used across rounds of the routine). Pour milestones are reconstructed and the precise sequencing should be checked against the official WCC video when teaching from this recipe.",
+      "Secondary-sourced (Slow Pour Supply / European Coffee Trip / Sprudge), no in-session transcript yet — corrected from the prior values: brewing ratio is ~1:14 (15 g : 210 g), NOT 1:4, and the staging is 96 → 96 → 80°C (no distinct 88°C step). The headline mechanics — three roast levels of one coffee, Melodrip, low-mineral water, ~50°C serving — are consistently reported. Pour milestones are reconstructed; confirm against the official WCC video before teaching from this recipe.",
   },
 
   // ── 2024 World AeroPress Championship ─────────────────────────────────────
