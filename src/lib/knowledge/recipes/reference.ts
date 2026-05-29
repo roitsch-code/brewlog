@@ -211,47 +211,53 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "hoffmann-aeropress-standard",
-    name: "Hoffmann AeroPress — Inverted",
+    name: "Hoffmann AeroPress — Recommended Technique",
     shortName: "Hoffmann AeroPress",
     attribution: {
       person: "James Hoffmann",
       country: "United Kingdom",
+      year: 2021,
     },
     category: "reference",
     brewer: "aeropress",
-    brewerNotes: "Inverted orientation, standard paper filter",
+    brewerNotes:
+      "Upright (standard) orientation — NOT inverted. Paper filter in the cap, no rinse needed, set on a sturdy mug or carafe.",
     dose: { grams: 11 },
     water: { grams: 200, ratio: "1:18.2" },
-    temperature: { celsius: 85, rangeC: [80, 90] },
+    temperature: { celsius: 100, rangeC: [85, 100] },
     grind: {
-      referenceSetting: "medium-fine, slightly coarser than espresso",
+      referenceSetting:
+        "fine — finer than a pour-over, getting close to the espresso range (for light roasts)",
       nicheZeroDegrees: [377, 387],
     },
     pourSequence: [
-      { label: "Invert and load", action: "invert", durationSec: 0 },
       {
         label: "Add water",
         action: "pour",
         waterGramsAtEnd: 200,
         durationSec: 10,
+        notes:
+          "Get the coffee wet as quickly as you can, then pour to 200 g. No need for a gooseneck kettle.",
       },
+      { label: "Steep", action: "wait", durationSec: 120, notes: "Two-minute steep. No stir." },
       {
-        label: "Stir 2–3× evenly",
-        action: "stir",
-        durationSec: 10,
+        label: "Gentle swirl",
+        action: "swirl",
+        durationSec: 5,
+        notes:
+          "Hold both piston and base; a gentle swirl knocks the grounds down — not a vortex.",
       },
-      { label: "Steep", action: "wait", durationSec: 90 },
+      { label: "Settle", action: "wait", durationSec: 30 },
       {
-        label: "Stir to break crust",
-        action: "stir",
-        durationSec: 10,
+        label: "Press gently",
+        action: "press",
+        durationSec: 30,
+        notes: "Press gently and evenly — comfortably, not leaning in. ~30 s for this grind.",
       },
-      { label: "Cap, flip, press slowly", action: "press", durationSec: 30 },
     ],
-    totalTimeSec: 150,
+    totalTimeSec: 215,
     techniques: [
-      "inverted-aeropress",
-      "low-temperature-extraction",
+      "swirl-not-stir",
       "lean-ratio",
     ],
     bestFor: {
@@ -260,18 +266,22 @@ export const REFERENCE_RECIPES: Recipe[] = [
       goals: ["balanced"],
     },
     teaches:
-      "How a low-temperature, lean-ratio AeroPress produces a clean, filter-style cup without the bitterness people associate with the brewer.",
+      "How the least-fuss AeroPress technique — upright, lean ratio, two-minute steep, a single swirl, gentle press — reliably makes a clean, filter-style cup. Hoffmann's deliberate default, not the inverted/stirred ritual.",
     science:
-      "The AeroPress is often brewed too hot and too rich — that's where the muddy, bitter reputation comes from. At 85°C and 1:18, the brew sits in Zone 1–2 throughout the 90-second steep. The press itself is the only agitation event that matters for late extraction; pressing slowly (30 seconds) avoids forcing water through over-extracted boundary layers around grounds.",
+      "A lean 1:18 ratio with a fine grind keeps the cup clean rather than muddy. For light roasts Hoffmann pours fully boiling water; for medium roasts drop to ~90–95°C and for dark roasts ~85°C, because darker coffees over-extract bitter compounds at high temperature. A two-minute steep does the extraction; the only late agitation is one gentle swirl to settle the bed, and a gentle ~30 s press avoids forcing water through over-extracted boundary layers.",
     whenToUse:
-      "A daily AeroPress that drinks like a clean filter cup. Excellent for travel because the AeroPress is forgiving on grind precision.",
+      "A daily AeroPress that drinks like a clean filter cup. Excellent for travel — forgiving on grind precision. If too bitter, grind coarser / cooler; if sour, go hotter and finer.",
     sources: [
       {
-        type: "video",
-        citation: "James Hoffmann — AeroPress technique videos (multiple)",
+        type: "transcript",
+        citation:
+          "James Hoffmann — 'My Recommended AeroPress Technique' (2021). Upright, 11 g : 200 g, fine grind, boiling water for light roasts (90–95 medium, 85 dark), 2-minute steep, gentle swirl, wait 30 s, gentle ~30 s press. Transcribed in-session.",
+        year: 2021,
       },
     ],
     verified: true,
+    notes:
+      "Corrected from Hoffmann's own 2021 'recommended technique' video: upright, NOT inverted; water is freshly boiled for light roasts (the old 85°C value applies only to dark roasts); a single gentle SWIRL replaces the 2–3× stir; 2-minute steep then 30 s wait then gentle press. Hoffmann notes he has other AeroPress recipes — this entry captures his recommended default, kept internally consistent.",
   },
 
   {
@@ -909,16 +919,17 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "kalita-wave",
-    brewerNotes: "Kalita Wave 155 with wave paper filter",
-    dose: { grams: 22 },
-    water: { grams: 330, ratio: "1:15" },
-    temperature: { celsius: 94 },
+    brewerNotes:
+      "Kalita Wave with wave paper filter. Coffee: a washed Kenya Kieni (SL28 / SL34), rested ~16 days off roast. RO water with low ppm / low carbonate. She brews one cup at a time, gently agitating with a continuous pour, and uses kettle flow restrictors for a steady stream.",
+    dose: { grams: 15 },
+    water: { grams: 250, ratio: "1:16.7" },
+    temperature: { celsius: 96 },
     grind: {
       referenceSetting:
-        "medium, then sieved to remove fines (Kruve Two or similar)",
+        "her everyday Kalita grind, then sieved to remove fines",
       nicheZeroDegrees: [396, 406],
       description:
-        "Pre-sieving removes the fines fraction (~3–5% of total mass) — the cup is markedly cleaner.",
+        "The only change from her daily bar routine is sieving off the fines so they can't over-extract.",
     },
     pourSequence: [
       {
@@ -926,54 +937,38 @@ export const REFERENCE_RECIPES: Recipe[] = [
         action: "agitate-bed",
         durationSec: 0,
         notes:
-          "Discard fines fraction before brewing. This is the technique's defining move.",
+          "Sieve off the fines before brewing — less bitterness because the fines can't over-extract.",
       },
       {
         label: "Bloom",
         action: "pour",
         waterGramsAtEnd: 50,
-        durationSec: 35,
+        durationSec: 30,
+        notes: "30 s bloom.",
       },
       {
-        label: "Swirl (no stir)",
-        action: "swirl",
-        durationSec: 5,
+        label: "Continuous circular pour to 250 g",
+        action: "pour",
+        waterGramsAtEnd: 250,
+        durationSec: 75,
         notes:
-          "Kalita Wave: never stir. The flat bed channels if disturbed.",
+          "One continuous pour in circles, all the way to 1:45 — gentle, even agitation of the whole bed the entire pour. Flow restrictors on the kettle keep the stream steady and controlled.",
       },
-      {
-        label: "Pour 1",
-        action: "pour",
-        waterGramsAtEnd: 150,
-        durationSec: 25,
-      },
-      {
-        label: "Pour 2",
-        action: "pour",
-        waterGramsAtEnd: 240,
-        durationSec: 25,
-      },
-      {
-        label: "Pour 3",
-        action: "pour",
-        waterGramsAtEnd: 330,
-        durationSec: 25,
-      },
-      { label: "Drawdown", action: "drain", durationSec: 70 },
+      { label: "Drawdown", action: "drain", durationSec: 50 },
     ],
-    totalTimeSec: 215,
-    techniques: ["fines-removal", "kalita-flat-bed", "swirl-only-agitation"],
+    totalTimeSec: 155,
+    techniques: ["fines-removal", "kalita-flat-bed", "continuous-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
-      goals: ["high-clarity"],
+      goals: ["high-clarity", "sweetness-forward"],
     },
     teaches:
-      "How removing fines before brewing produces clarity that no in-cup technique can match. Fines are the primary source of muddy cups; remove them and the Kalita Wave's already-clean profile becomes pristine.",
+      "How removing fines before brewing produces clarity that no in-cup technique can match — paired with a single continuous circular pour for even, gentle agitation throughout the brew.",
     science:
-      "Fines (particles smaller than ~200 µm) over-extract relative to the rest of the grind because their surface-area-to-volume ratio is huge. They contribute disproportionately to bitter, phenolic Zone 3 compounds. Sieving them out reduces the median extraction yield slightly but tightens the distribution — every remaining particle extracts in the same window. The Kalita's flat bed already favours uniform extraction; combined with fines removal, the cup reads almost too clean to non-specialty palates.",
+      "Fines (particles smaller than ~200 µm) over-extract relative to the rest of the grind because their surface-area-to-volume ratio is huge. They contribute disproportionately to bitter, phenolic Zone 3 compounds. Sieving them out tightens the extraction distribution so every remaining particle extracts in the same window. Brewing one cup at a time with a continuous circular pour keeps the whole bed gently agitated, which Wallgren credits for an even extraction and a sweeter cup; the Kalita's flat bed reinforces the uniformity.",
     whenToUse:
-      "For competition-grade light washed coffees where the goal is maximum clarity and the budget supports a sieve. Not for naturals — fines contribute body that naturals often need.",
+      "For competition-grade light washed coffees where the goal is maximum clarity and sweetness and the budget supports a sieve. Not for naturals — fines contribute body that naturals often need.",
     sources: [
       {
         type: "official-competition",
@@ -981,14 +976,15 @@ export const REFERENCE_RECIPES: Recipe[] = [
         year: 2016,
       },
       {
-        type: "interview",
+        type: "transcript",
         citation:
-          "The Coffee Collective / Mikaela Wallgren published interviews",
+          "Wallgren's own WBrC 2016 stage presentation (The Coffee Collective, Kenya Kieni SL28/SL34) — '15 grams of coffee, 250 mils of water… 30 second bloom, then continue pouring continued circles all the way to 1 minute 45… total brew time 2 minutes 35… 96 degrees… I sieved off the fines.' Transcribed in-session.",
+        year: 2016,
       },
     ],
-    verified: false,
+    verified: true,
     notes:
-      "The sieving + Kalita Wave + light agitation combination is well-attested as Wallgren's signature. Specific dose/water/temperature reconstructed from Coffee Collective public materials.",
+      "Corrected from Wallgren's own stage presentation: dose 15 g (was 22 g), water 250 g / 1:16.7 (was 330 g / 1:15), 96°C (was 94°C), bloom 30 s + one continuous circular pour to 1:45, total 2:35 (was bloom + 3 discrete pours, 3:35). Fines-sieving confirmed.",
   },
 
   // ── Turbo V60 (popularised by Lance Hedrick) ─────────────────────────────
