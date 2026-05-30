@@ -164,7 +164,7 @@ export async function translate(input: TranslationInput): Promise<TranslationRes
   const userContent = serialiseInput(input);
 
   const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: "claude-haiku-4-5",
     max_tokens: 600,
     system: TRANSLATE_SYSTEM,
     messages: [{ role: "user", content: userContent }],
