@@ -56,11 +56,11 @@ const client = new Anthropic({
   timeout: 120_000,
 });
 
-const USER_LOCATION = process.env.USER_LOCATION
-  ? ` in ${process.env.USER_LOCATION}`
-  : "";
+// Single-user app — default matches /explore-agent so the model gets the
+// same regional framing on both surfaces when the env var is unset.
+const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
-const SYSTEM_PROMPT = `You are a personal brewing coach and coffee scientist. You are speaking directly with a semi-expert specialty coffee enthusiast${USER_LOCATION}. Address them as "you" throughout — never refer to them in the third person.
+const SYSTEM_PROMPT = `You are a personal brewing coach and coffee scientist. You are speaking directly with a semi-expert specialty coffee enthusiast in ${USER_LOCATION}. Address them as "you" throughout — never refer to them in the third person.
 
 Your role is not to route occasion to preset method. Your role is to reason like a skilled barista who has studied your history, knows this coffee's properties, and cares about what you will learn in the cup.
 
@@ -347,6 +347,7 @@ OREA V4 — dedicated rules:
 3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
 
 NICHE° GRIND REFERENCE:
+(On the Niche Zero dial, HIGHER degree = COARSER grind. The numbers below are starting points; calibrate to drawdown.)
 V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°

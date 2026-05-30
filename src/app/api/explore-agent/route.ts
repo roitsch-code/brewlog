@@ -379,6 +379,11 @@ async function fetchImageAsBase64(
 // "Dusseldorf", "Duesseldorf", and "düsseldorf" all collapse to "dusseldorf".
 // Applied to BOTH the user's query and each row before substring matching,
 // so search is accent- and umlaut-insensitive without any DB extension.
+// NFD normalize + strip combining marks already collapses "Düsseldorf" →
+// "dusseldorf", so the digraph replacements below only fire when the user
+// (or a piece of legacy data) types out a digraph manually — e.g.
+// "duesseldorf", "koeln", "muenchen". Keep both layers: the NFD handles
+// the diacritic form, the digraph rules handle the typed-out form.
 function fold(s: string): string {
   return s
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -633,7 +638,10 @@ export async function POST(req: NextRequest) {
           });
 
           const navSuggestions: NavAction[] = [];
-          const MAX_ITERATIONS = 6;
+          // 6 was tight for compound research tasks — "compare 4 roasters"
+          // already eats 1 search + 4 fetch_page = 5, leaving 1 buffer for
+          // a follow-up question that needs another fetch. Bumped to 8.
+          const MAX_ITERATIONS = 8;
 
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             const stream = client.messages.stream({
