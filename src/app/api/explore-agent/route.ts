@@ -42,11 +42,13 @@ export interface NavAction {
 
 // ── System prompt ────────────────────────────────────────────────────────────
 
-const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and research agent embedded in BrewLog, a personal coffee diary PWA. You speak directly to a semi-expert enthusiast based in ${USER_LOCATION}.
+const AGENT_SYSTEM_PROMPT = `You are a world-class specialty coffee expert and research agent embedded in Better taste than sorry (BTTS), a personal coffee diary PWA. You speak directly to a semi-expert enthusiast based in ${USER_LOCATION}.
+
+The app is always called "Better taste than sorry" or "BTTS" — never any other name. If the user asks what app this is or what you are, you're the coffee assistant inside BTTS.
 
 ## Your Capabilities
 
-You're a chat agent inside BrewLog. When the user asks "what can you do?" or "can I dictate?" etc., answer from this list — don't invent extra abilities.
+You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I dictate?" etc., answer from this list — don't invent extra abilities.
 
 **Voice in & out** — the user may speak to you (ElevenLabs Scribe transcribes English, German, and other languages) and you can speak back (ElevenLabs TTS). Transcription handles umlauts and diacritics imperfectly, but every search you run ignores diacritics, so the user doesn't have to enunciate carefully.
 
@@ -54,7 +56,7 @@ You're a chat agent inside BrewLog. When the user asks "what can you do?" or "ca
 - **search_places**: query the café & roastery database (~6,200 places across Europe). Diacritic- and umlaut-insensitive: "Düsseldorf", "Dusseldorf", and "Duesseldorf" all match the same row.
 - **fetch_page**: retrieve any webpage. For Shopify roaster shops this auto-resolves to structured product JSON (title, origin, process, price, tasting notes). Call this whenever the user shares a URL or asks about a specific shop.
 - **analyze_image**: download an image URL and read it visually — extract origin, varietal, process, roaster name, tasting notes from bag photos.
-- **suggest_navigation**: propose navigating to a BrewLog feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
+- **suggest_navigation**: propose navigating to a BTTS feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
 
 **Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (last 6 — this is *not* the full library, just what's open and active right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
 
@@ -189,7 +191,7 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "search_places",
     description:
-      "Search the BrewLog café and roastery database by city or name. Call this BEFORE recommending any place to visit — never use training data for place names. Returns up to 20 matches.",
+      "Search the BTTS café and roastery database by city or name. Call this BEFORE recommending any place to visit — never use training data for place names. Returns up to 20 matches.",
     input_schema: {
       type: "object",
       properties: {
@@ -204,14 +206,14 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "suggest_navigation",
     description:
-      "Suggest navigating to a BrewLog feature. Call this when navigation would genuinely help the user act on what you just said. Can be called multiple times in one turn.",
+      "Suggest navigating to a BTTS feature. Call this when navigation would genuinely help the user act on what you just said. Can be called multiple times in one turn.",
     input_schema: {
       type: "object",
       properties: {
         destination: {
           type: "string",
           enum: ["coffee_library", "coffee_detail", "brew_again", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
-          description: "Which part of BrewLog to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit. Use brew_again when the user explicitly wants to start a brew flow with a specific bag from their library — drops them into Step 3 (Context) with the bag pre-selected.",
+          description: "Which part of BTTS to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit. Use brew_again when the user explicitly wants to start a brew flow with a specific bag from their library — drops them into Step 3 (Context) with the bag pre-selected.",
         },
         label: {
           type: "string",
@@ -685,7 +687,7 @@ export async function POST(req: NextRequest) {
                     const results = await searchPlaces(input.query);
                     const content =
                       results.length === 0
-                        ? `No places found in the BrewLog database matching "${input.query}".`
+                        ? `No places found in the BTTS database matching "${input.query}".`
                         : `Found ${results.length} place(s) matching "${input.query}":\n\n` +
                           results
                             .map((p) => `- ${p.name} | ${p.city}${p.address ? ` | ${p.address}` : ""}`)
