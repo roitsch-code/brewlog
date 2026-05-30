@@ -43,11 +43,11 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 | Recipe | Brewer | Dose : Water | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|
-| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 92°C | 396–406° | 3:30 | true |
-| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96°C | 421–431° | 3:00 | true |
-| **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85°C | 377–387° | 2:30 | true |
-| **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 431–441° | 8:00 | true |
-| **Hoffmann Immersion Iced** | Clever onto ice | 20g : 250g (+200g ice) | 95°C | 421–431° | 5:00 | true |
+| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 80–100°C † | calibrate ‡ | 3:00 | true |
+| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 3:30 | true |
+| **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85–100°C † | 356–366° | 3:35 | true |
+| **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
+| **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |
 | **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 92°C | 411–421° | 3:30 | true |
 | **April House V60 (Rolf)** | V60 | 20g : 300g | 92°C | — (calibrate) | 3:20–3:30 | true |
 | **Gagné Long AeroPress** | AeroPress + Prismo | 20g : 200g | 80°C | 365–375° | 6:25 | true |
@@ -56,13 +56,16 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g *(unsourced — flagged)* | 88–95°C (by roast) | 396–406° | 3:10 | false |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
 
+† **Hoffmann roast-temperature staircase:** light = **freshly boiled (100 °C)**, medium 90–95 °C, dark 80–85 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span.
+‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
+
 **Teaching summaries**
 
 - **Hoffmann V60 (Better 1 Cup)** — Swirl rather than stir, flatten the bed with a tap before drawdown. Both moves reduce fines migration and channeling without sacrificing extraction.
 - **Hoffmann Ultimate Clever** — Water-first technique: pour all water first, drop coffee on top. The grounds saturate from below via buoyancy/capillary action; no mechanical agitation needed.
-- **Hoffmann AeroPress** — A low-temperature (85°C), lean-ratio (1:18) AeroPress produces a clean, filter-style cup without the bitterness people associate with the brewer.
+- **Hoffmann AeroPress** — Lean-ratio (1:18) AeroPress, roast-temperature staircase (light 100 °C, medium 90–95 °C, dark 85 °C), produces a clean, filter-style cup without the bitterness people associate with the brewer.
 - **Hoffmann Moccamaster Method** — Pulsing showerhead + flat-bottomed paper filter approximates a multi-pour V60 without operator skill. 1:15 at medium-coarse grind for batches ≥500ml.
-- **Hoffmann Immersion Iced** — Flash-chilling preserves aromatics that cold-brew loses to its long extraction time. 1:12.5 hot extraction + ice dilution = effective 1:22 final drink.
+- **Hoffmann Immersion Iced** — Flash-chilling preserves aromatics that cold-brew loses to its long extraction time. 75 g coffee per litre of total water; total water split ~2/3 hot brew + ~1/3 ice (e.g. 37.5 g : 330 g hot + ~170 g ice = 1:13.3 final). Hot extraction at 1:8.8 then diluted by ice to the drinking ratio.
 - **April House V60 (Rolf)** — April's agitation-forward house recipe: six even 50g pours on a ~30s cadence, each poured deliberately aggressively, finished with one stir. The opposite of a minimal-agitation brew. (Replaces a prior "Minimum Variables" entry that was a misattribution — no such single-continuous-pour Rolf recipe exists.)
 - **Gagné Long AeroPress** — The "second sweet spot": fine grind + 80°C + 5-minute steep. Bitter Zone 3 compounds extract orders of magnitude slower at low temp; long steep saturates Zone 2 fully without invading Zone 3.
 - **Perger High-Extraction V60** — Vigorous bloom stir + fine grind + spinning swirl during drawdown drives extraction yield above 22%. Bitterness comes from over-extracting the wrong compounds, not high yield itself.

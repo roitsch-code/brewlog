@@ -1078,6 +1078,18 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
 
   {
     name: "RVTC",
+    // Migration 0010 (May 2026) renamed every "Rösterei Vier / The Commonage"
+    // variant to "RVTC" across coffees / sessions JSONB / this priors cache.
+    // Aliases stay here as a safety net so getRoasterPrior() still matches
+    // any legacy string that escapes the migration (older offline IDB cache,
+    // re-imports, etc.) — fuzzy substring match would otherwise fail since
+    // neither "Rösterei Vier" nor "The Commonage" is a substring of "RVTC".
+    aliases: [
+      "Rösterei Vier",
+      "Rösterei Vier / The Commonage",
+      "The Commonage",
+      "RVTC – Rösterei Vier / The Commonage",
+    ],
     region: "Düsseldorf, Germany",
     styleSummary:
       "Düsseldorf specialty roaster. Light-medium, varied range covering both naturals and washed. Accessible and approachable specialty.",

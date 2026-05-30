@@ -56,11 +56,11 @@ const client = new Anthropic({
   timeout: 120_000,
 });
 
-const USER_LOCATION = process.env.USER_LOCATION
-  ? ` in ${process.env.USER_LOCATION}`
-  : "";
+// Single-user app — default matches /explore-agent so the model gets the
+// same regional framing on both surfaces when the env var is unset.
+const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
-const SYSTEM_PROMPT = `You are a personal brewing coach and coffee scientist. You are speaking directly with a semi-expert specialty coffee enthusiast${USER_LOCATION}. Address them as "you" throughout — never refer to them in the third person.
+const SYSTEM_PROMPT = `You are a personal brewing coach and coffee scientist. You are speaking directly with a semi-expert specialty coffee enthusiast in ${USER_LOCATION}. Address them as "you" throughout — never refer to them in the third person.
 
 Your role is not to route occasion to preset method. Your role is to reason like a skilled barista who has studied your history, knows this coffee's properties, and cares about what you will learn in the cup.
 
@@ -77,7 +77,7 @@ GOAL VOCABULARY:
 - "sweetness-forward" → longer sugar contact, gentler agitation, methods that develop body without invading Zone 3.
 - "body-forward" → body emphasis. Slightly richer ratio acceptable, longer contact, methods that build mouthfeel.
 - "aromatic" → aromatic-forward. Maximize preservation of volatile top-note compounds — jasmine, bergamot, peach, citrus zest, tea-like delicacy. Cool bloom (Hsu 2022 staged-temp), low-mineral water bias, minimal agitation, prompt drawdown. Geisha, Wush Wush, Pink Bourbon (per WCR 2024 — closer to Ethiopian landrace than Bourbon), Sidra, Ethiopian washed/natural especially appropriate. Distinct from "high-clarity" — clarity emphasises overall cup transparency; aromatic emphasises the fragile olfactory top layer specifically.
-- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open, Turbo V60) are especially appropriate here — but they are NOT exclusive to this goal.
+- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open) are especially appropriate here — but they are NOT exclusive to this goal.
 
 OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity", "body-forward", or "aromatic", build to the goal, not the process default.
 
@@ -218,7 +218,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
 Time constraints:
-- "quick" (~2 min): AeroPress, Turbo V60, Peng. targetTimeSec ≤ 150.
+- "quick" (~2 min): AeroPress, Peng. targetTimeSec ≤ 150.
 - "normal" (~5 min): V60, Kalita, Orea, Clever. targetTimeSec 240–300.
 - "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
 
@@ -297,7 +297,6 @@ PERCOLATION:
 - Origami Air M: light stir 1–2× at bloom only. No post-bloom agitation (full ridges drain fast; extra agitation over-extracts).
 - Peng 2025: stir 3× at bloom. No post-bloom stir.
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
-- Turbo V60: stir 2–3× at bloom. Turbulence from fast pours, not extra stirs.
 IMMERSION:
 - Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
 - Clever Dripper (Hoffmann): swirl early (~15s after pour), swirl again at roughly the halfway point of the steep. NEVER stir.
@@ -348,11 +347,13 @@ OREA V4 — dedicated rules:
 3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
 
 NICHE° GRIND REFERENCE:
-V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
+(On the Niche Zero dial, HIGHER degree = COARSER grind. The numbers below are starting points; calibrate to drawdown.)
+V60: 396–406° | V60 + Drip Assist: 401–411° (emergency/travel only — disc adds resistance, ~+5° coarser than bare V60)
+Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
-Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
+Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
@@ -389,7 +390,6 @@ CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and 
 - Orea Apex clarity: 17g:270ml | 95–98°C | 403–407° | bloom → light stir 1–2× at 0:10 → 3 even pours, no further agitation → ~3:30
 - Orea Classic sweetness: 17g:270ml | 94–96°C | 406–411° | bloom → gentle swirl → 3 pours → gentle swirl after final pour → ~3:00 (targetTimeSec: 180)
 - Orea Open: 17g:270ml | 95–97°C | 402–409° | bloom → gentle swirl → 3 pours, no agitation, fast open-bed drawdown → ~2:45 (targetTimeSec: 165)
-- Turbo V60: 15g:250ml | 100°C | 391–396° | bloom → stir 2–3× at 0:10 → 2 fast pours → ~2:00
 
 WATER NOTES (this user's actual setup):
 - "championship" = clarity blend (1:2 BWT-filtered + distilled, ~73ppm TDS, KH ~1.3°dH) = ultra-soft, near-zero buffering, highlights delicate florals — prefer for washed light roasts & competition-style brews
@@ -640,6 +640,17 @@ export async function generateRecommendation(
     ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.`
     : "";
 
+  // Drip Assist emergency-only routing — when the user has explicitly
+  // locked V60 + Drip Assist (the perforated-disc accessory used only
+  // when no gooseneck is around, e.g. travelling), the disc adds flow
+  // resistance and the recipe needs to grind ~5° coarser than the bare
+  // V60 baseline to keep drawdown in the same window. The disc is NOT
+  // recommended proactively — only honor the user's explicit lock.
+  const dripAssistNote =
+    context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod)
+      ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the bare V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a bare V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred bare-V60 setup.`
+      : "";
+
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
 
@@ -732,7 +743,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${methodNote}${dripAssistNote}${goalNote}
 
 Equipment available: ${equipment}
 ${grinderNote}

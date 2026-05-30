@@ -154,9 +154,9 @@ export default function HomePage() {
     // (Open-Meteo) so a hot day can steer toward iced. Time-of-day
     // bucket appended so the starter regenerates when the user crosses
     // a tod boundary (morning → midday → afternoon → evening →
-    // late-night). Old `brewlog.starter.v{2..5}.<date>` entries are
+    // late-night). Old `brewlog.starter.v{2..6}.<date>` entries are
     // orphaned in localStorage — harmless.
-    const key = `brewlog.starter.v6.${todayKey()}.${timeBucket()}`;
+    const key = `brewlog.starter.v7.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {
