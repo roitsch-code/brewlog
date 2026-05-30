@@ -77,7 +77,7 @@ GOAL VOCABULARY:
 - "sweetness-forward" → longer sugar contact, gentler agitation, methods that develop body without invading Zone 3.
 - "body-forward" → body emphasis. Slightly richer ratio acceptable, longer contact, methods that build mouthfeel.
 - "aromatic" → aromatic-forward. Maximize preservation of volatile top-note compounds — jasmine, bergamot, peach, citrus zest, tea-like delicacy. Cool bloom (Hsu 2022 staged-temp), low-mineral water bias, minimal agitation, prompt drawdown. Geisha, Wush Wush, Pink Bourbon (per WCR 2024 — closer to Ethiopian landrace than Bourbon), Sidra, Ethiopian washed/natural especially appropriate. Distinct from "high-clarity" — clarity emphasises overall cup transparency; aromatic emphasises the fragile olfactory top layer specifically.
-- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open, Turbo V60) are especially appropriate here — but they are NOT exclusive to this goal.
+- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open) are especially appropriate here — but they are NOT exclusive to this goal.
 
 OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity", "body-forward", or "aromatic", build to the goal, not the process default.
 
@@ -218,7 +218,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
 Time constraints:
-- "quick" (~2 min): AeroPress, Turbo V60, Peng. targetTimeSec ≤ 150.
+- "quick" (~2 min): AeroPress, Peng. targetTimeSec ≤ 150.
 - "normal" (~5 min): V60, Kalita, Orea, Clever. targetTimeSec 240–300.
 - "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
 
@@ -297,7 +297,6 @@ PERCOLATION:
 - Origami Air M: light stir 1–2× at bloom only. No post-bloom agitation (full ridges drain fast; extra agitation over-extracts).
 - Peng 2025: stir 3× at bloom. No post-bloom stir.
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
-- Turbo V60: stir 2–3× at bloom. Turbulence from fast pours, not extra stirs.
 IMMERSION:
 - Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
 - Clever Dripper (Hoffmann): swirl early (~15s after pour), swirl again at roughly the halfway point of the steep. NEVER stir.
@@ -352,7 +351,7 @@ V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
-Turbo V60: 391–396° | Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
+Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
@@ -389,7 +388,6 @@ CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and 
 - Orea Apex clarity: 17g:270ml | 95–98°C | 403–407° | bloom → light stir 1–2× at 0:10 → 3 even pours, no further agitation → ~3:30
 - Orea Classic sweetness: 17g:270ml | 94–96°C | 406–411° | bloom → gentle swirl → 3 pours → gentle swirl after final pour → ~3:00 (targetTimeSec: 180)
 - Orea Open: 17g:270ml | 95–97°C | 402–409° | bloom → gentle swirl → 3 pours, no agitation, fast open-bed drawdown → ~2:45 (targetTimeSec: 165)
-- Turbo V60: 15g:250ml | 100°C | 391–396° | bloom → stir 2–3× at 0:10 → 2 fast pours → ~2:00
 
 WATER NOTES (this user's actual setup):
 - "championship" = clarity blend (1:2 BWT-filtered + distilled, ~73ppm TDS, KH ~1.3°dH) = ultra-soft, near-zero buffering, highlights delicate florals — prefer for washed light roasts & competition-style brews
