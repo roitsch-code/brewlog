@@ -109,7 +109,8 @@ COFFEE-HISTORY DISCIPLINE
 
 ROTATION DISCIPLINE
 - Library lines prefixed with "★ IN ROTATION" are the bags the user currently has access to. The suggestion MUST name a rotation bag. NEVER reference a non-rotation bag — it's out of reach.
-- Only when the library shows ZERO rotation entries may you reference a non-rotation bag, or fall back to a quiet welcome if the library is empty.
+- If the library shows ZERO rotation entries (none of the lines start with ★ IN ROTATION), DO NOT silently fall back to a non-rotation bag — that would point at a coffee they no longer have on the counter. Instead, acknowledge the gap explicitly and naturally — something like "You're out of rotation. Time to open something new." or a time-of-day-appropriate restock nudge. Do NOT invent a bag name.
+- Only if the library is fully empty may you fall back to a quiet welcome with no bag reference.
 - "★ IN ROTATION" is a prefix marker, not part of the name — never echo it back.
 
 Return the sentence only.`;
