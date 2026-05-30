@@ -185,7 +185,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     brewerNotes:
       "AeroPress inverted, Kalita 95 mm paper (rinsed cold). DM Grinder 2 at 10/10 (very coarse) for the main 30 g + espresso-fine spike of 1 g. Brita-filtered water.",
     dose: { grams: 30 },
-    water: { grams: 220, ratio: "1:9" },
+    water: { grams: 220, ratio: "1:9 final drink (30 g : 270 g total, incl. 50 g bypass)" },
     temperature: { celsius: 80 },
     grind: {
       referenceGrinder: "DM Grinder 2",
@@ -219,7 +219,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "official-competition", citation: "World AeroPress Championship official record — WAC 2018 entry", year: 2018 },
     ],
     verified: false,
-    notes: "Dose is 30 g coarse main + a 1 g espresso-fine spike; the 30 g main is in dose.grams and the spike is in the pour sequence. Niche range estimated from the coarse-grind feel.",
+    notes: "Compound recipe — three numbers to read carefully. Dose is 30 g coarse main + a 1 g espresso-fine spike (31 g total coffee); the 30 g main lives in dose.grams, the spike lives in the pour sequence. Water is 220 g brew + 50 g bypass = 270 g total. The published ratio \"1:9\" is the final drink ratio (30 g coffee : 270 g total water); the brew ratio (30 g : 220 g) is closer to 1:7.3, and the cup ratio inc. spike (31 g : 270 g) is ~1:8.7. Niche range estimated from the coarse-grind feel.",
   },
 
   {
