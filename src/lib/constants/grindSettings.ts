@@ -42,6 +42,18 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
     confidence: "measured",
     notes: "Anchor: 15 g single cup = 380° / 23 clicks. Larger batches coarsen (see dose-scaling rule).",
   },
+  // V60 + Drip Assist (emergency / travel only — the disc adds flow
+  // resistance, so grind a little coarser than bare V60 to keep
+  // drawdown in the same window. Magnitude is approximate; refine
+  // after a real travel brew. Direction confirmed by the user; ~+5°
+  // / +2 Comandante clicks is a small starting offset.
+  {
+    method: "V60 + Drip Assist",
+    niche: { min: 380, max: 390 },
+    comandante: { min: 24, max: 27 },
+    confidence: "estimate",
+    notes: "Emergency / travel only. Disc adds resistance → grind ~5° coarser than bare V60 (one Comandante click). The disc smooths pour distribution at the cost of free flow; coarsen to compensate so timing matches bare V60. Refine after first travel brew.",
+  },
   { method: "Orea V4", niche: { min: 380, max: 390 }, comandante: { min: 23, max: 26 }, confidence: "estimate" },
   { method: "Origami Dripper", process: "Washed", niche: { min: 380, max: 386 }, comandante: { min: 23, max: 25 }, confidence: "estimate" },
   { method: "Origami Dripper", process: "Honey", niche: { min: 382, max: 387 }, comandante: { min: 24, max: 25 }, confidence: "estimate" },
@@ -75,9 +87,13 @@ export const GRIND_FOOTNOTE =
   DOSE_SCALING_RULE +
   " Adjust grind coarser/finer to fix flow timing — never use temperature for that; temperature controls extraction chemistry only.";
 
-// Drip Assist is fully retired — removed from the active set (do not surface in
-// UI / prompts). The user stopped using the disc; all V60 figures above are
-// no-Assist.
+// Drip Assist status (May 2026): retired from daily use BUT still selectable
+// in the flow picker as an emergency / travel-only option (no gooseneck
+// available). The V60 figures in the main entry above are the no-Assist
+// baseline; the "V60 + Drip Assist" row above carries the disc offset
+// (~+5° coarser) so the prompt and UI have a usable target when the disc
+// is in. Do NOT recommend the Assist proactively — only honor it when the
+// user explicitly picks it.
 
 export function formatGrindSettingsForPrompt(): string {
   const lines = NICHE_GRIND_SETTINGS.map((s) => {

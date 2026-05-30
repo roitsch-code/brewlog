@@ -1,6 +1,6 @@
 # Grind Settings — Niche Zero (°) + Comandante (clicks)
 
-> **Code source of truth:** `src/lib/constants/grindSettings.ts`. Recommend and Explore both import from there. If you change a number, change it in the constants file — this table mirrors it.
+> **Code source of truth:** `src/lib/constants/grindSettings.ts`. The constants file is canonical for the per-method default table; this doc mirrors it for humans. NOTE: `/recommend` and `/explore-agent` do NOT import the constants file — each carries its own hardcoded NICHE° GRIND REFERENCE in the system prompt. To re-calibrate a number, update all three (constants + this doc + the prompt block).
 
 ## Empirical calibration (user-measured, May 2026)
 
@@ -21,6 +21,7 @@ Two relationships fall out of those points:
 | Method | Process | Niche° | Comandante | Confidence |
 |--------|---------|--------|------------|------------|
 | V60 | any | 375–385° | 22–25 | **measured** (380°/23 = single cup) |
+| V60 + Drip Assist | any | 380–390° | 24–27 | estimate (emergency/travel only — disc adds resistance → ~+5° coarser than bare V60) |
 | Orea V4 | any | 380–390° | 23–26 | estimate |
 | Origami Dripper | Washed | 380–386° | 23–25 | estimate |
 | Origami Dripper | Honey | 382–387° | 24–25 | estimate |

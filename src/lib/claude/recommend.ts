@@ -348,7 +348,8 @@ OREA V4 — dedicated rules:
 
 NICHE° GRIND REFERENCE:
 (On the Niche Zero dial, HIGHER degree = COARSER grind. The numbers below are starting points; calibrate to drawdown.)
-V60: 396–406° | Orea: 401–411° | Origami Air M: 401–408°
+V60: 396–406° | V60 + Drip Assist: 401–411° (emergency/travel only — disc adds resistance, ~+5° coarser than bare V60)
+Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
@@ -639,6 +640,17 @@ export async function generateRecommendation(
     ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.`
     : "";
 
+  // Drip Assist emergency-only routing — when the user has explicitly
+  // locked V60 + Drip Assist (the perforated-disc accessory used only
+  // when no gooseneck is around, e.g. travelling), the disc adds flow
+  // resistance and the recipe needs to grind ~5° coarser than the bare
+  // V60 baseline to keep drawdown in the same window. The disc is NOT
+  // recommended proactively — only honor the user's explicit lock.
+  const dripAssistNote =
+    context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod)
+      ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the bare V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a bare V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred bare-V60 setup.`
+      : "";
+
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
 
@@ -731,7 +743,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${methodNote}${dripAssistNote}${goalNote}
 
 Equipment available: ${equipment}
 ${grinderNote}
