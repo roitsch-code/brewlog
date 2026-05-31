@@ -36,7 +36,15 @@ export interface BrewableCoffee {
 
 function recipeSignature(r: BrewableRecipe): string {
   const x = r.recipe;
-  return [r.method, x.doseGrams, x.waterGrams, x.waterTempC, x.targetTimeSec, x.pourSequence ?? ""].join("|");
+  return [
+    r.method,
+    x.doseGrams,
+    x.waterGrams,
+    x.waterTempC,
+    x.targetTimeSec,
+    x.pourSequence ?? "",
+    x.pourSteps ? JSON.stringify(x.pourSteps) : "",
+  ].join("|");
 }
 
 /** The recipe that was actually brewed in a session, normalized so the

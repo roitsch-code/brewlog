@@ -7,6 +7,8 @@ import type {
   CandidateRole,
   CandidateConfidence,
   BrewRecipe,
+  BrewPourStep,
+  BrewStepAction,
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
@@ -50,6 +52,57 @@ const RecommendationResponseSchema = z.object({
   sessionObjective: z.string().optional(),
   coffeeAssessment: z.string().optional(),
 });
+
+const STEP_ACTIONS: readonly BrewStepAction[] = [
+  "bloom", "pour", "final", "stir", "swirl", "wait",
+  "press", "invert", "flip", "drain", "bypass", "melodrip", "agitate-bed",
+];
+
+/** Map free-text / synonym actions onto the structured vocabulary so a minor
+ * wording drift ("rest", "plunge") doesn't drop the whole step array. */
+function normalizeStepAction(a: string): BrewStepAction {
+  const t = a.toLowerCase().trim();
+  if ((STEP_ACTIONS as string[]).includes(t)) return t as BrewStepAction;
+  if (/plunge|press/.test(t)) return "press";
+  if (/flip/.test(t)) return "flip";
+  if (/invert/.test(t)) return "invert";
+  if (/bypass|dilute/.test(t)) return "bypass";
+  if (/drain|draw|release/.test(t)) return "drain";
+  if (/steep|wait|rest|brew/.test(t)) return "wait";
+  if (/melodrip/.test(t)) return "melodrip";
+  if (/agitate/.test(t)) return "agitate-bed";
+  if (/stir|mix/.test(t)) return "stir";
+  if (/swirl|shake/.test(t)) return "swirl";
+  if (/bloom/.test(t)) return "bloom";
+  if (/final|last/.test(t)) return "final";
+  return "pour";
+}
+
+const PourStepInputSchema = z.object({
+  label: z.string(),
+  action: z.string().transform(normalizeStepAction),
+  waterGramsAtEnd: z.number().optional(),
+  durationSec: z.number().optional(),
+  temperatureC: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+/**
+ * Validate + coerce the model's `pourSteps`. Lenient by design: a well-formed
+ * array is kept (actions normalised); anything malformed is dropped so the
+ * timer falls back to the `pourSequence` string. NEVER throws — a bad step
+ * array must not fail the whole recommendation.
+ */
+function sanitizeRecipe(recipe: Record<string, unknown>): BrewRecipe {
+  const out = { ...recipe } as Record<string, unknown>;
+  const parsed = z.array(PourStepInputSchema).safeParse(out.pourSteps);
+  if (parsed.success && parsed.data.length >= 2) {
+    out.pourSteps = parsed.data as BrewPourStep[];
+  } else {
+    delete out.pourSteps;
+  }
+  return out as unknown as BrewRecipe;
+}
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -449,7 +502,14 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
         "waterTempC": 98,
         "grindSize": "406°",
         "targetTimeSec": 270,
-        "pourSequence": "70 – 220 – 370 – 520"
+        "pourSequence": "70 – 220 – 370 – 520",
+        "pourSteps": [
+          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 45, "notes": "Slow circles from centre out, wet all grounds" },
+          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 220, "durationSec": 30 },
+          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 370, "durationSec": 30 },
+          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 520, "durationSec": 30, "notes": "Swirl gently after" },
+          { "label": "Drawdown", "action": "drain", "durationSec": 60 }
+        ]
       },
       "whyChosen": "1 short sentence: why this candidate",
       "hypothesis": "1 short sentence: extraction mechanism at play",
@@ -780,6 +840,15 @@ ${varietyBlock}${recipesBlock}${techniquesBlock}
 Pour sequence format: CUMULATIVE weight milestones separated by " – " for percolation (e.g. "50 – 180 – 320 – 500").
 For immersion methods (AeroPress, Clever, Moccamaster), use prose description instead.
 
+pourSteps — ALSO emit this structured array on every recipe. It is what the in-app timer advances through step by step, so it must be complete and ordered.
+- One object per physical step the brewer performs, in order.
+- action: one of bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed
+- waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps). These MUST match pourSequence.
+- durationSec: how long the step takes. Percolation: the timer re-derives pour timing, durations are advisory. Immersion / AeroPress: durations are MANDATORY and the timed (non-setup) steps MUST sum to targetTimeSec.
+- temperatureC: per-step water temperature ONLY when the recipe stages temperature (e.g. Hsu/Peng cool-bloom-then-hot); omit when constant.
+- notes: one short, step-relevant hint (agitation, what to watch). Optional.
+- Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
+
 Return valid JSON only.`;
 
   const response = await client.messages.create({
@@ -799,7 +868,7 @@ Return valid JSON only.`;
 
   const candidates: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
-    recipe: c.recipe as unknown as BrewRecipe,
+    recipe: sanitizeRecipe(c.recipe),
     role: c.role as CandidateRole,
     title: c.title,
     whyChosen: c.whyChosen,

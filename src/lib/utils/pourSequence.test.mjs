@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-// ── Re-declared pure math (MUST stay in sync with src/lib/utils/pourSequence.ts) ──
+// ── Re-declared pure logic (MUST stay in sync with src/lib/utils/pourSequence.ts) ──
 
 function getBloomDuration(roastDate, now = Date.now()) {
   if (roastDate) {
@@ -21,25 +21,120 @@ function getBloomDuration(roastDate, now = Date.now()) {
   return 45;
 }
 
-function parsePourSteps(sequence, targetTimeSec, roastDate, now = Date.now()) {
-  const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
-  if (parts.length < 2 || !parts.every((p) => /^\d+$/.test(p))) return null;
+function leadingGrams(token) {
+  const m = token.match(/^\s*(\d+)/);
+  return m ? Number(m[1]) : null;
+}
 
-  const milestones = parts.map(Number);
+function tokenTemperature(token) {
+  const t = token.match(/[@(]\s*@?\s*(\d{2,3})\s*°?\s*[cC]?/);
+  return t ? Number(t[1]) : undefined;
+}
+
+function tokenNote(token) {
+  const s = token
+    .replace(/^\s*\d+\s*/, "")
+    .replace(/[@(]\s*@?\s*\d{2,3}\s*°?\s*[cC]?\s*\)?/g, "")
+    .replace(/[()]/g, "")
+    .trim();
+  return s.length > 0 ? s : undefined;
+}
+
+function buildPourOver(milestones, targetTimeSec, roastDate, now = Date.now()) {
   const n = milestones.length;
+  if (n < 2) return null;
   const bloomDur = getBloomDuration(roastDate, now);
   const drawdownReserve = Math.round(targetTimeSec * 0.33);
   const remaining = targetTimeSec - bloomDur - drawdownReserve;
   const interval = n > 2 ? remaining / (n - 2) : 0;
-
-  return milestones.map((grams, i) => ({
+  return milestones.map((m, i) => ({
     index: i,
     label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
-    cumulativeGrams: grams,
-    pourGrams: i === 0 ? grams : grams - milestones[i - 1],
+    cumulativeGrams: m.grams,
+    pourGrams: i === 0 ? m.grams : m.grams - milestones[i - 1].grams,
     startTimeSec: i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval),
     action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
+    temperatureC: m.temperatureC,
+    notes: m.notes,
   }));
+}
+
+function parsePourSteps(sequence, targetTimeSec, roastDate, now = Date.now()) {
+  const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
+  const grams = parts.map(leadingGrams);
+  if (parts.length < 2 || grams.some((g) => g === null)) return null;
+  const milestones = parts.map((p, i) => ({
+    grams: grams[i],
+    temperatureC: tokenTemperature(p),
+    notes: tokenNote(p),
+  }));
+  return buildPourOver(milestones, targetTimeSec, roastDate, now);
+}
+
+function defaultDuration(action) {
+  switch (action) {
+    case "press": return 25;
+    case "wait": return 60;
+    case "stir":
+    case "swirl":
+    case "agitate-bed": return 10;
+    case "drain": return 30;
+    case "bypass": return 5;
+    case "invert":
+    case "flip": return 0;
+    default: return 10;
+  }
+}
+
+function isSetupAction(action, label) {
+  if (action === "invert") return true;
+  return /^\s*(assemble|position|set.?up|load|rinse|place)\b/i.test(label);
+}
+
+function buildGuideSteps(recipe) {
+  const src = recipe.pourSteps;
+  if (!src || src.length === 0) return null;
+  let clock = 0;
+  return src.map((step, i) => {
+    const action = step.action;
+    const isSetup = isSetupAction(action, step.label);
+    const durationSec = step.durationSec ?? defaultDuration(action);
+    const startTimeSec = isSetup ? 0 : clock;
+    if (!isSetup) clock += durationSec;
+    return {
+      index: i,
+      label: step.label,
+      action,
+      startTimeSec,
+      durationSec,
+      temperatureC: step.temperatureC,
+      notes: step.notes,
+      cumulativeGrams: step.waterGramsAtEnd,
+      isSetup,
+    };
+  });
+}
+
+function pourStepsFromStructured(recipe, roastDate, now = Date.now()) {
+  const src = recipe.pourSteps;
+  if (!src || src.length === 0) return null;
+  const milestones = src
+    .filter((s) => s.waterGramsAtEnd != null)
+    .map((s) => ({ grams: s.waterGramsAtEnd, temperatureC: s.temperatureC, notes: s.notes }));
+  return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
+}
+
+function hasImmersionShape(recipe) {
+  const src = recipe.pourSteps;
+  if (!src || src.length === 0) return false;
+  return src.some(
+    (s) =>
+      s.action === "invert" ||
+      s.action === "flip" ||
+      s.action === "press" ||
+      s.action === "bypass" ||
+      (s.action === "wait" && (s.durationSec ?? 0) >= 45),
+  );
 }
 
 function getActiveIdx(elapsed, steps) {
@@ -177,6 +272,121 @@ test("parsePourSteps: drawdown reserve scales proportionally (not fixed)", () =>
   assert.ok(short && long);
   assert.equal(short.at(-1).startTimeSec, 180 - Math.round(180 * 0.33)); // 180−59=121
   assert.equal(long.at(-1).startTimeSec, 300 - Math.round(300 * 0.33));  // 300−99=201
+});
+
+// ── parsePourSteps: tolerant annotation parsing (the staged-temp fix) ───────
+
+test("parsePourSteps: tolerates inline temperature annotations", () => {
+  // The bug: "70 (@70°C) – …" used to fail /^\d+$/ and collapse to one step.
+  const steps = parsePourSteps("70 (@70°C) – 220 – 370 – 520", 200, peakRoast, NOW);
+  assert.ok(steps, "annotated sequence should parse");
+  assert.equal(steps.length, 4);
+  assert.deepEqual(steps.map((s) => s.cumulativeGrams), [70, 220, 370, 520]);
+  assert.equal(steps[0].temperatureC, 70);
+});
+
+test("parsePourSteps: staged per-pour temps carry to each step", () => {
+  const steps = parsePourSteps("50 @96C – 180 @92C – 320 @88C", 210, peakRoast, NOW);
+  assert.ok(steps);
+  assert.deepEqual(
+    steps.map((s) => s.temperatureC),
+    [96, 92, 88],
+  );
+  // Grams unaffected by the temp annotation
+  assert.deepEqual(steps.map((s) => s.cumulativeGrams), [50, 180, 320]);
+});
+
+test("parsePourSteps: trailing note text becomes the step note", () => {
+  const steps = parsePourSteps("50 (gentle bloom) – 250", 210, peakRoast, NOW);
+  assert.ok(steps);
+  assert.equal(steps[0].notes, "gentle bloom");
+});
+
+test("parsePourSteps: plain numeric milestones carry no temp/note", () => {
+  const steps = parsePourSteps("50 – 180 – 320", 210, peakRoast, NOW);
+  assert.ok(steps);
+  assert.ok(steps.every((s) => s.temperatureC === undefined));
+  assert.ok(steps.every((s) => s.notes === undefined));
+});
+
+// ── pourStepsFromStructured: structured percolation ────────────────────────
+
+test("pourStepsFromStructured: structured V60 times identically to its string", () => {
+  const recipe = {
+    targetTimeSec: 270,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 50, temperatureC: 94 },
+      { label: "Rest", action: "wait", durationSec: 30 },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 180, temperatureC: 92 },
+      { label: "Pour 3", action: "pour", waterGramsAtEnd: 320 },
+      { label: "Final", action: "final", waterGramsAtEnd: 500 },
+      { label: "Drawdown", action: "drain", durationSec: 40 },
+    ],
+  };
+  const fromStruct = pourStepsFromStructured(recipe, peakRoast, NOW);
+  const fromString = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
+  assert.ok(fromStruct && fromString);
+  assert.deepEqual(
+    fromStruct.map((s) => s.startTimeSec),
+    fromString.map((s) => s.startTimeSec),
+  );
+  assert.deepEqual(
+    fromStruct.map((s) => s.cumulativeGrams),
+    fromString.map((s) => s.cumulativeGrams),
+  );
+  // …but structured carries the per-pour temperatures the string lacks
+  assert.equal(fromStruct[0].temperatureC, 94);
+  assert.equal(fromStruct[1].temperatureC, 92);
+});
+
+// ── buildGuideSteps + hasImmersionShape: immersion routing ─────────────────
+
+test("hasImmersionShape: true for steep/flip/press/bypass, false for percolation", () => {
+  const percolation = { pourSteps: [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
+    { label: "Rest", action: "wait", durationSec: 30 }, // short rest, not a steep
+    { label: "Final", action: "final", waterGramsAtEnd: 300 },
+  ] };
+  const immersion = { pourSteps: [
+    { label: "Steep", action: "wait", durationSec: 120 },
+    { label: "Press", action: "press", durationSec: 30 },
+  ] };
+  assert.equal(hasImmersionShape(percolation), false);
+  assert.equal(hasImmersionShape(immersion), true);
+});
+
+test("buildGuideSteps: inverted AeroPress lays out setup + timed flip/press", () => {
+  const recipe = { pourSteps: [
+    { label: "Invert and load", action: "invert", durationSec: 0 },
+    { label: "Pour", action: "pour", waterGramsAtEnd: 120, durationSec: 15, temperatureC: 96 },
+    { label: "Stir 2–3×", action: "stir", durationSec: 10 },
+    { label: "Steep", action: "wait", durationSec: 60 },
+    { label: "Cap, flip, press", action: "press", durationSec: 30 },
+    { label: "Bypass", action: "bypass", waterGramsAtEnd: 200, durationSec: 5 },
+  ] };
+  const steps = buildGuideSteps(recipe);
+  assert.ok(steps);
+  // The invert is a setup step (excluded from the timeline)
+  assert.equal(steps[0].isSetup, true);
+  assert.equal(steps[0].startTimeSec, 0);
+  const timed = steps.filter((s) => !s.isSetup);
+  // Pour @0, stir @15, steep @25, press @85, bypass @115
+  assert.deepEqual(timed.map((s) => s.startTimeSec), [0, 15, 25, 85, 115]);
+  // The press (flip) cue lands exactly when the 60s steep ends
+  const press = timed.find((s) => s.action === "press");
+  assert.equal(press.startTimeSec, 85);
+});
+
+test("buildGuideSteps: missing durations fall back to action defaults", () => {
+  const recipe = { pourSteps: [
+    { label: "Pour", action: "pour", waterGramsAtEnd: 200 },
+    { label: "Steep", action: "wait" },
+    { label: "Press", action: "press" },
+  ] };
+  const steps = buildGuideSteps(recipe);
+  assert.ok(steps);
+  assert.deepEqual(steps.map((s) => s.durationSec), [10, 60, 25]);
+  assert.deepEqual(steps.map((s) => s.startTimeSec), [0, 10, 70]);
 });
 
 // ── getActiveIdx ───────────────────────────────────────────────────────────
