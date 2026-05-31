@@ -16,7 +16,7 @@ import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
-import type { Session } from "@/lib/types/session";
+import type { Session, BrewRecipe } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,7 @@ export interface NavAction {
     | "coffee_library"
     | "coffee_detail"
     | "brew_again"
+    | "start_brew"
     | "cafe_map"
     | "cafe_detail"
     | "taste_profile"
@@ -39,6 +40,16 @@ export interface NavAction {
   label: string;
   reason?: string;
   id?: string; // coffee UUID or place name
+  // ── start_brew payload ──────────────────────────────────────────────
+  // The exact recipe the chat just worked out, carried straight into the
+  // brew timer (Step "brew") so it isn't re-generated. Present only when
+  // destination === "start_brew".
+  method?: string;
+  /** Recipe name to show on the brew screen (the chat's own title). */
+  title?: string;
+  /** Stable reference recipe this adapts ("Japanese Iced V60"), or "Own recipe". */
+  basedOn?: string;
+  recipe?: BrewRecipe;
 }
 
 // ── System prompt ────────────────────────────────────────────────────────────

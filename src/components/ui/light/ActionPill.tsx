@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
-import { startBrewAgain } from "@/lib/flow/brewAgain";
+import { startBrewAgain, startBrewFromChat } from "@/lib/flow/brewAgain";
 import type { CoffeeIdentity } from "@/lib/types/session";
 
 /**
@@ -49,8 +49,9 @@ function destinationToPath(action: NavAction): string {
     case "coffee_detail":
       return action.id ? `/coffees/${action.id}` : "/coffees";
     case "brew_again":
-      // brew_again is handled specially — the click handler hydrates
-      // the flow store first. Fallback path on failure.
+    case "start_brew":
+      // Both are handled specially — the click handler hydrates the flow
+      // store first. Fallback path on failure.
       return "/brew/new";
     case "cafe_map":
       return "/cafes";
@@ -76,6 +77,7 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
     case "coffee_detail":
       return <Coffee className={cls} strokeWidth={1.75} />;
     case "brew_again":
+    case "start_brew":
       return <RotateCcw className={cls} strokeWidth={1.75} />;
     case "cafe_map":
     case "cafe_detail":
@@ -93,8 +95,8 @@ export default function ActionPill({ action }: { action: NavAction }) {
   const router = useRouter();
 
   const handleClick = async () => {
-    if (action.destination === "brew_again" && action.id) {
-      // Hydrate the flow store with the coffee, then jump into Step 3.
+    if ((action.destination === "brew_again" || action.destination === "start_brew") && action.id) {
+      // Hydrate the flow store with the coffee first.
       // Same pattern /coffees and /coffees/[id] use for "Brew this".
       try {
         const res = await fetch(`/api/coffees/${action.id}`, { cache: "no-store" });
@@ -112,10 +114,32 @@ export default function ActionPill({ action }: { action: NavAction }) {
               aiExtracted: false,
               coffeeId: row.id,
             };
-            // Generative Field v1.1 — Brew Again from Home: lift the
-            // persisted Field composition. The /api/coffees/[id]
-            // response now carries fieldZones via rowToCoffee.
-            startBrewAgain(identity, row.fieldZones ?? null);
+            const fieldZones = row.fieldZones ?? null;
+            const r = action.recipe;
+            // start_brew with a complete recipe → jump STRAIGHT to the brew
+            // timer with the chat's exact recipe (no context/recommend, so it
+            // isn't re-generated). If the payload is incomplete, fall back to
+            // the normal "brew again" path (Step Context) rather than break.
+            if (
+              action.destination === "start_brew" &&
+              r &&
+              typeof r.doseGrams === "number" &&
+              typeof r.waterGrams === "number" &&
+              typeof r.waterTempC === "number" &&
+              typeof r.targetTimeSec === "number"
+            ) {
+              startBrewFromChat(
+                identity,
+                fieldZones,
+                r,
+                action.method || "Brew",
+                action.title,
+                action.basedOn,
+              );
+            } else {
+              // Generative Field v1.1 — lift the persisted Field composition.
+              startBrewAgain(identity, fieldZones);
+            }
           }
         }
       } catch {
