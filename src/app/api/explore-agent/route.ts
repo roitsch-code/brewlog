@@ -69,6 +69,7 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 - **fetch_page**: retrieve any webpage. For Shopify roaster shops this auto-resolves to structured product JSON (title, origin, process, price, tasting notes). Call this whenever the user shares a URL or asks about a specific shop.
 - **analyze_image**: download an image URL and read it visually — extract origin, varietal, process, roaster name, tasting notes from bag photos.
 - **suggest_navigation**: propose navigating to a BTTS feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
+- **start_brew**: drop the user STRAIGHT into the step-by-step brew timer with the exact recipe you just gave — no context questions, no re-recommendation. For when you've just laid out a complete recipe for a specific library bag (often a one-off for the last few grams that isn't worth saving).
 
 **Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (last 6 — this is *not* the full library, just what's open and active right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
 
@@ -91,6 +92,16 @@ Mention capabilities only when relevant — don't pitch them unprompted.
 **Critical distinction:** coffee_library / coffee_detail → the user's bag/purchase collection at /coffees. cafe_map / cafe_detail → physical places to visit at /cafes. Never use coffee_library when the topic is a café or place.
 
 Do NOT call suggest_navigation for trivial mentions. Only when navigation would genuinely help them act on what you just said.
+
+## When to call start_brew
+
+When you have just written out a COMPLETE, ready-to-brew recipe for a specific bag in the user's library (you have its id), offer **start_brew** so they can brew it immediately — straight into the timer, without re-entering context (which would re-generate a possibly different recipe). This is the common "I've only got a few grams left, how would you brew it?" case. Do NOT use brew_again for this — brew_again throws your recipe away and re-asks context.
+
+Non-negotiable rules:
+- The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
+- Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step; set temperatureC per step only when you stage temperature. For iced, the final step drains onto the ice.
+- Only call it for a bag you can reference by id. For a generic or hypothetical recipe with no specific library bag, don't.
+- It's a terminal action like suggest_navigation — one call, no data round-trip.
 
 ## STRICT RULE: Physical place recommendations
 
@@ -267,7 +278,73 @@ const TOOLS: Anthropic.Tool[] = [
       required: ["destination", "label"],
     },
   },
+  {
+    name: "start_brew",
+    description:
+      "Drop the user straight into the step-by-step brew TIMER with the EXACT recipe you just gave them — no context questions, no re-recommendation. Call this ONLY when you have just laid out a complete, ready-to-brew recipe for a SPECIFIC bag from their library (you have its id). Typical case: they have a few grams left and asked how you'd brew it. The recipe you pass here MUST be identical to the one in your message — same dose, water, temperature, grind, total time, and the same pour-by-pour sequence. Do not round or restate differently.",
+    input_schema: {
+      type: "object",
+      properties: {
+        label: { type: "string", description: "Button label, e.g. 'Brew Quiquira (Iced)'" },
+        id: { type: "string", description: "The coffee's UUID from the library context." },
+        method: { type: "string", description: "Brewer, e.g. 'Japanese Iced V60', 'V60', 'AeroPress'." },
+        title: { type: "string", description: "Short recipe name shown on the brew screen, e.g. 'Japanese Iced V60 — Quiquira'." },
+        basedOn: { type: "string", description: "Reference recipe this adapts (e.g. 'Japanese Iced V60'), or 'Own recipe'." },
+        recipe: {
+          type: "object",
+          description: "The exact recipe — MUST equal what you wrote in your message.",
+          properties: {
+            doseGrams: { type: "number" },
+            waterGrams: { type: "number", description: "For iced: the HOT water only (exclude ice)." },
+            iceGrams: { type: "number", description: "Iced brews only — grams of ice the hot brew drains onto." },
+            waterTempC: { type: "number" },
+            grindSize: { type: "string", description: "Single Niche° value or Comandante clicks, e.g. '380°'." },
+            targetTimeSec: { type: "number", description: "Total brew time in seconds." },
+            pourSteps: {
+              type: "array",
+              description: "Ordered steps. Cumulative grams on pours; agitation/flip/press/drain as their own steps; per-step temperature only when staged.",
+              items: {
+                type: "object",
+                properties: {
+                  label: { type: "string" },
+                  action: { type: "string", description: "bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed" },
+                  waterGramsAtEnd: { type: "number" },
+                  durationSec: { type: "number" },
+                  temperatureC: { type: "number" },
+                  notes: { type: "string" },
+                },
+                required: ["label", "action"],
+              },
+            },
+          },
+          required: ["doseGrams", "waterGrams", "waterTempC", "grindSize", "targetTimeSec", "pourSteps"],
+        },
+      },
+      required: ["label", "id", "method", "recipe"],
+    },
+  },
 ];
+
+// suggest_navigation and start_brew are terminal "action" tools — collected
+// into the response's actions, not round-tripped. This copies the right fields
+// for each (start_brew carries the recipe payload).
+function toNavAction(input: NavAction): NavAction {
+  const base: NavAction = {
+    destination: input.destination,
+    label: input.label,
+    reason: input.reason,
+    id: input.id,
+  };
+  if (input.destination === "start_brew") {
+    base.method = input.method;
+    base.title = input.title;
+    base.basedOn = input.basedOn;
+    base.recipe = input.recipe;
+  }
+  return base;
+}
+
+const isActionTool = (name: string) => name === "suggest_navigation" || name === "start_brew";
 
 // ── Tool implementations ─────────────────────────────────────────────────────
 
@@ -708,19 +785,13 @@ export async function POST(req: NextRequest) {
               const toolBlocks = response.content.filter(
                 (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === "tool_use"
               );
-              const onlyNavSuggestions = toolBlocks.every((b: Anthropic.ToolUseBlock) => b.name === "suggest_navigation");
+              const onlyActionTools = toolBlocks.every((b: Anthropic.ToolUseBlock) => isActionTool(b.name));
 
-              if (onlyNavSuggestions) {
+              if (onlyActionTools) {
                 // The streamed text was the real response — keep it.
-                // Just collect the nav suggestions and finish without another Claude round trip.
+                // Just collect the action(s) and finish without another Claude round trip.
                 for (const block of toolBlocks) {
-                  const input = block.input as NavAction;
-                  navSuggestions.push({
-                    destination: input.destination,
-                    label: input.label,
-                    reason: input.reason,
-                    id: input.id,
-                  });
+                  navSuggestions.push(toNavAction(block.input as NavAction));
                 }
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,
@@ -802,18 +873,12 @@ export async function POST(req: NextRequest) {
                       is_error: true,
                     });
                   }
-                } else if (block.name === "suggest_navigation") {
-                  const input = block.input as NavAction;
-                  navSuggestions.push({
-                    destination: input.destination,
-                    label: input.label,
-                    reason: input.reason,
-                    id: input.id,
-                  });
+                } else if (isActionTool(block.name)) {
+                  navSuggestions.push(toNavAction(block.input as NavAction));
                   toolResults.push({
                     type: "tool_result",
                     tool_use_id: block.id,
-                    content: "Navigation suggestion noted.",
+                    content: "Action noted.",
                   });
                 }
               }
