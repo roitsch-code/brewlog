@@ -8,6 +8,7 @@ import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import type { Session } from "@/lib/types/session";
 import type { Coffee } from "@/lib/types/coffee";
+import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { formatDate, formatSeconds } from "@/lib/utils/formatTime";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { recallSessionField, rememberSessionField } from "@/lib/field/cache";
@@ -86,15 +87,10 @@ export default function SessionDetailPage() {
   }
 
   const { coffee: sessionCoffee, result, brew, recommendation, mode, place, createdAt } = session;
-  const method = brew?.methodUsed || recommendation?.primaryMethod || "Brew";
-  // Show the candidate the user actually selected (by index), not always the
-  // primary one. Falls back to method-name match, then primaryRecipe (legacy).
-  const recipe =
-    (brew?.selectedCandidateIdx != null
-      ? recommendation?.candidates?.[brew.selectedCandidateIdx]?.recipe
-      : undefined) ??
-    recommendation?.candidates?.find((c) => c.method === method)?.recipe ??
-    recommendation?.primaryRecipe;
+  // Resolve the candidate the user actually brewed (by index, not primary) —
+  // shared helper so the recipe, method and name all stay consistent.
+  const { recipe, candidate, method } = resolveBrewedRecipe(session);
+  const recipeName = brewedRecipeName(candidate);
 
   // Back resolution — prefer the deterministic /coffees/[id] target so
   // the user lands on the exact detail page they came from, regardless
@@ -169,6 +165,9 @@ export default function SessionDetailPage() {
             <BrewMethodIcon method={method} className="w-6 h-6 opacity-90" />
             <h1 className="font-fraunces text-3xl text-light-foreground">{method}</h1>
           </div>
+          {recipeName && (
+            <p className="text-light-foreground/80 text-sm mt-1.5 font-medium">{recipeName}</p>
+          )}
           {sessionCoffee?.name && (
             <p className="text-light-foreground/70 text-sm mt-1.5">
               {sessionCoffee.name}

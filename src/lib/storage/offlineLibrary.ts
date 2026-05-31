@@ -13,6 +13,7 @@ import type { Coffee } from "@/lib/types/coffee";
 import type { Session, CoffeeIdentity, Recommendation, BrewRecipe } from "@/lib/types/session";
 import type { FieldZones } from "@/lib/field/types";
 import { STORE_BREWABLE, idbGetAll, idbGet, idbPut, idbReplaceAll } from "./idb";
+import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
 
 export interface BrewableRecipe {
   method: string;
@@ -53,9 +54,9 @@ function recipeSignature(r: BrewableRecipe): string {
 function usedRecipe(session: Session): BrewableRecipe | null {
   const rec = session.recommendation;
   if (!rec) return null;
-  const method = session.brew?.methodUsed || rec.primaryMethod;
-  if (!method) return null;
-  const recipe = rec.candidates?.find((c) => c.method === method)?.recipe ?? rec.primaryRecipe;
+  // Resolve the candidate the user actually brewed (by index), not a
+  // method-name match — two candidates can share a method.
+  const { recipe, method } = resolveBrewedRecipe(session);
   if (!recipe) return null;
   return {
     method,

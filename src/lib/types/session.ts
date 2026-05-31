@@ -104,7 +104,12 @@ export interface RecommendationCandidate {
   method: string;
   recipe: BrewRecipe;
   role: CandidateRole;
+  /** The AI's per-brew descriptive name for this candidate. */
   title: string;
+  /** Stable reference recipe this candidate adapts (e.g. "Kasuya 4:6"), or
+   * "Own recipe" when it isn't based on a documented one. Populated by the
+   * recommend model; shown on the brew screen and known to the chat. */
+  basedOn?: string;
   whyChosen: string;
   hypothesis: string;
   predictedCupProfile: string;

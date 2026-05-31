@@ -39,6 +39,10 @@ export interface PourStep {
   temperatureC?: number;
   /** Free-text hint shown alongside the active pour. */
   notes?: string;
+  /** Agitation the recipe calls for AT this pour. Explicit `"stir"`/`"swirl"`
+   * shows the button; explicit `null` suppresses it (minimal-agitation recipe);
+   * `undefined` = unknown (legacy grams string) → renderer applies its default. */
+  agitation?: "stir" | "swirl" | null;
 }
 
 /** A timed, action-aware step for non-percolation methods (immersion,
@@ -109,6 +113,7 @@ interface Milestone {
   grams: number;
   temperatureC?: number;
   notes?: string;
+  agitation?: "stir" | "swirl" | null;
 }
 
 /**
@@ -141,6 +146,7 @@ function buildPourOver(
     action: (i === 0 ? "bloom" : i === n - 1 ? "final" : "pour") as PourStep["action"],
     temperatureC: m.temperatureC,
     notes: m.notes,
+    agitation: m.agitation,
   }));
 }
 
@@ -169,13 +175,22 @@ export function parsePourSteps(
   return buildPourOver(milestones, targetTimeSec, roastDate, now);
 }
 
+const isAgitationStep = (a: BrewStepAction) =>
+  a === "swirl" || a === "stir" || a === "agitate-bed";
+
 /**
  * Build a pour-over schedule from a recipe's STRUCTURED steps (the percolation
  * case). Milestones are the steps that add water (carry `waterGramsAtEnd`);
  * rests and drawdown are handled by the drawdown-reserve formula, exactly as
  * for a grams string — so a structured V60 times identically to its string
- * form, but now carries per-pour temperature and notes. Returns null when there
- * aren't at least two water-bearing steps.
+ * form, but now carries per-pour temperature and notes.
+ *
+ * Agitation is RECIPE-DRIVEN, not assumed: each milestone gets an explicit
+ * `agitation` of `"stir"`/`"swirl"` only when an agitation step sits next to it
+ * in the sequence, otherwise `null`. So a reduced-/minimal-agitation recipe
+ * (no swirl/stir steps) shows no agitation affordance — fixing the bug where a
+ * Swirl button appeared on a recipe that explicitly wanted none. Returns null
+ * when there aren't at least two water-bearing steps.
  */
 export function pourStepsFromStructured(
   recipe: BrewRecipe,
@@ -184,13 +199,22 @@ export function pourStepsFromStructured(
 ): PourStep[] | null {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return null;
-  const milestones: Milestone[] = src
-    .filter((s) => s.waterGramsAtEnd != null)
-    .map((s) => ({
-      grams: s.waterGramsAtEnd as number,
-      temperatureC: s.temperatureC,
-      notes: s.notes,
-    }));
+  const milestones: Milestone[] = [];
+  let last = -1;
+  for (const s of src) {
+    if (s.waterGramsAtEnd != null) {
+      milestones.push({
+        grams: s.waterGramsAtEnd,
+        temperatureC: s.temperatureC,
+        notes: s.notes,
+        agitation: null,
+      });
+      last = milestones.length - 1;
+    } else if (isAgitationStep(s.action) && last >= 0) {
+      // Attach this agitation to the pour it follows (bloom-stir, post-pour swirl).
+      milestones[last].agitation = s.action === "swirl" ? "swirl" : "stir";
+    }
+  }
   return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
 }
 

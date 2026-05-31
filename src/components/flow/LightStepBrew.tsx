@@ -52,6 +52,21 @@ export default function LightStepBrew() {
 
   const methodLabel = method;
 
+  // Recipe name shown on the brew screen (the user wants to know WHAT they're
+  // brewing, not just the brewer). title is the AI's per-brew name; basedOn is
+  // the stable reference recipe it adapts (populated by the recommend model).
+  const recipeName = selectedCandidate?.title;
+  const basedOn = selectedCandidate?.basedOn;
+
+  // Belt-and-suspenders: even if the structured steps aren't explicit, a recipe
+  // that describes itself as minimal/reduced agitation must never show a swirl
+  // affordance. Scans the candidate's own words + any step notes.
+  const suppressAgitation = /minimal agitation|reduced agitation|no swirl|no stir|no agitation|without agitation/i.test(
+    `${selectedCandidate?.title ?? ""} ${selectedCandidate?.whyChosen ?? ""} ${(recipe?.pourSteps ?? [])
+      .map((s) => s.notes ?? "")
+      .join(" ")}`,
+  );
+
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -120,7 +135,17 @@ export default function LightStepBrew() {
       <div className="flex flex-col gap-5">
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
-            <p className="label-eyebrow mb-3">{methodLabel}</p>
+            <div className="mb-3">
+              <p className="label-eyebrow">{methodLabel}</p>
+              {recipeName && (
+                <p className="font-fraunces text-[18px] leading-tight text-light-foreground mt-1">
+                  {recipeName}
+                </p>
+              )}
+              {basedOn && (
+                <p className="text-[11px] text-light-muted-foreground mt-0.5">based on {basedOn}</p>
+              )}
+            </div>
             <div className="grid grid-cols-4 gap-2 text-center">
               <MiniStat label="Dose" value={`${recipe.doseGrams}g`} />
               <MiniStat label={recipe.iceGrams ? "Hot" : "Water"} value={`${recipe.waterGrams}g`} />
@@ -149,6 +174,7 @@ export default function LightStepBrew() {
             targetTimeSec={recipe.targetTimeSec}
             started={started}
             process={draft.coffee?.process}
+            suppressAgitation={suppressAgitation}
           />
         )}
 
@@ -168,6 +194,28 @@ interface LivePourSequenceProps {
   targetTimeSec: number;
   started: boolean;
   process?: string;
+  /** Recipe is minimal/reduced agitation — never show a swirl/stir affordance. */
+  suppressAgitation?: boolean;
+}
+
+/**
+ * Decide whether (and how) to offer an agitation tap for a pour — RECIPE-DRIVEN.
+ * Explicit `agitation` from the structured recipe wins (`null` = none). When the
+ * recipe is silent (legacy grams string, `agitation === undefined`), default to
+ * a bloom-only swirl/stir; NO default agitation on mid or final pours — that
+ * stray "Swirl" on the drawdown card was the reported bug.
+ */
+function resolveAgitation(
+  step: PourStep,
+  isWashed: boolean,
+  suppress: boolean,
+): { isStir: boolean; label: string } | null {
+  if (suppress) return null;
+  if (step.agitation === null) return null;
+  if (step.agitation === "stir") return { isStir: true, label: "Stir" };
+  if (step.agitation === "swirl") return { isStir: false, label: "Swirl" };
+  if (step.action === "bloom") return { isStir: isWashed, label: isWashed ? "Stir" : "Swirl" };
+  return null;
 }
 
 function LivePourSequence({
@@ -176,6 +224,7 @@ function LivePourSequence({
   targetTimeSec,
   started,
   process,
+  suppressAgitation = false,
 }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
@@ -200,9 +249,6 @@ function LivePourSequence({
   }, [activeIdx]);
 
   if (!started) {
-    const bloomAgitation = isWashed ? "Stir 3–5×" : "Gentle swirl";
-    const finalAgitation = "Gentle swirl";
-
     return (
       <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
         <p className="label-eyebrow mb-4">Pour Sequence</p>
@@ -216,12 +262,8 @@ function LivePourSequence({
           />
 
           {steps.map((step, i) => {
-            const agitation =
-              step.action === "bloom"
-                ? bloomAgitation
-                : step.action === "final"
-                  ? finalAgitation
-                  : null;
+            const ag = resolveAgitation(step, isWashed, suppressAgitation);
+            const agitation = ag ? (ag.isStir ? "Stir to agitate" : "Gentle swirl") : null;
             return (
               <TimelineRow
                 key={i}
@@ -287,13 +329,23 @@ function LivePourSequence({
               </p>
             </div>
 
-            {(activeStep.action === "bloom" || activeStep.action === "final") && (
-              <SwirlButton
-                isStir={activeStep.action === "bloom" && isWashed}
-                label={activeStep.action === "bloom" ? (isWashed ? "Stir" : "Swirl") : "Swirl"}
-                cueActive={activeStep.action === "bloom" ? bloomCueActive : finalCueActive}
-              />
-            )}
+            {(() => {
+              const ag = resolveAgitation(activeStep, isWashed, suppressAgitation);
+              if (!ag) return null;
+              return (
+                <SwirlButton
+                  isStir={ag.isStir}
+                  label={ag.label}
+                  cueActive={
+                    activeStep.action === "bloom"
+                      ? bloomCueActive
+                      : activeStep.action === "final"
+                        ? finalCueActive
+                        : false
+                  }
+                />
+              );
+            })()}
           </div>
 
           {nextCountdown !== null && nextCountdown <= 20 && nextCountdown > 0 && (
@@ -330,7 +382,10 @@ function LivePourSequence({
                 Target finish: {formatSeconds(targetTimeSec)}
               </p>
             </div>
-            {steps[steps.length - 1].action === "final" && <SwirlButton label="Swirl" />}
+            {(() => {
+              const ag = resolveAgitation(steps[steps.length - 1], isWashed, suppressAgitation);
+              return ag ? <SwirlButton isStir={ag.isStir} label={ag.label} /> : null;
+            })()}
           </div>
         </div>
       )}

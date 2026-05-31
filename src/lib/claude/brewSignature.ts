@@ -1,4 +1,5 @@
 import type { Session } from "../types/session";
+import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 
 // ─── Output type ─────────────────────────────────────────────────────────────
 
@@ -113,9 +114,10 @@ export function buildSignature(session: Session): BrewSignature | null {
   // Actual grind used takes precedence over recommended
   type BrewCompat = typeof session.brew & { grindSettingUsed?: string; actualTempC?: number; followedAgitation?: string; agitationNote?: string };
   const brew = session.brew as BrewCompat | undefined;
-  const grindSetting = brew?.grindSettingUsed ?? session.recommendation?.primaryRecipe?.grindSize ?? "";
+  // Read the recipe the user actually brewed (selected candidate), not primary.
+  const recipe = resolveBrewedRecipe(session).recipe;
+  const grindSetting = brew?.grindSettingUsed ?? recipe?.grindSize ?? "";
 
-  const recipe = session.recommendation?.primaryRecipe;
   const waterPpm = waterPpmFromSource(session.context?.waterSource);
   const tempC = brew?.actualTempC ?? recipe?.waterTempC ?? null;
   const ratio = recipe ? recipe.doseGrams / recipe.waterGrams : null;
