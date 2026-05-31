@@ -326,22 +326,28 @@ const TOOLS: Anthropic.Tool[] = [
 ];
 
 // suggest_navigation and start_brew are terminal "action" tools — collected
-// into the response's actions, not round-tripped. This copies the right fields
-// for each (start_brew carries the recipe payload).
-function toNavAction(input: NavAction): NavAction {
-  const base: NavAction = {
+// into the response's actions, not round-tripped. The destination comes from
+// the TOOL NAME for start_brew (its input has no destination field), and from
+// the input for suggest_navigation.
+function toNavAction(toolName: string, input: NavAction): NavAction {
+  if (toolName === "start_brew") {
+    return {
+      destination: "start_brew",
+      label: input.label,
+      reason: input.reason,
+      id: input.id,
+      method: input.method,
+      title: input.title,
+      basedOn: input.basedOn,
+      recipe: input.recipe,
+    };
+  }
+  return {
     destination: input.destination,
     label: input.label,
     reason: input.reason,
     id: input.id,
   };
-  if (input.destination === "start_brew") {
-    base.method = input.method;
-    base.title = input.title;
-    base.basedOn = input.basedOn;
-    base.recipe = input.recipe;
-  }
-  return base;
 }
 
 const isActionTool = (name: string) => name === "suggest_navigation" || name === "start_brew";
@@ -791,7 +797,7 @@ export async function POST(req: NextRequest) {
                 // The streamed text was the real response — keep it.
                 // Just collect the action(s) and finish without another Claude round trip.
                 for (const block of toolBlocks) {
-                  navSuggestions.push(toNavAction(block.input as NavAction));
+                  navSuggestions.push(toNavAction(block.name, block.input as NavAction));
                 }
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,
@@ -874,7 +880,7 @@ export async function POST(req: NextRequest) {
                     });
                   }
                 } else if (isActionTool(block.name)) {
-                  navSuggestions.push(toNavAction(block.input as NavAction));
+                  navSuggestions.push(toNavAction(block.name, block.input as NavAction));
                   toolResults.push({
                     type: "tool_result",
                     tool_use_id: block.id,
