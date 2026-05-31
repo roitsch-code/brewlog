@@ -37,6 +37,42 @@ export interface SessionContext {
   // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
 }
 
+/** Step kinds a brew guide can render. Percolation uses bloom/pour/final;
+ * immersion / AeroPress / staged routines add steep (`wait`), agitation, and
+ * the inverted-AeroPress handling (`invert` → `flip`/`press`) plus `bypass`
+ * dilution. Self-contained here so saved sessions never import the knowledge
+ * layer. Mirrors `PourAction` in src/lib/knowledge/recipes/types.ts. */
+export type BrewStepAction =
+  | "bloom"
+  | "pour"
+  | "final"
+  | "stir"
+  | "swirl"
+  | "wait"
+  | "press"
+  | "invert"
+  | "flip"
+  | "drain"
+  | "bypass"
+  | "melodrip"
+  | "agitate-bed";
+
+/** One structured step of a recipe's pour/brew sequence. Preferred over the
+ * legacy `pourSequence` string: it carries the per-step temperature and note
+ * the timer shows, and lets immersion methods advance step-by-step. */
+export interface BrewPourStep {
+  label: string;
+  action: BrewStepAction;
+  /** Cumulative water in the brewer after this step (grams), when known. */
+  waterGramsAtEnd?: number;
+  /** Duration of this step in seconds (authored). */
+  durationSec?: number;
+  /** Per-step temperature override for staged-temperature recipes. */
+  temperatureC?: number;
+  /** Short, step-relevant hint (technique, agitation, what to watch). */
+  notes?: string;
+}
+
 export interface BrewRecipe {
   doseGrams: number;
   waterGrams: number;
@@ -46,7 +82,11 @@ export interface BrewRecipe {
   waterTempC: number;
   grindSize: string;
   targetTimeSec: number;
+  /** Legacy cumulative-grams ("50 – 180 – 320") / prose string. Kept for old
+   * saved sessions and as a fallback when `pourSteps` is absent. */
   pourSequence?: string;
+  /** Structured, per-step sequence — preferred source for the brew timer. */
+  pourSteps?: BrewPourStep[];
 }
 
 export type CandidateRole =

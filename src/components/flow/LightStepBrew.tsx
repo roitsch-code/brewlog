@@ -5,7 +5,16 @@ import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import LightCircularTimer from "@/components/ui/light/CircularTimer";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { parsePourSteps, getActiveIdx, type PourStep } from "@/lib/utils/pourSequence";
+import {
+  parsePourSteps,
+  pourStepsFromStructured,
+  buildGuideSteps,
+  hasImmersionShape,
+  getActiveIdx,
+  type PourStep,
+  type GuideStep,
+} from "@/lib/utils/pourSequence";
+import type { BrewStepAction } from "@/lib/types/session";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -85,12 +94,26 @@ export default function LightStepBrew() {
     [draft.brew, method, setBrew],
   );
 
+  const roastDate = draft.coffee?.roastDate;
+
+  // Immersion / AeroPress / staged routines (steep, flip, press, bypass) →
+  // action-aware step guide built from the recipe's structured steps.
+  const guideSteps = recipe && hasImmersionShape(recipe) ? buildGuideSteps(recipe) : null;
+
+  // Percolation → cumulative-grams pour-over renderer. Prefer structured steps
+  // (they carry per-pour temperature + notes); fall back to the legacy grams
+  // string. Either way the drawdown-reserve timing is identical.
   const steps =
-    recipe?.pourSequence && recipe.targetTimeSec
-      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, draft.coffee?.roastDate)
+    !guideSteps && recipe
+      ? pourStepsFromStructured(recipe, roastDate) ??
+        (recipe.pourSequence && recipe.targetTimeSec
+          ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate)
+          : null)
       : null;
 
-  const isProseMethod = recipe?.pourSequence && !steps;
+  // Genuine prose immersion ("·"-separated string, no structured steps) — the
+  // legacy path for older recommendations.
+  const proseSequence = !guideSteps && !steps && recipe?.pourSequence ? recipe.pourSequence : null;
 
   return (
     <LightFlowShell onNext={() => handleDone()} nextLabel="Done Brewing">
@@ -129,15 +152,9 @@ export default function LightStepBrew() {
           />
         )}
 
-        {isProseMethod && recipe?.pourSequence && (
-          <ProseStepGuide
-            sequence={recipe.pourSequence}
-            method={method}
-            elapsed={elapsed}
-            targetTimeSec={recipe.targetTimeSec || 120}
-            started={started}
-          />
-        )}
+        {guideSteps && <StepGuide steps={guideSteps} elapsed={elapsed} started={started} />}
+
+        {proseSequence && <StepGuide sequence={proseSequence} elapsed={elapsed} started={started} />}
       </div>
     </LightFlowShell>
   );
@@ -215,6 +232,9 @@ function LivePourSequence({
                       <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
                       <span className="font-mono-num text-[12px] font-semibold text-light-foreground">+{step.pourGrams}g</span>
                       <span className="font-mono-num text-[12px] text-light-muted-foreground">→ {step.cumulativeGrams}g</span>
+                      {step.temperatureC != null && (
+                        <span className="font-mono-num text-[12px] text-light-muted-foreground">· {step.temperatureC}°C</span>
+                      )}
                     </div>
                     {agitation && (
                       <span className="text-[12px] text-light-muted-foreground block mt-0.5">
@@ -255,22 +275,16 @@ function LivePourSequence({
                 <span className="font-semibold text-light-foreground">+{activeStep.pourGrams}g</span>
                 <span className="text-light-muted-foreground"> → </span>
                 <span className="text-light-foreground">{activeStep.cumulativeGrams}g total</span>
+                {activeStep.temperatureC != null && (
+                  <>
+                    <span className="text-light-muted-foreground"> · </span>
+                    <span className="text-light-foreground">{activeStep.temperatureC}°C water</span>
+                  </>
+                )}
               </p>
-              {activeStep.action === "bloom" && (
-                <p className="text-[12px] text-light-muted-foreground mt-2">
-                  Pour in slow circles from centre outward
-                </p>
-              )}
-              {activeStep.action === "pour" && (
-                <p className="text-[12px] text-light-muted-foreground mt-2">
-                  Slow spiral from centre outward
-                </p>
-              )}
-              {activeStep.action === "final" && (
-                <p className="text-[12px] text-light-muted-foreground mt-2">
-                  Last pour — swirl gently after
-                </p>
-              )}
+              <p className="text-[12px] text-light-muted-foreground mt-2">
+                {activeStep.notes ?? defaultPourNote(activeStep.action)}
+              </p>
             </div>
 
             {(activeStep.action === "bloom" || activeStep.action === "final") && (
@@ -414,7 +428,67 @@ function StepDots({
   );
 }
 
-// ── ProseStepGuide helpers (identical to Dark) ────────────────────────────
+// ── Pour-over note fallback (LivePourSequence) ────────────────────────────
+
+function defaultPourNote(action: PourStep["action"]): string {
+  switch (action) {
+    case "bloom":
+      return "Pour in slow circles from centre outward";
+    case "final":
+      return "Last pour — swirl gently after";
+    default:
+      return "Slow spiral from centre outward";
+  }
+}
+
+// ── StepGuide helpers (immersion / AeroPress / staged) ────────────────────
+
+/** Default per-step hint when a structured step has no note. */
+function defaultGuideNote(action: BrewStepAction): string {
+  switch (action) {
+    case "wait":
+      return "Let it steep — don't disturb the bed";
+    case "press":
+      return "Press down slowly and evenly";
+    case "flip":
+      return "Flip onto your cup, then press";
+    case "invert":
+      return "Build it inverted, filter cap off";
+    case "drain":
+      return "Let it drain through";
+    case "bypass":
+      return "Add cool water to taste";
+    case "stir":
+      return "Stir evenly to settle the bed";
+    case "swirl":
+      return "Gentle swirl to even the bed";
+    case "melodrip":
+      return "Pour through the Melodrip — minimal turbulence";
+    case "agitate-bed":
+      return "Agitate the bed to wet it evenly";
+    default:
+      return "Pour evenly";
+  }
+}
+
+/** A short, loud tag for the decisive hand-action steps. */
+function actionTag(action: BrewStepAction): string | null {
+  switch (action) {
+    case "flip":
+      return "FLIP NOW";
+    case "press":
+      return "PRESS";
+    case "drain":
+      return "DRAIN";
+    case "bypass":
+      return "DILUTE";
+    default:
+      return null;
+  }
+}
+
+const isAgitationAction = (a: BrewStepAction) => a === "stir" || a === "swirl" || a === "agitate-bed";
+const isStirAction = (a: BrewStepAction) => a === "stir" || a === "agitate-bed";
 
 function parseStepDuration(step: string): number {
   const s = step.toLowerCase();
@@ -432,43 +506,69 @@ function parseStepDuration(step: string): number {
   return 12;
 }
 
-function isSetupStep(s: string): boolean {
-  return /^inverted|^flip|^cap\b|^assemble|^position|^set.?up/i.test(s.trim());
+function isSetupText(s: string): boolean {
+  // Orientation / assembly only — NOT flip or cap-and-press, which are timed
+  // hand-actions the brewer must hit at the right moment.
+  return /^inverted|^assemble|^position|^set.?up|^load|^rinse|^place/i.test(s.trim());
 }
 
-// ── ProseStepGuide ── AeroPress / Clever Dripper / Moccamaster ─────────────
+/** Infer a structured action from a prose step label (legacy recommendations). */
+function actionFromText(s: string): BrewStepAction {
+  const t = s.toLowerCase();
+  if (/plunge|press/.test(t)) return "press";
+  if (/\bflip\b/.test(t)) return "flip";
+  if (/invert/.test(t)) return "invert";
+  if (/bypass|dilute|top.?up|top up/.test(t)) return "bypass";
+  if (/drain|draw.?down|release|drip/.test(t)) return "drain";
+  if (/steep|wait|brew|\brest\b/.test(t)) return "wait";
+  if (/\bstir\b|agitat|mix/.test(t)) return "stir";
+  if (/swirl|shake/.test(t)) return "swirl";
+  return "pour";
+}
 
-function ProseStepGuide({
+/** Normalise a legacy "·"-separated prose sequence into timed GuideSteps. */
+function proseToGuideSteps(sequence: string): GuideStep[] {
+  const raw = sequence.split(/\s*[·|]\s*/).map((s) => s.trim()).filter(Boolean);
+  const all = raw.length >= 2 ? raw : sequence.split(/\s*,\s*/).map((s) => s.trim()).filter(Boolean);
+  let clock = 0;
+  return all.map((label, i): GuideStep => {
+    const action = actionFromText(label);
+    const setup = isSetupText(label);
+    const durationSec = setup ? 0 : parseStepDuration(label);
+    const startTimeSec = setup ? 0 : clock;
+    if (!setup) clock += durationSec;
+    return { index: i, label, action, startTimeSec, durationSec, isSetup: setup };
+  });
+}
+
+// ── StepGuide ── immersion / AeroPress / Clever / iced / staged ───────────
+// Action-aware, time-driven. Setup (invert / load) shows in a Setup card; the
+// timeline auto-advances pour → stir → steep → flip/press → bypass, firing the
+// same 2-tone cue + vibration as the pour-over renderer on each transition.
+
+function StepGuide({
+  steps: stepsProp,
   sequence,
   elapsed,
   started,
 }: {
-  sequence: string;
-  method: string;
+  steps?: GuideStep[];
+  sequence?: string;
   elapsed: number;
-  targetTimeSec: number;
   started: boolean;
 }) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const prevAutoIdxRef = useRef(-1);
   const [manualIdx, setManualIdx] = useState<number | null>(null);
 
-  const raw = sequence.split(/\s*[·|]\s*/).map((s) => s.trim()).filter(Boolean);
-  const all = raw.length >= 2 ? raw : sequence.split(/\s*,\s*/).map((s) => s.trim()).filter(Boolean);
-
-  const setupNotes = all.filter((s) => isSetupStep(s));
-  const steps = all.filter((s) => !isSetupStep(s));
-  const effectiveSteps = steps.length > 0 ? steps : all;
-
-  const durations = effectiveSteps.map(parseStepDuration);
-  const cumulativeStarts = effectiveSteps.map((_, i) =>
-    durations.slice(0, i).reduce((a, b) => a + b, 0),
-  );
+  const allSteps = stepsProp ?? (sequence ? proseToGuideSteps(sequence) : []);
+  const setupSteps = allSteps.filter((s) => s.isSetup);
+  const timed = allSteps.filter((s) => !s.isSetup);
 
   let autoIdx = 0;
   if (started) {
-    for (let i = 0; i < effectiveSteps.length; i++) {
-      if (elapsed >= cumulativeStarts[i]) autoIdx = i;
+    for (let i = 0; i < timed.length; i++) {
+      if (elapsed >= timed[i].startTimeSec) autoIdx = i;
     }
   }
 
@@ -501,30 +601,35 @@ function ProseStepGuide({
   }, [autoIdx, started]);
 
   const currentIdx = manualIdx !== null ? Math.max(manualIdx, autoIdx) : autoIdx;
-  const isLast = currentIdx >= effectiveSteps.length - 1;
 
   useEffect(() => {
     if (manualIdx !== null && autoIdx >= manualIdx) setManualIdx(null);
   }, [autoIdx, manualIdx]);
 
-  const needsAgitation = (s: string) => /stir|swirl|agitate|mix|shake/i.test(s);
-  const isStirStep = (s: string) => /\bstir\b|agitat|mix/i.test(s) && !/swirl/i.test(s);
-  const stepCueActive =
-    started &&
-    elapsed >= cumulativeStarts[currentIdx] &&
-    elapsed < cumulativeStarts[currentIdx] + 10;
+  if (timed.length === 0) return null;
 
-  const nextStart = currentIdx < effectiveSteps.length - 1 ? cumulativeStarts[currentIdx + 1] : null;
-  const nextCountdown = nextStart !== null && started ? Math.max(0, nextStart - elapsed) : null;
+  const current = timed[currentIdx];
+  const isLast = currentIdx >= timed.length - 1;
+  const tag = actionTag(current.action);
+  const isSteep = current.action === "wait";
+
+  const stepCueActive =
+    started && elapsed >= current.startTimeSec && elapsed < current.startTimeSec + 10;
+  const stepRemaining = started
+    ? Math.max(0, current.startTimeSec + current.durationSec - elapsed)
+    : current.durationSec;
+
+  const nextStep = currentIdx < timed.length - 1 ? timed[currentIdx + 1] : null;
+  const nextCountdown = nextStep && started ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
 
   return (
     <div className="space-y-3">
-      {setupNotes.length > 0 && (
+      {setupSteps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-3">
           <p className="label-eyebrow mb-1">Setup</p>
-          {setupNotes.map((note, i) => (
-            <p key={i} className="text-[14px] text-light-foreground/70 capitalize">
-              {note}
+          {setupSteps.map((s) => (
+            <p key={s.index} className="text-[14px] text-light-foreground/70">
+              {s.label}
             </p>
           ))}
         </div>
@@ -536,35 +641,56 @@ function ProseStepGuide({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p className="label-eyebrow mb-1">
-              Step {currentIdx + 1} of {effectiveSteps.length}
+            <div className="flex items-center gap-2 mb-1">
+              <p className="label-eyebrow">
+                Step {currentIdx + 1} of {timed.length}
+              </p>
+              {tag && (
+                <span className="px-2 py-0.5 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-[10px] font-semibold tracking-wide">
+                  {tag}
+                </span>
+              )}
+            </div>
+            <p className="font-fraunces text-[22px] leading-snug text-light-foreground">
+              {current.label}
             </p>
-            <p className="font-fraunces text-[22px] leading-snug capitalize text-light-foreground">
-              {effectiveSteps[currentIdx]}
-            </p>
-            {durations[currentIdx] > 0 && (
-              <p className="font-mono-num text-[12px] text-light-muted-foreground mt-1">
-                ~{durations[currentIdx]}s
+            {(current.cumulativeGrams != null || current.temperatureC != null) && (
+              <p className="font-mono-num text-[14px] mt-1 text-light-foreground">
+                {current.cumulativeGrams != null && <span>→ {current.cumulativeGrams}g</span>}
+                {current.cumulativeGrams != null && current.temperatureC != null && (
+                  <span className="text-light-muted-foreground"> · </span>
+                )}
+                {current.temperatureC != null && <span>{current.temperatureC}°C water</span>}
               </p>
             )}
+            <p className="text-[12px] text-light-muted-foreground mt-2">
+              {current.notes ?? defaultGuideNote(current.action)}
+            </p>
+            {isSteep ? (
+              <p className="font-mono-num text-[13px] text-light-foreground mt-2">
+                Steeping — {formatSeconds(stepRemaining)} left
+              </p>
+            ) : (
+              current.durationSec > 0 && (
+                <p className="font-mono-num text-[12px] text-light-muted-foreground mt-1">
+                  ~{current.durationSec}s
+                </p>
+              )
+            )}
           </div>
-          {needsAgitation(effectiveSteps[currentIdx]) && (
+          {isAgitationAction(current.action) && (
             <SwirlButton
-              isStir={isStirStep(effectiveSteps[currentIdx])}
-              label={isStirStep(effectiveSteps[currentIdx]) ? "Stir" : "Swirl"}
+              isStir={isStirAction(current.action)}
+              label={isStirAction(current.action) ? "Stir" : "Swirl"}
               cueActive={stepCueActive}
             />
           )}
         </div>
 
-        {nextCountdown !== null && nextCountdown <= 15 && nextCountdown > 0 && (
+        {nextStep && nextCountdown !== null && nextCountdown <= 15 && nextCountdown > 0 && (
           <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
-            <span className="text-[12px] text-light-muted-foreground capitalize">
-              Next: {effectiveSteps[currentIdx + 1]}
-            </span>
+            <span className="text-[12px] text-light-muted-foreground">Next: {nextStep.label}</span>
             <span
-              // see comment on the pour-countdown span above — same reason
-              // for keying on the tick.
               key={nextCountdown}
               className={`font-mono-num text-[14px] ${
                 nextCountdown <= 5
@@ -577,14 +703,16 @@ function ProseStepGuide({
           </div>
         )}
 
-        {!isLast && (
+        {!isLast && nextStep && (
           <button
             type="button"
             onClick={() => setManualIdx(currentIdx + 1)}
             className="mt-4 w-full py-2.5 rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 text-[14px] font-medium text-light-foreground/70 active:scale-95 transition-all text-left px-3"
           >
-            <span className="text-light-muted-foreground text-[12px] mr-2">Next:</span>
-            {effectiveSteps[currentIdx + 1]}
+            <span className="text-light-muted-foreground text-[12px] mr-2">
+              {isSteep ? "Done — next:" : "Next:"}
+            </span>
+            {nextStep.label}
           </button>
         )}
         {isLast && (
@@ -596,12 +724,12 @@ function ProseStepGuide({
 
       <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
         <div className="space-y-3">
-          {effectiveSteps.map((step, i) => {
+          {timed.map((step, i) => {
             const isDone = i < currentIdx;
             const isActive = i === currentIdx;
             return (
               <div
-                key={i}
+                key={step.index}
                 className={`flex items-start gap-3 transition-opacity ${i > currentIdx ? "opacity-40" : ""}`}
               >
                 <div
@@ -629,7 +757,7 @@ function ProseStepGuide({
                 </div>
                 <div className="flex-1">
                   <p
-                    className={`text-[14px] capitalize leading-relaxed ${
+                    className={`text-[14px] leading-relaxed ${
                       isActive
                         ? "text-light-foreground font-medium"
                         : isDone
@@ -637,11 +765,14 @@ function ProseStepGuide({
                           : "text-light-foreground/70"
                     }`}
                   >
-                    {step}
+                    {step.label}
+                    {step.temperatureC != null && (
+                      <span className="font-mono-num text-[12px] text-light-muted-foreground"> · {step.temperatureC}°C</span>
+                    )}
                   </p>
-                  {!isDone && !isActive && cumulativeStarts[i] > 0 && (
+                  {!isDone && !isActive && step.startTimeSec > 0 && (
                     <p className="font-mono-num text-[12px] text-light-muted-foreground">
-                      @ {formatSeconds(cumulativeStarts[i])}
+                      @ {formatSeconds(step.startTimeSec)}
                     </p>
                   )}
                 </div>
