@@ -4,6 +4,27 @@
 
 ---
 
+## Latest — Step-by-step timer + recipe names + chat→brew (PR #195 → #200, 2026-05-31) ✅ shipped + verified on device
+
+The brew flow now runs genuinely step-by-step for every method, the chat is honest about the recipe you actually brewed, and the chat can hand a recipe straight to the timer.
+
+- **#195** — Home chat brands itself only as BTTS (no "BrewLog" in replies; internal code/User-Agent unchanged) and presents verified recipes instead of improvising pour math.
+- **#197** — **Step-by-step, method-aware timer.** Root cause of the "Step 1 of 1" stall: `parsePourSteps` rejected any pour string with inline annotations (staged per-pour temps like `70 (@70°C) – …`) and the prose fallback couldn't split it. Fixes:
+  - `parsePourSteps` tolerant (extracts leading grams + optional `@temp` + trailing note).
+  - `BrewRecipe.pourSteps` (structured `BrewPourStep[]`) is the preferred source; `pourStepsFromStructured` times percolation identically to the string.
+  - Immersion/AeroPress/inverted/iced → new `StepGuide` (setup card, steep countdown, action cards for invert/flip/press/drain/bypass) via `buildGuideSteps`/`hasImmersionShape`.
+  - `/api/recommend` emits structured `pourSteps`, sanitised post-parse (bad array dropped, never fatal).
+- **#198** — **The no-go: chat reported a wrong grind** (398° vs the 405° actually brewed) because history/chat read `primaryRecipe`, not the selected candidate. One shared `src/lib/utils/resolveRecipe.ts` `resolveBrewedRecipe()` now feeds chat history, timing stats, offline cache, brewSignature, brew detail. **Agitation is recipe-driven** (no stray swirl on reduced-agitation recipes — the bug from the Orea Apex screenshot). **Recipe name** (`title` + `basedOn`) shows on brew screen / detail / recommend / chat.
+- **#199 + #200** — **Chat → direct brew.** `start_brew` agent tool + `startBrewFromChat()` seed the chat's exact recipe and jump to Step "brew" (no context, no re-recommend). Use case Markus called out: *only a few grams left, ask the chat, brew it, not worth saving to the library.* #200 fixed the button being a no-op — `start_brew`'s `destination` is set from the **tool name** (the tool input has no destination field; reading it from input gave `undefined` → default globe icon → click pushed `/`).
+
+**Markus verified on the deployed PWA:** the step-by-step guide, the corrected chat numbers, and the chat→brew button ("Now it works.").
+
+**Pitfall carried forward:** the chat-emitted `start_brew` recipe must equal its own prose — enforced by prompt only (couldn't sample the model from the work env). If a mismatch ever shows on device, add a server-side guard in `explore-agent` that rejects/repairs a `start_brew` payload that disagrees with the message.
+
+**Recurring bug class, now fenced:** "read the recipe the user actually brewed" = `resolveBrewedRecipe(session)` (selectedCandidateIdx), never `recommendation.primaryRecipe`. #193 fixed it in the brew UI, #198 fixed it again in chat/history — use the shared helper anywhere a session's brewed numbers/name are read.
+
+---
+
 ## Latest — Offline Brew Mode (PR #184 → #185, 2026-05-24) ✅ shipped + verified on device
 
 Re-brew a **known** coffee with no network. The brew process was already client-only (timer, pour guide, tasting log; pour math is local); the only offline-breaking pieces were fetching a recipe (`/api/recommend`) and saving (`/api/sessions`). Both closed by reusing a past recipe + queuing the save.
