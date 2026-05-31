@@ -73,7 +73,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `coffees` | GET library / POST new coffee |
 | `coffees/[id]` | GET / PUT / DELETE individual coffee |
 | `coffees/compact` | Lightweight list (id, roaster, name, photo) for dropdowns |
-| `recommend` | ★ POST coffee + context → 2–4 AI brew recipe candidates |
+| `recommend` | ★ POST coffee + context → 2–4 AI brew recipe candidates. Each recipe carries a structured `pourSteps[]` (per-step action/grams/duration/temperature/notes; agitation emitted as explicit stir/swirl steps) alongside the legacy `pourSequence` string; each candidate carries `basedOn` (the reference recipe it adapts, or "Own recipe"). `pourSteps` is sanitised + action-normalised post-parse (`sanitizeRecipe`) — a malformed array is dropped, never fatal (PR #197/#198). |
 | `analyze-bag` | Claude Vision → coffee identity from bag photo |
 | `analyze-bag/clarify` | Follow-up clarification on extracted bag data |
 | `analyze-url` | Scrape & analyze a coffee product page URL |
@@ -85,7 +85,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `conversations/active` | GET the currently-active conversation (live thread on /home) |
 | `conversations/archive` | POST → move the active conversation to past-conversations |
 | `explore` | AMA conversational exploration with sources (legacy; no page consumer left) |
-| `explore-agent` | ★ Agent loop with tool-use (`search_places`, `fetch_page`, `analyze_image`, `suggest_navigation`) — powers the inline chat on `(light)/page.tsx` |
+| `explore-agent` | ★ Agent loop with tool-use (`search_places`, `fetch_page`, `analyze_image`, `suggest_navigation`, `start_brew`) — powers the inline chat on `(light)/page.tsx`. `start_brew` (PR #199/#200) is a terminal action tool: when the agent has laid out a complete recipe for a library bag it hands the exact recipe (dose/water/ice/temp/grind/`targetTimeSec`/`pourSteps` + method/title/basedOn) to the brew timer so the user lands straight in Step "brew" — no context, no re-recommendation. Its `destination` is set from the TOOL NAME (the input has no destination field — that omission caused the no-op fixed in #200). Per-turn context now includes recipe names + a "Most Recent Brew" block, all read from the actually-brewed candidate. |
 | `research` | Weekly deep-research cron agent (Ofelia) |
 | `preferences` | GET / POST user preferences (equipment, grinder, location) |
 | `roasters` | GET / POST roaster profiles |
@@ -116,8 +116,8 @@ All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `Ste
 | `LightStepMode.tsx` | Home Brew / Coffee Shop / Taste Match selector |
 | `LightStepScan.tsx` | ★ Camera / photo upload / URL / manual + AI bag extraction + roaster Q&A (1400+ lines — biggest step) |
 | `LightStepContext.tsx` | Occasion, water amount, time, mood, equipment, goal. Goal picker has 6 options incl. `aromatic` (PR #192). Method list incl. "V60 + Drip Assist" emergency-only option (PR #193). Locking a method sets `context.preferredMethod` → hard-filters recipe selection. |
-| `LightStepRecommend.tsx` | 2–4 AI recipe candidates with reasoning. Selecting a candidate sets `brew.selectedCandidateIdx` so Brew/Log/Summary read THAT candidate's recipe by index, not by method name (PR #193 — fixed alternative inheriting the primary's temp/grind when both share a method). |
-| `LightStepBrew.tsx` | ★ Circular timer + real-time pour guide (Web Audio cue + vibrate on step change) |
+| `LightStepRecommend.tsx` | 2–4 AI recipe candidates with reasoning. Selecting a candidate sets `brew.selectedCandidateIdx` so Brew/Log/Summary read THAT candidate's recipe by index, not by method name (PR #193 — fixed alternative inheriting the primary's temp/grind when both share a method). Shows the candidate `title` + `based on …` reference name (PR #198). |
+| `LightStepBrew.tsx` | ★ Circular timer + **step-by-step, method-aware** pour guide (Web Audio cue + vibrate on step change). Shows the recipe **name** (candidate `title` + `based on …`). Two renderers, chosen per recipe (PR #197): **`LivePourSequence`** for percolation (cumulative-grams pours, drawdown reserve) and **`StepGuide`** for immersion/AeroPress/iced/staged (setup card, steep countdown, action cards for invert/flip/press/drain/bypass). **Agitation is recipe-driven** (PR #198): the swirl/stir button shows only where the recipe calls for it — no stray swirl on a reduced-agitation recipe. Reads the recipe via `selectedCandidateIdx`; per-pour temperatures + notes render per step. |
 | `LightStepLog.tsx` | Post-brew: flavor wheel, star rating, tasting notes |
 | `LightStepSummary.tsx` | Review + save session |
 
@@ -156,7 +156,7 @@ lib/
 │   ├── translate.ts        # Tasting notes ↔ SCA flavor wheel taxonomy
 │   └── parseJson.ts        # Safe Claude JSON parsing with Zod
 ├── types/
-│   ├── session.ts          # ★ Core data model (all interfaces)
+│   ├── session.ts          # ★ Core data model (all interfaces). BrewRecipe carries optional structured `pourSteps: BrewPourStep[]` (preferred over the legacy `pourSequence` string) using the `BrewStepAction` union (bloom/pour/final/stir/swirl/wait/press/invert/flip/drain/bypass/melodrip/agitate-bed). RecommendationCandidate carries `basedOn` (stable reference-recipe name). selectedCandidateIdx on BrewLog = the brewed candidate.
 │   ├── coffee.ts           # Coffee-specific types
 │   ├── preferences.ts      # UserPreferences interface
 │   └── cafes.ts            # CafeSummary + PlaceCoordinates
@@ -211,10 +211,12 @@ lib/
 │   ├── offlineLibrary.ts   # ★ Caches coffees + their TOP-2 best-rated recipes (deduped) for offline re-brew. Warmed in background on online /coffees loads.
 │   └── saveQueue.ts        # ★ Offline save queue — parks the /api/sessions POST body in IDB; flushQueue() drains it (never drops a brew on failure).
 ├── flow/
-│   └── brewAgain.ts        # ★ Shared "Brew Again" entry — startBrewAgain() (online → Step "context") + startBrewAgainOffline() (seed cached recipe → Step "brew"). Used by /coffees list, /coffees/[id], ActionPill.
+│   └── brewAgain.ts        # ★ Shared brew-flow entries — startBrewAgain() (online → Step "context") + startBrewAgainOffline() (seed cached recipe → Step "brew") + startBrewFromChat() (seed the chat's exact recipe as a 1-candidate recommendation → Step "brew"; backs the chat `start_brew` button, PR #199). Used by /coffees list, /coffees/[id], ActionPill.
 └── utils/
-    ├── cn.ts / safeFetch.ts / formatTime.ts / pourSequence.ts
-    └── pourSequence.test.mjs  # node --test suite for pour math
+    ├── cn.ts / safeFetch.ts / formatTime.ts
+    ├── pourSequence.ts     # ★ Pure pour timing. parsePourSteps() (tolerant of inline @temp/notes annotations) → percolation PourStep[]; pourStepsFromStructured() builds the same from a recipe's structured pourSteps AND derives per-pour agitation from adjacent stir/swirl steps; buildGuideSteps() + hasImmersionShape() drive the immersion StepGuide. PourStep carries temperatureC/notes/agitation.
+    ├── resolveRecipe.ts    # ★ resolveBrewedRecipe(session) — single source of truth for "the recipe the user ACTUALLY brewed" (the selectedCandidateIdx candidate, NOT primaryRecipe). Used by chat history, timing stats, offline cache, brewSignature, brew detail so the primary-vs-selected bug class (PR #193, #198) can't recur per-call. brewedRecipeName() = title (+ "based on …").
+    └── pourSequence.test.mjs  # node --test suite — pour math + tolerant parse + structured/guide + agitation + resolveBrewedRecipe
 ```
 
 ### Other key files
@@ -272,6 +274,12 @@ All migrations applied manually on the VPS — see migration NOTE above.
 ## Current Status — Snapshot May 2026
 
 ### ✅ Done
+**Step-by-step brew timer + recipe names + chat→brew (PR #195 → #200, May 2026)**
+- **BTTS chat branding + no pour-arithmetic** (#195): the home chat brands itself only as "Better taste than sorry / BTTS" (no "BrewLog" in replies — internal code/headers unchanged) and is instructed to present verified recipes rather than improvise pour math.
+- **Step-by-step, method-aware timer** (#197): the active-brew guide used to stall on "Step 1 of 1" whenever a pour string carried inline annotations (e.g. staged per-pour temps `70 (@70°C) – …`). `parsePourSteps` is now annotation-tolerant; `BrewRecipe.pourSteps` carries structured steps; immersion/AeroPress/inverted/iced route to an action-aware `StepGuide` (setup card, steep countdown, flip/press/drain cue at the right moment); recommend emits structured `pourSteps` (sanitised post-parse, graceful fallback to the string).
+- **The no-go — chat reported a wrong grind** (#198): `buildRecentRecipes` (and offline cache, brewSignature, timing stats) read `primaryRecipe` instead of the brewed candidate, so the chat stated the primary's numbers (398° vs the 405° actually brewed). Fixed with one shared `resolveBrewedRecipe()` used everywhere. **Recipe-driven agitation:** the swirl/stir button shows only where the recipe calls for it (no stray swirl on reduced-agitation recipes). **Recipe name** (`title` + `basedOn`) now shows on the brew screen, brew detail, recommend screen, and in the chat context ("Most Recent Brew" block).
+- **Chat → direct brew** (#199, fixed #200): the chat's "Brew X" button (`start_brew` tool → `startBrewFromChat`) drops the user straight into the timer with the chat's *exact* recipe — no context, no re-recommendation. Use case: a few grams left, brewed via a one-off chat recipe not worth saving. (#200 fixed the button being a no-op — `start_brew`'s `destination` is set from the tool name, not its input.) ⚠️ The chat-emitted recipe must equal its prose; enforced by prompt only — flag if a mismatch ever appears on the PWA.
+
 **Recipe corpus expansion + selection fairness + flow fixes (PR #190 → #193, May 2026)**
 - **Recipe pool 19 → 133** (#191, #192): added `markusAdditions.ts` (51 user-supplied recipes, category "experimental") on top of the corrected championship/reference sets. Source-audit corrections to existing entries (Hoffmann V60/Clever/Iced/AeroPress, Wallgren, Du/Hsu/Wölfl/Peng) against primary transcripts. Niche grind re-baselined to the measured V60 anchors. `docs/recipes-full.md` is the full mirror (all 133 with brew steps).
 - **6th goal `aromatic`** (#192): the flow already offered "Aromatic / Floral" but the recipe `Goal` type + `normaliseGoal()` didn't know it (silently fell back to `balanced`). Added to the type/normaliser; remapped 10 iced/cold-bloom/staged-with-cool-finish recipes onto it.
