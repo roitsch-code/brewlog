@@ -56,6 +56,7 @@ function buildPourOver(milestones, targetTimeSec, roastDate, now = Date.now()) {
     action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
     temperatureC: m.temperatureC,
     notes: m.notes,
+    agitation: m.agitation,
   }));
 }
 
@@ -115,12 +116,21 @@ function buildGuideSteps(recipe) {
   });
 }
 
+const isAgitationStep = (a) => a === "swirl" || a === "stir" || a === "agitate-bed";
+
 function pourStepsFromStructured(recipe, roastDate, now = Date.now()) {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return null;
-  const milestones = src
-    .filter((s) => s.waterGramsAtEnd != null)
-    .map((s) => ({ grams: s.waterGramsAtEnd, temperatureC: s.temperatureC, notes: s.notes }));
+  const milestones = [];
+  let last = -1;
+  for (const s of src) {
+    if (s.waterGramsAtEnd != null) {
+      milestones.push({ grams: s.waterGramsAtEnd, temperatureC: s.temperatureC, notes: s.notes, agitation: null });
+      last = milestones.length - 1;
+    } else if (isAgitationStep(s.action) && last >= 0) {
+      milestones[last].agitation = s.action === "swirl" ? "swirl" : "stir";
+    }
+  }
   return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
 }
 
@@ -406,4 +416,89 @@ test("getActiveIdx: advances exactly at each step's startTime", () => {
   assert.equal(getActiveIdx(180, steps), 2);
   assert.equal(getActiveIdx(181, steps), 3);
   assert.equal(getActiveIdx(500, steps), 3); // stays on final after target time
+});
+
+// ── pourStepsFromStructured: agitation is recipe-driven ─────────────────────
+
+test("pourStepsFromStructured: attaches swirl/stir only where the recipe agitates", () => {
+  const recipe = {
+    targetTimeSec: 240,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
+      { label: "Stir", action: "stir", durationSec: 5 },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 200 },
+      { label: "Final", action: "final", waterGramsAtEnd: 300 },
+      { label: "Swirl", action: "swirl", durationSec: 5 },
+      { label: "Drawdown", action: "drain", durationSec: 40 },
+    ],
+  };
+  const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
+  assert.ok(steps);
+  assert.deepEqual(steps.map((s) => s.agitation), ["stir", null, "swirl"]);
+});
+
+test("pourStepsFromStructured: reduced-agitation recipe shows NO agitation", () => {
+  // The screenshot bug: a recipe with no swirl/stir steps must yield agitation
+  // null everywhere — no stray Swirl button on the final pour / drawdown.
+  const recipe = {
+    targetTimeSec: 270,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, notes: "no swirl, minimal agitation" },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 250 },
+      { label: "Final", action: "final", waterGramsAtEnd: 450 },
+      { label: "Drawdown", action: "drain", durationSec: 60 },
+    ],
+  };
+  const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
+  assert.ok(steps);
+  assert.ok(steps.every((s) => s.agitation === null), "every milestone agitation is null");
+});
+
+// ── resolveBrewedRecipe: read the SELECTED candidate, not primary ───────────
+// Re-declared logic (MUST stay in sync with src/lib/utils/resolveRecipe.ts).
+
+function resolveBrewedRecipe(session) {
+  const rec = session.recommendation;
+  const idx = session.brew?.selectedCandidateIdx;
+  const candidate =
+    (idx != null ? rec?.candidates?.[idx] : undefined) ??
+    (session.brew?.methodUsed
+      ? rec?.candidates?.find((c) => c.method === session.brew?.methodUsed)
+      : undefined);
+  const recipe = candidate?.recipe ?? rec?.primaryRecipe;
+  const method = candidate?.method || session.brew?.methodUsed || rec?.primaryMethod || "Brew";
+  return { recipe, candidate, method };
+}
+
+test("resolveBrewedRecipe: returns the selected candidate's recipe, not primary", () => {
+  // The no-go: primary grind 398, but the user brewed candidate[1] at 405.
+  const session = {
+    recommendation: {
+      primaryMethod: "Orea Fast",
+      primaryRecipe: { grindSize: "398°", doseGrams: 30 },
+      candidates: [
+        { method: "Orea Fast", title: "Primary", recipe: { grindSize: "398°", doseGrams: 30 } },
+        { method: "Orea Apex", title: "Reduced agitation Orea Apex", basedOn: "April 1-2-3", recipe: { grindSize: "405°", doseGrams: 30 } },
+      ],
+    },
+    brew: { selectedCandidateIdx: 1, methodUsed: "Orea Apex" },
+  };
+  const { recipe, candidate, method } = resolveBrewedRecipe(session);
+  assert.equal(recipe.grindSize, "405°"); // not the primary's 398
+  assert.equal(candidate.title, "Reduced agitation Orea Apex");
+  assert.equal(method, "Orea Apex");
+});
+
+test("resolveBrewedRecipe: legacy session without idx falls back to primary", () => {
+  const session = {
+    recommendation: {
+      primaryMethod: "V60",
+      primaryRecipe: { grindSize: "388°" },
+      candidates: [{ method: "V60", title: "X", recipe: { grindSize: "388°" } }],
+    },
+    brew: {},
+  };
+  const { recipe, method } = resolveBrewedRecipe(session);
+  assert.equal(recipe.grindSize, "388°");
+  assert.equal(method, "V60");
 });

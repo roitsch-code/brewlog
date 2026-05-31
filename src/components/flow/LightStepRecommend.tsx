@@ -190,6 +190,9 @@ export default function LightStepRecommend() {
           <h1 className="font-fraunces text-[28px] leading-tight tracking-[-0.01em] text-light-foreground px-1">
             {active.title}
           </h1>
+          {active.basedOn && active.basedOn.toLowerCase() !== active.title.toLowerCase() && (
+            <p className="text-[12px] text-light-muted-foreground mt-1 px-1">based on {active.basedOn}</p>
+          )}
           <div className="flex items-center justify-between mt-2 px-1">
             <div className="flex items-center gap-2">
               <BrewMethodIcon method={activeMethod} className="w-5 h-5 text-light-foreground" />

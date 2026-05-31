@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildRecentRecipes } from "@/lib/claude/historyUtils";
+import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
@@ -524,6 +525,23 @@ export async function POST(req: NextRequest) {
     const recipesBlock = buildRecentRecipes(recentSessions, 5);
     if (recipesBlock) {
       contextParts.push(`\n## Your Recent Recipes\n` + recipesBlock);
+    }
+
+    // Lead the model to the brew the user most likely means by "the recipe I
+    // just used" — with its name and a hard rule to quote the SELECTED
+    // candidate's numbers (the first Recent-Recipes line), never the primary.
+    if (recentSessions[0]) {
+      const s0 = recentSessions[0];
+      const { candidate, method } = resolveBrewedRecipe(s0);
+      const name = brewedRecipeName(candidate);
+      const coffee0 =
+        s0.coffee?.roaster && s0.coffee?.name
+          ? `${s0.coffee.roaster} — ${s0.coffee.name}`
+          : s0.coffee?.name || "their coffee";
+      contextParts.push(
+        `\n## Most Recent Brew (what they just brewed)\n` +
+          `${name ? `"${name}" · ` : ""}${method} · ${coffee0}. Its exact numbers are the first line of "Your Recent Recipes" above — quote THOSE values for "the recipe I just used", never a different candidate's.`,
+      );
     }
 
     const libraryBlock = formatLibraryForAgent(library);

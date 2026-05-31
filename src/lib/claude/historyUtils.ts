@@ -1,4 +1,5 @@
 import type { Session } from "../types/session";
+import { resolveBrewedRecipe, brewedRecipeName } from "../utils/resolveRecipe";
 
 /**
  * Computes per-method average timing delta (actualTimeSec - targetTimeSec) across past sessions.
@@ -13,7 +14,7 @@ export function buildTimingStats(
 
   for (const s of pastSessions) {
     const actual = s.brew?.actualTimeSec;
-    const target = s.recommendation?.primaryRecipe?.targetTimeSec;
+    const target = resolveBrewedRecipe(s).recipe?.targetTimeSec;
     const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
     if (!actual || !target || !isPercolation(method)) continue;
     const key = (method ?? "unknown").toLowerCase().trim();
@@ -255,18 +256,22 @@ export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
   if (!pastSessions.length) return "";
   const lines = pastSessions.slice(0, limit).map((s) => {
     const date = formatRelativeDate(s.createdAt);
+    // Read the recipe the user ACTUALLY brewed (selected candidate), not the
+    // primary — reading primary is what made the chat report a wrong grind.
+    const { recipe: brewed, candidate } = resolveBrewedRecipe(s);
     const method = s.brew?.methodUsed || s.recommendation?.primaryMethod || "?";
+    const recipeName = brewedRecipeName(candidate);
     const coffee =
       s.coffee?.roaster && s.coffee?.name
         ? `${s.coffee.roaster} — ${s.coffee.name}`
         : s.coffee?.name || "unknown coffee";
 
-    const dose = s.brew?.doseGrams ?? s.recommendation?.primaryRecipe?.doseGrams;
-    const water = s.brew?.waterGrams ?? s.recommendation?.primaryRecipe?.waterGrams;
+    const dose = s.brew?.doseGrams ?? brewed?.doseGrams;
+    const water = s.brew?.waterGrams ?? brewed?.waterGrams;
     const ratio = dose && water ? `1:${(water / dose).toFixed(1)}` : null;
-    const grind = s.brew?.grindSettingUsed ?? s.recommendation?.primaryRecipe?.grindSize;
-    const temp = s.brew?.actualTempC ?? s.recommendation?.primaryRecipe?.waterTempC;
-    const target = s.recommendation?.primaryRecipe?.targetTimeSec;
+    const grind = s.brew?.grindSettingUsed ?? brewed?.grindSize;
+    const temp = s.brew?.actualTempC ?? brewed?.waterTempC;
+    const target = brewed?.targetTimeSec;
     const actual = s.brew?.actualTimeSec;
     const flow = s.brew?.flow && s.brew.flow !== "na" ? s.brew.flow : null;
     const waterSource = s.context?.waterSource;
@@ -274,6 +279,7 @@ export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
     const flavors = s.result?.flavorNotes?.slice(0, 3).join(", ");
 
     const parts: string[] = [date, method, coffee];
+    if (recipeName) parts.push(`recipe: ${recipeName}`);
 
     const doseWater = [dose ? `${dose}g` : null, water ? `${water}g` : null]
       .filter(Boolean)
