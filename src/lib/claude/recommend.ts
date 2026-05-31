@@ -34,6 +34,7 @@ const CandidateSchema = z.object({
   method: z.string(),
   role: z.string(),
   title: z.string(),
+  basedOn: z.string().optional(),
   recipe: z.record(z.string(), z.unknown()),
   whyChosen: z.string(),
   hypothesis: z.string(),
@@ -496,6 +497,7 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "method": "exact brewer name",
       "role": "anchor | adjacent | contrast | clarity-probe | sweetness-probe | body-probe | wildcard",
       "title": "3–5 word title for this candidate",
+      "basedOn": "name of the reference recipe this adapts (e.g. \"Kasuya 4:6\"), or \"Own recipe\"",
       "recipe": {
         "doseGrams": 34,
         "waterGrams": 520,
@@ -505,9 +507,10 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
         "pourSequence": "70 – 220 – 370 – 520",
         "pourSteps": [
           { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 45, "notes": "Slow circles from centre out, wet all grounds" },
+          { "label": "Stir", "action": "stir", "durationSec": 5, "notes": "3–5× even stir to settle the bed" },
           { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 220, "durationSec": 30 },
           { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 370, "durationSec": 30 },
-          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 520, "durationSec": 30, "notes": "Swirl gently after" },
+          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 520, "durationSec": 30 },
           { "label": "Drawdown", "action": "drain", "durationSec": 60 }
         ]
       },
@@ -846,8 +849,11 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 - waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps). These MUST match pourSequence.
 - durationSec: how long the step takes. Percolation: the timer re-derives pour timing, durations are advisory. Immersion / AeroPress: durations are MANDATORY and the timed (non-setup) steps MUST sum to targetTimeSec.
 - temperatureC: per-step water temperature ONLY when the recipe stages temperature (e.g. Hsu/Peng cool-bloom-then-hot); omit when constant.
-- notes: one short, step-relevant hint (agitation, what to watch). Optional.
+- notes: one short, step-relevant hint (what to watch). Optional.
+- AGITATION IS AN EXPLICIT STEP, NOT A NOTE. Wherever the AGITATION RULES above call for a stir or swirl, emit it as its OWN step ("action": "stir" | "swirl" | "agitate-bed") at that point in the sequence. The brew screen shows a stir/swirl prompt ONLY where such a step exists. For minimal/no-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any "minimal/reduced agitation" recipe) include NO agitation steps after the ones the rules permit — do not add a trailing swirl the recipe doesn't want.
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
+
+basedOn — name the documented recipe this candidate adapts, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"). If the candidate isn't based on any documented recipe, set "Own recipe". Always present.
 
 Return valid JSON only.`;
 
@@ -871,6 +877,7 @@ Return valid JSON only.`;
     recipe: sanitizeRecipe(c.recipe),
     role: c.role as CandidateRole,
     title: c.title,
+    ...(c.basedOn ? { basedOn: c.basedOn } : {}),
     whyChosen: c.whyChosen,
     hypothesis: c.hypothesis,
     predictedCupProfile: c.predictedCupProfile,
