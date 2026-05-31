@@ -239,7 +239,6 @@ lib/
 | `docker-compose.yml` | 4-service stack: postgres, app, caddy, ofelia |
 | `.dockerignore` | Excludes `lovable-v7/`, `node_modules`, `.next`, `.env*` — `lovable-v7/` was dragging react-router-dom into the Next.js build context and failing the deploy. |
 | `lovable-v7/` | Read-only design reference (Lovable v7 export). Excluded from Docker build context. |
-| `HANDOVER.md` | In-flight project state — what shipped, what's next, pitfalls discovered. Read at session start for context above and beyond CLAUDE.md. |
 
 ### Database tables (Drizzle + Postgres)
 
@@ -420,8 +419,8 @@ All migrations applied manually on the VPS — see migration NOTE above.
 
 ### ❌ Not Done / Known Gaps
 
-**Open items** (live ranking lives in HANDOVER.md):
-1. **`/cafes/map` Light pass** — currently Dark with CartoCDN dark tiles + default Leaflet blue markers. Sticks out hard against the rest of the Light app. Owner: next session. Sketch in HANDOVER.md.
+**Open items:**
+1. **`/cafes/map` Light pass** — currently Dark with CartoCDN dark tiles + default Leaflet blue markers. Sticks out hard against the rest of the Light app. Swap the tile provider to a light one (Carto voyager/positron, Stadia Light, or raw OSM), replace the default Leaflet markers with anthracite circles (visited filled vs unvisited outline), and expose the PR #145 "I've been here" modal straight from a tapped marker. Files: `src/app/cafes/map/page.tsx`, `src/components/cafes/CafeMap.tsx`.
 2. **`/cafes/map` "I've been here" entry point** — coupled with map work. Once the user can search a brand-new place and tap it, expose the "I've been here" modal directly from the map without first going through `/cafes/place/[slug]`.
 3. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
 4. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
@@ -529,6 +528,22 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 - Commit message: imperative, lowercase prefix (`fix:`, `feat:`, `remove:`, `docs:`, `build:`)
 - Always `npx tsc --noEmit` before commit
 - No staging environment — once merged to `main` it is live within minutes
+
+### Light design tokens (cheat sheet)
+- **Tokens:** `text-light-foreground` (anthracite), `text-light-muted-foreground`, `bg-light-card-default` (cream glass 55 %), `bg-light-card-selected` (warm taupe), `border-light-foreground/15`, `shadow-light-card-pressed`
+- **Cream highlight on dark elements:** `text-[hsl(36_55%_96%)]` (e.g. CTA text on the anthracite button)
+- **Card variants:** default cards use `bg-light-card-default` (55 %); SessionCard (chips inside) uses `bg-[hsl(36_55%_96%/0.30)]` — the lower opacity so child chips visibly contrast
+- **Destructive (delete, error):** `bg-[hsl(12_70%_45%)]` warm rust
+- **Hero question:** `font-fraunces font-semibold text-[40px] leading-[1.05] tracking-[-0.01em]`
+- **Headline (route title):** `font-fraunces text-3xl text-light-foreground leading-none`
+- **Wordmark (Home + Login):** `<h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground">Better taste<br />than sorry.</h1>` — exact same markup at both entry points
+- **Eyebrow:** `text-light-muted-foreground text-xs tracking-widest` uppercase
+- **Unified chip / tag:** `inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground`
+- **Primary CTA pill:** `w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold` + `active:scale-[0.98] transition-transform`
+- **Light scope marker:** `[data-light-scope]` attribute set by `LightShell` wraps the whole `(light)` route group; the `globals.css` shim catches inline `var(--card)` etc. for un-migrated components — but NOT hardcoded hex like `#2A241C`, which needs explicit Light tokens at the source
+
+### iOS PWA / install gotcha
+- iOS caches `apple-mobile-web-app-status-bar-style` **at PWA install time** — changing the meta tag does NOT update an already-installed home-screen app. To pick up the change the user must delete the PWA from the home screen AND clear Safari → Advanced → Website Data for the domain, then re-install.
 
 ---
 

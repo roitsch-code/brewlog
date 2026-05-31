@@ -22,7 +22,7 @@ jobs:
           #      "<hash>_brewlog-app-1" half-renamed leftover from a
           #      previous recreate that failed midway (the race that bit
           #      us when manual `docker compose up -d app` overlapped
-          #      with a workflow run — see HANDOVER.md). Postgres + Caddy
+          #      with a workflow run). Postgres + Caddy
           #      + Ofelia containers untouched.
           #   4. start the app service fresh.
           ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
