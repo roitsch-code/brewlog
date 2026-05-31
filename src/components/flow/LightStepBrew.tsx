@@ -39,16 +39,16 @@ export default function LightStepBrew() {
   const rec = draft.recommendation;
   // Read the chosen candidate by explicit index (set on the recommend screen).
   // Two candidates can share a method, so name-matching would pick the wrong
-  // one. Fall back to name-match, then primaryRecipe, for legacy drafts.
+  // one — the find-by-method fallback that used to live here is the exact
+  // bug PR #193 was engineered to eliminate. For legacy drafts (no idx),
+  // pair method + recipe from the same primary source so they stay aligned
+  // — never fall back to draft.brew.methodUsed for recipe lookup, because
+  // it can point at a different brewer than primaryRecipe carries.
   const idx = draft.brew?.selectedCandidateIdx;
-  const selectedCandidate =
-    idx != null ? rec?.candidates?.[idx] : undefined;
+  const selectedCandidate = idx != null ? rec?.candidates?.[idx] : undefined;
+  const recipe = selectedCandidate?.recipe ?? rec?.primaryRecipe;
   const method =
-    selectedCandidate?.method || draft.brew?.methodUsed || rec?.primaryMethod || "Brew";
-  const recipe =
-    selectedCandidate?.recipe ??
-    rec?.candidates?.find((c) => c.method === method)?.recipe ??
-    rec?.primaryRecipe;
+    selectedCandidate?.method ?? rec?.primaryMethod ?? draft.brew?.methodUsed ?? "Brew";
 
   const methodLabel = method;
 

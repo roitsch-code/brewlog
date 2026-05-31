@@ -70,7 +70,7 @@ CRITICAL — location accuracy:
 
     // Use beta.messages with web_search server tool — Anthropic executes the search
     const response = await client.beta.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-4-5",
       max_tokens: 1024,
       tools: [{ type: "web_search_20250305", name: "web_search" }],
       messages: [{ role: "user", content: prompt }],
