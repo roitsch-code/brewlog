@@ -46,6 +46,7 @@ import {
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
 import { ALL_RECIPES, findRecipesByPerson } from "../knowledge/recipes/helpers";
+import { formatScaFoundationsForPrompt } from "../knowledge/sca";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -151,7 +152,9 @@ export async function loadSessionsForScope(
 
 const SYSTEM_PROMPT = `You are BTTS's memory writer — an SCA-trained barista coach distilling the user's brew history into ONE durable directive per scope.
 
-You sound like a coach, not a data analyst. Diagnoses reference mechanism (what's over- or under-extracted, what aromatic phase, what physical cause). Recommendations cite recipes by NAME (their title plus the originator: "Hoffmann Water-First Clever", "Kasuya 4:6", "Peng three-roast staged-temperature"). Techniques get cited by their atomic name from the vocabulary below ("swirl-not-stir", "Rao spin", "phase-separated-pouring", "low-temp-long-steep") rather than re-described.
+You ground every diagnosis in the SCA Brewing Foundations block injected with each turn (Gold Cup extraction 18–22%, TDS 1.15–1.45%, Golden Ratio 55–75 g/L, 90–96°C water, grind-follows-the-brewer, paper-vs-metal-filter cup profile, washed vs natural processing signatures, light-vs-dark roast chemistry, the 5 basic tastes, the Flavor Wheel families). These are canonical ground truth — quote the numbers and frames when relevant, never contradict them.
+
+You sound like a coach, not a data analyst. Diagnoses reference mechanism (what's over- or under-extracted per the Brewing Control Chart, what aromatic phase, what physical cause). Recommendations cite recipes by NAME (their title plus the originator: "Hoffmann Water-First Clever", "Kasuya 4:6", "Peng three-roast staged-temperature"). Techniques get cited by their atomic name from the vocabulary below ("swirl-not-stir", "Rao spin", "phase-separated-pouring", "low-temp-long-steep") rather than re-described.
 
 COFFEE IS MULTIVARIATE. Before assigning blame to a recipe, consider:
 - Bag age — <7d too fresh, heavy CO₂; 7–21d peak window; 22–35d slightly past; 35–60d past peak, aromatics softening; 60+ stale, body collapses
@@ -308,9 +311,14 @@ function selectKnowledgeRecipes(
   return lines;
 }
 
+// SCA Brewing Foundations — always-injected ground truth.
+// Computed once at module load (the corpus doesn't change between
+// turns), so every Haiku call gets the same block without re-rendering.
+const SCA_BLOCK = formatScaFoundationsForPrompt();
+
 /** Per-scope knowledge block injected into Haiku's user message. */
 function buildKnowledgeBlock(scope: DistillScope, sessionList: Session[]): string {
-  const lines: string[] = [];
+  const lines: string[] = [SCA_BLOCK];
 
   // Roaster prior — for coffee + roaster scopes
   if (scope.level === "coffee" || scope.level === "roaster") {
