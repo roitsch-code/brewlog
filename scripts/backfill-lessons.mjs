@@ -34,19 +34,36 @@ if (!ANTHROPIC_API_KEY) {
 
 const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive — a single short paragraph that a recommendation prompt can quote verbatim months from now.
 
-Output exactly this JSON shape, nothing else:
-
-{
-  "content": "ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If freeNotes flag a meta-fact about the coffee/roaster (e.g. roasted for espresso, fermented hot, stale), surface it. Plain prose, no bullets, no JSON-in-JSON, no emojis. Metric units only.",
-  "confidence_n": <integer count of rated brews backing this lesson>
-}
+When you call write_lesson, pass:
+- content: ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If a freeNote flags a meta-fact about the coffee or roaster (e.g. roasted for espresso, fermented hot, stale), paraphrase it into the directive without using quotation marks. Plain prose, no bullets, no emojis. Metric units only. If you cannot write a concrete directive from the evidence, pass an empty string.
+- confidence_n: integer count of rated brews backing this lesson.
 
 Constraints:
-- One paragraph only. If you can't be concrete, return empty content "".
-- Prefer "Avoid X for this coffee" / "Prefer Y" over generic "experiment more".
-- Cite recipe NAMES (the title + based-on), not just methods, when distinguishing what worked.
-- Where freeNotes contain a meta-observation the user typed (e.g. "this is an espresso roast"), include it verbatim as a quoted phrase.
+- Prefer "Avoid X" / "Prefer Y" over generic "experiment more".
+- Cite recipe NAMES (the title plus the based-on), not just methods, when distinguishing what worked.
+- Do not use quotation marks anywhere in content — paraphrase rather than quote.
 - No hedging. The user wants a directive, not advice.`;
+
+const WRITE_LESSON_TOOL = {
+  name: "write_lesson",
+  description:
+    "Persist the distilled BTTS lesson for this (level, scope). Always call this tool exactly once.",
+  input_schema: {
+    type: "object",
+    properties: {
+      content: {
+        type: "string",
+        description:
+          "1–3 short sentences, plain prose, no quotation marks. Empty string if no concrete directive can be drawn from the evidence.",
+      },
+      confidence_n: {
+        type: "integer",
+        description: "Number of rated brews backing this lesson.",
+      },
+    },
+    required: ["content", "confidence_n"],
+  },
+};
 
 function resolveBrewedCandidate(session) {
   const rec = session.recommendation;
@@ -178,10 +195,10 @@ async function callHaiku(scopeLabel, level, sessionList, existingContent) {
   const userMessage = `Level: ${level}
 Scope: ${scopeLabel}
 
-${existingContent ? `Existing lesson (revise if the new evidence changes it; keep what still holds):\n"${existingContent}"\n\n` : ""}Brews backing this scope (most recent first, max 30):
+${existingContent ? `Existing lesson (revise if the new evidence changes it; keep what still holds): ${existingContent}\n\n` : ""}Brews backing this scope (most recent first, max 30):
 ${formatSessionsForPrompt(sessionList)}
 
-Write the updated directive now.`;
+Write the updated directive now via write_lesson.`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -193,8 +210,10 @@ Write the updated directive now.`;
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5",
-        max_tokens: 400,
+        max_tokens: 1024,
         system: SYSTEM_PROMPT,
+        tools: [WRITE_LESSON_TOOL],
+        tool_choice: { type: "tool", name: "write_lesson" },
         messages: [{ role: "user", content: userMessage }],
       }),
     });
@@ -202,16 +221,36 @@ Write the updated directive now.`;
       console.error(`  ✗ haiku ${res.status}:`, await res.text());
       return null;
     }
-    const body = await res.json();
-    const rawText = body.content?.[0]?.text?.trim();
-    if (!rawText) return null;
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+    // Read as text first so we can dump the raw payload on JSON.parse
+    // failure — Anthropic occasionally returns responses our outer
+    // .json() couldn't parse, and without the body we can't tell whether
+    // the issue is truncation, an unescaped char, or something stranger.
+    const responseText = await res.text();
+    let body;
+    try {
+      body = JSON.parse(responseText);
+    } catch (parseErr) {
+      console.error(`  ✗ json parse: ${parseErr.message}`);
+      console.error(`     raw len=${responseText.length}`);
+      console.error(`     first 400: ${responseText.slice(0, 400)}`);
+      console.error(`     last 200:  ${responseText.slice(-200)}`);
+      return null;
+    }
+    if (body.stop_reason && body.stop_reason !== "tool_use" && body.stop_reason !== "end_turn") {
+      console.error(`  ⚠ stop_reason=${body.stop_reason}`);
+    }
+    const toolBlock = body.content?.find((b) => b.type === "tool_use");
+    if (!toolBlock?.input) {
+      console.error(`  ✗ no tool_use block. content types: ${(body.content ?? []).map((b) => b.type).join(", ") || "none"}`);
+      return null;
+    }
     const content =
-      typeof parsed.content === "string" ? parsed.content.trim() : "";
+      typeof toolBlock.input.content === "string"
+        ? toolBlock.input.content.trim()
+        : "";
     const confidenceN =
-      typeof parsed.confidence_n === "number"
-        ? Math.max(0, Math.floor(parsed.confidence_n))
+      typeof toolBlock.input.confidence_n === "number"
+        ? Math.max(0, Math.floor(toolBlock.input.confidence_n))
         : ratedCount;
     if (!content) return null;
     return { content, confidenceN };
