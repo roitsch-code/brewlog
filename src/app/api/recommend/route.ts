@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { generateRecommendation, type RecommendLesson } from "@/lib/claude/recommend";
+import { and, eq, isNull, sql } from "drizzle-orm";
+import { generateRecommendation, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
-import { coffees, preferences as preferencesTable, roasters } from "@/lib/db/schema";
+import { coffees, preferences as preferencesTable, roasters, insights as insightsTable } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { canonicalRoasterSlug } from "@/lib/roasters/priors";
-import { loadLessonsForRecommend, loadMethodStyleLessons } from "@/lib/claude/lessons";
 import type { UserPreferences } from "@/lib/types/preferences";
 import type { RoasterPrior } from "@/lib/roasters/priors";
 
@@ -94,15 +93,12 @@ export async function POST(req: NextRequest) {
     const sessions = pastSessions || [];
 
     // Run DB roaster lookup, Escher terrain, coffee-history lookup, and
-    // BTTS lessons load in parallel — saves 3–5s vs sequential. Lessons
-    // are loaded for the four relevant scopes (this coffee / this roaster /
-    // this process×roast / top method-style rows) and merged below.
+    // multivariate coach insights in parallel — saves 3–5s vs sequential.
     const [
       userRoasterPriorResult,
       terrain,
       coffeeHistory,
-      scopedLessons,
-      methodStyleLessons,
+      coachInsights,
     ] = await Promise.all([
       (async (): Promise<RoasterPrior | null> => {
         if (!coffee?.roaster) return null;
@@ -123,23 +119,24 @@ export async function POST(req: NextRequest) {
         ? buildEscherTerrain(sessions, coffee).catch(() => "")
         : Promise.resolve(""),
       loadCoffeeHistory(coffee?.coffeeId, coffee?.roaster, coffee?.name),
-      loadLessonsForRecommend({
-        coffeeId: coffee?.coffeeId,
-        roaster: coffee?.roaster,
-        process: coffee?.process,
-        roastLevel: coffee?.roastLevel,
-      }).catch(() => []),
-      loadMethodStyleLessons(6).catch(() => []),
+      // Coach insights — filter out dismissed at the query layer so the
+      // prompt never sees them.
+      db
+        .select()
+        .from(insightsTable)
+        .where(isNull(insightsTable.dismissedAt))
+        .limit(20)
+        .catch(() => []),
     ]);
     const userRoasterPrior = userRoasterPriorResult;
 
-    const allLessons: RecommendLesson[] = [...scopedLessons, ...methodStyleLessons].map((row) => ({
-      level: row.level,
-      scope: row.scope,
-      content: row.content,
-      confidenceN: row.confidenceN,
-      source: row.source,
-    }));
+    const allInsights: RecommendInsight[] = Array.isArray(coachInsights)
+      ? coachInsights.map((row) => ({
+          observation: row.observation,
+          suggestion: row.suggestion,
+          citationFields: row.citationFields ?? [],
+        }))
+      : [];
 
     const { recommendation } = await generateRecommendation(
       coffee,
@@ -149,7 +146,8 @@ export async function POST(req: NextRequest) {
       userRoasterPrior ?? undefined,
       terrain || undefined,
       coffeeHistory,
-      allLessons.length > 0 ? allLessons : undefined,
+      undefined,
+      allInsights.length > 0 ? allInsights : undefined,
     );
     return NextResponse.json(recommendation);
   } catch (err) {

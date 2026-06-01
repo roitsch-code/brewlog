@@ -7,7 +7,6 @@ import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
 import { FieldZonesSchema } from "@/lib/field/schema";
-import { distillLessonsForSession } from "@/lib/claude/lessons";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -62,6 +61,25 @@ const SessionPostSchema = z.object({
     attribution: z.enum(["brew", "bean", "roaster"]).optional(),
     craft: z.enum(["off", "solid", "exceptional"]).optional(),
     fit: z.enum(["not-my-style", "neutral", "my-kind"]).optional(),
+    roastQuality: z.enum(["poor", "fine", "exceptional"]).optional(),
+    // Extended sensory dimensions. Collected by LightStepLog and present
+    // on the TasteResult type since the Light migration, but originally
+    // missing from this schema — so they were silently stripped at parse
+    // time and never reached the JSONB column. Restored here so months
+    // of taste feedback actually persist and reach downstream analysis
+    // (extractor, brewSignature, insights, brew-insight).
+    sweetness: z.enum(["low", "medium", "high"]).optional(),
+    clarity: z.enum(["muddy", "cloudy", "clean", "crystal"]).optional(),
+    bitterness: z.enum(["none", "pleasant", "harsh"]).optional(),
+    astringency: z.enum(["none", "light", "notable"]).optional(),
+    finish: z.enum(["short", "medium", "long"]).optional(),
+    balance: z.enum(["unbalanced", "decent", "harmonious"]).optional(),
+    improvedWhileCooling: z.boolean().optional(),
+    matchedIntention: z.boolean().optional(),
+    coachAnswer: z.object({
+      question: z.string().max(500),
+      answer: z.string().max(500),
+    }).optional(),
   }).optional(),
   // Generative Field v1.1 — top-level (NOT on coffee). Persisted to
   // coffees.field_zones on first insert; ignored on subsequent saves
@@ -219,28 +237,6 @@ export async function POST(req: NextRequest) {
           .where(sql`${coffees.id} = ${coffeeKey}`);
       }
     }
-
-    // Fire-and-forget lesson distillation. Runs in the background on
-    // the long-lived Node process; never blocks the response. Failure
-    // here is silent — the save has already succeeded and the lesson
-    // can be re-derived on the next strong-signal brew or by the
-    // backfill script. Only meaningful brews (rating ≤2 OR ≥4 OR with
-    // freeNotes) trigger Haiku — see isHighSignal() in lessons.ts.
-    const savedSession: Session = {
-      id: sessionId,
-      type: data.type,
-      mode: data.mode,
-      createdAt: data.createdAt,
-      coffee: data.coffee as Session["coffee"],
-      place: data.place,
-      context: data.context as Session["context"],
-      recommendation: data.recommendation as Session["recommendation"],
-      brew: data.brew as Session["brew"],
-      result: data.result as Session["result"],
-    };
-    distillLessonsForSession(savedSession).catch((err) => {
-      console.error("lesson distillation error (non-fatal):", err);
-    });
 
     return NextResponse.json({ id: sessionId });
   } catch (err) {
