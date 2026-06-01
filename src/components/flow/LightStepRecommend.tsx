@@ -165,7 +165,7 @@ export default function LightStepRecommend() {
       </p>
 
       {rec.reasoning && (
-        <p className="mt-3 px-1 text-[13px] leading-relaxed text-light-muted-foreground italic">
+        <p className="mt-3 px-1 text-[14px] leading-relaxed text-light-foreground/85">
           {rec.reasoning}
         </p>
       )}
