@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { generateRecommendation, type RecommendLesson } from "@/lib/claude/recommend";
+import { and, eq, isNull, sql } from "drizzle-orm";
+import { generateRecommendation, type RecommendLesson, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
-import { coffees, preferences as preferencesTable, roasters } from "@/lib/db/schema";
+import { coffees, preferences as preferencesTable, roasters, insights as insightsTable } from "@/lib/db/schema";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { canonicalRoasterSlug } from "@/lib/roasters/priors";
 import { loadLessonsForRecommend, loadMethodStyleLessons } from "@/lib/claude/lessons";
@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       coffeeHistory,
       scopedLessons,
       methodStyleLessons,
+      coachInsights,
     ] = await Promise.all([
       (async (): Promise<RoasterPrior | null> => {
         if (!coffee?.roaster) return null;
@@ -130,6 +131,14 @@ export async function POST(req: NextRequest) {
         roastLevel: coffee?.roastLevel,
       }).catch(() => []),
       loadMethodStyleLessons(6).catch(() => []),
+      // Multivariate coach insights — filter out dismissed at the
+      // query layer so the prompt never sees them.
+      db
+        .select()
+        .from(insightsTable)
+        .where(isNull(insightsTable.dismissedAt))
+        .limit(20)
+        .catch(() => []),
     ]);
     const userRoasterPrior = userRoasterPriorResult;
 
@@ -141,6 +150,14 @@ export async function POST(req: NextRequest) {
       source: row.source,
     }));
 
+    const allInsights: RecommendInsight[] = Array.isArray(coachInsights)
+      ? coachInsights.map((row) => ({
+          observation: row.observation,
+          suggestion: row.suggestion,
+          citationFields: row.citationFields ?? [],
+        }))
+      : [];
+
     const { recommendation } = await generateRecommendation(
       coffee,
       context,
@@ -150,6 +167,7 @@ export async function POST(req: NextRequest) {
       terrain || undefined,
       coffeeHistory,
       allLessons.length > 0 ? allLessons : undefined,
+      allInsights.length > 0 ? allInsights : undefined,
     );
     return NextResponse.json(recommendation);
   } catch (err) {
