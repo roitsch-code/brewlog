@@ -306,6 +306,10 @@ What makes a strong portfolio:
   thesis actually predicts for this specific coffee at this specific extraction stage.
 - The reasoning field is the coach's opening: what does this coffee demand, what does the history tell us,
   what are we discovering today? 4–6 sentences minimum. Direct address to the user.
+- Freshness call-out: when the coffee is ≥22 days past roast (slightly past peak, past peak, or stale),
+  the reasoning MUST name it explicitly — "at 42 days this bag is past peak, so we're grinding finer and
+  expecting softer aromatics." Don't bury the freshness reality. The user wants to know when age is
+  shaping the dial.
 
 What to avoid:
 - Category rules disguised as hypotheses: "AeroPress is always good for X" — say what THIS recipe tests

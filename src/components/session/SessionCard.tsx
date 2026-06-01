@@ -21,6 +21,7 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
   const dose = brew?.doseGrams ?? recommendation?.primaryRecipe.doseGrams;
   const water = brew?.waterGrams ?? recommendation?.primaryRecipe.waterGrams;
   const timeSec = brew?.actualTimeSec ?? recommendation?.primaryRecipe.targetTimeSec;
+  const grind = brew?.grindSettingUsed ?? recommendation?.primaryRecipe.grindSize;
   const rating = result?.rating;
   const tags = result?.flavorNotes?.slice(0, 4) ?? [];
 
@@ -32,6 +33,7 @@ export default function SessionCard({ session, onDeleted }: SessionCardProps) {
   if (dose != null) recipeBits.push(`${dose}g`);
   if (water != null) recipeBits.push(`${water}g`);
   if (timeSec != null) recipeBits.push(formatSeconds(timeSec));
+  if (grind) recipeBits.push(typeof grind === "number" ? `${grind}°` : grind);
 
   const [offset, setOffset] = useState(0);
   const [deleting, setDeleting] = useState(false);
