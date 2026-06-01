@@ -132,18 +132,14 @@ export async function loadSessionsForScope(
 
 const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive — a single short paragraph that a recommendation prompt can quote verbatim months from now.
 
-Output exactly this JSON shape, nothing else:
-
-{
-  "content": "ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If freeNotes flag a meta-fact about the coffee/roaster (e.g. roasted for espresso, fermented hot, stale), surface it. Plain prose, no bullets, no JSON-in-JSON, no emojis. Metric units only.",
-  "confidence_n": <integer count of rated brews backing this lesson>
-}
+When you call write_lesson, pass:
+- content: ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If a freeNote flags a meta-fact about the coffee or roaster (e.g. roasted for espresso, fermented hot, stale), paraphrase it into the directive without using quotation marks. Plain prose, no bullets, no emojis. Metric units only. If you cannot write a concrete directive from the evidence, pass an empty string.
+- confidence_n: integer count of rated brews backing this lesson.
 
 Constraints:
-- One paragraph only. If you can't be concrete, return empty content "".
-- Prefer "Avoid X for this coffee" / "Prefer Y" over generic "experiment more".
-- Cite recipe NAMES (the title + based-on), not just methods, when distinguishing what worked.
-- Where freeNotes contain a meta-observation the user typed (e.g. "this is an espresso roast"), include it verbatim as a quoted phrase.
+- Prefer "Avoid X" / "Prefer Y" over generic "experiment more".
+- Cite recipe NAMES (the title plus the based-on), not just methods, when distinguishing what worked.
+- Do not use quotation marks anywhere in content — paraphrase rather than quote.
 - No hedging. The user wants a directive, not advice.`;
 
 interface DistillResult {
@@ -200,26 +196,52 @@ async function callHaikuForDistillation(
   const userMessage = `Level: ${scope.level}
 Scope: ${scope.label}
 
-${existing?.content ? `Existing lesson (revise if the new evidence changes it; keep what still holds):\n"${existing.content}"\n\n` : ""}Brews backing this scope (most recent first, max 30):
+${existing?.content ? `Existing lesson (revise if the new evidence changes it; keep what still holds): ${existing.content}\n\n` : ""}Brews backing this scope (most recent first, max 30):
 ${formatSessionsForPrompt(sessionList)}
 
-Write the updated directive now.`;
+Write the updated directive now via write_lesson.`;
 
   try {
     const msg = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 400,
+      max_tokens: 600,
       system: SYSTEM_PROMPT,
+      tools: [
+        {
+          name: "write_lesson",
+          description:
+            "Persist the distilled BTTS lesson for this (level, scope). Always call this tool exactly once.",
+          input_schema: {
+            type: "object",
+            properties: {
+              content: {
+                type: "string",
+                description:
+                  "1–3 short sentences, plain prose, no quotation marks. Empty string if no concrete directive can be drawn from the evidence.",
+              },
+              confidence_n: {
+                type: "integer",
+                description: "Number of rated brews backing this lesson.",
+              },
+            },
+            required: ["content", "confidence_n"],
+          },
+        },
+      ],
+      tool_choice: { type: "tool", name: "write_lesson" },
       messages: [{ role: "user", content: userMessage }],
     });
-    const rawText = (msg.content[0] as { type: string; text: string })?.text?.trim();
-    if (!rawText) return null;
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
-    const content = typeof parsed.content === "string" ? parsed.content.trim() : "";
+
+    const toolBlock = msg.content.find(
+      (b): b is Anthropic.Messages.ToolUseBlock => b.type === "tool_use",
+    );
+    if (!toolBlock) return null;
+    const input = toolBlock.input as { content?: unknown; confidence_n?: unknown };
+    const content =
+      typeof input.content === "string" ? input.content.trim() : "";
     const confidence_n =
-      typeof parsed.confidence_n === "number"
-        ? Math.max(0, Math.floor(parsed.confidence_n))
+      typeof input.confidence_n === "number"
+        ? Math.max(0, Math.floor(input.confidence_n))
         : ratedCount;
     if (!content) return null;
     return { content, confidence_n };
