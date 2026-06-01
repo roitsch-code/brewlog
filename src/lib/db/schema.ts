@@ -230,6 +230,34 @@ export const lessons = pgTable(
 export type LessonRow = typeof lessons.$inferSelect;
 export type NewLessonRow = typeof lessons.$inferInsert;
 
+// Multivariate coach memory — replaces the lessons table for the
+// surfaces that need cross-axis observations. See migration 0013.
+export type InsightSource = "opus" | "user-confirmed";
+
+export const insights = pgTable(
+  "insights",
+  {
+    id: text("id").primaryKey(),
+    observation: text("observation").notNull(),
+    suggestion: text("suggestion").notNull(),
+    citationFields: jsonb("citation_fields").$type<string[]>().notNull().default([]),
+    latestSessionMs: bigint("latest_session_ms", { mode: "number" }).notNull(),
+    source: text("source").$type<InsightSource>().notNull().default("opus"),
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    userNote: text("user_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    latestSessionMsIdx: index("insights_latest_session_ms_idx").on(t.latestSessionMs.desc()),
+    dismissedAtIdx: index("insights_dismissed_at_idx").on(t.dismissedAt),
+    createdAtIdx: index("insights_created_at_idx").on(t.createdAt.desc()),
+  })
+);
+
+export type InsightRow = typeof insights.$inferSelect;
+export type NewInsightRow = typeof insights.$inferInsert;
+
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;
 export type CoffeeRow = typeof coffees.$inferSelect;

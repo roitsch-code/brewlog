@@ -1,11 +1,32 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import type { Session } from "@/lib/types/session";
 import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+
+/**
+ * Taste Profile — coach-first edition.
+ *
+ * Replaces the previous narrative paragraph + consumption-stat layout
+ * with a multivariate coach pass over the full corpus. The consumption
+ * stats (origin / process / method rankings, body / acidity distros,
+ * flavour wheel, rating trend) are retained but demoted into a single
+ * collapsible "What you brew" section below the coach panel. The
+ * insights themselves come from /api/insights — a cached Opus pass
+ * driven by lib/claude/insights.ts.
+ */
+
+interface InsightItem {
+  id: string;
+  observation: string;
+  suggestion: string;
+  citationFields: string[];
+  dismissed: boolean;
+  source: string;
+}
 
 interface TasteStats {
   radarData: { label: string; value: number }[];
@@ -116,10 +137,11 @@ function computeStats(sessions: Session[]): TasteStats {
 export default function TastePage() {
   const [stats, setStats] = useState<TasteStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Array<{type: string; text: string; tag: string}>>([]);
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [insights, setInsights] = useState<InsightItem[]>([]);
+  const [insightsLoading, setInsightsLoading] = useState(true);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -128,26 +150,51 @@ export default function TastePage() {
     fetch("/api/sessions?limit=300", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
       .then((sessions: Session[]) => {
-        const s = computeStats(Array.isArray(sessions) ? sessions : []);
-        setStats(s);
-        if (s.totalSessions >= 3) {
-          setSummaryLoading(true);
-          fetch("/api/taste-summary", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(s),
-          })
-            .then(r => r.json())
-            .then(d => { setSummary(d.summary ?? null); setSuggestions(d.suggestions ?? []); })
-            .catch(() => {})
-            .finally(() => setSummaryLoading(false));
-        }
+        setStats(computeStats(Array.isArray(sessions) ? sessions : []));
       })
       .catch(() => setStats(computeStats([])))
       .finally(() => { clearTimeout(timer); setLoading(false); });
 
     return () => { clearTimeout(timer); controller.abort(); };
   }, []);
+
+  // Coach insights — own request with a longer timeout because Opus
+  // generation runs at first page mount after a new brew. Cached
+  // server-side so subsequent mounts return instantly.
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 90_000);
+
+    fetch("/api/insights", { cache: "no-store", signal: controller.signal })
+      .then(r => r.json())
+      .then((d) => {
+        const items: InsightItem[] = (d.insights ?? []).filter((it: InsightItem) => !it.dismissed);
+        setInsights(items);
+        if (items.length === 0 && (d.corpusSize ?? 0) < 4) {
+          setInsightsError("Log and rate a few more brews — the coach needs at least four rated sessions to spot a cross-axis pattern.");
+        }
+      })
+      .catch(() => {
+        setInsightsError("Couldn't load coach insights — try refreshing.");
+      })
+      .finally(() => { clearTimeout(timer); setInsightsLoading(false); });
+
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, []);
+
+  const dismissInsight = async (id: string) => {
+    setInsights((prev) => prev.filter((i) => i.id !== id));
+    try {
+      await fetch("/api/insights", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, dismissed: true }),
+      });
+    } catch {
+      // dismissal is optimistic — if the PATCH fails it'll come back
+      // next regeneration; not worth surfacing to the user
+    }
+  };
 
   if (loading) {
     return (
@@ -185,7 +232,7 @@ export default function TastePage() {
       <Header onMenu={() => setMenuOpen(true)} />
 
       <div className="px-5 pb-12 flex flex-col gap-8">
-        {/* Summary stat */}
+        {/* Summary stat header — unchanged */}
         <div className="flex items-center gap-4">
           <div className="text-center">
             <p className="font-mono-num text-4xl text-light-foreground font-medium">{stats.avgRating}</p>
@@ -199,123 +246,157 @@ export default function TastePage() {
           <p className="text-light-muted-foreground/60 text-xs ml-auto self-end">All time</p>
         </div>
 
-        {/* AI narrative summary — section title is the old header subline,
-            which has nowhere else to live since the Light System convention
-            is headline-only (no sub-lines). */}
-        {(summaryLoading || summary) && (
-          <Section title="What you love, over time">
-            <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-              {summaryLoading && !summary ? (
-                <div className="space-y-2">
+        {/* ─── COACH INSIGHTS ─────────────────────────────────────
+            Replaces the old "What you love, over time" narrative
+            summary. Each card = one multivariate observation + one
+            suggestion / question. No labels, no chapters — the
+            terminology lives in the writing. Generated by Opus over the
+            full session corpus (lib/claude/insights.ts), cached
+            server-side until a new brew lands. */}
+        <Section title="Coach">
+          {insightsLoading ? (
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4 space-y-2">
                   <div className="h-3 bg-light-foreground/10 rounded-full w-full animate-pulse" />
                   <div className="h-3 bg-light-foreground/10 rounded-full w-5/6 animate-pulse" />
                   <div className="h-3 bg-light-foreground/10 rounded-full w-4/6 animate-pulse" />
                 </div>
-              ) : (
-                <p className="text-light-foreground/85 text-sm leading-relaxed">{summary}</p>
-              )}
+              ))}
             </div>
-          </Section>
-        )}
-
-        {/* Flavor Profile — SCA wheel with radar overlay */}
-        <Section title="Flavor Profile">
-          <div className="w-full">
-            <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
-          </div>
+          ) : insights.length === 0 ? (
+            <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
+              <p className="text-light-foreground/85 text-sm leading-relaxed">
+                {insightsError ?? "No cross-axis patterns are clear yet — keep logging and the coach will surface concrete observations once enough variation is on the record."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {insights.map((insight) => (
+                <InsightCard
+                  key={insight.id}
+                  insight={insight}
+                  onDismiss={() => dismissInsight(insight.id)}
+                />
+              ))}
+            </div>
+          )}
         </Section>
 
-        {/* Top flavors */}
-        {stats.topFlavors.length > 0 && (
-          <Section title="Top Flavors">
-            <div className="space-y-2">
-              {stats.topFlavors.map(f => (
-                <div key={f.name} className="flex items-center gap-3">
-                  <span className="text-light-foreground text-sm w-28 shrink-0 capitalize">{f.name}</span>
-                  <div className="flex-1 h-1.5 bg-light-foreground/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-light-foreground rounded-full transition-all"
-                      style={{ width: `${(f.count / maxFlavor) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-light-muted-foreground text-xs w-5 text-right">{f.count}</span>
+        {/* ─── WHAT YOU BREW (collapsed) ────────────────────────
+            All the consumption stats demoted into one place. Still here
+            for the user who wants the at-a-glance distributions, but no
+            longer the headline. */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setStatsOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-1 py-1 text-light-muted-foreground"
+          >
+            <span className="text-xs uppercase tracking-widest">What you brew</span>
+            <ChevronDown className={`h-4 w-4 transition-transform ${statsOpen ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`overflow-hidden transition-all duration-300 ${statsOpen ? "max-h-[4000px] opacity-100 mt-4" : "max-h-0 opacity-0"}`}>
+            <div className="flex flex-col gap-8">
+              <Section title="Flavor Profile">
+                <div className="w-full">
+                  <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
                 </div>
-              ))}
-            </div>
-          </Section>
-        )}
+              </Section>
 
-        {/* Rating trend */}
-        {stats.ratingTrend.length > 1 && (
-          <Section title="Rating Over Time">
-            <div className="flex items-end gap-2 h-24">
-              {stats.ratingTrend.map(t => (
-                <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-light-muted-foreground text-xs">{t.avg}</span>
-                  <div className="w-full bg-light-foreground/10 rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
-                    <div
-                      className="w-full bg-light-foreground rounded-t-lg transition-all"
-                      style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
-                    />
+              {stats.topFlavors.length > 0 && (
+                <Section title="Top Flavors">
+                  <div className="space-y-2">
+                    {stats.topFlavors.map(f => (
+                      <div key={f.name} className="flex items-center gap-3">
+                        <span className="text-light-foreground text-sm w-28 shrink-0 capitalize">{f.name}</span>
+                        <div className="flex-1 h-1.5 bg-light-foreground/10 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-light-foreground rounded-full transition-all"
+                            style={{ width: `${(f.count / maxFlavor) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-light-muted-foreground text-xs w-5 text-right">{f.count}</span>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-light-muted-foreground text-xs">{t.label}</span>
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
+                </Section>
+              )}
 
-        {/* Body + Acidity */}
-        <div className="grid grid-cols-2 gap-4">
-          {Object.keys(stats.bodyDist).length > 0 && (
-            <Section title="Body">
-              <DistBar data={stats.bodyDist} total={stats.totalSessions} />
-            </Section>
-          )}
-          {Object.keys(stats.acidityDist).length > 0 && (
-            <Section title="Acidity">
-              <DistBar data={stats.acidityDist} total={stats.totalSessions} />
-            </Section>
-          )}
+              {stats.ratingTrend.length > 1 && (
+                <Section title="Rating Over Time">
+                  <div className="flex items-end gap-2 h-24">
+                    {stats.ratingTrend.map(t => (
+                      <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-light-muted-foreground text-xs">{t.avg}</span>
+                        <div className="w-full bg-light-foreground/10 rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
+                          <div
+                            className="w-full bg-light-foreground rounded-t-lg transition-all"
+                            style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
+                          />
+                        </div>
+                        <span className="text-light-muted-foreground text-xs">{t.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {Object.keys(stats.bodyDist).length > 0 && (
+                  <Section title="Body">
+                    <DistBar data={stats.bodyDist} total={stats.totalSessions} />
+                  </Section>
+                )}
+                {Object.keys(stats.acidityDist).length > 0 && (
+                  <Section title="Acidity">
+                    <DistBar data={stats.acidityDist} total={stats.totalSessions} />
+                  </Section>
+                )}
+              </div>
+
+              {stats.topOrigins.length > 0 && (
+                <Section title="Best Origins">
+                  <RankedList items={stats.topOrigins} />
+                </Section>
+              )}
+
+              {stats.topProcesses.length > 0 && (
+                <Section title="Best Processes">
+                  <RankedList items={stats.topProcesses} />
+                </Section>
+              )}
+
+              {stats.topMethods.length > 0 && (
+                <Section title="Best Methods">
+                  <RankedList items={stats.topMethods} />
+                </Section>
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Top origins */}
-        {stats.topOrigins.length > 0 && (
-          <Section title="Best Origins">
-            <RankedList items={stats.topOrigins} />
-          </Section>
-        )}
-
-        {/* Top processes */}
-        {stats.topProcesses.length > 0 && (
-          <Section title="Best Processes">
-            <RankedList items={stats.topProcesses} />
-          </Section>
-        )}
-
-        {/* Top methods */}
-        {stats.topMethods.length > 0 && (
-          <Section title="Best Methods">
-            <RankedList items={stats.topMethods} />
-          </Section>
-        )}
-
-        {/* Explore Next */}
-        {suggestions.length > 0 && (
-          <Section title="Explore Next">
-            <div className="space-y-3">
-              {suggestions.map((s, i) => (
-                <div key={i} className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-3">
-                  <span className="text-light-foreground/80 text-xs font-medium uppercase tracking-wide bg-light-foreground/10 px-2 py-1 rounded-lg inline-block mb-2">{s.tag}</span>
-                  <p className="text-light-foreground/80 text-sm leading-relaxed">{s.text}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
       </div>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
+    </div>
+  );
+}
+
+function InsightCard({ insight, onDismiss }: { insight: InsightItem; onDismiss: () => void }) {
+  return (
+    <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
+      <p className="text-light-foreground text-[15px] leading-relaxed">{insight.observation}</p>
+      <p className="text-light-foreground/80 text-[14px] leading-relaxed mt-2">{insight.suggestion}</p>
+      <div className="mt-3 pt-3 border-t border-light-foreground/10 flex justify-end">
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss insight"
+          className="text-light-muted-foreground text-[11px] uppercase tracking-widest active:text-light-foreground transition-colors"
+        >
+          Not for me
+        </button>
+      </div>
     </div>
   );
 }
