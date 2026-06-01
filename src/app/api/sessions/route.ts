@@ -62,6 +62,25 @@ const SessionPostSchema = z.object({
     attribution: z.enum(["brew", "bean", "roaster"]).optional(),
     craft: z.enum(["off", "solid", "exceptional"]).optional(),
     fit: z.enum(["not-my-style", "neutral", "my-kind"]).optional(),
+    roastQuality: z.enum(["poor", "fine", "exceptional"]).optional(),
+    // Extended sensory dimensions. Collected by LightStepLog and present
+    // on the TasteResult type since the Light migration, but originally
+    // missing from this schema — so they were silently stripped at parse
+    // time and never reached the JSONB column. Restored here so months
+    // of taste feedback actually persist and reach downstream analysis
+    // (extractor, brewSignature, insights, brew-insight).
+    sweetness: z.enum(["low", "medium", "high"]).optional(),
+    clarity: z.enum(["muddy", "cloudy", "clean", "crystal"]).optional(),
+    bitterness: z.enum(["none", "pleasant", "harsh"]).optional(),
+    astringency: z.enum(["none", "light", "notable"]).optional(),
+    finish: z.enum(["short", "medium", "long"]).optional(),
+    balance: z.enum(["unbalanced", "decent", "harmonious"]).optional(),
+    improvedWhileCooling: z.boolean().optional(),
+    matchedIntention: z.boolean().optional(),
+    coachAnswer: z.object({
+      question: z.string().max(500),
+      answer: z.string().max(500),
+    }).optional(),
   }).optional(),
   // Generative Field v1.1 — top-level (NOT on coffee). Persisted to
   // coffees.field_zones on first insert; ignored on subsequent saves
