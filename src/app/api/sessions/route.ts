@@ -7,6 +7,7 @@ import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
 import { FieldZonesSchema } from "@/lib/field/schema";
+import { distillLessonsForSession } from "@/lib/claude/lessons";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -218,6 +219,28 @@ export async function POST(req: NextRequest) {
           .where(sql`${coffees.id} = ${coffeeKey}`);
       }
     }
+
+    // Fire-and-forget lesson distillation. Runs in the background on
+    // the long-lived Node process; never blocks the response. Failure
+    // here is silent — the save has already succeeded and the lesson
+    // can be re-derived on the next strong-signal brew or by the
+    // backfill script. Only meaningful brews (rating ≤2 OR ≥4 OR with
+    // freeNotes) trigger Haiku — see isHighSignal() in lessons.ts.
+    const savedSession: Session = {
+      id: sessionId,
+      type: data.type,
+      mode: data.mode,
+      createdAt: data.createdAt,
+      coffee: data.coffee as Session["coffee"],
+      place: data.place,
+      context: data.context as Session["context"],
+      recommendation: data.recommendation as Session["recommendation"],
+      brew: data.brew as Session["brew"],
+      result: data.result as Session["result"],
+    };
+    distillLessonsForSession(savedSession).catch((err) => {
+      console.error("lesson distillation error (non-fatal):", err);
+    });
 
     return NextResponse.json({ id: sessionId });
   } catch (err) {
