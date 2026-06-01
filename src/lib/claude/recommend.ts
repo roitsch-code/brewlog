@@ -304,12 +304,13 @@ What makes a strong portfolio:
 - brewingLesson should explain the WHY, in Hoffmann-style plain language: the physics, the chemistry,
   what it predicts the brewer will taste and why. Not "Perger says more agitation." Say what Perger's
   thesis actually predicts for this specific coffee at this specific extraction stage.
-- The reasoning field is the coach's opening: what does this coffee demand, what does the history tell us,
-  what are we discovering today? 4–6 sentences minimum. Direct address to the user.
+- The reasoning field is the coach's opening: ONE sentence, ≤30 words. What does this coffee demand
+  today and what is the single thing to watch across both candidates. Direct address to the user. No
+  preamble, no recap of history — the candidates carry their own per-field detail (whyChosen,
+  hypothesis, predictedCupProfile, whatToObserve). reasoning is the headline only.
 - Freshness call-out: when the coffee is ≥22 days past roast (slightly past peak, past peak, or stale),
-  the reasoning MUST name it explicitly — "at 42 days this bag is past peak, so we're grinding finer and
-  expecting softer aromatics." Don't bury the freshness reality. The user wants to know when age is
-  shaping the dial.
+  the freshness reality MUST appear somewhere in the candidate fields (whyChosen or hypothesis), but
+  NOT in the one-sentence reasoning unless it IS the headline tension.
 
 What to avoid:
 - Category rules disguised as hypotheses: "AeroPress is always good for X" — say what THIS recipe tests
@@ -328,7 +329,8 @@ A single candidate may carry one of these labels in its "role" field. Pick which
 
 Portfolio rules (non-negotiable):
 - Exactly 2 candidates, both equal — neither is primary, neither is "the alternative". They are two scientific hypotheses being run side-by-side. The user will choose which to brew based on which question they want answered today.
-- The two candidates must use different brewers AND test meaningfully different extraction physics (not the same brewer with a small variable shifted)
+- If no preferredMethod is locked: the two candidates must use DIFFERENT brewers AND test meaningfully different extraction physics (not the same brewer with a small variable shifted).
+- If preferredMethod IS locked (user's explicit instruction): BOTH candidates MUST use that same locked brewer. The contrast comes from substantially different recipe physics on that brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single-continuous), different ratio (1:15 vs 1:17), different temperature (95°C vs 80°C staged), different agitation (high vs minimal), inverted vs upright (AeroPress), etc. Two AeroPresses with the same recipe and one number changed is NOT acceptable. They are still two scientific hypotheses, just constrained to one vessel.
 - Method selection is driven by: this coffee's chemistry (process, roast, freshness, origin, variety), brewing science (extraction physics, water chemistry, agitation), capacity constraints, and brew history as data. Never by user equipment preference. Never by a "primary brewer" default. Never by gating recipes behind a goal label.
 - All available methods (in the user's equipment list) are equally eligible a priori — every one of them. The science narrows the choice. The amount of detail a brewer happens to get in this prompt is NOT a signal of preference; a brewer with two sentences of notes is exactly as eligible as one with a dedicated rules block. Choose the brewer whose physics best serve THIS coffee and goal — never the one that's most familiar or most documented.
 - If time is "quick", all candidates must respect targetTimeSec ≤ 150
@@ -529,10 +531,10 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "brewingLesson": "3–4 sentences. Teach the extraction science behind this candidate in Hoffmann-style plain language. What physical or chemical mechanism is being tested? What does that mechanism predict the brewer will taste? What should they notice at each stage of the brew? No jargon without explanation."
     }
   ],
-  "reasoning": "4–6 sentences. The coach's briefing to the user — direct address. What does this coffee demand and why. What does the history or arc tell us about where we are in learning this coffee. Why was this portfolio assembled this way. What single thing should they pay close attention to across all candidates. Open a conversation, don't write a summary."
+  "reasoning": "ONE sentence, ≤30 words. The coach's headline only — what does this coffee demand today and what is the single thing to watch across the candidates. No preamble, no history recap, no per-candidate detail — that lives in whyChosen / hypothesis / predictedCupProfile / whatToObserve / brewingLesson on each candidate."
 }
 
-BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1–2 short sentences. brewingLesson, reasoning, sessionObjective, coffeeAssessment: no word cap — these are the teaching fields.
+BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1 short sentence each (hard cap). reasoning: ONE sentence, ≤30 words. brewingLesson, sessionObjective, coffeeAssessment: 2–4 sentences — these are the teaching fields and can breathe.
 
 LANGUAGE: Always respond in English. All text fields must be in English only.
 GRIND SIZE: Must be a single Niche° value (e.g. "406°") or single Comandante click count (e.g. "26"). Never a range.`;
@@ -727,7 +729,7 @@ export async function generateRecommendation(
   })();
 
   const methodNote = context.preferredMethod
-    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this method for this brew, so one of the two candidates MUST use it. The OTHER candidate is a contrast hypothesis using meaningfully different physics. Both candidates are equal — neither is primary. Override the lock only if it is genuinely incompatible with the coffee chemistry / process. Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above: when the user has typed a custom volume that's near a vessel's edge, honor both the method and the ml and flag the trade-off in reasoning.`
+    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different temperature (e.g. flat 95°C vs staged 80→95°C), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. Both candidates equal — neither is primary. Override the lock only if genuinely incompatible with the coffee chemistry (rare). Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above.`
     : "";
 
   // Drip Assist emergency-only routing — when the user has explicitly
