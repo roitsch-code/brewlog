@@ -116,16 +116,53 @@ export function scopesForSession(session: Session): DistillScope[] {
 }
 
 /**
- * High-signal heuristic. Only brews carrying useful information move the
- * lessons forward — running Haiku on every neutral 3★ no-note brew is
- * waste.
+ * Pattern gate. Different from the old isHighSignal — we no longer
+ * trigger on individual extreme ratings. Lessons emerge only when
+ * there's enough DATA in a scope to see a pattern, not when one brew
+ * was hot or cold.
+ *
+ * Per-level thresholds:
+ *   coffee         ≥3 rated brews of this bag
+ *   roaster        ≥3 rated brews AND ≥2 different coffees from this roaster
+ *   method-style   ≥3 rated brews using this recipe family
+ *   process-roast  ≥3 rated brews AND ≥2 different coffees
+ *
+ * Below the gate: no lesson, no questions, nothing. A single brew of a
+ * new roaster does NOT generate a roaster-level lesson. Two brews of
+ * one coffee from a new roaster do NOT generate a roaster-level lesson
+ * either — that's pattern-matching one bag's quirks onto a whole
+ * brand. The threshold protects against that.
+ *
+ * All ratings count (3, 3.5, etc.) — the gate is sample size, not
+ * extremity. A coffee that consistently lands at 3.5 IS a pattern
+ * worth noting once we have ≥3 brews of it.
  */
-export function isHighSignal(session: Session): boolean {
-  const r = session.result;
-  if (!r) return false;
-  if (typeof r.rating === "number" && (r.rating <= 2 || r.rating >= 4)) return true;
-  if (r.freeNotes && r.freeNotes.trim().length > 8) return true;
-  return false;
+export function meetsPatternThreshold(
+  scope: DistillScope,
+  sessionList: Session[],
+): boolean {
+  const rated = sessionList.filter((s) => typeof s.result?.rating === "number");
+  if (rated.length < 3) return false;
+
+  if (scope.level === "roaster" || scope.level === "process-roast") {
+    const uniqueCoffees = new Set(
+      rated
+        .map((s) => {
+          const c = s.coffee;
+          if (!c) return null;
+          return (
+            c.coffeeId ??
+            (c.roaster && c.name
+              ? `${c.roaster}__${c.name}`.toLowerCase()
+              : null)
+          );
+        })
+        .filter((x): x is string => x !== null),
+    );
+    if (uniqueCoffees.size < 2) return false;
+  }
+
+  return true;
 }
 
 /**
@@ -171,7 +208,7 @@ write_lesson when the evidence is clean: 3+ rated brews, a consistent pattern, O
 
 ask_for_clarification when multiple plausible causes could explain the pattern. Draft = your best guess as if you'd called write_lesson; questions = how you'd want to be wrong. Questions must be SPECIFIC — name the brews, the dates, the recipes, the candidate causes. Options must be PLAUSIBLE — each one a real explanation written in the user's voice, not a placeholder. NO generic "Was it the recipe?" — name the recipes. NO generic "Was it the age?" — name the day count and what shifts in that window per the freshness curve above.
 
-Single bucket, 1 rated brew: usually ask_for_clarification. One data point cannot support a directive. Use the draft to record what the brew suggested; use the question to ask whether this is a pattern or a one-off.
+Every scope you see has already passed a sample-size gate (≥3 brews, and ≥2 different coffees for roaster / process-roast). Below-threshold scopes never reach you. So you do NOT need to caveat that a single brew is too small to call — by the time you're asked, the data is there.
 
 Metric units. No emojis. No quotation marks anywhere in your output. Output prose, not bullet lists.`;
 
@@ -657,21 +694,25 @@ async function upsertLesson(
  * /api/sessions in a fire-and-forget after the response is sent — never
  * blocks the save. Returns the number of lessons upserted.
  *
- * Skips:
- *   - low-signal brews (isHighSignal gate)
+ * Skips per scope:
+ *   - below the pattern threshold (see meetsPatternThreshold)
  *   - user-edited rows (the user's text is the truth)
  *   - pending rows (the user is mid-answer; don't yank the questions
  *     out from under them with a new auto run)
+ *
+ * The OLD per-session "is this rating extreme enough to count" gate is
+ * gone. Lessons emerge from sample-size now, not from any single brew
+ * being hot or cold. A 3.5★ brew counts the same as a 5★ once the
+ * threshold is met.
  */
 export async function distillLessonsForSession(session: Session): Promise<number> {
-  if (!isHighSignal(session)) return 0;
   const scopes = scopesForSession(session);
   if (scopes.length === 0) return 0;
 
   const results = await Promise.allSettled(
     scopes.map(async (scope) => {
       const sessionList = await loadSessionsForScope(scope);
-      if (sessionList.length === 0) return false;
+      if (!meetsPatternThreshold(scope, sessionList)) return false;
       const existingRows = await db
         .select()
         .from(lessons)
@@ -705,7 +746,7 @@ export async function distillLessonForScope(
   source: LessonSource = "backfill",
 ): Promise<boolean> {
   const sessionList = await loadSessionsForScope(scope);
-  if (sessionList.length === 0) return false;
+  if (!meetsPatternThreshold(scope, sessionList)) return false;
   const existingRows = await db
     .select()
     .from(lessons)

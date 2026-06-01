@@ -395,10 +395,39 @@ async function main() {
   let errors = 0;
 
   for (const bucket of buckets.values()) {
-    const ratedCount = bucket.sessions.filter((s) => s.result?.rating != null).length;
-    if (ratedCount === 0) {
+    const rated = bucket.sessions.filter((s) => typeof s.result?.rating === "number");
+
+    // Pattern threshold gate — mirror of meetsPatternThreshold() in
+    // src/lib/claude/lessons.ts. Keep in sync if the live gate moves.
+    //   coffee         ≥3 rated brews
+    //   roaster        ≥3 rated brews AND ≥2 different coffees
+    //   method-style   ≥3 rated brews
+    //   process-roast  ≥3 rated brews AND ≥2 different coffees
+    if (rated.length < 3) {
+      console.log(`  ⏭  ${bucket.level}:${bucket.scope} (${rated.length} brews — below threshold)`);
       skipped++;
       continue;
+    }
+    if (bucket.level === "roaster" || bucket.level === "process-roast") {
+      const uniqueCoffees = new Set(
+        rated
+          .map((s) => {
+            const c = s.coffee;
+            if (!c) return null;
+            return (
+              c.coffeeId ??
+              (c.roaster && c.name
+                ? `${c.roaster}__${c.name}`.toLowerCase()
+                : null)
+            );
+          })
+          .filter((x) => x !== null),
+      );
+      if (uniqueCoffees.size < 2) {
+        console.log(`  ⏭  ${bucket.level}:${bucket.scope} (only ${uniqueCoffees.size} coffee${uniqueCoffees.size === 1 ? "" : "s"} — need ≥2 for ${bucket.level})`);
+        skipped++;
+        continue;
+      }
     }
 
     // Pull existing row to feed Haiku and to honour user-edited rows.
