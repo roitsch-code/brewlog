@@ -194,6 +194,42 @@ export const conversationMessages = pgTable(
   })
 );
 
+// BTTS distilled memory — promoted from raw sessions into per-level
+// directives by src/lib/claude/lessons.ts. See migration 0012.
+export type LessonLevel =
+  | "coffee"
+  | "roaster"
+  | "method-style"
+  | "process-roast";
+export type LessonSource = "auto" | "user-confirmed" | "user-edited" | "backfill";
+export type LessonStatus = "active" | "dismissed";
+
+export const lessons = pgTable(
+  "lessons",
+  {
+    id: text("id").primaryKey(),
+    level: text("level").$type<LessonLevel>().notNull(),
+    scope: text("scope").notNull(),
+    content: text("content").notNull(),
+    confidenceN: integer("confidence_n").notNull().default(0),
+    evidenceSessionIds: jsonb("evidence_session_ids").$type<string[]>().notNull().default([]),
+    source: text("source").$type<LessonSource>().notNull().default("auto"),
+    status: text("status").$type<LessonStatus>().notNull().default("active"),
+    userNote: text("user_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    levelScopeIdx: index("lessons_level_scope_idx").on(t.level, t.scope),
+    levelIdx: index("lessons_level_idx").on(t.level),
+    statusIdx: index("lessons_status_idx").on(t.status),
+    updatedAtIdx: index("lessons_updated_at_idx").on(t.updatedAt.desc()),
+  })
+);
+
+export type LessonRow = typeof lessons.$inferSelect;
+export type NewLessonRow = typeof lessons.$inferInsert;
+
 export type SessionRow = typeof sessions.$inferSelect;
 export type NewSessionRow = typeof sessions.$inferInsert;
 export type CoffeeRow = typeof coffees.$inferSelect;

@@ -306,6 +306,10 @@ What makes a strong portfolio:
   thesis actually predicts for this specific coffee at this specific extraction stage.
 - The reasoning field is the coach's opening: what does this coffee demand, what does the history tell us,
   what are we discovering today? 4–6 sentences minimum. Direct address to the user.
+- Freshness call-out: when the coffee is ≥22 days past roast (slightly past peak, past peak, or stale),
+  the reasoning MUST name it explicitly — "at 42 days this bag is past peak, so we're grinding finer and
+  expecting softer aromatics." Don't bury the freshness reality. The user wants to know when age is
+  shaping the dial.
 
 What to avoid:
 - Category rules disguised as hypotheses: "AeroPress is always good for X" — say what THIS recipe tests
@@ -559,6 +563,17 @@ export interface CoffeeHistory {
   writtenSummary?: string;
 }
 
+/** A single distilled lesson, shaped for prompt injection. Avoids
+ * importing the Drizzle row type so the recommend module stays free of
+ * DB types — the caller (POST /api/recommend) does the load. */
+export interface RecommendLesson {
+  level: "coffee" | "roaster" | "method-style" | "process-roast";
+  scope: string;
+  content: string;
+  confidenceN: number;
+  source: "auto" | "user-confirmed" | "user-edited" | "backfill";
+}
+
 export async function generateRecommendation(
   coffee: CoffeeIdentity,
   context: SessionContext,
@@ -567,6 +582,7 @@ export async function generateRecommendation(
   userRoasterPrior?: import("../roasters/priors").RoasterPrior,
   escherTerrain?: string,
   coffeeHistory?: CoffeeHistory,
+  lessons?: RecommendLesson[],
 ): Promise<{
   recommendation: Recommendation;
   usage: { input_tokens: number; output_tokens: number };
@@ -741,6 +757,43 @@ export async function generateRecommendation(
     return lines.length > 1 ? lines.join("\n") : "";
   })();
 
+  // BTTS LESSONS — distilled directives the user has accumulated across
+  // brews, grouped per-level (see src/lib/claude/lessons.ts). Additive
+  // to historyBlock: history gives Opus the raw session evidence;
+  // lessons give it the already-extracted rules. Dismissed lessons are
+  // filtered upstream (loadLessonsForRecommend), so anything in this
+  // list is active. User-edited / user-confirmed sources are higher
+  // priority — they reflect explicit user decisions, not auto guesses.
+  const lessonsBlock = (() => {
+    if (!lessons || lessons.length === 0) return "";
+    const levelLabel: Record<RecommendLesson["level"], string> = {
+      coffee: "THIS COFFEE",
+      roaster: "THIS ROASTER",
+      "method-style": "RECIPE FAMILY",
+      "process-roast": "PROCESS × ROAST",
+    };
+    const sourceTag: Record<RecommendLesson["source"], string> = {
+      "user-edited": "user-written",
+      "user-confirmed": "user-confirmed",
+      backfill: "from-history",
+      auto: "auto",
+    };
+    const ordered = [...lessons].sort((a, b) => {
+      // User-touched first, then by confidence.
+      const weight = (l: RecommendLesson) =>
+        l.source === "user-edited" ? 3 : l.source === "user-confirmed" ? 2 : l.source === "backfill" ? 1 : 0;
+      return weight(b) - weight(a) || b.confidenceN - a.confidenceN;
+    });
+    const lines = ordered.map(
+      (l) =>
+        `- [${levelLabel[l.level]} · n=${l.confidenceN} · ${sourceTag[l.source]}] ${l.content}`,
+    );
+    return (
+      "\nBTTS LESSONS — durable directives the user has accumulated across previous brews. Treat user-written and user-confirmed lessons as near-binding (the user has explicitly endorsed them). Treat auto and from-history lessons as strong priors that can be overridden when the current coffee/context clearly demands it. If a lesson conflicts with what this specific coffee needs, name the conflict in the reasoning field and choose the better path.\n" +
+      lines.join("\n")
+    );
+  })();
+
   // ── Knowledge layer injection ──────────────────────────────────────────
   // Three structured blocks selected per turn:
   //   1. Variety priors — what genetics tell us (WCR-grounded)
@@ -800,7 +853,7 @@ Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}
 Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
-${roasterBlock}${historyBlock}
+${roasterBlock}${historyBlock}${lessonsBlock}
 Context:
 - Occasion: ${context.occasion}
 - Amount: ${context.amount} (${guide})

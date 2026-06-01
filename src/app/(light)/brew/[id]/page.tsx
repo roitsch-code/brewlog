@@ -193,6 +193,20 @@ export default function SessionDetailPage() {
             <Stat label={recipe.iceGrams ? "Hot Water" : "Water"} value={`${recipe.waterGrams}g`} />
             <Stat label="Temp" value={`${recipe.waterTempC}°C`} />
           </div>
+          {(() => {
+            const grind = brew?.grindSettingUsed ?? recipe.grindSize;
+            const grindLabel = grind
+              ? typeof grind === "number"
+                ? `${grind}°`
+                : grind
+              : null;
+            if (!grindLabel) return null;
+            return (
+              <div className="grid grid-cols-1 gap-3 mt-3">
+                <Stat label="Grind" value={grindLabel} />
+              </div>
+            );
+          })()}
           {recipe.iceGrams != null && recipe.iceGrams > 0 && (
             <div className="grid grid-cols-2 gap-3 mt-3">
               <Stat label="Ice" value={`${recipe.iceGrams}g`} />
