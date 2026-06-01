@@ -93,6 +93,11 @@ export async function GET(req: NextRequest) {
         source: r.source,
         status: r.status,
         userNote: r.userNote,
+        // Migration 0013 — pending lessons carry questions; answered
+        // ones carry answers alongside the questions (preserved for
+        // audit). Both null for legacy 'active' or 'dismissed' rows.
+        questions: r.questions,
+        answers: r.answers,
         createdAt: r.createdAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
         coffeeMeta:
