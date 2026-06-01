@@ -146,7 +146,6 @@ export async function POST(req: NextRequest) {
       userRoasterPrior ?? undefined,
       terrain || undefined,
       coffeeHistory,
-      undefined,
       allInsights.length > 0 ? allInsights : undefined,
     );
     return NextResponse.json(recommendation);
