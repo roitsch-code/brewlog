@@ -194,69 +194,10 @@ export const conversationMessages = pgTable(
   })
 );
 
-// BTTS distilled memory — promoted from raw sessions into per-level
-// directives by src/lib/claude/lessons.ts. See migration 0012.
-// Migration 0013 adds questions + answers and the 'pending' status for
-// the "ask before committing a verdict" flow.
-export type LessonLevel =
-  | "coffee"
-  | "roaster"
-  | "method-style"
-  | "process-roast";
-export type LessonSource = "auto" | "user-confirmed" | "user-edited" | "backfill";
-export type LessonStatus = "active" | "dismissed" | "pending";
-
-/** A single clarifying question Haiku asks before committing a lesson.
- * Persisted as part of lessons.questions while the row is pending.
- * The user picks one option, or types into freeText for an "Other" path. */
-export interface LessonQuestion {
-  id: string;
-  prompt: string;
-  /** 2–4 prefab choices. The card renders these as buttons + one extra
-   * "Other…" affordance that expands a free-text input. */
-  options: string[];
-}
-
-/** The user's answer to a LessonQuestion. selected is one of the
- * options (or null if they only typed in freeText). freeText is
- * optional supplementary detail. */
-export interface LessonAnswer {
-  questionId: string;
-  selected: string | null;
-  freeText: string | null;
-}
-
-export const lessons = pgTable(
-  "lessons",
-  {
-    id: text("id").primaryKey(),
-    level: text("level").$type<LessonLevel>().notNull(),
-    scope: text("scope").notNull(),
-    content: text("content").notNull(),
-    confidenceN: integer("confidence_n").notNull().default(0),
-    evidenceSessionIds: jsonb("evidence_session_ids").$type<string[]>().notNull().default([]),
-    source: text("source").$type<LessonSource>().notNull().default("auto"),
-    status: text("status").$type<LessonStatus>().notNull().default("active"),
-    userNote: text("user_note"),
-    // Migration 0013 — populated when status='pending' (draft + questions
-    // awaiting user clarification). Null otherwise.
-    questions: jsonb("questions").$type<LessonQuestion[] | null>(),
-    // Migration 0013 — the user's answers, written by PATCH
-    // /api/lessons/[id]/answer. Null until the user responds.
-    answers: jsonb("answers").$type<LessonAnswer[] | null>(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => ({
-    levelScopeIdx: index("lessons_level_scope_idx").on(t.level, t.scope),
-    levelIdx: index("lessons_level_idx").on(t.level),
-    statusIdx: index("lessons_status_idx").on(t.status),
-    updatedAtIdx: index("lessons_updated_at_idx").on(t.updatedAt.desc()),
-  })
-);
-
-export type LessonRow = typeof lessons.$inferSelect;
-export type NewLessonRow = typeof lessons.$inferInsert;
+// The legacy `lessons` table (migrations 0012 + 0013) remains in the
+// production database for archival purposes (non-destructive removal)
+// but no code reads or writes it any more — the multivariate coach
+// (insights table below) replaced it.
 
 // Multivariate coach memory — replaces the lessons table for the
 // surfaces that need cross-axis observations. See migration 0013.

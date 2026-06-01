@@ -4,8 +4,8 @@ import { requireAuth } from "@/lib/auth/requireAuth";
 import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
 import { loadUserProfile } from "@/lib/claude/userProfile";
 import { db } from "@/lib/db/client";
-import { sessions } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { sessions, insights as insightsTable } from "@/lib/db/schema";
+import { desc, isNull } from "drizzle-orm";
 import { rowToSession } from "@/lib/db/helpers";
 
 export const dynamic = "force-dynamic";
@@ -113,6 +113,12 @@ ROTATION DISCIPLINE
 - Only if the library is fully empty may you fall back to a quiet welcome with no bag reference.
 - "★ IN ROTATION" is a prefix marker, not part of the name — never echo it back.
 
+COACH INSIGHTS (multivariate signals across the user's whole log)
+- The context may include a COACH SIGNAL block — observations like "lower-ratio brews on naturals score 0.7★ higher than 1:15" or "your past-peak coffees do best on immersion."
+- If ONE signal is directly relevant to the rotation bag you'd pair, weave it into the reason clause. Keep it light — one phrase, not a paragraph. The line still stays one sentence.
+- If no signal is relevant, ignore the block. Don't force it in.
+- Never quote the signal text verbatim — rephrase it as the friend's voice. ("immersion is your move for stale washed" → "give it the Clever — past-peak washed always lands quieter there for you.")
+
 Return the sentence only.`;
 
 interface RequestBody {
@@ -130,7 +136,7 @@ export async function POST(req: NextRequest) {
     // payloads, so a malformed body doesn't 400 here.
     await req.json().catch(() => ({} as RequestBody));
 
-    const [library, recentRows, profile, weather] = await Promise.all([
+    const [library, recentRows, profile, weather, activeInsights] = await Promise.all([
       // Only the last few bags in active rotation — the line biases
       // toward what the user is brewing right now, not their full
       // historical library.
@@ -143,6 +149,15 @@ export async function POST(req: NextRequest) {
         .catch(() => []),
       loadUserProfile().catch(() => null),
       fetchWeather(),
+      // Top coach insights — filter out dismissed at query time so the
+      // prompt only sees observations the user hasn't rejected.
+      db
+        .select()
+        .from(insightsTable)
+        .where(isNull(insightsTable.dismissedAt))
+        .orderBy(desc(insightsTable.latestSessionMs))
+        .limit(8)
+        .catch(() => []),
     ]);
     const recentSessions = (recentRows as unknown[]).map((row) =>
       rowToSession(row as Parameters<typeof rowToSession>[0])
@@ -182,6 +197,17 @@ export async function POST(req: NextRequest) {
       ? profile.equipment.join(", ")
       : "V60, Orea V4, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex";
 
+    // Coach signal block — up to ~4 insight observations, one per line.
+    // Suggestion lines are stripped (the greeting is one short sentence,
+    // not a recommendation chain); we keep only the observation so the
+    // model has the "what" to lean on if it's relevant.
+    const insightsBlock = Array.isArray(activeInsights) && activeInsights.length > 0
+      ? activeInsights
+          .slice(0, 4)
+          .map((row) => `- ${row.observation}`)
+          .join("\n")
+      : "";
+
     const userBlock = [
       `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
       weather
@@ -194,7 +220,10 @@ export async function POST(req: NextRequest) {
       libraryBlock.length > 0
         ? `Library snapshot (★ IN ROTATION = available now; lines show ORIGIN PROCESS so you can pair a method):\n${libraryBlock}`
         : "Library snapshot: empty.",
-    ].join("\n\n");
+      insightsBlock.length > 0
+        ? `COACH SIGNAL (multivariate observations from the user's full log — weave ONE in only if it's directly relevant to the bag/method you'd pair, else ignore):\n${insightsBlock}`
+        : "",
+    ].filter(Boolean).join("\n\n");
 
     const completion = await client.messages.create({
       model: "claude-haiku-4-5",
