@@ -304,12 +304,13 @@ What makes a strong portfolio:
 - brewingLesson should explain the WHY, in Hoffmann-style plain language: the physics, the chemistry,
   what it predicts the brewer will taste and why. Not "Perger says more agitation." Say what Perger's
   thesis actually predicts for this specific coffee at this specific extraction stage.
-- The reasoning field is the coach's opening: what does this coffee demand, what does the history tell us,
-  what are we discovering today? 4–6 sentences minimum. Direct address to the user.
+- The reasoning field is the coach's opening: ONE sentence, ≤30 words. What does this coffee demand
+  today and what is the single thing to watch across both candidates. Direct address to the user. No
+  preamble, no recap of history — the candidates carry their own per-field detail (whyChosen,
+  hypothesis, predictedCupProfile, whatToObserve). reasoning is the headline only.
 - Freshness call-out: when the coffee is ≥22 days past roast (slightly past peak, past peak, or stale),
-  the reasoning MUST name it explicitly — "at 42 days this bag is past peak, so we're grinding finer and
-  expecting softer aromatics." Don't bury the freshness reality. The user wants to know when age is
-  shaping the dial.
+  the freshness reality MUST appear somewhere in the candidate fields (whyChosen or hypothesis), but
+  NOT in the one-sentence reasoning unless it IS the headline tension.
 
 What to avoid:
 - Category rules disguised as hypotheses: "AeroPress is always good for X" — say what THIS recipe tests
@@ -530,10 +531,10 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "brewingLesson": "3–4 sentences. Teach the extraction science behind this candidate in Hoffmann-style plain language. What physical or chemical mechanism is being tested? What does that mechanism predict the brewer will taste? What should they notice at each stage of the brew? No jargon without explanation."
     }
   ],
-  "reasoning": "4–6 sentences. The coach's briefing to the user — direct address. What does this coffee demand and why. What does the history or arc tell us about where we are in learning this coffee. Why was this portfolio assembled this way. What single thing should they pay close attention to across all candidates. Open a conversation, don't write a summary."
+  "reasoning": "ONE sentence, ≤30 words. The coach's headline only — what does this coffee demand today and what is the single thing to watch across the candidates. No preamble, no history recap, no per-candidate detail — that lives in whyChosen / hypothesis / predictedCupProfile / whatToObserve / brewingLesson on each candidate."
 }
 
-BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1–2 short sentences. brewingLesson, reasoning, sessionObjective, coffeeAssessment: no word cap — these are the teaching fields.
+BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1 short sentence each (hard cap). reasoning: ONE sentence, ≤30 words. brewingLesson, sessionObjective, coffeeAssessment: 2–4 sentences — these are the teaching fields and can breathe.
 
 LANGUAGE: Always respond in English. All text fields must be in English only.
 GRIND SIZE: Must be a single Niche° value (e.g. "406°") or single Comandante click count (e.g. "26"). Never a range.`;
