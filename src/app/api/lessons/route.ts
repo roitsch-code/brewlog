@@ -6,14 +6,19 @@
  * "dismissed" affordance and the user can re-activate them; /recommend
  * filters dismissed separately (loadLessonsForRecommend).
  *
+ * For level='coffee' rows we also join the coffees table so the page
+ * can (a) hide out-of-rotation coffees under an "Archived" drawer by
+ * default and (b) show a friendly "Roaster — Coffee Name" label
+ * instead of the raw scope id (e.g. "ineffable_coffee_roasters__la_coipa").
+ *
  * Optional query params:
  *   - level: 'coffee' | 'roaster' | 'method-style' | 'process-roast'
  *   - includeDismissed: 'false' to hide dismissed rows (default: include)
  */
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { lessons } from "@/lib/db/schema";
+import { coffees, lessons } from "@/lib/db/schema";
 import type { LessonLevel } from "@/lib/db/schema";
 
 const VALID_LEVELS: LessonLevel[] = [
@@ -46,6 +51,37 @@ export async function GET(req: NextRequest) {
       ? rows
       : rows.filter((r) => r.status !== "dismissed");
 
+    // For coffee-level rows, attach rotation status + friendly display
+    // name by joining the coffees table. Single point-lookup query;
+    // no N+1.
+    const coffeeIds = Array.from(
+      new Set(
+        filtered.filter((r) => r.level === "coffee").map((r) => r.scope),
+      ),
+    );
+    const coffeeMeta = new Map<
+      string,
+      { inRotation: boolean; roaster: string; name: string }
+    >();
+    if (coffeeIds.length > 0) {
+      const coffeeRows = await db
+        .select({
+          id: coffees.id,
+          inRotation: coffees.inRotation,
+          roaster: coffees.roaster,
+          name: coffees.name,
+        })
+        .from(coffees)
+        .where(inArray(coffees.id, coffeeIds));
+      for (const c of coffeeRows) {
+        coffeeMeta.set(c.id, {
+          inRotation: c.inRotation,
+          roaster: c.roaster,
+          name: c.name,
+        });
+      }
+    }
+
     return NextResponse.json(
       filtered.map((r) => ({
         id: r.id,
@@ -59,6 +95,8 @@ export async function GET(req: NextRequest) {
         userNote: r.userNote,
         createdAt: r.createdAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
+        coffeeMeta:
+          r.level === "coffee" ? coffeeMeta.get(r.scope) ?? null : null,
       })),
     );
   } catch (err) {

@@ -27,6 +27,12 @@ type Level = "coffee" | "roaster" | "method-style" | "process-roast";
 type Source = "auto" | "user-confirmed" | "user-edited" | "backfill";
 type Status = "active" | "dismissed";
 
+interface CoffeeMeta {
+  inRotation: boolean;
+  roaster: string;
+  name: string;
+}
+
 interface Lesson {
   id: string;
   level: Level;
@@ -39,6 +45,8 @@ interface Lesson {
   userNote: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Present only for level='coffee'; null when the coffees row is missing. */
+  coffeeMeta?: CoffeeMeta | null;
 }
 
 const LEVEL_TITLES: Record<Level, string> = {
@@ -146,6 +154,18 @@ export default function LessonsPage() {
   };
   for (const l of active) groupedActive[l.level].push(l);
 
+  // Coffee level splits two ways: lessons for bags currently in rotation
+  // (front-and-centre) vs lessons for archived bags (out-of-rotation,
+  // collapsed into a drawer). Bags whose coffeeMeta couldn't be resolved
+  // (legacy / deleted coffee row) sit in the archived bucket so they
+  // don't crowd the main view — they can still be inspected.
+  const coffeeInRotation = groupedActive.coffee.filter(
+    (l) => l.coffeeMeta?.inRotation === true,
+  );
+  const coffeeArchived = groupedActive.coffee.filter(
+    (l) => l.coffeeMeta?.inRotation !== true,
+  );
+
   return (
     <div className="min-h-svh bg-transparent flex flex-col">
       {/* Header */}
@@ -201,16 +221,30 @@ export default function LessonsPage() {
         </div>
       ) : (
         <div className="flex-1 px-5 pb-20 space-y-10">
-          {LEVEL_ORDER.map((lvl) => (
-            <LevelSection
-              key={lvl}
-              level={lvl}
-              lessons={groupedActive[lvl]}
-              onDismiss={handleDismiss}
-              onConfirm={handleConfirm}
-              onSaveEdit={handleSaveEdit}
-            />
-          ))}
+          {LEVEL_ORDER.map((lvl) => {
+            if (lvl === "coffee") {
+              return (
+                <CoffeeLevelSection
+                  key={lvl}
+                  inRotation={coffeeInRotation}
+                  archived={coffeeArchived}
+                  onDismiss={handleDismiss}
+                  onConfirm={handleConfirm}
+                  onSaveEdit={handleSaveEdit}
+                />
+              );
+            }
+            return (
+              <LevelSection
+                key={lvl}
+                level={lvl}
+                lessons={groupedActive[lvl]}
+                onDismiss={handleDismiss}
+                onConfirm={handleConfirm}
+                onSaveEdit={handleSaveEdit}
+              />
+            );
+          })}
 
           {/* Dismissed drawer */}
           {dismissed.length > 0 && (
@@ -243,6 +277,80 @@ export default function LessonsPage() {
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
+  );
+}
+
+function CoffeeLevelSection({
+  inRotation,
+  archived,
+  onDismiss,
+  onConfirm,
+  onSaveEdit,
+}: {
+  inRotation: Lesson[];
+  archived: Lesson[];
+  onDismiss: (id: string) => void;
+  onConfirm: (id: string) => void;
+  onSaveEdit: (id: string, content: string) => void;
+}) {
+  const [showArchived, setShowArchived] = useState(false);
+  return (
+    <section>
+      <div className="flex items-baseline justify-between mb-2 px-1">
+        <p className="text-light-muted-foreground text-xs tracking-widest uppercase">
+          {LEVEL_TITLES.coffee}
+        </p>
+        <span className="text-light-muted-foreground/70 text-xs">
+          {inRotation.length}
+          {archived.length > 0 ? ` · ${archived.length} archived` : ""}
+        </span>
+      </div>
+      <p className="text-light-muted-foreground text-xs leading-relaxed mb-3 px-1">
+        {LEVEL_BLURBS.coffee} Only bags in rotation are shown by default —
+        archived bags sit in the drawer below.
+      </p>
+      {inRotation.length === 0 ? (
+        <p className="text-light-muted-foreground/70 text-sm italic px-1">
+          No lessons for bags currently in rotation.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {inRotation.map((l) => (
+            <LessonCard
+              key={l.id}
+              lesson={l}
+              onDismiss={onDismiss}
+              onConfirm={onConfirm}
+              onSaveEdit={onSaveEdit}
+            />
+          ))}
+        </div>
+      )}
+      {archived.length > 0 && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowArchived((v) => !v)}
+            className="text-light-muted-foreground text-xs tracking-widest uppercase px-1"
+          >
+            Archived bags ({archived.length}) {showArchived ? "▾" : "▸"}
+          </button>
+          {showArchived && (
+            <div className="space-y-3 mt-3">
+              {archived.map((l) => (
+                <LessonCard
+                  key={l.id}
+                  lesson={l}
+                  onDismiss={onDismiss}
+                  onConfirm={onConfirm}
+                  onSaveEdit={onSaveEdit}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -322,7 +430,12 @@ function LessonCard({
       }`}
     >
       <p className="text-light-muted-foreground text-xs mb-1.5 leading-tight">
-        {lesson.scope}
+        {/* Friendly display name for coffee-level rows when available;
+            falls back to the raw scope id (e.g. "ineffable_coffee_roasters__la_coipa"
+            for rows whose coffees-table join missed). */}
+        {lesson.coffeeMeta
+          ? `${lesson.coffeeMeta.roaster} — ${lesson.coffeeMeta.name}${lesson.coffeeMeta.inRotation ? "" : " · archived"}`
+          : lesson.scope}
       </p>
       {editing ? (
         <textarea

@@ -286,6 +286,12 @@ async function upsertLesson(
     });
   } else {
     const row = existing[0];
+    // User-edited rows are sacred — the user explicitly rewrote this
+    // lesson. Auto distillation MUST NOT overwrite their text. Skip
+    // entirely (no content update, no evidence update). Only an explicit
+    // user-edited source coming back in (the PATCH route) can change
+    // the row's content from here on.
+    if (row.source === "user-edited" && source !== "user-edited") return;
     await db
       .update(lessons)
       .set({
@@ -320,6 +326,9 @@ export async function distillLessonsForSession(session: Session): Promise<number
         .where(and(eq(lessons.level, scope.level), eq(lessons.scope, scope.scope)))
         .limit(1);
       const existing = existingRows[0] ?? null;
+      // User has explicitly rewritten this lesson — don't even call
+      // Haiku. Their text is the truth. Saves an API call too.
+      if (existing?.source === "user-edited") return false;
       const distillation = await callHaikuForDistillation(
         scope,
         sessionList,
@@ -352,6 +361,7 @@ export async function distillLessonForScope(
     .where(and(eq(lessons.level, scope.level), eq(lessons.scope, scope.scope)))
     .limit(1);
   const existing = existingRows[0] ?? null;
+  if (existing?.source === "user-edited") return false;
   const distillation = await callHaikuForDistillation(scope, sessionList, existing);
   if (!distillation) return false;
   await upsertLesson(scope, distillation, sessionList, source);
