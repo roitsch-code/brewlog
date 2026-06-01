@@ -32,29 +32,38 @@ if (!ANTHROPIC_API_KEY) {
   process.exit(1);
 }
 
-const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive — a single short paragraph that a recommendation prompt can quote verbatim months from now.
+const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive per scope — a paragraph a recommendation prompt can quote verbatim months from now.
 
-When you call write_lesson, pass:
-- content: ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If a freeNote flags a meta-fact about the coffee or roaster (e.g. roasted for espresso, fermented hot, stale), paraphrase it into the directive without using quotation marks. Plain prose, no bullets, no emojis. Metric units only. If you cannot write a concrete directive from the evidence, pass an empty string.
-- confidence_n: integer count of rated brews backing this lesson.
+COFFEE IS MULTIVARIATE. Before assigning blame to a recipe, consider:
+- Bag age (<7d too fresh, 7–21d peak, 22–35d slightly past, 35–60d past peak, 60+ stale)
+- Recipe family (Hoffmann vs Hub vs Kasuya vs Wölfl — different physics, different cups)
+- Water source (clarity blend ~73 ppm vs filtered tap ~220 ppm — buffering differs)
+- Grind drift (Niche calibration shifts over months)
+- Pour technique (agitation level, pulse timing)
+- Roast inconsistency at source — some bags are uneven, not the user's fault
+- Palate fluctuation day to day
 
-Constraints:
-- Prefer "Avoid X" / "Prefer Y" over generic "experiment more".
-- Cite recipe NAMES (the title plus the based-on), not just methods, when distinguishing what worked.
-- Do not use quotation marks anywhere in content — paraphrase rather than quote.
-- No hedging. The user wants a directive, not advice.`;
+ONE TOOL PER TURN.
+
+Call write_lesson when the evidence is clean: 3+ rated brews, a consistent pattern, ONE variable clearly standing out. Be a coach, not a hedger. Reference recipe NAMES (title plus based-on). Paraphrase freeNotes; never quote them.
+
+Call ask_for_clarification when multiple plausible causes could explain the pattern and you need the user to disambiguate. The draft is your best guess as if you'd called write_lesson; the questions are how you'd want to be wrong. Questions must be SPECIFIC — reference the actual brews, the actual dates, the actual ambiguity. Options must be PLAUSIBLE — each one a real explanation the user might endorse, written in their voice. NO generic "Was it the recipe?" questions — name the recipes.
+
+Single bucket, 1 rated brew: usually ask_for_clarification (a single data point cannot support a directive). Use the draft to capture what the brew suggested; use the question to ask whether the user thinks this is a real pattern or a one-off.
+
+Metric units. No emojis. No quotation marks anywhere.`;
 
 const WRITE_LESSON_TOOL = {
   name: "write_lesson",
   description:
-    "Persist the distilled BTTS lesson for this (level, scope). Always call this tool exactly once.",
+    "Use when the evidence is clean: 3+ rated brews, consistent pattern, one variable clearly standing out as the cause. Be a coach issuing a directive. Never call this AND ask_for_clarification in the same turn.",
   input_schema: {
     type: "object",
     properties: {
       content: {
         type: "string",
         description:
-          "1–3 short sentences, plain prose, no quotation marks. Empty string if no concrete directive can be drawn from the evidence.",
+          "1–3 short sentences, plain prose, no quotation marks. A directive — prefer X / avoid Y / remember Z. Reference recipe NAMES (title plus based-on). Paraphrase freeNotes; never quote them.",
       },
       confidence_n: {
         type: "integer",
@@ -62,6 +71,51 @@ const WRITE_LESSON_TOOL = {
       },
     },
     required: ["content", "confidence_n"],
+  },
+};
+
+const ASK_FOR_CLARIFICATION_TOOL = {
+  name: "ask_for_clarification",
+  description:
+    "Use when multiple plausible causes could explain the pattern and you genuinely need the user's input to disambiguate. Examples: a single bad brew on a 42-day-old bag (recipe vs age?); a method change coinciding with a water source change; inconsistent ratings on the same recipe across weeks. Never call this AND write_lesson in the same turn.",
+  input_schema: {
+    type: "object",
+    properties: {
+      draft: {
+        type: "string",
+        description:
+          "Your tentative directive — what you'd commit if your best guess were correct. The user reads this alongside the questions. Same constraints as write_lesson.content.",
+      },
+      confidence_n: {
+        type: "integer",
+        description: "Number of rated brews backing this draft.",
+      },
+      questions: {
+        type: "array",
+        minItems: 1,
+        maxItems: 2,
+        items: {
+          type: "object",
+          properties: {
+            prompt: {
+              type: "string",
+              description:
+                "ONE concrete question naming the actual ambiguity. Reference the specific brews, recipe names, and dates. Not generic.",
+            },
+            options: {
+              type: "array",
+              minItems: 2,
+              maxItems: 4,
+              items: { type: "string" },
+              description:
+                "Plausible explanations the user can tap, written in the user's voice.",
+            },
+          },
+          required: ["prompt", "options"],
+        },
+      },
+    },
+    required: ["draft", "confidence_n", "questions"],
   },
 };
 
@@ -188,6 +242,12 @@ function formatSessionsForPrompt(sessionList) {
     .join("\n");
 }
 
+/**
+ * Two-tool Haiku call. Returns either:
+ *   { kind: 'confident', content, confidenceN }
+ *   { kind: 'uncertain', draft, confidenceN, questions: [{id, prompt, options}] }
+ * or null on failure.
+ */
 async function callHaiku(scopeLabel, level, sessionList, existingContent) {
   const ratedCount = sessionList.filter((s) => s.result?.rating != null).length;
   if (ratedCount === 0) return null;
@@ -198,7 +258,7 @@ Scope: ${scopeLabel}
 ${existingContent ? `Existing lesson (revise if the new evidence changes it; keep what still holds): ${existingContent}\n\n` : ""}Brews backing this scope (most recent first, max 30):
 ${formatSessionsForPrompt(sessionList)}
 
-Write the updated directive now via write_lesson.`;
+Choose ONE tool — write_lesson if the signal is clean, ask_for_clarification if it isn't.`;
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -212,8 +272,8 @@ Write the updated directive now via write_lesson.`;
         model: "claude-haiku-4-5",
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
-        tools: [WRITE_LESSON_TOOL],
-        tool_choice: { type: "tool", name: "write_lesson" },
+        tools: [WRITE_LESSON_TOOL, ASK_FOR_CLARIFICATION_TOOL],
+        tool_choice: { type: "auto" },
         messages: [{ role: "user", content: userMessage }],
       }),
     });
@@ -221,10 +281,6 @@ Write the updated directive now via write_lesson.`;
       console.error(`  ✗ haiku ${res.status}:`, await res.text());
       return null;
     }
-    // Read as text first so we can dump the raw payload on JSON.parse
-    // failure — Anthropic occasionally returns responses our outer
-    // .json() couldn't parse, and without the body we can't tell whether
-    // the issue is truncation, an unescaped char, or something stranger.
     const responseText = await res.text();
     let body;
     try {
@@ -244,16 +300,49 @@ Write the updated directive now via write_lesson.`;
       console.error(`  ✗ no tool_use block. content types: ${(body.content ?? []).map((b) => b.type).join(", ") || "none"}`);
       return null;
     }
-    const content =
-      typeof toolBlock.input.content === "string"
-        ? toolBlock.input.content.trim()
-        : "";
-    const confidenceN =
-      typeof toolBlock.input.confidence_n === "number"
-        ? Math.max(0, Math.floor(toolBlock.input.confidence_n))
-        : ratedCount;
-    if (!content) return null;
-    return { content, confidenceN };
+
+    if (toolBlock.name === "write_lesson") {
+      const content =
+        typeof toolBlock.input.content === "string"
+          ? toolBlock.input.content.trim()
+          : "";
+      const confidenceN =
+        typeof toolBlock.input.confidence_n === "number"
+          ? Math.max(0, Math.floor(toolBlock.input.confidence_n))
+          : ratedCount;
+      if (!content) return null;
+      return { kind: "confident", content, confidenceN };
+    }
+
+    if (toolBlock.name === "ask_for_clarification") {
+      const draft =
+        typeof toolBlock.input.draft === "string"
+          ? toolBlock.input.draft.trim()
+          : "";
+      const confidenceN =
+        typeof toolBlock.input.confidence_n === "number"
+          ? Math.max(0, Math.floor(toolBlock.input.confidence_n))
+          : ratedCount;
+      const rawQs = Array.isArray(toolBlock.input.questions)
+        ? toolBlock.input.questions
+        : [];
+      const questions = rawQs.flatMap((q) => {
+        if (!q || typeof q !== "object") return [];
+        const prompt = typeof q.prompt === "string" ? q.prompt.trim() : "";
+        const options = Array.isArray(q.options)
+          ? q.options
+              .filter((o) => typeof o === "string" && o.trim().length > 0)
+              .map((o) => o.trim())
+              .slice(0, 4)
+          : [];
+        if (!prompt || options.length < 2) return [];
+        return [{ id: randomUUID(), prompt, options }];
+      });
+      if (!draft || questions.length === 0) return null;
+      return { kind: "uncertain", draft, confidenceN, questions };
+    }
+
+    return null;
   } catch (err) {
     console.error(`  ✗ haiku error:`, err.message);
     return null;
@@ -323,6 +412,11 @@ async function main() {
       skipped++;
       continue;
     }
+    if (existing && existing.status === "pending") {
+      console.log(`  ⏭  ${bucket.level}:${bucket.scope} (pending — awaiting user answer)`);
+      skipped++;
+      continue;
+    }
 
     const top = bucket.sessions
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -341,18 +435,36 @@ async function main() {
     }
     const evidence = top.slice(0, 12).map((s) => s.id);
     const now = new Date();
+    // Branch on Haiku's tool choice:
+    //   confident  -> status='active', content=content, questions=null
+    //   uncertain  -> status='pending', content=draft,  questions=[...]
+    const content =
+      distillation.kind === "confident"
+        ? distillation.content
+        : distillation.draft;
+    const status =
+      distillation.kind === "confident" ? "active" : "pending";
+    const questionsJson =
+      distillation.kind === "uncertain"
+        ? JSON.stringify(distillation.questions)
+        : null;
     if (existing) {
       // Preserve dismissed status; do not auto-revive a thumbs-down.
       await pool.query(
         `UPDATE lessons
             SET content = $1, confidence_n = $2, evidence_session_ids = $3::jsonb,
                 source = CASE WHEN source = 'user-edited' THEN source ELSE 'backfill' END,
-                updated_at = $4
-          WHERE id = $5`,
+                status = CASE WHEN status = 'dismissed' THEN status ELSE $4 END,
+                questions = $5::jsonb,
+                answers = NULL,
+                updated_at = $6
+          WHERE id = $7`,
         [
-          distillation.content,
+          content,
           distillation.confidenceN,
           JSON.stringify(evidence),
+          status,
+          questionsJson,
           now,
           existing.id,
         ],
@@ -360,20 +472,23 @@ async function main() {
     } else {
       await pool.query(
         `INSERT INTO lessons
-            (id, level, scope, content, confidence_n, evidence_session_ids, source, status, created_at, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'backfill', 'active', $7, $7)`,
+            (id, level, scope, content, confidence_n, evidence_session_ids,
+             source, status, questions, answers, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'backfill', $7, $8::jsonb, NULL, $9, $9)`,
         [
           randomUUID(),
           bucket.level,
           bucket.scope,
-          distillation.content,
+          content,
           distillation.confidenceN,
           JSON.stringify(evidence),
+          status,
+          questionsJson,
           now,
         ],
       );
     }
-    console.log("✓");
+    console.log(distillation.kind === "uncertain" ? "✓ pending" : "✓");
     processed++;
   }
 

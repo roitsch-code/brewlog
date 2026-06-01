@@ -24,7 +24,13 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { lessons, sessions } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
-import type { LessonLevel, LessonRow, LessonSource } from "@/lib/db/schema";
+import type {
+  LessonAnswer,
+  LessonLevel,
+  LessonQuestion,
+  LessonRow,
+  LessonSource,
+} from "@/lib/db/schema";
 import type { Session } from "@/lib/types/session";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 
@@ -130,17 +136,38 @@ export async function loadSessionsForScope(
   return filtered.slice(0, limit);
 }
 
-const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive — a single short paragraph that a recommendation prompt can quote verbatim months from now.
+const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive per scope — a paragraph a recommendation prompt can quote verbatim months from now.
 
-When you call write_lesson, pass:
-- content: ONE paragraph, 1–3 short sentences. A concrete, actionable directive — what to prefer, what to avoid, what to remember. Reference real numbers (ratings, recipe names, methods). If two recipes diverge in outcome, name both. If a freeNote flags a meta-fact about the coffee or roaster (e.g. roasted for espresso, fermented hot, stale), paraphrase it into the directive without using quotation marks. Plain prose, no bullets, no emojis. Metric units only. If you cannot write a concrete directive from the evidence, pass an empty string.
-- confidence_n: integer count of rated brews backing this lesson.
+COFFEE IS MULTIVARIATE. Before assigning blame to a recipe, consider:
+- Bag age (<7d too fresh, 7–21d peak, 22–35d slightly past, 35–60d past peak, 60+ stale)
+- Recipe family (Hoffmann vs Hub vs Kasuya vs Wölfl — different physics, different cups)
+- Water source (clarity blend ~73 ppm vs filtered tap ~220 ppm — buffering differs)
+- Grind drift (Niche calibration shifts over months)
+- Pour technique (agitation level, pulse timing)
+- Roast inconsistency at source — some bags are uneven, not the user's fault
+- Palate fluctuation day to day
 
-Constraints:
-- Prefer "Avoid X" / "Prefer Y" over generic "experiment more".
-- Cite recipe NAMES (the title plus the based-on), not just methods, when distinguishing what worked.
-- Do not use quotation marks anywhere in content — paraphrase rather than quote.
-- No hedging. The user wants a directive, not advice.`;
+ONE TOOL PER TURN.
+
+Call write_lesson when the evidence is clean: 3+ rated brews, a consistent pattern, ONE variable clearly standing out. Be a coach, not a hedger. Reference recipe NAMES (title plus based-on). Paraphrase freeNotes; never quote them.
+
+Call ask_for_clarification when multiple plausible causes could explain the pattern and you need the user to disambiguate. The draft is your best guess as if you'd called write_lesson; the questions are how you'd want to be wrong. Questions must be SPECIFIC — reference the actual brews, the actual dates, the actual ambiguity. Options must be PLAUSIBLE — each one a real explanation the user might endorse, written in their voice. NO generic "Was it the recipe?" questions — name the recipes.
+
+Single bucket, 1 rated brew: usually ask_for_clarification (a single data point cannot support a directive). Use the draft to capture what the brew suggested; use the question to ask whether the user thinks this is a real pattern or a one-off.
+
+Metric units. No emojis. No quotation marks anywhere.`;
+
+const FINALISE_PROMPT = `You previously drafted a lesson and asked the user clarifying questions about this scope. The user has now answered. Incorporate their answers and commit the final directive via write_lesson.
+
+Preserve what was right in the draft. Adjust what the answers contradict. If their answer fundamentally changes your diagnosis (you blamed the recipe but they blame the age), rewrite cleanly to match their understanding — their answer is ground truth.
+
+Same constraints as before: 1–3 short sentences, plain prose, no quotation marks, no emojis, metric units only, reference recipe NAMES.`;
+
+/** Live distiller output: either a confident lesson or an uncertain
+ * draft that needs clarification. upsertLesson() branches on `kind`. */
+export type DistillOutput =
+  | { kind: "confident"; content: string; confidenceN: number }
+  | { kind: "uncertain"; draft: string; confidenceN: number; questions: LessonQuestion[] };
 
 interface DistillResult {
   content: string;
@@ -185,11 +212,80 @@ function formatSessionsForPrompt(sessionList: Session[]): string {
     .join("\n");
 }
 
+/** The two-tool array passed to the Haiku distillation call. Shared with
+ * the backfill script (mirrored there in JS — keep in sync). */
+const DISTILL_TOOLS: Anthropic.Messages.Tool[] = [
+  {
+    name: "write_lesson",
+    description:
+      "Use when the evidence is clean: 3+ rated brews, consistent pattern, one variable clearly standing out as the cause. Be a coach issuing a directive. Never call this AND ask_for_clarification in the same turn.",
+    input_schema: {
+      type: "object",
+      properties: {
+        content: {
+          type: "string",
+          description:
+            "1–3 short sentences, plain prose, no quotation marks. A directive — prefer X / avoid Y / remember Z. Reference recipe NAMES (title plus based-on). Paraphrase freeNotes; never quote them.",
+        },
+        confidence_n: {
+          type: "integer",
+          description: "Number of rated brews backing this lesson.",
+        },
+      },
+      required: ["content", "confidence_n"],
+    },
+  },
+  {
+    name: "ask_for_clarification",
+    description:
+      "Use when multiple plausible causes could explain the pattern and you genuinely need the user's input to disambiguate. Examples: a single bad brew on a 42-day-old bag (recipe vs age?); a method change coinciding with a water source change; inconsistent ratings on the same recipe across weeks. Never call this AND write_lesson in the same turn.",
+    input_schema: {
+      type: "object",
+      properties: {
+        draft: {
+          type: "string",
+          description:
+            "Your tentative directive — what you'd commit if your best guess were correct. The user reads this alongside the questions. Same constraints as write_lesson.content.",
+        },
+        confidence_n: {
+          type: "integer",
+          description: "Number of rated brews backing this draft.",
+        },
+        questions: {
+          type: "array",
+          minItems: 1,
+          maxItems: 2,
+          items: {
+            type: "object",
+            properties: {
+              prompt: {
+                type: "string",
+                description:
+                  "ONE concrete question naming the actual ambiguity. Reference the specific brews, recipe names, and dates. Not generic.",
+              },
+              options: {
+                type: "array",
+                minItems: 2,
+                maxItems: 4,
+                items: { type: "string" },
+                description:
+                  "Plausible explanations the user can tap, written in the user's voice. Each option is a real candidate explanation, not a hedge.",
+              },
+            },
+            required: ["prompt", "options"],
+          },
+        },
+      },
+      required: ["draft", "confidence_n", "questions"],
+    },
+  },
+];
+
 async function callHaikuForDistillation(
   scope: DistillScope,
   sessionList: Session[],
   existing: LessonRow | null,
-): Promise<DistillResult | null> {
+): Promise<DistillOutput | null> {
   const ratedCount = sessionList.filter((s) => s.result?.rating != null).length;
   if (ratedCount === 0) return null;
 
@@ -199,39 +295,118 @@ Scope: ${scope.label}
 ${existing?.content ? `Existing lesson (revise if the new evidence changes it; keep what still holds): ${existing.content}\n\n` : ""}Brews backing this scope (most recent first, max 30):
 ${formatSessionsForPrompt(sessionList)}
 
-Write the updated directive now via write_lesson.`;
+Choose ONE tool — write_lesson if the signal is clean, ask_for_clarification if it isn't.`;
+
+  try {
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      tools: DISTILL_TOOLS,
+      tool_choice: { type: "auto" },
+      messages: [{ role: "user", content: userMessage }],
+    });
+
+    const toolBlock = msg.content.find(
+      (b): b is Anthropic.Messages.ToolUseBlock => b.type === "tool_use",
+    );
+    if (!toolBlock) return null;
+
+    if (toolBlock.name === "write_lesson") {
+      const input = toolBlock.input as {
+        content?: unknown;
+        confidence_n?: unknown;
+      };
+      const content =
+        typeof input.content === "string" ? input.content.trim() : "";
+      const confidenceN =
+        typeof input.confidence_n === "number"
+          ? Math.max(0, Math.floor(input.confidence_n))
+          : ratedCount;
+      if (!content) return null;
+      return { kind: "confident", content, confidenceN };
+    }
+
+    if (toolBlock.name === "ask_for_clarification") {
+      const input = toolBlock.input as {
+        draft?: unknown;
+        confidence_n?: unknown;
+        questions?: unknown;
+      };
+      const draft = typeof input.draft === "string" ? input.draft.trim() : "";
+      const confidenceN =
+        typeof input.confidence_n === "number"
+          ? Math.max(0, Math.floor(input.confidence_n))
+          : ratedCount;
+      const rawQs = Array.isArray(input.questions) ? input.questions : [];
+      const questions: LessonQuestion[] = rawQs.flatMap((q): LessonQuestion[] => {
+        if (!q || typeof q !== "object") return [];
+        const obj = q as { prompt?: unknown; options?: unknown };
+        const prompt = typeof obj.prompt === "string" ? obj.prompt.trim() : "";
+        const options = Array.isArray(obj.options)
+          ? obj.options
+              .filter((o): o is string => typeof o === "string" && o.trim().length > 0)
+              .map((o) => o.trim())
+              .slice(0, 4)
+          : [];
+        if (!prompt || options.length < 2) return [];
+        const lq: LessonQuestion = { id: randomUUID(), prompt, options };
+        return [lq];
+      });
+      if (!draft || questions.length === 0) return null;
+      return { kind: "uncertain", draft, confidenceN, questions };
+    }
+
+    return null;
+  } catch (err) {
+    console.error(`distillLesson(${scope.level}:${scope.scope}) error:`, err);
+    return null;
+  }
+}
+
+/** Second-turn Haiku call: given a pending draft + the user's answers,
+ * finalise the lesson via write_lesson. Used by POST /api/lessons/[id]/answer. */
+async function callHaikuToFinalise(
+  scope: DistillScope,
+  sessionList: Session[],
+  draft: string,
+  questions: LessonQuestion[],
+  answers: LessonAnswer[],
+): Promise<DistillResult | null> {
+  const ratedCount = sessionList.filter((s) => s.result?.rating != null).length;
+
+  const qAndA = questions
+    .map((q) => {
+      const a = answers.find((ans) => ans.questionId === q.id);
+      const answerText = a
+        ? [a.selected, a.freeText].filter(Boolean).join(" — ")
+        : "(no answer)";
+      return `Q: ${q.prompt}\nA: ${answerText}`;
+    })
+    .join("\n\n");
+
+  const userMessage = `Level: ${scope.level}
+Scope: ${scope.label}
+
+Draft you wrote earlier: ${draft}
+
+Brews backing this scope (most recent first, max 30):
+${formatSessionsForPrompt(sessionList)}
+
+User's answers to your clarifying questions:
+${qAndA}
+
+Now commit the final directive via write_lesson.`;
 
   try {
     const msg = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 600,
-      system: SYSTEM_PROMPT,
-      tools: [
-        {
-          name: "write_lesson",
-          description:
-            "Persist the distilled BTTS lesson for this (level, scope). Always call this tool exactly once.",
-          input_schema: {
-            type: "object",
-            properties: {
-              content: {
-                type: "string",
-                description:
-                  "1–3 short sentences, plain prose, no quotation marks. Empty string if no concrete directive can be drawn from the evidence.",
-              },
-              confidence_n: {
-                type: "integer",
-                description: "Number of rated brews backing this lesson.",
-              },
-            },
-            required: ["content", "confidence_n"],
-          },
-        },
-      ],
+      system: FINALISE_PROMPT,
+      tools: [DISTILL_TOOLS[0]],
       tool_choice: { type: "tool", name: "write_lesson" },
       messages: [{ role: "user", content: userMessage }],
     });
-
     const toolBlock = msg.content.find(
       (b): b is Anthropic.Messages.ToolUseBlock => b.type === "tool_use",
     );
@@ -246,7 +421,7 @@ Write the updated directive now via write_lesson.`;
     if (!content) return null;
     return { content, confidence_n };
   } catch (err) {
-    console.error(`distillLesson(${scope.level}:${scope.scope}) error:`, err);
+    console.error(`finaliseLesson(${scope.level}:${scope.scope}) error:`, err);
     return null;
   }
 }
@@ -260,7 +435,7 @@ Write the updated directive now via write_lesson.`;
  */
 async function upsertLesson(
   scope: DistillScope,
-  result: DistillResult,
+  output: DistillOutput,
   sessionList: Session[],
   source: LessonSource = "auto",
 ): Promise<void> {
@@ -271,45 +446,70 @@ async function upsertLesson(
     .where(and(eq(lessons.level, scope.level), eq(lessons.scope, scope.scope)))
     .limit(1);
   const now = new Date();
+
+  // Decide what content/status to write based on which tool Haiku chose.
+  const content =
+    output.kind === "confident" ? output.content : output.draft;
+  const status: "active" | "pending" =
+    output.kind === "confident" ? "active" : "pending";
+  const questions: LessonQuestion[] | null =
+    output.kind === "uncertain" ? output.questions : null;
+
   if (existing.length === 0) {
     await db.insert(lessons).values({
       id: randomUUID(),
       level: scope.level,
       scope: scope.scope,
-      content: result.content,
-      confidenceN: result.confidence_n,
+      content,
+      confidenceN: output.confidenceN,
       evidenceSessionIds: evidence,
       source,
-      status: "active",
+      status,
+      questions,
+      answers: null,
       createdAt: now,
       updatedAt: now,
     });
-  } else {
-    const row = existing[0];
-    // User-edited rows are sacred — the user explicitly rewrote this
-    // lesson. Auto distillation MUST NOT overwrite their text. Skip
-    // entirely (no content update, no evidence update). Only an explicit
-    // user-edited source coming back in (the PATCH route) can change
-    // the row's content from here on.
-    if (row.source === "user-edited" && source !== "user-edited") return;
-    await db
-      .update(lessons)
-      .set({
-        content: result.content,
-        confidenceN: result.confidence_n,
-        evidenceSessionIds: evidence,
-        // Only escalate source on explicit user edits — leave auto-on-auto alone.
-        source: row.source === "user-edited" ? row.source : source,
-        updatedAt: now,
-      })
-      .where(eq(lessons.id, row.id));
+    return;
   }
+
+  const row = existing[0];
+  // User-edited rows are sacred — the user explicitly rewrote this
+  // lesson. Auto distillation MUST NOT overwrite their text. Skip
+  // entirely. Only an explicit user-edited source coming back in
+  // (the PATCH route) can change the row's content from here on.
+  if (row.source === "user-edited" && source !== "user-edited") return;
+
+  await db
+    .update(lessons)
+    .set({
+      content,
+      confidenceN: output.confidenceN,
+      evidenceSessionIds: evidence,
+      // Only escalate source on explicit user edits — leave auto-on-auto alone.
+      source: row.source === "user-edited" ? row.source : source,
+      status,
+      questions,
+      // Going from pending → confident means the answers are now stale —
+      // null them out. Going confident → confident keeps answers as null.
+      // Going pending → pending replaces with new questions, so old
+      // answers are invalid: null them out too.
+      answers: null,
+      updatedAt: now,
+    })
+    .where(eq(lessons.id, row.id));
 }
 
 /**
  * Distill all four scopes for a single session. Called from POST
  * /api/sessions in a fire-and-forget after the response is sent — never
  * blocks the save. Returns the number of lessons upserted.
+ *
+ * Skips:
+ *   - low-signal brews (isHighSignal gate)
+ *   - user-edited rows (the user's text is the truth)
+ *   - pending rows (the user is mid-answer; don't yank the questions
+ *     out from under them with a new auto run)
  */
 export async function distillLessonsForSession(session: Session): Promise<number> {
   if (!isHighSignal(session)) return 0;
@@ -326,9 +526,8 @@ export async function distillLessonsForSession(session: Session): Promise<number
         .where(and(eq(lessons.level, scope.level), eq(lessons.scope, scope.scope)))
         .limit(1);
       const existing = existingRows[0] ?? null;
-      // User has explicitly rewritten this lesson — don't even call
-      // Haiku. Their text is the truth. Saves an API call too.
       if (existing?.source === "user-edited") return false;
+      if (existing?.status === "pending") return false;
       const distillation = await callHaikuForDistillation(
         scope,
         sessionList,
@@ -362,10 +561,78 @@ export async function distillLessonForScope(
     .limit(1);
   const existing = existingRows[0] ?? null;
   if (existing?.source === "user-edited") return false;
+  if (existing?.status === "pending") return false;
   const distillation = await callHaikuForDistillation(scope, sessionList, existing);
   if (!distillation) return false;
   await upsertLesson(scope, distillation, sessionList, source);
   return true;
+}
+
+/**
+ * Finalise a pending lesson now that the user has answered the
+ * clarifying questions. Called from POST /api/lessons/[id]/answer.
+ *
+ * Runs a second Haiku turn (single-tool, write_lesson forced) with the
+ * draft + questions + user's answers. Updates the row in place:
+ *   - content = final directive from the second turn
+ *   - status  = 'active'
+ *   - answers = stored (kept for audit, surfaced on the page)
+ *   - questions kept (so the page can show "you answered X to Y")
+ *
+ * Returns the updated row, or null if Haiku couldn't produce a final
+ * content (caller can re-prompt or surface the error).
+ */
+export async function finaliseLessonWithAnswers(
+  lessonId: string,
+  answers: LessonAnswer[],
+): Promise<LessonRow | null> {
+  const existingRows = await db
+    .select()
+    .from(lessons)
+    .where(eq(lessons.id, lessonId))
+    .limit(1);
+  const row = existingRows[0];
+  if (!row) return null;
+  if (row.status !== "pending") return null;
+  if (!row.questions || row.questions.length === 0) return null;
+
+  const scope: DistillScope = {
+    level: row.level,
+    scope: row.scope,
+    label: row.scope, // best we can do without re-resolving — Haiku still sees full session detail
+  };
+  const sessionList = await loadSessionsForScope(scope);
+
+  const finalised = await callHaikuToFinalise(
+    scope,
+    sessionList,
+    row.content,
+    row.questions,
+    answers,
+  );
+  if (!finalised) return null;
+
+  const now = new Date();
+  await db
+    .update(lessons)
+    .set({
+      content: finalised.content,
+      confidenceN: finalised.confidence_n,
+      status: "active",
+      answers,
+      // questions preserved for audit. source stays whatever it was
+      // (typically 'auto' or 'backfill'); the user didn't write the
+      // content themselves, they just answered.
+      updatedAt: now,
+    })
+    .where(eq(lessons.id, lessonId));
+
+  const refreshed = await db
+    .select()
+    .from(lessons)
+    .where(eq(lessons.id, lessonId))
+    .limit(1);
+  return refreshed[0] ?? null;
 }
 
 /**
