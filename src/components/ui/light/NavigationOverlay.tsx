@@ -41,6 +41,7 @@ const ITEMS: NavItem[] = [
   { label: "Nearby", href: "/cafes/map" },
   { label: "Café Library", href: "/cafes" },
   { label: "Taste Profile", href: "/taste" },
+  { label: "Lessons", href: "/lessons" },
 ];
 
 interface NavigationOverlayProps {
