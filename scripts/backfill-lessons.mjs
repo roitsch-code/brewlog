@@ -210,7 +210,7 @@ Write the updated directive now via write_lesson.`;
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5",
-        max_tokens: 600,
+        max_tokens: 1024,
         system: SYSTEM_PROMPT,
         tools: [WRITE_LESSON_TOOL],
         tool_choice: { type: "tool", name: "write_lesson" },
@@ -221,9 +221,29 @@ Write the updated directive now via write_lesson.`;
       console.error(`  ✗ haiku ${res.status}:`, await res.text());
       return null;
     }
-    const body = await res.json();
+    // Read as text first so we can dump the raw payload on JSON.parse
+    // failure — Anthropic occasionally returns responses our outer
+    // .json() couldn't parse, and without the body we can't tell whether
+    // the issue is truncation, an unescaped char, or something stranger.
+    const responseText = await res.text();
+    let body;
+    try {
+      body = JSON.parse(responseText);
+    } catch (parseErr) {
+      console.error(`  ✗ json parse: ${parseErr.message}`);
+      console.error(`     raw len=${responseText.length}`);
+      console.error(`     first 400: ${responseText.slice(0, 400)}`);
+      console.error(`     last 200:  ${responseText.slice(-200)}`);
+      return null;
+    }
+    if (body.stop_reason && body.stop_reason !== "tool_use" && body.stop_reason !== "end_turn") {
+      console.error(`  ⚠ stop_reason=${body.stop_reason}`);
+    }
     const toolBlock = body.content?.find((b) => b.type === "tool_use");
-    if (!toolBlock?.input) return null;
+    if (!toolBlock?.input) {
+      console.error(`  ✗ no tool_use block. content types: ${(body.content ?? []).map((b) => b.type).join(", ") || "none"}`);
+      return null;
+    }
     const content =
       typeof toolBlock.input.content === "string"
         ? toolBlock.input.content.trim()
