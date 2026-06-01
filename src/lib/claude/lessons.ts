@@ -33,6 +33,19 @@ import type {
 } from "@/lib/db/schema";
 import type { Session } from "@/lib/types/session";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
+// Knowledge layer — same one /recommend reads from, so the distiller
+// reasons with the named-expert vocabulary instead of inventing
+// coaching-speak.
+import {
+  getRoasterPrior,
+  formatRoasterPriorForPrompt,
+} from "../roasters/priors";
+import {
+  getVarietyPriorsForBag,
+  formatVarietyPriorsForPrompt,
+} from "../knowledge/varieties";
+import { TECHNIQUES } from "../knowledge/techniques";
+import { ALL_RECIPES, findRecipesByPerson } from "../knowledge/recipes/helpers";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -136,26 +149,28 @@ export async function loadSessionsForScope(
   return filtered.slice(0, limit);
 }
 
-const SYSTEM_PROMPT = `You are BTTS's memory writer. You distill a user's brew history into ONE durable directive per scope — a paragraph a recommendation prompt can quote verbatim months from now.
+const SYSTEM_PROMPT = `You are BTTS's memory writer — an SCA-trained barista coach distilling the user's brew history into ONE durable directive per scope.
+
+You sound like a coach, not a data analyst. Diagnoses reference mechanism (what's over- or under-extracted, what aromatic phase, what physical cause). Recommendations cite recipes by NAME (their title plus the originator: "Hoffmann Water-First Clever", "Kasuya 4:6", "Peng three-roast staged-temperature"). Techniques get cited by their atomic name from the vocabulary below ("swirl-not-stir", "Rao spin", "phase-separated-pouring", "low-temp-long-steep") rather than re-described.
 
 COFFEE IS MULTIVARIATE. Before assigning blame to a recipe, consider:
-- Bag age (<7d too fresh, 7–21d peak, 22–35d slightly past, 35–60d past peak, 60+ stale)
-- Recipe family (Hoffmann vs Hub vs Kasuya vs Wölfl — different physics, different cups)
-- Water source (clarity blend ~73 ppm vs filtered tap ~220 ppm — buffering differs)
-- Grind drift (Niche calibration shifts over months)
-- Pour technique (agitation level, pulse timing)
-- Roast inconsistency at source — some bags are uneven, not the user's fault
+- Bag age — <7d too fresh, heavy CO₂; 7–21d peak window; 22–35d slightly past; 35–60d past peak, aromatics softening; 60+ stale, body collapses
+- Recipe family — Hoffmann (swirl, water-first), Kasuya (4:6 phase-separated), Wölfl (Orea Fast, turbulent), Peng (staged-temp, melodrip), Rao (rule-of-thirds, spin), Perger (high agitation, high extraction), Gagné (low-temp long steep) — each is different physics
+- Water source — clarity blend (~73 ppm, low buffering) sharpens aromatic & acid expression on delicate washed coffees; filtered tap (~220 ppm) gives more body and balance but mutes high florals
+- Grind drift — burr seasoning + calibration shifts over months; a "same recipe" can flow differently across weeks
+- Pour technique — agitation level, pulse timing, drawdown geometry
+- Roast inconsistency at the source — some bags are simply uneven, not the brewer's fault
 - Palate fluctuation day to day
 
 ONE TOOL PER TURN.
 
-Call write_lesson when the evidence is clean: 3+ rated brews, a consistent pattern, ONE variable clearly standing out. Be a coach, not a hedger. Reference recipe NAMES (title plus based-on). Paraphrase freeNotes; never quote them.
+write_lesson when the evidence is clean: 3+ rated brews, a consistent pattern, ONE variable clearly standing out. Be a coach issuing a directive: name the mechanism, cite the technique vocabulary, reference the specific recipe family. Paraphrase freeNotes into the directive without quoting.
 
-Call ask_for_clarification when multiple plausible causes could explain the pattern and you need the user to disambiguate. The draft is your best guess as if you'd called write_lesson; the questions are how you'd want to be wrong. Questions must be SPECIFIC — reference the actual brews, the actual dates, the actual ambiguity. Options must be PLAUSIBLE — each one a real explanation the user might endorse, written in their voice. NO generic "Was it the recipe?" questions — name the recipes.
+ask_for_clarification when multiple plausible causes could explain the pattern. Draft = your best guess as if you'd called write_lesson; questions = how you'd want to be wrong. Questions must be SPECIFIC — name the brews, the dates, the recipes, the candidate causes. Options must be PLAUSIBLE — each one a real explanation written in the user's voice, not a placeholder. NO generic "Was it the recipe?" — name the recipes. NO generic "Was it the age?" — name the day count and what shifts in that window per the freshness curve above.
 
-Single bucket, 1 rated brew: usually ask_for_clarification (a single data point cannot support a directive). Use the draft to capture what the brew suggested; use the question to ask whether the user thinks this is a real pattern or a one-off.
+Single bucket, 1 rated brew: usually ask_for_clarification. One data point cannot support a directive. Use the draft to record what the brew suggested; use the question to ask whether this is a pattern or a one-off.
 
-Metric units. No emojis. No quotation marks anywhere.`;
+Metric units. No emojis. No quotation marks anywhere in your output. Output prose, not bullet lists.`;
 
 const FINALISE_PROMPT = `You previously drafted a lesson and asked the user clarifying questions about this scope. The user has now answered. Incorporate their answers and commit the final directive via write_lesson.
 
@@ -210,6 +225,129 @@ function formatSessionsForPrompt(sessionList: Session[]): string {
       return `- ${date} · ${rating} · ${recipeLine} · ${recipeParams.join("/")} · [${flavors}]${free}${attr}${fit}`;
     })
     .join("\n");
+}
+
+/** Compact technique vocabulary — every distill turn gets this so
+ * Haiku can cite techniques by id rather than re-invent coaching-speak. */
+function formatTechniqueVocabulary(): string {
+  return (
+    "TECHNIQUE VOCABULARY (cite by id, do not re-describe):\n" +
+    TECHNIQUES.map((t) => `  - ${t.id}: ${t.description}`).join("\n")
+  );
+}
+
+/** Pick recipes most likely relevant for a given scope so the lesson
+ * can name them directly. Different rules per level — see comments. */
+function selectKnowledgeRecipes(
+  scope: DistillScope,
+  sessionList: Session[],
+): string[] {
+  const lines: string[] = [];
+
+  if (scope.level === "method-style") {
+    const parts = scope.scope.split("·").map((s) => s.trim());
+    const basedOn = parts[1] ?? "";
+    const match = ALL_RECIPES.find(
+      (r) =>
+        r.name.toLowerCase() === basedOn.toLowerCase() ||
+        r.shortName.toLowerCase() === basedOn.toLowerCase() ||
+        r.id.toLowerCase().includes(basedOn.toLowerCase().replace(/\s+/g, "-")),
+    );
+    if (match) {
+      const temp =
+        match.temperature.celsius ??
+        (match.temperature.rangeC ? match.temperature.rangeC[0] : null);
+      lines.push(
+        `Reference recipe — ${match.name} by ${match.attribution.person}: dose ${match.dose.grams}g, water ${match.water.grams}g (${match.water.ratio}), ${temp != null ? `temperature ${temp}°C, ` : ""}total ${match.totalTimeSec}s, brewer ${match.brewer}.`,
+      );
+      lines.push(`Teaches: ${match.teaches}`);
+      lines.push(`Mechanism: ${match.science}`);
+      if (match.techniques.length > 0) {
+        lines.push(`Techniques used: ${match.techniques.join(", ")}`);
+      }
+    }
+  }
+
+  if (scope.level === "process-roast") {
+    const parts = scope.scope.split("×").map((s) => s.trim());
+    const process = parts[0] ?? "";
+    const matches = ALL_RECIPES.filter((r) =>
+      r.bestFor.processes?.some(
+        (p) => p.toLowerCase() === process.toLowerCase(),
+      ),
+    ).slice(0, 3);
+    for (const r of matches) {
+      lines.push(
+        `- ${r.shortName} (${r.attribution.person}): ${r.teaches}`,
+      );
+    }
+  }
+
+  // Pull recipes authored by people referenced in this scope's brews —
+  // surfaces the originator's actual numbers as ground truth when the
+  // user has been brewing e.g. Kasuya 4:6 or Hoffmann Better 1 Cup.
+  const seenAuthors = new Set<string>();
+  for (const s of sessionList.slice(0, 5)) {
+    const { candidate } = resolveBrewedRecipe(s);
+    const basedOn = candidate?.basedOn?.trim();
+    if (!basedOn || basedOn.toLowerCase() === "own recipe") continue;
+    if (seenAuthors.has(basedOn)) continue;
+    seenAuthors.add(basedOn);
+    const recipes = findRecipesByPerson(basedOn);
+    if (recipes.length > 0) {
+      const r = recipes[0];
+      const temp =
+        r.temperature.celsius ??
+        (r.temperature.rangeC ? r.temperature.rangeC[0] : null);
+      lines.push(
+        `- ${r.shortName} (${r.attribution.person}): ${r.dose.grams}g/${r.water.grams}g${temp != null ? ` @ ${temp}°C` : ""}, ${r.totalTimeSec}s. ${r.teaches}`,
+      );
+    }
+  }
+
+  return lines;
+}
+
+/** Per-scope knowledge block injected into Haiku's user message. */
+function buildKnowledgeBlock(scope: DistillScope, sessionList: Session[]): string {
+  const lines: string[] = [];
+
+  // Roaster prior — for coffee + roaster scopes
+  if (scope.level === "coffee" || scope.level === "roaster") {
+    const roaster = sessionList[0]?.coffee?.roaster;
+    if (roaster) {
+      const prior = getRoasterPrior(roaster);
+      if (prior.confidence !== "fallback") {
+        lines.push(formatRoasterPriorForPrompt(prior));
+      }
+    }
+  }
+
+  // Variety priors — for coffee scope when the bag has a variety
+  if (scope.level === "coffee") {
+    const variety = sessionList[0]?.coffee?.variety;
+    if (variety) {
+      const priors = getVarietyPriorsForBag(variety);
+      if (priors.length > 0) {
+        lines.push(formatVarietyPriorsForPrompt(priors));
+      }
+    }
+  }
+
+  // Recipe context — method-style cites a specific reference; others
+  // cite recipes by authors the user has actually been brewing.
+  const recipeLines = selectKnowledgeRecipes(scope, sessionList);
+  if (recipeLines.length > 0) {
+    lines.push(
+      "RELEVANT REFERENCE RECIPES (the originator's actual numbers — use as ground truth):\n" +
+        recipeLines.join("\n"),
+    );
+  }
+
+  // Technique vocabulary — always
+  lines.push(formatTechniqueVocabulary());
+
+  return lines.join("\n\n");
 }
 
 /** The two-tool array passed to the Haiku distillation call. Shared with
@@ -289,8 +427,11 @@ async function callHaikuForDistillation(
   const ratedCount = sessionList.filter((s) => s.result?.rating != null).length;
   if (ratedCount === 0) return null;
 
+  const knowledgeBlock = buildKnowledgeBlock(scope, sessionList);
   const userMessage = `Level: ${scope.level}
 Scope: ${scope.label}
+
+${knowledgeBlock}
 
 ${existing?.content ? `Existing lesson (revise if the new evidence changes it; keep what still holds): ${existing.content}\n\n` : ""}Brews backing this scope (most recent first, max 30):
 ${formatSessionsForPrompt(sessionList)}
@@ -385,8 +526,11 @@ async function callHaikuToFinalise(
     })
     .join("\n\n");
 
+  const knowledgeBlock = buildKnowledgeBlock(scope, sessionList);
   const userMessage = `Level: ${scope.level}
 Scope: ${scope.label}
+
+${knowledgeBlock}
 
 Draft you wrote earlier: ${draft}
 
