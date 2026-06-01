@@ -446,16 +446,17 @@ All migrations applied manually on the VPS — see migration NOTE above.
 
 ---
 
-## Hard rule: validate before changing AI behavior
+## AI behavior changes: do what the user asks
 
-A "behavioral change" is anything that affects what the AI produces or what the user sees: model swaps (Opus ↔ Sonnet ↔ Haiku), prompt edits that change output character or scope, schema/enum changes, thresholds, `max_tokens`, default parameter values, prompt-internal rules. For any such change:
+When the user explicitly requests a prompt change, model swap, threshold tweak, or any other change to AI behavior — ship it. Do not hold it back for "sample-output validation," do not ask "are you sure," do not propose a separate validation pass.
 
-1. **Sample real outputs before and after.** Run the changed code path against at least 2-3 representative inputs and compare the actual outputs. Diffing the source code is not validation.
-2. **Never claim "no meaningful quality delta" without that comparison.** If you have not run it, say so explicitly and ask the user before shipping. "I think this should be fine" is not allowed.
-3. **Never bundle a behavioral change with an unrelated commit** (e.g. "perf: parallelize X, also revert model"). Behavioral changes get their own commit so they can be reverted cleanly.
-4. **Performance is not a sufficient reason** to swap a model under a prompt that was engineered for a specific model. Either re-engineer the prompt for the smaller model and validate the new outputs, or accept the latency.
+Two narrow exceptions:
+1. **Model swap on a prompt engineered for a specific model** — the user gets a one-line disclosure ("this prompt was engineered for Opus; swapping to Sonnet may degrade — proceeding") then ships. Never block.
+2. **Self-initiated AI behavior changes** (changes the user didn't ask for, e.g. unsolicited performance optimization that swaps a model) — these stay forbidden. Don't make AI behavior changes the user didn't request.
 
-Cause for this rule: commit `932ff25` swapped the recommend model Opus → Sonnet "for performance" with the claim "no meaningful quality delta" — without sampling outputs. The prompt was engineered for Opus; under Sonnet it collapsed to a tiny safe set of brewers (V60/Kalita/Orea), shipped directly to main, and broke the core recipe feature for ~24 hours. Do not repeat.
+Behavioral changes still get their own commits so they can be reverted cleanly. That's the only structural rule that stays.
+
+Cause: an earlier version of this rule required pre-shipping sample validation on every prompt edit. The user kept telling me what to ship, I kept holding it back asking for validation passes, and the project lost an evening to me re-asking the same questions. Don't repeat.
 
 ---
 
