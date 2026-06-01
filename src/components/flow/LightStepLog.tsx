@@ -92,12 +92,45 @@ export default function LightStepLog() {
   const [improvedWhileCooling, setImprovedWhileCooling] = useState<boolean | null>(null);
   const [matchedIntention, setMatchedIntention] = useState<boolean | null>(null);
 
+  // Post-rate coach micro-dialogue. The heuristic decides locally whether
+  // to ask (no LLM round-trip just to skip); the endpoint only writes the
+  // question text when one is warranted.
+  const [coachQuestion, setCoachQuestion] = useState<{ question: string; chips: string[] } | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
+  const [coachAnswer, setCoachAnswer] = useState<string>("");
+  const [coachCustom, setCoachCustom] = useState<string>("");
+
   const toggleFlavor = (f: string) =>
     setSelectedFlavors((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
   const canProceed = rating > 0;
 
-  const handleNext = () => {
+  /** Build the TasteResult object from current local state. Pure, no
+   * side effects — used both by the "save without coach" path and by
+   * the "save with coachAnswer" path so the field-merge logic lives in
+   * one place. */
+  const buildResult = (coachAnswerData?: { question: string; answer: string }) => ({
+    rating,
+    flavorNotes: selectedFlavors,
+    body,
+    acidity,
+    freeNotes,
+    ...(wouldAgain !== null ? { wouldBrewAgain: wouldAgain } : {}),
+    ...(rating <= 3 && attribution ? { attribution } : {}),
+    ...(craft ? { craft } : {}),
+    ...(fit ? { fit } : {}),
+    ...(roastQuality ? { roastQuality } : {}),
+    ...(sweetness ? { sweetness } : {}),
+    ...(clarity ? { clarity } : {}),
+    ...(bitterness ? { bitterness } : {}),
+    ...(finish ? { finish } : {}),
+    ...(improvedWhileCooling !== null ? { improvedWhileCooling } : {}),
+    ...(matchedIntention !== null ? { matchedIntention } : {}),
+    ...(coachAnswerData ? { coachAnswer: coachAnswerData } : {}),
+  });
+
+  const commitBrew = () => {
     if (isExternal) {
       setBrew({
         // Do NOT spread draft.brew here — home-mode fields would leak into
@@ -118,24 +151,112 @@ export default function LightStepLog() {
         ...(agitationNote.trim() ? { agitationNote: agitationNote.trim() } : {}),
       });
     }
-    setResult({
-      rating,
-      flavorNotes: selectedFlavors,
-      body,
-      acidity,
-      freeNotes,
-      ...(wouldAgain !== null ? { wouldBrewAgain: wouldAgain } : {}),
-      ...(rating <= 3 && attribution ? { attribution } : {}),
-      ...(craft ? { craft } : {}),
-      ...(fit ? { fit } : {}),
-      ...(roastQuality ? { roastQuality } : {}),
-      ...(sweetness ? { sweetness } : {}),
-      ...(clarity ? { clarity } : {}),
-      ...(bitterness ? { bitterness } : {}),
-      ...(finish ? { finish } : {}),
-      ...(improvedWhileCooling !== null ? { improvedWhileCooling } : {}),
-      ...(matchedIntention !== null ? { matchedIntention } : {}),
-    });
+  };
+
+  /** Deterministic ambiguity heuristic — decides whether the post-rate
+   * coach should ask one micro-dialogue question. The endpoint never
+   * decides whether to ask: this function does. Examples below match
+   * the plan's call-out cases (rating drop, timing drift, bitter+low,
+   * muddy+high, cooling shift). */
+  const computeCoachSignals = () => {
+    const recipe = selectedRecipe;
+    const actualTimeSec = draft.brew?.actualTimeSec;
+    const targetTimeSec = recipe?.targetTimeSec;
+    const overrunPct =
+      actualTimeSec != null && targetTimeSec != null && targetTimeSec > 0
+        ? ((actualTimeSec - targetTimeSec) / targetTimeSec) * 100
+        : undefined;
+
+    const bitterAndLowRating = bitterness === "harsh" && rating > 0 && rating <= 3;
+    const muddyAndHighRating = (clarity === "muddy" || clarity === "cloudy") && rating >= 4;
+    const coolingChangedTaste = improvedWhileCooling === true;
+
+    const fireCount =
+      (overrunPct != null && Math.abs(overrunPct) >= 20 ? 1 : 0) +
+      (bitterAndLowRating ? 1 : 0) +
+      (muddyAndHighRating ? 1 : 0) +
+      (coolingChangedTaste ? 1 : 0);
+
+    return {
+      shouldAsk: fireCount > 0,
+      signals: {
+        ...(overrunPct != null ? { timingOverrunPct: overrunPct } : {}),
+        ...(bitterAndLowRating ? { bitterAndLowRating: true } : {}),
+        ...(muddyAndHighRating ? { muddyAndHighRating: true } : {}),
+        ...(coolingChangedTaste ? { coolingChangedTaste: true } : {}),
+      },
+      context: {
+        coffeeName: draft.coffee ? `${draft.coffee.roaster ?? ""} ${draft.coffee.name ?? ""}`.trim() : undefined,
+        methodUsed: draft.brew?.methodUsed ?? rec?.primaryMethod,
+        rating,
+        bitterness: bitterness || undefined,
+        clarity: clarity || undefined,
+        finish: finish || undefined,
+        actualTimeSec,
+        targetTimeSec,
+        flavorNotes: selectedFlavors,
+        freeNotes: freeNotes || undefined,
+      },
+    };
+  };
+
+  const handleNext = async () => {
+    commitBrew();
+    const { shouldAsk, signals, context } = computeCoachSignals();
+
+    if (!shouldAsk || isExternal) {
+      // External brews are out of scope for the coach micro-dialogue —
+      // we didn't author the recipe so we can't ask sharp questions
+      // about it.
+      setResult(buildResult());
+      setStep("summary");
+      return;
+    }
+
+    // Ambiguity present — open the modal with a loading state, fetch
+    // the question, then let the user answer or skip. If the fetch
+    // fails or times out, fall through to save without the coach.
+    setCoachOpen(true);
+    setCoachLoading(true);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch("/api/coach-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signals, context }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.question && Array.isArray(data?.chips)) {
+          setCoachQuestion({ question: data.question, chips: data.chips });
+          setCoachLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // network error or timeout — fall through and save without coach
+    }
+    // No question available — skip silently.
+    setCoachLoading(false);
+    setCoachOpen(false);
+    setResult(buildResult());
+    setStep("summary");
+  };
+
+  const submitCoachAnswer = (answerText: string) => {
+    const answer = answerText.trim();
+    if (!coachQuestion || !answer) return;
+    setResult(buildResult({ question: coachQuestion.question, answer }));
+    setCoachOpen(false);
+    setStep("summary");
+  };
+
+  const skipCoach = () => {
+    setResult(buildResult());
+    setCoachOpen(false);
     setStep("summary");
   };
 
@@ -410,7 +531,110 @@ export default function LightStepLog() {
           />
         </Section>
       </div>
+
+      {coachOpen && (
+        <CoachQuestionSheet
+          loading={coachLoading}
+          question={coachQuestion}
+          answer={coachAnswer}
+          custom={coachCustom}
+          onPickChip={(chip) => {
+            setCoachAnswer(chip);
+            setCoachCustom("");
+          }}
+          onTypeCustom={(value) => {
+            setCoachCustom(value);
+            setCoachAnswer("");
+          }}
+          onSubmit={() => {
+            const answer = coachAnswer || coachCustom;
+            if (answer) submitCoachAnswer(answer);
+          }}
+          onSkip={skipCoach}
+        />
+      )}
     </LightFlowShell>
+  );
+}
+
+/**
+ * Bottom sheet that surfaces the coach's one micro-dialogue question.
+ * Only mounted when the ambiguity heuristic has fired AND the Sonnet
+ * call returned a usable question. Modal-style — covers the screen,
+ * blocks save until answered or explicitly skipped.
+ */
+function CoachQuestionSheet({
+  loading,
+  question,
+  answer,
+  custom,
+  onPickChip,
+  onTypeCustom,
+  onSubmit,
+  onSkip,
+}: {
+  loading: boolean;
+  question: { question: string; chips: string[] } | null;
+  answer: string;
+  custom: string;
+  onPickChip: (chip: string) => void;
+  onTypeCustom: (value: string) => void;
+  onSubmit: () => void;
+  onSkip: () => void;
+}) {
+  const canSubmit = !!(answer || custom.trim());
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-light-foreground/30 backdrop-blur-sm">
+      <div className="bg-[hsl(36_55%_96%)] rounded-t-3xl px-6 pt-6 pb-8 shadow-light-card-pressed" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}>
+        <p className="label-eyebrow text-light-muted-foreground mb-3">One quick check</p>
+        {loading || !question ? (
+          <div className="space-y-3">
+            <div className="h-4 bg-light-foreground/10 rounded-full w-full animate-pulse" />
+            <div className="h-4 bg-light-foreground/10 rounded-full w-3/4 animate-pulse" />
+            <p className="text-light-muted-foreground text-xs pt-2">Coach is thinking…</p>
+          </div>
+        ) : (
+          <>
+            <p className="font-fraunces text-[22px] leading-tight text-light-foreground mb-5">{question.question}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {question.chips.map((chip) => (
+                <Chip key={chip} selected={answer === chip} onClick={() => onPickChip(chip)}>
+                  {chip}
+                </Chip>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={custom}
+              onChange={(e) => onTypeCustom(e.target.value)}
+              placeholder="Other…"
+              className={inputClass}
+            />
+            <div className="flex items-center gap-3 mt-5">
+              <button
+                type="button"
+                onClick={onSkip}
+                className="flex-1 h-12 rounded-full text-light-muted-foreground text-[14px] active:text-light-foreground"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                onClick={onSubmit}
+                disabled={!canSubmit}
+                className={`flex-[2] h-12 rounded-full font-semibold text-[14px] transition-opacity ${
+                  canSubmit
+                    ? "bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98]"
+                    : "bg-light-foreground/30 text-[hsl(36_55%_96%)] cursor-not-allowed"
+                }`}
+              >
+                Save with this
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
