@@ -183,6 +183,15 @@ export interface TasteResult {
   balance?: "unbalanced" | "decent" | "harmonious";
   improvedWhileCooling?: boolean;
   matchedIntention?: boolean;
+  /** Coach micro-dialogue answer. Captured by /api/coach-question when
+   * the post-rate heuristic flags this brew as high-signal-ambiguous
+   * (rating drop, off-target timing, conflicting taste markers, first
+   * brew of a new bag). Read downstream by /recommend and /api/insights
+   * to ground the next suggestion in the user's own words. */
+  coachAnswer?: {
+    question: string;
+    answer: string;
+  };
 }
 
 export interface ExternalPlace {
