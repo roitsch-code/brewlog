@@ -8,7 +8,7 @@ Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Cla
 
 | What | Detail |
 |------|--------|
-| **VPS** | Hetzner, IP `89.167.31.219`, path `/opt/brewlog` |
+| **VPS** | Hetzner Cloud, host in the `DEPLOY_HOST` GitHub Actions secret, path `/opt/brewlog` |
 | **Stack** | Docker Compose: `postgres`, `app` (Next.js), `caddy` (reverse proxy), `ofelia` (cron) |
 | **Vercel** | **Deleted.** App is 100% on Hetzner. No Vercel, no Vercel env vars, nothing. |
 | **Auto-deploy** | `.github/workflows/deploy.yml` — pushes to `main` trigger SSH deploy on VPS |
@@ -522,7 +522,7 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 
 ### Git / Deploy
 - **"Done" means shipped** — merged to `main`, auto-deploy runs on Hetzner, live on the iPhone PWA. "Pushed to a feature branch" is NOT done. Stopping at a branch leaves the user staring at the still-broken app, re-reporting the bug, and re-fixing what is already fixed. That is chaos and it is not acceptable.
-- **Workflow is PR-based.** `main` is branch-protected on GitHub — direct pushes return HTTP 403. Every change goes: feature branch → PR → squash-merge to `main` → auto-deploy. Use the GitHub MCP tools (`mcp__github__create_pull_request`, `mcp__github__merge_pull_request`, `mcp__github__enable_pr_auto_merge`).
+- **Workflow is PR-based.** Every change goes: feature branch → PR → squash-merge to `main` → auto-deploy. Use the GitHub MCP tools (`mcp__github__create_pull_request`, `mcp__github__merge_pull_request`, `mcp__github__enable_pr_auto_merge`). The PR flow is **by convention** — branch protection is not currently enabled, so direct pushes to `main` are technically possible but should never be done.
 - **Auto-merge is enabled on the repo.** For PRs that pass CI without review gating, call `enable_pr_auto_merge` (mergeMethod: SQUASH); GitHub merges as soon as checks go green. If checks are already clean, call `merge_pull_request` directly.
 - **Session-level harness instructions are compatible.** If a system prompt tells you to develop on a feature branch — fine, that's the actual flow. Just don't stop at the branch: open the PR, merge it, confirm `main` advanced.
 - **Auto-deploy** — GitHub Actions runs on every push to `main`. No manual steps needed unless the action fails (fallback: SSH to VPS and run docker compose manually per the Infrastructure section).
@@ -571,7 +571,7 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
-| **Water** | BWT Bestmax Premium V (bypass 0): ~370 ppm Düsseldorf tap → **~220 ppm** filtered (GH 5–6 / KH 4 °dH), daily driver for naturals/honeys · **clarity blend** 1:2 filtered+distilled = **~73 ppm** (KH ~1.3 °dH) for washed florals & championship methods (Peng/Kasuya/Wölfl) |
+| **Water** | BWT Bestmax Premium V (bypass 0): ~370 ppm hard local tap → **~220 ppm** filtered (GH 5–6 / KH 4 °dH), daily driver for naturals/honeys · **clarity blend** 1:2 filtered+distilled = **~73 ppm** (KH ~1.3 °dH) for washed florals & championship methods (Peng/Kasuya/Wölfl) |
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
 **Grind quick ref:** @./docs/grind-settings.md

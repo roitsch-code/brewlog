@@ -2,7 +2,7 @@
 
 ## Server details
 
-- **VPS**: Hetzner CX33, Helsinki `hel1`, IP `89.167.31.219`
+- **VPS**: Hetzner Cloud CX33, host stored in the `DEPLOY_HOST` GitHub Actions secret (see `.github/workflows/deploy.yml`)
 - **OS**: Ubuntu 24.04
 - **Docker Compose** manages: `app`, `postgres`, `caddy`, `ofelia`
 
@@ -11,7 +11,7 @@
 ## First-time server setup
 
 ```bash
-ssh root@89.167.31.219
+ssh root@<vps-host>  # use the host stored in the DEPLOY_HOST GitHub Actions secret
 
 # Install Docker
 curl -fsSL https://get.docker.com | sh
@@ -127,7 +127,7 @@ crontab -e
 ## DNS cutover
 
 1. In your domain registrar, set:
-   - `A` record: `bettertastethansorry.com` → `89.167.31.219`
+   - `A` record: `bettertastethansorry.com` → `<vps-ipv4>`
    - `AAAA` record: `bettertastethansorry.com` → VPS IPv6
    - TTL: 300
 2. Caddy automatically issues a Let's Encrypt cert on first HTTPS hit.
