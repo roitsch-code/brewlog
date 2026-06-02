@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import Chip from "@/components/ui/light/Chip";
 
 /**
  * Coach insight card — shared across /taste, /coffees/[id], and the
  * /brew/new Context reminder pill.
  *
  * The card itself is presentational. The three actions surface
- * Try it / Confirmed / Doesn't apply with a clean visual hierarchy:
- * anthracite for the encouraged path, cream-glass for satisfaction,
- * muted text for dismissal.
+ * Try it / Confirmed / Doesn't apply as the Light system's `Chip`
+ * primitive (small variant) — same primitive used in StepLog's
+ * sensory + flavor pickers, so the visual language is consistent.
  *
  * Two-line layout is intentional:
  *   - row 1 = observation (data with real counts)
@@ -56,40 +56,12 @@ export function CoachCard({
       <p className="text-light-foreground/75 text-[14px] leading-relaxed mt-2">
         {insight.suggestion}
       </p>
-      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex gap-2">
-        <CardAction onClick={onTry} variant="primary">
-          Try it
-        </CardAction>
-        <CardAction onClick={onConfirm} variant="soft">
-          Confirmed
-        </CardAction>
-        <CardAction onClick={onDoesntApply} variant="muted">
-          Doesn’t apply
-        </CardAction>
+      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex flex-wrap gap-2">
+        <Chip size="sm" onClick={onTry}>Try it</Chip>
+        <Chip size="sm" onClick={onConfirm}>Confirmed</Chip>
+        <Chip size="sm" onClick={onDoesntApply}>Doesn’t apply</Chip>
       </div>
     </div>
-  );
-}
-
-function CardAction({
-  onClick,
-  variant,
-  children,
-}: {
-  onClick: () => void;
-  variant: "primary" | "soft" | "muted";
-  children: ReactNode;
-}) {
-  const classes =
-    variant === "primary"
-      ? "flex-1 h-9 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-[12px] font-semibold tracking-tight active:scale-[0.97] transition-transform"
-      : variant === "soft"
-        ? "flex-1 h-9 rounded-full bg-light-card-selected text-light-foreground text-[12px] font-semibold tracking-tight backdrop-blur-light-card backdrop-saturate-150 active:scale-[0.97] transition-transform"
-        : "flex-1 h-9 rounded-full text-light-muted-foreground text-[12px] tracking-tight active:text-light-foreground transition-colors";
-  return (
-    <button type="button" onClick={onClick} className={classes}>
-      {children}
-    </button>
   );
 }
 
