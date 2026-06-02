@@ -170,9 +170,22 @@ export function CoffeeCoachCard({
 }
 
 /**
- * Score insights by `citationFields` overlap with the coffee's
- * attributes. Trying status wins all ties (it's already an active
- * reminder; surface it on the page where the user is about to brew).
+ * Decide whether an insight is actually about THIS coffee.
+ *
+ * The old logic scored on `citationFields` overlap with the coffee's
+ * attribute *names* (process, roast, …). That matched almost every
+ * coffee since most have a process and a roast — so a "honey-processed
+ * light roasts beat naturals" insight would show on a washed Gesha
+ * just because the Gesha has a process field at all.
+ *
+ * Tightened rule: the insight's TEXT (observation + suggestion) must
+ * mention at least one of THIS coffee's specific attribute *values*.
+ * We weight by specificity:
+ *   - variety / origin / specific process value  → real signal
+ *   - roast level alone ("light")                → too generic to count
+ *     (it would match every light-roast coffee in the library)
+ *   - method                                     → only counts if the
+ *     coffee actually has a best method
  */
 function selectBestMatch(
   insights: CoachInsight[],
@@ -186,26 +199,33 @@ function selectBestMatch(
 ): CoachInsight | null {
   if (insights.length === 0) return null;
 
-  const want = new Set<string>();
-  if (ctx.variety) want.add("variety");
-  if (ctx.process) want.add("process");
-  if (ctx.origin) want.add("origin");
-  if (ctx.roastLevel) want.add("roast");
-  if (ctx.method) want.add("method");
+  // Build the list of specific values for THIS coffee. roastLevel is
+  // deliberately excluded — it's too coarse a match on its own
+  // (any "light roasts" insight would otherwise apply to every light
+  // coffee in the library).
+  const specific: string[] = [];
+  if (ctx.variety) specific.push(ctx.variety.toLowerCase());
+  if (ctx.process) specific.push(ctx.process.toLowerCase());
+  if (ctx.origin) specific.push(ctx.origin.toLowerCase());
+  if (ctx.method) specific.push(ctx.method.toLowerCase());
 
-  const score = (i: CoachInsight) => {
-    const overlap = i.citationFields.reduce(
-      (acc, f) => acc + (want.has(f.toLowerCase()) ? 1 : 0),
-      0,
-    );
-    // Trying tier beats new tier regardless of overlap.
-    const tier = i.status === "trying" ? 100 : 0;
-    return tier + overlap;
+  if (specific.length === 0) return null;
+
+  // An insight is RELEVANT iff its observation+suggestion text mentions
+  // at least one of this coffee's specific values verbatim. (Lowercase
+  // substring match — light enough to handle "Washed" → "washed" and
+  // "Colombia" → "colombian", strict enough to skip pure citation-field
+  // overlap noise.)
+  const mentions = (i: CoachInsight): boolean => {
+    const text = `${i.observation} ${i.suggestion}`.toLowerCase();
+    return specific.some((v) => v.length > 2 && text.includes(v));
   };
 
-  const best = [...insights].sort((a, b) => score(b) - score(a))[0];
-  // Require at least one field overlap OR a 'trying' status to bother
-  // surfacing — otherwise the card is just generic noise on this page.
-  if (best.status !== "trying" && score(best) === 0) return null;
-  return best;
+  const relevant = insights.filter(mentions);
+  if (relevant.length === 0) return null;
+
+  // Prefer trying status (it's already an active reminder for this
+  // user — surface it where they're about to brew).
+  const trying = relevant.find((i) => i.status === "trying");
+  return trying ?? relevant[0];
 }
