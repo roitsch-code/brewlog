@@ -83,7 +83,24 @@ export const coffees = pgTable("coffees", {
   // /api/greeting library snapshot so the daily Haiku starter
   // prioritises rotation bags. Toggled from /coffees/[id].
   inRotation: boolean("in_rotation").notNull().default(false),
+  // Per-coffee coach insight (migration 0015). Single Opus-generated
+  // observation+suggestion specific to THIS coffee, drawing on its
+  // brew history, roaster prior, and variety prior. Shape:
+  // { observation, suggestion, status, generatedAtSessionMs, generatedAt }.
+  coachInsight: jsonb("coach_insight").$type<CoffeeCoachInsight | null>(),
 });
+
+export interface CoffeeCoachInsight {
+  observation: string;
+  suggestion: string;
+  // Same state machine as library-wide insights (see InsightStatus).
+  status: "new" | "trying" | "confirmed" | "doesnt-apply";
+  // Latest sessionMs of THIS coffee at generation time. Stale when
+  // the coffee gets a newer session — triggers a regeneration unless
+  // the user is in the middle of `trying` or `confirmed`.
+  generatedAtSessionMs: number;
+  generatedAt: string;
+}
 
 // "I've been here" — visit-only café record without a brew session.
 // rating is intentionally binary ('come-back' | 'wont-return') since

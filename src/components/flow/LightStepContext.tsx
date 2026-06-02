@@ -206,43 +206,37 @@ export default function LightStepContext() {
     };
   }, [draft.coffee?.coffeeId]);
 
-  // Fetch any 'trying' insight that matches this coffee's attributes.
-  // citationFields overlap with variety / process / origin / roast.
+  // Fetch THIS coffee's per-coffee insight; surface it as a quiet
+  // reminder pill only when its status is 'trying' (the user already
+  // tapped "Try it" on the /coffees/[id] coach card and we're now in
+  // the flow that should remind them).
   useEffect(() => {
-    const c = draft.coffee;
-    if (!c) return;
-    const want = new Set<string>(
-      [
-        c.variety && "variety",
-        c.process && "process",
-        c.origin && "origin",
-        c.roastLevel && "roast",
-      ].filter(Boolean) as string[],
-    );
-    if (want.size === 0) return;
+    const coffeeId = draft.coffee?.coffeeId;
+    if (!coffeeId) return;
     let cancelled = false;
-    fetch("/api/insights?status=trying", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { insights: [] }))
+    fetch(`/api/coffees/${coffeeId}/insight`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { insight: null }))
       .then((d) => {
         if (cancelled) return;
-        const items: CoachInsight[] = Array.isArray(d.insights) ? d.insights : [];
-        const scored = items
-          .map((i) => ({
-            insight: i,
-            overlap: i.citationFields.reduce(
-              (acc, f) => acc + (want.has(f.toLowerCase()) ? 1 : 0),
-              0,
-            ),
-          }))
-          .filter((x) => x.overlap > 0)
-          .sort((a, b) => b.overlap - a.overlap);
-        setTryingReminder(scored[0]?.insight ?? null);
+        const raw = d.insight;
+        if (!raw || raw.status !== "trying") {
+          setTryingReminder(null);
+          return;
+        }
+        setTryingReminder({
+          id: coffeeId,
+          observation: raw.observation,
+          suggestion: raw.suggestion,
+          citationFields: [],
+          status: raw.status,
+          source: "per-coffee",
+        });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [draft.coffee]);
+  }, [draft.coffee?.coffeeId]);
 
   const updateCtx = (patch: Partial<SessionContext>) => {
     setContext({ ...ctx, ...patch } as SessionContext);
