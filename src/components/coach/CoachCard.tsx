@@ -94,29 +94,28 @@ function CardAction({
 }
 
 /**
- * Lightweight wrapper for /coffees/[id]: fetches insights filtered to
- * `new` + `trying`, scores by attribute overlap with the given coffee,
- * renders the single best match. No render when the coffee isn't in
- * rotation, or when nothing matches.
+ * Per-coffee coach card. Fetches an Opus-generated insight that is
+ * specifically about THIS coffee — its brew history, its roaster
+ * prior, its variety prior — from /api/coffees/[id]/insight.
  *
- * Filter precedence: prefers status='trying' (active reminder) then
- * status='new'. Never renders confirmed or doesnt-apply.
+ * Rotation-only: out-of-rotation pages stay clean.
+ *
+ * Status actions are local to this coffee (not the global /taste queue):
+ *   - Try it → status='trying'; surfaces as a /brew/new Context reminder
+ *     when this same coffee is selected for the next brew.
+ *   - Confirmed → status='confirmed'; preserved across regenerations
+ *     until the user explicitly dismisses or replaces.
+ *   - Doesn't apply → status='doesnt-apply'; next regeneration replaces.
+ *
+ * Replaces the earlier library-wide citation-field matcher that was
+ * surfacing wrong insights on the wrong coffees.
  */
 export function CoffeeCoachCard({
+  coffeeId,
   inRotation,
-  variety,
-  process,
-  origin,
-  roastLevel,
-  method,
 }: {
+  coffeeId: string;
   inRotation: boolean;
-  variety?: string | null;
-  process?: string | null;
-  origin?: string | null;
-  roastLevel?: string | null;
-  /** Optional brew method history hint — boosts insights citing 'method'. */
-  method?: string | null;
 }) {
   const [pick, setPick] = useState<CoachInsight | null>(null);
   const [loading, setLoading] = useState(true);
@@ -127,29 +126,49 @@ export function CoffeeCoachCard({
       return;
     }
     const controller = new AbortController();
-    fetch("/api/insights?status=trying,new", {
+    fetch(`/api/coffees/${coffeeId}/insight`, {
       cache: "no-store",
       signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : { insight: null }))
       .then((d) => {
-        const all: CoachInsight[] = Array.isArray(d.insights) ? d.insights : [];
-        setPick(selectBestMatch(all, { variety, process, origin, roastLevel, method }));
+        const raw = d.insight;
+        if (!raw) {
+          setPick(null);
+          return;
+        }
+        // Hide confirmed + doesnt-apply from this view — the user has
+        // already acted on them. (The regeneration logic preserves
+        // confirmed rows specifically so the suggestion stays alive
+        // for /recommend prompts; on the coffee page itself, a
+        // resolved card just clutters.)
+        if (raw.status === "confirmed" || raw.status === "doesnt-apply") {
+          setPick(null);
+          return;
+        }
+        setPick({
+          id: coffeeId,
+          observation: raw.observation,
+          suggestion: raw.suggestion,
+          citationFields: [],
+          status: raw.status,
+          source: "per-coffee",
+        });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [inRotation, variety, process, origin, roastLevel, method]);
+  }, [inRotation, coffeeId]);
 
   if (!inRotation || loading || !pick) return null;
 
   const patchStatus = async (status: InsightStatus) => {
     setPick(null);
     try {
-      await fetch("/api/insights", {
+      await fetch(`/api/coffees/${coffeeId}/insight`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: pick.id, status }),
+        body: JSON.stringify({ status }),
       });
     } catch {
       /* optimistic */
@@ -167,45 +186,4 @@ export function CoffeeCoachCard({
       />
     </div>
   );
-}
-
-/**
- * Score insights by `citationFields` overlap with the coffee's
- * attributes. Trying status wins all ties (it's already an active
- * reminder; surface it on the page where the user is about to brew).
- */
-function selectBestMatch(
-  insights: CoachInsight[],
-  ctx: {
-    variety?: string | null;
-    process?: string | null;
-    origin?: string | null;
-    roastLevel?: string | null;
-    method?: string | null;
-  },
-): CoachInsight | null {
-  if (insights.length === 0) return null;
-
-  const want = new Set<string>();
-  if (ctx.variety) want.add("variety");
-  if (ctx.process) want.add("process");
-  if (ctx.origin) want.add("origin");
-  if (ctx.roastLevel) want.add("roast");
-  if (ctx.method) want.add("method");
-
-  const score = (i: CoachInsight) => {
-    const overlap = i.citationFields.reduce(
-      (acc, f) => acc + (want.has(f.toLowerCase()) ? 1 : 0),
-      0,
-    );
-    // Trying tier beats new tier regardless of overlap.
-    const tier = i.status === "trying" ? 100 : 0;
-    return tier + overlap;
-  };
-
-  const best = [...insights].sort((a, b) => score(b) - score(a))[0];
-  // Require at least one field overlap OR a 'trying' status to bother
-  // surfacing — otherwise the card is just generic noise on this page.
-  if (best.status !== "trying" && score(best) === 0) return null;
-  return best;
 }

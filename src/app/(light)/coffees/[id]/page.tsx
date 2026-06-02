@@ -403,18 +403,9 @@ export default function CoffeeDetailPage() {
         </div>
       )}
 
-      {/* Coach card — single most-relevant insight for this coffee.
-          Rotation-only: out-of-rotation pages stay clean. Filters by
-          attribute overlap (variety / process / origin / roast / method)
-          and prefers 'trying' over 'new' rows. */}
-      <CoffeeCoachCard
-        inRotation={!!coffee.inRotation}
-        variety={variety}
-        process={process}
-        origin={origin}
-        roastLevel={roastLevel}
-        method={coffee.bestMethod}
-      />
+      {/* Coach card — per-coffee Opus insight (its own brew history +
+          roaster prior + variety prior). Rotation-only. */}
+      <CoffeeCoachCard coffeeId={coffee.id} inRotation={!!coffee.inRotation} />
 
       {/* Personal notes */}
       <div className="px-5 py-4 border-b border-light-foreground/15">
