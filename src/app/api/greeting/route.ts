@@ -5,7 +5,7 @@ import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/c
 import { loadUserProfile } from "@/lib/claude/userProfile";
 import { db } from "@/lib/db/client";
 import { sessions, insights as insightsTable } from "@/lib/db/schema";
-import { desc, isNull } from "drizzle-orm";
+import { desc, ne } from "drizzle-orm";
 import { rowToSession } from "@/lib/db/helpers";
 
 export const dynamic = "force-dynamic";
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       db
         .select()
         .from(insightsTable)
-        .where(isNull(insightsTable.dismissedAt))
+        .where(ne(insightsTable.status, "doesnt-apply"))
         .orderBy(desc(insightsTable.latestSessionMs))
         .limit(8)
         .catch(() => []),

@@ -10,6 +10,7 @@ import Card, { CardTitle, CardSubText, CardIcon } from "@/components/ui/light/Ca
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { Brain, FlaskConical, Moon, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
+import type { CoachInsight } from "@/components/coach/CoachCard";
 
 /**
  * Light System fork of /components/flow/StepContext.tsx.
@@ -173,6 +174,10 @@ export default function LightStepContext() {
   const [approach, setApproach] = useState<ApproachId | null>(null);
   const [grinderId, setGrinderId] = useState<string | null>(ctx.grinder ?? null);
   const [coffeeMemory, setCoffeeMemory] = useState<CoffeeMemory | null>(null);
+  // Single 'trying' insight matching this coffee — surfaces as a quiet
+  // reminder above the Context selectors. The user's earlier "Try it"
+  // tap on /taste lands here when they reach for the same coffee.
+  const [tryingReminder, setTryingReminder] = useState<CoachInsight | null>(null);
 
   // Sync local grinder selection with whatever lands in ctx (rehydrate
   // from store when the page is re-entered mid-session).
@@ -200,6 +205,44 @@ export default function LightStepContext() {
       cancelled = true;
     };
   }, [draft.coffee?.coffeeId]);
+
+  // Fetch any 'trying' insight that matches this coffee's attributes.
+  // citationFields overlap with variety / process / origin / roast.
+  useEffect(() => {
+    const c = draft.coffee;
+    if (!c) return;
+    const want = new Set<string>(
+      [
+        c.variety && "variety",
+        c.process && "process",
+        c.origin && "origin",
+        c.roastLevel && "roast",
+      ].filter(Boolean) as string[],
+    );
+    if (want.size === 0) return;
+    let cancelled = false;
+    fetch("/api/insights?status=trying", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { insights: [] }))
+      .then((d) => {
+        if (cancelled) return;
+        const items: CoachInsight[] = Array.isArray(d.insights) ? d.insights : [];
+        const scored = items
+          .map((i) => ({
+            insight: i,
+            overlap: i.citationFields.reduce(
+              (acc, f) => acc + (want.has(f.toLowerCase()) ? 1 : 0),
+              0,
+            ),
+          }))
+          .filter((x) => x.overlap > 0)
+          .sort((a, b) => b.overlap - a.overlap);
+        setTryingReminder(scored[0]?.insight ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [draft.coffee]);
 
   const updateCtx = (patch: Partial<SessionContext>) => {
     setContext({ ...ctx, ...patch } as SessionContext);
@@ -278,6 +321,18 @@ export default function LightStepContext() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {tryingReminder && (
+        <div className="mb-10 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 p-4">
+          <p className="label-eyebrow mb-1.5">Coach reminder · trying</p>
+          <p className="text-[14px] leading-relaxed text-light-foreground">
+            {tryingReminder.observation}
+          </p>
+          <p className="text-[13px] leading-relaxed text-light-foreground/70 mt-1.5">
+            {tryingReminder.suggestion}
+          </p>
         </div>
       )}
 

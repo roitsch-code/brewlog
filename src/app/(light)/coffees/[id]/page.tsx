@@ -9,6 +9,7 @@ import StarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+import { CoffeeCoachCard } from "@/components/coach/CoachCard";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { rememberSessionField } from "@/lib/field/cache";
 import { useOnline } from "@/hooks/useOnline";
@@ -401,6 +402,19 @@ export default function CoffeeDetailPage() {
           ) : null}
         </div>
       )}
+
+      {/* Coach card — single most-relevant insight for this coffee.
+          Rotation-only: out-of-rotation pages stay clean. Filters by
+          attribute overlap (variety / process / origin / roast / method)
+          and prefers 'trying' over 'new' rows. */}
+      <CoffeeCoachCard
+        inRotation={!!coffee.inRotation}
+        variety={variety}
+        process={process}
+        origin={origin}
+        roastLevel={roastLevel}
+        method={coffee.bestMethod}
+      />
 
       {/* Personal notes */}
       <div className="px-5 py-4 border-b border-light-foreground/15">
