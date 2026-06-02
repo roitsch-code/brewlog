@@ -202,6 +202,9 @@ export const conversationMessages = pgTable(
 // Multivariate coach memory — replaces the lessons table for the
 // surfaces that need cross-axis observations. See migration 0013.
 export type InsightSource = "opus" | "user-confirmed";
+// Migration 0014 adds a card-workflow state machine. See
+// 0014_add_insight_status.sql for the semantics of each value.
+export type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply";
 
 export const insights = pgTable(
   "insights",
@@ -212,6 +215,7 @@ export const insights = pgTable(
     citationFields: jsonb("citation_fields").$type<string[]>().notNull().default([]),
     latestSessionMs: bigint("latest_session_ms", { mode: "number" }).notNull(),
     source: text("source").$type<InsightSource>().notNull().default("opus"),
+    status: text("status").$type<InsightStatus>().notNull().default("new"),
     dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
     userNote: text("user_note"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -220,6 +224,7 @@ export const insights = pgTable(
   (t) => ({
     latestSessionMsIdx: index("insights_latest_session_ms_idx").on(t.latestSessionMs.desc()),
     dismissedAtIdx: index("insights_dismissed_at_idx").on(t.dismissedAt),
+    statusIdx: index("insights_status_idx").on(t.status),
     createdAtIdx: index("insights_created_at_idx").on(t.createdAt.desc()),
   })
 );

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { Session } from "@/lib/types/session";
 import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
@@ -8,23 +8,26 @@ import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 
 /**
- * Taste Profile — coach-first edition.
+ * Taste Profile — coach + always-visible consumption stats.
  *
- * Replaces the previous narrative paragraph + consumption-stat layout
- * with a multivariate coach pass over the full corpus. The consumption
- * stats (origin / process / method rankings, body / acidity distros,
- * flavour wheel, rating trend) are retained but demoted into a single
- * collapsible "What you brew" section below the coach panel. The
- * insights themselves come from /api/insights — a cached Opus pass
- * driven by lib/claude/insights.ts.
+ * Layout (top to bottom):
+ *   1. Avg rating + rated brews header
+ *   2. Coach insights (top 3 with `status: 'new'`, 3-action workflow:
+ *      Try it / Confirmed / Doesn't apply). When a card is processed
+ *      (Confirmed or Doesn't apply), the next from the back slides in.
+ *      Trying cards stay in the queue until later resolved.
+ *   3. What you brew — Flavor wheel, top flavors, rating trend, body /
+ *      acidity, best origins / processes / methods. ALWAYS VISIBLE.
  */
+
+type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply";
 
 interface InsightItem {
   id: string;
   observation: string;
   suggestion: string;
   citationFields: string[];
-  dismissed: boolean;
+  status: InsightStatus;
   source: string;
 }
 
@@ -138,10 +141,13 @@ export default function TastePage() {
   const [stats, setStats] = useState<TasteStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  // All non-doesnt-apply insights returned by the server. Local state
+  // splits them by status: only `new` shows in the queue; `trying` rows
+  // live elsewhere (the /brew/new Context step). `confirmed` rows fade
+  // out here and weight /recommend prompts.
   const [insights, setInsights] = useState<InsightItem[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState<string | null>(null);
-  const [statsOpen, setStatsOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -168,7 +174,9 @@ export default function TastePage() {
     fetch("/api/insights", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
       .then((d) => {
-        const items: InsightItem[] = (d.insights ?? []).filter((it: InsightItem) => !it.dismissed);
+        const items: InsightItem[] = (d.insights ?? []).filter(
+          (it: InsightItem) => it.status !== "doesnt-apply",
+        );
         setInsights(items);
         if (items.length === 0 && (d.corpusSize ?? 0) < 4) {
           setInsightsError("Log and rate a few more brews — the coach needs at least four rated sessions to spot a cross-axis pattern.");
@@ -182,19 +190,40 @@ export default function TastePage() {
     return () => { clearTimeout(timer); controller.abort(); };
   }, []);
 
-  const dismissInsight = async (id: string) => {
-    setInsights((prev) => prev.filter((i) => i.id !== id));
+  /**
+   * Optimistic state update + PATCH. Used by all three card actions:
+   *   - "Try it"      → status = trying  (card leaves /taste queue; surfaces in /brew/new Context)
+   *   - "Confirmed"   → status = confirmed (server also bumps source = user-confirmed for /recommend weighting)
+   *   - "Doesn't apply" → status = doesnt-apply (soft-preserved across regens)
+   * Cards in the new queue are always the visible top 3 with status='new';
+   * the moment one is acted on, the next 'new' row in the local list
+   * slides into its place.
+   */
+  const updateInsight = async (id: string, status: InsightStatus) => {
+    setInsights((prev) =>
+      prev
+        .map((i) => (i.id === id ? { ...i, status } : i))
+        // Drop fully-resolved entries from local state so they don't
+        // crowd downstream rendering. `trying` stays so the user sees
+        // it move off the queue but knows it's still alive (reminder).
+        .filter((i) => i.status !== "doesnt-apply" && i.status !== "confirmed"),
+    );
     try {
       await fetch("/api/insights", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, dismissed: true }),
+        body: JSON.stringify({ id, status }),
       });
     } catch {
-      // dismissal is optimistic — if the PATCH fails it'll come back
-      // next regeneration; not worth surfacing to the user
+      // Optimistic — if the PATCH fails the row re-appears on the next
+      // regeneration. Not worth surfacing to the user.
     }
   };
+
+  // Active queue = status='new' only, top 3 visible. As the user acts on
+  // them, the next 'new' card slides in. 'trying' cards are NOT here —
+  // they live in the /brew/new Context reminder.
+  const queue = insights.filter((i) => i.status === "new").slice(0, 3);
 
   if (loading) {
     return (
@@ -246,13 +275,12 @@ export default function TastePage() {
           <p className="text-light-muted-foreground/60 text-xs ml-auto self-end">All time</p>
         </div>
 
-        {/* ─── COACH INSIGHTS ─────────────────────────────────────
-            Replaces the old "What you love, over time" narrative
-            summary. Each card = one multivariate observation + one
-            suggestion / question. No labels, no chapters — the
-            terminology lives in the writing. Generated by Opus over the
-            full session corpus (lib/claude/insights.ts), cached
-            server-side until a new brew lands. */}
+        {/* ─── COACH ─────────────────────────────────────────────
+            Top 3 active observations (status='new'), each with the
+            three-action workflow. When the user processes one
+            (Confirmed / Doesn't apply), the next 'new' row from the
+            back slides in. 'Try it' moves the card off this queue but
+            keeps it alive as a /brew/new reminder. */}
         <Section title="Coach">
           {insightsLoading ? (
             <div className="space-y-3">
@@ -264,116 +292,106 @@ export default function TastePage() {
                 </div>
               ))}
             </div>
-          ) : insights.length === 0 ? (
+          ) : queue.length === 0 ? (
             <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
               <p className="text-light-foreground/85 text-sm leading-relaxed">
-                {insightsError ?? "No cross-axis patterns are clear yet — keep logging and the coach will surface concrete observations once enough variation is on the record."}
+                {insightsError ?? "All clear. Coach is watching for the next pattern."}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {insights.map((insight) => (
+              {queue.map((insight) => (
                 <InsightCard
                   key={insight.id}
                   insight={insight}
-                  onDismiss={() => dismissInsight(insight.id)}
+                  onTry={() => updateInsight(insight.id, "trying")}
+                  onConfirm={() => updateInsight(insight.id, "confirmed")}
+                  onDoesntApply={() => updateInsight(insight.id, "doesnt-apply")}
                 />
               ))}
             </div>
           )}
         </Section>
 
-        {/* ─── WHAT YOU BREW (collapsed) ────────────────────────
-            All the consumption stats demoted into one place. Still here
-            for the user who wants the at-a-glance distributions, but no
-            longer the headline. */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setStatsOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-2 px-1 py-1 text-light-muted-foreground"
-          >
-            <span className="text-xs uppercase tracking-widest">What you brew</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${statsOpen ? "rotate-180" : ""}`} />
-          </button>
-          <div className={`overflow-hidden transition-all duration-300 ${statsOpen ? "max-h-[4000px] opacity-100 mt-4" : "max-h-0 opacity-0"}`}>
-            <div className="flex flex-col gap-8">
-              <Section title="Flavor Profile">
-                <div className="w-full">
-                  <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
-                </div>
-              </Section>
-
-              {stats.topFlavors.length > 0 && (
-                <Section title="Top Flavors">
-                  <div className="space-y-2">
-                    {stats.topFlavors.map(f => (
-                      <div key={f.name} className="flex items-center gap-3">
-                        <span className="text-light-foreground text-sm w-28 shrink-0 capitalize">{f.name}</span>
-                        <div className="flex-1 h-1.5 bg-light-foreground/10 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-light-foreground rounded-full transition-all"
-                            style={{ width: `${(f.count / maxFlavor) * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-light-muted-foreground text-xs w-5 text-right">{f.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )}
-
-              {stats.ratingTrend.length > 1 && (
-                <Section title="Rating Over Time">
-                  <div className="flex items-end gap-2 h-24">
-                    {stats.ratingTrend.map(t => (
-                      <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-light-muted-foreground text-xs">{t.avg}</span>
-                        <div className="w-full bg-light-foreground/10 rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
-                          <div
-                            className="w-full bg-light-foreground rounded-t-lg transition-all"
-                            style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
-                          />
-                        </div>
-                        <span className="text-light-muted-foreground text-xs">{t.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Section>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {Object.keys(stats.bodyDist).length > 0 && (
-                  <Section title="Body">
-                    <DistBar data={stats.bodyDist} total={stats.totalSessions} />
-                  </Section>
-                )}
-                {Object.keys(stats.acidityDist).length > 0 && (
-                  <Section title="Acidity">
-                    <DistBar data={stats.acidityDist} total={stats.totalSessions} />
-                  </Section>
-                )}
-              </div>
-
-              {stats.topOrigins.length > 0 && (
-                <Section title="Best Origins">
-                  <RankedList items={stats.topOrigins} />
-                </Section>
-              )}
-
-              {stats.topProcesses.length > 0 && (
-                <Section title="Best Processes">
-                  <RankedList items={stats.topProcesses} />
-                </Section>
-              )}
-
-              {stats.topMethods.length > 0 && (
-                <Section title="Best Methods">
-                  <RankedList items={stats.topMethods} />
-                </Section>
-              )}
+        {/* ─── WHAT YOU BREW (always visible) ────────────────────
+            Flavor wheel + top flavors + trend + distributions + best
+            origins / processes / methods. The visual identity of /taste
+            — never hidden. */}
+        <div className="flex flex-col gap-8">
+          <Section title="Flavor Profile">
+            <div className="w-full">
+              <FlavorWheel mode="profile" profileData={stats.radarData} size={320} />
             </div>
+          </Section>
+
+          {stats.topFlavors.length > 0 && (
+            <Section title="Top Flavors">
+              <div className="space-y-2">
+                {stats.topFlavors.map(f => (
+                  <div key={f.name} className="flex items-center gap-3">
+                    <span className="text-light-foreground text-sm w-28 shrink-0 capitalize">{f.name}</span>
+                    <div className="flex-1 h-1.5 bg-light-foreground/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-light-foreground rounded-full transition-all"
+                        style={{ width: `${(f.count / maxFlavor) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-light-muted-foreground text-xs w-5 text-right">{f.count}</span>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {stats.ratingTrend.length > 1 && (
+            <Section title="Rating Over Time">
+              <div className="flex items-end gap-2 h-24">
+                {stats.ratingTrend.map(t => (
+                  <div key={t.label} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-light-muted-foreground text-xs">{t.avg}</span>
+                    <div className="w-full bg-light-foreground/10 rounded-t-lg overflow-hidden" style={{ height: "60px" }}>
+                      <div
+                        className="w-full bg-light-foreground rounded-t-lg transition-all"
+                        style={{ height: `${(t.avg / trendMax) * 60}px`, marginTop: `${60 - (t.avg / trendMax) * 60}px` }}
+                      />
+                    </div>
+                    <span className="text-light-muted-foreground text-xs">{t.label}</span>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            {Object.keys(stats.bodyDist).length > 0 && (
+              <Section title="Body">
+                <DistBar data={stats.bodyDist} total={stats.totalSessions} />
+              </Section>
+            )}
+            {Object.keys(stats.acidityDist).length > 0 && (
+              <Section title="Acidity">
+                <DistBar data={stats.acidityDist} total={stats.totalSessions} />
+              </Section>
+            )}
           </div>
+
+          {stats.topOrigins.length > 0 && (
+            <Section title="Best Origins">
+              <RankedList items={stats.topOrigins} />
+            </Section>
+          )}
+
+          {stats.topProcesses.length > 0 && (
+            <Section title="Best Processes">
+              <RankedList items={stats.topProcesses} />
+            </Section>
+          )}
+
+          {stats.topMethods.length > 0 && (
+            <Section title="Best Methods">
+              <RankedList items={stats.topMethods} />
+            </Section>
+          )}
         </div>
       </div>
 
@@ -382,22 +400,76 @@ export default function TastePage() {
   );
 }
 
-function InsightCard({ insight, onDismiss }: { insight: InsightItem; onDismiss: () => void }) {
+/**
+ * Coach insight card with the three-action workflow.
+ *
+ * Two text rows are intentional:
+ *   - First row (observation): the data, with real counts. The "what
+ *     the coach noticed."
+ *   - Second row (suggestion): the next move or test question. The
+ *     "what to do."
+ * Different weight/opacity so the roles are visually distinct and
+ * scannable.
+ *
+ * Actions (left to right, soft → hard):
+ *   - Try it          → status = trying; reminder surfaces in
+ *                       /brew/new Context for matching coffees
+ *   - Confirmed       → status = confirmed; boosts /recommend weight
+ *   - Doesn't apply   → status = doesnt-apply; soft-preserved
+ */
+function InsightCard({
+  insight,
+  onTry,
+  onConfirm,
+  onDoesntApply,
+}: {
+  insight: InsightItem;
+  onTry: () => void;
+  onConfirm: () => void;
+  onDoesntApply: () => void;
+}) {
   return (
     <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-      <p className="text-light-foreground text-[15px] leading-relaxed">{insight.observation}</p>
-      <p className="text-light-foreground/80 text-[14px] leading-relaxed mt-2">{insight.suggestion}</p>
-      <div className="mt-3 pt-3 border-t border-light-foreground/10 flex justify-end">
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Dismiss insight"
-          className="text-light-muted-foreground text-[11px] uppercase tracking-widest active:text-light-foreground transition-colors"
-        >
-          Not for me
-        </button>
+      {/* Observation — what the coach noticed (the data) */}
+      <p className="text-light-foreground text-[15px] font-medium leading-relaxed">
+        {insight.observation}
+      </p>
+      {/* Suggestion — what to do (the next move) */}
+      <p className="text-light-foreground/75 text-[14px] leading-relaxed mt-2">
+        {insight.suggestion}
+      </p>
+      {/* Action row — 3 buttons, soft → hard left to right */}
+      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex gap-2">
+        <CardAction onClick={onTry} variant="primary">Try it</CardAction>
+        <CardAction onClick={onConfirm} variant="soft">Confirmed</CardAction>
+        <CardAction onClick={onDoesntApply} variant="muted">Doesn’t apply</CardAction>
       </div>
     </div>
+  );
+}
+
+function CardAction({
+  onClick,
+  variant,
+  children,
+}: {
+  onClick: () => void;
+  variant: "primary" | "soft" | "muted";
+  children: React.ReactNode;
+}) {
+  // Three tonal weights so the visual hierarchy matches the action
+  // hierarchy: Try it is the encouraged path (anthracite), Confirmed is
+  // satisfaction (cream-glass), Doesn't apply is dismissal (muted text).
+  const classes =
+    variant === "primary"
+      ? "flex-1 h-9 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-[12px] font-semibold tracking-tight active:scale-[0.97] transition-transform"
+      : variant === "soft"
+        ? "flex-1 h-9 rounded-full bg-light-card-selected text-light-foreground text-[12px] font-semibold tracking-tight backdrop-blur-light-card backdrop-saturate-150 active:scale-[0.97] transition-transform"
+        : "flex-1 h-9 rounded-full text-light-muted-foreground text-[12px] tracking-tight active:text-light-foreground transition-colors";
+  return (
+    <button type="button" onClick={onClick} className={classes}>
+      {children}
+    </button>
   );
 }
 

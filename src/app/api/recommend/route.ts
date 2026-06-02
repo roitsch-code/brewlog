@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { generateRecommendation, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
@@ -119,12 +119,13 @@ export async function POST(req: NextRequest) {
         ? buildEscherTerrain(sessions, coffee).catch(() => "")
         : Promise.resolve(""),
       loadCoffeeHistory(coffee?.coffeeId, coffee?.roaster, coffee?.name),
-      // Coach insights — filter out dismissed at the query layer so the
-      // prompt never sees them.
+      // Coach insights — exclude only doesnt-apply at the query layer.
+      // new / trying / confirmed all feed the prompt, with confirmed
+      // ranked higher in the recommend prompt block builder.
       db
         .select()
         .from(insightsTable)
-        .where(isNull(insightsTable.dismissedAt))
+        .where(ne(insightsTable.status, "doesnt-apply"))
         .limit(20)
         .catch(() => []),
     ]);

@@ -185,25 +185,26 @@ export default function SessionDetailPage() {
         </div>
       )}
 
-      {/* Recipe */}
+      {/* Recipe — 2×2 stat grid (Dose | Grind on row 1, Water | Temp on
+          row 2). When grind is missing the cell stays empty rather than
+          collapsing the layout. Iced brews get an additional 2-up row
+          underneath for Ice + Final cup. */}
       {recipe && (
         <Section title="Recipe">
-          <div className="grid grid-cols-3 gap-3">
-            <Stat label="Dose" value={`${recipe.doseGrams}g`} />
-            <Stat label={recipe.iceGrams ? "Hot Water" : "Water"} value={`${recipe.waterGrams}g`} />
-            <Stat label="Temp" value={`${recipe.waterTempC}°C`} />
-          </div>
           {(() => {
             const grind = brew?.grindSettingUsed ?? recipe.grindSize;
             const grindLabel = grind
               ? typeof grind === "number"
                 ? `${grind}°`
                 : grind
-              : null;
-            if (!grindLabel) return null;
+              : "—";
+            const waterLabel = recipe.iceGrams ? "Hot Water" : "Water";
             return (
-              <div className="grid grid-cols-1 gap-3 mt-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Stat label="Dose" value={`${recipe.doseGrams}g`} />
                 <Stat label="Grind" value={grindLabel} />
+                <Stat label={waterLabel} value={`${recipe.waterGrams}g`} />
+                <Stat label="Temp" value={`${recipe.waterTempC}°C`} />
               </div>
             );
           })()}
