@@ -41,13 +41,13 @@ The single remaining Dark route is `cafes/map/page.tsx` and that's intentional (
 | `(light)/past-conversations/page.tsx` | Light | Conversation history list (archived chats) |
 | `(light)/past-conversations/[id]/page.tsx` | Light | Single past conversation thread (read-only replay) |
 | `(light)/brew/new/page.tsx` | Light | Multi-step brew flow — routes `flowStore.step` to the right `LightStep*` component |
-| `(light)/brew/[id]/page.tsx` | Light | Read-only session detail — Brew-method as headline, Field of the linked coffee, sections for recipe / brew notes / taste / reasoning |
+| `(light)/brew/[id]/page.tsx` | Light | Read-only session detail — Brew-method as headline, Field of the linked coffee, **2×2 stat grid** (Dose \| Grind on row 1, Water \| Temp on row 2 — PR #215, replaces the prior 3-up + Grind-below layout), then sections for brew notes / taste / reasoning |
 | `(light)/coffees/page.tsx` | Light | Coffee library — searchable list with full-bleed bag-photo card (96 px left strip), brew count over Brew CTA in the right column |
-| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + rotation toggle + gated Brew CTA + rating history + brew signatures |
+| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + rotation toggle + gated Brew CTA + **single coach card** between Roaster and Notes (rotation-only, best-matched insight via `CoffeeCoachCard` — PR #215) + rating history + brew signatures |
 | `(light)/cafes/page.tsx` | Light | Café Library — tabbed list (Cafés + Coffees tasted out), photo-strip cards in the Coffees tab |
 | `(light)/cafes/place/[slug]/page.tsx` | Light | Single café detail + inline session edit panel |
 | `(light)/cafes/coffee/[id]/page.tsx` | Light | Coffee tasted at an external location, cross-links to library coffee via `coffeeId` |
-| `(light)/taste/page.tsx` | Light | Taste profile — Avg rating + rated count + AI summary + FlavorWheel (profile mode) + top flavors / rating trend / body / acidity / origins / processes / methods |
+| `(light)/taste/page.tsx` | Light | Taste profile — Avg rating + rated count header, then **Coach** (top 3 `status='new'` insights with three-action workflow Try it / Confirmed / Doesn't apply; the back of the 5–8 queue slides into place when one is solved — PR #215), then **What you brew** (always-visible, no collapsible): FlavorWheel + top flavors + rating trend + body / acidity + best origins / processes / methods |
 | `(light)/login/page.tsx` | Light | Passkey (WebAuthn) login UI + PIN fallback + reset path |
 | `(light)/onboarding/page.tsx` | Light | First-run equipment + grinder wizard (uses the Chip primitive) |
 | `(light)/offline/page.tsx` | Light | Service-worker document fallback (`next.config.mjs` `fallbacks.document`). Shown when an uncached route is opened offline; links to `/coffees`. Safety net — the real offline path lives in the precached `/coffees` + `/brew/new` shell. |
@@ -84,6 +84,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `conversations/[id]` | GET / PUT / DELETE individual conversation thread |
 | `conversations/active` | GET the currently-active conversation (live thread on /home) |
 | `conversations/archive` | POST → move the active conversation to past-conversations |
+| `conversations/cleanup` | POST (cron-auth) — Ofelia daily at 04:00 UTC, deletes archived conversations older than 7 days. Live conversation (archivedAt IS NULL) is NEVER touched. Messages cascade-delete via the conversation_messages FK. (PR #217) |
 | `explore` | AMA conversational exploration with sources (legacy; no page consumer left) |
 | `explore-agent` | ★ Agent loop with tool-use (`search_places`, `fetch_page`, `analyze_image`, `suggest_navigation`, `start_brew`) — powers the inline chat on `(light)/page.tsx`. `start_brew` (PR #199/#200) is a terminal action tool: when the agent has laid out a complete recipe for a library bag it hands the exact recipe (dose/water/ice/temp/grind/`targetTimeSec`/`pourSteps` + method/title/basedOn) to the brew timer so the user lands straight in Step "brew" — no context, no re-recommendation. Its `destination` is set from the TOOL NAME (the input has no destination field — that omission caused the no-op fixed in #200). Per-turn context now includes recipe names + a "Most Recent Brew" block, all read from the actually-brewed candidate. |
 | `research` | Weekly deep-research cron agent (Ofelia) |
@@ -95,7 +96,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `upload` | Multipart photo → Hetzner S3, returns URL |
 | `voice/synthesize` | POST text → ElevenLabs TTS audio |
 | `voice/transcribe` | POST audio → ElevenLabs Scribe STT transcript |
-| `insights` | GET curated articles from knowledge base |
+| `insights` | ★ Coach observations over the full session corpus. GET (cache-aware Opus regeneration; `?status=trying,new` filters for surface-specific fetches). PATCH `{ id, status }` to advance an insight's workflow (`new → trying → confirmed` or `→ doesnt-apply`). The regeneration only replaces `status='new'` rows; user-acted rows (trying/confirmed/doesnt-apply) are preserved and re-emitted similar observations inherit the existing status. (PR #215, migration 0014) |
 | `hints` | GET contextual brewing hints |
 | `news` | GET coffee news feed |
 | `questions` | GET suggestion questions for explore mode |
@@ -115,7 +116,7 @@ All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `Ste
 |-----------|---------|
 | `LightStepMode.tsx` | Home Brew / Coffee Shop / Taste Match selector |
 | `LightStepScan.tsx` | ★ Camera / photo upload / URL / manual + AI bag extraction + roaster Q&A (1400+ lines — biggest step) |
-| `LightStepContext.tsx` | Occasion, water amount, time, mood, equipment, goal. Goal picker has 6 options incl. `aromatic` (PR #192). Method list incl. "V60 + Drip Assist" emergency-only option (PR #193). Locking a method sets `context.preferredMethod` → hard-filters recipe selection. |
+| `LightStepContext.tsx` | Occasion, water amount, time, mood, equipment, goal. Goal picker has 6 options incl. `aromatic` (PR #192). Method list incl. "V60 + Drip Assist" emergency-only option (PR #193). Locking a method sets `context.preferredMethod` → hard-filters recipe selection. **Coach reminder pill** above the selectors when the chosen coffee has a `status='trying'` insight matching its attributes — quiet read-only nudge driven off `/api/insights?status=trying` (PR #215). |
 | `LightStepRecommend.tsx` | 2–4 AI recipe candidates with reasoning. Selecting a candidate sets `brew.selectedCandidateIdx` so Brew/Log/Summary read THAT candidate's recipe by index, not by method name (PR #193 — fixed alternative inheriting the primary's temp/grind when both share a method). Shows the candidate `title` + `based on …` reference name (PR #198). |
 | `LightStepBrew.tsx` | ★ Circular timer + **step-by-step, method-aware** pour guide (Web Audio cue + vibrate on step change). Shows the recipe **name** (candidate `title` + `based on …`). Two renderers, chosen per recipe (PR #197): **`LivePourSequence`** for percolation (cumulative-grams pours, drawdown reserve) and **`StepGuide`** for immersion/AeroPress/iced/staged (setup card, steep countdown, action cards for invert/flip/press/drain/bypass). **Agitation is recipe-driven** (PR #198): the swirl/stir button shows only where the recipe calls for it — no stray swirl on a reduced-agitation recipe. Reads the recipe via `selectedCandidateIdx`; per-pour temperatures + notes render per step. |
 | `LightStepLog.tsx` | Post-brew: flavor wheel, star rating, tasting notes |
@@ -134,6 +135,7 @@ Removed during the Light cleanup (PR #137): `BottomNav`, Dark `Chip`, `RadarChar
 
 **Session:** `SessionCard` (Light, consumed only by `/coffees/[id]` All-brews list — Brew-method as headline, Field's cream-glass cards, swipe-to-delete with rust-red destructive button)
 **Cafés:** `CafeMap` (Leaflet — consumed by `/cafes/map`)
+**Coach (`src/components/coach/`):** `CoachCard` (presentational two-paragraph card — observation row 1, suggestion row 2, three-action footer Try it / Confirmed / Doesn't apply, consumed by `/taste` queue) + `CoffeeCoachCard` (wrapper that fetches `/api/insights?status=trying,new`, scores by citationFields overlap with this coffee's attributes, prefers trying then new, renders one best-match — rotation-only). PR #215.
 
 ### `src/lib/`
 
@@ -175,7 +177,10 @@ lib/
 │   ├── 0008_add_field_zones.sql           # coffees.field_zones jsonb (Field v1.1 persistence)
 │   ├── 0009_add_in_rotation.sql           # coffees.in_rotation boolean (rotation marker)
 │   ├── 0010_rename_rvtc.sql                # bulk rename "Rösterei Vier / The Commonage" → "RVTC"
-│   └── 0011_add_cafe_visits.sql            # cafe_visits table — visit-only logs + binary thumbs rating
+│   ├── 0011_add_cafe_visits.sql            # cafe_visits table — visit-only logs + binary thumbs rating
+│   ├── 0012_add_lessons.sql                # lessons table (PR #210). DEPRECATED — feature replaced by insights in #211; table preserved but unused
+│   ├── 0013_add_insights.sql               # insights table + indexes (PR #211, coach observation corpus)
+│   └── 0014_add_insight_status.sql         # status workflow column on insights (`new`/`trying`/`confirmed`/`doesnt-apply`), PR #215
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
 │   # Applying schema/code that references a new column BEFORE running the migration on the VPS
 │   # makes Drizzle SELECT 500 (column-strict). Always migrate VPS first, deploy code second.
@@ -242,13 +247,16 @@ lib/
 
 ### Database tables (Drizzle + Postgres)
 
-`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits` (12 tables).
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits`, `insights` (13 tables; `lessons` from PR #210 also exists but is read-by-nothing post-#211).
 
 Recent additions:
 - `coffees.field_zones jsonb` (migration 0008) — persisted Field composition per coffee
 - `coffees.in_rotation boolean NOT NULL DEFAULT false` (migration 0009) — star toggle for "currently brewing this bag"
 - **Migration 0010** (applied 2026-05) — bulk-rename roaster variants `"Rösterei Vier / The Commonage"` / `"RVTC – Rösterei Vier / The Commonage"` → `"RVTC"` across coffees + sessions JSONB + roasters priors cache.
 - **Migration 0011 + new `cafe_visits` table** (applied 2026-05) — schema: `id`, `cafe_name`, `location`, `rating` ('come-back' | 'wont-return'), `notes`, `visited_at`, `visited_at_ms`. Visit-only café logs without an attached brew session. Binary thumbs rating since there's no brew context for stars. Aggregated into `/api/cafes` so visit-only places appear in the Café Library.
+- **Migration 0013 + new `insights` table** (applied 2026-06) — schema: `id`, `observation`, `suggestion`, `citation_fields jsonb`, `latest_session_ms`, `source` ('opus' | 'user-confirmed'), `status` (added by 0014), `dismissed_at` (legacy, replaced by status), `user_note`, `created_at`, `updated_at`. Multivariate coach observations over the full session corpus. (PR #211)
+- **Migration 0014 — `insights.status text`** (applied 2026-06-02) — workflow state machine `new`/`trying`/`confirmed`/`doesnt-apply`. Indexed. Default `'new'`. Orchestrator (`src/lib/claude/insights.ts`) only replaces `status='new'` rows on regeneration; user-acted rows (trying/confirmed/doesnt-apply) are preserved, and re-emitted similar observations inherit the existing status. `/recommend` + `/greeting` filter `status != 'doesnt-apply'`. (PR #215)
+- **One-shot data fix** (applied 2026-06-02) — Friedhats Quiquira + Policarpo Yossa Rojos roast date bumped from `2025-05-18` → `2026-05-18` in both `coffees.latest_roast_date` and `sessions.coffee` JSONB. Bag-scanner had defaulted to last year on ambiguous month/day stamps; PR #216 closes the loop in code so it can't recur.
 
 All migrations applied manually on the VPS — see migration NOTE above.
 
@@ -270,9 +278,41 @@ All migrations applied manually on the VPS — see migration NOTE above.
 
 ---
 
-## Current Status — Snapshot May 2026
+## Current Status — Snapshot June 2026
 
 ### ✅ Done
+
+**Coach workflow + /taste layout + per-coffee insight + brew detail 2×2 (PR #215, June 2026)**
+- **Three-action insight workflow.** `insights.status` column (migration 0014) with state machine `new → trying → confirmed` or `→ doesnt-apply`. **Try it** queues a quiet reminder for the next time the user opens `/brew/new` on a matching coffee. **Confirmed** boosts `/recommend` + `/greeting` weight (also bumps `source = 'user-confirmed'`). **Doesn't apply** soft-dismisses and is preserved across regenerations so the same observation isn't re-pitched. The orchestrator (`src/lib/claude/insights.ts`) ONLY replaces `status='new'` rows on regeneration — user-acted rows are kept verbatim, and re-emitted similar observations inherit the existing status (text-match on the first 80 chars).
+- **`/taste` page restructured.** Coach section at the top: top 3 `status='new'` insights as cards. When a card is processed (Confirmed or Doesn't apply count as solved — Trying doesn't), the next from the 5–8-deep queue slides in. **"What you brew" is now ALWAYS VISIBLE** — flavor wheel, top flavors, rating trend, body / acidity, best origins / processes / methods. No collapsible. The two-paragraph card layout (observation row, suggestion row, different weights) is intentional for scanning.
+- **`/coffees/[id]` single coach card** between the Roaster section and the Personal Notes section. **Rotation-only** (out-of-rotation pages stay clean — no card). Filters by `citationFields` overlap with the coffee's attributes (variety / process / origin / roast / best method). Prefers `status='trying'` (already an active reminder) then `'new'`. Same three actions on the card.
+- **`/brew/new` Context step quiet reminder.** Read-only card above the selectors, surfaces when a `'trying'` insight matches the chosen coffee's attributes. The user already chose Try it on /taste; this is the nudge when they reach for that coffee.
+- **`/brew/[id]` 2×2 stat grid.** Dose | Grind on row 1, Water | Temp on row 2. Same `Stat` primitive as before. Iced brews still get an extra Ice + Final cup row underneath.
+- **Recipe intro widened.** `recommend.ts` prompt: `reasoning` is now ONE substantive sentence (40–60 words) grounded in a named coffee-science principle. Not a headline fragment, not a 6-sentence wall.
+
+**Bag scanner roast-date current-year guard (PR #216, June 2026)**
+- The bag scanner consistently parsed month-and-day-only stamps as last year's date (a Friedhats Quiquira bag from 2 weeks ago was logged as 14 months old, cascading through the welcome haiku + `/recommend` freshness + zone classifier).
+- **Prompt fix:** `analyzeBag.ts` builds `USER_PROMPT` fresh per call so today's date can be injected. Explicit ROAST DATE RULES section forces the model to use the current year on ambiguous month/day stamps, only drop back a year if that would put the date in the future, never use a "best before" date as roastDate, always return ISO `YYYY-MM-DD`.
+- **Defensive post-process:** `guardRoastYear()` — if the returned date is more than 11 months in the past AND shifting it forward by one year lands within the fresh-bag window without going into the future, take the bump. Catches the case where the model still gets it wrong despite the prompt rule.
+- **Data fix:** Friedhats Quiquira + Policarpo Yossa Rojos (both in rotation) bumped from `2025-05-18` → `2026-05-18` in both `coffees.latest_roast_date` and per-session `coffee.roastDate` JSONB on 2026-06-02.
+
+**Conversation 1-week TTL + Ofelia cleanup cron (PR #217, June 2026)**
+- New `POST /api/conversations/cleanup` endpoint deletes archived conversations whose `archivedAt < now() - 7 days`. Messages cascade-delete via the existing `conversation_messages.conversation_id` FK (`onDelete: 'cascade'`).
+- New Ofelia job in `deploy/ofelia.ini` runs daily at 04:00 UTC, same `CRON_SECRET` bearer pattern as `/api/research` and `/api/coffees/compact`.
+- **NEVER touches active conversations** (`archivedAt IS NULL`) — that's the live thread on /home; auto-deleting it after a quiet week would surprise the user.
+
+**Deploy workflow hardening (PR #218, June 2026)**
+- The deploy after PR #216 failed with `Error response from daemon: removal of container <id> is already in progress` (exit code 123). Root cause: a manual `docker compose up -d ofelia` (run earlier to pick up the conversation-cleanup cron) triggered a compose reconciliation that began removing the app container; the workflow's hand-rolled `docker rm -f` then fired while removal was in flight and the daemon rejected the second rm.
+- **Fix:** drop the hand-rolled rm sequence; let compose drive the recreate via `docker compose up -d --force-recreate --no-deps app`. `--force-recreate` handles "container already exists" + "removal in progress" daemon states gracefully (compose serialises with its own teardown); `--no-deps` keeps postgres + caddy + ofelia untouched. Five-attempt fallback retry loop with growing backoff preserved for daemon wedges.
+
+**Security scrub + visibility flip (PR #219, June 2026)**
+- Repo was public the whole time without anyone realising. CLAUDE.md leaked the literal Hetzner IP (`89.167.31.219`), the deploy SSH paths, the user's email, and the Düsseldorf location. The "main is branch-protected" claim was also false (GitHub's free plan + private repo can't enforce branch protection).
+- **CLAUDE.md scrubbed:** Hetzner IP → reference to `DEPLOY_HOST` GitHub Actions secret. "Düsseldorf tap" → "hard local tap" (chemistry is what matters). Branch-protection claim updated to reflect reality (PR flow is by convention).
+- **`deploy/README.md` scrubbed:** same IP replaced with placeholder in three places (server header, ssh example, DNS A-record example).
+- **Stale Pages marketing site deleted** from `docs/`: the `index.html` / `about.html` / `how-it-works.html` / `open-source.html` / `the-gap.html` files referenced a Firebase stack that hasn't existed since the Postgres migration, AND they were stored in git as JSON-wrapped base64 (got mangled in a fetch-write roundtrip). GH Pages was disabled in repo settings anyway.
+- **Caveat:** the IP still exists in git history from the public period. Real security boundary is the Hetzner SSH key + Caddy + firewall, not the IP being secret.
+- Repo flipped private momentarily for the scrub, then back to public. Dependabot alerts + Secret scanning enabled on the Security tab.
+
 **Step-by-step brew timer + recipe names + chat→brew (PR #195 → #200, May 2026)**
 - **BTTS chat branding + no pour-arithmetic** (#195): the home chat brands itself only as "Better taste than sorry / BTTS" (no "BrewLog" in replies — internal code/headers unchanged) and is instructed to present verified recipes rather than improvise pour math.
 - **Step-by-step, method-aware timer** (#197): the active-brew guide used to stall on "Step 1 of 1" whenever a pour string carried inline annotations (e.g. staged per-pour temps `70 (@70°C) – …`). `parsePourSteps` is now annotation-tolerant; `BrewRecipe.pourSteps` carries structured steps; immersion/AeroPress/inverted/iced route to an action-aware `StepGuide` (setup card, steep countdown, flip/press/drain cue at the right moment); recommend emits structured `pourSteps` (sanitised post-parse, graceful fallback to the string).
@@ -426,7 +466,8 @@ All migrations applied manually on the VPS — see migration NOTE above.
 4. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
 5. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
 6. **Cafe visit notes edit UI** — `cafe_visits.notes` column exists but UI only lets you delete + re-add, no inline edit. Cheap follow-up.
-7. **Deploy workflow harden** — May 2026 deploy hit a Docker name conflict when manual `up -d` raced with GitHub Action. `deploy.yml` should add `docker compose down` (or `up --remove-orphans --force-recreate`) before bringing app back up.
+7. **PR CI workflow** — no CI runs on PRs today; the only workflow on the repo is `deploy.yml` which fires on push to `main`. A small `ci.yml` that runs `npx tsc --noEmit` (and eventually `node --test src/lib/utils/*.test.mjs`) on every PR would let us re-enable "Require status checks to pass" in the branch protection ruleset. Currently branch protection is PR + block-force-push only.
+8. **Drip Assist demoted to "emergency / travel only"** in the user profile, but it's still selectable in `LightStepContext` as one of the brewer options (PR #193 kept it for legacy session render compat). Worth re-checking that it never gets recommended proactively now that the user's V60 Drip Assist is retired from daily use.
 
 **Permanent gaps**
 - Photo uploads: stored under `bags/` — old sessions scanned before this convention have no `bagPhotoUrl`
