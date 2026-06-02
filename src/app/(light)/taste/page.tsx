@@ -6,6 +6,7 @@ import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+import Chip from "@/components/ui/light/Chip";
 
 /**
  * Taste Profile — coach + always-visible consumption stats.
@@ -404,18 +405,13 @@ export default function TastePage() {
  * Coach insight card with the three-action workflow.
  *
  * Two text rows are intentional:
- *   - First row (observation): the data, with real counts. The "what
- *     the coach noticed."
- *   - Second row (suggestion): the next move or test question. The
- *     "what to do."
+ *   - First row (observation): the data, with real counts.
+ *   - Second row (suggestion): the next move or test question.
  * Different weight/opacity so the roles are visually distinct and
  * scannable.
  *
- * Actions (left to right, soft → hard):
- *   - Try it          → status = trying; reminder surfaces in
- *                       /brew/new Context for matching coffees
- *   - Confirmed       → status = confirmed; boosts /recommend weight
- *   - Doesn't apply   → status = doesnt-apply; soft-preserved
+ * Actions use the Light system's `Chip` primitive (small variant) so
+ * the visual language matches StepLog's sensory + flavor pickers.
  */
 function InsightCard({
   insight,
@@ -430,46 +426,18 @@ function InsightCard({
 }) {
   return (
     <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-      {/* Observation — what the coach noticed (the data) */}
       <p className="text-light-foreground text-[15px] font-medium leading-relaxed">
         {insight.observation}
       </p>
-      {/* Suggestion — what to do (the next move) */}
       <p className="text-light-foreground/75 text-[14px] leading-relaxed mt-2">
         {insight.suggestion}
       </p>
-      {/* Action row — 3 buttons, soft → hard left to right */}
-      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex gap-2">
-        <CardAction onClick={onTry} variant="primary">Try it</CardAction>
-        <CardAction onClick={onConfirm} variant="soft">Confirmed</CardAction>
-        <CardAction onClick={onDoesntApply} variant="muted">Doesn’t apply</CardAction>
+      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex flex-wrap gap-2">
+        <Chip size="sm" onClick={onTry}>Try it</Chip>
+        <Chip size="sm" onClick={onConfirm}>Confirmed</Chip>
+        <Chip size="sm" onClick={onDoesntApply}>Doesn’t apply</Chip>
       </div>
     </div>
-  );
-}
-
-function CardAction({
-  onClick,
-  variant,
-  children,
-}: {
-  onClick: () => void;
-  variant: "primary" | "soft" | "muted";
-  children: React.ReactNode;
-}) {
-  // Three tonal weights so the visual hierarchy matches the action
-  // hierarchy: Try it is the encouraged path (anthracite), Confirmed is
-  // satisfaction (cream-glass), Doesn't apply is dismissal (muted text).
-  const classes =
-    variant === "primary"
-      ? "flex-1 h-9 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-[12px] font-semibold tracking-tight active:scale-[0.97] transition-transform"
-      : variant === "soft"
-        ? "flex-1 h-9 rounded-full bg-light-card-selected text-light-foreground text-[12px] font-semibold tracking-tight backdrop-blur-light-card backdrop-saturate-150 active:scale-[0.97] transition-transform"
-        : "flex-1 h-9 rounded-full text-light-muted-foreground text-[12px] tracking-tight active:text-light-foreground transition-colors";
-  return (
-    <button type="button" onClick={onClick} className={classes}>
-      {children}
-    </button>
   );
 }
 
