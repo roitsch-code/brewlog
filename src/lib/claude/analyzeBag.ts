@@ -28,7 +28,28 @@ const BagAnalysisSchema = z.object({
 
 const SYSTEM_PROMPT = `You are an expert specialty coffee analyst with deep knowledge of coffee producers, origins, processing methods, and roasters worldwide. When given a photo of a coffee bag or label, extract all visible information AND supplement with your knowledge to fill in gaps the bag doesn't explicitly state. Return structured JSON only.`;
 
-const USER_PROMPT = `Analyze this coffee bag photo and return a JSON object. Extract what's visible on the bag, then use your knowledge to supplement missing details (mark these as "researched"). For completely unknown fields, use null.
+function buildUserPrompt(): string {
+  // Today's date is injected so the model can resolve ambiguous roast
+  // dates (e.g. "Mar 4" with no year) against reality — every bag the
+  // user scans is roasted in the recent past, never the future, and
+  // almost always in the current calendar year. Without this anchor,
+  // Claude consistently defaulted to the previous year on
+  // month-and-day-only stamps.
+  const today = new Date();
+  const todayIso = today.toISOString().slice(0, 10);
+  const currentYear = today.getUTCFullYear();
+  const previousYear = currentYear - 1;
+
+  return `Analyze this coffee bag photo and return a JSON object. Extract what's visible on the bag, then use your knowledge to supplement missing details (mark these as "researched"). For completely unknown fields, use null.
+
+TODAY IS ${todayIso}.
+
+ROAST DATE RULES (non-negotiable):
+- If the bag shows a FULL date (month + day + year), use it verbatim.
+- If the bag shows ONLY month + day (e.g. "Roasted 03/04", "Roasted Mar 4", "EU 04.03"), assume the CURRENT year (${currentYear}). The only exception: that combination of month + day would put the date in the FUTURE relative to today — only then drop back to ${previousYear}. Specialty coffee is roasted in the recent past, never tomorrow.
+- If the bag shows a "best before" or "consume by" date (typically 6–12 months after roast), DO NOT use it as roastDate. Set roastDate to null in that case.
+- If no date is visible at all, set roastDate to null.
+- Always return ISO format: YYYY-MM-DD. Never DD/MM/YY or MM-DD.
 
 Return this exact JSON structure:
 {
@@ -67,9 +88,10 @@ clarifications: list up to 2 natural-language questions about the most important
 - "I didn't spot a variety — is it listed anywhere on the bag, or do you know it?"
 - "No tasting notes were visible — what flavour descriptors does the roaster use?"
 
-NEVER ask about roast date (the user enters this via a dedicated date picker in the UI) or cupping/Q score (optional, often unavailable — leave null if not printed on the bag).
+NEVER ask about roast date (the user can correct it via the UI's date picker if needed) or cupping/Q score (optional, often unavailable — leave null if not printed on the bag).
 
 Return ONLY valid JSON with no markdown or explanation.`;
+}
 
 export interface RoasterPriorSummary {
   name: string;
@@ -123,7 +145,7 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
             type: "image",
             source: { type: "base64", media_type: mimeType as "image/jpeg" | "image/png" | "image/webp", data: imageBase64 },
           },
-          { type: "text", text: USER_PROMPT },
+          { type: "text", text: buildUserPrompt() },
         ],
       },
     ],
@@ -136,6 +158,21 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
     const cleanExtracted = Object.fromEntries(
       Object.entries(parsed.extracted).filter(([, v]) => v !== null && v !== undefined)
     );
+
+    // Defensive year guard: even with the prompt instruction, Claude
+    // occasionally returns last year's date for an ambiguous "Mar 4"
+    // stamp. If the date sits more than 11 months in the past AND
+    // bumping the year by one lands within the last 11 months, take
+    // the bump — that's the path the prompt was already asking for.
+    // Don't touch dates that are within 11 months (legit fresh bag)
+    // or further than 23 months back (clearly wasn't extracted from a
+    // YY-stamp).
+    const rd = (cleanExtracted as { roastDate?: string }).roastDate;
+    if (typeof rd === "string" && /^\d{4}-\d{2}-\d{2}/.test(rd)) {
+      const cleaned = guardRoastYear(rd);
+      if (cleaned !== rd) (cleanExtracted as { roastDate?: string }).roastDate = cleaned;
+    }
+
     return {
       result: {
         extracted: cleanExtracted as BagAnalysisResult["extracted"],
@@ -150,4 +187,27 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
     result: { extracted: {}, confidence: {}, clarifications: [], isCoffeeBag: false },
     usage: response.usage,
   };
+}
+
+/**
+ * Defensive year adjustment for ambiguous month+day-only roast dates.
+ * If the parsed date is >11 months in the past AND shifting it forward
+ * by one year lands within the "fresh bag" window (i.e. not in the
+ * future), use that. Otherwise return the original.
+ */
+function guardRoastYear(iso: string): string {
+  const parsed = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (isNaN(parsed.getTime())) return iso;
+  const now = new Date();
+  const elevenMonthsMs = 11 * 30 * 24 * 60 * 60 * 1000;
+  const ageMs = now.getTime() - parsed.getTime();
+  if (ageMs < elevenMonthsMs) return iso;
+
+  const bumped = new Date(parsed);
+  bumped.setUTCFullYear(bumped.getUTCFullYear() + 1);
+  // Bumped must not be in the future and must be more reasonable.
+  if (bumped.getTime() > now.getTime()) return iso;
+  const newAgeMs = now.getTime() - bumped.getTime();
+  if (newAgeMs >= elevenMonthsMs) return iso;
+  return bumped.toISOString().slice(0, 10);
 }
