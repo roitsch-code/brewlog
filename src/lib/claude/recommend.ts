@@ -723,16 +723,18 @@ export async function generateRecommendation(
     ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different temperature (e.g. flat 95°C vs staged 80→95°C), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. Both candidates equal — neither is primary. Override the lock only if genuinely incompatible with the coffee chemistry (rare). Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above.`
     : "";
 
-  // Drip Assist emergency-only routing — when the user has explicitly
-  // locked V60 + Drip Assist (the perforated-disc accessory used only
-  // when no gooseneck is around, e.g. travelling), the disc adds flow
-  // resistance and the recipe needs to grind ~5° coarser than the bare
-  // V60 baseline to keep drawdown in the same window. The disc is NOT
-  // recommended proactively — only honor the user's explicit lock.
-  const dripAssistNote =
-    context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod)
-      ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the bare V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a bare V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred bare-V60 setup.`
-      : "";
+  // Drip Assist routing — the disc is the user's emergency / travel
+  // backup, used only when no gooseneck kettle is around. It is NEVER
+  // recommended proactively. When the user has explicitly locked
+  // "V60 + Drip Assist", honor it with the coarser-grind instruction;
+  // otherwise, ban it outright so Opus doesn't surface it as an
+  // exploratory candidate (the "Drip Assist Slow-Flow Probe" failure
+  // mode where it picked the disc on its own).
+  const dripAssistLocked =
+    context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod);
+  const dripAssistNote = dripAssistLocked
+    ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the bare V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a bare V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred bare-V60 setup.`
+    : `\nDRIP ASSIST IS BANNED: Do NOT suggest "V60 + Drip Assist" as a candidate's primaryMethod. The Hario Drip Assist disc is the user's emergency/travel backup (used only when no gooseneck kettle is available). It is NEVER a proactive recommendation. If the user wanted it, they would have locked it as preferredMethod — they did not. Pick a bare V60 or any other brewer the user owns instead.`;
 
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
