@@ -94,9 +94,17 @@ export default function LightCircularTimer({ targetSeconds, onComplete, onTick, 
   const circumference = 2 * Math.PI * radius;
   const progress = targetSeconds ? Math.min(elapsed / targetSeconds, 1) : 0;
   const dashOffset = circumference * (1 - progress);
-  const trackColor = "hsl(0 0% 14% / 0.12)";
-  const ringColor = overtime ? "hsl(28 95% 45%)" : "hsl(0 0% 14%)";
-  const timeColor = overtime ? "hsl(28 95% 45%)" : "hsl(0 0% 14%)";
+  // Inline SVG strokes can't read Tailwind tokens; mirror the
+  // `light-foreground` (anthracite) and `light-accent-overtime` (amber)
+  // tokens here so the same single source applies to ring, time text,
+  // and the "Done" button tint below. `withAlpha` produces variants
+  // (e.g. amber at 12% for the "Done" background tint).
+  const ANTHRACITE = "hsl(0 0% 14%)";
+  const OVERTIME = "hsl(28 95% 45%)";
+  const withAlpha = (color: string, a: number) => color.replace(")", ` / ${a})`);
+  const trackColor = withAlpha(ANTHRACITE, 0.12);
+  const ringColor = overtime ? OVERTIME : ANTHRACITE;
+  const timeColor = overtime ? OVERTIME : ANTHRACITE;
 
   return (
     <div className={cn("flex flex-col items-center gap-5", className)}>
@@ -129,7 +137,7 @@ export default function LightCircularTimer({ targetSeconds, onComplete, onTick, 
             </span>
           )}
           {overtime && (
-            <span className="text-xs mt-1 font-mono-num" style={{ color: "hsl(28 95% 45% / 0.85)" }}>
+            <span className="text-xs mt-1 font-mono-num" style={{ color: withAlpha(OVERTIME, 0.85) }}>
               +{Math.floor(overSec / 60)}:{String(overSec % 60).padStart(2, "0")} over
             </span>
           )}
@@ -163,14 +171,14 @@ export default function LightCircularTimer({ targetSeconds, onComplete, onTick, 
               ? "border"
               : running
                 ? "bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 text-light-foreground"
-                : "bg-light-foreground text-[hsl(36_55%_96%)]",
+                : "bg-light-foreground text-light-text-on-dark",
           )}
           style={
             running && overtime
               ? {
-                  background: "hsl(28 95% 45% / 0.12)",
-                  borderColor: "hsl(28 95% 45% / 0.5)",
-                  color: "hsl(28 95% 45%)",
+                  background: withAlpha(OVERTIME, 0.12),
+                  borderColor: withAlpha(OVERTIME, 0.5),
+                  color: OVERTIME,
                 }
               : undefined
           }

@@ -12,6 +12,7 @@ import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { CoffeeCoachCard } from "@/components/coach/CoachCard";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { rememberSessionField } from "@/lib/field/cache";
+import { gradientCreamScrim } from "@/lib/theme/gradients";
 import { useOnline } from "@/hooks/useOnline";
 import { startBrewAgain, startBrewAgainOffline } from "@/lib/flow/brewAgain";
 import {
@@ -213,10 +214,7 @@ export default function CoffeeDetailPage() {
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
-              }}
+              style={{ background: gradientCreamScrim }}
             />
           </div>
         ) : (
@@ -316,10 +314,10 @@ export default function CoffeeDetailPage() {
               setCoffee((prev) => (prev ? { ...prev, inRotation: !next } : prev));
             }
           }}
-          className={`w-full py-3.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${
+          className={`w-full h-14 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${
             coffee.inRotation
               ? "bg-light-foreground/10 border border-light-foreground/40 text-light-foreground"
-              : "bg-light-foreground text-[hsl(36_55%_96%)]"
+              : "bg-light-foreground text-light-text-on-dark"
           }`}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill={coffee.inRotation ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -331,7 +329,7 @@ export default function CoffeeDetailPage() {
           <button
             type="button"
             onClick={brewThis}
-            className="w-full py-3.5 rounded-2xl text-sm font-medium bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98] transition-transform"
+            className="w-full h-14 rounded-full text-sm font-medium bg-light-foreground text-light-text-on-dark active:scale-[0.98] transition-transform"
           >
             Brew this
           </button>
@@ -551,10 +549,7 @@ function OfflineCoffeeDetail({
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
-              }}
+              style={{ background: gradientCreamScrim }}
             />
           </div>
         ) : (

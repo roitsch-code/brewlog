@@ -585,7 +585,7 @@ function CoachQuestionSheet({
   const canSubmit = !!(answer || custom.trim());
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-light-foreground/30 backdrop-blur-sm">
-      <div className="bg-[hsl(36_55%_96%)] rounded-t-3xl px-6 pt-6 pb-8 shadow-light-card-pressed" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}>
+      <div className="bg-light-surface rounded-t-3xl px-6 pt-6 pb-8 shadow-light-card-pressed" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}>
         <p className="label-eyebrow text-light-muted-foreground mb-3">One quick check</p>
         {loading || !question ? (
           <div className="space-y-3">
@@ -624,8 +624,8 @@ function CoachQuestionSheet({
                 disabled={!canSubmit}
                 className={`flex-[2] h-12 rounded-full font-semibold text-[14px] transition-opacity ${
                   canSubmit
-                    ? "bg-light-foreground text-[hsl(36_55%_96%)] active:scale-[0.98]"
-                    : "bg-light-foreground/30 text-[hsl(36_55%_96%)] cursor-not-allowed"
+                    ? "bg-light-foreground text-light-text-on-dark active:scale-[0.98]"
+                    : "bg-light-foreground/30 text-light-text-on-dark cursor-not-allowed"
                 }`}
               >
                 Save with this

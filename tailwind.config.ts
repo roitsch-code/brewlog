@@ -52,6 +52,28 @@ const config: Config = {
           "muted-foreground": "hsl(0 0% 40% / <alpha-value>)",
           "card-default": "hsl(36 55% 96% / 0.55)",
           "card-selected": "hsl(28 22% 84% / 0.7)",
+          // Cream label that sits on `bg-light-foreground` (anthracite)
+          // pills, CTAs, and the connection status badge. Single source of
+          // truth — pre-token there were two near-identical creams
+          // (`hsl(36 55% 96%)` on CTA/ConnectionStatus vs `hsl(30 40% 97%)`
+          // on ActionPill/ChatInput) which read as subtly different chips.
+          "text-on-dark": "hsl(36 55% 96% / <alpha-value>)",
+          // Amber accent used by CircularTimer when elapsed > target. Single
+          // value, reused for ring, time text, "over" indicator, and the
+          // "Done" button background tint.
+          "accent-overtime": "hsl(28 95% 45% / <alpha-value>)",
+          // Warm rust used for destructive actions (delete brew, swipe-to-
+          // delete on SessionCard, delete session inside the café detail
+          // edit panel).
+          destructive: "hsl(12 70% 45% / <alpha-value>)",
+          // Opaque cream — modal/sheet surfaces that need to pop in front
+          // of the Field. Distinct from `card-default` (0.55 glass) — this
+          // is the solid cream behind the "I've been here" modal so the
+          // Field doesn't bleed through a high-decision moment.
+          surface: "hsl(36 55% 96%)",
+          // Warm-near-black backdrop behind centred modals — dims the rest
+          // of the page so the modal cream pops. Use as `bg-light-scrim/45`.
+          scrim: "hsl(20 19% 9% / <alpha-value>)",
         },
       },
       fontFamily: {

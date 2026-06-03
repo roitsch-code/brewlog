@@ -61,7 +61,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
       // the visit-modal sheet sits at z-2000 inside CafeMap.tsx, so the
       // old z-50 left the menu opening behind the map UI. z-[2100] keeps
       // top-level navigation on top of everything.
-      className="fixed inset-0 z-[2100] bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150"
+      className="fixed inset-0 z-[2100] bg-light-card-default backdrop-blur-light-card backdrop-saturate-150"
     >
       {/* Close button — same coordinates as the Burger that opened it
           (§7.1: "mirroring placement so thumb knows where to look").
@@ -74,7 +74,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
         onClick={onClose}
         aria-label="Close menu"
         style={{ top: "calc(env(safe-area-inset-top) + 1.25rem)" }}
-        className="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+        className="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150"
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>

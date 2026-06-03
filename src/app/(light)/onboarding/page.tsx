@@ -61,8 +61,8 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-svh bg-transparent flex flex-col px-5">
       <div className="pb-8" style={{ paddingTop: "calc(env(safe-area-inset-top) + 3rem)" }}>
-        <p className="text-light-muted-foreground text-xs tracking-widest uppercase font-medium mb-3">Setup</p>
-        <h1 className="font-fraunces text-4xl text-light-foreground leading-tight whitespace-pre-line">
+        <p className="text-light-muted-foreground text-xs tracking-widest uppercase mb-3">Setup</p>
+        <h1 className="font-fraunces text-3xl text-light-foreground leading-none whitespace-pre-line">
           {step === "equipment" ? "What's in\nyour kitchen?" : "Your grinder"}
         </h1>
       </div>
@@ -89,7 +89,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={() => setStep("grinder")}
               disabled={equipment.length === 0}
-              className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-30"
+              className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-30"
             >
               Next →
             </button>
@@ -133,7 +133,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-60"
+              className="flex-1 h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold text-base active:scale-[0.98] transition-transform disabled:opacity-60"
             >
               {saving ? "Saving..." : "Start Brewing"}
             </button>

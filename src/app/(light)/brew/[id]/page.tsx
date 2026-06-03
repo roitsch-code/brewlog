@@ -12,6 +12,7 @@ import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe
 import { formatDate, formatSeconds } from "@/lib/utils/formatTime";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { recallSessionField, rememberSessionField } from "@/lib/field/cache";
+import { gradientCreamScrim } from "@/lib/theme/gradients";
 
 export default function SessionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -122,10 +123,7 @@ export default function SessionDetailPage() {
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
-              }}
+              style={{ background: gradientCreamScrim }}
             />
           </div>
         ) : (
@@ -349,7 +347,7 @@ function DeleteButton({ sessionId, onDeleted }: { sessionId: string; onDeleted: 
           type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="flex-1 py-3 rounded-xl bg-[hsl(12_70%_45%)] text-[hsl(36_55%_96%)] text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
+          className="flex-1 py-3 rounded-xl bg-light-destructive text-light-text-on-dark text-sm font-medium active:scale-[0.98] transition-transform disabled:opacity-50"
         >
           {deleting ? "Deleting…" : "Yes, delete"}
         </button>

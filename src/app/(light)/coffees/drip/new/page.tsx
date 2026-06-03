@@ -262,7 +262,7 @@ export default function LogDripBagPage() {
           />
         </Section>
 
-        {saveError && <p className="text-[hsl(12_70%_45%)] text-sm px-1">{saveError}</p>}
+        {saveError && <p className="text-light-destructive text-sm px-1">{saveError}</p>}
       </div>
 
       {/* Non-sticky design-system CTA (no pinned bar / cream box). */}
