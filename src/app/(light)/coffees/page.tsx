@@ -222,19 +222,6 @@ export default function CoffeesPage() {
         ) : null}
       </div>
 
-      {/* Add drip bag — documentation for single-serve sachets. Brewed one
-          fixed way, so it skips the brew flow entirely (scan → flavours →
-          rating). Always visible, including the empty state. */}
-      <div className="px-5 mb-3">
-        <button
-          type="button"
-          onClick={() => router.push("/coffees/drip/new")}
-          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 text-light-foreground active:scale-95 transition-transform"
-        >
-          <span className="text-base leading-none">+</span> Drip bag
-        </button>
-      </div>
-
       {/* Search bar */}
       {!loading && !error && coffees.length > 0 && (
         <div className="px-5 mb-3">

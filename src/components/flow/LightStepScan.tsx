@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import PhotoUpload from "@/components/ui/PhotoUpload";
@@ -58,7 +59,8 @@ const ROASTER_QA_LOCATION_CHIPS = ["Germany", "Netherlands", "UK", "USA", "Denma
 const ROASTER_QA_STYLE_CHIPS = ["Very light", "Light", "Light-medium", "Medium", "Varies"];
 
 export default function LightStepScan() {
-  const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset } = useFlowStore();
+  const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isDripBag, setIsDripBag, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset } = useFlowStore();
+  const router = useRouter();
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModeChoice | null>(null);
@@ -531,20 +533,52 @@ export default function LightStepScan() {
           )}
         </div>
       )}
+
+      {/* Drip bag toggle — a single-serve sachet brews one fixed way, so
+          there's no recipe to generate. Flip this on and Continue jumps
+          straight to documenting flavours + a rating (saved isolated in
+          drip_bags, never fed to recommendations). */}
+      <button
+        type="button"
+        onClick={() => setIsDripBag(!isDripBag)}
+        aria-pressed={isDripBag}
+        className="w-full flex items-center justify-between gap-3 pt-3 mt-1 border-t"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <span className="text-left">
+          <span className="block text-sm" style={{ color: "var(--foreground)" }}>This is a drip bag</span>
+          <span className="block text-xs" style={{ color: "var(--muted-foreground)" }}>Skip the recipe — just log flavours + a rating</span>
+        </span>
+        <span
+          className="relative shrink-0 h-6 w-11 rounded-full transition-colors"
+          style={{ background: isDripBag ? "var(--foreground)" : "var(--border)" }}
+        >
+          <span
+            className="absolute top-0.5 h-5 w-5 rounded-full transition-transform"
+            style={{ left: "2px", background: "var(--card)", transform: isDripBag ? "translateX(20px)" : "translateX(0)" }}
+          />
+        </span>
+      </button>
     </div>
   );
 
-  // Continue is gated on BOTH having coffee info AND picking a mode —
-  // mode no longer defaults to "home" so the user has to make an
-  // explicit choice (Markus' feedback: pre-selected Brew-at-home was
-  // confusing).
-  const canProceed = hasCoffeeInfo && selectedMode !== null;
+  // Continue is gated on having coffee info AND (for a normal brew) an
+  // explicit mode choice — mode no longer defaults to "home" (Markus'
+  // feedback: pre-selected Brew-at-home was confusing). A drip bag needs
+  // no mode, so the toggle alone unlocks Continue.
+  const canProceed = hasCoffeeInfo && (isDripBag || selectedMode !== null);
 
   const nextStep = () => {
-    if (!selectedMode) return;
     if (showManualForm && (manualRoaster || manualName || manualOrigin)) {
       applyManualForm();
     }
+    // Drip bag: leave the brew flow and hand the scanned identity to the
+    // documentation page (it reads draft.coffee + fieldZones + isDripBag).
+    if (isDripBag) {
+      router.push("/coffees/drip/new");
+      return;
+    }
+    if (!selectedMode) return;
     setMode(selectedMode);
     if (selectedMode === "home") setStep("context");
     else setStep("mode");
@@ -555,7 +589,7 @@ export default function LightStepScan() {
     analysisResult?.roasterPrior ?? manualRoasterPrior ?? null;
 
   return (
-    <LightFlowShell onNext={canProceed ? nextStep : undefined} nextDisabled={!canProceed} nextLabel="Continue →">
+    <LightFlowShell onNext={canProceed ? nextStep : undefined} nextDisabled={!canProceed} nextLabel={isDripBag ? "Document →" : "Continue →"}>
       <div className="px-5 py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
         <Hero eyebrow="New Session" question={<>What are you brewing today?</>} />
 
@@ -974,24 +1008,27 @@ export default function LightStepScan() {
           </a>
         )}
 
-        {/* THEN CHOOSE */}
-        <div>
-          <p className="label-eyebrow mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
-          <div className="grid grid-cols-2 gap-3">
-            {SCAN_MODES.map(m => (
-              <div key={m.id} className="h-[88px]">
-                <Card
-                  selected={selectedMode === m.id}
-                  onClick={() => setSelectedMode(m.id)}
-                  ariaLabel={m.label}
-                >
-                  <CardIcon><m.Icon className="h-5 w-5" strokeWidth={1.5} /></CardIcon>
-                  <CardTitle>{m.label}</CardTitle>
-                </Card>
-              </div>
-            ))}
+        {/* THEN CHOOSE — hidden for drip bags (no brew mode applies; the
+            Continue button documents it directly). */}
+        {!isDripBag && (
+          <div>
+            <p className="label-eyebrow mb-3" style={{ color: "var(--muted-foreground)" }}>Then Choose</p>
+            <div className="grid grid-cols-2 gap-3">
+              {SCAN_MODES.map(m => (
+                <div key={m.id} className="h-[88px]">
+                  <Card
+                    selected={selectedMode === m.id}
+                    onClick={() => setSelectedMode(m.id)}
+                    ariaLabel={m.label}
+                  >
+                    <CardIcon><m.Icon className="h-5 w-5" strokeWidth={1.5} /></CardIcon>
+                    <CardTitle>{m.label}</CardTitle>
+                  </Card>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </LightFlowShell>
   );

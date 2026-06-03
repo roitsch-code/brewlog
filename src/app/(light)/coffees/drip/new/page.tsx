@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useFlowStore } from "@/store/flowStore";
 import Hero from "@/components/ui/light/Hero";
 import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
@@ -67,6 +68,31 @@ export default function AddDripBagPage() {
   const [freeNotes, setFreeNotes] = useState("");
 
   const [saving, setSaving] = useState(false);
+
+  // Seed from the brew-flow scan when entered via the "Drip bag" toggle.
+  // The scan step already extracted the identity, uploaded the photo and
+  // mapped the Field — read it once on mount and skip straight to the
+  // flavours + rating capture. (Direct visits with no flow draft fall back
+  // to this page's own scan UI.)
+  useEffect(() => {
+    const st = useFlowStore.getState();
+    const c = st.draft.coffee;
+    if (!st.isDripBag || !c || !(c.name || c.roaster)) return;
+    setRoaster(c.roaster ?? "");
+    setName(c.name ?? "");
+    setOrigin(c.origin || undefined);
+    setRegion(c.region || undefined);
+    setVariety(c.variety || undefined);
+    setProcess(c.process || undefined);
+    setRoastLevel(c.roastLevel || undefined);
+    if (c.tastingNotesFromBag?.length) setBagNotes(c.tastingNotesFromBag);
+    setBagPhotoUrl(c.bagPhotoUrl || undefined);
+    setBagPhotoPath(c.bagPhotoPath || undefined);
+    if (c.bagPhotoUrl) setPreviewUrl(c.bagPhotoUrl);
+    if (st.fieldZones) setFieldZones(st.fieldZones);
+    setAiExtracted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Paint the page in the scanned coffee's Field, like the rest of the app.
   useFieldConfig(fieldZones ? { fieldZones, rotation: 0 } : null);
@@ -172,6 +198,9 @@ export default function AddDripBagPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Save failed");
+      // Clear the brew-flow draft + drip-bag flag so the next "New Session"
+      // starts clean (the scan step seeded this page from the flow store).
+      useFlowStore.getState().reset();
       router.push("/coffees");
     } catch {
       setSaving(false);
