@@ -156,7 +156,11 @@ export default function HomePage() {
     // a tod boundary (morning → midday → afternoon → evening →
     // late-night). Old `brewlog.starter.v{2..6}.<date>` entries are
     // orphaned in localStorage — harmless.
-    const key = `brewlog.starter.v8.${todayKey()}.${timeBucket()}`;
+    // v9 bumps for the Europe/Berlin timezone fix on the server — prior
+    // cached "Late night" greetings generated at 06:00 CEST (because
+    // the server read UTC 04:00) need to be discarded so the morning
+    // bucket regenerates from scratch.
+    const key = `brewlog.starter.v9.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {

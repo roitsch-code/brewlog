@@ -163,9 +163,21 @@ export async function POST(req: NextRequest) {
       rowToSession(row as Parameters<typeof rowToSession>[0])
     );
 
+    // The server runs in UTC; the user is in Europe/Berlin. Without
+    // explicitly converting, at 06:48 CEST we computed UTC 04:48 and
+    // returned "late-night" — Haiku then opened the haiku with
+    // "Late night —" at 6:48 in the morning. Lock the wall-clock
+    // read to Europe/Berlin so the bucket matches what the user
+    // actually sees on their phone.
     const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+    const berlinParts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Berlin",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+    const hour = Number(berlinParts.find((p) => p.type === "hour")?.value ?? "0");
+    const minute = Number(berlinParts.find((p) => p.type === "minute")?.value ?? "0");
     const timeOfDay =
       hour < 5 ? "late-night"
       : hour < 11 ? "morning"
