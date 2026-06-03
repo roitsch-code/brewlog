@@ -115,6 +115,38 @@ export const cafeVisits = pgTable("cafe_visits", {
   visitedAtMs: bigint("visited_at_ms", { mode: "number" }).notNull(),
 });
 
+// Single-serve drip-bag documentation record (see migration 0016 and
+// src/lib/types/dripBag.ts). Brewed one fixed way, so no recipe/brew
+// fields — just the scanned identity, the printed bag notes, the user's
+// flavour-wheel picks, and a star rating. Intentionally isolated from
+// `sessions`/`coffees`/the AI corpus, like `cafe_visits`.
+export const dripBags = pgTable(
+  "drip_bags",
+  {
+    id: text("id").primaryKey(),
+    roaster: text("roaster").notNull(),
+    name: text("name").notNull(),
+    origin: text("origin"),
+    region: text("region"),
+    variety: text("variety"),
+    process: text("process"),
+    roastLevel: text("roast_level"),
+    bagNotes: jsonb("bag_notes").$type<string[]>().notNull().default([]),
+    flavorNotes: jsonb("flavor_notes").$type<string[]>().notNull().default([]),
+    rating: numeric("rating"),
+    freeNotes: text("free_notes"),
+    bagPhotoUrl: text("bag_photo_url"),
+    bagPhotoPath: text("bag_photo_path"),
+    fieldZones: jsonb("field_zones"),
+    aiExtracted: boolean("ai_extracted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAtMs: bigint("created_at_ms", { mode: "number" }).notNull(),
+  },
+  (t) => ({
+    createdAtMsIdx: index("drip_bags_created_at_ms_idx").on(t.createdAtMs.desc()),
+  })
+);
+
 export const preferences = pgTable("preferences", {
   key: text("key").primaryKey(),
   data: jsonb("data").notNull(),
