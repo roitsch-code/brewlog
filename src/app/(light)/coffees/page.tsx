@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 import type { Coffee } from "@/lib/types/coffee";
 import type { CoffeeIdentity, Session } from "@/lib/types/session";
+import type { DripBag } from "@/lib/types/dripBag";
 import StarRating from "@/components/ui/light/StarRating";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
@@ -17,6 +18,32 @@ import {
 } from "@/lib/storage/offlineLibrary";
 
 type Filter = "recent" | "favorites" | "roaster";
+
+/** A library row — either an aggregated brewed Coffee or a documented
+ * drip bag (flagged), so both render through the same card markup. */
+type LibraryItem = Coffee & { isDripBag?: boolean };
+
+/** Map a documented drip bag into the shared card view-model. Drip bags
+ * have no brews, so sessionCount is 0 and the right-hand brew column stays
+ * hidden; the star row reuses the drip bag's own rating. firstSeenAt is the
+ * record's createdAt so it sorts alongside coffees by recency. */
+function dripBagToItem(d: DripBag): LibraryItem {
+  return {
+    id: d.id,
+    roaster: d.roaster,
+    name: d.name,
+    origin: d.origin ?? "",
+    process: d.process ?? "",
+    firstSeenAt: d.createdAt,
+    sessionCount: 0,
+    sessionIds: [],
+    avgRating: d.rating > 0 ? d.rating : undefined,
+    bagPhotoUrl: d.bagPhotoUrl,
+    fieldZones: d.fieldZones ?? null,
+    inRotation: false,
+    isDripBag: true,
+  };
+}
 
 /** Map a cached brewable coffee to the Coffee shape the list renders, so
  * the offline view reuses the same card markup. avgRating is derived from
@@ -44,7 +71,7 @@ function brewableToCoffee(b: BrewableCoffee): Coffee {
 }
 
 export default function CoffeesPage() {
-  const [coffees, setCoffees] = useState<Coffee[]>([]);
+  const [coffees, setCoffees] = useState<LibraryItem[]>([]);
   const [totalSessions, setTotalSessions] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -103,11 +130,18 @@ export default function CoffeesPage() {
     const coffeesP = fetch("/api/coffees", { cache: "no-store" })
       .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<Coffee[]>; });
 
-    // Render the list as soon as coffees load — don't block on the cache warm.
-    coffeesP
-      .then((data) => {
+    // Drip bags live in their own table; merge them into the same list,
+    // flagged. A drip-bags outage is non-fatal — coffees still render.
+    const dripBagsP = fetch("/api/drip-bags", { cache: "no-store" })
+      .then((r) => (r.ok ? (r.json() as Promise<DripBag[]>) : []))
+      .catch((): DripBag[] => []);
+
+    // Render the list as soon as the sources load — don't block on the cache warm.
+    Promise.all([coffeesP, dripBagsP])
+      .then(([data, drips]) => {
         if (cancelled) return;
-        setCoffees([...data].sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || "")));
+        const merged: LibraryItem[] = [...data, ...drips.map(dripBagToItem)];
+        setCoffees(merged.sort((a, b) => (b.firstSeenAt || "").localeCompare(a.firstSeenAt || "")));
       })
       .catch(() => { if (!cancelled) setError(true); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -254,7 +288,7 @@ export default function CoffeesPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
             </svg>
             <p className="font-fraunces text-xl text-light-foreground">No coffees yet</p>
-            <p className="text-light-muted-foreground text-sm">Coffees you scan will appear here.</p>
+            <p className="text-light-muted-foreground text-sm">Coffees you scan — and drip bags you log — appear here.</p>
           </div>
         ) : filteredCoffees.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center gap-2">
@@ -276,7 +310,13 @@ export default function CoffeesPage() {
                       flush with the card border, no padding gap. */}
                   <button
                     type="button"
-                    onClick={() => (online ? router.push(`/coffees/${coffee.id}`) : setPickerId(coffee.id))}
+                    onClick={() =>
+                      coffee.isDripBag
+                        ? router.push(`/coffees/drip/${coffee.id}`)
+                        : online
+                          ? router.push(`/coffees/${coffee.id}`)
+                          : setPickerId(coffee.id)
+                    }
                     className="flex items-stretch flex-1 min-w-0 text-left active:opacity-80 transition-opacity"
                   >
                     {/* Photo — full-height left strip (w-24 = 96px).
@@ -319,6 +359,11 @@ export default function CoffeesPage() {
                       </div>
                       {sub && (
                         <p className="text-light-muted-foreground text-xs truncate mt-0.5">{sub}</p>
+                      )}
+                      {coffee.isDripBag && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 mt-1 text-[10px] font-medium uppercase tracking-wide bg-light-card-selected text-light-foreground">
+                          Drip bag
+                        </span>
                       )}
                       {coffee.latestRoastDate && (
                         <p className="text-light-muted-foreground text-xs truncate mt-0.5">

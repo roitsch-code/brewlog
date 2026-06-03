@@ -22,6 +22,11 @@ interface FlowState {
    * property per spec §10.4 anti-pattern). null = use Default Field. */
   fieldZones: FieldZones | null;
   skipScan: boolean;         // true when entering via "brew again" (no scan step)
+  /** Set from the "Drip bag" toggle in the scan step. A drip bag brews one
+   * fixed way, so when true the flow leaves the brew steps after scan and
+   * routes to the drip documentation (flavours + rating), saved isolated in
+   * the drip_bags table. See src/lib/types/dripBag.ts. */
+  isDripBag: boolean;
   isAnalyzing: boolean;
   isRecommending: boolean;
   recommendError: string | null;
@@ -31,6 +36,7 @@ interface FlowState {
   setStep: (step: FlowStep) => void;
   setMode: (mode: SessionMode) => void;
   setSkipScan: (v: boolean) => void;
+  setIsDripBag: (v: boolean) => void;
   setCoffee: (coffee: Partial<CoffeeIdentity>) => void;
   setPlace: (place: ExternalPlace) => void;
   setContext: (context: SessionContext) => void;
@@ -64,6 +70,7 @@ export const useFlowStore = create<FlowState>()(
       draft: initialDraft,
       fieldZones: null,
       skipScan: false,
+      isDripBag: false,
       isAnalyzing: false,
       isRecommending: false,
       recommendError: null,
@@ -72,6 +79,7 @@ export const useFlowStore = create<FlowState>()(
       setStep: (step) => set({ step }),
       setMode: (mode) => set((s) => ({ draft: { ...s.draft, mode } })),
       setSkipScan: (v) => set({ skipScan: v }),
+      setIsDripBag: (v) => set({ isDripBag: v }),
       setCoffee: (coffee) =>
         set((s) => ({ draft: { ...s.draft, coffee: { ...s.draft.coffee, ...coffee } as CoffeeIdentity } })),
       setPlace: (place) => set((s) => ({ draft: { ...s.draft, place } })),
@@ -87,7 +95,7 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a
