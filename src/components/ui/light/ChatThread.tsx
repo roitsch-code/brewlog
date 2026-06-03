@@ -129,7 +129,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
         <div className="flex w-full flex-col gap-3 px-5 py-5">
           {showThinking && (
             <div
-              className="flex h-9 w-fit items-center gap-2 rounded-2xl bg-light-card-default px-4 backdrop-blur-[14px] backdrop-saturate-150 order-last"
+              className="flex h-9 w-fit items-center gap-2 rounded-2xl bg-light-card-default px-4 backdrop-blur-light-card backdrop-saturate-150 order-last"
               aria-label="Thinking"
             >
               <span
@@ -150,7 +150,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
             m.role === "user" ? (
               <div key={i} className="flex flex-col items-end gap-2">
                 {m.imageUrl && (
-                  <div className="max-w-[80%] overflow-hidden rounded-2xl border border-light-foreground/25 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150">
+                  <div className="max-w-[80%] overflow-hidden rounded-2xl border border-light-foreground/25 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={m.imageUrl}
@@ -160,7 +160,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                   </div>
                 )}
                 {m.coffeeRef && (
-                  <div className="flex max-w-[80%] items-start gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                  <div className="flex max-w-[80%] items-start gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-light-card backdrop-saturate-150">
                     <CoffeeIcon className="mt-0.5 h-5 w-5 shrink-0 text-light-foreground/80" strokeWidth={1.5} />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <span className="line-clamp-2 break-words font-chivo text-[13px] font-normal text-light-muted-foreground">
@@ -173,7 +173,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                   </div>
                 )}
                 {m.content && (
-                  <div className="max-w-[80%] rounded-2xl bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150">
+                  <div className="max-w-[80%] rounded-2xl bg-light-card-default px-4 py-3 backdrop-blur-light-card backdrop-saturate-150">
                     <p className="whitespace-pre-wrap font-chivo text-[15px] font-normal text-light-foreground">
                       {m.content}
                     </p>

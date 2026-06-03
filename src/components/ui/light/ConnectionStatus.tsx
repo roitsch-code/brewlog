@@ -81,7 +81,7 @@ export default function ConnectionStatus() {
         type="button"
         disabled={!tappable}
         onClick={() => { if (tappable) void tick(); }}
-        className="pointer-events-auto rounded-full bg-light-foreground/90 px-3.5 py-1.5 text-[11px] font-medium text-[hsl(36_55%_96%)] shadow-sm backdrop-blur disabled:cursor-default"
+        className="pointer-events-auto rounded-full bg-light-foreground/90 px-3.5 py-1.5 text-[11px] font-medium text-light-text-on-dark shadow-sm backdrop-blur-light-card backdrop-saturate-150 disabled:cursor-default"
       >
         {label}
       </button>

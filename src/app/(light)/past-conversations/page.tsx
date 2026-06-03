@@ -78,7 +78,7 @@ export default function PastConversationsPage() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -99,7 +99,7 @@ export default function PastConversationsPage() {
                   <div className="flex items-stretch gap-2">
                     <Link
                       href={`/past-conversations/${row.id}`}
-                      className="flex flex-1 items-center gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-[14px] backdrop-saturate-150"
+                      className="flex flex-1 items-center gap-3 rounded-2xl border border-light-foreground/25 bg-light-card-default px-4 py-3 backdrop-blur-light-card backdrop-saturate-150"
                     >
                       <div className="flex min-w-0 flex-1 flex-col">
                         <span className="font-chivo text-[12px] font-normal text-light-muted-foreground">
@@ -118,7 +118,7 @@ export default function PastConversationsPage() {
                       type="button"
                       onClick={() => void handleDelete(row.id)}
                       aria-label="Delete conversation"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150"
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                     </button>

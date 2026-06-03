@@ -111,7 +111,7 @@ export default function CafesPage() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150 active:scale-95 transition-transform"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -137,7 +137,7 @@ export default function CafesPage() {
             onClick={() => setActiveTab(t.id)}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
               activeTab === t.id
-                ? "bg-light-foreground text-[hsl(36_55%_96%)]"
+                ? "bg-light-foreground text-light-text-on-dark"
                 : "bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 text-light-muted-foreground"
             }`}
           >

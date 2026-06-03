@@ -32,7 +32,7 @@ export default function CTA({ onClick, disabled, loading, children }: CTAProps) 
         type="button"
         onClick={onClick}
         disabled={disabled || loading}
-        className="h-14 w-full rounded-full bg-light-foreground text-[15px] font-semibold text-[hsl(36_55%_96%)] active:scale-[0.99] transition-transform disabled:opacity-40 disabled:active:scale-100"
+        className="h-14 w-full rounded-full bg-light-foreground text-[15px] font-semibold text-light-text-on-dark active:scale-[0.99] transition-transform disabled:opacity-40 disabled:active:scale-100"
       >
         {children}
       </button>

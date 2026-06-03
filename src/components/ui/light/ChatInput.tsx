@@ -239,7 +239,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
         {(voiceError || uploadError) && (
           <div
             role="alert"
-            className="mb-2 rounded-2xl border border-light-foreground/25 bg-light-card-default px-3 py-2 font-chivo text-[13px] text-light-foreground backdrop-blur-[14px] backdrop-saturate-150"
+            className="mb-2 rounded-2xl border border-light-foreground/25 bg-light-card-default px-3 py-2 font-chivo text-[13px] text-light-foreground backdrop-blur-light-card backdrop-saturate-150"
           >
             {voiceError ?? uploadError}
           </div>
@@ -269,7 +269,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               onClick={() => voice.cancel()}
               disabled={isTranscribing}
               aria-label="Cancel recording"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150 disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -279,7 +279,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               onClick={clearComposition}
               disabled={loading || uploadingImage}
               aria-label={loading ? "Sending" : "Clear"}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150 disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -288,16 +288,16 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               type="button"
               onClick={openSheet}
               aria-label="Attach"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-[14px] backdrop-saturate-150"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150"
             >
               <Plus className="h-5 w-5" strokeWidth={1.5} />
             </button>
           )}
 
           {loading ? (
-            <div className="h-11 flex-1 rounded-full border border-light-foreground/25 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150" />
+            <div className="h-11 flex-1 rounded-full border border-light-foreground/25 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150" />
           ) : isVoiceActive ? (
-            <div className="flex h-11 flex-1 items-center gap-2 rounded-full border border-light-foreground/25 bg-light-card-default pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
+            <div className="flex h-11 flex-1 items-center gap-2 rounded-full border border-light-foreground/25 bg-light-card-default pl-5 pr-1.5 backdrop-blur-light-card backdrop-saturate-150">
               <WaveformBars
                 getLevel={voice.getLevel}
                 color="hsl(20 14% 12%)"
@@ -317,14 +317,14 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                   type="button"
                   onClick={() => void voice.stop()}
                   aria-label="Stop recording"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
                 >
                   <Square className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl border border-light-foreground/25 bg-light-card-default py-1.5 pl-5 pr-1.5 backdrop-blur-[14px] backdrop-saturate-150">
+            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl border border-light-foreground/25 bg-light-card-default py-1.5 pl-5 pr-1.5 backdrop-blur-light-card backdrop-saturate-150">
               {(attachedImageUrl || uploadingImage) && (
                 <div className="relative h-20 w-20">
                   {attachedImageUrl ? (
@@ -347,7 +347,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                       type="button"
                       onClick={() => setAttachedImageUrl(null)}
                       aria-label="Remove photo"
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)]"
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
                     >
                       <X className="h-3 w-3" strokeWidth={2.25} />
                     </button>
@@ -372,7 +372,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                     type="button"
                     onClick={() => setAttachedCoffee(null)}
                     aria-label="Remove coffee reference"
-                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)]"
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
                   >
                     <X className="h-3 w-3" strokeWidth={2.25} />
                   </button>
@@ -411,7 +411,7 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
                     onClick={send}
                     disabled={uploadingImage}
                     aria-label="Send"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-[hsl(30_40%_97%)] disabled:opacity-30"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark disabled:opacity-30"
                   >
                     <ArrowUp className="h-4 w-4" strokeWidth={2.25} />
                   </button>

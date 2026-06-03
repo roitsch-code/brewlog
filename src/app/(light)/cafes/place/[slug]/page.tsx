@@ -181,7 +181,7 @@ export default function CafeDetailPage() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150 active:scale-95 transition-transform"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -223,7 +223,7 @@ export default function CafeDetailPage() {
         <button
           type="button"
           onClick={() => setVisitModalOpen(true)}
-          className="mt-3 w-full h-12 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-sm font-medium active:scale-[0.98] transition-transform"
+          className="mt-3 w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark text-sm font-medium active:scale-[0.98] transition-transform"
         >
           I&apos;ve been here
         </button>
@@ -349,7 +349,7 @@ export default function CafeDetailPage() {
                               onClick={() => setEditMethod(editMethod === m.label ? "" : m.label)}
                               className={`shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors ${
                                 editMethod === m.label
-                                  ? "bg-light-foreground text-[hsl(36_55%_96%)] border-light-foreground"
+                                  ? "bg-light-foreground text-light-text-on-dark border-light-foreground"
                                   : "text-light-muted-foreground border-light-foreground/20 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150"
                               }`}
                             >
@@ -381,7 +381,7 @@ export default function CafeDetailPage() {
                         <button
                           onClick={() => saveEdit(s)}
                           disabled={saving}
-                          className="flex-1 py-2 rounded-xl bg-light-foreground text-[hsl(36_55%_96%)] text-sm font-medium disabled:opacity-50"
+                          className="flex-1 py-2 rounded-xl bg-light-foreground text-light-text-on-dark text-sm font-medium disabled:opacity-50"
                         >
                           Save
                         </button>
@@ -395,7 +395,7 @@ export default function CafeDetailPage() {
                       <button
                         onClick={() => deleteSession(s.id)}
                         disabled={deletingId === s.id}
-                        className="w-full py-2 rounded-xl bg-[hsl(12_70%_45%)] text-[hsl(36_55%_96%)] text-xs font-medium active:scale-[0.99] transition-transform disabled:opacity-40"
+                        className="w-full py-2 rounded-xl bg-light-destructive text-light-text-on-dark text-xs font-medium active:scale-[0.99] transition-transform disabled:opacity-40"
                       >
                         {deletingId === s.id ? "Deleting…" : "Delete session"}
                       </button>
@@ -414,12 +414,11 @@ export default function CafeDetailPage() {
           return). Saves to /api/cafe-visits and prepends to the list. */}
       {visitModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-5"
-          style={{ background: "rgba(28,22,19,0.45)" }}
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-5 bg-light-scrim/45"
           onClick={() => !visitSaving && setVisitModalOpen(false)}
         >
           <div
-            className="w-full max-w-sm bg-[hsl(36_55%_96%)] rounded-3xl p-6 space-y-4 mb-6 sm:mb-0"
+            className="w-full max-w-sm bg-light-surface rounded-3xl p-6 space-y-4 mb-6 sm:mb-0"
             onClick={e => e.stopPropagation()}
           >
             <div className="space-y-1">
@@ -431,7 +430,7 @@ export default function CafeDetailPage() {
                 type="button"
                 disabled={visitSaving}
                 onClick={() => saveVisit("come-back")}
-                className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+                className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50"
               >
                 <ThumbsUp className="w-5 h-5" strokeWidth={1.75} />
                 Would come back

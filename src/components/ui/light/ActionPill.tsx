@@ -70,7 +70,7 @@ function destinationToPath(action: NavAction): string {
 
 function ActionPillIcon({ destination }: { destination: NavAction["destination"] }) {
   // Cream icon on the anthracite pill body — same colour as the label.
-  const cls = "h-4 w-4 text-[hsl(30_40%_97%)]";
+  const cls = "h-4 w-4 text-light-text-on-dark";
   switch (destination) {
     case "coffee_library":
       return <BookOpen className={cls} strokeWidth={1.75} />;
@@ -158,7 +158,7 @@ export default function ActionPill({ action }: { action: NavAction }) {
       type="button"
       onClick={() => void handleClick()}
       title={action.reason}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-[hsl(30_40%_97%)] shadow-sm active:opacity-90"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-sm active:opacity-90"
     >
       <ActionPillIcon destination={action.destination} />
       {action.label}

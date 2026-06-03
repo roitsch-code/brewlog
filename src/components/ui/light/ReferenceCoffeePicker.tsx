@@ -63,7 +63,7 @@ export default function ReferenceCoffeePicker({
         className="fixed inset-0 z-50 cursor-default bg-light-foreground/10 backdrop-blur-[2px]"
       />
 
-      <div className="fixed inset-x-0 bottom-0 z-[60] flex max-h-[80vh] min-h-[60vh] flex-col rounded-t-2xl border border-light-foreground/25 bg-light-card-default backdrop-blur-[14px] backdrop-saturate-150">
+      <div className="fixed inset-x-0 bottom-0 z-[60] flex max-h-[80vh] min-h-[60vh] flex-col rounded-t-2xl border border-light-foreground/25 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150">
         <div className="mt-2 self-center">
           <span className="block h-1 w-10 rounded-full bg-light-foreground/30" />
         </div>
@@ -83,7 +83,6 @@ export default function ReferenceCoffeePicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search roaster or coffee"
             className="block h-11 w-full rounded-full border-0 bg-light-card-default px-5 font-chivo text-[15px] font-normal text-light-foreground placeholder:text-light-muted-foreground focus:border-transparent focus:outline-none focus:ring-0 focus:ring-offset-0"
-            style={{ background: "hsl(36 55% 96% / 0.45)" }}
           />
         </div>
 

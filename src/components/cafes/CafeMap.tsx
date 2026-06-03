@@ -614,7 +614,7 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
                 <button
                   type="button"
                   onClick={() => onSelect(selected)}
-                  className="bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform"
+                  className="bg-light-foreground text-light-text-on-dark text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform"
                 >
                   View
                 </button>
@@ -661,7 +661,7 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
               <button
                 type="button"
                 onClick={() => setVisitModalPlace(placeSelected)}
-                className="bg-light-foreground text-[hsl(36_55%_96%)] text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform whitespace-nowrap"
+                className="bg-light-foreground text-light-text-on-dark text-xs font-semibold px-4 py-1.5 rounded-full active:scale-95 transition-transform whitespace-nowrap"
               >
                 I&apos;ve been here
               </button>
@@ -674,12 +674,11 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
           return). Mirrors the modal on /cafes/place/[slug]. */}
       {visitModalPlace && (
         <div
-          className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center px-5"
-          style={{ background: "rgba(28,22,19,0.45)" }}
+          className="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center px-5 bg-light-scrim/45"
           onClick={() => !visitSaving && setVisitModalPlace(null)}
         >
           <div
-            className="w-full max-w-sm bg-[hsl(36_55%_96%)] rounded-3xl p-6 space-y-4 mb-6 sm:mb-0"
+            className="w-full max-w-sm bg-light-surface rounded-3xl p-6 space-y-4 mb-6 sm:mb-0"
             onClick={e => e.stopPropagation()}
           >
             <div className="space-y-1">
@@ -691,7 +690,7 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
                 type="button"
                 disabled={visitSaving}
                 onClick={() => saveVisit("come-back")}
-                className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50"
+                className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-medium flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-50"
               >
                 <ThumbsUp className="w-5 h-5" strokeWidth={1.75} />
                 Would come back

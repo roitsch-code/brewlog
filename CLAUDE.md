@@ -32,7 +32,7 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 Light migration is **complete** as of PRs #134–#137. Every visited route lives inside the **`(light)` route group** (BTTS Light theme — Cream background, Fraunces/Chivo, anthracite foreground, generative Field) and inherits `LightShell` from `(light)/layout.tsx`. The `(light)` segment is URL-invisible — `/coffees` resolves through `(light)/coffees/page.tsx`. `LightShell` sets the `[data-light-scope]` data attribute used by the CSS shim in `globals.css`.
 
-The single remaining Dark route is `cafes/map/page.tsx` and that's intentional (dark Leaflet tiles).
+Every route is now Light, including `cafes/map` (headlined "Nearby") — the cream→transparent scrim at the top keeps the title legible against the warm-tinted Positron tiles.
 
 | Route | Theme | Purpose |
 |-------|-------|---------|
@@ -53,7 +53,7 @@ The single remaining Dark route is `cafes/map/page.tsx` and that's intentional (
 | `(light)/offline/page.tsx` | Light | Service-worker document fallback (`next.config.mjs` `fallbacks.document`). Shown when an uncached route is opened offline; links to `/coffees`. Safety net — the real offline path lives in the precached `/coffees` + `/brew/new` shell. |
 | `layout.tsx` | — | Root layout: PWA meta tags, font preloads, `<ScrollContainer>` wrapper |
 | `loading.tsx` | Light | Global loading state — Light CoffeeBeanGlow on inline cream bg (renders before LightShell mounts) |
-| `cafes/map/page.tsx` | Dark *(intentional)* | Nearby — full-screen Leaflet map (CartoCDN dark tiles); needs `h-dvh flex flex-col` + `flex-1 min-h-0` so Leaflet gets a non-zero container |
+| `(light)/cafes/map/page.tsx` | Light | Nearby — full-bleed Leaflet map (Positron tiles warmed via the `[data-light-scope]` sepia filter on `.leaflet-tile-pane`); floating header with the Light wordmark pattern + cream→transparent scrim so the title reads cleanly over the tiles |
 
 Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/page.tsx` + `/api/match` (folded into `/api/explore-agent`), `explore/page.tsx` (replaced by inline chat on home), `library/page.tsx` (the Coffee Library / Café Library picker — redundant once `NavigationOverlay` gained direct entries for both).
 
@@ -134,7 +134,7 @@ Removed during the Light cleanup (PR #137): `BottomNav`, Dark `Chip`, `RadarChar
 `ScrollContainer` (root 100dvh wrapper with hidden scroll — no more allowlist, no nav-padding reserve), `BottomSpacer`
 
 **Session:** `SessionCard` (Light, consumed only by `/coffees/[id]` All-brews list — Brew-method as headline, Field's cream-glass cards, swipe-to-delete with rust-red destructive button)
-**Cafés:** `CafeMap` (Leaflet — consumed by `/cafes/map`)
+**Cafés:** `CafeMap` (Leaflet — consumed by `(light)/cafes/map`, now Light with warmed Positron tiles)
 **Coach (`src/components/coach/`):** `CoachCard` (presentational two-paragraph card — observation row 1, suggestion row 2, three-action footer Try it / Confirmed / Doesn't apply, consumed by `/taste` queue) + `CoffeeCoachCard` (wrapper that fetches `/api/insights?status=trying,new`, scores by citationFields overlap with this coffee's attributes, prefers trying then new, renders one best-match — rotation-only). PR #215.
 
 ### `src/lib/`
@@ -342,7 +342,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 - Light primitives stack: `LightShell`, `LightFlowShell`, `Field`, `Card`, `Section`, `Footnote`, `Chip`, `Hero`, `CTA`, `CTAWarmth`, `ActionPill`, `ChatInput`, `ChatThread`, `NavigationOverlay`, `StarRating`, `CircularTimer` (fork), `CoffeeBeanGlow` (fork).
 - Atomic cut-over (PR #95) renamed `(light)/brew/preview` → `(light)/brew/new` and deleted ~4,300 lines of Dark step code (`Step*.tsx` + `FlowShell.tsx` + Dark `CircularTimer`).
 - `[data-light-scope]` CSS shim in `globals.css` adapts shared Dark-era components (`BrewMethodIcon`, original `CoffeeBeanGlow`) via `filter: brightness(0)` so they read as anthracite inside the Light tree without being forked.
-- Migrated this arc (Sep–May 2026): `/brew/[id]` (#122), `/coffees/[id]` Field adoption (#123), SessionCard rewrite (#120), `/cafes` + `/cafes/place/[slug]` + `/cafes/coffee/[id]` (#134), `/login` + `/onboarding` (#135), `/taste` (#136). Only `/cafes/map` remains Dark — intentional for the dark CartoCDN tiles.
+- Migrated this arc (Sep–May 2026): `/brew/[id]` (#122), `/coffees/[id]` Field adoption (#123), SessionCard rewrite (#120), `/cafes` + `/cafes/place/[slug]` + `/cafes/coffee/[id]` (#134), `/login` + `/onboarding` (#135), `/taste` (#136). `/cafes/map` (Nearby) is also fully Light — warmed Positron tiles via the `[data-light-scope]` sepia filter — pin to a specific PR pending.
 - Cleanup pass (#137): removed `BottomNav`, `RadarChart`, Dark `Chip` (all orphaned post-migration); `loading.tsx` flipped to Light with explicit cream bg so route transitions don't flash dark; `ScrollContainer` simplified (no allowlist, no nav-padding reserve); `--nav-bottom-padding` CSS var dropped.
 - PWA chrome aligned (#113–#119): `themeColor: #D4B8C9` (mauve) on viewport + `manifest.json`, `manifest.background_color: #F3E5DC` (cream so the splash matches the Field base), `appleWebApp.statusBarStyle: "default"`, `html { background-color: #F3E5DC }` so the Light cream is the baseline even if the Field gradient is thin at the very top pixels.
 
@@ -396,8 +396,10 @@ All migrations applied manually on the VPS — see migration NOTE above.
 - Library snapshot uses `formatLibraryForPrompt` (with rotation prefix + usage signal) instead of bare roaster+name.
 - localStorage cache keyed by `brewlog.starter.v4.<date>.<bucket>` — regenerates 5× per day at tod-bucket boundaries instead of once per calendar day. Bumping the version is the canonical invalidation lever for any greeting prompt change.
 
-**Nearby map split (PR #101)**
-- `/cafes/map` is now a dedicated route (full-screen Leaflet with dark CartoCDN tiles). `/cafes` is the tabbed Café Library list (Cafés + Coffees tasted out). `NavigationOverlay` "Nearby" → `/cafes/map`; "Café Library" → `/cafes`.
+**Nearby map split (PR #101) — Light-finished**
+- `/cafes/map` (headlined "Nearby") is its own dedicated route, now fully Light. `/cafes` is the tabbed Café Library list (Cafés + Coffees tasted out). `NavigationOverlay` "Nearby" → `/cafes/map`; "Café Library" → `/cafes`.
+- Tiles served by Carto Positron, warmed in CSS via `[data-light-scope] .leaflet-tile-pane { filter: sepia(0.4) hue-rotate(-15deg) saturate(0.7) brightness(1.04) }` so they read as cream rather than cold gray.
+- Floating header sits on top of a cream→transparent scrim so the page title stays legible without a hard banner edge.
 - Fixed flex-collapse bug: Leaflet needs `h-dvh flex flex-col` + `flex-1 min-h-0` to get a non-zero container.
 
 **Core brew flow**
@@ -460,14 +462,11 @@ All migrations applied manually on the VPS — see migration NOTE above.
 ### ❌ Not Done / Known Gaps
 
 **Open items:**
-1. **`/cafes/map` Light pass** — currently Dark with CartoCDN dark tiles + default Leaflet blue markers. Sticks out hard against the rest of the Light app. Swap the tile provider to a light one (Carto voyager/positron, Stadia Light, or raw OSM), replace the default Leaflet markers with anthracite circles (visited filled vs unvisited outline), and expose the PR #145 "I've been here" modal straight from a tapped marker. Files: `src/app/cafes/map/page.tsx`, `src/components/cafes/CafeMap.tsx`.
-2. **`/cafes/map` "I've been here" entry point** — coupled with map work. Once the user can search a brand-new place and tap it, expose the "I've been here" modal directly from the map without first going through `/cafes/place/[slug]`.
-3. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
-4. `LightStepScan` Card/Chip refactor — 1400 lines with bespoke buttons that should route through the `Card` + `Chip` primitives. Code quality, no visible UX change
-5. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
-6. **Cafe visit notes edit UI** — `cafe_visits.notes` column exists but UI only lets you delete + re-add, no inline edit. Cheap follow-up.
-7. **PR CI workflow** — no CI runs on PRs today; the only workflow on the repo is `deploy.yml` which fires on push to `main`. A small `ci.yml` that runs `npx tsc --noEmit` (and eventually `node --test src/lib/utils/*.test.mjs`) on every PR would let us re-enable "Require status checks to pass" in the branch protection ruleset. Currently branch protection is PR + block-force-push only.
-8. **Drip Assist demoted to "emergency / travel only"** in the user profile, but it's still selectable in `LightStepContext` as one of the brewer options (PR #193 kept it for legacy session render compat). Worth re-checking that it never gets recommended proactively now that the user's V60 Drip Assist is retired from daily use.
+1. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
+2. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
+3. **Cafe visit notes edit UI** — `cafe_visits.notes` column exists but UI only lets you delete + re-add, no inline edit. Cheap follow-up.
+4. **PR CI workflow** — no CI runs on PRs today; the only workflow on the repo is `deploy.yml` which fires on push to `main`. A small `ci.yml` that runs `npx tsc --noEmit` (and eventually `node --test src/lib/utils/*.test.mjs`) on every PR would let us re-enable "Require status checks to pass" in the branch protection ruleset. Currently branch protection is PR + block-force-push only.
+5. **Drip Assist demoted to "emergency / travel only"** in the user profile, but it's still selectable in `LightStepContext` as one of the brewer options (PR #193 kept it for legacy session render compat). Worth re-checking that it never gets recommended proactively now that the user's V60 Drip Assist is retired from daily use.
 
 **Permanent gaps**
 - Photo uploads: stored under `bags/` — old sessions scanned before this convention have no `bagPhotoUrl`
@@ -484,6 +483,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 - Examples worth flagging: files stored in odd formats, unused endpoints, duplicated code paths, secrets in the wrong places, stale dependencies, missing error handling at system boundaries, slow API calls that could be cached, confusing UX that you happened to notice while editing nearby code.
 - Flag once, explain the trade-off plainly, then wait for a yes/no before acting. Don't hoard issues for a big cleanup later.
 - **Translate, don't jargon-dump.** The user reads everything you write. Plain English, no unexplained acronyms or shorthand. If a technical term is unavoidable, define it inline once.
+- **Build everything new on the Design System.** Any new page, component, primitive, or modal MUST compose from the documented Light tokens (`text-light-foreground`, `text-light-text-on-dark`, `bg-light-card-default`, `bg-light-surface`, `bg-light-destructive`, `light-accent-overtime`, `light-scrim`, `backdrop-blur-light-card`, the gutter `px-5`, the primary pill `h-14 rounded-full`, etc.) — see the "Light design tokens (cheat sheet)" section. Never reintroduce a literal `hsl(...)` / `rgba(...)` / `#hex` for a colour role the system already has a token for, and never roll a one-off pill height or radius. If a genuinely new visual role appears (e.g. a fresh status colour), add it to `tailwind.config.ts` as a `light-*` token FIRST, then consume the token — single source of truth in one place. Drift like this is what produced the May 2026 token-cleanup pass; do not invite a sequel.
 
 ---
 
@@ -572,16 +572,20 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 - No staging environment — once merged to `main` it is live within minutes
 
 ### Light design tokens (cheat sheet)
-- **Tokens:** `text-light-foreground` (anthracite), `text-light-muted-foreground`, `bg-light-card-default` (cream glass 55 %), `bg-light-card-selected` (warm taupe), `border-light-foreground/15`, `shadow-light-card-pressed`
-- **Cream highlight on dark elements:** `text-[hsl(36_55%_96%)]` (e.g. CTA text on the anthracite button)
+- **Tokens:** `text-light-foreground` (anthracite), `text-light-muted-foreground`, `bg-light-card-default` (cream glass 55 %), `bg-light-card-selected` (warm taupe), `bg-light-surface` (opaque cream, modal/sheet surfaces), `border-light-foreground/15`, `shadow-light-card-pressed`
+- **Cream highlight on dark elements:** `text-light-text-on-dark` (single token; replaced the two pre-token literals `hsl(36 55% 96%)` and `hsl(30 40% 97%)` so CTA / ActionPill / ChatInput buttons / ConnectionStatus all share the same cream)
 - **Card variants:** default cards use `bg-light-card-default` (55 %); SessionCard (chips inside) uses `bg-[hsl(36_55%_96%/0.30)]` — the lower opacity so child chips visibly contrast
-- **Destructive (delete, error):** `bg-[hsl(12_70%_45%)]` warm rust
+- **Destructive (delete, error):** `bg-light-destructive` (warm rust) — `text-light-destructive` for error copy
+- **Amber accent (overtime):** `light-accent-overtime` — used by `CircularTimer` when elapsed > target; inline SVG strokes mirror the value via two module-level constants `ANTHRACITE` / `OVERTIME` since SVG strokes can't read Tailwind tokens
+- **Glass blur:** `backdrop-blur-light-card backdrop-saturate-150` — the canonical pair on every glass surface (Card, Chip, ChatInput, ChatThread, AttachmentSheet, NavigationOverlay, ReferenceCoffeePicker, ConnectionStatus, page menu buttons). Don't write `backdrop-blur-[14px]` — it bypasses the token
+- **Photo scrim:** import `gradientCreamScrim` from `@/lib/theme/gradients` for the cream→transparent vertical fade overlaid on bag photos (consumed by `/coffees/[id]`, `/brew/[id]`, `/coffees/drip/[id]`)
 - **Hero question:** `font-fraunces font-semibold text-[40px] leading-[1.05] tracking-[-0.01em]`
 - **Headline (route title):** `font-fraunces text-3xl text-light-foreground leading-none`
 - **Wordmark (Home + Login):** `<h1 className="font-fraunces text-3xl leading-[1.05] text-light-foreground">Better taste<br />than sorry.</h1>` — exact same markup at both entry points
-- **Eyebrow:** `text-light-muted-foreground text-xs tracking-widest` uppercase
+- **Eyebrow:** `text-light-muted-foreground text-xs tracking-widest` uppercase (no `font-medium` — that's an outlier)
 - **Unified chip / tag:** `inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-medium leading-tight backdrop-blur-light-card backdrop-saturate-150 bg-light-card-default text-light-foreground`
-- **Primary CTA pill:** `w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold` + `active:scale-[0.98] transition-transform`
+- **Primary CTA pill:** `w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold` + `active:scale-[0.98] transition-transform` — both `h-14` AND `rounded-full` are required; `py-3.5 rounded-2xl` is NOT a CTA, it's a card
+- **Page gutter:** `px-5` (20 px). Don't use `px-8` — it's not a defined gutter width
 - **Light scope marker:** `[data-light-scope]` attribute set by `LightShell` wraps the whole `(light)` route group; the `globals.css` shim catches inline `var(--card)` etc. for un-migrated components — but NOT hardcoded hex like `#2A241C`, which needs explicit Light tokens at the source
 
 ### iOS PWA / install gotcha

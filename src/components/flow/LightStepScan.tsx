@@ -1363,7 +1363,7 @@ function GenerateRoasterForm({
             type="button"
             onClick={save}
             disabled={saving || !draft.styleSummary}
-            className="w-full py-3 rounded-2xl bg-light-foreground text-[hsl(36_55%_96%)] text-sm font-semibold disabled:opacity-40 active:scale-95 transition-all"
+            className="w-full py-3 rounded-2xl bg-light-foreground text-light-text-on-dark text-sm font-semibold disabled:opacity-40 active:scale-95 transition-all"
           >
             {saving ? "Saving…" : "Save to my roasters"}
           </button>

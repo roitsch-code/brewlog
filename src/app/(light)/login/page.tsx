@@ -186,11 +186,11 @@ export default function LoginPage() {
             className="w-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/20 rounded-2xl px-4 py-4 text-light-foreground text-center text-2xl tracking-widest placeholder:text-light-muted-foreground focus:outline-none focus:border-light-foreground/40"
             autoFocus
           />
-          {pinError && <p className="text-[hsl(12_70%_45%)] text-sm text-center">{pinError}</p>}
+          {pinError && <p className="text-light-destructive text-sm text-center">{pinError}</p>}
           <button
             onClick={handlePin}
             disabled={pin.length < 4 || working}
-            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
+            className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
           >
             {working ? "Checking…" : "Unlock"}
           </button>
@@ -231,7 +231,7 @@ export default function LoginPage() {
           <button
             onClick={handleRegister}
             disabled={working}
-            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Setting up…" : "Set up Face ID"}
@@ -240,7 +240,7 @@ export default function LoginPage() {
           <button
             onClick={triggerFaceID}
             disabled={working}
-            className="w-full h-14 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold text-base flex items-center justify-center gap-3 active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {working ? <Spinner /> : <FaceIDIcon />}
             {working ? "Verifying…" : "Use Face ID"}
@@ -275,6 +275,6 @@ function FaceIDIcon() {
 
 function Spinner() {
   return (
-    <div className="w-5 h-5 rounded-full border-2 border-[hsl(36_55%_96%)]/30 border-t-[hsl(36_55%_96%)] animate-spin" />
+    <div className="w-5 h-5 rounded-full border-2 border-light-text-on-dark/30 border-t-light-text-on-dark animate-spin" />
   );
 }

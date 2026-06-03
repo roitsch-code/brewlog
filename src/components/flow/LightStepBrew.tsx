@@ -701,7 +701,7 @@ function StepGuide({
                 Step {currentIdx + 1} of {timed.length}
               </p>
               {tag && (
-                <span className="px-2 py-0.5 rounded-full bg-light-foreground text-[hsl(36_55%_96%)] text-[10px] font-semibold tracking-wide">
+                <span className="px-2 py-0.5 rounded-full bg-light-foreground text-light-text-on-dark text-[10px] font-semibold tracking-wide">
                   {tag}
                 </span>
               )}

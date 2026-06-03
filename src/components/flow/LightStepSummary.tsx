@@ -161,7 +161,7 @@ export default function LightStepSummary() {
           </svg>
           <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-light-foreground flex items-center justify-center">
             <svg
-              className="w-3.5 h-3.5 text-[hsl(36_55%_96%)]"
+              className="w-3.5 h-3.5 text-light-text-on-dark"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -330,7 +330,7 @@ export default function LightStepSummary() {
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="h-14 w-full rounded-full bg-light-foreground text-[15px] font-semibold text-[hsl(36_55%_96%)] active:scale-[0.99] transition-transform disabled:opacity-60 disabled:active:scale-100"
+          className="h-14 w-full rounded-full bg-light-foreground text-[15px] font-semibold text-light-text-on-dark active:scale-[0.99] transition-transform disabled:opacity-60 disabled:active:scale-100"
         >
           {saving ? "Saving…" : saveError ? "Retry" : "Save Brew"}
         </button>

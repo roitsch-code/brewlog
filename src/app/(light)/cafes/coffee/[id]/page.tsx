@@ -132,7 +132,7 @@ export default function CafeCoffeeDetailPage() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150 active:scale-95 transition-transform"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -287,7 +287,7 @@ export default function CafeCoffeeDetailPage() {
                               onClick={() => setEditMethod(editMethod === m.label ? "" : m.label)}
                               className={`shrink-0 px-2.5 py-1 rounded-full text-xs border transition-colors ${
                                 editMethod === m.label
-                                  ? "bg-light-foreground text-[hsl(36_55%_96%)] border-light-foreground"
+                                  ? "bg-light-foreground text-light-text-on-dark border-light-foreground"
                                   : "text-light-muted-foreground border-light-foreground/20 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150"
                               }`}
                             >
@@ -319,7 +319,7 @@ export default function CafeCoffeeDetailPage() {
                         <button
                           onClick={() => saveEdit(s)}
                           disabled={saving}
-                          className="flex-1 py-2 rounded-xl bg-light-foreground text-[hsl(36_55%_96%)] text-sm font-medium disabled:opacity-50"
+                          className="flex-1 py-2 rounded-xl bg-light-foreground text-light-text-on-dark text-sm font-medium disabled:opacity-50"
                         >
                           Save
                         </button>

@@ -9,6 +9,7 @@ import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import type { FieldZones } from "@/lib/field/types";
 import type { DripBag } from "@/lib/types/dripBag";
+import { gradientCreamScrim } from "@/lib/theme/gradients";
 
 /**
  * Drip-bag detail — read-only documentation view. No rotation toggle, no
@@ -96,10 +97,7 @@ export default function DripBagDetailPage() {
             <div
               aria-hidden
               className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)",
-              }}
+              style={{ background: gradientCreamScrim }}
             />
           </div>
         ) : (
@@ -221,7 +219,7 @@ export default function DripBagDetailPage() {
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="flex-1 py-3 rounded-2xl text-sm font-medium bg-[hsl(12_70%_45%)] text-[hsl(36_55%_96%)] disabled:opacity-50"
+              className="flex-1 py-3 rounded-2xl text-sm font-medium bg-light-destructive text-light-text-on-dark disabled:opacity-50"
             >
               {deleting ? "Deleting…" : "Confirm delete"}
             </button>

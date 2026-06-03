@@ -35,3 +35,13 @@ export const gradientPillUser =
  */
 export const gradientButtonPrimary =
   "linear-gradient(135deg, #F1D2B6 0%, #E8C5A8 60%, #D4A98A 100%)";
+
+/**
+ * Cream-to-transparent vertical scrim overlaid on bag photos so the
+ * anthracite headline/eyebrow on top of the photo stays readable
+ * regardless of the photo's tone. Used on /coffees/[id] and /brew/[id]
+ * hero blocks. Was previously duplicated inline in both pages; lifting
+ * here keeps the only knob in one place.
+ */
+export const gradientCreamScrim =
+  "linear-gradient(to top, hsl(30 60% 92% / 0.95) 0%, hsl(30 60% 92% / 0.45) 45%, transparent 80%)";

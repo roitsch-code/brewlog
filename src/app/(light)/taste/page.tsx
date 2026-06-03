@@ -451,7 +451,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
         type="button"
         onClick={onMenu}
         aria-label="Open menu"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-[14px] backdrop-saturate-150 active:scale-95 transition-transform"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150 active:scale-95 transition-transform"
       >
         <Menu className="h-5 w-5" strokeWidth={1.5} />
       </button>
