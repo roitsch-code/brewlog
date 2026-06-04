@@ -1,7 +1,9 @@
 name: Run SQL Migration
 
-# Manual SQL migration runner — pipes a checked-in migration file into
-# the production Postgres container via the existing deploy SSH key.
+# Manual SQL migration runner — fetches a checked-in migration file
+# from any branch (default: main) and pipes it into the production
+# Postgres container via the existing deploy SSH key.
+#
 # Trigger from the GitHub Actions UI (Actions tab → "Run SQL Migration"
 # → "Run workflow") on the smartphone web app when you can't SSH from
 # a laptop.
@@ -10,6 +12,11 @@ name: Run SQL Migration
 # workflow IS that manual step, just driven from a web UI instead of a
 # terminal. It does NOT auto-run on push, and it does NOT touch the
 # Drizzle journal (the journal only tracks 0000_init by design).
+#
+# `ref` exists so the migration file can live on a feature branch and
+# be applied BEFORE that branch's code merges to main — required because
+# Drizzle is column-strict and code referencing a new column 500s if the
+# column doesn't exist yet.
 
 on:
   workflow_dispatch:
@@ -18,6 +25,11 @@ on:
         description: 'Migration file under src/lib/db/migrations/ (e.g. 0017_add_insight_snooze.sql)'
         required: true
         type: string
+      ref:
+        description: 'Branch or commit containing the migration file (default: main)'
+        required: false
+        type: string
+        default: main
 
 jobs:
   migrate:
@@ -34,9 +46,21 @@ jobs:
             exit 1
           fi
 
+      - name: Validate ref
+        # Refs are passed straight to git; restrict to safe characters
+        # (no whitespace, no shell metacharacters, no leading dash).
+        run: |
+          ref='${{ inputs.ref }}'
+          if ! [[ "$ref" =~ ^[A-Za-z0-9._/-]+$ ]] || [[ "$ref" == -* ]]; then
+            echo "Invalid ref: $ref"
+            echo "Expected: a branch name or commit SHA."
+            exit 1
+          fi
+
       - name: Run migration on VPS
         env:
           MIGRATION_FILE: ${{ inputs.migration_file }}
+          MIGRATION_REF: ${{ inputs.ref }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
@@ -44,29 +68,29 @@ jobs:
           ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key \
               ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-              "MIGRATION_FILE='$MIGRATION_FILE' bash -s" <<'REMOTE'
+              "MIGRATION_FILE='$MIGRATION_FILE' MIGRATION_REF='$MIGRATION_REF' bash -s" <<'REMOTE'
             set -euo pipefail
             cd ${{ secrets.DEPLOY_PATH }}
 
-            # Pull the latest main so the migration file the user picked
-            # actually exists on disk — the workflow is decoupled from
-            # the deploy workflow, so the file may have been added in a
-            # commit that hasn't been pulled yet.
-            git fetch origin main
-            git reset --hard origin/main
+            # Fetch the requested ref without touching the working tree —
+            # we use `git show <FETCH_HEAD>:<path>` to read the file from
+            # the fetched commit directly, so the VPS checkout stays
+            # exactly where the deploy workflow left it (origin/main).
+            git fetch origin "$MIGRATION_REF"
 
             path="src/lib/db/migrations/$MIGRATION_FILE"
-            if [ ! -f "$path" ]; then
-              echo "Migration file not found at $path"
+            if ! git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
+              echo "Migration file not found at $path on ref $MIGRATION_REF"
               exit 1
             fi
 
-            echo "Applying $path against the brewlog database..."
+            echo "Applying $path from $MIGRATION_REF against the brewlog database..."
             # -T to drop tty allocation (no fake interactive prompt);
             # -v ON_ERROR_STOP=1 so a failing statement aborts the rest
             # of the script with a non-zero exit instead of silently
             # rolling forward.
-            cat "$path" | docker compose exec -T postgres \
-              psql -U brewlog -d brewlog -v ON_ERROR_STOP=1
+            git show "FETCH_HEAD:$path" \
+              | docker compose exec -T postgres \
+                  psql -U brewlog -d brewlog -v ON_ERROR_STOP=1
             echo "Done."
           REMOTE
