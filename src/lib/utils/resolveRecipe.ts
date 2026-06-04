@@ -33,14 +33,23 @@ export function resolveBrewedRecipe(session: Session): ResolvedBrew {
   return { recipe, candidate, method };
 }
 
+/** The reference recipe to surface as a "based on …" subtitle, or undefined when
+ * there's nothing worth showing: no reference, the "Own recipe" placeholder, or a
+ * value that just repeats the title. Single source of truth for the sentinel. */
+export function basedOnReference(basedOn?: string, title?: string): string | undefined {
+  const ref = basedOn?.trim();
+  if (!ref) return undefined;
+  if (ref.toLowerCase() === "own recipe") return undefined;
+  if (title && ref.toLowerCase() === title.trim().toLowerCase()) return undefined;
+  return ref;
+}
+
 /** The display name for a brewed recipe: the AI title, with the stable
  * reference appended when present ("Reduced agitation Orea — based on April 1-2-3"). */
 export function brewedRecipeName(candidate?: RecommendationCandidate): string | undefined {
   if (!candidate) return undefined;
   const title = candidate.title?.trim();
-  const basedOn = candidate.basedOn?.trim();
-  if (title && basedOn && basedOn.toLowerCase() !== title.toLowerCase()) {
-    return `${title} (based on ${basedOn})`;
-  }
-  return title || basedOn || undefined;
+  const ref = basedOnReference(candidate.basedOn, candidate.title);
+  if (title && ref) return `${title} (based on ${ref})`;
+  return title || candidate.basedOn?.trim() || undefined;
 }

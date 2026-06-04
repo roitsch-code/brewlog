@@ -502,3 +502,45 @@ test("resolveBrewedRecipe: legacy session without idx falls back to primary", ()
   assert.equal(recipe.grindSize, "388°");
   assert.equal(method, "V60");
 });
+
+// ── basedOnReference / brewedRecipeName: suppress the "Own recipe" sentinel ──
+// Re-declared logic (MUST stay in sync with src/lib/utils/resolveRecipe.ts).
+
+function basedOnReference(basedOn, title) {
+  const ref = basedOn?.trim();
+  if (!ref) return undefined;
+  if (ref.toLowerCase() === "own recipe") return undefined;
+  if (title && ref.toLowerCase() === title.trim().toLowerCase()) return undefined;
+  return ref;
+}
+
+function brewedRecipeName(candidate) {
+  if (!candidate) return undefined;
+  const title = candidate.title?.trim();
+  const ref = basedOnReference(candidate.basedOn, candidate.title);
+  if (title && ref) return `${title} (based on ${ref})`;
+  return title || candidate.basedOn?.trim() || undefined;
+}
+
+test("basedOnReference: 'Own recipe' placeholder is suppressed", () => {
+  assert.equal(basedOnReference("Own recipe", "Orea Classic, sweetness floor"), undefined);
+  assert.equal(basedOnReference("own recipe", "X"), undefined);
+});
+
+test("basedOnReference: a real reference passes through", () => {
+  assert.equal(basedOnReference("Kasuya 4:6", "My morning V60"), "Kasuya 4:6");
+});
+
+test("basedOnReference: a reference that just repeats the title is suppressed", () => {
+  assert.equal(basedOnReference("Kasuya 4:6", "Kasuya 4:6"), undefined);
+});
+
+test("brewedRecipeName: 'Own recipe' gives the bare title, no (based on …)", () => {
+  const name = brewedRecipeName({ title: "Orea Classic, sweetness floor", basedOn: "Own recipe" });
+  assert.equal(name, "Orea Classic, sweetness floor");
+});
+
+test("brewedRecipeName: a real reference is appended", () => {
+  const name = brewedRecipeName({ title: "My morning V60", basedOn: "Kasuya 4:6" });
+  assert.equal(name, "My morning V60 (based on Kasuya 4:6)");
+});

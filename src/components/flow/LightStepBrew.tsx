@@ -15,6 +15,7 @@ import {
   type GuideStep,
 } from "@/lib/utils/pourSequence";
 import type { BrewStepAction } from "@/lib/types/session";
+import { basedOnReference } from "@/lib/utils/resolveRecipe";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -56,7 +57,7 @@ export default function LightStepBrew() {
   // brewing, not just the brewer). title is the AI's per-brew name; basedOn is
   // the stable reference recipe it adapts (populated by the recommend model).
   const recipeName = selectedCandidate?.title;
-  const basedOn = selectedCandidate?.basedOn;
+  const basedOn = basedOnReference(selectedCandidate?.basedOn, selectedCandidate?.title);
 
   // Belt-and-suspenders: even if the structured steps aren't explicit, a recipe
   // that describes itself as minimal/reduced agitation must never show a swirl

@@ -12,6 +12,7 @@ import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { getLoadingHints, COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
+import { basedOnReference } from "@/lib/utils/resolveRecipe";
 
 /**
  * Light System fork of /components/flow/StepRecommend.tsx.
@@ -190,8 +191,10 @@ export default function LightStepRecommend() {
           <h1 className="font-fraunces text-[28px] leading-tight tracking-[-0.01em] text-light-foreground px-1">
             {active.title}
           </h1>
-          {active.basedOn && active.basedOn.toLowerCase() !== active.title.toLowerCase() && (
-            <p className="text-[12px] text-light-muted-foreground mt-1 px-1">based on {active.basedOn}</p>
+          {basedOnReference(active.basedOn, active.title) && (
+            <p className="text-[12px] text-light-muted-foreground mt-1 px-1">
+              based on {basedOnReference(active.basedOn, active.title)}
+            </p>
           )}
           <div className="flex items-center justify-between mt-2 px-1">
             <div className="flex items-center gap-2">
