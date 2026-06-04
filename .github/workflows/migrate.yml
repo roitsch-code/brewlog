@@ -1,0 +1,72 @@
+name: Run SQL Migration
+
+# Manual SQL migration runner — pipes a checked-in migration file into
+# the production Postgres container via the existing deploy SSH key.
+# Trigger from the GitHub Actions UI (Actions tab → "Run SQL Migration"
+# → "Run workflow") on the smartphone web app when you can't SSH from
+# a laptop.
+#
+# CLAUDE.md says migrations are applied manually on the VPS — this
+# workflow IS that manual step, just driven from a web UI instead of a
+# terminal. It does NOT auto-run on push, and it does NOT touch the
+# Drizzle journal (the journal only tracks 0000_init by design).
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_file:
+        description: 'Migration file under src/lib/db/migrations/ (e.g. 0017_add_insight_snooze.sql)'
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate filename
+        # Reject anything that isn't a plain filename under the migrations
+        # directory — no path traversal, no .. tricks, no absolute paths.
+        run: |
+          file='${{ inputs.migration_file }}'
+          if ! [[ "$file" =~ ^[A-Za-z0-9._-]+\.sql$ ]]; then
+            echo "Invalid migration filename: $file"
+            echo "Expected: a plain .sql filename under src/lib/db/migrations/"
+            exit 1
+          fi
+
+      - name: Run migration on VPS
+        env:
+          MIGRATION_FILE: ${{ inputs.migration_file }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+              "MIGRATION_FILE='$MIGRATION_FILE' bash -s" <<'REMOTE'
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Pull the latest main so the migration file the user picked
+            # actually exists on disk — the workflow is decoupled from
+            # the deploy workflow, so the file may have been added in a
+            # commit that hasn't been pulled yet.
+            git fetch origin main
+            git reset --hard origin/main
+
+            path="src/lib/db/migrations/$MIGRATION_FILE"
+            if [ ! -f "$path" ]; then
+              echo "Migration file not found at $path"
+              exit 1
+            fi
+
+            echo "Applying $path against the brewlog database..."
+            # -T to drop tty allocation (no fake interactive prompt);
+            # -v ON_ERROR_STOP=1 so a failing statement aborts the rest
+            # of the script with a non-zero exit instead of silently
+            # rolling forward.
+            cat "$path" | docker compose exec -T postgres \
+              psql -U brewlog -d brewlog -v ON_ERROR_STOP=1
+            echo "Done."
+          REMOTE
