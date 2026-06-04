@@ -5,7 +5,7 @@ import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/c
 import { loadUserProfile } from "@/lib/claude/userProfile";
 import { db } from "@/lib/db/client";
 import { sessions, insights as insightsTable } from "@/lib/db/schema";
-import { desc, ne } from "drizzle-orm";
+import { and, desc, isNull, lte, ne, or } from "drizzle-orm";
 import { rowToSession } from "@/lib/db/helpers";
 
 export const dynamic = "force-dynamic";
@@ -149,12 +149,22 @@ export async function POST(req: NextRequest) {
         .catch(() => []),
       loadUserProfile().catch(() => null),
       fetchWeather(),
-      // Top coach insights — filter out dismissed at query time so the
-      // prompt only sees observations the user hasn't rejected.
+      // Top coach insights — filter out dismissed AND actively-snoozed
+      // at query time so the prompt only sees observations the user
+      // hasn't rejected or paused.
       db
         .select()
         .from(insightsTable)
-        .where(ne(insightsTable.status, "doesnt-apply"))
+        .where(
+          and(
+            ne(insightsTable.status, "doesnt-apply"),
+            or(
+              ne(insightsTable.status, "snoozed"),
+              isNull(insightsTable.snoozedUntil),
+              lte(insightsTable.snoozedUntil, new Date()),
+            ),
+          ),
+        )
         .orderBy(desc(insightsTable.latestSessionMs))
         .limit(8)
         .catch(() => []),

@@ -6,22 +6,36 @@ import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
-import Chip from "@/components/ui/light/Chip";
+import { CoachCard } from "@/components/coach/CoachCard";
 
 /**
  * Taste Profile — coach + always-visible consumption stats.
  *
  * Layout (top to bottom):
  *   1. Avg rating + rated brews header
- *   2. Coach insights (top 3 with `status: 'new'`, 3-action workflow:
- *      Try it / Confirmed / Doesn't apply). When a card is processed
- *      (Confirmed or Doesn't apply), the next from the back slides in.
- *      Trying cards stay in the queue until later resolved.
+ *   2. Coach insights — two-stage workflow:
+ *
+ *      Stage 1 (status='new'):
+ *        Save to try / Confirmed / Doesn't apply
+ *
+ *      Stage 2 (status='trying'):
+ *        It helped / Didn't help / Skip
+ *
+ *      Saved cards stay pinned to the top of the queue in the warm
+ *      taupe highlight so the user actually remembers what they
+ *      committed to trying. "Skip" snoozes for 7 days, then resurfaces.
+ *      Confirmed / Doesn't apply remove the card immediately.
+ *
  *   3. What you brew — Flavor wheel, top flavors, rating trend, body /
  *      acidity, best origins / processes / methods. ALWAYS VISIBLE.
  */
 
-type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply";
+type InsightStatus =
+  | "new"
+  | "trying"
+  | "confirmed"
+  | "doesnt-apply"
+  | "snoozed";
 
 interface InsightItem {
   id: string;
@@ -142,10 +156,10 @@ export default function TastePage() {
   const [stats, setStats] = useState<TasteStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  // All non-doesnt-apply insights returned by the server. Local state
-  // splits them by status: only `new` shows in the queue; `trying` rows
-  // live elsewhere (the /brew/new Context step). `confirmed` rows fade
-  // out here and weight /recommend prompts.
+  // All non-terminal insights returned by the server. The queue mixes
+  // 'new' and 'trying' rows: 'trying' (saved-to-try) is pinned to the
+  // top in the highlighted card surface so the user remembers what
+  // they committed to; 'new' cards fill in below.
   const [insights, setInsights] = useState<InsightItem[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState<string | null>(null);
@@ -175,8 +189,12 @@ export default function TastePage() {
     fetch("/api/insights", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
       .then((d) => {
+        // Server already hides actively-snoozed + filters status; we
+        // only keep new + trying for the queue. Confirmed are dropped
+        // here (the row still lives in DB to weight /recommend, but
+        // the user has already resolved it visually).
         const items: InsightItem[] = (d.insights ?? []).filter(
-          (it: InsightItem) => it.status !== "doesnt-apply",
+          (it: InsightItem) => it.status === "new" || it.status === "trying",
         );
         setInsights(items);
         if (items.length === 0 && (d.corpusSize ?? 0) < 4) {
@@ -192,23 +210,26 @@ export default function TastePage() {
   }, []);
 
   /**
-   * Optimistic state update + PATCH. Used by all three card actions:
-   *   - "Try it"      → status = trying  (card leaves /taste queue; surfaces in /brew/new Context)
-   *   - "Confirmed"   → status = confirmed (server also bumps source = user-confirmed for /recommend weighting)
-   *   - "Doesn't apply" → status = doesnt-apply (soft-preserved across regens)
-   * Cards in the new queue are always the visible top 3 with status='new';
-   * the moment one is acted on, the next 'new' row in the local list
-   * slides into its place.
+   * Optimistic state update + PATCH. Stage-aware:
+   *   New stage actions:
+   *     "Save to try"   → status='trying' (card STAYS, taupe-highlighted)
+   *     "Confirmed"     → status='confirmed' (card removed; server bumps
+   *                       source=user-confirmed for /recommend weighting)
+   *     "Doesn't apply" → status='doesnt-apply' (removed; soft-preserved)
+   *   Saved stage actions:
+   *     "It helped"     → status='confirmed' (removed)
+   *     "Didn't help"   → status='doesnt-apply' (removed)
+   *     "Skip"          → status='snoozed' (removed; resurfaces in ~7 days)
    */
   const updateInsight = async (id: string, status: InsightStatus) => {
-    setInsights((prev) =>
-      prev
-        .map((i) => (i.id === id ? { ...i, status } : i))
-        // Drop fully-resolved entries from local state so they don't
-        // crowd downstream rendering. `trying` stays so the user sees
-        // it move off the queue but knows it's still alive (reminder).
-        .filter((i) => i.status !== "doesnt-apply" && i.status !== "confirmed"),
-    );
+    setInsights((prev) => {
+      if (status === "trying") {
+        // Save-to-try: keep the card visible in the saved state.
+        return prev.map((i) => (i.id === id ? { ...i, status } : i));
+      }
+      // Any terminal/snoozed action: remove from view.
+      return prev.filter((i) => i.id !== id);
+    });
     try {
       await fetch("/api/insights", {
         method: "PATCH",
@@ -221,10 +242,12 @@ export default function TastePage() {
     }
   };
 
-  // Active queue = status='new' only, top 3 visible. As the user acts on
-  // them, the next 'new' card slides in. 'trying' cards are NOT here —
-  // they live in the /brew/new Context reminder.
-  const queue = insights.filter((i) => i.status === "new").slice(0, 3);
+  // Queue = saved-to-try cards first (pinned), then fresh 'new' cards
+  // below. Capped at 5 so it doesn't run away on session count.
+  const queue = [
+    ...insights.filter((i) => i.status === "trying"),
+    ...insights.filter((i) => i.status === "new"),
+  ].slice(0, 5);
 
   if (loading) {
     return (
@@ -302,12 +325,10 @@ export default function TastePage() {
           ) : (
             <div className="space-y-3">
               {queue.map((insight) => (
-                <InsightCard
+                <CoachCard
                   key={insight.id}
                   insight={insight}
-                  onTry={() => updateInsight(insight.id, "trying")}
-                  onConfirm={() => updateInsight(insight.id, "confirmed")}
-                  onDoesntApply={() => updateInsight(insight.id, "doesnt-apply")}
+                  onAction={(next) => updateInsight(insight.id, next)}
                 />
               ))}
             </div>
@@ -397,46 +418,6 @@ export default function TastePage() {
       </div>
 
       <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
-    </div>
-  );
-}
-
-/**
- * Coach insight card with the three-action workflow.
- *
- * Two text rows are intentional:
- *   - First row (observation): the data, with real counts.
- *   - Second row (suggestion): the next move or test question.
- * Different weight/opacity so the roles are visually distinct and
- * scannable.
- *
- * Actions use the Light system's `Chip` primitive (small variant) so
- * the visual language matches StepLog's sensory + flavor pickers.
- */
-function InsightCard({
-  insight,
-  onTry,
-  onConfirm,
-  onDoesntApply,
-}: {
-  insight: InsightItem;
-  onTry: () => void;
-  onConfirm: () => void;
-  onDoesntApply: () => void;
-}) {
-  return (
-    <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-      <p className="text-light-foreground text-[15px] font-medium leading-relaxed">
-        {insight.observation}
-      </p>
-      <p className="text-light-foreground/75 text-[14px] leading-relaxed mt-2">
-        {insight.suggestion}
-      </p>
-      <div className="mt-4 pt-3 border-t border-light-foreground/10 flex flex-wrap gap-2">
-        <Chip size="sm" onClick={onTry}>Try it</Chip>
-        <Chip size="sm" onClick={onConfirm}>Confirmed</Chip>
-        <Chip size="sm" onClick={onDoesntApply}>Doesn’t apply</Chip>
-      </div>
     </div>
   );
 }

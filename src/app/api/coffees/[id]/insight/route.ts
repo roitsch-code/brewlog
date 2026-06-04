@@ -56,8 +56,23 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     const cacheIsFresh =
       cached != null && cached.generatedAtSessionMs >= latestSessionMs;
 
-    if (cached && (cacheIsFresh || userInMidFlight)) {
+    // Hide actively-snoozed cards from the consumer. Once the snooze
+    // window has passed, the row behaves like 'new' from the GET's
+    // point of view — the next regen replaces it OR it surfaces with
+    // the original observation.
+    const snoozeActive =
+      cached?.status === "snoozed" &&
+      typeof cached.snoozedUntil === "string" &&
+      Date.parse(cached.snoozedUntil) > Date.now();
+
+    if (cached && (cacheIsFresh || userInMidFlight) && !snoozeActive) {
       return NextResponse.json({ insight: cached });
+    }
+
+    // Active snooze: don't regenerate, just hide. The card will come
+    // back once the snooze passes.
+    if (snoozeActive) {
+      return NextResponse.json({ insight: null });
     }
 
     // Regenerate.
@@ -96,16 +111,23 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 }
 
 const PatchSchema = z.object({
-  status: z.enum(["new", "trying", "confirmed", "doesnt-apply"]),
+  status: z.enum(["new", "trying", "confirmed", "doesnt-apply", "snoozed"]),
 });
+
+const SNOOZE_DAYS = 7;
 
 /**
  * PATCH — Update the per-coffee insight's workflow status.
  *
- *   trying        → quiet reminder pill in /brew/new Context when the
- *                   user opens this coffee in the brew flow.
- *   confirmed     → preserved across regenerations until user dismisses.
- *   doesnt-apply  → soft-dismiss; next regeneration replaces it.
+ *   new          → fresh card (just generated)
+ *   trying       → user tapped Save to try; card stays on /coffees/[id]
+ *                  in the highlighted saved state, AND surfaces as a
+ *                  quiet reminder in /brew/new Context.
+ *   confirmed    → user tapped Confirmed or It helped; preserved across
+ *                  regenerations.
+ *   doesnt-apply → user tapped Doesn't apply or Didn't help; soft-rejects.
+ *   snoozed      → user tapped Skip (saved-stage); hidden for SNOOZE_DAYS,
+ *                  then resurfaces as if new.
  *
  * If there's no cached insight to update, returns 404.
  */
@@ -128,7 +150,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     if (!current) {
       return NextResponse.json({ error: "No insight to update" }, { status: 404 });
     }
-    const next: CoffeeCoachInsight = { ...current, status: parsed.data.status };
+    const next: CoffeeCoachInsight = {
+      ...current,
+      status: parsed.data.status,
+      snoozedUntil:
+        parsed.data.status === "snoozed"
+          ? new Date(Date.now() + SNOOZE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+          : undefined,
+    };
     await db
       .update(coffees)
       .set({ coachInsight: next })

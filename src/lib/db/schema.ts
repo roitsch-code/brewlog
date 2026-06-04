@@ -94,7 +94,11 @@ export interface CoffeeCoachInsight {
   observation: string;
   suggestion: string;
   // Same state machine as library-wide insights (see InsightStatus).
-  status: "new" | "trying" | "confirmed" | "doesnt-apply";
+  status: "new" | "trying" | "confirmed" | "doesnt-apply" | "snoozed";
+  // ISO timestamp; only set when status='snoozed' (PATCH writes now+7d
+  // when user taps Skip on a saved card). Hidden from GET while
+  // snoozed_until > now(); resurfaces afterwards.
+  snoozedUntil?: string;
   // Latest sessionMs of THIS coffee at generation time. Stale when
   // the coffee gets a newer session — triggers a regeneration unless
   // the user is in the middle of `trying` or `confirmed`.
@@ -252,8 +256,10 @@ export const conversationMessages = pgTable(
 // surfaces that need cross-axis observations. See migration 0013.
 export type InsightSource = "opus" | "user-confirmed";
 // Migration 0014 adds a card-workflow state machine. See
-// 0014_add_insight_status.sql for the semantics of each value.
-export type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply";
+// 0014_add_insight_status.sql for the semantics of the original values.
+// Migration 0017 adds 'snoozed' for the "remind me later" branch of the
+// two-stage coach workflow.
+export type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply" | "snoozed";
 
 export const insights = pgTable(
   "insights",
@@ -266,6 +272,8 @@ export const insights = pgTable(
     source: text("source").$type<InsightSource>().notNull().default("opus"),
     status: text("status").$type<InsightStatus>().notNull().default("new"),
     dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+    // Only set when status='snoozed'; hidden from queues until passed.
+    snoozedUntil: timestamp("snoozed_until", { withTimezone: true }),
     userNote: text("user_note"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -274,6 +282,7 @@ export const insights = pgTable(
     latestSessionMsIdx: index("insights_latest_session_ms_idx").on(t.latestSessionMs.desc()),
     dismissedAtIdx: index("insights_dismissed_at_idx").on(t.dismissedAt),
     statusIdx: index("insights_status_idx").on(t.status),
+    snoozedUntilIdx: index("insights_snoozed_until_idx").on(t.snoozedUntil),
     createdAtIdx: index("insights_created_at_idx").on(t.createdAt.desc()),
   })
 );

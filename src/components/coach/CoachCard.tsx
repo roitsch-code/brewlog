@@ -7,10 +7,22 @@ import Chip from "@/components/ui/light/Chip";
  * Coach insight card — shared across /taste, /coffees/[id], and the
  * /brew/new Context reminder pill.
  *
- * The card itself is presentational. The three actions surface
- * Try it / Confirmed / Doesn't apply as the Light system's `Chip`
- * primitive (small variant) — same primitive used in StepLog's
- * sensory + flavor pickers, so the visual language is consistent.
+ * Two visible stages driven off `insight.status`:
+ *
+ *   New stage (status='new')
+ *     - eyebrow: "Coach" (or caller-provided)
+ *     - card surface: cream-glass `bg-light-card-default`
+ *     - actions: Save to try / Confirmed / Doesn't apply
+ *
+ *   Saved stage (status='trying')
+ *     - eyebrow: "Saved · Trying"
+ *     - card surface: warm taupe `bg-light-card-selected` +
+ *       `shadow-light-card-pressed` (signals "this is yours, you
+ *       committed to it")
+ *     - actions: It helped / Didn't help / Skip
+ *       — "It helped" → confirmed
+ *       — "Didn't help" → doesnt-apply
+ *       — "Skip" → snoozed (hidden for 7 days, then resurfaces)
  *
  * Two-line layout is intentional:
  *   - row 1 = observation (data with real counts)
@@ -18,7 +30,12 @@ import Chip from "@/components/ui/light/Chip";
  * Visually distinct weights so the roles are scannable.
  */
 
-export type InsightStatus = "new" | "trying" | "confirmed" | "doesnt-apply";
+export type InsightStatus =
+  | "new"
+  | "trying"
+  | "confirmed"
+  | "doesnt-apply"
+  | "snoozed";
 
 export interface CoachInsight {
   id: string;
@@ -31,25 +48,33 @@ export interface CoachInsight {
 
 export function CoachCard({
   insight,
-  onTry,
-  onConfirm,
-  onDoesntApply,
+  onAction,
   eyebrow,
 }: {
   insight: CoachInsight;
-  onTry: () => void;
-  onConfirm: () => void;
-  onDoesntApply: () => void;
-  /** Optional small label above the card ("Coach", "Reminder", etc.). */
+  /**
+   * Unified handler — the card maps the visible buttons to the next
+   * status itself, so the parent doesn't carry the new-vs-saved branch.
+   * Parent passes the optimistic UI update + the PATCH.
+   */
+  onAction: (next: InsightStatus) => void;
+  /** Optional small label above the card. Defaults to "Coach" (new) or
+   *  "Saved · Trying" (saved). */
   eyebrow?: string;
 }) {
+  const isSaved = insight.status === "trying";
+  const surface = isSaved
+    ? "bg-light-card-selected shadow-light-card-pressed"
+    : "bg-light-card-default";
+  const resolvedEyebrow = eyebrow ?? (isSaved ? "Saved · Trying" : "Coach");
+
   return (
-    <div className="bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4">
-      {eyebrow && (
-        <p className="text-light-muted-foreground text-[11px] uppercase tracking-widest mb-2">
-          {eyebrow}
-        </p>
-      )}
+    <div
+      className={`${surface} backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 rounded-2xl px-4 py-4`}
+    >
+      <p className="text-light-muted-foreground text-[11px] uppercase tracking-widest mb-2">
+        {resolvedEyebrow}
+      </p>
       <p className="text-light-foreground text-[15px] font-medium leading-relaxed">
         {insight.observation}
       </p>
@@ -57,9 +82,19 @@ export function CoachCard({
         {insight.suggestion}
       </p>
       <div className="mt-4 pt-3 border-t border-light-foreground/10 flex flex-wrap gap-2">
-        <Chip size="sm" onClick={onTry}>Try it</Chip>
-        <Chip size="sm" onClick={onConfirm}>Confirmed</Chip>
-        <Chip size="sm" onClick={onDoesntApply}>Doesn’t apply</Chip>
+        {isSaved ? (
+          <>
+            <Chip size="sm" onClick={() => onAction("confirmed")}>It helped</Chip>
+            <Chip size="sm" onClick={() => onAction("doesnt-apply")}>Didn’t help</Chip>
+            <Chip size="sm" onClick={() => onAction("snoozed")}>Skip</Chip>
+          </>
+        ) : (
+          <>
+            <Chip size="sm" onClick={() => onAction("trying")}>Save to try</Chip>
+            <Chip size="sm" onClick={() => onAction("confirmed")}>Confirmed</Chip>
+            <Chip size="sm" onClick={() => onAction("doesnt-apply")}>Doesn’t apply</Chip>
+          </>
+        )}
       </div>
     </div>
   );
@@ -72,15 +107,10 @@ export function CoachCard({
  *
  * Rotation-only: out-of-rotation pages stay clean.
  *
- * Status actions are local to this coffee (not the global /taste queue):
- *   - Try it → status='trying'; surfaces as a /brew/new Context reminder
- *     when this same coffee is selected for the next brew.
- *   - Confirmed → status='confirmed'; preserved across regenerations
- *     until the user explicitly dismisses or replaces.
- *   - Doesn't apply → status='doesnt-apply'; next regeneration replaces.
- *
- * Replaces the earlier library-wide citation-field matcher that was
- * surfacing wrong insights on the wrong coffees.
+ * Saved-stage cards stay on this page in the taupe highlight so the
+ * user can act on them later. Confirmed / Doesn't apply / Skip hide
+ * the card from this view (the server preserves the row so /recommend
+ * still benefits where relevant).
  */
 export function CoffeeCoachCard({
   coffeeId,
@@ -109,12 +139,14 @@ export function CoffeeCoachCard({
           setPick(null);
           return;
         }
-        // Hide confirmed + doesnt-apply from this view — the user has
-        // already acted on them. (The regeneration logic preserves
-        // confirmed rows specifically so the suggestion stays alive
-        // for /recommend prompts; on the coffee page itself, a
-        // resolved card just clutters.)
-        if (raw.status === "confirmed" || raw.status === "doesnt-apply") {
+        // Hide terminal statuses + active snoozes. The server is
+        // already filtering active snoozes on GET; this is a belt-and-
+        // braces guard so a stale cache doesn't surface them.
+        if (
+          raw.status === "confirmed" ||
+          raw.status === "doesnt-apply" ||
+          raw.status === "snoozed"
+        ) {
           setPick(null);
           return;
         }
@@ -135,7 +167,13 @@ export function CoffeeCoachCard({
   if (!inRotation || loading || !pick) return null;
 
   const patchStatus = async (status: InsightStatus) => {
-    setPick(null);
+    // Save-to-try keeps the card visible in the saved state; everything
+    // else hides it from this view.
+    if (status === "trying") {
+      setPick({ ...pick, status });
+    } else {
+      setPick(null);
+    }
     try {
       await fetch(`/api/coffees/${coffeeId}/insight`, {
         method: "PATCH",
@@ -149,13 +187,7 @@ export function CoffeeCoachCard({
 
   return (
     <div className="px-5 py-4 border-b border-light-foreground/15">
-      <CoachCard
-        insight={pick}
-        eyebrow="Coach"
-        onTry={() => patchStatus("trying")}
-        onConfirm={() => patchStatus("confirmed")}
-        onDoesntApply={() => patchStatus("doesnt-apply")}
-      />
+      <CoachCard insight={pick} onAction={patchStatus} />
     </div>
   );
 }

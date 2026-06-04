@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { generateRecommendation, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
@@ -119,13 +119,23 @@ export async function POST(req: NextRequest) {
         ? buildEscherTerrain(sessions, coffee).catch(() => "")
         : Promise.resolve(""),
       loadCoffeeHistory(coffee?.coffeeId, coffee?.roaster, coffee?.name),
-      // Coach insights — exclude only doesnt-apply at the query layer.
-      // new / trying / confirmed all feed the prompt, with confirmed
-      // ranked higher in the recommend prompt block builder.
+      // Coach insights — exclude doesnt-apply AND actively-snoozed at
+      // the query layer. new / trying / confirmed / expired-snoozes all
+      // feed the prompt, with confirmed ranked higher by the recommend
+      // prompt block builder.
       db
         .select()
         .from(insightsTable)
-        .where(ne(insightsTable.status, "doesnt-apply"))
+        .where(
+          and(
+            ne(insightsTable.status, "doesnt-apply"),
+            or(
+              ne(insightsTable.status, "snoozed"),
+              isNull(insightsTable.snoozedUntil),
+              lte(insightsTable.snoozedUntil, new Date()),
+            ),
+          ),
+        )
         .limit(20)
         .catch(() => []),
     ]);
