@@ -1,6 +1,6 @@
 {
-  "name": "BrewLog",
-  "short_name": "BrewLog",
+  "name": "Better taste than sorry",
+  "short_name": "BTTS",
   "description": "Your personal coffee brew advisor & diary",
   "start_url": "/",
   "display": "standalone",
