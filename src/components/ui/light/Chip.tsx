@@ -15,9 +15,25 @@ import type { ReactNode } from "react";
  * Selected: warm taupe at 70% + warm inset shadow. No scale-down
  * (chips are too small for the press effect to read).
  *
- * Size variants:
- *   - default: px-4 py-2, 13px — for primary chip rows
- *   - sm: px-3 py-1.5, 12px — for dense rows (FlavorWheel pickers)
+ * Size variants — pick one of these two and stick to it:
+ *   - default: px-4 py-2, 13px
+ *       "pick-one answer" rows where the chip IS the question's
+ *       primary control. Examples: Sensory clarity/body/sweetness
+ *       /bitterness/finish/flow on /brew log, SensoryToggle Yes/No,
+ *       ImpressionRow's primary chips, roaster Q&A clarifications on
+ *       /brew scan, the grinder picker on /onboarding.
+ *   - sm: px-3 py-1.5, 12px
+ *       Multi-select TAG rows, dense scrolling pickers, compact
+ *       card-footer actions, and secondary inline confirmations
+ *       inside a denser review form. Examples: FlavorWheel quick
+ *       picks, candidate role picker on /recommend, country picker,
+ *       process / roast level on /brew scan review, coach actions on
+ *       /taste and CoachCard, equipment multi-select on /onboarding.
+ *
+ * The rule of thumb: if the chip stands alone as the answer to a
+ * focused question, use `default`. If it's one of many tags / one of
+ * a dense row / a secondary inline confirm, use `sm`. Don't mix the
+ * two on the same row — the cheat sheet in CLAUDE.md mirrors this.
  */
 interface ChipProps {
   selected?: boolean;
