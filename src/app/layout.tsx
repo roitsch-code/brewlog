@@ -40,13 +40,13 @@ const chivo = Chivo({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bettertastethansorry.com"),
-  title: "BrewLog",
+  title: "BTTS",
   description: "Your personal coffee brew advisor & diary",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BrewLog",
+    title: "BTTS",
   },
 };
 
