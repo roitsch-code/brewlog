@@ -34,6 +34,20 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch origin main
             git reset --hard origin/main
+
+            # One-shot migration: apply 0017 if it hasn't run yet.
+            # The SQL is fully idempotent (column add uses IF NOT EXISTS;
+            # CHECK constraint drop+re-add via DO-block that no-ops when
+            # the constraint already contains 'snoozed'). Safe to run on
+            # every deploy. Remove this block once everyone is on 0017+
+            # and the next migration ships with its own apply step.
+            if [ -f src/lib/db/migrations/0017_add_insight_snooze.sql ]; then
+              echo "Applying migration 0017_add_insight_snooze..."
+              docker compose exec -T postgres \
+                psql -U brewlog -d brewlog -v ON_ERROR_STOP=1 \
+                < src/lib/db/migrations/0017_add_insight_snooze.sql
+            fi
+
             docker compose build app
 
             if docker compose up -d --force-recreate --no-deps app; then
