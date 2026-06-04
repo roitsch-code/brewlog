@@ -26,7 +26,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { randomUUID } from "crypto";
-import { desc, eq, gte } from "drizzle-orm";
+import { desc, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { insights, sessions } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
@@ -395,22 +395,39 @@ async function callOpusForInsights(userMessage: string): Promise<InsightItem[] |
 }
 
 async function replaceInsights(items: InsightItem[], latestMs: number): Promise<void> {
-  // Three-tier preservation across regenerations:
-  //   - status != 'new'  → keep the row entirely (user has acted on it)
-  //   - status == 'new'  → delete and replace with the fresh Opus pass
-  // For doesnt-apply rows in particular: also remember the observation
-  // text so a re-emitted similar observation inherits the doesnt-apply
-  // status instead of popping back as 'new'.
+  // Four-tier preservation across regenerations:
+  //   - status='trying' | 'confirmed' | 'doesnt-apply'   → keep verbatim
+  //   - status='snoozed' AND snoozed_until > now()       → keep verbatim
+  //   - status='snoozed' AND snoozed_until <= now()      → treat as 'new'
+  //                                                        (replaceable)
+  //   - status='new'                                     → replaceable
+  //
+  // Acted observation text is indexed so a re-emitted similar observation
+  // inherits the existing user status instead of popping back as 'new'.
+  const now = new Date();
   const old = await db.select().from(insights);
-  const acted = old.filter((r) => r.status !== "new");
+
+  const isActiveSnooze = (row: typeof old[number]) =>
+    row.status === "snoozed" && row.snoozedUntil != null && row.snoozedUntil > now;
+  const isPreserved = (row: typeof old[number]) =>
+    row.status === "trying" || row.status === "confirmed" || row.status === "doesnt-apply" || isActiveSnooze(row);
+
+  const acted = old.filter(isPreserved);
   const actedTextIndex = new Map<string, typeof acted[number]>();
   for (const row of acted) {
     actedTextIndex.set(row.observation.slice(0, 80).toLowerCase(), row);
   }
 
-  await db.delete(insights).where(eq(insights.status, "new"));
+  // Replaceable rows = 'new' + expired snoozes. Snoozes that have passed
+  // their window get rewritten by the fresh Opus pass like any other 'new'
+  // row — they earned the second look.
+  const replaceableIds = old
+    .filter((r) => !isPreserved(r))
+    .map((r) => r.id);
+  if (replaceableIds.length > 0) {
+    await db.delete(insights).where(inArray(insights.id, replaceableIds));
+  }
 
-  const now = new Date();
   for (const item of items) {
     const key = item.observation.slice(0, 80).toLowerCase();
     const existingActed = actedTextIndex.get(key);
@@ -426,6 +443,7 @@ async function replaceInsights(items: InsightItem[], latestMs: number): Promise<
       source: "opus",
       status: "new",
       dismissedAt: null,
+      snoozedUntil: null,
       userNote: null,
       createdAt: now,
       updatedAt: now,

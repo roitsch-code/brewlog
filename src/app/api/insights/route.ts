@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { insights } from "@/lib/db/schema";
 import type { InsightStatus } from "@/lib/db/schema";
@@ -9,7 +9,21 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const STATUS_VALUES: readonly InsightStatus[] = ["new", "trying", "confirmed", "doesnt-apply"] as const;
+const STATUS_VALUES: readonly InsightStatus[] = ["new", "trying", "confirmed", "doesnt-apply", "snoozed"] as const;
+
+// Snooze window — when the user taps "Skip" on a saved card, the row is
+// hidden from all surfaces until this many days have passed, then
+// resurfaces in the queue. Matches the conversations TTL cadence.
+const SNOOZE_DAYS = 7;
+
+// Hides actively-snoozed rows. A row counts as "expired snooze" once
+// snoozed_until has passed — those resurface and behave like 'new'
+// from the consumer's point of view.
+const snoozeVisibilityFilter = or(
+  sql`${insights.status} != 'snoozed'`,
+  isNull(insights.snoozedUntil),
+  lte(insights.snoozedUntil, new Date()),
+);
 
 /**
  * GET — Returns coach insights.
@@ -41,10 +55,16 @@ export async function GET(req: NextRequest) {
       if (requested.length === 0) {
         return NextResponse.json({ insights: [] });
       }
+      // If the caller explicitly asked for 'snoozed', surface every snoozed
+      // row (debug / admin); otherwise hide active snoozes.
+      const callerWantsSnoozed = requested.includes("snoozed");
+      const whereClause = callerWantsSnoozed
+        ? inArray(insights.status, requested)
+        : and(inArray(insights.status, requested), snoozeVisibilityFilter);
       const rows = await db
         .select()
         .from(insights)
-        .where(inArray(insights.status, requested));
+        .where(whereClause);
       return NextResponse.json({
         insights: rows.map((row) => ({
           id: row.id,
@@ -58,15 +78,30 @@ export async function GET(req: NextRequest) {
     }
 
     // Default path — /taste page mount. Runs the full cache-aware
-    // generation, returns everything for client-side filtering.
+    // generation, returns everything for client-side filtering. Active
+    // snoozes are hidden so the queue doesn't show them; once a snooze
+    // expires the row is treated like 'new' (regeneration replaces it
+    // OR it appears in the queue with its preserved observation).
     const result = await getOrGenerateInsights();
+    const nowMs = Date.now();
+    const visible = result.insights.filter((row) => {
+      if (row.status !== "snoozed") return true;
+      if (!row.snoozedUntil) return true;
+      return row.snoozedUntil.getTime() <= nowMs;
+    });
     return NextResponse.json({
-      insights: result.insights.map((row) => ({
+      insights: visible.map((row) => ({
         id: row.id,
         observation: row.observation,
         suggestion: row.suggestion,
         citationFields: row.citationFields ?? [],
-        status: row.status,
+        // Expired snoozes resurface as 'new' — they earned the second
+        // look. The DB row keeps status='snoozed' until regen rewrites
+        // it or the user acts; the consumer doesn't need to know.
+        status:
+          row.status === "snoozed" && row.snoozedUntil && row.snoozedUntil.getTime() <= nowMs
+            ? "new"
+            : row.status,
         source: row.source,
       })),
       generated: result.generated,
@@ -83,19 +118,25 @@ export async function GET(req: NextRequest) {
 
 const PatchSchema = z.object({
   id: z.string().min(1),
-  status: z.enum(["new", "trying", "confirmed", "doesnt-apply"]),
+  status: z.enum(["new", "trying", "confirmed", "doesnt-apply", "snoozed"]),
 });
 
 /**
  * PATCH — Update an insight's workflow status.
  *
- *   new           → fresh, in the /taste queue
- *   trying        → user is testing it; surfaces in /brew/new Context
- *   confirmed     → user saw the pattern hold; weights /recommend higher
- *   doesnt-apply  → user rejects it; soft-preserved across regens
- *
- * Status survives Opus regeneration (see replaceInsights in
- * lib/claude/insights.ts) — only 'new' rows get replaced.
+ * Two-stage workflow (PR ⟨coach-redesign⟩):
+ *   New stage (status='new'):
+ *     - 'trying'       (Save to try)    → stays visible on /taste in
+ *                                         the saved/highlighted state.
+ *     - 'confirmed'    (Confirmed)      → user saw the pattern hold;
+ *                                         bumps source for /recommend.
+ *     - 'doesnt-apply' (Doesn't apply)  → soft-rejects, preserved across
+ *                                         regens.
+ *   Saved stage (status='trying'):
+ *     - 'confirmed'    (It helped)      → same as above.
+ *     - 'doesnt-apply' (Didn't help)    → same as above.
+ *     - 'snoozed'      (Skip — remind   → hidden for SNOOZE_DAYS, then
+ *                       me later)         resurfaces in the /taste queue.
  */
 export async function PATCH(req: NextRequest) {
   try {
@@ -106,15 +147,21 @@ export async function PATCH(req: NextRequest) {
     }
     const now = new Date();
     const { id, status } = parsed.data;
+    const snoozedUntil =
+      status === "snoozed"
+        ? new Date(now.getTime() + SNOOZE_DAYS * 24 * 60 * 60 * 1000)
+        : null;
     await db
       .update(insights)
       .set({
         status,
+        snoozedUntil,
         // Mirror dismissedAt for legacy code paths that still read it
         // (e.g. the GET cache check). 'doesnt-apply' is the spiritual
         // successor of dismissed.
         dismissedAt: status === "doesnt-apply" ? now : null,
         // Confirmation also bumps source so /recommend can weight it.
+        // Any other transition resets to 'opus'.
         source: status === "confirmed" ? "user-confirmed" : "opus",
         updatedAt: now,
       })
