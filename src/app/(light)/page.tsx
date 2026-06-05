@@ -240,7 +240,7 @@ export default function HomePage() {
       .catch(() => null);
   };
 
-  const handleSend = async ({ text, imageUrl, coffeeRef }: SendPayload) => {
+  const handleSend = async ({ text, imageUrl, coffeeRef, voiceInitiated }: SendPayload) => {
     const userMsg: Message = {
       role: "user",
       content: text,
@@ -261,8 +261,10 @@ export default function HomePage() {
     let assistantContent = "";
     let assistantActions: NavAction[] | undefined;
     let ttsBuffer = "";
-    // Stop any audio still playing from the previous reply so the assistant
-    // doesn't overlap itself when the user fires the next question.
+    // TTS only for voice-initiated turns — typed messages get a silent
+    // assistant reply. Stop any audio still playing from the previous turn
+    // either way so a new voice turn doesn't overlap the old one.
+    const speakReply = voiceInitiated === true;
     voice.cancel();
 
     try {
@@ -323,15 +325,18 @@ export default function HomePage() {
               const payload = JSON.parse(data) as { text?: string };
               if (payload.text) {
                 assistantContent += payload.text;
-                ttsBuffer += payload.text;
-                // Drain every complete sentence into the TTS queue. The hook
-                // pre-fetches up to MAX_AHEAD ahead and plays them in order,
-                // so the user hears the first sentence while the rest stream.
-                while (true) {
-                  const taken = takeSentence(ttsBuffer);
-                  if (!taken) break;
-                  ttsBuffer = taken.rest;
-                  voice.enqueue(taken.sentence);
+                if (speakReply) {
+                  ttsBuffer += payload.text;
+                  // Drain every complete sentence into the TTS queue. The
+                  // hook pre-fetches up to MAX_AHEAD ahead and plays them in
+                  // order, so the user hears the first sentence while the
+                  // rest still stream.
+                  while (true) {
+                    const taken = takeSentence(ttsBuffer);
+                    if (!taken) break;
+                    ttsBuffer = taken.rest;
+                    voice.enqueue(taken.sentence);
+                  }
                 }
                 setMessages((prev) => {
                   const copy = prev.slice();
@@ -350,7 +355,7 @@ export default function HomePage() {
             assistantContent = "";
             ttsBuffer = "";
             // Drop whatever was about to be spoken — the agent walked it back.
-            voice.cancel();
+            if (speakReply) voice.cancel();
             setMessages((prev) => {
               const copy = prev.slice();
               const lastIdx = copy.length - 1;
@@ -384,8 +389,10 @@ export default function HomePage() {
 
       // Speak any tail that didn't end in punctuation (the model sometimes
       // closes a reply with a clause that has no terminating period).
-      const tail = ttsBuffer.trim();
-      if (tail.length >= 2) voice.enqueue(tail);
+      if (speakReply) {
+        const tail = ttsBuffer.trim();
+        if (tail.length >= 2) voice.enqueue(tail);
+      }
       ttsBuffer = "";
 
       if (assistantContent || assistantActions) {

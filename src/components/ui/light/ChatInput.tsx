@@ -33,6 +33,8 @@ export interface SendPayload {
   text: string;
   imageUrl?: string;
   coffeeRef?: CompactCoffee;
+  /** True if any part of this message originated from voice capture. */
+  voiceInitiated?: boolean;
 }
 
 interface ChatInputProps {
@@ -85,6 +87,11 @@ export default function ChatInput({
   const editorRef = useRef<HTMLDivElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const composeStartedRef = useRef(false);
+  // True once the current composition has picked up any voice-transcribed
+  // text. Reset on send and on clear. Drives the SendPayload flag the home
+  // page reads to decide whether to read the assistant reply aloud — typed
+  // messages stay silent, voice-initiated ones get spoken.
+  const voiceInitiatedRef = useRef(false);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Compact coffee list for the picker — fetched once on mount.
@@ -153,6 +160,7 @@ export default function ChatInput({
   const voice = useVoiceCapture({
     onTranscript: (transcript) => {
       markComposed();
+      voiceInitiatedRef.current = true;
       setText(transcript);
       if (editorRef.current) {
         editorRef.current.textContent = transcript;
@@ -226,23 +234,29 @@ export default function ChatInput({
     setAttachedImageUrl(null);
     setAttachedCoffee(null);
     setUploadError(null);
+    voiceInitiatedRef.current = false;
     editorRef.current?.focus();
   };
 
   const send = () => {
     if (!sendActive || loading || uploadingImage) return;
-    onUnlockAudio?.();
+    const voiceInitiated = voiceInitiatedRef.current;
+    // Unlock iOS audio only when this message was voice-initiated, so a
+    // pure-text exchange doesn't prime the audio element unnecessarily.
+    if (voiceInitiated) onUnlockAudio?.();
     if (assistantSpeaking) onCancelSpeak?.();
     onSend({
       text: text.trim(),
       ...(attachedImageUrl ? { imageUrl: attachedImageUrl } : {}),
       ...(attachedCoffee ? { coffeeRef: attachedCoffee } : {}),
+      ...(voiceInitiated ? { voiceInitiated: true } : {}),
     });
     if (editorRef.current) editorRef.current.textContent = "";
     setText("");
     setAttachedImageUrl(null);
     setAttachedCoffee(null);
     composeStartedRef.current = false;
+    voiceInitiatedRef.current = false;
     editorRef.current?.blur();
   };
 
@@ -250,6 +264,9 @@ export default function ChatInput({
     if (loading || sendActive) return;
     setVoiceError(null);
     markComposed();
+    // The mic tap is a user gesture — prime iOS audio now so the reply
+    // (which we'll route to TTS because this composition is voice-initiated)
+    // plays without an autoplay block.
     onUnlockAudio?.();
     if (assistantSpeaking) onCancelSpeak?.();
     await voice.start();
