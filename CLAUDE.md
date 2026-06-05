@@ -4,17 +4,18 @@ Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Cla
 
 ---
 
-## Operating mode — autonomous & mobile-first (OVERRIDES the friction rules below)
+## Operating mode — own the mechanics, keep asking (OVERRIDES the friction rules below)
 
-The user runs this project from a phone, usually with no terminal. **Default to acting, not asking.** This section takes precedence over any "flag once and wait", "ask before acting", "validate before shipping", or "confirm with the user" instruction anywhere else in this file.
+The user runs this project from a phone, usually with no terminal. The thing to eliminate is **manual mechanical work on the user's side** — never the conversation. This section takes precedence over any "validate before shipping" instruction elsewhere in this file, but it does NOT tell you to stop asking questions.
 
-- **Ship by default.** Make the change → `tsc` → commit → push → open the PR → enable auto-merge (or merge) → confirm `main` advanced. "Done" = merged + deploying, never "pushed to a branch". Don't ask "should I proceed?".
-- **Decide, don't poll.** When a reasonable default exists, pick it, do it, and state what you picked + why in one line. Reserve `AskUserQuestion` for genuine forks where guessing wrong wastes real work or is hard to undo. A subjective visual/design choice with no clear default is one of the few legit reasons to ask.
-- **Only pause for the genuinely irreversible:** wiping/overwriting production data, deleting things you didn't create, force-pushing `main`, rotating secrets, spending money, anything hard to walk back. Ordinary code / asset / config / prompt changes are NOT in this bucket — git makes them revertible, so just ship them.
-- **A wall means route around it, not stop.** No terminal? The deploy is automatic on merge; SQL migrations run from the GitHub Actions UI ("Run SQL Migration" workflow). A tool is blocked? Find another path and keep going. Only surface a wall after you've actually tried to get past it — and when you do, say what you tried.
-- **Self-correct in place.** Made a mistake? Fix it and move on. No spiralling, no re-asking the same question, no wall of hedging.
+- **Asking is a MUST, not friction.** The user wants to steer: clarify ambiguity, confirm direction, surface trade-offs, present real options for decisions (especially anything subjective, visual, product-shaping, or with no clear default). Erring toward asking on *what to build / which way to go* is correct and wanted. What the user is sick of is being *blocked* — not being *consulted*.
+- **Never offload mechanics onto the user.** Do NOT hand them commands to type, do NOT expect them to `git pull` / push / merge / run a script / SSH / type anything in a terminal. YOU run git, YOU open and merge the PR, deploy is automatic, SQL migrations go through the GitHub Actions "Run SQL Migration" workflow. The only legitimate "you do it" is a setting that genuinely lives behind a web UI you can't reach (e.g. GitHub repo-settings toggles) — and even then, name the exact clicks and offer to walk them through it.
+- **Ship the execution end-to-end.** Once a direction is agreed: make the change → `tsc` → commit → push → open the PR → enable auto-merge (or merge on green) → confirm `main` advanced. "Done" = merged + deploying, never "pushed to a branch" and never "here's the command, you run it".
+- **Pause for decisions and for the genuinely irreversible.** Ask the user on real forks. Hard-stop only for wiping/overwriting production data, deleting things you didn't create, force-pushing `main`, rotating secrets, or spending money. Ordinary code / asset / config / prompt changes are revertible via git — execute them, then report.
+- **A wall means route around it, not dump it on the user.** A tool is blocked? Find another path before surfacing it. When you do surface a wall, say what you already tried — don't make the user do the legwork.
+- **Self-correct in place.** Made a mistake? Fix it and move on. No spiralling, no wall of hedging.
 
-**What this does NOT relax:** the "never fabricate coffee parameters / facts" rule stays fully in force — but it means *look it up or mark it unverified and keep going*, never *halt the task*. Honesty about data (don't invent row counts, don't claim verified when you didn't check) is about not lying to the user, which serves autonomy, not friction.
+**What this does NOT relax:** the "never fabricate coffee parameters / facts" rule stays fully in force — but it means *look it up or mark it unverified and keep going*, never *halt the task*. Honesty about data (don't invent row counts, don't claim verified when you didn't check) is about not lying to the user.
 
 ---
 
