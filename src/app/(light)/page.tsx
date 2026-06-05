@@ -5,8 +5,25 @@ import { Menu } from "lucide-react";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
 import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
+import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import type { Session } from "@/lib/types/session";
 import type { NavAction } from "@/app/api/explore-agent/route";
+
+// Extract the first complete sentence from the front of `buf`. "Complete" =
+// terminating punctuation (`.!?` or newline) followed by whitespace. We deny
+// end-of-string because mid-stream the next chunk might continue the sentence
+// (e.g. a decimal like "3.14" or "Mr. Hoffmann"). The final flush at
+// stream-end accepts whatever's left without this guard.
+function takeSentence(buf: string): { sentence: string; rest: string } | null {
+  const re = /[.!?\n]+\s/;
+  const m = re.exec(buf);
+  if (!m) return null;
+  const endIdx = m.index + m[0].length;
+  const sentence = buf.slice(0, endIdx).trim();
+  const rest = buf.slice(endIdx);
+  if (!sentence) return null;
+  return { sentence, rest };
+}
 
 /**
  * BTTS Home (specs/home.md §0, §8, §10, §11).
@@ -101,6 +118,7 @@ export default function HomePage() {
   // lands, which is better UX than flashing a generic "Welcome…" string.
   const [starter, setStarter] = useState<string>("");
   const conversationIdRef = useRef<string | null>(null);
+  const voice = useVoicePlayback();
 
   // Recent sessions for the agent's personal-context block.
   useEffect(() => {
@@ -242,6 +260,10 @@ export default function HomePage() {
 
     let assistantContent = "";
     let assistantActions: NavAction[] | undefined;
+    let ttsBuffer = "";
+    // Stop any audio still playing from the previous reply so the assistant
+    // doesn't overlap itself when the user fires the next question.
+    voice.cancel();
 
     try {
       const apiMessages = next.map((m, idx) => {
@@ -301,6 +323,16 @@ export default function HomePage() {
               const payload = JSON.parse(data) as { text?: string };
               if (payload.text) {
                 assistantContent += payload.text;
+                ttsBuffer += payload.text;
+                // Drain every complete sentence into the TTS queue. The hook
+                // pre-fetches up to MAX_AHEAD ahead and plays them in order,
+                // so the user hears the first sentence while the rest stream.
+                while (true) {
+                  const taken = takeSentence(ttsBuffer);
+                  if (!taken) break;
+                  ttsBuffer = taken.rest;
+                  voice.enqueue(taken.sentence);
+                }
                 setMessages((prev) => {
                   const copy = prev.slice();
                   const lastIdx = copy.length - 1;
@@ -316,6 +348,9 @@ export default function HomePage() {
             }
           } else if (event === "retract") {
             assistantContent = "";
+            ttsBuffer = "";
+            // Drop whatever was about to be spoken — the agent walked it back.
+            voice.cancel();
             setMessages((prev) => {
               const copy = prev.slice();
               const lastIdx = copy.length - 1;
@@ -346,6 +381,12 @@ export default function HomePage() {
           }
         }
       }
+
+      // Speak any tail that didn't end in punctuation (the model sometimes
+      // closes a reply with a clause that has no terminating period).
+      const tail = ttsBuffer.trim();
+      if (tail.length >= 2) voice.enqueue(tail);
+      ttsBuffer = "";
 
       if (assistantContent || assistantActions) {
         void persistMessage("assistant", assistantContent, {
@@ -400,6 +441,9 @@ export default function HomePage() {
           loading={loading}
           onSend={handleSend}
           onComposeStart={() => setInteracted(true)}
+          assistantSpeaking={voice.speaking}
+          onCancelSpeak={voice.cancel}
+          onUnlockAudio={voice.unlock}
         />
       </main>
 
