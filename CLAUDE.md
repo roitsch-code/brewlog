@@ -4,6 +4,20 @@ Personal coffee brew advisor & diary PWA. Next.js 14 App Router + Postgres + Cla
 
 ---
 
+## Operating mode — autonomous & mobile-first (OVERRIDES the friction rules below)
+
+The user runs this project from a phone, usually with no terminal. **Default to acting, not asking.** This section takes precedence over any "flag once and wait", "ask before acting", "validate before shipping", or "confirm with the user" instruction anywhere else in this file.
+
+- **Ship by default.** Make the change → `tsc` → commit → push → open the PR → enable auto-merge (or merge) → confirm `main` advanced. "Done" = merged + deploying, never "pushed to a branch". Don't ask "should I proceed?".
+- **Decide, don't poll.** When a reasonable default exists, pick it, do it, and state what you picked + why in one line. Reserve `AskUserQuestion` for genuine forks where guessing wrong wastes real work or is hard to undo. A subjective visual/design choice with no clear default is one of the few legit reasons to ask.
+- **Only pause for the genuinely irreversible:** wiping/overwriting production data, deleting things you didn't create, force-pushing `main`, rotating secrets, spending money, anything hard to walk back. Ordinary code / asset / config / prompt changes are NOT in this bucket — git makes them revertible, so just ship them.
+- **A wall means route around it, not stop.** No terminal? The deploy is automatic on merge; SQL migrations run from the GitHub Actions UI ("Run SQL Migration" workflow). A tool is blocked? Find another path and keep going. Only surface a wall after you've actually tried to get past it — and when you do, say what you tried.
+- **Self-correct in place.** Made a mistake? Fix it and move on. No spiralling, no re-asking the same question, no wall of hedging.
+
+**What this does NOT relax:** the "never fabricate coffee parameters / facts" rule stays fully in force — but it means *look it up or mark it unverified and keep going*, never *halt the task*. Honesty about data (don't invent row counts, don't claim verified when you didn't check) is about not lying to the user, which serves autonomy, not friction.
+
+---
+
 ## Infrastructure
 
 | What | Detail |
@@ -481,7 +495,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 
 - **Flag proactively.** If something is inefficient (wastes tokens/time), insecure, or messy process-wise — raise it in the conversation. Don't silently tolerate it. The user is non-technical and cannot spot these issues on their own; it is your job to surface them.
 - Examples worth flagging: files stored in odd formats, unused endpoints, duplicated code paths, secrets in the wrong places, stale dependencies, missing error handling at system boundaries, slow API calls that could be cached, confusing UX that you happened to notice while editing nearby code.
-- Flag once, explain the trade-off plainly, then wait for a yes/no before acting. Don't hoard issues for a big cleanup later.
+- Flag once, explain the trade-off plainly. Per the Operating-mode section, if the fix is safe and revertible just do it and report it in the same breath; only wait for a yes/no when it's genuinely irreversible. Don't hoard issues for a big cleanup later.
 - **Translate, don't jargon-dump.** The user reads everything you write. Plain English, no unexplained acronyms or shorthand. If a technical term is unavoidable, define it inline once.
 - **Build everything new on the Design System.** Any new page, component, primitive, or modal MUST compose from the documented Light tokens (`text-light-foreground`, `text-light-text-on-dark`, `bg-light-card-default`, `bg-light-surface`, `bg-light-destructive`, `light-accent-overtime`, `light-scrim`, `backdrop-blur-light-card`, the gutter `px-5`, the primary pill `h-14 rounded-full`, etc.) — see the "Light design tokens (cheat sheet)" section. Never reintroduce a literal `hsl(...)` / `rgba(...)` / `#hex` for a colour role the system already has a token for, and never roll a one-off pill height or radius. If a genuinely new visual role appears (e.g. a fresh status colour), add it to `tailwind.config.ts` as a `light-*` token FIRST, then consume the token — single source of truth in one place. Drift like this is what produced the May 2026 token-cleanup pass; do not invite a sequel.
 
