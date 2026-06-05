@@ -39,6 +39,15 @@ interface ChatInputProps {
   loading: boolean;
   onSend: (payload: SendPayload) => void;
   onComposeStart?: () => void;
+  /** True while the assistant's reply is being read aloud. */
+  assistantSpeaking?: boolean;
+  /** Stop the current TTS playback (silence the assistant). */
+  onCancelSpeak?: () => void;
+  /**
+   * Called inside a user gesture so iOS can prime its audio element —
+   * required before any later programmatic playback succeeds.
+   */
+  onUnlockAudio?: () => void;
 }
 
 async function uploadPhoto(file: File): Promise<string> {
@@ -56,7 +65,14 @@ async function uploadPhoto(file: File): Promise<string> {
   return data.url as string;
 }
 
-export default function ChatInput({ loading, onSend, onComposeStart }: ChatInputProps) {
+export default function ChatInput({
+  loading,
+  onSend,
+  onComposeStart,
+  assistantSpeaking = false,
+  onCancelSpeak,
+  onUnlockAudio,
+}: ChatInputProps) {
   const [text, setText] = useState("");
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -93,6 +109,31 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
       })
       .catch(() => {});
   }, []);
+
+  // The editor pill is unmounted while voice recording is active, so when the
+  // transcript arrives `editorRef.current` is null and the synchronous
+  // textContent write in onTranscript is a no-op — the user sees an empty
+  // editor with no placeholder. Sync state → DOM here, where the ref is
+  // guaranteed to be live after the editor remounts.
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    if (el.textContent !== text) {
+      el.textContent = text;
+      if (text.length > 0) {
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        } catch {
+          /* selection APIs vary across iOS WebKit */
+        }
+      }
+    }
+  }, [text]);
 
   const dismissErrors = (delay: number) => {
     if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
@@ -149,6 +190,11 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
 
   const handleFocus = () => {
     markComposed();
+    // The user is composing — silence the assistant so it doesn't talk over
+    // their reply. iOS audio also needs a gesture before later playbacks; the
+    // focus event itself isn't a gesture, but follow-up taps within this
+    // session will pick up the queue.
+    if (assistantSpeaking) onCancelSpeak?.();
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
@@ -185,6 +231,8 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
 
   const send = () => {
     if (!sendActive || loading || uploadingImage) return;
+    onUnlockAudio?.();
+    if (assistantSpeaking) onCancelSpeak?.();
     onSend({
       text: text.trim(),
       ...(attachedImageUrl ? { imageUrl: attachedImageUrl } : {}),
@@ -202,6 +250,8 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
     if (loading || sendActive) return;
     setVoiceError(null);
     markComposed();
+    onUnlockAudio?.();
+    if (assistantSpeaking) onCancelSpeak?.();
     await voice.start();
   };
 
@@ -270,6 +320,15 @@ export default function ChatInput({ loading, onSend, onComposeStart }: ChatInput
               disabled={isTranscribing}
               aria-label="Cancel recording"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150 disabled:opacity-50"
+            >
+              <X className="h-5 w-5" strokeWidth={1.5} />
+            </button>
+          ) : assistantSpeaking && !isCompositionActive ? (
+            <button
+              type="button"
+              onClick={() => onCancelSpeak?.()}
+              aria-label="Stop talking"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
