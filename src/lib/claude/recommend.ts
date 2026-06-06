@@ -262,7 +262,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - V60 size 2: max ~600ml water
 - Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max ~500ml
 - Origami Dripper (size M): max ~500ml
-- Clever Dripper: MAX 400ml total water. NEVER recommend for >400ml water.
+- Clever Dripper: MAX 450ml total water. NEVER recommend for >450ml water.
 - Kalita Wave: max ~500ml
 - Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Reserve 34g:520ml brews for V60 or Orea.
 - AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
@@ -633,9 +633,9 @@ export async function generateRecommendation(
 
   const amountGuide: Record<string, string> = {
     small:
-      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 400ml ✓), Kalita, Chemex, Origami Air M (23g < 30g dose limit ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M (23g < 30g dose limit ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 400ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water / 34g dose (1:15.3). Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 450ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -697,7 +697,7 @@ export async function generateRecommendation(
     type Violation = { method: string; reason: string };
     const allViolations: Violation[] = [];
     if (ml > 230) allViolations.push({ method: "AeroPress", reason: "max 230ml" });
-    if (ml > 400) allViolations.push({ method: "Clever Dripper", reason: "max 400ml" });
+    if (ml > 450) allViolations.push({ method: "Clever Dripper", reason: "max 450ml" });
     if (ml > 450) allViolations.push({ method: "Origami Air M", reason: "30g dose limit → max ~450ml" });
     if (ml < 500) allViolations.push({ method: "Moccamaster", reason: "batch only, min 500ml" });
 
