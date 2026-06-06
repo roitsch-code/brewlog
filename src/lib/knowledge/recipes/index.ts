@@ -31,6 +31,7 @@ export { MARKUS_ADDITIONS } from "./markusAdditions";
 
 export {
   ALL_RECIPES,
+  CANONICAL_EQUIPMENT,
   brewersAvailableFromEquipment,
   brewersFromMethod,
   normaliseRoastLevel,

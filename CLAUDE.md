@@ -627,7 +627,7 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 | Device | Details |
 |--------|---------|
 | **PRIMARY** | V60 size 2 (Hario Drip Assist **retired from daily use** — emergency-only when no gooseneck kettle is around, e.g. travelling. Selectable in the flow as "V60 + Drip Assist" but never recommended proactively; PR #193) |
-| Other | Orea V4 Wide, Origami Dripper, Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
+| Other | Orea V4 Wide, Origami Air M (resin / AS-resin "Air" line — lighter, lower thermal mass than ceramic; takes both V60 conical and Kalita Wave flat-bottom filters), Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex |
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
