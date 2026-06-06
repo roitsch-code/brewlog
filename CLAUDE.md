@@ -120,7 +120,6 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `cafe-visits` | GET / POST — visit-only café logs with binary thumbs rating (independent of brew sessions) |
 | `cafe-visits/[id]` | DELETE — remove a logged visit |
 | `admin/seed` | Populate knowledge base (run once on new installs) |
-| `admin/lookup` | ★ Read-only live-data lookups (session-cookie gated). `GET ?q=preferences\|counts\|rotation\|coffees\|coffee` — whitelisted, parameterised, no arbitrary SQL. Lets the owner inspect production rows in-browser without SSH. |
 
 ### Components
 
@@ -642,7 +641,7 @@ This app has exactly **one user (the owner, roitsch@gmail.com) and always will.*
 - **The profile is CODE-CANONICAL.** The owner's equipment, grinder, water, and taste are the source of truth in code: `CANONICAL_PROFILE` (`src/lib/claude/userProfile.ts`) for prompt text and `CANONICAL_EQUIPMENT` (`src/lib/knowledge/recipes/helpers.ts`) for recipe-brewer filtering. When the kit changes, edit those constants — never wait on a DB/onboarding round-trip. `/recommend` unions the stored `preferences.equipment` with `CANONICAL_EQUIPMENT` so a stale DB row can never hide an owned brewer (this was the cause of Origami/Chemex being filtered out of recommendations — PR #250).
 - **Don't add per-user generality** (multi-tenant isolation, per-user onboarding gates, "first-run" UX). It's wasted complexity for a one-person project.
 
-**Reading live data:** the production DB (Postgres on the VPS) is NOT reachable from a Claude Code session — only the repo is. Two read paths exist: the auth-gated `GET /api/admin/lookup?q=…` endpoint (session-cookie only, whitelisted read-only lookups — for the owner in-browser) and the `DB Read (read-only SQL)` GitHub Action (`.github/workflows/db-read.yml`, runs a SELECT inside a READ ONLY transaction on the VPS and prints to the log — for Claude's diagnostic reads). Use these instead of guessing at row contents.
+**Live data:** the production DB (Postgres on the VPS) is NOT reachable from a Claude Code session — only the repo is. Work from the code: read the schema, the constants, and the canonical profile to know how things behave. Do NOT guess at, extrapolate, or fabricate row contents (see the "never infer repo state from partial evidence" Hard Rule). If a specific live value genuinely matters and can't be determined from code, say so plainly and ask the owner — don't invent tooling to paper over it.
 
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
