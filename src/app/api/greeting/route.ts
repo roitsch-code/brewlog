@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { loadCoffeeLibraryCompact, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
+import { loadRotationCoffees, formatLibraryForPrompt } from "@/lib/claude/coffeeLibrary";
 import { loadUserProfile } from "@/lib/claude/userProfile";
 import { db } from "@/lib/db/client";
 import { sessions, insights as insightsTable } from "@/lib/db/schema";
@@ -137,10 +137,12 @@ export async function POST(req: NextRequest) {
     await req.json().catch(() => ({} as RequestBody));
 
     const [library, recentRows, profile, weather, activeInsights] = await Promise.all([
-      // Only the last few bags in active rotation — the line biases
-      // toward what the user is brewing right now, not their full
-      // historical library.
-      loadCoffeeLibraryCompact(4).catch(() => []),
+      // The bags the user has explicitly marked ★ in rotation — what they're
+      // actually brewing right now, by the rotation flag rather than a
+      // recency proxy. An older-but-still-open bag is no longer dropped just
+      // because newer bags were added after it. The prompt already handles the
+      // zero-rotation case (acknowledge the gap, don't invent a bag).
+      loadRotationCoffees().catch(() => []),
       db
         .select()
         .from(sessions)

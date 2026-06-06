@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
-import { loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
+import { loadRotationCoffees } from "@/lib/claude/coffeeLibrary";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import {
@@ -71,9 +71,9 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 - **suggest_navigation**: propose navigating to a BTTS feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
 - **start_brew**: drop the user STRAIGHT into the step-by-step brew timer with the exact recipe you just gave — no context questions, no re-recommendation. For when you've just laid out a complete recipe for a specific library bag (often a one-off for the last few grams that isn't worth saving).
 
-**Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (last 6 — this is *not* the full library, just what's open and active right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
+**Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (the bags the user has explicitly marked ★ in rotation — this is *not* the full library, just what's open and active on the counter right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
 
-When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the bags in the Coffee Library block below — that's the active rotation. Don't pull older bags out of memory; if none of the rotation fits, say so plainly.
+When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the bags in the Coffee Library block below — that's the active rotation. Don't pull older bags out of memory; if none of the rotation fits, say so plainly. If the Coffee Library block is empty, nothing is marked in rotation — say so and suggest opening/marking a bag rather than naming one from memory.
 
 Mention capabilities only when relevant — don't pitch them unprompted.
 
@@ -540,7 +540,8 @@ function formatLibraryForAgent(library: CompactCoffee[]): string {
         c.avgRating != null
           ? `${c.avgRating.toFixed(1)}★ · ${c.sessionCount} sessions`
           : `${c.sessionCount} sessions`;
-      return `- [id:${c.id}] ${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${usage}`;
+      const rotationMark = c.inRotation ? "★ IN ROTATION | " : "";
+      return `- [id:${c.id}] ${rotationMark}${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${usage}`;
     })
     .join("\n");
 }
@@ -584,12 +585,12 @@ export async function POST(req: NextRequest) {
 
     const [userPrefs, library] = await Promise.all([
       loadUserProfile().catch(() => null),
-      // Only the bags in active rotation. Recommendations bias toward
-      // what the user is actually brewing right now, not their full
-      // historical library. The agent can still answer questions about
-      // older bags by name; this just keeps "what should I brew?"
-      // grounded in recent stock.
-      loadCoffeeLibraryCompact(6).catch(() => []),
+      // The bags the user has explicitly marked ★ in rotation — the real
+      // "what's on the counter right now" set, NOT a recency proxy. Using the
+      // actual flag means an older-but-still-open bag (e.g. a coffee roasted
+      // weeks ago with many brews) is never dropped just because newer bags
+      // were added after it.
+      loadRotationCoffees().catch(() => []),
     ]);
 
     const profileBlock = formatProfileForPrompt(userPrefs);
