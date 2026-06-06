@@ -15,9 +15,19 @@ import type { ReactNode } from "react";
  * Selected: warm taupe at 70% + warm inset shadow. No scale-down
  * (chips are too small for the press effect to read).
  *
- * Size variants:
- *   - default: px-4 py-2, 13px — for primary chip rows
- *   - sm: px-3 py-1.5, 12px — for dense rows (FlavorWheel pickers)
+ * Size variants — pick by the chip's ROLE, and never mix sizes on one row:
+ *   - default (px-4 py-2, 13px): the chip IS the primary control answering a
+ *     focused, pick-one question. Sensory clarity/body/sweetness/bitterness/
+ *     finish/flow on the /brew log, SensoryToggle Yes/No, ImpressionRow
+ *     primaries, Roaster Q&A clarifications on /brew scan, the grinder picker
+ *     on /onboarding.
+ *   - sm (px-3 py-1.5, 12px): one of many tags, a dense scrolling picker, a
+ *     compact card-footer action, or a secondary inline confirm in a denser
+ *     form. FlavorWheel quick picks, candidate role picker on /recommend,
+ *     country picker, process/roast on /brew scan review, Coach actions on
+ *     /taste + CoachCard, and the equipment multi-select on /onboarding.
+ *   Rule of thumb: stands alone as the answer → default; one of many / dense
+ *   row / secondary confirm → sm.
  */
 interface ChipProps {
   selected?: boolean;
