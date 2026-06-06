@@ -2568,7 +2568,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 85, notes: "Total brew time ~2:30–3:00. Swirl the carafe before serving." },
     ],
     totalTimeSec: 165,
-    techniques: ["pre-grind-rest", "two-pour", "wall-wash-pour"],
+    techniques: ["pulse-pouring", "spiral-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -2614,7 +2614,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80, notes: "Total brew time 2:30–3:00. Swirl the carafe before serving." },
     ],
     totalTimeSec: 165,
-    techniques: ["laminar-then-turbulent", "stir-bloom"],
+    techniques: ["high-agitation-high-extraction", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -2664,7 +2664,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 75, notes: "Brew should finish 3:00–3:30. Swirl gently before serving." },
     ],
     totalTimeSec: 210,
-    techniques: ["even-pour-distribution", "larger-batch"],
+    techniques: ["pulse-pouring", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -2712,7 +2712,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Flip and press", action: "press", durationSec: 40, notes: "At 3:00, flip and press 30–45 s. Total brew time ~3:30–4:00. Swirl before serving." },
     ],
     totalTimeSec: 230,
-    techniques: ["inverted-aeropress", "long-steep", "double-stir"],
+    techniques: ["aeropress-inversion", "immersion-steep", "high-agitation-high-extraction"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],

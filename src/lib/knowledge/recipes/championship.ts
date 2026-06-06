@@ -100,11 +100,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 35 },
     ],
     totalTimeSec: 210,
-    techniques: [
-      "phase-separated-pouring",
-      "ratio-control-via-pour-count",
-      "no-bloom-distinction",
-    ],
+    techniques: ["phase-separated-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -189,11 +185,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 25 },
     ],
     totalTimeSec: 105,
-    techniques: [
-      "custom-mineral-water",
-      "even-pour-distribution",
-      "flat-bed-extraction",
-    ],
+    techniques: ["low-mineral-water", "pulse-pouring", "flat-bed-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -292,7 +284,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 40, notes: "Total brew time 2:40–3:00. Swirl the carafe before serving." },
     ],
     totalTimeSec: 170,
-    techniques: ["even-pulse-pouring", "lean-ratio", "moderate-temperature"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey", "washed"],
@@ -387,11 +379,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 10 },
     ],
     totalTimeSec: 145,
-    techniques: [
-      "fast-flow-dripper",
-      "turbulent-pours",
-      "limited-bed-contact",
-    ],
+    techniques: ["high-agitation-high-extraction"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "anaerobic", "honey", "washed"],
@@ -477,12 +465,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       },
     ],
     totalTimeSec: 120,
-    techniques: [
-      "inverted-aeropress",
-      "concentrate-and-bypass",
-      "high-temperature-extraction",
-      "mid-mineral-water",
-    ],
+    techniques: ["aeropress-inversion", "concentrate-and-bypass", "low-mineral-water"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],

@@ -543,4 +543,173 @@ export const TECHNIQUES: Technique[] = [
     ],
     verified: true,
   },
+
+  // ── General / foundational moves ───────────────────────────────────────────
+  // These are common-practice techniques with no single originator. They are
+  // marked verified:false because there is no one author publishing canonical
+  // mechanics — the mechanism descriptions are textbook brewing physics, not a
+  // specific cited routine. Added in the technique-tag cleanup so every recipe
+  // references a real technique id rather than ad-hoc free text.
+
+  {
+    id: "bloom",
+    name: "Bloom (Pre-infusion)",
+    attribution: { person: "General (popularised by Rao, Hoffmann and others)" },
+    category: "pre-brew",
+    manipulates: ["degassing", "even saturation"],
+    description:
+      "Wet the grounds with a small amount of water (~2–3× the dose) and wait 30–45 s before the main pours.",
+    mechanism:
+      "Fresh coffee holds dissolved CO2 from roasting. When hot water hits it the gas off-gasses vigorously, repelling water and lifting the bed — which causes uneven saturation and channeling during the main pours. A short pre-wet lets most of that CO2 escape first, so the subsequent water meets a settled, evenly-wetted bed and extracts uniformly. Fresher coffee needs a longer bloom; stale coffee barely blooms at all.",
+    whenToUse:
+      "Almost any pour-over or immersion brew with reasonably fresh coffee. The first pour of phase-separated and pulse recipes doubles as the bloom.",
+    compatibleBrewers: ["v60", "orea-v4-fast", "origami-cone", "kalita-wave", "clever", "chemex", "cafec-flower"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup", "hub-bloom-first-clever"],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "pulse-pouring",
+    name: "Pulse Pouring",
+    attribution: { person: "General" },
+    category: "pour-pattern",
+    manipulates: ["agitation cadence", "water level"],
+    description:
+      "Add the brew water in several discrete pours separated by short pauses, rather than one continuous stream.",
+    mechanism:
+      "Each pulse briefly re-agitates and re-saturates the bed, then the pause lets it draw down before the next addition. This keeps the slurry level and bed depth in a consistent range across the brew, so extraction stays even and the brewer doesn't flood. Pour count and pulse size become control knobs: more/smaller pulses raise agitation and extraction, fewer/larger pulses lower it.",
+    whenToUse:
+      "The default structure for most V60 / flat-bottom pour-overs. Reach for more pulses when a cup tastes underdeveloped, fewer when it reads harsh.",
+    compatibleBrewers: ["v60", "orea-v4-fast", "origami-cone", "kalita-wave", "chemex", "cafec-flower"],
+    exemplifiedBy: ["hoffmann-v60-better-one-cup", "kasuya-4-6-standard"],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "immersion-steep",
+    name: "Immersion Steep",
+    attribution: { person: "General" },
+    category: "vessel-specific",
+    manipulates: ["contact time", "extraction evenness"],
+    description:
+      "Fully submerge the grounds in all the water for a set time, then release/drain through the filter.",
+    mechanism:
+      "In full immersion every particle sees the same water for the same duration, so extraction approaches equilibrium and is far less sensitive to pour technique than percolation. Strength and extraction are set mainly by grind, ratio and steep time; the result is forgiving and repeatable, trading some peak clarity for consistency.",
+    whenToUse:
+      "Clever, AeroPress and similar steep-and-release brewers — especially for unfamiliar coffees or hands-off brewing.",
+    compatibleBrewers: ["clever", "aeropress", "aeropress-prismo"],
+    exemplifiedBy: ["hoffmann-clever-ultimate"],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "central-pour",
+    name: "Central Pour",
+    attribution: { person: "General" },
+    category: "pour-pattern",
+    manipulates: ["bypass", "bed agitation"],
+    description:
+      "Pour only into the centre of the bed, keeping water off the filter wall.",
+    mechanism:
+      "Water poured at the walls runs down the paper and bypasses the coffee, diluting the cup and under-extracting the edge. Pouring centrally forces water to percolate down through the bed before reaching the wall, reducing bypass and concentrating agitation in the middle for a deeper, more even extraction column.",
+    whenToUse:
+      "Conical drippers when you want to limit bypass and lift body; often paired with a deeper, narrower bed.",
+    compatibleBrewers: ["v60", "origami-cone", "orea-v4-fast"],
+    exemplifiedBy: [],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "spiral-pour",
+    name: "Spiral Pour",
+    attribution: { person: "General" },
+    category: "pour-pattern",
+    manipulates: ["surface wetting", "bed evenness"],
+    description:
+      "Pour in an outward spiral from the centre to the edge (and back), covering the whole bed surface.",
+    mechanism:
+      "A spiral distributes water over the entire surface so every region of the bed is wetted at a similar time, avoiding dry pockets and over-soaked centres. Reaching toward the edge also washes wall-clinging grounds back down into the bed, keeping it level and the extraction uniform.",
+    whenToUse:
+      "Bloom and main pours on most drippers when you want even, gentle saturation across a wide bed.",
+    compatibleBrewers: ["v60", "origami-cone", "kalita-wave", "chemex", "orea-v4-fast"],
+    exemplifiedBy: [],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "continuous-pour",
+    name: "Continuous Pour",
+    attribution: { person: "General" },
+    category: "pour-pattern",
+    manipulates: ["flow rate", "agitation"],
+    description:
+      "After the bloom, add all remaining water in one slow, uninterrupted stream.",
+    mechanism:
+      "A single continuous pour holds a steady water level and a near-constant flow through the bed, removing pour count and pulse spacing as variables. With matched flow rate it gives a smooth, lower-agitation extraction — simpler and more repeatable, at some cost to the control that pulsing offers.",
+    whenToUse:
+      "When you want a simple, low-variable brew, or to reduce agitation on delicate coffees that turn harsh with pulsing.",
+    compatibleBrewers: ["v60", "origami-cone", "orea-v4-fast", "kalita-wave"],
+    exemplifiedBy: [],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "machine-drip-brew",
+    name: "Automatic Drip / Batch Brew",
+    attribution: { person: "General (Moccamaster / Technivorm style)" },
+    category: "vessel-specific",
+    manipulates: ["operator variance", "batch size"],
+    description:
+      "Let an automatic drip machine meter hot water through a showerhead over a flat-bottom paper bed.",
+    mechanism:
+      "The machine's showerhead and pulsing dispersion approximate a multi-pour pour-over without operator skill, and a flat-bottom basket keeps an even bed. Consistency comes from the machine controlling temperature and flow; the main levers left to the user are grind, dose and total ratio.",
+    whenToUse:
+      "Larger batches (≥500 ml) and hands-off brewing where repeatability matters more than peak single-cup control.",
+    compatibleBrewers: ["moccamaster"],
+    exemplifiedBy: ["hoffmann-moccamaster"],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "batch-scaling",
+    name: "Batch Scaling",
+    attribution: { person: "General" },
+    category: "pre-brew",
+    manipulates: ["grind", "bed geometry"],
+    description:
+      "Scale a recipe up to a larger dose/batch while holding the ratio, coarsening the grind and keeping bloom proportional.",
+    mechanism:
+      "A bigger dose makes a deeper, wider bed, which adds flow resistance and lengthens the water's path — so the same grind that worked single-cup will over-extract and stall at batch size. Coarsening the grind restores flow, while keeping the ratio and a proportional bloom preserves the target strength and even saturation.",
+    whenToUse:
+      "Whenever you take a dialled single-cup recipe to a multi-cup batch, on any percolation brewer.",
+    compatibleBrewers: ["v60", "origami-cone", "kalita-wave", "chemex", "moccamaster"],
+    exemplifiedBy: [],
+    sources: [],
+    verified: false,
+  },
+
+  {
+    id: "flat-bed-pour",
+    name: "Flat-Bed Pouring",
+    attribution: { person: "General (Kalita Wave / flat-bottom style)" },
+    category: "pour-pattern",
+    manipulates: ["bed evenness", "path-length uniformity"],
+    description:
+      "Pour to keep a flat, level grounds bed — central pours, gentle additions, and avoiding grounds climbing the wall.",
+    mechanism:
+      "In a flat-bottom brewer every part of the bed has a similar depth, so water travels a similar path length through all the coffee and extracts it evenly. Keeping the bed flat (not walled-up or trenched) preserves that uniform path length; uneven beds create fast and slow channels that mix over- and under-extracted liquid.",
+    whenToUse:
+      "Kalita Wave, Orea and other flat-bottom drippers; pair with fines removal for a very clean, even cup.",
+    compatibleBrewers: ["kalita-wave", "orea-v4-fast", "orea-v4-wide"],
+    exemplifiedBy: ["wallgren-kalita-sieved"],
+    sources: [],
+    verified: false,
+  },
 ];
