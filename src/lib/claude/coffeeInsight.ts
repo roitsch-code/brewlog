@@ -78,8 +78,6 @@ function buildUserPrompt(coffee: Coffee, sessionsForCoffee: Session[]): string {
   if (latest?.variety) lines.push(`- Variety: ${latest.variety}`);
   if (latest?.roastLevel) lines.push(`- Roast: ${latest.roastLevel}`);
   if (latest?.region) lines.push(`- Region: ${latest.region}`);
-  if (latest?.farm) lines.push(`- Farm: ${latest.farm}`);
-  if (latest?.altitudeMeters) lines.push(`- Altitude: ${latest.altitudeMeters} m`);
   if (latest?.fermentationStyle) lines.push(`- Fermentation: ${latest.fermentationStyle}`);
   if (latest?.tastingNotesFromBag?.length) {
     lines.push(`- Tasting notes from bag: ${latest.tastingNotesFromBag.join(", ")}`);

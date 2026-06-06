@@ -27,7 +27,6 @@ const numeric = z.preprocess((v) => {
 const ClarifiedCoffeeSchema = z
   .object({
     cuppingScore: numeric,
-    altitudeMeters: numeric,
   })
   .passthrough();
 

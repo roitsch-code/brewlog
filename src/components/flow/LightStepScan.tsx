@@ -456,9 +456,6 @@ export default function LightStepScan() {
           }}
         />
       )}
-      {draft.coffee?.farm !== undefined && (
-        <EditableRow label="Farm" value={draft.coffee.farm || ""} onChange={v => setCoffee({ farm: v || undefined })} />
-      )}
       {draft.coffee?.process && (
         <div>
           <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Process</p>
@@ -480,16 +477,6 @@ export default function LightStepScan() {
       )}
       {draft.coffee?.fermentationStyle !== undefined && (
         <EditableRow label="Fermentation" value={draft.coffee.fermentationStyle || ""} onChange={v => setCoffee({ fermentationStyle: v || undefined })} />
-      )}
-      {draft.coffee?.altitudeMeters !== undefined && (
-        <EditableRow
-          label="Altitude (m)"
-          value={draft.coffee.altitudeMeters ? String(draft.coffee.altitudeMeters) : ""}
-          onChange={v => {
-            const n = parseInt(v, 10);
-            setCoffee({ altitudeMeters: Number.isFinite(n) ? n : undefined });
-          }}
-        />
       )}
       {draft.coffee?.cuppingScore !== undefined && (
         <EditableRow
@@ -886,7 +873,7 @@ export default function LightStepScan() {
                   the photo flow renders, so the user sees and can
                   correct every field that was extracted (roaster, name,
                   origin, process, roast level, variety, fermentation,
-                  farm, altitude, cupping score, roast date, bag notes). */}
+                  cupping score, roast date, bag notes). */}
               {(draft.coffee?.name || draft.coffee?.roaster) && !isAnalyzingUrl && inputMethod === "link" && identifiedPanel}
               {/* Roaster prior — surfaces curated/DB profile for the URL path
                   too. Previously only the photo path rendered this; URL

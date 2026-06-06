@@ -17,13 +17,11 @@ const UrlExtractSchema = z.object({
       name: z.string().optional(),
       origin: z.string().optional(),
       region: z.string().optional(),
-      farm: z.string().optional(),
       variety: z.string().optional(),
       process: z.string().optional(),
       fermentationStyle: z.string().optional(),
       roastLevel: z.string().optional(),
       roastDate: z.string().optional(),
-      altitudeMeters: z.number().optional(),
       cuppingScore: z.number().optional(),
       tastingNotesFromBag: z.array(z.string()).optional(),
     })
@@ -101,25 +99,23 @@ export async function POST(req: Request) {
     "name": string,
     "origin": string,
     "region": string,
-    "farm": string,
     "variety": string,
     "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other",
     "fermentationStyle": string,
     "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark",
     "roastDate": "YYYY-MM-DD",
-    "altitudeMeters": number,
     "cuppingScore": number,
     "tastingNotesFromBag": string[]
   },
   "clarifications": string[]
 }
 
-Inside "extracted": omit any field you cannot find with confidence (do not return null — just omit). fermentationStyle is the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol. cuppingScore is the SCA / Q-grade if printed (e.g. 87.5). altitudeMeters is the grow elevation in metres (e.g. 1750).
+Inside "extracted": omit any field you cannot find with confidence (do not return null — just omit). fermentationStyle is the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol. cuppingScore is the SCA / Q-grade if printed (e.g. 87.5).
 
-"clarifications": list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) altitude if unknown, (4) region/farm if unclear. Examples:
+"clarifications": list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) region if unclear. Examples:
 - "I couldn't spot a variety on the page — is it listed anywhere, or do you know it?"
 - "No tasting notes were visible — what flavour descriptors does the roaster use?"
-- "The page doesn't mention altitude — do you know the elevation at \${farm or origin}?"
+- "I couldn't pin down the region — do you know which growing area it's from?"
 
 NEVER ask about roast date (the user enters this via a dedicated date picker in the UI) or cupping score (optional, often unavailable — leave the field omitted if not printed). Return [] if every important field is already known.
 

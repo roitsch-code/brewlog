@@ -6,13 +6,11 @@ export interface CoffeeIdentity {
   name: string;
   origin: string;
   region?: string;
-  farm?: string; // specific farm / estate, e.g. "Fazenda Passeio"
   variety?: string;
   process: string; // Natural | Washed | Honey | Anaerobic | Other
   fermentationStyle?: string; // e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed"
   roastLevel: string; // Light | Medium-Light | Medium | Dark
   roastDate?: string; // ISO date string
-  altitudeMeters?: number; // grow elevation in metres above sea level
   cuppingScore?: number; // SCA / Q-grade, e.g. 87.5
   bagPhotoUrl?: string;
   bagPhotoPath?: string;
