@@ -39,6 +39,10 @@ Replace the filename with the actual migration file. You should see `INSERT 0 N`
 
 **Type-check before every commit:** `npx tsc --noEmit`
 
+**CI on every PR (`.github/workflows/ci.yml`):**
+- **`check` job** — `tsc --noEmit` + `node --test` (pour-math suite). Fast quality gate.
+- **`screenshots` job** — boots the app against a throwaway Postgres (applies every migration to an empty DB), logs in via the **PIN path** (`POST /api/auth/login {type:"pin"}`; CI uses a throwaway `AUTH_PIN=1234` + test `AUTH_SECRET`, runs `next dev` so the session cookie isn't `secure`-gated over http), then drives a headless mobile-viewport Chromium (Playwright, installed ad-hoc — not a committed dep) through every key screen and uploads them as the **`app-screenshots`** artifact. This is how a human/Claude eyeballs layout on a PR without running anything; download the artifact from the PR's checks. A screen returning 5xx fails the job. AI sections render empty unless an `ANTHROPIC_API_KEY` repo secret is set (run passes either way). Screen list + opportunistic dynamic-route capture live in `tests/smoke/screenshot.mjs`.
+
 ---
 
 ## Project Structure & Key Files
@@ -58,7 +62,9 @@ Every route is now Light, including `cafes/map` (headlined "Nearby") — the cre
 | `(light)/brew/new/page.tsx` | Light | Multi-step brew flow — routes `flowStore.step` to the right `LightStep*` component |
 | `(light)/brew/[id]/page.tsx` | Light | Read-only session detail — Brew-method as headline, Field of the linked coffee, **2×2 stat grid** (Dose \| Grind on row 1, Water \| Temp on row 2 — PR #215, replaces the prior 3-up + Grind-below layout), then sections for brew notes / taste / reasoning |
 | `(light)/coffees/page.tsx` | Light | Coffee library — searchable list with full-bleed bag-photo card (96 px left strip), brew count over Brew CTA in the right column |
-| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + rotation toggle + gated Brew CTA + **single coach card** between Roaster and Notes (rotation-only, best-matched insight via `CoffeeCoachCard` — PR #215) + rating history + brew signatures |
+| `(light)/coffees/[id]/page.tsx` | Light | Coffee detail — Field + rotation toggle + gated Brew CTA + **single coach card** between Roaster and Notes (rotation-only; reads the coffee's own `coffees.coach_insight` column — Opus-generated per-coffee insight via `CoffeeCoachCard`, migration 0015, replacing the old library-wide citationFields overlap that surfaced other bags' insights on the wrong coffee) + rating history + brew signatures |
+| `(light)/coffees/drip/new/page.tsx` | Light | Drip-bag scan + log — single-serve sachet (e.g. INNO Signature Drip): scan identity, pick tasted flavours, 1–5 star rating. No recipe, no timer. Writes to the isolated `drip_bags` table (migration 0016) |
+| `(light)/coffees/drip/[id]/page.tsx` | Light | Drip-bag detail — read-only identity + Field + bag/tasted notes + rating. Isolated from sessions/coffees/AI corpus |
 | `(light)/cafes/page.tsx` | Light | Café Library — tabbed list (Cafés + Coffees tasted out), photo-strip cards in the Coffees tab |
 | `(light)/cafes/place/[slug]/page.tsx` | Light | Single café detail + inline session edit panel |
 | `(light)/cafes/coffee/[id]/page.tsx` | Light | Coffee tasted at an external location, cross-links to library coffee via `coffeeId` |
@@ -111,12 +117,14 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `upload` | Multipart photo → Hetzner S3, returns URL |
 | `voice/synthesize` | POST text → ElevenLabs TTS audio |
 | `voice/transcribe` | POST audio → ElevenLabs Scribe STT transcript |
-| `insights` | ★ Coach observations over the full session corpus. GET (cache-aware Opus regeneration; `?status=trying,new` filters for surface-specific fetches). PATCH `{ id, status }` to advance an insight's workflow (`new → trying → confirmed` or `→ doesnt-apply`). The regeneration only replaces `status='new'` rows; user-acted rows (trying/confirmed/doesnt-apply) are preserved and re-emitted similar observations inherit the existing status. (PR #215, migration 0014) |
+| `insights` | ★ Coach observations over the full session corpus. GET (cache-aware Opus regeneration; `?status=trying,new` filters for surface-specific fetches). PATCH `{ id, status }` advances an insight through a **two-stage** workflow (migration 0017): **New** (`new` → Save to try / Confirmed / Doesn't apply) then **Saved** (`trying` → It helped=`confirmed` / Didn't help=`doesnt-apply` / Skip=`snoozed`). `snoozed` rows set `snoozed_until` (default +7 days) and are hidden until it passes, then resurface and regen treats them like `new`. The regeneration only replaces `status='new'` (and expired-snooze) rows; user-acted rows (trying/confirmed/doesnt-apply/active-snooze) are preserved and re-emitted similar observations inherit the existing status. (PR #215, migrations 0014 + 0017) |
 | `hints` | GET contextual brewing hints |
 | `news` | GET coffee news feed |
 | `questions` | GET suggestion questions for explore mode |
 | `alerts` | GET / POST coffee availability alert subscriptions |
 | `webhooks/coffee-alert` | Incoming webhook for coffee availability notifications |
+| `drip-bags` | GET list / POST — single-serve drip-bag documentation records (migration 0016). Isolated from sessions/coffees/the AI corpus (mirrors the `cafe-visits` precedent) so they never skew `/recommend`, `/insights`, `/taste`, or the Café Library |
+| `drip-bags/[id]` | GET / DELETE individual drip-bag record |
 | `cafe-visits` | GET / POST — visit-only café logs with binary thumbs rating (independent of brew sessions) |
 | `cafe-visits/[id]` | DELETE — remove a logged visit |
 | `admin/seed` | Populate knowledge base (run once on new installs) |
@@ -150,7 +158,7 @@ Removed during the Light cleanup (PR #137): `BottomNav`, Dark `Chip`, `RadarChar
 
 **Session:** `SessionCard` (Light, consumed only by `/coffees/[id]` All-brews list — Brew-method as headline, Field's cream-glass cards, swipe-to-delete with rust-red destructive button)
 **Cafés:** `CafeMap` (Leaflet — consumed by `(light)/cafes/map`, now Light with warmed Positron tiles)
-**Coach (`src/components/coach/`):** `CoachCard` (presentational two-paragraph card — observation row 1, suggestion row 2, three-action footer Try it / Confirmed / Doesn't apply, consumed by `/taste` queue) + `CoffeeCoachCard` (wrapper that fetches `/api/insights?status=trying,new`, scores by citationFields overlap with this coffee's attributes, prefers trying then new, renders one best-match — rotation-only). PR #215.
+**Coach (`src/components/coach/`):** `CoachCard` (presentational card with the two-stage footer — New: Save to try / Confirmed / Doesn't apply; Saved: It helped / Didn't help / Skip — consumed by `/taste` queue) + `CoffeeCoachCard` (per-coffee card that reads the coffee's own `coffees.coach_insight` column — migration 0015 — an Opus-generated insight specific to THIS coffee; rotation-only). The old library-wide `citationFields`-overlap matching was replaced by 0015 because it surfaced other bags' insights on the wrong coffee. PR #215.
 
 ### `src/lib/`
 
@@ -176,7 +184,8 @@ lib/
 │   ├── session.ts          # ★ Core data model (all interfaces). BrewRecipe carries optional structured `pourSteps: BrewPourStep[]` (preferred over the legacy `pourSequence` string) using the `BrewStepAction` union (bloom/pour/final/stir/swirl/wait/press/invert/flip/drain/bypass/melodrip/agitate-bed). RecommendationCandidate carries `basedOn` (stable reference-recipe name). selectedCandidateIdx on BrewLog = the brewed candidate.
 │   ├── coffee.ts           # Coffee-specific types
 │   ├── preferences.ts      # UserPreferences interface
-│   └── cafes.ts            # CafeSummary + PlaceCoordinates
+│   ├── cafes.ts            # CafeSummary + PlaceCoordinates
+│   └── dripBag.ts          # DripBag interface — single-serve drip-bag records (isolated from sessions/coffees)
 ├── db/
 │   ├── schema.ts           # Drizzle table definitions (9 tables)
 │   ├── client.ts           # Lazy Drizzle client + pg Pool
@@ -195,7 +204,11 @@ lib/
 │   ├── 0011_add_cafe_visits.sql            # cafe_visits table — visit-only logs + binary thumbs rating
 │   ├── 0012_add_lessons.sql                # lessons table (PR #210). DEPRECATED — feature replaced by insights in #211; table preserved but unused
 │   ├── 0013_add_insights.sql               # insights table + indexes (PR #211, coach observation corpus)
-│   └── 0014_add_insight_status.sql         # status workflow column on insights (`new`/`trying`/`confirmed`/`doesnt-apply`), PR #215
+│   ├── 0013_add_lesson_questions.sql        # questions/answers cols + 'pending' status on the (now-removed) lessons "ask before rating" flow — dead alongside the lessons table
+│   ├── 0014_add_insight_status.sql         # status workflow column on insights (`new`/`trying`/`confirmed`/`doesnt-apply`), PR #215
+│   ├── 0015_add_coffee_coach_insight.sql    # coffees.coach_insight jsonb — per-coffee Opus insight (CoffeeCoachCard source)
+│   ├── 0016_add_drip_bags.sql               # drip_bags table — single-serve drip-bag documentation records, isolated from the corpus
+│   └── 0017_add_insight_snooze.sql          # insights.snoozed_until + 'snoozed' status (two-stage coach workflow, +7-day skip)
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
 │   # Applying schema/code that references a new column BEFORE running the migration on the VPS
 │   # makes Drizzle SELECT 500 (column-strict). Always migrate VPS first, deploy code second.
@@ -262,7 +275,7 @@ lib/
 
 ### Database tables (Drizzle + Postgres)
 
-`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits`, `insights` (13 tables; `lessons` from PR #210 also exists but is read-by-nothing post-#211).
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits`, `insights`, `drip_bags` (14 tables; `lessons` from PR #210 also exists but is read-by-nothing post-#211 — its `/lessons` page, `/api/lessons` route, and `src/lib/claude/lessons.ts` distiller were all removed, only the table + migrations 0012/0013_add_lesson_questions remain as dead schema).
 
 Recent additions:
 - `coffees.field_zones jsonb` (migration 0008) — persisted Field composition per coffee
@@ -271,6 +284,9 @@ Recent additions:
 - **Migration 0011 + new `cafe_visits` table** (applied 2026-05) — schema: `id`, `cafe_name`, `location`, `rating` ('come-back' | 'wont-return'), `notes`, `visited_at`, `visited_at_ms`. Visit-only café logs without an attached brew session. Binary thumbs rating since there's no brew context for stars. Aggregated into `/api/cafes` so visit-only places appear in the Café Library.
 - **Migration 0013 + new `insights` table** (applied 2026-06) — schema: `id`, `observation`, `suggestion`, `citation_fields jsonb`, `latest_session_ms`, `source` ('opus' | 'user-confirmed'), `status` (added by 0014), `dismissed_at` (legacy, replaced by status), `user_note`, `created_at`, `updated_at`. Multivariate coach observations over the full session corpus. (PR #211)
 - **Migration 0014 — `insights.status text`** (applied 2026-06-02) — workflow state machine `new`/`trying`/`confirmed`/`doesnt-apply`. Indexed. Default `'new'`. Orchestrator (`src/lib/claude/insights.ts`) only replaces `status='new'` rows on regeneration; user-acted rows (trying/confirmed/doesnt-apply) are preserved, and re-emitted similar observations inherit the existing status. `/recommend` + `/greeting` filter `status != 'doesnt-apply'`. (PR #215)
+- **Migration 0015 — `coffees.coach_insight jsonb`** — per-coffee Opus insight (`{observation, suggestion, status, generatedAtSessionMs, generatedAt}`, type `CoffeeCoachInsight` in `schema.ts`). Backs `CoffeeCoachCard` on `/coffees/[id]`. Regenerates when the coffee gets a newer session, EXCEPT while status is `trying`/`confirmed` (don't move the card under the user). Replaced the prior library-wide citationFields-overlap matching that surfaced other bags' insights on the wrong coffee.
+- **Migration 0016 + new `drip_bags` table** — single-serve drip-bag documentation records (id, roaster, name, origin/region/variety/process/roast_level, bag_notes, flavor_notes, rating, free_notes, bag_photo_*, field_zones, ai_extracted, created_at(_ms)). Fixed brew (200 ml through the built-in filter) → no recipe, no timer. **Deliberately isolated** from sessions/coffees/the AI corpus (mirrors `cafe_visits`) so drip bags never skew `/recommend`, `/insights`, `/taste`, or the Café Library. Surfaced only in the Coffee Library (flagged) + their own `/coffees/drip/[id]` detail. Type `DripBag` in `src/lib/types/dripBag.ts`; routes `/api/drip-bags` (+ `[id]`).
+- **Migration 0017 — `insights.snoozed_until` + `'snoozed'` status** — the coach card became a **two-stage** workflow: New (`new`) → Save to try / Confirmed / Doesn't apply, then Saved (`trying`) → It helped / Didn't help / Skip. **Skip** = remind-me-later → `status='snoozed'`, `snoozed_until = now()+7 days`; hidden until it passes, then resurfaces and regen treats it like `new`. The status CHECK constraint was rebuilt to allow the new value.
 - **One-shot data fix** (applied 2026-06-02) — Friedhats Quiquira + Policarpo Yossa Rojos roast date bumped from `2025-05-18` → `2026-05-18` in both `coffees.latest_roast_date` and `sessions.coffee` JSONB. Bag-scanner had defaulted to last year on ambiguous month/day stamps; PR #216 closes the loop in code so it can't recur.
 
 All migrations applied manually on the VPS — see migration NOTE above.
@@ -487,7 +503,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 1. `/coffees` "Show only rotation" filter — list shows the star indicator (#117) but no toggle yet to filter the list to rotation bags only
 2. Aromatic Goal validation — PR #72 added the intent to `/api/recommend` but per the Hard Rule it needs sample-before/after against a delicate coffee on the deployed PWA
 3. **Cafe visit notes edit UI** — `cafe_visits.notes` column exists but UI only lets you delete + re-add, no inline edit. Cheap follow-up.
-4. **PR CI workflow** — no CI runs on PRs today; the only workflow on the repo is `deploy.yml` which fires on push to `main`. A small `ci.yml` that runs `npx tsc --noEmit` (and eventually `node --test src/lib/utils/*.test.mjs`) on every PR would let us re-enable "Require status checks to pass" in the branch protection ruleset. Currently branch protection is PR + block-force-push only.
+4. **Branch protection / required checks** — CI now runs on every PR (`.github/workflows/ci.yml`: a `check` job = `tsc --noEmit` + `node --test`, and a `screenshots` job, see CI section below). What's still NOT done is wiring these as *required* status checks — branch protection isn't enabled (GitHub free plan limitation noted in the Git section), so green CI is advisory, not enforced. The PR flow stays by convention.
 5. **Drip Assist demoted to "emergency / travel only"** in the user profile, but it's still selectable in `LightStepContext` as one of the brewer options (PR #193 kept it for legacy session render compat). Worth re-checking that it never gets recommended proactively now that the user's V60 Drip Assist is retired from daily use.
 
 **Permanent gaps**

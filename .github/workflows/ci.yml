@@ -23,3 +23,76 @@ jobs:
         run: npx tsc --noEmit
       - name: Unit tests
         run: node --test $(find src -name '*.test.mjs')
+
+  # Visual smoke test: boot the app against a throwaway Postgres, log in via
+  # the PIN path, and screenshot every key screen. Download the
+  # "app-screenshots" artifact from the PR's checks to eyeball layout — this
+  # is how a regression like the old white-on-white card gets caught before
+  # it lands on the phone. AI-backed sections render empty unless an
+  # ANTHROPIC_API_KEY repo secret is present (the run still passes either way).
+  screenshots:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: brewlog
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: brewlog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brewlog"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://brewlog:test@localhost:5432/brewlog
+      AUTH_SECRET: ci-test-secret-not-a-real-secret-000000000000
+      AUTH_PIN: "1234"
+      PGPASSWORD: test
+      # Optional: set an ANTHROPIC_API_KEY repo secret to get real AI content
+      # (greeting, recommendations, chat) in the screenshots. Absent = empty
+      # AI areas, run still passes.
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Ensure psql is available
+        run: which psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: Apply migrations
+        run: |
+          for f in $(ls src/lib/db/migrations/*.sql | sort); do
+            echo "── applying $f"
+            psql -v ON_ERROR_STOP=1 -h localhost -U brewlog -d brewlog -f "$f"
+          done
+      - name: Install Playwright (Chromium only)
+        run: |
+          npm i -D playwright@1.48.0 --no-save
+          npx playwright install --with-deps chromium
+      - name: Start app (dev mode so the session cookie works over http)
+        run: |
+          npm run dev -- -p 3000 > /tmp/next.log 2>&1 &
+          echo "Waiting for the dev server to compile /login…"
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:3000/login >/dev/null && { echo "up"; break; }
+            sleep 2
+          done
+      - name: Capture screenshots
+        run: node tests/smoke/screenshot.mjs
+        env:
+          BASE_URL: http://localhost:3000
+          AUTH_PIN: "1234"
+          OUT_DIR: screenshots
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: screenshots/
+          if-no-files-found: warn
+      - name: Dump server log on failure
+        if: failure()
+        run: cat /tmp/next.log || true
