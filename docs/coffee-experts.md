@@ -21,11 +21,11 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 | Year | Recipe | Brewer | Dose : Water | Ratio | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|---|---|
-| 2016 | **Kasuya 4:6** (Tetsu Kasuya, Japan) | V60 size 02 | 20g : 300g | 1:15 | 92°C | 411–421° | 3:30 | true |
-| 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 398–408° | 3:15 | false |
-| 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 398–406° | 3:30 | false |
-| 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 401–411° | 2:20 | true |
-| 2024 (WAC) | **Stanica AeroPress + Bypass** (George Stanica, Romania) | Inverted AeroPress, Aesir filter | 18g : 200g (120g extract + 80g bypass) | 1:11 ext | 96°C | 382–388° | 2:00 | true |
+| 2016 | **Kasuya 4:6** (Tetsu Kasuya, Japan) | V60 size 02 | 20g : 300g | 1:15 | 92°C | 390–400° | 3:30 | true |
+| 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 377–387° | 3:15 | false |
+| 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 387–393° | 3:30 | false |
+| 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 380–390° | 2:20 | true |
+| 2024 (WAC) | **Stanica AeroPress + Bypass** (George Stanica, Romania) | Inverted AeroPress, Aesir filter | 18g : 200g (120g extract + 80g bypass) | 1:11 ext | 96°C | 415–425° | 2:00 | true |
 
 **Teaching summaries**
 
@@ -40,7 +40,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | Recipe | Brewer | Dose : Water | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|
 | **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 80–100°C † | calibrate ‡ | 3:00 | true |
-| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 3:30 | true |
+| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 4:00 | true |
 | **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85–100°C † | 356–366° | 3:35 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |

@@ -23,6 +23,10 @@ jobs:
         run: npx tsc --noEmit
       - name: Unit tests
         run: node --test $(find src -name '*.test.mjs')
+      - name: Recipe corpus validation
+        run: node tests/recipes/validate.mjs
+      - name: Data-flow / resolution tests
+        run: node --test $(find tests -name '*.test.mjs')
 
   # Visual smoke test: boot the app against a throwaway Postgres, log in via
   # the PIN path, and screenshot every key screen. Download the
