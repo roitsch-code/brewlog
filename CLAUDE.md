@@ -120,6 +120,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `cafe-visits` | GET / POST — visit-only café logs with binary thumbs rating (independent of brew sessions) |
 | `cafe-visits/[id]` | DELETE — remove a logged visit |
 | `admin/seed` | Populate knowledge base (run once on new installs) |
+| `admin/lookup` | ★ Read-only live-data lookups (session-cookie gated). `GET ?q=preferences\|counts\|rotation\|coffees\|coffee` — whitelisted, parameterised, no arbitrary SQL. Lets the owner inspect production rows in-browser without SSH. |
 
 ### Components
 
@@ -632,6 +633,17 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
 | **Water** | BWT Bestmax Premium V (bypass 0): ~370 ppm hard local tap → **~220 ppm** filtered (GH 5–6 / KH 4 °dH), daily driver for naturals/honeys · **clarity blend** 1:2 filtered+distilled = **~73 ppm** (KH ~1.3 °dH) for washed florals & championship methods (Peng/Kasuya/Wölfl) |
+
+### Hard rule: single-user PROJECT, not a product — no onboarding
+
+This app has exactly **one user (the owner, roitsch@gmail.com) and always will.** It is a personal project, not a product. Consequences that OVERRIDE any "make it configurable / generic" instinct:
+
+- **There is no onboarding flow to rely on.** The `(light)/onboarding` page is deprecated; do not route new behaviour through it or assume the user will (re-)run it. The user cannot re-select equipment through a wizard — there is no settings screen.
+- **The profile is CODE-CANONICAL.** The owner's equipment, grinder, water, and taste are the source of truth in code: `CANONICAL_PROFILE` (`src/lib/claude/userProfile.ts`) for prompt text and `CANONICAL_EQUIPMENT` (`src/lib/knowledge/recipes/helpers.ts`) for recipe-brewer filtering. When the kit changes, edit those constants — never wait on a DB/onboarding round-trip. `/recommend` unions the stored `preferences.equipment` with `CANONICAL_EQUIPMENT` so a stale DB row can never hide an owned brewer (this was the cause of Origami/Chemex being filtered out of recommendations — PR #250).
+- **Don't add per-user generality** (multi-tenant isolation, per-user onboarding gates, "first-run" UX). It's wasted complexity for a one-person project.
+
+**Reading live data:** the production DB (Postgres on the VPS) is NOT reachable from a Claude Code session — only the repo is. Two read paths exist: the auth-gated `GET /api/admin/lookup?q=…` endpoint (session-cookie only, whitelisted read-only lookups — for the owner in-browser) and the `DB Read (read-only SQL)` GitHub Action (`.github/workflows/db-read.yml`, runs a SELECT inside a READ ONLY transaction on the VPS and prints to the log — for Claude's diagnostic reads). Use these instead of guessing at row contents.
+
 
 **Taste:** silky, balanced, floral/fruity (elegant); light roast SO; avoids anaerobic/infused/dark.
 **Grind quick ref:** @./docs/grind-settings.md
