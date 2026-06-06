@@ -22,7 +22,19 @@ const SessionPostSchema = z.object({
     fermentationStyle: z.string().max(200).optional(),
     roastLevel: z.string().max(100).optional().default(""),
     roastDate: z.string().optional(),
-    cuppingScore: z.number().min(0).max(100).optional(),
+    // Tolerate a numeric string here: sessions migrated from Firestore (and
+    // any coffee identity re-submitted via "Brew Again") can carry
+    // cuppingScore as a string like "89". Coerce numeric strings to numbers;
+    // empty/garbage becomes undefined rather than a bogus 0. Without this the
+    // POST rejects with "coffee: expected number, received string".
+    cuppingScore: z.preprocess((v) => {
+      if (v == null || v === "") return undefined;
+      if (typeof v === "string") {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : undefined;
+      }
+      return v;
+    }, z.number().min(0).max(100).optional()),
     bagPhotoUrl: z.string().url().optional().or(z.literal("")),
     bagPhotoPath: z.string().max(500).optional(),
     aiExtracted: z.boolean().default(false),
