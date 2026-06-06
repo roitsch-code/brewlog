@@ -147,7 +147,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 ## 3. Techniques
 
-18 atomic moves. Recipes are compositions of 3–6 of these. Each technique cross-references the recipes that exemplify it.
+25 atomic moves (16 named-expert techniques + 9 general/foundational moves added in the June-2026 tag cleanup). Recipes are compositions of 3–6 of these, and every recipe's `techniques` field now references these ids — no free-text tags. Each technique cross-references the recipes that exemplify it.
 
 ### 3a. Temperature
 
@@ -199,6 +199,22 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **low-mineral-water** *(championship water)* | Hendon (foundation); Du (championship application) | 40–80 ppm TDS, magnesium-biased. Removes bicarbonate buffering; sharpens delicate aromatic and acid expression. | wbrc-2019-du |
+
+### 3h. General / foundational moves
+
+Common-practice moves with no single originator (`verified: false` — the mechanisms are textbook brewing physics, not a cited routine). Added so every recipe references a real technique id instead of ad-hoc free text.
+
+| Technique | Category | Mechanism (1 line) |
+|---|---|---|
+| **bloom** | pre-brew | Pre-wet the grounds (~2–3× dose) and wait 30–45 s so roast CO2 off-gasses before the main pours, preventing channeling. |
+| **pulse-pouring** | pour-pattern | Add water in several discrete pours with pauses; pour count/size becomes the agitation + extraction control knob. |
+| **immersion-steep** | vessel-specific | Fully submerge for a set time then drain — every particle sees the same water for the same time, so it's even and forgiving. |
+| **central-pour** | pour-pattern | Pour only into the centre to keep water off the wall, reducing bypass and deepening the extraction column. |
+| **spiral-pour** | pour-pattern | Outward spiral wets the whole surface evenly and washes wall grounds back into the bed. |
+| **continuous-pour** | pour-pattern | One slow uninterrupted stream after the bloom — steady level, low agitation, fewer variables. |
+| **machine-drip-brew** | vessel-specific | Auto drip machine meters water through a showerhead over a flat bed — multi-pour without operator skill. |
+| **batch-scaling** | pre-brew | Scale up dose/batch at fixed ratio, coarsening grind because a deeper bed adds flow resistance. |
+| **flat-bed-pour** | pour-pattern | Keep a flat, level bed (flat-bottom brewers, central pours) so water path length is uniform across all grounds. |
 
 ---
 
