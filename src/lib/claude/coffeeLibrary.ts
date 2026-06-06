@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { coffees } from "@/lib/db/schema";
 
@@ -21,6 +21,28 @@ export interface CompactCoffee {
   inRotation?: boolean;
 }
 
+type CoffeeRow = typeof coffees.$inferSelect;
+
+function rowToCompact(r: CoffeeRow): CompactCoffee {
+  return {
+    id: r.id,
+    roaster: r.roaster,
+    name: r.name,
+    origin: r.origin,
+    process: r.process,
+    latestRoastDate: r.latestRoastDate ?? undefined,
+    firstSeenAt: r.firstSeenAt,
+    sessionCount: r.sessionCount,
+    avgRating: r.avgRating != null ? Number(r.avgRating) : undefined,
+    commonNotes:
+      Array.isArray(r.commonNotes) && r.commonNotes.length > 0
+        ? r.commonNotes
+        : undefined,
+    writtenSummary: r.writtenSummary ?? undefined,
+    inRotation: r.inRotation ?? false,
+  };
+}
+
 export async function loadCoffeeLibraryCompact(limit = 30): Promise<CompactCoffee[]> {
   try {
     const rows = await db
@@ -28,25 +50,31 @@ export async function loadCoffeeLibraryCompact(limit = 30): Promise<CompactCoffe
       .from(coffees)
       .orderBy(desc(coffees.firstSeenAt))
       .limit(limit);
-    return rows.map((r) => ({
-      id: r.id,
-      roaster: r.roaster,
-      name: r.name,
-      origin: r.origin,
-      process: r.process,
-      latestRoastDate: r.latestRoastDate ?? undefined,
-      firstSeenAt: r.firstSeenAt,
-      sessionCount: r.sessionCount,
-      avgRating: r.avgRating != null ? Number(r.avgRating) : undefined,
-      commonNotes:
-        Array.isArray(r.commonNotes) && r.commonNotes.length > 0
-          ? r.commonNotes
-          : undefined,
-      writtenSummary: r.writtenSummary ?? undefined,
-      inRotation: r.inRotation ?? false,
-    }));
+    return rows.map(rowToCompact);
   } catch (err) {
     console.error("loadCoffeeLibraryCompact error:", err);
+    return [];
+  }
+}
+
+/**
+ * The bags the user has explicitly marked ★ in rotation (in_rotation = true).
+ * This is the real "what's on the counter right now" set — NOT a recency proxy.
+ * The greeting + home chat must use this so an older-but-still-open bag (e.g. a
+ * coffee roasted weeks ago with many brews) is never dropped just because newer
+ * bags were added after it. Returns [] if nothing is marked.
+ */
+export async function loadRotationCoffees(limit = 12): Promise<CompactCoffee[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(coffees)
+      .where(eq(coffees.inRotation, true))
+      .orderBy(desc(coffees.firstSeenAt))
+      .limit(limit);
+    return rows.map(rowToCompact);
+  } catch (err) {
+    console.error("loadRotationCoffees error:", err);
     return [];
   }
 }
