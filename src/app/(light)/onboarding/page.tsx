@@ -79,6 +79,7 @@ export default function OnboardingPage() {
                 <Chip
                   key={e.id}
                   selected={selected}
+                  size="sm"
                   onClick={() => toggleEquipment(e.id)}
                 >
                   {e.label}
