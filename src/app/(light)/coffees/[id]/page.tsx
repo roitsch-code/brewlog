@@ -169,8 +169,6 @@ export default function CoffeeDetailPage() {
   const variety = latestCoffee?.variety;
   const roastLevel = latestCoffee?.roastLevel;
   const region = latestCoffee?.region;
-  const farm = latestCoffee?.farm;
-  const altitude = latestCoffee?.altitudeMeters;
   const process = latestCoffee?.process || coffee.process;
   const fermentationStyle = latestCoffee?.fermentationStyle;
   const cuppingScore = latestCoffee?.cuppingScore;
@@ -337,7 +335,7 @@ export default function CoffeeDetailPage() {
       </div>
 
       {/* Coffee scan details */}
-      {(roastDate || variety || roastLevel || region || farm || altitude || process || fermentationStyle || cuppingScore || tastingNotes.length > 0 || commonNotes.length > 0) && (
+      {(roastDate || variety || roastLevel || region || process || fermentationStyle || cuppingScore || tastingNotes.length > 0 || commonNotes.length > 0) && (
         <div className="px-5 py-4 border-b border-light-foreground/15 space-y-2">
           <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-3">Coffee Details</p>
           {variety && <DetailRow label="Variety" value={variety} />}
@@ -345,8 +343,6 @@ export default function CoffeeDetailPage() {
           {fermentationStyle && <DetailRow label="Fermentation" value={fermentationStyle} />}
           {roastLevel && <DetailRow label="Roast" value={roastLevel} />}
           {region && <DetailRow label="Region" value={region} />}
-          {farm && <DetailRow label="Farm" value={farm} />}
-          {altitude != null && <DetailRow label="Altitude" value={`${altitude} m`} />}
           {cuppingScore != null && <DetailRow label="Cupping score" value={String(cuppingScore)} />}
           {roastDate && (
             <DetailRow

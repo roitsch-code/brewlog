@@ -10,13 +10,11 @@ const BagAnalysisSchema = z.object({
       name: z.string().nullable().optional(),
       origin: z.string().nullable().optional(),
       region: z.string().nullable().optional(),
-      farm: z.string().nullable().optional(),
       variety: z.string().nullable().optional(),
       process: z.string().nullable().optional(),
       fermentationStyle: z.string().nullable().optional(),
       roastLevel: z.string().nullable().optional(),
       roastDate: z.string().nullable().optional(),
-      altitudeMeters: z.number().nullable().optional(),
       cuppingScore: z.number().nullable().optional(),
       tastingNotesFromBag: z.array(z.string()).optional(),
     })
@@ -58,13 +56,11 @@ Return this exact JSON structure:
     "name": string | null,
     "origin": string | null,
     "region": string | null,
-    "farm": string | null,
     "variety": string | null,
     "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other" | null,
     "fermentationStyle": string | null,
     "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark" | null,
     "roastDate": string | null,
-    "altitudeMeters": number | null,
     "cuppingScore": number | null,
     "tastingNotesFromBag": string[]
   },
@@ -113,13 +109,11 @@ export interface BagAnalysisResult {
     name?: string;
     origin?: string;
     region?: string;
-    farm?: string;
     variety?: string;
     process?: string;
     fermentationStyle?: string;
     roastLevel?: string;
     roastDate?: string;
-    altitudeMeters?: number;
     cuppingScore?: number;
     tastingNotesFromBag?: string[];
   };
