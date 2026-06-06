@@ -184,7 +184,10 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes: "Drawdown is roughly a minute (faster on a high-end grinder).",
       },
     ],
-    totalTimeSec: 210,
+    // Pour 15s + add/stir 5s + steep 120s + crust 5s + settle 30s + drawdown
+    // 65s = 240s. Verified against Hoffmann's own Clever video (2-min steep,
+    // 30s settle, ~1-min drawdown). Was 210s, which contradicted these steps.
+    totalTimeSec: 240,
     techniques: [
       "water-first",
       "full-immersion",
