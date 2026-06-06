@@ -9,7 +9,7 @@ import type { BrewerType, Source } from "../recipes/types";
  * what does each one do mechanistically?"
  *
  * Techniques are atomic — they compose into recipes. The brain can cite
- * a technique ("apply Hsu's staged-temperature method") and reason about
+ * a technique ("apply Rao's spin") and reason about
  * its mechanism without needing to drop in a full recipe.
  */
 
@@ -24,7 +24,7 @@ export type TechniqueCategory =
   | "vessel-specific";
 
 export interface Technique {
-  /** Stable identifier — "staged-temperature", "rao-spin", "fines-removal". */
+  /** Stable identifier — "swirl-not-stir", "rao-spin", "fines-removal". */
   id: string;
   /** Full canonical name. */
   name: string;

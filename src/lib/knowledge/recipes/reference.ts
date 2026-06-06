@@ -599,7 +599,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     science:
       "Six evenly spaced 50 g pours keep the slurry level and the bed agitation regular across the whole brew. The deliberately aggressive circular pour drives turbulence at the bed for higher, more even extraction; finishing with one stir flattens the bed before drawdown. The 1:15 ratio at 92 °C on 90–110 ppm water is a balanced all-rounder rather than a clarity-maximising routine.",
     whenToUse:
-      "A reliable daily V60 for washed, honey, or natural light-to-medium coffees. Because it is agitation-forward, it is NOT the right pick for the most delicate, clarity-first coffees (Geisha, Pink Bourbon) where heavy agitation muddies the cup — use a staged-temperature or fines-sieved clarity recipe there instead.",
+      "A reliable daily V60 for washed, honey, or natural light-to-medium coffees. Because it is agitation-forward, it is NOT the right pick for the most delicate, clarity-first coffees (Geisha, Pink Bourbon) where heavy agitation muddies the cup — use a gentle, minimal-agitation or fines-sieved clarity recipe there instead.",
     sources: [
       {
         type: "blog",

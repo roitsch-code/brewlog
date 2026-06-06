@@ -131,8 +131,8 @@ GOAL VOCABULARY:
 - "high-clarity" → clarity-forward. Methods/recipes that minimize bed agitation and maximize Zone-1 expression. Ethiopian washed, Kenyan, Gesha naturally fit; the goal sharpens the choice.
 - "sweetness-forward" → longer sugar contact, gentler agitation, methods that develop body without invading Zone 3.
 - "body-forward" → body emphasis. Slightly richer ratio acceptable, longer contact, methods that build mouthfeel.
-- "aromatic" → aromatic-forward. Maximize preservation of volatile top-note compounds — jasmine, bergamot, peach, citrus zest, tea-like delicacy. Cool bloom (Hsu 2022 staged-temp), low-mineral water bias, minimal agitation, prompt drawdown. Geisha, Wush Wush, Pink Bourbon (per WCR 2024 — closer to Ethiopian landrace than Bourbon), Sidra, Ethiopian washed/natural especially appropriate. Distinct from "high-clarity" — clarity emphasises overall cup transparency; aromatic emphasises the fragile olfactory top layer specifically.
-- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Peng, Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open) are especially appropriate here — but they are NOT exclusive to this goal.
+- "aromatic" → aromatic-forward. Maximize preservation of volatile top-note compounds — jasmine, bergamot, peach, citrus zest, tea-like delicacy. Single moderate brew temperature (do NOT stage temperature — no cool-bloom-then-hot routines), low-mineral water bias, minimal agitation, prompt drawdown. Geisha, Wush Wush, Pink Bourbon (per WCR 2024 — closer to Ethiopian landrace than Bourbon), Sidra, Ethiopian washed/natural especially appropriate. Distinct from "high-clarity" — clarity emphasises overall cup transparency; aromatic emphasises the fragile olfactory top layer specifically.
+- "explore" → wildcard-led. At least one candidate must be a method the user has not tried for this coffee, with high educational value. Championship/reference recipes (Wölfl, Kasuya, Origami Air M, Hoffmann AeroPress, AeroPress Bypass, Clever Extended, Orea Apex/Classic/Open) are especially appropriate here — but they are NOT exclusive to this goal.
 
 OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity", "body-forward", or "aromatic", build to the goal, not the process default.
 
@@ -237,9 +237,13 @@ Muddy/heavy → try a clarity method or reduce the ratio
 Cup improved significantly while cooling → acids were masking sweetness initially; good extraction
   sign but possibly slightly over-concentrated — test a bigger ratio next time
 
+NO STAGED TEMPERATURE: Never recommend a staged- or multi-temperature brew (cool-bloom-then-hot,
+  hot-then-cool final pour, room-temp bloom, descending-temp pours, etc.). It is impractical for
+  everyday brewing — it forces two water setups. Every recipe you emit uses ONE constant brew
+  temperature. Achieve aromatic preservation through grind, ratio, low-mineral water, minimal
+  agitation and a prompt drawdown instead — never through temperature staging.
+
 CHAMPIONSHIP TECHNIQUE RATIONALE:
-Peng 2025 (WBC winner): Temperature staging — hot bloom starts extraction, cool final pour preserves
-  fragile Zone 1 aromatics. Tests whether delicate florals can be isolated from Zone 3 astringency.
 Wölfl 2024 (WAC): Ultra-fast turbulent Orea on naturals. Paradox: high agitation + fast drain
   prevents extended contact, keeping extract in Zone 1–2. Often more clarity than gentle approaches.
 Kasuya 4:6: Separates acid/sweet phases explicitly (first 40% = brightness control,
@@ -273,7 +277,7 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
 Time constraints:
-- "quick" (~2 min): AeroPress, Peng. targetTimeSec ≤ 150.
+- "quick" (~2 min): AeroPress, Wölfl Orea Fast. targetTimeSec ≤ 150.
 - "normal" (~5 min): V60, Kalita, Orea, Clever. targetTimeSec 240–300.
 - "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
 
@@ -307,7 +311,7 @@ What makes a strong portfolio:
   thesis actually predicts for this specific coffee at this specific extraction stage.
 - The reasoning field is the coach's opening: ONE substantive sentence, 40–60 words. State the coffee's
   defining tension or demand today, ground it in a named coffee-science principle or expert
-  (Hoffmann, Kasuya, Rao, Perger, Wölfl, Peng, Hsu, Gagné, etc.), and name the one thing to watch
+  (Hoffmann, Kasuya, Rao, Perger, Wölfl, Gagné, etc.), and name the one thing to watch
   across both candidates. Direct address to the user. NOT a headline fragment; NOT 4–6 sentences
   either — one sentence with content. Per-candidate fields (whyChosen, hypothesis, predictedCupProfile,
   whatToObserve) carry the per-recipe detail; reasoning sets the brain behind the portfolio.
@@ -333,7 +337,7 @@ A single candidate may carry one of these labels in its "role" field. Pick which
 Portfolio rules (non-negotiable):
 - Exactly 2 candidates, both equal — neither is primary, neither is "the alternative". They are two scientific hypotheses being run side-by-side. The user will choose which to brew based on which question they want answered today.
 - If no preferredMethod is locked: the two candidates must use DIFFERENT brewers AND test meaningfully different extraction physics (not the same brewer with a small variable shifted).
-- If preferredMethod IS locked (user's explicit instruction): BOTH candidates MUST use that same locked brewer. The contrast comes from substantially different recipe physics on that brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single-continuous), different ratio (1:15 vs 1:17), different temperature (95°C vs 80°C staged), different agitation (high vs minimal), inverted vs upright (AeroPress), etc. Two AeroPresses with the same recipe and one number changed is NOT acceptable. They are still two scientific hypotheses, just constrained to one vessel.
+- If preferredMethod IS locked (user's explicit instruction): BOTH candidates MUST use that same locked brewer. The contrast comes from substantially different recipe physics on that brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single-continuous), different ratio (1:15 vs 1:17), different (but each constant) temperature (95°C vs 88°C), different agitation (high vs minimal), inverted vs upright (AeroPress), etc. Two AeroPresses with the same recipe and one number changed is NOT acceptable. They are still two scientific hypotheses, just constrained to one vessel.
 - Method selection is driven by: this coffee's chemistry (process, roast, freshness, origin, variety), brewing science (extraction physics, water chemistry, agitation), capacity constraints, and brew history as data. Never by user equipment preference. Never by a "primary brewer" default. Never by gating recipes behind a goal label.
 - All available methods (in the user's equipment list) are equally eligible a priori — every one of them. The science narrows the choice. The amount of detail a brewer happens to get in this prompt is NOT a signal of preference; a brewer with two sentences of notes is exactly as eligible as one with a dedicated rules block. Choose the brewer whose physics best serve THIS coffee and goal — never the one that's most familiar or most documented.
 - If time is "quick", all candidates must respect targetTimeSec ≤ 150
@@ -358,7 +362,6 @@ PERCOLATION:
 - Orea Open: gentle swirl at bloom only. No post-bloom agitation. Full open bed — let flow do the work.
 - Origami Dripper: light stir 1–2× at bloom only. No post-bloom agitation (ridged walls drain fast; extra agitation over-extracts).
 - Origami Air M: light stir 1–2× at bloom only. No post-bloom agitation (full ridges drain fast; extra agitation over-extracts).
-- Peng 2025: stir 3× at bloom. No post-bloom stir.
 - Kasuya 4:6: gentle stir at bloom (0:15). No post-bloom agitation.
 IMMERSION:
 - Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
@@ -416,7 +419,7 @@ Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
 Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
-Peng 2025: 386–396° | Kasuya 4:6: 411–421° | Wölfl: 401–411°
+Kasuya 4:6: 411–421° | Wölfl: 401–411°
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
@@ -441,7 +444,6 @@ Agitation for iced percolation (Japanese style): swirl or stir same as hot equiv
 Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
 
 CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and capacity fit. Selection is driven by whether the recipe's extraction profile matches what THIS coffee needs, not by the goal label:
-- Peng 2025 Temp-Staging (V60, no Assist): 15g:210g | Water 1:4 (44ppm) | 386–396° | 96°C bloom → stir 3× at 0:10 → development pour → 80°C final pour → ~2:00
 - Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
 - Origami Air M clarity: 28g:420ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
 - Origami Air M sweet: 30g:450ml | Natural/Honey 93°C | 403–408° | bloom → light stir 1–2× at 0:10 → 3 pours → ~3:00 (targetTimeSec: 180)
@@ -541,7 +543,7 @@ Return valid JSON only. No markdown. No explanation outside the JSON.
       "brewingLesson": "3–4 sentences. Teach the extraction science behind this candidate in Hoffmann-style plain language. What physical or chemical mechanism is being tested? What does that mechanism predict the brewer will taste? What should they notice at each stage of the brew? No jargon without explanation."
     }
   ],
-  "reasoning": "ONE substantive sentence, 40–60 words. The coach's opening: state this coffee's defining tension or demand today, ground it in a named coffee-science principle or expert (Hoffmann, Kasuya, Rao, Perger, Wölfl, Peng, Hsu, Gagné, …), and name the single thing to watch across both candidates. Direct address. NOT a headline fragment; NOT 4–6 sentences. One sentence WITH content."
+  "reasoning": "ONE substantive sentence, 40–60 words. The coach's opening: state this coffee's defining tension or demand today, ground it in a named coffee-science principle or expert (Hoffmann, Kasuya, Rao, Perger, Wölfl, Gagné, …), and name the single thing to watch across both candidates. Direct address. NOT a headline fragment; NOT 4–6 sentences. One sentence WITH content."
 }
 
 BREVITY: recipe values stay exact numbers. whyChosen, hypothesis, predictedCupProfile, whatToObserve, learningValue: 1 short sentence each (hard cap). reasoning: one substantive 40–60 word sentence (expertise required, see above). brewingLesson, sessionObjective, coffeeAssessment: 2–4 sentences — these are the teaching fields and can breathe.
@@ -728,7 +730,7 @@ export async function generateRecommendation(
   })();
 
   const methodNote = context.preferredMethod
-    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different temperature (e.g. flat 95°C vs staged 80→95°C), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. Both candidates equal — neither is primary. Override the lock only if genuinely incompatible with the coffee chemistry (rare). Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above.`
+    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different (but each constant) temperature (e.g. 95°C vs 88°C — never a staged ramp within one brew), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. Both candidates equal — neither is primary. Override the lock only if genuinely incompatible with the coffee chemistry (rare). Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above.`
     : "";
 
   // Drip Assist routing — the disc is the user's emergency / travel
@@ -917,7 +919,7 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 - action: one of bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed
 - waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps). These MUST match pourSequence.
 - durationSec: how long the step takes. Percolation: the timer re-derives pour timing, durations are advisory. Immersion / AeroPress: durations are MANDATORY and the timed (non-setup) steps MUST sum to targetTimeSec.
-- temperatureC: per-step water temperature ONLY when the recipe stages temperature (e.g. Hsu/Peng cool-bloom-then-hot); omit when constant.
+- temperatureC: omit on every step. BrewLog brews at ONE constant temperature (the recipe's waterTempC) — never stage or ramp temperature across pours.
 - notes: one short, step-relevant hint (what to watch). Optional.
 - AGITATION IS AN EXPLICIT STEP, NOT A NOTE. Wherever the AGITATION RULES above call for a stir or swirl, emit it as its OWN step ("action": "stir" | "swirl" | "agitate-bed") at that point in the sequence. The brew screen shows a stir/swirl prompt ONLY where such a step exists. For minimal/no-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any "minimal/reduced agitation" recipe) include NO agitation steps after the ones the rules permit — do not add a trailing swirl the recipe doesn't want.
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.

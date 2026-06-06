@@ -91,44 +91,6 @@ _Sources:_ 2019 World Brewers Cup Final — host city corrected to Boston (SCA E
 
 ---
 
-### Hsu 2022 — Staged-Temperature V60
-
-**Hsu 2022** · Shih Yuan Hsu (Sherry) (2022) — 2022 World Brewers Cup Champion
-
-| | |
-|---|---|
-| **Character** | Clarity |
-| **Brewer** | kalita-wave — Flat-bottom polycarbonate dripper (poor heat conductor, chosen to hold the bed temperature). The flat bed lets the coffee-bed temperature climb sharply from ~35°C to ~70°C for efficient extraction. |
-| **Dose / Water** | 14 g / 200 g (1:14) |
-| **Temperature** | staged 70°C (low-temp first pour) → 95°C (extraction) → 95°C (extraction) → 95°C (extraction) |
-| **Grind (Niche)** | 388–396° — medium-fine (two particle sizes: ~75% at 1000µm, 25% at 800µm) |
-| **Total time** | 2:30 |
-| **Best for** | roasts: very-light, light; process: washed, natural; varieties: Gesha, Geisha, Ethiopia Heirloom |
-| **Verified** | ✅ yes |
-
-**Brew steps:**
-
-- **0:00** — Pour 1 — cool (70°C)  → 50 g total @ 70°C (10s)
-  - _50 g every 30 s, four times. The first pour is cool (70°C) to preserve volatile floral aromatics and accentuate malic brightness._
-- **0:10** — Rest  (20s)
-- **0:30** — Pour 2 (95°C)  → 100 g total @ 95°C (10s)
-- **0:40** — Rest  (20s)
-- **1:00** — Pour 3 (95°C)  → 150 g total @ 95°C (10s)
-- **1:10** — Rest  (20s)
-- **1:30** — Pour 4 (95°C)  → 200 g total @ 95°C (10s)
-- **1:40** — Drawdown  (50s)
-
-**Teaches:** How temperature staging isolates aromatic preservation from extraction efficiency. A cool bloom captures volatile florals before they evaporate; a hot extraction then extracts the remaining sugars and acids.
-
-**Why it works:** The most fragile aromatic compounds in coffee (linalool, geraniol, jasmine lactones) volatilise above ~90°C. A standard 95°C first pour drives them off into the steam before they enter solution. By starting at 70°C, Hsu keeps these compounds in the liquid phase — they dissolve as the water heats from contact with the puck — and the cooler first pour also accentuates malic brightness. The subsequent 95°C pours then do the bulk extraction for sugars and balancing acids. Four equal 50 g pours on a 30 s cadence keep agitation regular; the 14 g dose at 1:14 keeps the cup concentrated enough to read those preserved florals clearly.
-
-**When to use:** For competition-grade washed Gesha or top-shelf Ethiopian where aromatic preservation is the entire point of the brew. Requires a kettle that can hold two temperatures (Stagg EKG works — set 95°C primary, manually cool a pre-poured 70°C portion).
-
-> **Note:** Corrected from Hsu's own stage presentation: 4 × 50 g pours on a 30 s cadence (50/100/150/200), not bloom + two pours; brewer is a flat-bottom polycarbonate dripper, not a V60. First pour 70°C, remaining pours 95°C. She also split the grind ~75% at 1000µm / 25% at 800µm (a micron detail, out of brew-parameter scope).
-
-_Sources:_ 2022 World Brewers Cup Final, Melbourne; Hsu's own WCE stage presentation — '14 grams, 200 grams of water, ratio 1 to 14… 50 grams of water added every 30 seconds, a total of four times'; first pour 70°C then 95°C; flat-bottom polycarbonate dripper. Transcribed in-session.
-
----
 
 ### Medina 2023 — Origami, Five Even Pours
 
@@ -219,43 +181,6 @@ _Sources:_ 2024 World Brewers Cup Final, Copenhagen; Wölfl brewing his winning 
 
 ---
 
-### Peng 2025 — Three-Roast Temperature-Staged Layering
-
-**Peng 2025** · George Jinyang Peng (2025) — 2025 World Brewers Cup Champion
-
-| | |
-|---|---|
-| **Character** | Clarity · Explore |
-| **Brewer** | solo-dripper — Solo dripper (PCTG plastic, 40° cone angle). Melodrip used over the cone to control agitation. Coffee: a single Panama Gesha, prepared at three different roast levels — 5g of each, layered in the brewer. |
-| **Dose / Water** | 15 g / 210 g (1:14) |
-| **Temperature** | staged 96°C (hot bloom) → 96°C (development) → 80°C (aroma-preservation final pour) |
-| **Grind (Niche)** | 386–396° — medium-fine (~800µm; ~26–27 Comandante clicks per research) |
-| **Total time** | 1:45 |
-| **Best for** | roasts: very-light, light, medium-light; process: washed; varieties: Gesha, Geisha |
-| **Verified** | ⚠️ no (reconstructed — see notes) |
-
-**Brew steps:**
-
-- **0:00** — Layer three roasts in the brewer
-  - _5g light, 5g medium-light, 5g medium of the same Panama Gesha. Order of layering is part of the routine._
-- **0:00** — Hot bloom (96°C, via Melodrip)  → 30 g total @ 96°C (30s)
-  - _Hot bloom starts extraction across all three roast levels; the Melodrip prevents agitation that would homogenise the layered bed._
-- **0:30** — Development pour (96°C, via Melodrip)  → 120 g total @ 96°C (25s)
-- **0:55** — Cool final pour (80°C, via Melodrip)  → 210 g total @ 80°C (25s)
-  - _Cool final pour preserves fragile Zone 1 aromatics that would dissipate at 96°C._
-- **1:20** — Drawdown  (25s)
-
-**Teaches:** How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and staged temperatures isolate which extraction phase contributes which character. The Melodrip removes agitation as a variable so the layered bed stays compositionally distinct.
-
-**Why it works:** Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using a hot bloom followed by progressively cooler pours, Peng compresses what would normally be three separate brews into one. The Melodrip (a perforated disc that diffuses pour flow) eliminates turbulence — the three layers extract in place rather than mixing. The cup is brewed on low-mineral water and served cool (~50°C), where retronasal aroma perception is at its peak.
-
-**When to use:** Demonstration brewing. Not a daily-driver recipe. Requires three roast levels of the same coffee — impractical for most home setups — but the principles (staged temperature, controlled agitation via Melodrip-equivalent, low-mineral water, cool serving) transfer to single-roast brews.
-
-> **Note:** Secondary-sourced (Slow Pour Supply / European Coffee Trip / Sprudge), no in-session transcript yet — corrected from the prior values: brewing ratio is ~1:14 (15 g : 210 g), NOT 1:4, and the staging is 96 → 96 → 80°C (no distinct 88°C step). The headline mechanics — three roast levels of one coffee, Melodrip, low-mineral water, ~50°C serving — are consistently reported. Pour milestones are reconstructed; confirm against the official WCC video before teaching from this recipe.
-
-_Sources:_ 2025 World Brewers Cup Final, Jakarta; Slow Pour Supply — Peng 2025 recipe write-up
-
----
 
 ### Stanica 2024 — Inverted AeroPress + Bypass
 
@@ -574,7 +499,7 @@ _Sources:_ Kasuya, T. — 4:6 Method documentation; Multiple Tetsu Kasuya / Phil
 
 **Why it works:** Six evenly spaced 50 g pours keep the slurry level and the bed agitation regular across the whole brew. The deliberately aggressive circular pour drives turbulence at the bed for higher, more even extraction; finishing with one stir flattens the bed before drawdown. The 1:15 ratio at 92 °C on 90–110 ppm water is a balanced all-rounder rather than a clarity-maximising routine.
 
-**When to use:** A reliable daily V60 for washed, honey, or natural light-to-medium coffees. Because it is agitation-forward, it is NOT the right pick for the most delicate, clarity-first coffees (Geisha, Pink Bourbon) where heavy agitation muddies the cup — use a staged-temperature or fines-sieved clarity recipe there instead.
+**When to use:** A reliable daily V60 for washed, honey, or natural light-to-medium coffees. Because it is agitation-forward, it is NOT the right pick for the most delicate, clarity-first coffees (Geisha, Pink Bourbon) where heavy agitation muddies the cup — use a gentle, minimal-agitation or fines-sieved clarity recipe there instead.
 
 > **Note:** Replaces the prior 'Rolf — Minimum Variables (Stagg [X])' entry, which was a misattribution: no such single-continuous-pour / no-stir Rolf recipe could be found in any primary source, and that 'minimum variables' style is stylistically Scott Rao's, not Rolf's. April's actual published house V60 is the opposite — agitation-forward with six aggressive pours and a finishing stir. Headline parameters (20 g / 300 g / 92 °C / V60 / six pours) are from April's own blog, read verbatim. Caveat: the source page is internally inconsistent on total time, stating both '2:20–3:00' (general guideline) and '3:20–3:30' (the specific recipe) — the 3:20–3:30 figure is used here. Separately, Rolf's own WBrC final recipe (Coffee with April Ep. 77, 2019) is on a custom brewer, not a V60, and its exact parameters live only in the unfetchable video — not captured here.
 
@@ -2899,47 +2824,6 @@ _Sources:_ User-provided recipe card — 'Origami Big Batch Brew Pour Over Recip
 
 ---
 
-### The Peak — Staged-Temperature Pour Over
-
-**The Peak** · 'The Peak' staged-temp method (recipe card)
-
-| | |
-|---|---|
-| **Character** | Clarity · Explore |
-| **Brewer** | origami-cone — Origami Air S + Cafec Abaca 01 paper filter. Uses three water temperatures: room temperature, 94°C, then 88°C (drop the kettle by adding room-temperature water). (Grind: ~800–900 microns / Timemore Chestnut S3 at 6.0–6.5 / Comandante C40 at 28–30 clicks / 1Zpresso K-Ultra at 7.5–8.0.) |
-| **Dose / Water** | 12.5 g / 200 g (1:16) |
-| **Temperature** | staged 22°C (room-temperature bloom) → 94°C (main extraction) → 88°C (cooler pour) → 88°C (cooler final pour) |
-| **Grind (Niche)** | 396–404° — medium-coarse, 800–900 microns |
-| **Total time** | 3:20 |
-| **Best for** | roasts: very-light, light; process: washed, natural; varieties: Gesha, Geisha |
-| **Verified** | ⚠️ no (reconstructed — see notes) |
-
-**Brew steps:**
-
-- **0:00** — Bloom (→55g, room temp)  → 55 g total @ 22°C (10s)
-  - _Room-temperature water, circular motion._
-- **0:10** — Bloom rest  (50s)
-  - _Bloom ~1 minute._
-- **1:00** — Pour 2 (→120g, 94°C)  → 120 g total @ 94°C (10s)
-  - _At 1:00, pour to 120 g at 94°C._
-- **1:10** — Wait + drop temp to 88°C  (35s)
-  - _Until 1:45. Add room-temperature water to bring the kettle to 88°C._
-- **1:45** — Pour 3 (→160g, 88°C)  → 160 g total @ 88°C (10s)
-- **1:55** — Wait  (35s)
-  - _Until 2:20._
-- **2:30** — Pour 4 (→200g, 88°C)  → 200 g total @ 88°C (10s)
-- **2:40** — Drawdown  (40s)
-  - _Total drawdown ~3:00–3:30. Swirl before serving._
-
-**Teaches:** Temperature staging that goes the opposite way to a hot bloom: a room-temperature bloom, then a hot main pour, then cooler pours — descending heat to preserve aromatics and tame late bitterness.
-
-**Why it works:** The cool bloom wets the bed without driving off volatiles or starting harsh extraction; the 94°C main pour does the bulk extraction; dropping to 88°C for the late pours slows extraction of bitter late-zone compounds while the bed is most saturated. The result aims at aromatic clarity in a delicate light roast.
-
-**When to use:** An exploratory brew for a top-tier washed Gesha or floral light roast where you want maximum aromatic preservation.
-
-_Sources:_ User-provided recipe card — 'The Peak Pour Over Recipe' (12.5 g : 200 g, room-temp/94°C/88°C staged, Origami Air S + Cafec Abaca 01). Author not stated on the card.
-
----
 
 ### The Inverted AeroPress
 

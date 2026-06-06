@@ -239,7 +239,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Treat like a Gesha or top Ethiopian — clarity methods, championship water, careful temperature. Aromatic compounds dissipate above 96°C; cap temperature at 94–95°C unless using Hsu-style staged temp.",
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
+      "hoffmann-v60-better-one-cup",
       "wbrc-2019-du",
     ],
     extractionRisks: [
@@ -362,7 +362,6 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Treat as the gold-standard clarity coffee. V60, Orea Apex, or championship-style brewing. Cap temperature at 94–95°C for washed Yirgacheffe (florals dissipate higher); 93°C for naturals (manage fermentation esters). Diluted or low-mineral water meaningfully improves the cup.",
     commonProcessings: ["washed", "natural", "honey"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",
       "wbrc-2019-du",
       "hoffmann-v60-better-one-cup",      "rao-rule-of-thirds",
     ],
@@ -394,7 +393,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Like a Gesha — wants clarity-forward technique, championship water if available, cap at 94–95°C. The aromatic complexity is the entire point; methods that flatten it (immersion at high temp) lose the variety.",
     commonProcessings: ["washed", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
+      "hoffmann-v60-better-one-cup",
       "wbrc-2019-du",
     ],
     extractionRisks: [
@@ -424,7 +423,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "Treat like Wush Wush — clarity methods, careful temperature. The lemongrass aromatic is fragile and dissipates above 95°C.",
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
-      "wbrc-2022-hsu",      "hoffmann-v60-better-one-cup",
+      "hoffmann-v60-better-one-cup",
     ],
     extractionRisks: [
       "Standard delicate-coffee risks — temperature, water, agitation",
@@ -453,7 +452,6 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     commonProcessings: ["washed", "natural", "honey", "anaerobic"],
     pairsWellWithRecipes: [
       "wbrc-2023-medina",
-      "wbrc-2022-hsu",
       "wbrc-2019-du",    ],
     extractionRisks: [
       "Naturals over-extract into volatile/winey at high temperatures",
@@ -486,8 +484,6 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
       "The reference clarity coffee. Championship-style brewing rewards every variable: low-mineral water (<80 ppm), staged temperature, minimal agitation, lean ratio (1:16+). The variety has the highest aromatic ceiling — match the technique to the coffee.",
     commonProcessings: ["washed", "natural", "honey"],
     pairsWellWithRecipes: [
-      "wbrc-2025-peng",
-      "wbrc-2022-hsu",
       "wbrc-2019-du",      "hoffmann-v60-better-one-cup",
     ],
     extractionRisks: [

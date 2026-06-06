@@ -31,9 +31,8 @@ Two relationships fall out of those points:
 | Kalita Wave | any | 384–394° | 24–27 | estimate |
 | Chemex | any | 398–410° | 28–32 | estimate |
 | Moccamaster | any | 410–420° | 32–35 | estimate |
-| Peng 2025 (Championship) | any | 385–395° | 25–28 | recipe-anchored (≈Comandante 26) |
 | Kasuya 4:6 | any | 390–400° | 26–29 | estimate |
 
-**Confidence:** only **V60** is directly measured. The other methods carry their previous *relative* offset onto the new V60 baseline (re-based by the same delta) — an **estimate**, not a measurement. Peng/Kasuya are anchored to their published recipe grind. Measure per method to firm these up.
+**Confidence:** only **V60** is directly measured. The other methods carry their previous *relative* offset onto the new V60 baseline (re-based by the same delta) — an **estimate**, not a measurement. Kasuya is anchored to its published recipe grind. Measure per method to firm these up.
 
 > Grind coarser/finer to adjust timing. Temperature controls extraction chemistry — never use it to fix flow speed.
