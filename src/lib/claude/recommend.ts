@@ -18,6 +18,7 @@ import {
   selectRecipes,
   formatRecipesForPrompt,
   brewersAvailableFromEquipment,
+  CANONICAL_EQUIPMENT,
   brewersFromMethod,
   normaliseRoastLevel,
   normaliseProcess,
@@ -826,7 +827,15 @@ export async function generateRecommendation(
             ? 750
             : undefined;
 
-  const brewersAvailable = brewersAvailableFromEquipment(preferences.equipment);
+  // Union the stored onboarding equipment with the owner's canonical kit.
+  // The onboarding picker never offered Origami or Chemex, so keying off the
+  // saved row alone silently filtered out every Origami/Chemex recipe before
+  // scoring. Single-user app — the canonical kit is the real, authoritative
+  // equipment list (see CLAUDE.md). Method-lock filtering still narrows from here.
+  const brewersAvailable = brewersAvailableFromEquipment([
+    ...(preferences.equipment ?? []),
+    ...CANONICAL_EQUIPMENT,
+  ]);
   // If the user locked a method in the flow, hard-filter recipe selection to
   // that method so the prompt only carries recipes for the brewer they chose.
   const lockedBrewers = brewersFromMethod(context.preferredMethod);

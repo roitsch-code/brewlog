@@ -82,7 +82,12 @@ const EQUIPMENT_PATTERNS: Array<{
   },
   {
     match: (k) => k.includes("origamiairm") || k.includes("airm"),
-    brewers: ["origami-air-m"],
+    // The Origami Air M physically takes BOTH a V60 conical filter and a
+    // Kalita Wave flat-bottom filter, so every cone- and wave-shaped Origami
+    // recipe is brewable on it. (There is no recipe with brewer
+    // "origami-air-m" — mapping it there would dead-end and hide all Origami
+    // recipes, which was the cause of Origami being under-represented.)
+    brewers: ["origami-cone", "origami-wave"],
   },
   {
     match: (k) => k.includes("origami"),
@@ -122,6 +127,26 @@ const EQUIPMENT_PATTERNS: Array<{
     match: (k) => k.includes("cafec") || k.includes("flower"),
     brewers: ["cafec-flower"],
   },
+];
+
+/**
+ * The owner's full, real brewing kit (single-user app — see CLAUDE.md
+ * "User / Equipment Profile"). The onboarding equipment picker is a thin
+ * subset (it never offered Origami or Chemex), so a recommendation that keyed
+ * ONLY off the stored onboarding row silently filtered out every Origami and
+ * Chemex recipe. We union this canonical kit into brewersAvailable so the
+ * recipe selector always sees the brewers the owner actually has. Strings are
+ * chosen to resolve through EQUIPMENT_PATTERNS (e.g. "Origami" → cone + wave).
+ */
+export const CANONICAL_EQUIPMENT: string[] = [
+  "V60",
+  "OreaV4",
+  "Origami",
+  "Kalita",
+  "CleverDripper",
+  "AeroPress",
+  "Moccamaster",
+  "Chemex",
 ];
 
 export function brewersAvailableFromEquipment(

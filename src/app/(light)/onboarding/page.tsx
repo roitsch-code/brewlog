@@ -15,9 +15,11 @@ async function savePreferences(prefs: UserPreferences): Promise<void> {
 const EQUIPMENT_OPTIONS = [
   { id: "V60", label: "V60" },
   { id: "OreaV4", label: "Orea V4" },
+  { id: "Origami", label: "Origami" },
   { id: "Kalita", label: "Kalita Wave" },
   { id: "CleverDripper", label: "Clever Dripper" },
   { id: "AeroPress", label: "AeroPress" },
+  { id: "Chemex", label: "Chemex" },
   { id: "Moccamaster", label: "Moccamaster" },
   { id: "FrenchPress", label: "French Press" },
   { id: "Espresso", label: "Espresso" },
