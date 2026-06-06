@@ -12,41 +12,6 @@ export const TECHNIQUES: Technique[] = [
   // ── Temperature ──────────────────────────────────────────────────────────
 
   {
-    id: "staged-temperature",
-    name: "Staged Temperature",
-    shortName: "Hsu / Peng staging",
-    attribution: {
-      person: "Sherry Hsu (popularised at WBrC 2022); George Peng (extended in WBrC 2025)",
-      year: 2022,
-    },
-    category: "temperature",
-    manipulates: ["aromatic preservation", "extraction phase isolation"],
-    description:
-      "Pour at two or more distinct temperatures during a single brew. The early pour(s) are cool to preserve volatile aromatics; later pours are hot to drive extraction.",
-    mechanism:
-      "Volatile aromatic compounds (linalool, geraniol, jasmine lactones, terpenes) volatilise above ~90°C — a standard 95°C bloom drives them into the steam before they reach the cup. Pouring the bloom at 70–80°C keeps these compounds in the liquid phase, where they dissolve into the water as it heats from puck contact. The subsequent hot pours then handle the bulk extraction work for sugars and balancing acids — by then the fragile aromatics are already in solution and protected.",
-    whenToUse:
-      "Delicate washed coffees where the entire point is aromatic preservation: Geisha, top Ethiopian Yirgacheffe / Guji washed, Pink Bourbon, Wush Wush.",
-    contraindications: [
-      "Body-forward goals — the technique sacrifices some extraction efficiency",
-      "Naturals — fermentation esters benefit from consistent moderate temps, not staging",
-      "Dark or medium roasts — there's nothing fragile to protect at the cool end",
-    ],
-    requiredEquipment: [
-      "A kettle that can hold two temperatures, OR a pre-cooled pour vessel for the cool stage",
-    ],
-    compatibleBrewers: ["v60", "orea-apex", "origami-cone", "solo-dripper"],
-    exemplifiedBy: ["wbrc-2022-hsu", "wbrc-2025-peng"],
-    sources: [
-      {
-        type: "official-competition",
-        citation: "2022 WBrC Final (Hsu); 2025 WBrC Final (Peng)",
-      },
-    ],
-    verified: true,
-  },
-
-  {
     id: "boiling-water-coarse-grind",
     name: "Boiling Water + Coarse Grind (Turbo)",
     shortName: "Turbo brewing",
@@ -279,7 +244,7 @@ export const TECHNIQUES: Technique[] = [
       "origami-cone",
       "orea-apex",
     ],
-    exemplifiedBy: ["wbrc-2025-peng"],
+    exemplifiedBy: ["wbrc-2024-wolfl"],
     sources: [
       {
         type: "official-competition",
@@ -408,36 +373,6 @@ export const TECHNIQUES: Technique[] = [
         type: "interview",
         citation:
           "The Coffee Collective / Mikaela Wallgren published interviews",
-      },
-    ],
-    verified: true,
-  },
-
-  {
-    id: "three-roast-layering",
-    name: "Three-Roast Layering",
-    attribution: {
-      person: "George Peng (WBrC 2025)",
-      year: 2025,
-    },
-    category: "pre-brew",
-    manipulates: ["compositional structure of the cup"],
-    description:
-      "Layer multiple roast levels of the same green coffee in the brewer. Each roast contributes different compounds; the cup is composed as a sequence rather than blended at the end.",
-    mechanism:
-      "Light roast contributes the most acidic, aromatic compounds (Zone 1 dominant). Medium-light contributes sugars and balance. Medium contributes body and roundness. By layering them and using staged temperatures with controlled (Melodrip) agitation, three separate extractions happen in place — the layers don't homogenise. The cup's flavour evolves in the brewer rather than being a single average.",
-    whenToUse:
-      "Demonstration brewing. Not a daily-driver. Requires three different roasts of the same green — impractical at home unless you home-roast.",
-    contraindications: [
-      "Practical daily brewing",
-      "Any goal where simplicity and repeatability matter",
-    ],
-    compatibleBrewers: ["solo-dripper", "v60", "origami-cone"],
-    exemplifiedBy: ["wbrc-2025-peng"],
-    sources: [
-      {
-        type: "official-competition",
-        citation: "2025 WBrC Final routine",
       },
     ],
     verified: true,
@@ -598,7 +533,7 @@ export const TECHNIQUES: Technique[] = [
       "Distilled water + mineral salts (Lotus, Aquacode, Third Wave Water packets) OR a 1:1+ tap-distilled blend that lands ~150 ppm minimum",
     ],
     compatibleBrewers: ["v60", "orea-apex", "origami-cone", "kalita-wave"],
-    exemplifiedBy: ["wbrc-2019-du", "wbrc-2025-peng"],
+    exemplifiedBy: ["wbrc-2019-du"],
     sources: [
       {
         type: "book",

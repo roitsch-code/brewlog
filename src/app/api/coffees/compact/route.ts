@@ -18,7 +18,7 @@ Given all brew sessions for one coffee, output exactly this JSON shape (no markd
 
 {
   "writtenSummary": "Exactly 2 sentences. Capture overall quality, which method worked best, recurring flavor notes, and trend if any. Reference actual numbers (e.g. \\"4 of 6 brews rated 4★+\\"). Direct, specific, personal. Metric units only. No emojis.",
-  "whatToExplore": "Exactly 2 sentences suggesting a specific unexplored angle for the next brew of this coffee. Could be: an untested method, a temperature shift, a different ratio, a championship recipe that fits the variety/process, or a technique to test (e.g. Hsu staged-temp, Rao spin, sieving fines). Be concrete. No emojis. No generic 'try different things'."
+  "whatToExplore": "Exactly 2 sentences suggesting a specific unexplored angle for the next brew of this coffee. Could be: an untested method, a temperature shift, a different ratio, a championship recipe that fits the variety/process, or a technique to test (e.g. Rao spin, sieving fines). Be concrete. No emojis. No generic 'try different things'."
 }
 
 Both fields are required strings. Total response budget: ~120 words.`;

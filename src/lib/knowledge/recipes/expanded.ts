@@ -2681,62 +2681,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
   },
 
   {
-    id: "the-peak-staged-temp",
-    name: "The Peak — Staged-Temperature Pour Over",
-    shortName: "The Peak",
-    attribution: {
-      person: "'The Peak' staged-temp method (recipe card)",
-    },
-    category: "reference",
-    brewer: "origami-cone",
-    brewerNotes:
-      "Origami Air S + Cafec Abaca 01 paper filter. Uses three water temperatures: room temperature, 94°C, then 88°C (drop the kettle by adding room-temperature water). (Grind: ~800–900 microns / Timemore Chestnut S3 at 6.0–6.5 / Comandante C40 at 28–30 clicks / 1Zpresso K-Ultra at 7.5–8.0.)",
-    dose: { grams: 12.5 },
-    water: { grams: 200, ratio: "1:16" },
-    temperature: {
-      staged: [
-        { pourIndex: 0, celsius: 22, label: "room-temperature bloom" },
-        { pourIndex: 1, celsius: 94, label: "main extraction" },
-        { pourIndex: 2, celsius: 88, label: "cooler pour" },
-        { pourIndex: 3, celsius: 88, label: "cooler final pour" },
-      ],
-      rangeC: [22, 94],
-    },
-    grind: {
-      referenceGrinder: "Timemore Chestnut S3 (6.0–6.5) / Comandante C40 (28–30 clicks) / 1Zpresso K-Ultra (7.5–8.0)",
-      referenceSetting: "medium-coarse, 800–900 microns",
-      nicheZeroDegrees: [396, 404],
-      description:
-        "Niche derived from the recipe's published Comandante clicks via the user's measured map (380°=23 clicks). Clicks kept verbatim.",
-    },
-    pourSequence: [
-      { label: "Bloom (→55g, room temp)", action: "pour", waterGramsAtEnd: 55, durationSec: 10, temperatureC: 22, notes: "Room-temperature water, circular motion." },
-      { label: "Bloom rest", action: "wait", durationSec: 50, notes: "Bloom ~1 minute." },
-      { label: "Pour 2 (→120g, 94°C)", action: "pour", waterGramsAtEnd: 120, durationSec: 10, temperatureC: 94, notes: "At 1:00, pour to 120 g at 94°C." },
-      { label: "Wait + drop temp to 88°C", action: "wait", durationSec: 35, notes: "Until 1:45. Add room-temperature water to bring the kettle to 88°C." },
-      { label: "Pour 3 (→160g, 88°C)", action: "pour", waterGramsAtEnd: 160, durationSec: 10, temperatureC: 88 },
-      { label: "Wait", action: "wait", durationSec: 35, notes: "Until 2:20." },
-      { label: "Pour 4 (→200g, 88°C)", action: "pour", waterGramsAtEnd: 200, durationSec: 10, temperatureC: 88 },
-      { label: "Drawdown", action: "drain", durationSec: 40, notes: "Total drawdown ~3:00–3:30. Swirl before serving." },
-    ],
-    totalTimeSec: 200,
-    techniques: ["staged-temperature", "room-temp-bloom"],
-    bestFor: {
-      roastLevels: ["very-light", "light"],
-      processes: ["washed", "natural"],
-      varieties: ["Gesha", "Geisha"],
-      goals: ["aromatic", "explore"],
-    },
-    teaches: "Temperature staging that goes the opposite way to a hot bloom: a room-temperature bloom, then a hot main pour, then cooler pours — descending heat to preserve aromatics and tame late bitterness.",
-    science: "The cool bloom wets the bed without driving off volatiles or starting harsh extraction; the 94°C main pour does the bulk extraction; dropping to 88°C for the late pours slows extraction of bitter late-zone compounds while the bed is most saturated. The result aims at aromatic clarity in a delicate light roast.",
-    whenToUse: "An exploratory brew for a top-tier washed Gesha or floral light roast where you want maximum aromatic preservation.",
-    sources: [
-      { type: "transcript", citation: "User-provided recipe card — 'The Peak Pour Over Recipe' (12.5 g : 200 g, room-temp/94°C/88°C staged, Origami Air S + Cafec Abaca 01). Author not stated on the card." },
-    ],
-    verified: false,
-  },
-
-  {
     id: "the-inverted-aeropress",
     name: "The Inverted AeroPress",
     shortName: "The Inverted AeroPress",

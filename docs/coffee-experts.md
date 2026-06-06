@@ -23,20 +23,16 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 |---|---|---|---|---|---|---|---|---|
 | 2016 | **Kasuya 4:6** (Tetsu Kasuya, Japan) | V60 size 02 | 20g : 300g | 1:15 | 92°C | 411–421° | 3:30 | true |
 | 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 398–408° | 3:15 | false |
-| 2022 | **Hsu Staged-Temp V60** (Sherry Hsu, Taiwan) | V60 size 02 | 14g : 200g | 1:14.3 | 70°C bloom → 95°C | 388–396° | 2:30 | false |
 | 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 398–406° | 3:30 | false |
 | 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 401–411° | 2:20 | true |
-| 2025 | **Peng Three-Roast / Staged** (George Peng, China) | Solo dripper + Melodrip | 15g (3×5g roasts) : 60g | 1:4 | 96 → 88 → 80°C | 386–396° | 2:00 | false |
 | 2024 (WAC) | **Stanica AeroPress + Bypass** (George Stanica, Romania) | Inverted AeroPress, Aesir filter | 18g : 200g (120g extract + 80g bypass) | 1:11 ext | 96°C | 382–388° | 2:00 | true |
 
 **Teaching summaries**
 
 - **Kasuya 4:6** — How to dial acidity and strength independently. First 40% (two pours) controls acid/sweet axis; last 60% (three pours) controls strength. Changing pour counts changes the cup without touching grind or temperature.
 - **Du Origami Wave** — How a rich brewing ratio (1:12) combined with custom low-mineral water (4ppm Ca / 15ppm Mg / 80ppm TDS) produces extreme clarity without sacrificing sweetness.
-- **Hsu Staged-Temp V60** — How temperature staging isolates aromatic preservation from extraction efficiency. Cool bloom captures volatile florals before they evaporate; hot pours then do the bulk extraction.
 - **Medina Conical** — How a lean ratio (1:16) at moderate 91°C extracts the fermentation-derived sweetness of a Natural Sidra without amplifying ester sharpness.
 - **Wölfl Orea Fast** — How fast-flowing geometry combined with turbulent pours delivers clarity on a Natural — the paradox of high agitation producing a clean cup because total bed-contact time stays in Zone 1–2.
-- **Peng Three-Roast / Staged** — How to compose a cup as a sequence — different roast levels extract different compounds at different rates, and staged temperatures + Melodrip-controlled agitation isolate which extraction phase contributes which character.
 - **Stanica AeroPress + Bypass** — How concentrate-and-bypass separates extraction from dilution. Over-pull a tight, intense concentrate at 1:11, then dial the cup back to drinking strength with cool water.
 
 ### 1b. Reference recipes
@@ -157,7 +153,6 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
-| **staged-temperature** | Hsu (2022); Peng (2025) | Cool bloom preserves fragile aromatics; hot pours do extraction work. | wbrc-2022-hsu, wbrc-2025-peng |
 | **boiling-water-coarse-grind** *(Turbo)* | Cameron/Hendon (*Matter* 2020); Hedrick popularised | 100°C raises extraction rate across all zones; coarse grind partially cancels — net is high yield in short time. | *(no verified recipe — espresso-origin; filter "turbo pour-over" is a community application)* |
 | **low-temp-long-steep** *(Gagné second sweet spot)* | Gagné | Bitter Zone-3 compounds extract orders of magnitude slower at 80°C — fine grind + long steep saturates Zone 2 without Zone 3. | gagne-long-aeropress |
 
@@ -169,7 +164,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **swirl-not-stir** | Hoffmann (popularised) | Swirl achieves saturation through bulk-puck motion, leaving fines distributed evenly. Stir agitates fines into the slurry. | hoffmann-v60-better-one-cup, rao-rule-of-thirds |
 | **high-agitation-high-extraction** | Perger | Vigorous bloom stir + fine grind + drawdown swirl drives extraction yield above 22%. | perger-high-extraction-v60 |
 | **minimal-agitation** | General (no single originator; **not** Rolf) | Single continuous pour, no stir. Removes pour count and pour spacing as variables. | wallgren-kalita-sieved |
-| **melodrip-controlled-pouring** | Peng (2025) | Perforated disc breaks pour into many fine streams; eliminates pour-induced turbulence at the bed. | wbrc-2025-peng |
+| **melodrip-controlled-pouring** | Peng (2025) | Perforated disc breaks pour into many fine streams; eliminates pour-induced turbulence at the bed. | wbrc-2024-wolfl |
 | **water-first** | Bailey (originated); Hoffmann (popularised) | Add water first, drop coffee on top. Grounds saturate from below via buoyancy/capillary action. | hoffmann-clever-ultimate |
 
 ### 3c. Pour pattern
@@ -184,7 +179,6 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **fines-removal-sieving** | Wallgren (2016) | Discard particles <200µm pre-brew. Tightens extraction distribution. | wallgren-kalita-sieved |
-| **three-roast-layering** | Peng (2025) | Layer light/medium-light/medium of same green; each contributes different compounds. | wbrc-2025-peng |
 | **roast-tailored-filter** | Hatakeyama | Match paper thickness to roast level — light roast → thin paper, dark roast → thick paper. | hatakeyama-cafec-flower |
 
 ### 3e. Post-brew
@@ -204,7 +198,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
-| **low-mineral-water** *(championship water)* | Hendon (foundation); Du, Peng (championship application) | 40–80 ppm TDS, magnesium-biased. Removes bicarbonate buffering; sharpens delicate aromatic and acid expression. | wbrc-2019-du, wbrc-2025-peng |
+| **low-mineral-water** *(championship water)* | Hendon (foundation); Du (championship application) | 40–80 ppm TDS, magnesium-biased. Removes bicarbonate buffering; sharpens delicate aromatic and acid expression. | wbrc-2019-du |
 
 ---
 
@@ -223,9 +217,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | **Lance Hedrick** | (popularised the espresso "turbo"; no verified filter recipe) | boiling-water-coarse-grind (popularised) |
 | **Cameron / Hendon** | (*Matter* 2020 — espresso "turbo" origin) | boiling-water-coarse-grind (foundation) |
 | **James Bailey** | (originated water-first; Hoffmann popularised) | water-first (origin) |
-| **Sherry Hsu** | WBrC 2022 | staged-temperature |
-| **George Peng** | WBrC 2025 | staged-temperature, melodrip-controlled-pouring, three-roast-layering |
-| **Martin Wölfl** | WBrC 2024 | (none atomic — composition of fast-flow + light agitation) |
+| **Martin Wölfl** | WBrC 2024 | melodrip-controlled-pouring (exemplar); else composition of fast-flow + light agitation |
 | **Carlos Medina** | WBrC 2023 | (none atomic — composition of lean ratio + moderate temp) |
 | **Jia Ning Du** | WBrC 2019 | low-mineral-water (application) |
 | **George Stanica** | WAC 2024 | concentrate-and-bypass (application) |
@@ -239,4 +231,5 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 - **Cold brew.** Flash-chilling is in; long cold-brew steeps are not — the report flags cold brew as losing aromatics and BrewLog avoids the format.
 - **Anaerobic / heavily-experimental processing recipes.** The user avoids anaerobic; recipes targeting anaerobic-amplification are out of scope.
 - **`/brew-insight` (post-brew haiku) integration.** That endpoint still uses its narrow Rao/Perger/Gagné/Solis canon by design — the haiku is 1–2 sentences and doesn't need the full corpus injected. If widened later, it'll be a separate change.
-- **Hardcoded recipe paragraphs in `/recommend`'s system prompt.** Still present (`Peng 2025 Temp-Staging`, `Wölfl 2024 Orea FAST`, etc., around line 376 of `src/lib/claude/recommend.ts`). They survive as a quick-reference embedded fallback; the structured corpus above is injected per turn alongside them. Future cleanup may remove the embedded list once we're sure the structured retrieval covers every case.
+- **Hardcoded recipe paragraphs in `/recommend`'s system prompt.** Still present (`Wölfl 2024 Orea FAST`, Origami Air M variants, etc., in `src/lib/claude/recommend.ts`). They survive as a quick-reference embedded fallback; the structured corpus above is injected per turn alongside them. Future cleanup may remove the embedded list once we're sure the structured retrieval covers every case.
+- **Staged / multi-temperature recipes.** Removed by request (June 2026) — staging needs two water temperatures, which isn't practical for everyday brewing. The Hsu 2022, Peng 2025 and "The Peak" recipes plus six experimental cold-bloom / multi-temp entries were deleted, and `/recommend` + `/explore-agent` are instructed never to stage temperature. Achieve aromatic preservation via grind, ratio, low-mineral water and minimal agitation instead.
