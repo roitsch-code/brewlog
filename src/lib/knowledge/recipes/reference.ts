@@ -100,7 +100,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 55 },
     ],
     totalTimeSec: 180,
-    techniques: ["swirl-not-stir", "pulsed-pours-50g-blocks", "preheat-via-hot-tap"],
+    techniques: ["swirl-not-stir", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -188,10 +188,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     // 65s = 240s. Verified against Hoffmann's own Clever video (2-min steep,
     // 30s settle, ~1-min drawdown). Was 210s, which contradicted these steps.
     totalTimeSec: 240,
-    techniques: [
-      "water-first",
-      "full-immersion",
-    ],
+    techniques: ["water-first", "immersion-steep"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -263,10 +260,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       },
     ],
     totalTimeSec: 215,
-    techniques: [
-      "swirl-not-stir",
-      "lean-ratio",
-    ],
+    techniques: ["swirl-not-stir"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -325,7 +319,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       },
     ],
     totalTimeSec: 480,
-    techniques: ["batch-brewing", "showerhead-pulse"],
+    techniques: ["machine-drip-brew"],
     bestFor: {
       roastLevels: ["medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -395,11 +389,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Add saline + serve", action: "bypass", durationSec: 5, notes: "2–4 drops of 20% saline to taste; ice your glass and pour." },
     ],
     totalTimeSec: 365,
-    techniques: [
-      "japanese-iced-immersion",
-      "flash-chilling",
-      "saline-finish",
-    ],
+    techniques: ["flash-chilling"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
@@ -483,7 +473,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 35 },
     ],
     totalTimeSec: 210,
-    techniques: ["phase-separated-pouring", "ratio-control-via-pour-count"],
+    techniques: ["phase-separated-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -591,7 +581,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 30 },
     ],
     totalTimeSec: 205,
-    techniques: ["aggressive-circular-agitation", "even-interval-pulse-pouring"],
+    techniques: ["high-agitation-high-extraction", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -666,12 +656,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       },
     ],
     totalTimeSec: 385,
-    techniques: [
-      "long-steep",
-      "low-temperature-extraction",
-      "fine-grind",
-      "valved-aeropress",
-    ],
+    techniques: ["immersion-steep", "low-temp-long-steep", "aeropress-inversion"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed"],
@@ -748,11 +733,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 65 },
     ],
     totalTimeSec: 140,
-    techniques: [
-      "high-agitation",
-      "fine-grind",
-      "high-extraction-yield",
-    ],
+    techniques: ["high-agitation-high-extraction"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed"],
@@ -838,7 +819,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 95 },
     ],
     totalTimeSec: 205,
-    techniques: ["rule-of-thirds", "rao-spin", "even-distribution"],
+    techniques: ["rule-of-thirds", "rao-spin", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -918,11 +899,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
     totalTimeSec: 190,
-    techniques: [
-      "roast-tailored-filter",
-      "flower-dripper-geometry",
-      "temperature-by-roast",
-    ],
+    techniques: ["roast-tailored-filter"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium", "medium-dark"],
       processes: ["washed", "natural", "honey"],
@@ -1003,7 +980,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 50 },
     ],
     totalTimeSec: 155,
-    techniques: ["fines-removal", "kalita-flat-bed", "continuous-pour"],
+    techniques: ["fines-removal-sieving", "flat-bed-pour", "continuous-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],

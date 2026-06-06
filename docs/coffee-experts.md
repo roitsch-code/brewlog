@@ -147,7 +147,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 ## 3. Techniques
 
-18 atomic moves. Recipes are compositions of 3–6 of these. Each technique cross-references the recipes that exemplify it.
+25 atomic moves (16 named-expert techniques + 9 general/foundational moves added in the June-2026 tag cleanup). Recipes are compositions of 3–6 of these, and every recipe's `techniques` field now references these ids — no free-text tags. Each technique cross-references the recipes that exemplify it.
 
 ### 3a. Temperature
 
@@ -200,6 +200,22 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 |---|---|---|---|
 | **low-mineral-water** *(championship water)* | Hendon (foundation); Du (championship application) | 40–80 ppm TDS, magnesium-biased. Removes bicarbonate buffering; sharpens delicate aromatic and acid expression. | wbrc-2019-du |
 
+### 3h. General / foundational moves
+
+Common-practice moves with no single originator (`verified: false` — the mechanisms are textbook brewing physics, not a cited routine). Added so every recipe references a real technique id instead of ad-hoc free text.
+
+| Technique | Category | Mechanism (1 line) |
+|---|---|---|
+| **bloom** | pre-brew | Pre-wet the grounds (~2–3× dose) and wait 30–45 s so roast CO2 off-gasses before the main pours, preventing channeling. |
+| **pulse-pouring** | pour-pattern | Add water in several discrete pours with pauses; pour count/size becomes the agitation + extraction control knob. |
+| **immersion-steep** | vessel-specific | Fully submerge for a set time then drain — every particle sees the same water for the same time, so it's even and forgiving. |
+| **central-pour** | pour-pattern | Pour only into the centre to keep water off the wall, reducing bypass and deepening the extraction column. |
+| **spiral-pour** | pour-pattern | Outward spiral wets the whole surface evenly and washes wall grounds back into the bed. |
+| **continuous-pour** | pour-pattern | One slow uninterrupted stream after the bloom — steady level, low agitation, fewer variables. |
+| **machine-drip-brew** | vessel-specific | Auto drip machine meters water through a showerhead over a flat bed — multi-pour without operator skill. |
+| **batch-scaling** | pre-brew | Scale up dose/batch at fixed ratio, coarsening grind because a deeper bed adds flow resistance. |
+| **flat-bed-pour** | pour-pattern | Keep a flat, level bed (flat-bottom brewers, central pours) so water path length is uniform across all grounds. |
+
 ---
 
 ## 4. Cross-reference: who's behind what
@@ -228,8 +244,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 ## 5. What's deliberately NOT here
 
 - **Espresso recipes.** BrewLog is filter-only; espresso has its own canon outside this corpus.
-- **Cold brew.** Flash-chilling is in; long cold-brew steeps are not — the report flags cold brew as losing aromatics and BrewLog avoids the format.
 - **Anaerobic / heavily-experimental processing recipes.** The user avoids anaerobic; recipes targeting anaerobic-amplification are out of scope.
 - **`/brew-insight` (post-brew haiku) integration.** That endpoint still uses its narrow Rao/Perger/Gagné/Solis canon by design — the haiku is 1–2 sentences and doesn't need the full corpus injected. If widened later, it'll be a separate change.
 - **Hardcoded recipe paragraphs in `/recommend`'s system prompt.** Still present (`Wölfl 2024 Orea FAST`, Origami Air M variants, etc., in `src/lib/claude/recommend.ts`). They survive as a quick-reference embedded fallback; the structured corpus above is injected per turn alongside them. Future cleanup may remove the embedded list once we're sure the structured retrieval covers every case.
-- **Staged / multi-temperature recipes.** Removed by request (June 2026) — staging needs two water temperatures, which isn't practical for everyday brewing. The Hsu 2022, Peng 2025 and "The Peak" recipes plus six experimental cold-bloom / multi-temp entries were deleted, and `/recommend` + `/explore-agent` are instructed never to stage temperature. Achieve aromatic preservation via grind, ratio, low-mineral water and minimal agitation instead.
+- **Staged / two-temperature recipes.** The one hard temperature rule: every recipe brews at ONE constant temperature. Staging — some water hot and some cool within a single brew, descending-temp pours, cool-bloom-then-hot, etc. — is out, because it needs two water setups and isn't practical for everyday brewing (removed by request, June 2026: Hsu 2022, Peng 2025, "The Peak", plus six experimental cold-bloom / multi-temp entries). `/recommend` + `/explore-agent` are instructed never to stage temperature; achieve aromatic preservation via grind, ratio, low-mineral water and minimal agitation instead. Enforced by `tests/recipes/validate.mjs`, which fails any recipe whose steps carry more than one temperature. **Cold brew is NOT excluded** — it's a single *cold* constant temperature, so it's allowed; iced/flash-chill brews likewise extract at one hot temperature and then dilute over ice (one brewing temperature, not staging).

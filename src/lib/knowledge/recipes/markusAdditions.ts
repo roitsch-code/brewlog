@@ -42,13 +42,13 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "slightly coarser than filter (estimate from grind description, not published)",
     },
     pourSequence: [
-      { label: "Coffee + water", action: "pour", waterGramsAtEnd: 200, durationSec: 0, temperatureC: 75, notes: "200ml @75°C onto 19.5–20g coffee" },
+      { label: "Coffee + water", action: "pour", waterGramsAtEnd: 200, durationSec: 0, notes: "200ml @75°C onto 19.5–20g coffee" },
       { label: "Stir 4×", action: "stir", durationSec: 3 },
       { label: "Secure filter, turn", action: "invert", durationSec: 7, notes: "stop, secure filter, flip the brewer" },
       { label: "Press and serve", action: "press", durationSec: 5 },
     ],
     totalTimeSec: 15,
-    techniques: ["aeropress-inversion", "low-temp-long-steep", "short-contact"],
+    techniques: ["aeropress-inversion", "low-temp-long-steep"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -100,7 +100,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Top-up in server", action: "bypass", waterGramsAtEnd: 270, durationSec: 5, notes: "+50g water in server" },
     ],
     totalTimeSec: 90,
-    techniques: ["dual-grind-spike", "aeropress-inversion", "concentrate-and-bypass"],
+    techniques: ["aeropress-inversion", "concentrate-and-bypass"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -192,16 +192,16 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "medium (derived from Comandante C40 @ 32 clicks via the user's measured Niche↔Comandante map: niche ≈ 380 + (32−23)×3.333 = 410°)",
     },
     pourSequence: [
-      { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, temperatureC: 100, notes: "50g water + 18g coffee" },
+      { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, notes: "50g water + 18g coffee" },
       { label: "32× very fast stirs", action: "stir", durationSec: 15 },
-      { label: "Pour to 160g + rinse filter", action: "pour", waterGramsAtEnd: 160, durationSec: 30, temperatureC: 100 },
+      { label: "Pour to 160g + rinse filter", action: "pour", waterGramsAtEnd: 160, durationSec: 30 },
       { label: "Cap on", action: "wait", durationSec: 25 },
       { label: "Flip on server", action: "flip", durationSec: 10 },
       { label: "Slow push (yield ~135g)", action: "press", durationSec: 15 },
       { label: "Dilute + aerate", action: "bypass", durationSec: 0, notes: "dilute to 150g with room-temp water; pour back-and-forth 10× between two servers to aerate + cool" },
     ],
     totalTimeSec: 110,
-    techniques: ["boiling-water-coarse-grind", "high-agitation-high-extraction", "aeropress-inversion", "aeration-cooling"],
+    techniques: ["boiling-water-coarse-grind", "high-agitation-high-extraction", "aeropress-inversion", "flash-chilling"],
     bestFor: {
       roastLevels: ["medium-light", "medium"],
       processes: ["washed", "natural"],
@@ -243,7 +243,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     },
     pourSequence: [
       { label: "Assemble + level bed", action: "wait", durationSec: 0, notes: "filter in cap, AP on server, 1 scoop coffee in chamber, level the bed" },
-      { label: "Hot water to Level 1–1.5", action: "pour", waterGramsAtEnd: 90, durationSec: 5, temperatureC: 80, notes: "~85–95g at 80°C (85°C for light roast)" },
+      { label: "Hot water to Level 1–1.5", action: "pour", waterGramsAtEnd: 90, durationSec: 5, notes: "~85–95g at 80°C (85°C for light roast)" },
       { label: "Stir", action: "stir", durationSec: 10 },
       { label: "Insert plunger", action: "wait", durationSec: 5 },
       { label: "Gentle press", action: "press", durationSec: 40, notes: "pause at resistance. Output: ~70–80g concentrate." },
@@ -311,7 +311,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     // Pours (50s) + rests (160s) + drawdown (30s) = 240s. Was 210s, which made
     // the brew timer finish 30s before the pour guide completed its steps.
     totalTimeSec: 240,
-    techniques: ["phase-separated-pouring", "inverse-phase-pouring"],
+    techniques: ["phase-separated-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "honey"],
@@ -419,7 +419,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 50 },
     ],
     totalTimeSec: 210,
-    techniques: ["slow-central-pour", "minimal-agitation"],
+    techniques: ["central-pour", "minimal-agitation"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed", "anaerobic"],
@@ -472,7 +472,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 70 },
     ],
     totalTimeSec: 210,
-    techniques: ["double-bloom", "co2-management"],
+    techniques: ["bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -526,7 +526,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 210,
-    techniques: ["rao-spin", "trench", "minimal-agitation"],
+    techniques: ["rao-spin", "central-pour", "minimal-agitation"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -576,7 +576,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
     totalTimeSec: 270,
-    techniques: ["swirl-not-stir", "big-batch-scaling", "minimal-agitation"],
+    techniques: ["swirl-not-stir", "batch-scaling", "minimal-agitation"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -628,7 +628,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain" },
     ],
     totalTimeSec: 210,
-    techniques: ["osmotic-flow", "bubble-stop-trigger", "pulse-pouring"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
@@ -676,7 +676,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 85 },
     ],
     totalTimeSec: 210,
-    techniques: ["vigorous-stir", "de-gas-pause"],
+    techniques: ["high-agitation-high-extraction", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
@@ -726,7 +726,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release onto cup", action: "drain", durationSec: 30 },
     ],
     totalTimeSec: 270,
-    techniques: ["immersion", "bloom-first"],
+    techniques: ["immersion-steep", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -772,7 +772,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release onto cup", action: "drain", durationSec: 15 },
     ],
     totalTimeSec: 270,
-    techniques: ["water-first", "immersion"],
+    techniques: ["water-first", "immersion-steep"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -820,7 +820,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     // Bloom (8s) + wait (45s) + fill (30s) + steep (240s) + release (15s) = 338s.
     // Was 330s, leaving the timer 8s short of the documented steps.
     totalTimeSec: 338,
-    techniques: ["immersion", "bloom-first", "long-steep"],
+    techniques: ["immersion-steep", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -867,7 +867,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release", action: "drain", durationSec: 25 },
     ],
     totalTimeSec: 300,
-    techniques: ["immersion", "mid-immersion-stir"],
+    techniques: ["immersion-steep", "high-agitation-high-extraction"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium", "medium-dark", "dark", "very-light"],
       processes: ["any"],
@@ -913,7 +913,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release", action: "drain", durationSec: 17 },
     ],
     totalTimeSec: 210,
-    techniques: ["immersion", "short-steep"],
+    techniques: ["immersion-steep"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed", "natural"],
@@ -960,7 +960,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release", action: "drain", durationSec: 5 },
     ],
     totalTimeSec: 255,
-    techniques: ["immersion", "bloom-first"],
+    techniques: ["immersion-steep", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1006,7 +1006,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Release", action: "drain", durationSec: 5 },
     ],
     totalTimeSec: 360,
-    techniques: ["immersion", "long-steep", "high-dose"],
+    techniques: ["immersion-steep"],
     bestFor: {
       roastLevels: ["medium", "medium-dark"],
       processes: ["natural", "washed"],
@@ -1046,14 +1046,14 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "medium-fine, immersion-tolerant (estimate from grind description, not published)",
     },
     pourSequence: [
-      { label: "Hot water + stir", action: "pour", waterGramsAtEnd: 330, durationSec: 15, temperatureC: 96, notes: "330g hot water @96°C in Clever; stir to wet grounds" },
+      { label: "Hot water + stir", action: "pour", waterGramsAtEnd: 330, durationSec: 15, notes: "330g hot water @96°C in Clever; stir to wet grounds" },
       { label: "Steep ~5 min", action: "wait", durationSec: 285 },
       { label: "Prep ice", action: "wait", durationSec: 0, notes: "at 4-min mark, prep 170g ice in server" },
       { label: "Release onto ice", action: "drain", durationSec: 60, notes: "flash chill" },
       { label: "Stir until ice melts", action: "stir", durationSec: 30, notes: "saline finish optional" },
     ],
     totalTimeSec: 390,
-    techniques: ["flash-chilling", "immersion", "high-dose"],
+    techniques: ["flash-chilling", "immersion-steep"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -1107,7 +1107,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 35 },
     ],
     totalTimeSec: 240,
-    techniques: ["pulse-pouring", "big-batch-scaling"],
+    techniques: ["pulse-pouring", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -1154,7 +1154,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Remove dripper (even if water remains)", action: "drain" },
     ],
     totalTimeSec: 80,
-    techniques: ["filter-choice", "pulse-pouring"],
+    techniques: ["roast-tailored-filter", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -1200,7 +1200,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 55 },
     ],
     totalTimeSec: 150,
-    techniques: ["single-pour", "minimal-agitation", "swirl-not-stir"],
+    techniques: ["continuous-pour", "minimal-agitation", "swirl-not-stir"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -1253,7 +1253,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 45 },
     ],
     totalTimeSec: 145,
-    techniques: ["equal-pour-schedule", "pulse-pouring"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed"],
@@ -1306,7 +1306,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 270,
-    techniques: ["big-batch-scaling", "slow-central-pour"],
+    techniques: ["batch-scaling", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -1353,7 +1353,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 270,
-    techniques: ["big-batch-scaling", "slow-central-pour"],
+    techniques: ["batch-scaling", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -1400,7 +1400,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 105 },
     ],
     totalTimeSec: 390,
-    techniques: ["big-batch-scaling", "slow-central-pour"],
+    techniques: ["batch-scaling", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1449,7 +1449,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 240,
-    techniques: ["slow-central-pour", "spiral-pour"],
+    techniques: ["central-pour", "spiral-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1498,7 +1498,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 45 },
     ],
     totalTimeSec: 300,
-    techniques: ["spiral-pour", "bloom-scaling"],
+    techniques: ["spiral-pour", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -1548,7 +1548,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 135 },
     ],
     totalTimeSec: 270,
-    techniques: ["filter-lift", "spiral-pour"],
+    techniques: ["spiral-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1598,7 +1598,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Serve in preheated cup", action: "wait", durationSec: 0 },
     ],
     totalTimeSec: 240,
-    techniques: ["final-swirl", "slow-central-pour"],
+    techniques: ["swirl-not-stir", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -1647,7 +1647,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 70 },
     ],
     totalTimeSec: 330,
-    techniques: ["big-batch-scaling", "slow-central-pour"],
+    techniques: ["batch-scaling", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1701,7 +1701,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Pour mug rinse out, swirl Chemex, pour to mug", action: "swirl", durationSec: 0 },
     ],
     totalTimeSec: 240,
-    techniques: ["filter-orientation", "slow-central-pour"],
+    techniques: ["central-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed", "honey"],
@@ -1756,7 +1756,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 35 },
     ],
     totalTimeSec: 210,
-    techniques: ["equal-pour-schedule", "pulse-pouring"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -1807,7 +1807,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 70 },
     ],
     totalTimeSec: 210,
-    techniques: ["pulse-pouring", "nordic-light"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -1857,7 +1857,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
     totalTimeSec: 240,
-    techniques: ["pulse-pouring", "big-batch-scaling"],
+    techniques: ["pulse-pouring", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1905,7 +1905,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 90 },
     ],
     totalTimeSec: 210,
-    techniques: ["spiral-pour", "periodic-top-up"],
+    techniques: ["spiral-pour", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -1956,7 +1956,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 75 },
     ],
     totalTimeSec: 180,
-    techniques: ["pulse-pouring", "small-brewer-bypass-control"],
+    techniques: ["pulse-pouring", "concentrate-and-bypass"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -2008,7 +2008,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 180,
-    techniques: ["bubble-stop-trigger", "co2-management", "pulse-pouring"],
+    techniques: ["bloom", "pulse-pouring"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -2061,7 +2061,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown, gentle tap", action: "drain", durationSec: 45 },
     ],
     totalTimeSec: 210,
-    techniques: ["counterclockwise-swirl", "pulse-pouring", "flat-bed-maintenance"],
+    techniques: ["swirl-not-stir", "pulse-pouring", "flat-bed-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -2110,7 +2110,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 270,
-    techniques: ["water-drop-trigger", "pulse-pouring", "big-batch-scaling"],
+    techniques: ["pulse-pouring", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -2163,7 +2163,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Swirl carafe, serve", action: "swirl", durationSec: 0 },
     ],
     totalTimeSec: 330,
-    techniques: ["pre-infusion", "closed-gate-bloom", "machine-brew"],
+    techniques: ["bloom", "machine-drip-brew"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
@@ -2214,7 +2214,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Carafe swirl, serve", action: "swirl", durationSec: 0 },
     ],
     totalTimeSec: 360,
-    techniques: ["mid-brew-stir", "machine-brew"],
+    techniques: ["high-agitation-high-extraction", "machine-drip-brew"],
     bestFor: {
       roastLevels: ["very-light", "light", "medium-light"],
       processes: ["washed", "natural"],
@@ -2265,7 +2265,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Brew completes (5–6 min), serve", action: "wait", durationSec: 295 },
     ],
     totalTimeSec: 330,
-    techniques: ["bed-turn", "machine-brew", "big-batch-scaling"],
+    techniques: ["flat-bed-pour", "machine-drip-brew", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],

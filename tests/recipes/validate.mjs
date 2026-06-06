@@ -110,7 +110,15 @@ for (const r of ALL_RECIPES) {
     temps.push(...t.staged.map((s) => s.celsius));
   }
   if (!temps.length) E(id, "no temperature specified");
-  for (const c of temps) if (c < 70 || c > 100) W(id, `temperature ${c}°C outside 70–100`);
+  // Cold brew is allowed — it's a single CONSTANT temperature, just a cold one.
+  // What's banned is TWO temperatures in one recipe (staged), caught below.
+  // So only flag physically-impossible (>100) or the lukewarm 35–70 no-man's-
+  // land that usually means a typo (e.g. 9 vs 90). Cold (<35) and hot (70–100)
+  // both pass silently.
+  for (const c of temps) {
+    if (c > 100) W(id, `temperature ${c}°C above boiling`);
+    else if (c >= 35 && c < 70) W(id, `temperature ${c}°C is lukewarm (typo?) — hot brew is 70–100, cold brew <35`);
+  }
 
   // Grind
   const g = r.grind || {};
@@ -162,7 +170,9 @@ for (const r of ALL_RECIPES) {
   if (!(r.totalTimeSec > 0)) E(id, `bad totalTimeSec ${r.totalTimeSec}`);
   else {
     if (durSum > r.totalTimeSec + 5) E(id, `brew-step durations sum ${durSum}s > totalTimeSec ${r.totalTimeSec}s (timer ends before steps do)`);
-    if (r.totalTimeSec > 960) W(id, `totalTimeSec ${r.totalTimeSec}s (>16 min)`);
+    // Long brews are expected for cold brew (single cold temp, hours of steep);
+    // only flag implausibly-long HOT brews (base temp ≥ 40°C).
+    if (r.totalTimeSec > 960 && (baseTemp === undefined || baseTemp >= 40)) W(id, `totalTimeSec ${r.totalTimeSec}s (>16 min) for a hot brew`);
   }
 
   // Cross-refs + enums
