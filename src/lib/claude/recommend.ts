@@ -479,6 +479,13 @@ Worked examples — verify your arithmetic before outputting:
     "fill tank 30s · brew 7:30"  ← 30+450 = 480 ✓
 Formula: steep = targetTimeSec − (pour + stirs + press/drain overhead). Compute steep last.
 
+DRAIN / DRAWDOWN OVERHEAD IS ROUGHLY CONSTANT — it does NOT scale up with water volume.
+The water-first Clever drains fast by design (water poured before the coffee = the paper never
+clogs, so drawdown is ~half a coffee-first brew). Keep its drain overhead at 0:55–1:15 (use ~1:00;
+a deep 500ml bed may sit at the top of the range, but NEVER stretch toward 1:20+). AeroPress press
+≈ 30s; Moccamaster fill ≈ 30s. When targetTimeSec grows for a larger brew, extend the STEEP, not
+the drain — a 500ml Clever and a 250ml Clever have nearly the same drawdown.
+
 HYPOTHESIS/WHY CONSISTENCY: In hypothesis, whyChosen, and predictedCupProfile text, always
 reference the TOTAL brew time (targetTimeSec as mm:ss), never just the steep phase.
 Write "a 5-minute immersion" not "a 4-minute steep" for targetTimeSec=300.
