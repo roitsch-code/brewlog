@@ -42,7 +42,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "slightly coarser than filter (estimate from grind description, not published)",
     },
     pourSequence: [
-      { label: "Coffee + water", action: "pour", waterGramsAtEnd: 200, durationSec: 0, temperatureC: 75, notes: "200ml @75°C onto 19.5–20g coffee" },
+      { label: "Coffee + water", action: "pour", waterGramsAtEnd: 200, durationSec: 0, notes: "200ml @75°C onto 19.5–20g coffee" },
       { label: "Stir 4×", action: "stir", durationSec: 3 },
       { label: "Secure filter, turn", action: "invert", durationSec: 7, notes: "stop, secure filter, flip the brewer" },
       { label: "Press and serve", action: "press", durationSec: 5 },
@@ -192,9 +192,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "medium (derived from Comandante C40 @ 32 clicks via the user's measured Niche↔Comandante map: niche ≈ 380 + (32−23)×3.333 = 410°)",
     },
     pourSequence: [
-      { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, temperatureC: 100, notes: "50g water + 18g coffee" },
+      { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, notes: "50g water + 18g coffee" },
       { label: "32× very fast stirs", action: "stir", durationSec: 15 },
-      { label: "Pour to 160g + rinse filter", action: "pour", waterGramsAtEnd: 160, durationSec: 30, temperatureC: 100 },
+      { label: "Pour to 160g + rinse filter", action: "pour", waterGramsAtEnd: 160, durationSec: 30 },
       { label: "Cap on", action: "wait", durationSec: 25 },
       { label: "Flip on server", action: "flip", durationSec: 10 },
       { label: "Slow push (yield ~135g)", action: "press", durationSec: 15 },
@@ -243,7 +243,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     },
     pourSequence: [
       { label: "Assemble + level bed", action: "wait", durationSec: 0, notes: "filter in cap, AP on server, 1 scoop coffee in chamber, level the bed" },
-      { label: "Hot water to Level 1–1.5", action: "pour", waterGramsAtEnd: 90, durationSec: 5, temperatureC: 80, notes: "~85–95g at 80°C (85°C for light roast)" },
+      { label: "Hot water to Level 1–1.5", action: "pour", waterGramsAtEnd: 90, durationSec: 5, notes: "~85–95g at 80°C (85°C for light roast)" },
       { label: "Stir", action: "stir", durationSec: 10 },
       { label: "Insert plunger", action: "wait", durationSec: 5 },
       { label: "Gentle press", action: "press", durationSec: 40, notes: "pause at resistance. Output: ~70–80g concentrate." },
@@ -1046,7 +1046,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       description: "medium-fine, immersion-tolerant (estimate from grind description, not published)",
     },
     pourSequence: [
-      { label: "Hot water + stir", action: "pour", waterGramsAtEnd: 330, durationSec: 15, temperatureC: 96, notes: "330g hot water @96°C in Clever; stir to wet grounds" },
+      { label: "Hot water + stir", action: "pour", waterGramsAtEnd: 330, durationSec: 15, notes: "330g hot water @96°C in Clever; stir to wet grounds" },
       { label: "Steep ~5 min", action: "wait", durationSec: 285 },
       { label: "Prep ice", action: "wait", durationSec: 0, notes: "at 4-min mark, prep 170g ice in server" },
       { label: "Release onto ice", action: "drain", durationSec: 60, notes: "flash chill" },

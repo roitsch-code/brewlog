@@ -446,7 +446,6 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
         action: "pour",
         waterGramsAtEnd: 120,
         durationSec: 15,
-        temperatureC: 96,
       },
       { label: "Stir 2–3× evenly", action: "stir", durationSec: 10 },
       { label: "Steep", action: "wait", durationSec: 60 },
