@@ -308,7 +308,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Rest", action: "wait", durationSec: 20 },
       { label: "Drawdown", action: "drain", durationSec: 30, notes: "final 40g settling" },
     ],
-    totalTimeSec: 210,
+    // Pours (50s) + rests (160s) + drawdown (30s) = 240s. Was 210s, which made
+    // the brew timer finish 30s before the pour guide completed its steps.
+    totalTimeSec: 240,
     techniques: ["phase-separated-pouring", "inverse-phase-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
@@ -815,7 +817,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Steep", action: "wait", durationSec: 240 },
       { label: "Release", action: "drain", durationSec: 15 },
     ],
-    totalTimeSec: 330,
+    // Bloom (8s) + wait (45s) + fill (30s) + steep (240s) + release (15s) = 338s.
+    // Was 330s, leaving the timer 8s short of the documented steps.
+    totalTimeSec: 338,
     techniques: ["immersion", "bloom-first", "long-steep"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
