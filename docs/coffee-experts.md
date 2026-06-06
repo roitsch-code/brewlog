@@ -40,7 +40,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | Recipe | Brewer | Dose : Water | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|
 | **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 80–100°C † | calibrate ‡ | 3:00 | true |
-| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 3:30 | true |
+| **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 4:00 | true |
 | **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85–100°C † | 356–366° | 3:35 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |

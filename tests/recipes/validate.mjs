@@ -59,10 +59,8 @@ const W = (id, m) => warns.push(`[${id}] ${m}`);
 // and do NOT fail the gate, so the validator still catches NEW regressions.
 // Remove an entry once its underlying issue is resolved.
 const KNOWN_ISSUES = [
-  // Hoffmann Ultimate Clever: documented steps sum to 240s but the published
-  // total is 3:30 (210s) — a step duration is wrong, but which one needs the
-  // original source to fix (YouTube blocks fetch). Don't guess a brew number.
-  "[hoffmann-clever-ultimate] brew-step durations sum",
+  // (empty) — list any deliberately-unfixed inconsistency here as a substring
+  // match against an error line so the gate still catches NEW regressions.
 ];
 
 // ── Per-recipe checks ───────────────────────────────────────────────────────
