@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { randomUUID } from "crypto";
+import { and, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { insights } from "@/lib/db/schema";
+import { insights, sessions } from "@/lib/db/schema";
 import type { InsightStatus } from "@/lib/db/schema";
 import { getOrGenerateInsights } from "@/lib/claude/insights";
 import { z } from "zod";
@@ -113,6 +114,88 @@ export async function GET(req: NextRequest) {
       { insights: [], generated: false, corpusSize: 0 },
       { status: 500 },
     );
+  }
+}
+
+// Field names the recommender ranks insights by (recommend.ts insightsBlock).
+// Plus 'freshness' which the coach uses in observation text. Anything else
+// the chat sends is dropped — keeps the citationFields vocabulary tight.
+const CITATION_FIELDS = ["variety", "process", "roast", "origin", "method", "freshness"] as const;
+
+const RememberSchema = z.object({
+  observation: z.string().min(10).max(400),
+  suggestion: z.string().min(10).max(400),
+  citationFields: z.array(z.string()).max(8).optional(),
+  // Provenance only — the observation text carries the per-coffee targeting.
+  coffeeId: z.string().optional(),
+  coffeeName: z.string().optional(),
+});
+
+/**
+ * POST — Save a chat-authored coach note (tap-to-save from the home chat's
+ * "Remember this for …" button). Writes one insight row that /recommend
+ * reads on the next recipe for a matching coffee.
+ *
+ * The user tapping the button is an explicit endorsement, so the row is
+ * written with status='trying' (an active reminder — feeds /recommend AND
+ * the /brew Context reminder pill) and source='user-confirmed' (an allowed
+ * CHECK value, so no migration is needed). status='trying' is preserved by
+ * the insights orchestrator across /taste regenerations, so a chat note is
+ * never silently wiped.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const parsed = RememberSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    }
+    const { observation, suggestion } = parsed.data;
+    const citationFields = (parsed.data.citationFields ?? [])
+      .map((f) => f.trim().toLowerCase())
+      .filter((f): f is (typeof CITATION_FIELDS)[number] =>
+        (CITATION_FIELDS as readonly string[]).includes(f),
+      );
+
+    // Dedup — if the same note was already saved (same first 80 chars of
+    // observation), don't write a second copy. The table is tiny, so an
+    // in-memory compare is cheaper than a wildcard query.
+    const key = observation.slice(0, 80).toLowerCase();
+    const existingRows = await db.select({ observation: insights.observation }).from(insights);
+    if (existingRows.some((r) => r.observation.slice(0, 80).toLowerCase() === key)) {
+      return NextResponse.json({ ok: true, deduped: true });
+    }
+
+    // Anchor the cache key to the current corpus so the chat note never
+    // freezes /taste regeneration (a now()-based value would always look
+    // "newer" than the latest session and short-circuit the cache check).
+    const latestRow = await db
+      .select({ ms: sessions.createdAtMs })
+      .from(sessions)
+      .orderBy(desc(sessions.createdAtMs))
+      .limit(1);
+    const latestMs = latestRow[0]?.ms ?? 0;
+
+    const now = new Date();
+    const id = randomUUID();
+    await db.insert(insights).values({
+      id,
+      observation,
+      suggestion,
+      citationFields,
+      latestSessionMs: latestMs,
+      source: "user-confirmed",
+      status: "trying",
+      dismissedAt: null,
+      snoozedUntil: null,
+      userNote: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return NextResponse.json({ ok: true, id });
+  } catch (err) {
+    console.error("insights POST error:", err);
+    return NextResponse.json({ error: "Failed to save insight" }, { status: 500 });
   }
 }
 

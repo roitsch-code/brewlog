@@ -32,6 +32,7 @@ export interface NavAction {
     | "coffee_detail"
     | "brew_again"
     | "start_brew"
+    | "remember_advice"
     | "cafe_map"
     | "cafe_detail"
     | "taste_profile"
@@ -50,6 +51,17 @@ export interface NavAction {
   /** Stable reference recipe this adapts ("Japanese Iced V60"), or "Own recipe". */
   basedOn?: string;
   recipe?: BrewRecipe;
+  // ── remember_advice payload ─────────────────────────────────────────
+  // A durable coach note the chat worked out for a specific bag. The
+  // button is tap-to-save: nothing is written until the user taps it,
+  // at which point ActionPill POSTs these to /api/insights, which writes
+  // an insight row (status='trying') that /recommend reads on the next
+  // recipe for a matching coffee. Present only when
+  // destination === "remember_advice".
+  observation?: string;
+  suggestion?: string;
+  /** Field names the advice keys off (variety/process/roast/origin/method) — drives /recommend ranking. */
+  citationFields?: string[];
 }
 
 // ── System prompt ────────────────────────────────────────────────────────────
@@ -102,6 +114,25 @@ Non-negotiable rules:
 - Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step. Brew at ONE constant temperature — never stage or ramp temperature across pours, so leave temperatureC off the steps. For iced, the final step drains onto the ice.
 - Only call it for a bag you can reference by id. For a generic or hypothetical recipe with no specific library bag, don't.
 - It's a terminal action like suggest_navigation — one call, no data round-trip.
+
+## When to call remember_advice
+
+Use this when you have worked out **durable, parameter-level guidance for a specific bag in the user's library** (you have its id) that they should benefit from the NEXT time they brew that coffee — without having to re-read this chat. It surfaces a **"Remember this for …"** button; nothing is saved until the user taps it (tap-to-save, the user stays in control). When tapped, it becomes a coach note that the recipe recommender reads automatically the next time it builds a recipe for a coffee that matches.
+
+Call it when, and only when, the advice is:
+- **Tied to one of their library bags** (you have its id from the Coffee Library block), AND
+- **Concrete and parameter-level** — a real change to grind / temperature / ratio / method / bloom / agitation, or a freshness adaptation. Not a vibe, not "enjoy it", not a generic fact.
+
+Good cases: "this washed Ethiopian is ~6 weeks past roast — go finer + hotter, skip the long bloom, brew it on the Clever or Orea Apex instead of V60." "On the Geisha, your clarity blend at 73 ppm beats tap water — use it next time."
+Do NOT call it: for generic education, for a coffee not in their library, when you only gave headline numbers with no specific adjustment, or as a reflex after every answer. At most one per turn.
+
+Fields:
+- **observation** — one sentence stating the situation, and NAME the specific bag (e.g. "The Süßhang Ethiopia is now ~6 weeks past roast, so its floral top-notes have faded."). Naming the bag is what makes the recommender apply it to the right coffee.
+- **suggestion** — one sentence with the concrete move ("Grind ~5° finer, brew at 95°C with a 30s bloom, and use the Clever or Orea Apex rather than the V60.").
+- **citationFields** — the field names this advice keys off, drawn from: variety, process, roast, origin, method, freshness. Include the ones that identify when it applies (e.g. ["origin","process","freshness","method"]) — the recommender ranks notes whose fields match the coffee being brewed.
+- **id** — the bag's UUID. **label** — the button text, e.g. "Remember this for the Süßhang".
+
+The observation + suggestion you save MUST match the advice you just wrote in your message.
 
 ## STRICT RULE: Physical place recommendations
 
@@ -323,6 +354,35 @@ const TOOLS: Anthropic.Tool[] = [
       required: ["label", "id", "method", "recipe"],
     },
   },
+  {
+    name: "remember_advice",
+    description:
+      "Offer a tap-to-save 'Remember this for …' button that turns durable, parameter-level advice you just gave about a SPECIFIC library bag (you have its id) into a coach note. When the user taps it, the recipe recommender reads it automatically the next time it builds a recipe for a matching coffee. Call ONLY for concrete adjustments (grind/temp/ratio/method/bloom/agitation/freshness) tied to one of their bags — never for generic education or a coffee not in their library. At most one per turn. The observation + suggestion MUST match what you wrote in your message.",
+    input_schema: {
+      type: "object",
+      properties: {
+        label: { type: "string", description: "Button text, e.g. 'Remember this for the Süßhang'." },
+        id: { type: "string", description: "The coffee's UUID from the Coffee Library context." },
+        observation: {
+          type: "string",
+          description:
+            "One sentence stating the situation, NAMING the specific bag (e.g. 'The Süßhang Ethiopia is ~6 weeks past roast, so its floral top-notes have faded.'). Naming the bag is what targets the right coffee.",
+        },
+        suggestion: {
+          type: "string",
+          description:
+            "One sentence with the concrete move ('Grind ~5° finer, brew at 95°C with a 30s bloom, and use the Clever or Orea Apex rather than the V60.').",
+        },
+        citationFields: {
+          type: "array",
+          description:
+            "Field names this advice keys off, from: variety, process, roast, origin, method, freshness. The recommender ranks notes whose fields match the coffee being brewed.",
+          items: { type: "string" },
+        },
+      },
+      required: ["label", "id", "observation", "suggestion"],
+    },
+  },
 ];
 
 // suggest_navigation and start_brew are terminal "action" tools — collected
@@ -342,6 +402,17 @@ function toNavAction(toolName: string, input: NavAction): NavAction {
       recipe: input.recipe,
     };
   }
+  if (toolName === "remember_advice") {
+    return {
+      destination: "remember_advice",
+      label: input.label,
+      reason: input.reason,
+      id: input.id,
+      observation: input.observation,
+      suggestion: input.suggestion,
+      citationFields: input.citationFields,
+    };
+  }
   return {
     destination: input.destination,
     label: input.label,
@@ -350,7 +421,8 @@ function toNavAction(toolName: string, input: NavAction): NavAction {
   };
 }
 
-const isActionTool = (name: string) => name === "suggest_navigation" || name === "start_brew";
+const isActionTool = (name: string) =>
+  name === "suggest_navigation" || name === "start_brew" || name === "remember_advice";
 
 // ── Tool implementations ─────────────────────────────────────────────────────
 
