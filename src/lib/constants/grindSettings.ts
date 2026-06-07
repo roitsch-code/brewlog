@@ -43,7 +43,7 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
     notes: "Anchor: 15 g single cup = 380° / 23 clicks. Larger batches coarsen (see dose-scaling rule).",
   },
   // V60 + Drip Assist (emergency / travel only — the disc adds flow
-  // resistance, so grind a little coarser than bare V60 to keep
+  // resistance, so grind a little coarser than the standard V60 to keep
   // drawdown in the same window. Magnitude is approximate; refine
   // after a real travel brew. Direction confirmed by the user; ~+5°
   // / +2 Comandante clicks is a small starting offset.
@@ -52,7 +52,7 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
     niche: { min: 380, max: 390 },
     comandante: { min: 24, max: 27 },
     confidence: "estimate",
-    notes: "Emergency / travel only. Disc adds resistance → grind ~5° coarser than bare V60 (one Comandante click). The disc smooths pour distribution at the cost of free flow; coarsen to compensate so timing matches bare V60. Refine after first travel brew.",
+    notes: "Emergency / travel only. Disc adds resistance → grind ~5° coarser than the standard V60 (one Comandante click). The disc smooths pour distribution at the cost of free flow; coarsen to compensate so timing matches the standard V60. Refine after first travel brew.",
   },
   { method: "Orea V4", niche: { min: 380, max: 390 }, comandante: { min: 23, max: 26 }, confidence: "estimate" },
   { method: "Origami Dripper", process: "Washed", niche: { min: 380, max: 386 }, comandante: { min: 23, max: 25 }, confidence: "estimate" },

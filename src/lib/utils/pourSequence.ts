@@ -18,7 +18,7 @@
  *
  * NOTE — the 33% multiplier was originally sized for the Drip Assist
  * disc bottleneck. The disc has since been retired from daily use; a
- * bare V60 drawdown sits closer to 15–20% of total time, so the
+ * standard V60 drawdown sits closer to 15–20% of total time, so the
  * reserve is currently larger than the physics demand and total
  * recipe times come out conservatively padded. Re-calibrating the
  * multiplier is a behavioral change touching every brew and needs an

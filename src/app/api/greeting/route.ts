@@ -77,16 +77,17 @@ Pair a specific bag from the user's rotation with a brewing method, and give a o
 - "Burundi in the Clever Dripper — that'd be a smart next move for its body."
 - "Warm afternoon — why not take the La Coipa over ice with a Japanese iced V60?"
 - "Hoffmann swears by the V60 for Ethiopians; worth trying yours that way today."
-- "The washed Kenya is built for clarity — bare V60, gentle pours, let it sing."
+- "The washed Kenya is built for clarity — V60, gentle pours, let it sing."
 
 RULES
 - One sentence, 10 to 22 words. A trailing question mark is fine; never an exclamation mark.
 - Name ONE specific bag from the rotation AND ONE brewing method the user actually owns (see Equipment). The pairing must be defensible by the science below.
 - Give a short reason — origin/process fit, time of day, or an expert/championship reference. Keep it to one clause.
 - No emojis, no markdown, no second sentence, no preamble like "Here's your greeting:". Return the sentence only.
+- BREWER NAMING: always call the V60 simply "V60". NEVER write "bare V60", "V60 without the Drip Assist", "plain V60", or any other qualifier — the Drip Assist is an invisible travel backup that is never mentioned to the user. The only time "Drip Assist" may appear is never; just say "V60".
 
 BREWING SCIENCE — pair intelligently (this is what makes it smart, not random):
-- Washed light African (Ethiopia, Kenya, Burundi, Rwanda): clarity-forward. Bare V60, Origami cone, or Chemex. Hoffmann's V60 is the canonical move for Ethiopians. High temp, gentle agitation.
+- Washed light African (Ethiopia, Kenya, Burundi, Rwanda): clarity-forward. V60, Origami cone, or Chemex. Hoffmann's V60 is the canonical move for Ethiopians. High temp, gentle agitation.
 - Naturals & honeys: sweetness/body-forward. Clever Dripper (immersion sweetness), Origami wave, or Kalita. Lower-ish temp, fewer pours.
 - Dense high-grown or competition lots: Kasuya 4:6 to tune acidity vs sweetness across the pour, or a high-extraction V60.
 - Experimental/anaerobic: short bed-contact + turbulence keeps it clean — Orea Fast (Wölfl 2024 WAC method).
