@@ -45,6 +45,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |
 | **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 92°C | 411–421° | 3:30 | true |
+| **Kasuya Super Coarse 10-Pour** | V60 / Neo | 20g : 300g | 95–96°C | 435–455° § | 3:30 | true |
 | **April House V60 (Rolf)** | V60 | 20g : 300g | 92°C | — (calibrate) | 3:20–3:30 | true |
 | **Gagné Long AeroPress** | AeroPress + Prismo | 20g : 200g | 80°C | 365–375° | 6:25 | true |
 | **Perger High-Extraction V60** | V60 | 12g : 200g | 97°C | — (calibrate) | 2:20 | false |
@@ -54,6 +55,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 † **Hoffmann roast-temperature staircase:** light = **freshly boiled (100 °C)**, medium 90–95 °C, dark 80–85 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span.
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
+§ Kasuya publishes the Super Coarse grind only as **Comandante 40–45 clicks**. The Niche 435–455° range is DERIVED from grind-settings.md's ~3.3°/click conversion and extrapolated well past the measured 23–29-click anchors — calibrate empirically against the ~3:30 finish.
 
 **Teaching summaries**
 
@@ -62,6 +64,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Hoffmann AeroPress** — Lean-ratio (1:18) AeroPress, roast-temperature staircase (light 100 °C, medium 90–95 °C, dark 85 °C), produces a clean, filter-style cup without the bitterness people associate with the brewer.
 - **Hoffmann Moccamaster Method** — Pulsing showerhead + flat-bottomed paper filter approximates a multi-pour V60 without operator skill. 1:15 at medium-coarse grind for batches ≥500ml.
 - **Hoffmann Immersion Iced** — Flash-chilling preserves aromatics that cold-brew loses to its long extraction time. 75 g coffee per litre of total water; total water split ~2/3 hot brew + ~1/3 ice (e.g. 37.5 g : 330 g hot + ~170 g ice = 1:13.3 final). Hot extraction at 1:8.8 then diluted by ice to the drinking ratio.
+- **Kasuya Super Coarse 10-Pour** — Full extraction of a light roast WITHOUT bitterness: grind super-coarse to drop out the over-extracting fines, then claw the yield back with near-boiling water (95–96 °C) and ten even 30 g pulses (bloom 30 s, then a 30 g pour every 15 s). The shallow, well-mixed bed speeds up as it drains and the cup lands clean and sweet rather than harsh. A different Kasuya recipe from the 4:6 method — even pours, not phase-separated.
 - **April House V60 (Rolf)** — April's agitation-forward house recipe: six even 50g pours on a ~30s cadence, each poured deliberately aggressively, finished with one stir. The opposite of a minimal-agitation brew. (Replaces a prior "Minimum Variables" entry that was a misattribution — no such single-continuous-pour Rolf recipe exists.)
 - **Gagné Long AeroPress** — The "second sweet spot": fine grind + 80°C + 5-minute steep. Bitter Zone 3 compounds extract orders of magnitude slower at low temp; long steep saturates Zone 2 fully without invading Zone 3.
 - **Perger High-Extraction V60** — Vigorous bloom stir + fine grind + spinning swirl during drawdown drives extraction yield above 22%. Bitterness comes from over-extracting the wrong compounds, not high yield itself.
