@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw } from "lucide-react";
+import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw, Bookmark, Check } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
 import { startBrewAgain, startBrewFromChat } from "@/lib/flow/brewAgain";
 import type { CoffeeIdentity } from "@/lib/types/session";
@@ -53,6 +54,9 @@ function destinationToPath(action: NavAction): string {
       // Both are handled specially — the click handler hydrates the flow
       // store first. Fallback path on failure.
       return "/brew/new";
+    case "remember_advice":
+      // Handled entirely client-side (tap-to-save); never navigates.
+      return "/";
     case "cafe_map":
       return "/cafes";
     case "cafe_detail":
@@ -79,6 +83,8 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
     case "brew_again":
     case "start_brew":
       return <RotateCcw className={cls} strokeWidth={1.75} />;
+    case "remember_advice":
+      return <Bookmark className={cls} strokeWidth={1.75} />;
     case "cafe_map":
     case "cafe_detail":
       return <MapPin className={cls} strokeWidth={1.75} />;
@@ -93,8 +99,36 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
 
 export default function ActionPill({ action }: { action: NavAction }) {
   const router = useRouter();
+  // remember_advice is tap-to-save: it writes a coach note instead of
+  // navigating, and reflects progress on the pill itself.
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const handleClick = async () => {
+    if (action.destination === "remember_advice") {
+      if (saveState === "saving" || saveState === "saved") return;
+      if (!action.observation || !action.suggestion) {
+        setSaveState("error");
+        return;
+      }
+      setSaveState("saving");
+      try {
+        const res = await fetch("/api/insights", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            observation: action.observation,
+            suggestion: action.suggestion,
+            citationFields: action.citationFields ?? [],
+            coffeeId: action.id,
+          }),
+        });
+        setSaveState(res.ok ? "saved" : "error");
+      } catch {
+        setSaveState("error");
+      }
+      return;
+    }
+
     if ((action.destination === "brew_again" || action.destination === "start_brew") && action.id) {
       // Hydrate the flow store with the coffee first.
       // Same pattern /coffees and /coffees/[id] use for "Brew this".
@@ -149,6 +183,20 @@ export default function ActionPill({ action }: { action: NavAction }) {
     router.push(destinationToPath(action));
   };
 
+  // For remember_advice the pill doubles as its own status: label + icon
+  // reflect the save progress, and it locks once saved.
+  const isRemember = action.destination === "remember_advice";
+  const label = isRemember
+    ? saveState === "saving"
+      ? "Saving…"
+      : saveState === "saved"
+        ? "Saved to coach"
+        : saveState === "error"
+          ? "Couldn't save — tap to retry"
+          : action.label
+    : action.label;
+  const locked = isRemember && (saveState === "saving" || saveState === "saved");
+
   // Filled-anthracite treatment so Action Pills don't visually echo the
   // cream Glass user bubbles — they read as "do this" CTAs rather than
   // another speech bubble. (Spec §6.1 specified Glass; user feedback in
@@ -157,11 +205,16 @@ export default function ActionPill({ action }: { action: NavAction }) {
     <button
       type="button"
       onClick={() => void handleClick()}
+      disabled={locked}
       title={action.reason}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-sm active:opacity-90"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-sm active:opacity-90 disabled:opacity-80"
     >
-      <ActionPillIcon destination={action.destination} />
-      {action.label}
+      {isRemember && saveState === "saved" ? (
+        <Check className="h-4 w-4 text-light-text-on-dark" strokeWidth={1.75} />
+      ) : (
+        <ActionPillIcon destination={action.destination} />
+      )}
+      {label}
     </button>
   );
 }
