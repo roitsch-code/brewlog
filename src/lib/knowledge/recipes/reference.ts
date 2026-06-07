@@ -498,6 +498,135 @@ export const REFERENCE_RECIPES: Recipe[] = [
     verified: true,
   },
 
+  // ── Kasuya Super Coarse 10-Pour (2026) ────────────────────────────────────
+
+  {
+    id: "kasuya-super-coarse-10-pour",
+    name: "Kasuya Super Coarse 10-Pour",
+    shortName: "Kasuya Super Coarse",
+    attribution: {
+      person: "Tetsu Kasuya",
+      title: "2016 World Brewers Cup Champion",
+      affiliation: "Philocoffea, Chiba",
+      country: "Japan",
+      year: 2026,
+    },
+    category: "reference",
+    brewer: "v60",
+    brewerNotes:
+      "Hario V60 or Hario Switch/Neo, size 02. Kasuya's 2026 routine to 'maximize the charm of light roast through full extraction': a very coarse grind, high water temperature, and ten even 30 g pours.",
+    dose: { grams: 20 },
+    water: { grams: 300, ratio: "1:15" },
+    temperature: { celsius: 96, rangeC: [95, 96] },
+    grind: {
+      referenceGrinder: "Comandante C40",
+      referenceSetting: "40–45 clicks (super coarse)",
+      nicheZeroDegrees: [435, 455],
+      description:
+        "Super coarse — Kasuya publishes the setting as Comandante 40–45 clicks. The Niche degree range here is DERIVED from the project's click→degree conversion (grind-settings.md, ~3.3°/click) and is extrapolated well beyond the measured 23–29-click anchors, so calibrate it empirically against the ~3:30 finish rather than trusting the number.",
+    },
+    pourSequence: [
+      {
+        label: "Pour 1 (bloom) @ 0:00",
+        action: "pour",
+        waterGramsAtEnd: 30,
+        durationSec: 5,
+        notes: "30 g — doubles as the bloom.",
+      },
+      { label: "Bloom rest → 0:30", action: "wait", durationSec: 25 },
+      {
+        label: "Pour 2 (→60 g) @ 0:30",
+        action: "pour",
+        waterGramsAtEnd: 60,
+        durationSec: 5,
+        notes: "From here, add 30 g every 15 s — wait ~10 s between each pour.",
+      },
+      { label: "Wait → 0:45", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 3 (→90 g) @ 0:45",
+        action: "pour",
+        waterGramsAtEnd: 90,
+        durationSec: 5,
+      },
+      { label: "Wait → 1:00", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 4 (→120 g) @ 1:00",
+        action: "pour",
+        waterGramsAtEnd: 120,
+        durationSec: 5,
+        notes: "From about here the bed sits lower and the brew speeds up.",
+      },
+      { label: "Wait → 1:15", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 5 (→150 g) @ 1:15",
+        action: "pour",
+        waterGramsAtEnd: 150,
+        durationSec: 5,
+      },
+      { label: "Wait → 1:30", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 6 (→180 g) @ 1:30",
+        action: "pour",
+        waterGramsAtEnd: 180,
+        durationSec: 5,
+      },
+      { label: "Wait → 1:45", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 7 (→210 g) @ 1:45",
+        action: "pour",
+        waterGramsAtEnd: 210,
+        durationSec: 5,
+      },
+      { label: "Wait → 2:00", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 8 (→240 g) @ 2:00",
+        action: "pour",
+        waterGramsAtEnd: 240,
+        durationSec: 5,
+      },
+      { label: "Wait → 2:15", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 9 (→270 g) @ 2:15",
+        action: "pour",
+        waterGramsAtEnd: 270,
+        durationSec: 5,
+      },
+      { label: "Wait → 2:30", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 10 (→300 g, finish) @ 2:30",
+        action: "pour",
+        waterGramsAtEnd: 300,
+        durationSec: 5,
+        notes: "Final pour — completes the 300 g.",
+      },
+      { label: "Drawdown → ~3:30", action: "drain", durationSec: 55 },
+    ],
+    totalTimeSec: 210,
+    techniques: ["bloom", "pulse-pouring"],
+    bestFor: {
+      roastLevels: ["very-light", "light", "medium-light"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["balanced", "high-clarity", "sweetness-forward"],
+    },
+    teaches:
+      "How to reach full extraction on a light roast without bitterness by grinding very coarse and compensating with many even pours and near-boiling water. The coarse grind removes the fines that would over-extract; the ten 30 g pulses and 95–96 °C restore the yield the coarse grind gives up.",
+    science:
+      "A super-coarse grind shrinks the fines fraction — the particles that over-extract first and carry most of the harsh, astringent compounds — which lowers the extraction ceiling. Kasuya pushes that ceiling back up two ways: near-boiling water (95–96 °C raises the extraction rate across all compound classes) and ten discrete 30 g pours, each a fresh agitation cycle that renews the concentration gradient at the grounds' surface. The bed stays shallow and well mixed and the flow speeds up as the level drops (the recipe notes this), so the cup reaches a high, even yield that reads as sweetness and clarity rather than the bitterness usually associated with high extraction.",
+    whenToUse:
+      "A light, delicate, expensive coffee where you want to pull as much sweetness and aromatic complexity as possible while keeping the cup clean — and you have a grinder that holds a tight particle distribution at a very coarse setting.",
+    sources: [
+      {
+        type: "blog",
+        citation:
+          "Tetsu Kasuya (@tetsukasuya) — 'Super Coarse 10-Pour Recipe', Instagram post (2026)",
+        year: 2026,
+      },
+    ],
+    verified: true,
+    notes:
+      "Transcribed directly from Kasuya's own Instagram post. Parameters (20 g : 300 g, 95–96 °C, super-coarse Comandante 40–45 clicks, ten 30 g pours, bloom 30 s then 15 s cadence, finish ~3:30) are as published. The only non-published value is the Niche Zero degree range, which is derived from the project's click→degree conversion and extrapolated beyond its measured anchors — calibrate empirically. Brews at one constant temperature (no staging).",
+  },
+
   // ── Patrik Rolf / April Coffee ────────────────────────────────────────────
 
   {
