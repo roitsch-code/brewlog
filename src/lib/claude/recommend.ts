@@ -259,7 +259,7 @@ A curated style prior will appear in the message if available.
 - If user brew history contradicts the prior → trust the history
 - If no history for this roaster → apply the prior with stated confidence
 - If prior says "clarity-focused" → consider clarity methods in the portfolio
-- If prior says "agitation-sensitive" → use Orea Apex or bare V60 with minimal pour agitation
+- If prior says "agitation-sensitive" → use Orea Apex or V60 with minimal pour agitation
 - Always be explicit about whether and how the prior influenced portfolio choices
 
 LAYER 4 — CONSTRAINTS (NON-NEGOTIABLE physical limits)
@@ -327,7 +327,7 @@ What to avoid:
 
 Role definitions (each candidate is an independent scientific hypothesis — neither is "primary"):
 - hypothesis-A / hypothesis-B: two equal hypotheses about how to extract the best version of THIS coffee. Order in the array is arbitrary; both stand on their own merits.
-- clarity-probe: specifically tests maximum origin clarity (Orea Apex, bare V60, Origami cone, Chemex, minimal agitation)
+- clarity-probe: specifically tests maximum origin clarity (Orea Apex, V60, Origami cone, Chemex, minimal agitation)
 - sweetness-probe: specifically tests sweetness development (Orea Classic, Clever, Origami wave, gentle agitation, richer ratio)
 - body-probe: tests body enhancement (Origami Air M, Clever, immersion methods, longer contact)
 - contrast: genuinely different extraction physics from the other candidate (percolation vs immersion, or very different agitation)
@@ -372,12 +372,12 @@ IMMERSION:
 - Moccamaster: no user agitation. Do not include stir/swirl.
 
 CHEMEX — dedicated rules:
-1. Thick bonded paper filter removes oils + fines → very clean, bright, tea-like cup. Cleaner than bare V60.
+1. Thick bonded paper filter removes oils + fines → very clean, bright, tea-like cup. Cleaner than a V60.
    Best for: washed light/light-medium, Ethiopian florals, Kenyan brightness, clarity-forward goals.
    Trade-off: strips body from naturals/anaerobic — note this when recommending for body-forward intent.
 2. Agitation: gentle swirl at bloom ONLY. NEVER stir — thick filter collapses against ribs → channeling.
 3. Temperature: Washed light 93–96°C | Natural/Honey light 91–94°C | Medium-light 91–94°C
-   (Slightly lower than bare V60 — thick filter slows flow, adding contact time)
+   (Slightly lower than V60 — thick filter slows flow, adding contact time)
 4. Ratio: 1:15–1:16 standard | 1:16–1:17 for lean/clarity focus
 5. Niche° for Chemex: Light washed 396–408° | Natural/Honey 398–410° (slightly coarser than Kalita — thick filter adds resistance)
 6. Small (350ml): 23g:350ml | Bloom 46g → 150g → 250g → 350g | ~4:30 (targetTimeSec: 270)
@@ -414,7 +414,7 @@ OREA V4 — dedicated rules:
 
 NICHE° GRIND REFERENCE:
 (On the Niche Zero dial, HIGHER degree = COARSER grind. The numbers below are starting points; calibrate to drawdown.)
-V60: 396–406° | V60 + Drip Assist: 401–411° (emergency/travel only — disc adds resistance, ~+5° coarser than bare V60)
+V60: 396–406° | V60 + Drip Assist: 401–411° (emergency/travel only — disc adds resistance, ~+5° coarser than the V60 range)
 Orea: 401–411° | Origami Air M: 401–408°
 Origami (cone): 398–408° | Origami (wave): 398–406°
 Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
@@ -743,8 +743,8 @@ export async function generateRecommendation(
   const dripAssistLocked =
     context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod);
   const dripAssistNote = dripAssistLocked
-    ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the bare V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a bare V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred bare-V60 setup.`
-    : `\nDRIP ASSIST IS BANNED: Do NOT suggest "V60 + Drip Assist" as a candidate's primaryMethod. The Hario Drip Assist disc is the user's emergency/travel backup (used only when no gooseneck kettle is available). It is NEVER a proactive recommendation. If the user wanted it, they would have locked it as preferredMethod — they did not. Pick a bare V60 or any other brewer the user owns instead.`;
+    ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the standard V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a standard V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred V60 setup. When you name the brewer, only ever write "V60 + Drip Assist" or "V60" — never "bare V60" or "V60 without the Drip Assist".`
+    : `\nDRIP ASSIST IS BANNED: Do NOT suggest "V60 + Drip Assist" as a candidate's primaryMethod. The Hario Drip Assist disc is the user's emergency/travel backup (used only when no gooseneck kettle is available). It is NEVER a proactive recommendation. If the user wanted it, they would have locked it as preferredMethod — they did not. Pick a plain "V60" (named exactly "V60", never "bare V60" or "V60 without the Drip Assist") or any other brewer the user owns instead.`;
 
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;

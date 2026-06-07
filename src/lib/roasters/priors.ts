@@ -85,7 +85,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Loses complexity if over-agitated",
     ],
     notes:
-      "Low agitation tolerance is the key signal here. Orea Apex or bare V60 with minimal pour agitation is ideal — anything that adds turbulence can muddy the clarity profile. Championship water (55–75 ppm) is worth considering for competition lots.",
+      "Low agitation tolerance is the key signal here. Orea Apex or V60 with minimal pour agitation is ideal — anything that adds turbulence can muddy the clarity profile. Championship water (55–75 ppm) is worth considering for competition lots.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -175,7 +175,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Too thin at 1:17+ ratios",
     ],
     notes:
-      "Clarity is the product. Orea Apex or bare V60. Minimal agitation. Diluted or championship water to protect delicate floral notes from mineral interference. Kasuya 4:6 can work well if the user wants to tune acid/sweetness balance across phases.",
+      "Clarity is the product. Orea Apex or V60. Minimal agitation. Diluted or championship water to protect delicate floral notes from mineral interference. Kasuya 4:6 can work well if the user wants to tune acid/sweetness balance across phases.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -564,7 +564,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Aggressive stir at bloom can cause agitation bitterness on very light lots",
     ],
     notes:
-      "Orea Apex or bare V60 are the natural picks — minimal agitation preserves transparency. High temp mandatory. Championship water opens up complexity. Kasuya 4:6 is excellent for exploring acid/sweet balance.",
+      "Orea Apex or V60 are the natural picks — minimal agitation preserves transparency. High temp mandatory. Championship water opens up complexity. Kasuya 4:6 is excellent for exploring acid/sweet balance.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },
@@ -835,7 +835,7 @@ export const ROASTER_PRIORS: RoasterPrior[] = [
       "Fines migration can muddy clarity on aggressive agitation",
     ],
     notes:
-      "Championship-grade coffees. Orea Apex or bare V60. Championship water can reveal additional complexity. Kasuya 4:6 is excellent for phase-by-phase exploration of these coffees.",
+      "Championship-grade coffees. Orea Apex or V60. Championship water can reveal additional complexity. Kasuya 4:6 is excellent for phase-by-phase exploration of these coffees.",
     confidence: "curated",
     disclaimer: DISCLAIMER,
   },

@@ -21,7 +21,7 @@ Two relationships fall out of those points:
 | Method | Process | Niche° | Comandante | Confidence |
 |--------|---------|--------|------------|------------|
 | V60 | any | 375–385° | 22–25 | **measured** (380°/23 = single cup) |
-| V60 + Drip Assist | any | 380–390° | 24–27 | estimate (emergency/travel only — disc adds resistance → ~+5° coarser than bare V60) |
+| V60 + Drip Assist | any | 380–390° | 24–27 | estimate (emergency/travel only — disc adds resistance → ~+5° coarser than the standard V60) |
 | Orea V4 | any | 380–390° | 23–26 | estimate |
 | Origami Dripper | Washed | 380–386° | 23–25 | estimate |
 | Origami Dripper | Honey | 382–387° | 24–25 | estimate |
