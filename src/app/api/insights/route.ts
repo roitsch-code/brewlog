@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { and, desc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { insights, sessions } from "@/lib/db/schema";
-import type { InsightStatus } from "@/lib/db/schema";
+import { insights, sessions, coffees } from "@/lib/db/schema";
+import type { InsightStatus, CoffeeCoachInsight } from "@/lib/db/schema";
 import { getOrGenerateInsights } from "@/lib/claude/insights";
 import { z } from "zod";
 
@@ -133,15 +133,23 @@ const RememberSchema = z.object({
 
 /**
  * POST — Save a chat-authored coach note (tap-to-save from the home chat's
- * "Remember this for …" button). Writes one insight row that /recommend
- * reads on the next recipe for a matching coffee.
+ * "Remember this for …" button). It lands in two places:
  *
- * The user tapping the button is an explicit endorsement, so the row is
- * written with status='trying' (an active reminder — feeds /recommend AND
- * the /brew Context reminder pill) and source='user-confirmed' (an allowed
- * CHECK value, so no migration is needed). status='trying' is preserved by
- * the insights orchestrator across /taste regenerations, so a chat note is
- * never silently wiped.
+ *   1. The insights table — one row that /recommend reads on the next
+ *      recipe for a matching coffee, and that the /brew Context step shows
+ *      as a reminder.
+ *   2. The targeted coffee's `coach_insight` column — so the saved note
+ *      becomes that bag's card on /coffees/[id] (the detail page reads
+ *      coach_insight, NOT the insights table). The chat knows the exact
+ *      coffeeId, so this is a precise per-coffee write — the user's
+ *      hand-saved advice supersedes the auto-generated per-coffee insight.
+ *
+ * The user tapping the button is an explicit endorsement, so both are
+ * written with status='trying' (an active reminder). The insights row uses
+ * source='user-confirmed' (an allowed CHECK value, so no migration is
+ * needed). status='trying' is preserved by the insights orchestrator across
+ * /taste regenerations AND keeps the coffee card from regenerating under the
+ * user, so a chat note is never silently wiped.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -156,6 +164,39 @@ export async function POST(req: NextRequest) {
       .filter((f): f is (typeof CITATION_FIELDS)[number] =>
         (CITATION_FIELDS as readonly string[]).includes(f),
       );
+
+    // (1b) Per-coffee card — when the note targets a real library bag,
+    // write it into that coffee's coach_insight so it shows on /coffees/[id].
+    // Runs regardless of the insights-table dedup below, so re-tapping the
+    // pill re-surfaces a card the user had previously resolved/hidden.
+    if (parsed.data.coffeeId) {
+      const coffeeRow = await db
+        .select({ id: coffees.id })
+        .from(coffees)
+        .where(eq(coffees.id, parsed.data.coffeeId))
+        .limit(1);
+      if (coffeeRow.length > 0) {
+        // This coffee's own latest session = the coach_insight cache key
+        // (matches the regen convention in /api/coffees/[id]/insight).
+        const coffeeLatest = await db
+          .select({ ms: sessions.createdAtMs })
+          .from(sessions)
+          .where(sql`${sessions.coffee}->>'coffeeId' = ${parsed.data.coffeeId}`)
+          .orderBy(desc(sessions.createdAtMs))
+          .limit(1);
+        const card: CoffeeCoachInsight = {
+          observation,
+          suggestion,
+          status: "trying",
+          generatedAtSessionMs: coffeeLatest[0]?.ms ?? 0,
+          generatedAt: new Date().toISOString(),
+        };
+        await db
+          .update(coffees)
+          .set({ coachInsight: card })
+          .where(eq(coffees.id, parsed.data.coffeeId));
+      }
+    }
 
     // Dedup — if the same note was already saved (same first 80 chars of
     // observation), don't write a second copy. The table is tiny, so an
