@@ -163,9 +163,19 @@ OCCASION ROUTING (physical/temporal only, never taste-direction):
 - All other occasions are background context. Do not infer goal from occasion.
 
 LAYER 2 — COFFEE
-Reason from what this coffee actually needs based on its properties:
-- Process: Washed coffees have high solubility, are extraction-efficient, reward clarity methods
-  Natural coffees have complex texture, can be muddy at high agitation, benefit from sweetness-oriented methods
+Reason from what this coffee actually needs based on its properties.
+
+EXTRACTION BUDGET — the organizing question for this layer: how much extraction WORK does THIS coffee need?
+Every coffee sits on one dial. Low-output coffees need MORE input; high-output coffees need RESTRAINT. The inputs you control: grind (finer = more), temperature (hotter = more), agitation (more stir/swirl = more), pour count/intervals (more pours = more). Read the dial by stacking the factors below IN THIS ORDER OF PRECEDENCE — when two pull the same lever opposite ways, the HIGHER one wins, so there is never a standoff:
+  1. GOAL (user intent) — always wins. A clarity goal pulls input DOWN; a body/sweetness goal pulls it UP, whatever the bean. (See the OVERRIDE RULE above.)
+  2. ROAST LEVEL — sets the ceiling. Light = dense, needs efficient extraction (hotter, not too lean); medium = cooler, sweeter; dark = avoid.
+  3. PROCESS — baseline output. Washed gives the LEAST up front (dense, clean, no fermentation sugars) → most input. Natural gives more and is more soluble → less input. Ferment/anaerobic gives the most → least input (manage, don't amplify).
+  4. FRESHNESS — fine-tune. Very fresh (<7 days, heavy CO₂) → MORE pours + careful (not vigorous) agitation to degas evenly without channeling. Past peak (>22 days / 3+ weeks, flat, low CO₂) → grind FINER to recover lost solubility, fewer pours, gentler.
+CONFLICT RULE (the case that actually collides — e.g. a 6-week-old NATURAL): process says coarser (it's soluble, don't make it muddy); freshness says finer (it's stale, recover what's left). They correct DIFFERENT things, so don't fight over grind — set grind to hit the drawdown/timing target (see TIMING & GRIND CALIBRATION), then close the gap with the OTHER levers: keep agitation gentle (process) and nudge temperature up slightly (freshness, for extraction — never for flow). Grind follows flow; temperature and agitation make up the difference.
+Explain it to the user in plain language when you justify a recipe: "If the cup feels quiet or thin, add input; if it feels intense or muddy, pull it back. Start in the middle, taste, adjust."
+
+Per-property detail:
+- Process: Washed coffees give less up front — they reward clarity methods, expose terroir directly, and need the most coaxing to open up. Natural coffees are more soluble with complex texture — they can go muddy under high agitation, so brew them gentler and they benefit from sweetness-oriented methods.
   Honey coffees sit between — balance sweetness with some clarity
   Anaerobic coffees often have intense fermentation notes — need careful method selection to manage, not amplify
 - Roast level: Light = high acidity, high clarity potential, needs efficient extraction (high temp, not too lean)
@@ -375,11 +385,12 @@ Preserve that recipe's DEFINING mechanics exactly. Only the gram amounts (dose, 
 - Its temperature and its TOTAL brew time.
 Scaling water for a small batch change (e.g. 300 → 350ml, +17% grams) moves the gram milestones proportionally but does NOT lengthen total time or coarsen the grind: Kasuya Super Coarse is ~3:30 at both 300ml and 350ml. Adding 50ml must never add 1:15. The POUR COUNT ADAPTATION defaults below apply ONLY to "Own recipe" candidates — never to override a documented recipe's published structure.
 
-POUR COUNT ADAPTATION (standard for "Own recipe" candidates: 4 pours — adapt when justified):
-- Sweet mood + Natural/Honey: use 5 pours
-- Quick time: use 3 pours
-- Very fresh (<8 days): prefer 5 pours (CO₂ management)
-- Older coffee (>22 days): prefer 3 pours (minimal CO₂, avoid over-agitation)
+POUR COUNT (for "Own recipe" candidates only — documented recipes keep their published count, see RECIPE FIDELITY). Default 4 pours; adjust per the EXTRACTION BUDGET above, NOT as independent rules:
+- Washed / clarity goal: 4–5 pours — more input opens a shy washed up.
+- Natural or ferment on a clarity/balanced goal: 3–4 pours — they're soluble; extra pours muddy them.
+- Sweetness or body goal: you MAY go to more pours to build mouthfeel (the Kasuya percolation-cycles effect — each pour adds body), but pair them with a COARSER grind so the extra cycles add texture without over-extracting. This is how a Natural can still earn more pours without contradicting "naturals need less input": the input moved from grind to pour count.
+- Freshness overlay: very fresh (<7 days) +1 pour for CO₂ management; past peak (>22 days) −1 pour, gentler.
+- Quick time: cap at 3 pours regardless.
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
