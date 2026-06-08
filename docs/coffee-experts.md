@@ -39,7 +39,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 | Recipe | Brewer | Dose : Water | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|
-| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 80–100°C † | calibrate ‡ | 3:00 | true |
+| **Hoffmann V60 (Better 1 Cup)** | V60 size 02 | 15g : 250g | 90–100°C † | calibrate ‡ | 3:00 | true |
 | **Hoffmann Ultimate Clever** | Clever Dripper | 18g : 300g | 96–100°C | 400–410° | 4:00 | true |
 | **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85–100°C † | 356–366° | 3:35 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
@@ -53,7 +53,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g *(unsourced — flagged)* | 88–95°C (by roast) | 396–406° | 3:10 | false |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
 
-† **Hoffmann roast-temperature staircase:** light = **freshly boiled (100 °C)**, medium 90–95 °C, dark 80–85 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span.
+† **Hoffmann roast-temperature staircase (as he states it in the Better 1 Cup video):** light = **freshly boiled (100 °C)**, medium 96 °C, darkest roasts down to 90 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span. (Verified against the video transcription, June 2026.)
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
 § Kasuya publishes the Super Coarse grind only as **Comandante 40–45 clicks**. The Niche 435–455° range is DERIVED from grind-settings.md's ~3.3°/click conversion and extrapolated well past the measured 23–29-click anchors — calibrate empirically against the ~3:30 finish.
 

@@ -40,7 +40,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "Hario V60 size 02, paper filter rinsed. Plastic V60 preferred per Hoffmann for thermal retention. Dripper preheated with very hot tap water — not boiling (Hoffmann calls boiling-water preheat wasteful). Expected liquid out: ~215–220 g from 250 g poured.",
     dose: { grams: 15 },
     water: { grams: 250, ratio: "1:16.7" },
-    temperature: { celsius: 100, rangeC: [80, 100] },
+    temperature: { celsius: 100, rangeC: [90, 100] },
     grind: {
       referenceGrinder: "Various",
       referenceSetting:
@@ -111,7 +111,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     science:
       "Bloom saturation via bulk-puck motion (swirl) keeps fines distributed evenly instead of dragging them to the filter walls where they form flow restrictions. The 4× 50 g pulse structure gives controlled alternation of agitation (pour) and bed-settling (10 s pause), so each pour drives a moment of extraction without accumulated turbulence. Per Hoffmann's measurement work, a ~5 g/s pour rate with a low spout produces the bed agitation needed for high extraction without channeling.",
     whenToUse:
-      "Default single-cup V60. Roast-temperature staircase per Hoffmann: light at freshly boiled (100 °C), medium 90–95, dark 80–85 (up to 90). Plastic V60-02 preferred for thermal retention; preheat with very hot tap water, not boiling.",
+      "Default single-cup V60. Roast-temperature staircase as Hoffmann states it IN THIS video: light = freshly boiled (100 °C), medium = 96 °C, darkest roasts down to 90 °C. Plastic V60-02 preferred for thermal retention; preheat with very hot tap water, not boiling.",
     sources: [
       {
         type: "video",
