@@ -407,7 +407,8 @@ IMMERSION:
 - Chemex: gentle swirl at bloom ONLY — NEVER stir. Stirring collapses the thick filter against the glass ribs → channeling. No agitation on subsequent pours. Keep circular pours gentle; never pour hard against the filter.
 - Clever Dripper (Hoffmann): swirl early (~15s after pour), swirl again at roughly the halfway point of the steep. NEVER stir.
 - Clever Extended: swirl early, swirl at halfway, swirl before drain. Never stir.
-- AeroPress (all modes): stir 2–3× shortly after adding water (~10s), stir again at roughly the halfway point of the steep. Both stirs required.
+- AeroPress (Stanica / Gagné / stir-style recipes): stir 2–3× shortly after adding water (~10s), stir again at roughly the halfway point of the steep.
+- Hoffmann Ultimate AeroPress is the EXCEPTION: NO stir — a single gentle SWIRL at the 2:00 mark, then settle 30s, then a gentle press. Follow the specific recipe's steps rather than forcing stirs.
 - AeroPress Bypass: stir 2–3× shortly after adding concentrate water. Swirl cup after adding bypass water.
 - Moccamaster: no user agitation. Do not include stir/swirl.
 
@@ -489,7 +490,7 @@ CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and 
 - Origami Air M sweet: 30g:450ml | Natural/Honey 93°C | 403–408° | bloom → light stir 1–2× at 0:10 → 3 pours → ~3:00 (targetTimeSec: 180)
 - Wölfl 2024 Orea FAST: 17g:270ml | soft low-mineral water (he used an Apax concentrate; no public TDS — do NOT state a ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
 - Kasuya 4:6 (V60, no Assist): 20g:300ml | soft water (Kasuya: light 93°C / medium 88 / dark 83) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30
-- Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s (targetTimeSec: 150)
+- Hoffmann Ultimate AeroPress (UPRIGHT — NOT inverted): 11g:200g | light = boiling / medium 90–95°C / dark ~85°C | fine, finer than V60 ~356–366° | add 200g 10s · steep to 2:00 (no stir) · gentle SWIRL not stir · wait 30s · gentle press ~30s → ~3:00 (targetTimeSec: 180)
 - AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water 10s · stir 2–3× 10s · press 20s · swirl cup after adding 140g bypass water (targetTimeSec: 90)
 - Clever Extended: 20g:300ml | 92°C | 421–431° | pour water 15s · swirl 5s · steep 4:20 · swirl 5s · swirl 5s · drain 40s (targetTimeSec: 330)
 - Orea Apex clarity: 17g:270ml | 95–98°C | 403–407° | bloom → light stir 1–2× at 0:10 → 3 even pours, no further agitation → ~3:30

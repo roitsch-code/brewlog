@@ -243,23 +243,23 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes:
           "Get the coffee wet as quickly as you can, then pour to 200 g. No need for a gooseneck kettle.",
       },
-      { label: "Steep", action: "wait", durationSec: 120, notes: "Two-minute steep. No stir." },
+      { label: "Steep", action: "wait", durationSec: 110, notes: "Steep to the 2:00 mark (timer starts when the water goes in). No stir." },
       {
         label: "Gentle swirl",
         action: "swirl",
         durationSec: 5,
         notes:
-          "Hold both piston and base; a gentle swirl knocks the grounds down — not a vortex.",
+          "At 2:00, hold both piston and base; a gentle swirl knocks the grounds down — not a vortex.",
       },
-      { label: "Settle", action: "wait", durationSec: 30 },
+      { label: "Settle", action: "wait", durationSec: 25 },
       {
         label: "Press gently",
         action: "press",
         durationSec: 30,
-        notes: "Press gently and evenly — comfortably, not leaning in. ~30 s for this grind.",
+        notes: "From ~2:30, press gently and evenly — comfortably, not leaning in. ~30 s for this grind; finish ~3:00.",
       },
     ],
-    totalTimeSec: 215,
+    totalTimeSec: 180,
     techniques: ["swirl-not-stir"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
