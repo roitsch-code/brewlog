@@ -29,6 +29,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
+import { reconcileToReference } from "./recipeFidelity";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -104,6 +105,27 @@ function sanitizeRecipe(recipe: Record<string, unknown>): BrewRecipe {
     delete out.pourSteps;
   }
   return out as unknown as BrewRecipe;
+}
+
+/**
+ * Deterministic backstop: if a candidate claims to adapt a verified reference
+ * recipe but its grind / total time / temperature has drifted too far from
+ * that recipe scaled to the user's batch, snap the mechanics back to the
+ * faithful scaled reference (PR #265 follow-up — the Kasuya Super Coarse case).
+ * Logs every correction so drift stays observable.
+ */
+function guardRecipeFidelity(
+  recipe: BrewRecipe,
+  basedOn: string | undefined,
+  title: string,
+): BrewRecipe {
+  const { recipe: fixed, changed, reasons, reference } = reconcileToReference(recipe, basedOn);
+  if (changed) {
+    console.warn(
+      `[recommend] recipe-fidelity: snapped "${title}" back to "${reference}" — ${reasons.join("; ")}`,
+    );
+  }
+  return fixed;
 }
 
 const client = new Anthropic({
@@ -952,7 +974,7 @@ Return valid JSON only.`;
 
   const candidates: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
-    recipe: sanitizeRecipe(c.recipe),
+    recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title),
     role: c.role as CandidateRole,
     title: c.title,
     ...(c.basedOn ? { basedOn: c.basedOn } : {}),
