@@ -25,7 +25,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 377–387° | 3:15 | false |
 | 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 387–393° | 3:30 | false |
 | 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 380–390° | 2:20 | true |
-| 2024 (WAC) | **Stanica AeroPress + Melodrip + Bypass** (George Stanica, Romania) | Inverted AeroPress, Melodrip | 18g : 100g → ~80g concentrate + bypass to ~155g | 1:5.5 ext | 88–93°C | 388–396° | 2:15 | true |
+| 2024 (WAC) | **Stanica WAC Champion (Flow Control)** (George Stanica, Romania) | Upright AeroPress, Flow Control cap, 2 filters | 18g : 225g + 15–30g bypass | 1:12.5 | 93°C | 385–392° | 2:15 | true |
 | 2025 (WAC) | **Nemo Pop — Flow Control Bypass** | Upright AeroPress, Flow Control cap, 2 filters | 18g : 100g brew + 70g bypass (50°C) | 1:5.5 ext | 84°C | 403–411° | 1:10 | true |
 
 **Teaching summaries**
@@ -34,7 +34,8 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Du Origami Wave** — How a rich brewing ratio (1:12) combined with custom low-mineral water (4ppm Ca / 15ppm Mg / 80ppm TDS) produces extreme clarity without sacrificing sweetness.
 - **Medina Conical** — How a lean ratio (1:16) at moderate 91°C extracts the fermentation-derived sweetness of a Natural Sidra without amplifying ester sharpness.
 - **Wölfl Orea Fast** — How fast-flowing geometry combined with turbulent pours delivers clarity on a Natural — the paradox of high agitation producing a clean cup because total bed-contact time stays in Zone 1–2.
-- **Stanica AeroPress + Melodrip + Bypass** — His WAC 2024 routine: inverted, gentle Melodrip pours (50g + 30s bloom + 50g) of 88–93°C water, NSEW stir, press out air at 1:20, flip, press to ~80g concentrate at 1:35, then rebuild to ~150–165g with warm + room-temp bypass. Concentrate-and-bypass = extraction and drink strength as independent controls. (An upright Flow-Control home version also exists.)
+- **Stanica WAC Champion (Flow Control)** — The recipe he WON the 2024 WAC with: UPRIGHT AeroPress, Flow Control cap + 2 rinsed filters, 18g:225g at 93°C, NSEW stir, press slowly at 1:30, then 15–30g room-temp bypass → ~240–255g. Concentrate-and-bypass without the inverted flip.
+- **Stanica Inverted + Melodrip** (separate recipe, NOT his WAC winner) — Inverted, plunger 4th mark, gentle Melodrip pours (50g + 30s bloom + 50g) of 88–93°C water, NSEW stir, press out air at 1:20, flip, press to ~80g concentrate at 1:35, rebuild to ~150–165g with warm + room-temp bypass.
 - **Nemo Pop 2025 (WAC champion)** — Bypass-FIRST: 70g of 50°C water waits in the carafe, then an 18g:100g concentrate is brewed at a cool 84°C (Comandante 31 clicks, fines sifted at 200µm), NSNS-WEWE stir at 0:25, gentle press from 0:50, ~1:10 total. The concentrate lands on the warm bypass for an even, sweet, fast cup.
 
 ### 1b. Reference recipes
