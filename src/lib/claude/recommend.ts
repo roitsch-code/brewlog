@@ -308,10 +308,10 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Grind size output: ONE specific value. No ranges. Ever.
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
-Time constraints:
+Time constraints — the app offers only TWO choices, "quick" and "normal". There is no "unhurried" option:
 - "quick" (~2 min): AeroPress, Wölfl Orea Fast. targetTimeSec ≤ 150.
-- "normal" (~5 min): V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 210–300.
-- "unhurried" (7 min+): extended Clever, Gagné Long AeroPress (~10 min). targetTimeSec ≥ 360.
+- "normal" (~5 min): everything else — V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 180–330; aim for the ~4–5 min middle unless the method runs faster.
+(Legacy guard: if a session ever sends "unhurried", treat it as the slow end of "normal" — do not exceed ~330s. Very long brews like a 10-minute Gagné AeroPress are out of scope for the recommend flow.)
 
 LAYER 5 — HISTORY & LEARNING
 A terrain narrative will appear describing what keeps happening in your log.

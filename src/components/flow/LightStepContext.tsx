@@ -18,9 +18,10 @@ import type { CoachInsight } from "@/components/coach/CoachCard";
  * Composition follows lovable-v7/src/pages/Index.tsx verbatim for the
  * non-data-model elements (icons, footnote copy, section order, card
  * layout). Strict-Lovable deviations from the live Dark Brew Context:
- *   - TIME: 2 cards (Quick, Normal) — Unhurried dropped from UI.
- *     The /api/recommend prompt still supports "unhurried" if a
- *     session ever ships it, but this UI no longer offers the choice.
+ *   - TIME: 2 cards (Quick, Normal) — Unhurried dropped from the UI
+ *     AND from the /api/recommend time buckets. The prompt now folds
+ *     any stray "unhurried" into the slow end of "normal" (~330s cap);
+ *     this UI only ever sends "quick" or "normal".
  *   - WATER: 2 cards (Tap only, Championship) — Diluted dropped.
  *   - APPROACH: 2 cards only (Claude picks / I'll choose). The Dark
  *     expanding method list is removed.
