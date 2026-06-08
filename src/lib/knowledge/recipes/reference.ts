@@ -40,7 +40,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "Hario V60 size 02, paper filter rinsed. Plastic V60 preferred per Hoffmann for thermal retention. Dripper preheated with very hot tap water — not boiling (Hoffmann calls boiling-water preheat wasteful). Expected liquid out: ~215–220 g from 250 g poured.",
     dose: { grams: 15 },
     water: { grams: 250, ratio: "1:16.7" },
-    temperature: { celsius: 100, rangeC: [80, 100] },
+    temperature: { celsius: 100, rangeC: [90, 100] },
     grind: {
       referenceGrinder: "Various",
       referenceSetting:
@@ -111,7 +111,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     science:
       "Bloom saturation via bulk-puck motion (swirl) keeps fines distributed evenly instead of dragging them to the filter walls where they form flow restrictions. The 4× 50 g pulse structure gives controlled alternation of agitation (pour) and bed-settling (10 s pause), so each pour drives a moment of extraction without accumulated turbulence. Per Hoffmann's measurement work, a ~5 g/s pour rate with a low spout produces the bed agitation needed for high extraction without channeling.",
     whenToUse:
-      "Default single-cup V60. Roast-temperature staircase per Hoffmann: light at freshly boiled (100 °C), medium 90–95, dark 80–85 (up to 90). Plastic V60-02 preferred for thermal retention; preheat with very hot tap water, not boiling.",
+      "Default single-cup V60. Roast-temperature staircase as Hoffmann states it IN THIS video: light = freshly boiled (100 °C), medium = 96 °C, darkest roasts down to 90 °C. Plastic V60-02 preferred for thermal retention; preheat with very hot tap water, not boiling.",
     sources: [
       {
         type: "video",
@@ -430,7 +430,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     brewer: "v60",
     dose: { grams: 20 },
     water: { grams: 300, ratio: "1:15" },
-    temperature: { celsius: 92 },
+    temperature: { celsius: 93, rangeC: [83, 93] },
     grind: {
       referenceSetting: "medium-coarse",
       nicheZeroDegrees: [390, 400],
@@ -753,55 +753,62 @@ export const REFERENCE_RECIPES: Recipe[] = [
     brewer: "aeropress-prismo",
     brewerNotes:
       "Upright AeroPress with a Fellow Prismo metal valve (acts like espresso portafilter — no drip until pressed).",
-    dose: { grams: 20 },
-    water: { grams: 200, ratio: "1:10" },
-    temperature: { celsius: 80, rangeC: [78, 82] },
+    dose: { grams: 18 },
+    water: { grams: 260, ratio: "1:14.4" },
+    temperature: { celsius: 100, rangeC: [99, 100] },
     grind: {
-      referenceSetting: "fine, espresso-adjacent",
-      nicheZeroDegrees: [344, 354],
+      referenceSetting:
+        "fine — fine enough for high extraction, but not so fine the press is hard (a hard press is what brings astringency)",
     },
     pourSequence: [
       {
-        label: "Add water",
+        label: "Add 18 g, pour 100 °C water to fill (~260 g)",
         action: "pour",
-        waterGramsAtEnd: 200,
+        waterGramsAtEnd: 260,
         durationSec: 15,
+        notes: "Fill the chamber off the boil; start the timer.",
       },
       {
-        label: "Stir thoroughly",
+        label: "Stir back-and-forth",
         action: "stir",
         durationSec: 10,
+        notes: "Bottom-to-top, NOT circular (Gagné is explicit — avoid a vortex). Then rest the plunger slightly in the chamber to pull a partial vacuum.",
       },
+      { label: "Steep to 5:00", action: "wait", durationSec: 275 },
       {
-        label: "Long steep",
-        action: "wait",
-        durationSec: 300,
-        notes: "5-minute steep — Gagné's PSD analyses show this lets fines fully saturate without channeling.",
+        label: "Vigorous swirl",
+        action: "swirl",
+        durationSec: 5,
+        notes: "At the 5-minute mark, swirl to level the bed.",
       },
+      { label: "Steep to 9:00", action: "wait", durationSec: 235 },
       {
-        label: "Slow press",
+        label: "Gentle press",
         action: "press",
         durationSec: 60,
-        notes: "60-second press — slow enough that the puck doesn't tear.",
+        notes: "From ~9:00, press as gently as you can — a bit over a minute to the bottom. Gentleness is what keeps it clean.",
       },
     ],
-    totalTimeSec: 385,
-    techniques: ["immersion-steep", "low-temp-long-steep", "aeropress-inversion"],
+    totalTimeSec: 600,
+    techniques: ["immersion-steep"],
     bestFor: {
-      roastLevels: ["light", "medium-light"],
-      processes: ["washed"],
-      goals: ["high-clarity"],
+      roastLevels: ["light", "medium-light", "medium"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["body-forward", "sweetness-forward"],
     },
     teaches:
-      "How a long, low-temperature steep with a fine grind extracts deeply into Zone 2 without invading Zone 3. The Prismo valve lets the steep run without drip, so extraction time is purely contact time.",
+      "How a long (~10-minute) HOT steep with a no-drip valve (Prismo) and a very gentle press reaches high extraction (~23.5%) on a fine grind without astringency — contact time and gentleness do the work, not a low temperature.",
     science:
-      "Conventional wisdom says 'fine grind + long time = bitter.' Gagné's PSD analyses show that's only true at high temperatures — the bitter, phenolic Zone 3 compounds have steep temperature dependencies. At 80°C they extract orders of magnitude more slowly than at 95°C. So a fine grind (high surface area) at 80°C (low Zone 3 extraction rate) over 5 minutes (full Zone 2 saturation) lands in a uniquely sweet, dense, and clean part of the extraction space — what Gagné calls the 'second sweet spot.'",
+      "Gagné fills with 100 °C water and steeps ~10 minutes; the Prismo valve means that whole time is pure steep, not drip. A back-and-forth (non-circular) stir plus one mid-steep swirl keep the bed even. Because the final press is very gentle and the grind isn't pushed espresso-fine, the long hot steep climbs to ~23.5 % extraction — full, sweet, dense — without dragging in the harsh, astringent compounds a hard press or over-fine grind would. (The earlier codebase entry attributed an 80 °C 'second sweet spot' LOW-temperature steep to Gagné — that was an error; his published AeroPress recipe is HOT. Corrected against his own blog, coffeeadastra.com 2021.)",
     whenToUse:
-      "When you have a precise washed coffee and want a body-forward but extremely clean cup. Requires a Prismo or equivalent — standard AeroPress drips through the paper filter and ruins the timing.",
+      "When you want a full, sweet, very clean AeroPress cup and own a Prismo (a standard AeroPress drips through the paper and ruins the long-steep timing). Patience required — it's a ~10-minute brew.",
     sources: [
       {
         type: "blog",
-        citation: "Jonathan Gagné — coffeeadastra.com (Prismo / long-brew posts)",
+        citation:
+          "Jonathan Gagné — 'Reaching Fuller Flavor Profiles with the AeroPress', coffeeadastra.com (2021-09-07). Verified in-session.",
+        url: "https://coffeeadastra.com/2021/09/07/reaching-fuller-flavor-profiles-with-the-aeropress/",
+        year: 2021,
       },
       {
         type: "book",
@@ -891,8 +898,8 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "rao-rule-of-thirds",
-    name: "Rao — Rule of Thirds Pour Pattern",
-    shortName: "Rao 1/3 1/3 1/3",
+    name: "Rao — V60 Spin Method",
+    shortName: "Rao V60 (spin)",
     attribution: {
       person: "Scott Rao",
       title: "*The Professional Barista's Handbook* author",
@@ -900,79 +907,86 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "v60",
-    dose: { grams: 22 },
-    water: { grams: 352, ratio: "1:16" },
-    temperature: { celsius: 96 },
+    dose: { grams: 20 },
+    water: { grams: 330, ratio: "1:16.5" },
+    temperature: { celsius: 97 },
     grind: {
-      referenceSetting: "medium-fine",
-      nicheZeroDegrees: [375, 383],
+      referenceSetting:
+        "medium-fine — fine enough to reach 22–24.5% extraction; Rao does not recommend brewing a V60 with much less than 20–22 g",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (→ 60 g)",
         action: "pour",
-        waterGramsAtEnd: 66,
-        durationSec: 10,
+        waterGramsAtEnd: 60,
+        durationSec: 8,
       },
       {
-        label: "Rao spin",
+        label: "Aggressive Rao spin",
         action: "swirl",
         durationSec: 5,
         notes:
-          "Rao's signature — a vigorous swirl during the bloom that spins the slurry like a vortex. Saturates evenly without stirring.",
+          "Spin the bloom AGGRESSIVELY — the vortex saturates the bed evenly without stirring fines to the walls.",
       },
-      { label: "Bloom rest", action: "wait", durationSec: 30 },
+      { label: "Bloom rest", action: "wait", durationSec: 47 },
       {
-        label: "Pour 1 (one-third)",
+        label: "Pour to 200 g",
         action: "pour",
-        waterGramsAtEnd: 162,
+        waterGramsAtEnd: 200,
         durationSec: 20,
+        notes: "Low, steady, near-vertical stream; move the kettle around the whole slurry.",
       },
       {
-        label: "Pour 2 (one-third)",
-        action: "pour",
-        waterGramsAtEnd: 257,
-        durationSec: 20,
-      },
-      {
-        label: "Pour 3 (one-third)",
-        action: "pour",
-        waterGramsAtEnd: 352,
-        durationSec: 20,
-      },
-      {
-        label: "Final Rao spin",
+        label: "Gentle spin",
         action: "swirl",
-        durationSec: 5,
-        notes: "Flatten the bed; encourage an even drawdown.",
+        durationSec: 2,
+        notes: "A very gentle spin (<1 s of motion) — just enough to fill in the ribbed channels.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 95 },
+      { label: "Wait until ~70% drained", action: "wait", durationSec: 58 },
+      {
+        label: "Pour to 330 g",
+        action: "pour",
+        waterGramsAtEnd: 330,
+        durationSec: 15,
+      },
+      {
+        label: "Gentle spin",
+        action: "swirl",
+        durationSec: 2,
+        notes: "Another brief gentle spin to settle the bed.",
+      },
+      { label: "Drawdown", action: "drain", durationSec: 98 },
     ],
-    totalTimeSec: 205,
-    techniques: ["rule-of-thirds", "rao-spin", "pulse-pouring"],
+    totalTimeSec: 255,
+    techniques: ["rao-spin", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced"],
     },
     teaches:
-      "Equal-volume thirds + swirl-not-stir agitation = predictable, repeatable extraction. The Rao spin is its own technique — a vortex swirl that distributes water evenly without disturbing the bed.",
+      "The Rao Spin: one AGGRESSIVE bloom spin to saturate evenly, then a brief GENTLE spin after each of the two main pours to refill the ribbed channels. Rao deliberately uses FEW pours — he argues against breaking a V60 into many parts because it drops the average extraction temperature.",
     science:
-      "Equal-volume pours produce a more uniform total extraction time per ground-water contact unit than weighted pour distributions. The Rao spin's vortex motion drags water down through the puck centre-first rather than wall-first, counteracting the V60's tendency to channel along the filter walls. Combined effect: lower extraction variance run-to-run, easier diagnosis when things go wrong.",
+      "The bloom spin's vortex drags water down through the puck centre-first rather than wall-first, counteracting the V60's tendency to channel along the filter walls. Keeping to two main pours (not many pulses) holds a higher average extraction temperature, which Rao prefers for reaching 22–24.5% extraction. The post-pour gentle spins re-wet the ribs without dropping fresh fines, so the bed stays even and the run-to-run variance stays low.",
     whenToUse:
-      "Default V60 daily-driver when you want consistency you can troubleshoot from. Pair with a known coffee to isolate technique drift; pair with an unknown coffee for a baseline read.",
+      "Default V60 daily-driver when you want consistency you can troubleshoot from, and you have the time for a ~4:00–4:30 brew. Not for someone who wants a fast, many-pulse routine — that's the opposite of Rao's approach.",
     sources: [
       {
-        type: "book",
+        type: "article",
         citation:
-          "Rao, S. — *The Professional Barista's Handbook* (multiple editions)",
+          "Scott Rao — V60 recipe as published by Hario UK (he is their ambassador): 20 g : 330 g, 97 °C, aggressive bloom spin + two pours (to 200 g, to 330 g) each with a gentle spin, 4:00–4:30. Verified in-session.",
+        url: "https://www.hario.co.uk/blogs/hario-ambassadors/hario-v60-recipe-interview-with-hario-ambassador-scott-rao",
       },
       {
-        type: "video",
-        citation: "Scott Rao — published V60 technique videos",
+        type: "blog",
+        citation:
+          "scottrao.com — Rao's stated position against breaking the pour into more than two parts (lowers average extraction temperature).",
+        url: "https://www.scottrao.com",
       },
     ],
     verified: true,
+    notes:
+      "Corrected June 2026 against Rao's own published recipe (Hario UK ambassador page) + his blog. The prior entry called this 'Rule of Thirds' with three EQUAL pours (22 g : 352 g, 96 °C) — a misattribution: Rao explicitly opposes breaking a V60 into more than two parts and does not publish equal thirds. His actual recipe is 20 g : 330 g / 97 °C, an aggressive bloom spin then two pours (to 200 g, to 330 g) each followed by a gentle spin, finishing 4:00–4:30. Renamed from 'Rule of Thirds' accordingly; the generic 'rule-of-thirds' technique tag was removed from this recipe.",
   },
 
   // ── Daiki Hatakeyama ─────────────────────────────────────────────────────

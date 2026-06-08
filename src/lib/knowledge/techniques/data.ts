@@ -49,15 +49,15 @@ export const TECHNIQUES: Technique[] = [
   {
     id: "low-temp-long-steep",
     name: "Low-Temperature Long Steep",
-    shortName: "Gagné second sweet spot",
+    shortName: "Low-temp steep",
     attribution: {
-      person: "Jonathan Gagné",
-      title: "*The Physics of Filter Coffee* (2021); coffeeadastra.com",
+      person: "General technique",
+      title: "extraction temperature-dependence documented by Jonathan Gagné (*The Physics of Filter Coffee*, 2021)",
     },
     category: "temperature",
     manipulates: ["zone-2 saturation", "zone-3 suppression"],
     description:
-      "Brew at low temperature (78–82°C) with a fine grind and a long steep (4–6 minutes). Lands in a unique extraction zone Gagné calls the 'second sweet spot.'",
+      "Brew at a low temperature (~78–85°C) with a long steep, trading heat for time: the slow cool extraction reaches the sweet Zone-2 fractions while under-extracting the harsher Zone-3 compounds. (NOTE: this is NOT Jonathan Gagné's AeroPress recipe — that is brewed HOT at 100°C; the prior 'Gagné second sweet spot' framing here was a misattribution, corrected June 2026. Gagné is credited only for documenting the temperature-dependence physics.)",
     mechanism:
       "The bitter, phenolic Zone 3 compounds have steep temperature dependencies — at 80°C they extract orders of magnitude more slowly than at 95°C. So a fine grind (high surface area) at 80°C (low Zone 3 extraction rate) over 5 minutes (full Zone 2 saturation) lands in a uniquely sweet, dense, and clean part of the extraction space. The long steep is doing the work the heat would normally do, but only for the soluble fractions you want.",
     whenToUse:
@@ -68,7 +68,7 @@ export const TECHNIQUES: Technique[] = [
     ],
     requiredEquipment: ["Fellow Prismo or equivalent valved AeroPress cap"],
     compatibleBrewers: ["aeropress-prismo"],
-    exemplifiedBy: ["gagne-long-aeropress"],
+    exemplifiedBy: [],
     sources: [
       {
         type: "blog",
@@ -322,25 +322,25 @@ export const TECHNIQUES: Technique[] = [
     name: "Rule of Thirds",
     shortName: "1/3 1/3 1/3",
     attribution: {
-      person: "Scott Rao",
+      person: "General pour-over practice (NOT Scott Rao)",
     },
     category: "pour-pattern",
     manipulates: ["pour evenness", "extraction uniformity"],
     description:
-      "Equal-volume pours after the bloom. Each pour adds the same gram count.",
+      "Equal-volume pours after the bloom. Each pour adds the same gram count. (Commonly MIS-attributed to Scott Rao — corrected June 2026: Rao explicitly argues AGAINST breaking a V60 into more than two parts because it lowers the average extraction temperature, and does not publish an equal-thirds recipe. This is a generic pour-over pattern, not Rao's.)",
     mechanism:
       "Equal-volume pours produce a more uniform total extraction time per ground-water contact unit than weighted pour distributions. With a known bloom + 3 equal pours + drawdown, the only timing variable is pour-to-pour spacing — every other variable is fixed. Run-to-run variance drops; troubleshooting becomes possible because there are fewer things that could have gone wrong.",
     whenToUse:
       "V60 daily-driver when you want consistency you can troubleshoot from. Default pour pattern unless a recipe specifies otherwise.",
     compatibleBrewers: ["v60", "origami-cone", "orea-classic"],
-    exemplifiedBy: ["rao-rule-of-thirds"],
+    exemplifiedBy: [],
     sources: [
       {
-        type: "book",
-        citation: "Rao, S. — *The Professional Barista's Handbook*",
+        type: "report",
+        citation: "Generic pour-over practice — no single originator; the prior Rao attribution was removed as a misattribution (June 2026).",
       },
     ],
-    verified: true,
+    verified: false,
   },
 
   // ── Pre-brew / grind ─────────────────────────────────────────────────────
