@@ -25,7 +25,8 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 377–387° | 3:15 | false |
 | 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 387–393° | 3:30 | false |
 | 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 380–390° | 2:20 | true |
-| 2024 (WAC) | **Stanica AeroPress + Bypass** (George Stanica, Romania) | Inverted AeroPress, Aesir filter | 18g : 200g (120g extract + 80g bypass) | 1:11 ext | 96°C | 415–425° | 2:00 | true |
+| 2024 (WAC) | **Stanica AeroPress + Melodrip + Bypass** (George Stanica, Romania) | Inverted AeroPress, Melodrip | 18g : 100g → ~80g concentrate + bypass to ~155g | 1:5.5 ext | 88–93°C | 388–396° | 2:15 | true |
+| 2025 (WAC) | **Nemo Pop — Flow Control Bypass** | Upright AeroPress, Flow Control cap, 2 filters | 18g : 100g brew + 70g bypass (50°C) | 1:5.5 ext | 84°C | 403–411° | 1:10 | true |
 
 **Teaching summaries**
 
@@ -33,7 +34,8 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Du Origami Wave** — How a rich brewing ratio (1:12) combined with custom low-mineral water (4ppm Ca / 15ppm Mg / 80ppm TDS) produces extreme clarity without sacrificing sweetness.
 - **Medina Conical** — How a lean ratio (1:16) at moderate 91°C extracts the fermentation-derived sweetness of a Natural Sidra without amplifying ester sharpness.
 - **Wölfl Orea Fast** — How fast-flowing geometry combined with turbulent pours delivers clarity on a Natural — the paradox of high agitation producing a clean cup because total bed-contact time stays in Zone 1–2.
-- **Stanica AeroPress + Bypass** — How concentrate-and-bypass separates extraction from dilution. Over-pull a tight, intense concentrate at 1:11, then dial the cup back to drinking strength with cool water.
+- **Stanica AeroPress + Melodrip + Bypass** — His WAC 2024 routine: inverted, gentle Melodrip pours (50g + 30s bloom + 50g) of 88–93°C water, NSEW stir, press out air at 1:20, flip, press to ~80g concentrate at 1:35, then rebuild to ~150–165g with warm + room-temp bypass. Concentrate-and-bypass = extraction and drink strength as independent controls. (An upright Flow-Control home version also exists.)
+- **Nemo Pop 2025 (WAC champion)** — Bypass-FIRST: 70g of 50°C water waits in the carafe, then an 18g:100g concentrate is brewed at a cool 84°C (Comandante 31 clicks, fines sifted at 200µm), NSNS-WEWE stir at 0:25, gentle press from 0:50, ~1:10 total. The concentrate lands on the warm bypass for an even, sweet, fast cup.
 
 ### 1b. Reference recipes
 
@@ -50,8 +52,9 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Gagné Long AeroPress** | AeroPress + Prismo | 18g : 260g | 100°C | calibrate | 10:00 | true |
 | **Perger High-Extraction V60** | V60 | 12g : 200g | 97°C | — (calibrate) | 2:20 | false |
 | **Rao V60 Spin Method** | V60 | 20g : 330g | 97°C | calibrate | 4:00–4:30 | true |
-| **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g *(unsourced — flagged)* | 88–95°C (by roast) | 396–406° | 3:10 | false |
-| **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
+| **Hatakeyama 2024 JBrC (Origami)** | Origami Air S/M + Cafec Abaca | 15g : 240g | **85°C** | 387–397° | 2:20 | true |
+| **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 15g : 250g | 96°C | 388–398° | 2:35 | false |
+| **Hoffmann Japanese Iced V60** | V60 onto ice | 32.5g : 500g (300 hot + 200 ice) | off the boil | calibrate | 2:45 | true |
 
 † **Hoffmann roast-temperature staircase (as he states it in the Better 1 Cup video):** light = **freshly boiled (100 °C)**, medium 96 °C, darkest roasts down to 90 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span. (Verified against the video transcription, June 2026.)
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
@@ -67,9 +70,10 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Kasuya Super Coarse 10-Pour** — Full extraction of a light roast WITHOUT bitterness: grind super-coarse (Comandante 40–45 clicks; 40 is the dependable default, 45 is extreme and can run thin) to drop out the over-extracting fines, then claw the yield back with near-boiling water (95–96 °C) and ten even 30 g pulses (bloom 30 s, then a 30 g pour every 15 s). At 1:15 this grind would normally give <1% TDS; the ten percolation cycles pull it to ~1.3% and, crucially, build a thick, almost syrupy **body** — Kasuya's point is that the *number* of pours is what creates mouthfeel (7–8 already help). Early pours drain straight through; the bed clogs slightly near the end (~2:00–2:15). Trade-off: sweetness dominates and **acidity is deliberately toned down** — not for an acidity-forward cup. Designed around the Hario Neo but he brews it on a V60; flat-bottom untested. A different Kasuya recipe from the 4:6 method — even pours, not phase-separated — pitched as its 10th-anniversary evolution. Source: his 2026 YouTube video ("Multi-Pour Recipe"), transcribed.
 - **April House V60 (Rolf)** — April's agitation-forward house recipe: six even 50g pours on a ~30s cadence, each poured deliberately aggressively, finished with one stir. The opposite of a minimal-agitation brew. (Replaces a prior "Minimum Variables" entry that was a misattribution — no such single-continuous-pour Rolf recipe exists.)
 - **Gagné Long AeroPress** — A long (~10-minute) **HOT** steep (100°C, 18g:260g) in an upright AeroPress with a no-drip Prismo valve, finished with a very gentle ~1-minute press. Contact time + gentleness reach ~23.5% extraction — full, sweet, clean — without astringency. (Corrected June 2026 against Gagné's own blog: the previous "80°C second sweet spot / low-temp" framing was a misattribution — his published recipe is hot.)
-- **Perger High-Extraction V60** — Vigorous bloom stir + fine grind + spinning swirl during drawdown drives extraction yield above 22%. Bitterness comes from over-extracting the wrong compounds, not high yield itself.
+- **Perger High-Extraction V60** — 12g:200g/97°C/2:20 (~20.8% extraction). Vigorous bloom stir ("stir like a bandit") + fine grind, then OUTWARD-SPIRAL pours (the spiral IS the Rao-spin — no separate spin), and tap to level the bed AFTER the final pour. Bitterness comes from over-extracting the wrong compounds, not high yield itself.
 - **Rao V60 Spin Method** — 20g:330g at 97°C: aggressive bloom spin, then **two** pours (to 200g, to 330g) each followed by a brief gentle spin to refill the ribbed channels; ~4:00–4:30. The defining feature is the spin, NOT equal thirds. (Corrected June 2026 against Rao's own published recipe: he explicitly argues AGAINST breaking a V60 into more than two parts, so the prior "Rule of Thirds / equal thirds / 22g:352g" attribution was wrong.)
-- **Hatakeyama Cafec Flower** — Match filter paper thickness to roast level. Light roast → thin paper (faster flow tolerable); dark roast → thick paper (slows flow where less contact is needed).
+- **Hatakeyama 2024 JBrC** — His Japan Brewers Cup champion recipe: 15g:240g, a COARSE grind (Comandante 25–27) with notably COOL 85°C water, and five even circular pours (30 → 120 → 160 → 200 → 240) finishing ~2:20, then swirl the carafe. Coarse + cool, yield recovered through pour count → sweet, clean, soft acidity. (Replaces the old unsourced "roast-tailored Cafec filter" reconstruction.)
+- **Hoffmann Japanese Iced V60** — Pour-over iced: brew HOT (off the boil) onto ice. 65 g/L, 40% ice / 60% hot (≈300g hot + 200g ice), slightly finer grind, bloom 2–3× for ≥45s, brew 2:30–3:00, finish with a circular stir then the opposite direction, drip onto ice, swirl, pour onto fresh ice. Keeps the origin character cold brew flattens.
 - **Wallgren Kalita** — Sieve out fines pre-brew. Fines over-extract relative to the rest of the grind; removing them tightens the extraction distribution and produces a startlingly clean cup.
 
 > *Removed:* the **Turbo V60 (Hedrick)** entry — "turbo" is an espresso technique (Cameron/Hendon, *Matter* 2020; popularised by Hedrick ~2021), and no primary source documents a Hedrick filter recipe with the parameters it carried. The boiling-water + coarse-grind mechanism survives as a technique (§3a), de-attributed.

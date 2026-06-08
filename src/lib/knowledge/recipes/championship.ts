@@ -412,7 +412,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
 
   {
     id: "wac-2024-stanica",
-    name: "Stanica 2024 — Inverted AeroPress + Bypass",
+    name: "Stanica 2024 — Inverted AeroPress + Melodrip + Bypass",
     shortName: "Stanica 2024",
     attribution: {
       person: "George Stanica",
@@ -423,68 +423,174 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "aeropress",
     brewerNotes:
-      "Inverted AeroPress with Aesir paper filter. Mixed Aquacode water at 85–90 ppm TDS.",
+      "INVERTED AeroPress, plunger at the 4th mark, standard paper filter (rinsed). Pours go through a Melodrip. His WAC 2024 competition routine. Brew water 88–93 °C; dilution = warm kettle water + room-temp water.",
     dose: { grams: 18 },
-    water: { grams: 200, ratio: "1:11.1 (extraction) + bypass" },
-    temperature: { celsius: 96 },
+    water: { grams: 100, ratio: "1:5.5 (extraction) + bypass → ~150–165 g cup" },
+    temperature: { celsius: 90, rangeC: [88, 93] },
     grind: {
-      referenceGrinder: "Comandante C40 Mk4 Red Clix",
-      referenceSetting: "58 clicks",
-      nicheZeroDegrees: [415, 425],
+      referenceGrinder: "Comandante C40",
+      referenceSetting: "medium / medium-coarse (~800 µm, ~26 clicks)",
+      nicheZeroDegrees: [388, 396],
       description:
-        "Red Clix has 50 clicks per turn vs. standard 30, so 58 Red Clix ≈ 35 standard clicks. The published 58 Red Clix is kept verbatim; Niche derived from it via the user's map (35 standard clicks ≈ 420°) — medium-coarse, as expected for an inverted-AeroPress concentrate.",
+        "Medium/medium-coarse, ~800 µm (~26 Comandante clicks). Niche derived from the clicks (~26 ≈ 392°); calibrate empirically.",
     },
     pourSequence: [
       {
-        label: "Invert and load",
+        label: "Invert (plunger 4th mark), 18 g coffee",
         action: "invert",
         durationSec: 0,
-        notes: "Inverted orientation, 18g dose, Aesir filter in cap (off).",
+        notes: "Inverted, plunger set at the 4th mark; add 18 g coffee.",
       },
       {
-        label: "Pour concentrate water at 96°C",
-        action: "pour",
-        waterGramsAtEnd: 120,
-        durationSec: 15,
+        label: "First pour 50 g via Melodrip",
+        action: "melodrip",
+        waterGramsAtEnd: 50,
+        durationSec: 6,
+        notes: "Pour 50 g of 88–93 °C water through a Melodrip (~5–6 s).",
       },
-      { label: "Stir 2–3× evenly", action: "stir", durationSec: 10 },
-      { label: "Steep", action: "wait", durationSec: 60 },
+      { label: "Bloom → 0:30", action: "wait", durationSec: 24 },
       {
-        label: "Cap, flip, and press",
+        label: "Second pour 50 g via Melodrip (→100 g)",
+        action: "melodrip",
+        waterGramsAtEnd: 100,
+        durationSec: 6,
+      },
+      {
+        label: "NSEW stir 10 s",
+        action: "stir",
+        durationSec: 10,
+        notes: "Light paddle stir North-South-East-West. Rinse the cap filter and crack the kettle lid to cool the dilution water.",
+      },
+      { label: "Wait → 1:20", action: "wait", durationSec: 34 },
+      {
+        label: "Press out air (inverted, ~10 s)",
         action: "press",
-        durationSec: 30,
+        durationSec: 10,
+        notes: "At 1:20, cap on, gently press while inverted just to push the air out.",
       },
       {
-        label: "Add bypass water to taste",
+        label: "Swirl, then flip onto the server",
+        action: "flip",
+        durationSec: 3,
+        notes: "Gently swirl inverted, then flip onto your server.",
+      },
+      { label: "Wait → 1:35", action: "wait", durationSec: 2 },
+      {
+        label: "Press slowly 30–40 s → ~80 g concentrate",
+        action: "press",
+        durationSec: 35,
+        notes: "From 1:35, press slowly until you have ~80 g of concentrate.",
+      },
+      {
+        label: "Dilute → ~150–165 g cup",
         action: "bypass",
-        waterGramsAtEnd: 200,
+        waterGramsAtEnd: 160,
         durationSec: 5,
-        notes:
-          "~80g cool bypass water added directly to the cup. Separates extraction strength from final drink concentration.",
+        notes: "Add warm kettle water to bring the ~80 g concentrate to 130–135 g, then add 20–30 g room-temp (25 °C) water.",
       },
     ],
-    totalTimeSec: 120,
-    techniques: ["aeropress-inversion", "concentrate-and-bypass", "low-mineral-water"],
+    totalTimeSec: 135,
+    techniques: ["aeropress-inversion", "concentrate-and-bypass"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
       goals: ["high-clarity", "balanced", "explore"],
     },
     teaches:
-      "How concentrate-and-bypass separates extraction from dilution. You can over-pull a tight, intense concentrate at 1:6–1:11, then dial the cup back to drinking strength with cool water — the cup's flavour profile and its strength become independent controls.",
+      "His WAC 2024 routine: over-extract a tight ~1:5.5 concentrate inverted with gentle Melodrip pours, press to ~80 g, then rebuild the cup with warm + room-temp bypass water. Concentrate-and-bypass makes extraction strength and drink strength independent controls.",
     science:
-      "At 1:11 extraction, the AeroPress extracts deeply into Zone 2 (sugars, maillard) without the diluted, watery cup that a 1:16 brew would produce. The bypass water then adjusts cup weight — adding water doesn't extract anything (the puck is already pressed), it only changes concentration. 85–90 ppm mineral water is the SCA sweet spot for clarity-with-body. Aesir paper retains more oils than standard AeroPress paper, pushing the cup toward filter-cup clarity rather than the typical AeroPress mouthfeel.",
+      "Pulling a small 1:5.5 concentrate at 88–93 °C extracts deeply into Zone 2 (sugars, body) without the watery cup a 1:16 brew gives; the Melodrip breaks the pour into many fine streams so the small bed saturates with almost no turbulence. Pressing fully means the bypass water only sets concentration, not extraction — warm water to 130–135 g rebuilds body, and a final 20–30 g of room-temp water cools and lengthens it. The NSEW stir agitates the small bed evenly without a vortex.",
     whenToUse:
-      "For an AeroPress brew where you want filter-style clarity at the strength of a concentrated extraction. Excellent for competition-grade light roasts where standard AeroPress recipes feel under-extracted.",
+      "When you want filter-style clarity at the intensity of a concentrate, with full control over final strength. Competition-grade light roasts that feel under-extracted on a standard AeroPress.",
     sources: [
       {
-        type: "official-competition",
-        citation: "2024 World AeroPress Championship",
+        type: "report",
+        citation:
+          "George Stanica — 2024 World AeroPress Championship recipe with dilution (owner-supplied): inverted, plunger 4th mark, 18 g, ~800 µm; 100 g brew water at 88–93 °C via Melodrip (50 g + 30 s bloom + 50 g), NSEW stir 10 s, press out air at 1:20, flip, press to ~80 g concentrate at 1:35, dilute with warm water to 130–135 g + 20–30 g room-temp.",
         year: 2024,
       },
     ],
     verified: true,
     notes:
-      "The Comandante 'Red Clix' setting (58 clicks) only translates correctly on Red Clix burrs — standard Comandante owners should use ~35 clicks as the equivalent.",
+      "George Stanica's WAC 2024 competition routine (owner-supplied, with the full dilution). Inverted + Melodrip; 100 g brew water → ~80 g concentrate → diluted to ~150–165 g with warm + room-temp bypass. He won the 2024 World AeroPress Championship (Lisbon). One constant brewing temperature (88–93 °C); the warm/room-temp dilution water is bypass, not staging. An alternative UPRIGHT Flow-Control home version also circulates (18 g : 225 g, 93 °C, Comandante 25 clicks, NSEW stir, press at 1:30, dilute 15–30 g) — this entry is the competition recipe. Parameters owner-supplied; Niche derived from the Comandante clicks.",
+  },
+
+  {
+    id: "wac-2025-nemo-pop",
+    name: "Nemo Pop 2025 — Flow Control Bypass AeroPress",
+    shortName: "Nemo Pop 2025",
+    attribution: {
+      person: "Nemo Pop",
+      title: "2025 World AeroPress Champion",
+      year: 2025,
+    },
+    category: "championship",
+    brewer: "aeropress",
+    brewerNotes:
+      "UPRIGHT AeroPress, Flow Control Filter Cap, 2× paper filters, set over the carafe. 125 ppm water (Apax prototype). BYPASS-FIRST: 70 g of 50 °C bypass water goes into the carafe BEFORE brewing, and the pressed concentrate lands on it. Comandante Trailmaster (Tigershark burrs); grind slow, blow off chaff, sift fines at 200 µm.",
+    dose: { grams: 18 },
+    water: { grams: 100, ratio: "1:5.5 (brew concentrate) + 70 g bypass → ~170 g cup (1:9.4)" },
+    temperature: { celsius: 84 },
+    grind: {
+      referenceGrinder: "Comandante (Trailmaster x25, Tigershark burrs)",
+      referenceSetting: "31 clicks, sifted at 200 µm",
+      nicheZeroDegrees: [403, 411],
+      description:
+        "Comandante 31 clicks, fines sifted out at 200 µm and chaff blown off. Niche derived from the published clicks (~31 clicks ≈ 407°); calibrate empirically.",
+    },
+    pourSequence: [
+      {
+        label: "Pour 100 g brewing water (84 °C)",
+        action: "pour",
+        waterGramsAtEnd: 100,
+        durationSec: 10,
+        notes: "70 g of 50 °C bypass water is already in the carafe below. Pour 100 g of 84 °C water into the AeroPress, wetting all the grounds.",
+      },
+      { label: "Wait → 0:25", action: "wait", durationSec: 15 },
+      {
+        label: "Stir NSNS-WEWE",
+        action: "stir",
+        durationSec: 5,
+        notes: "At 25 s, stir north-south-north-south, then west-east-west-east.",
+      },
+      { label: "Wait → 0:50", action: "wait", durationSec: 20 },
+      {
+        label: "Gently press (~20 s)",
+        action: "press",
+        durationSec: 20,
+        notes: "From 50 s, press gently for ~20 s — the concentrate presses down onto the 70 g bypass in the carafe.",
+      },
+      {
+        label: "Serve",
+        action: "bypass",
+        waterGramsAtEnd: 170,
+        durationSec: 0,
+        notes: "~100 g concentrate pressed onto the 70 g of 50 °C bypass ≈ 170 g cup. Serve.",
+      },
+    ],
+    totalTimeSec: 70,
+    techniques: ["concentrate-and-bypass", "fines-removal-sieving"],
+    bestFor: {
+      roastLevels: ["light", "medium-light"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["high-clarity", "sweetness-forward", "balanced"],
+    },
+    teaches:
+      "Bypass-FIRST concentrate AeroPress: brew a small, cool (84 °C) concentrate at 1:5.5 and press it straight onto warm (50 °C) bypass water already waiting in the carafe. Sifting the fines + a coarse-ish grind keep it clean; the cool brew water lands a sweet, low-bitterness cup fast (~1:10).",
+    science:
+      "Pressing a 1:5.5 concentrate onto bypass water separates extraction from strength — the puck is fully pressed, so the 70 g bypass only sets drinking concentration, not extraction. Brewing at a cool 84 °C with a coarse-ish sifted grind keeps the fast-extracting bitter compounds down, and removing the fines (sifted at 200 µm) tightens the extraction distribution for clarity. The NSNS-WEWE stir evenly agitates a small bed without a vortex. Putting the warm bypass in the carafe first means the concentrate mixes on contact for an even cup. One constant brewing temperature (84 °C); the 50 °C bypass is dilution, not staging.",
+    whenToUse:
+      "A fast, clean, sweet AeroPress when you want filter-style clarity at controllable strength — dial the cup with the bypass amount. Upright + Flow Control, no inversion.",
+    sources: [
+      {
+        type: "report",
+        citation:
+          "Nemo Pop — 2025 World AeroPress Champion recipe (owner-supplied): upright, 18 g, Comandante 31 clicks sifted at 200 µm, 100 g brew water at 84 °C + 70 g bypass at 50 °C (bypass first in carafe), 125 ppm water, NSNS-WEWE stir at 0:25, gentle press from 0:50 (~20 s), ~1:10 total.",
+        year: 2025,
+      },
+    ],
+    verified: true,
+    notes:
+      "New entry (June 2026), owner-supplied 2025 World AeroPress Championship winning recipe. Bypass-first method (70 g of 50 °C water in the carafe before brewing). Single 84 °C brew temperature; the 50 °C bypass is dilution, not staging. Parameters owner-supplied; Niche degrees derived from the published Comandante clicks. Not independently web-fetched.",
   },
 ];

@@ -422,6 +422,76 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "Corrected from Hoffmann's 2023 iced video: dose is 75 g/L of TOTAL water (~37.5 g for a 500 g drink, was 20 g), water split is ~2/3 hot + 1/3 ice (~330 g + ~170 g, was 250 g + 200 g), steep ~5 min (was 3:40), brewed as hot as possible (was 95°C), plus a saline finish. The earlier '1:12.5 + 200 g ice' figures were a different reconstruction.",
   },
 
+  {
+    id: "hoffmann-iced-v60-pourover",
+    name: "Hoffmann Japanese Iced V60 (pour-over)",
+    shortName: "Hoffmann Iced V60",
+    attribution: {
+      person: "James Hoffmann",
+      country: "United Kingdom",
+    },
+    category: "reference",
+    brewer: "v60",
+    brewerNotes:
+      "V60 pour-over with the server holding ~200 g ice (40% of the total water). The hot brew drips straight onto the ice to flash-chill. 60% hot brew water / 40% ice by weight; finish onto fresh ice in the glass.",
+    dose: { grams: 32.5 },
+    water: { grams: 500, ratio: "1:15.4 (65 g/L total: ~300 g hot brew + ~200 g ice)" },
+    temperature: { celsius: 99, rangeC: [96, 100] },
+    grind: {
+      referenceSetting:
+        "slightly finer than a standard V60 — the smaller hot-brew-water volume needs help extracting",
+    },
+    pourSequence: [
+      {
+        label: "Bloom (→65 g) @ 0:00",
+        action: "pour",
+        waterGramsAtEnd: 65,
+        durationSec: 10,
+        notes: "2× dose, off the boil, onto the GROUNDS (the ~200 g ice is in the server below). Bloom at least 45 s.",
+      },
+      { label: "Bloom rest (≥45 s)", action: "wait", durationSec: 45 },
+      { label: "Pour 2 (→150 g)", action: "pour", waterGramsAtEnd: 150, durationSec: 15 },
+      { label: "Pour 3 (→225 g)", action: "pour", waterGramsAtEnd: 225, durationSec: 15 },
+      { label: "Final pour (→300 g)", action: "pour", waterGramsAtEnd: 300, durationSec: 15 },
+      {
+        label: "Stir circular, then opposite",
+        action: "stir",
+        durationSec: 5,
+        notes: "At the end: one circular stir one way, then once the opposite direction — then let it draw down.",
+      },
+      {
+        label: "Drawdown onto ice — then swirl the decanter",
+        action: "drain",
+        durationSec: 60,
+        notes: "Drains onto the ~200 g ice and flash-chills. Swirl the decanter to melt any leftover ice, then pour onto fresh ice in the glass.",
+      },
+    ],
+    totalTimeSec: 165,
+    techniques: ["flash-chilling", "pulse-pouring"],
+    bestFor: {
+      roastLevels: ["light", "medium-light"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["high-clarity", "aromatic", "sweetness-forward"],
+      occasions: ["summer-time", "iced"],
+    },
+    teaches:
+      "Japanese-style iced: brew HOT over ice so the cup keeps the origin character (florals, fruit, acidity) that cold brew flattens. 65 g/L with 40% of the water as ice, a slightly finer grind and a long-ish bloom recover the extraction the reduced hot-water volume gives up.",
+    science:
+      "Cold brew loses origin character — it reads chocolatey and low-acid. Brewing HOT extracts the volatile aromatics and acids; the brewed coffee then drips straight onto ice and flash-chills, locking those aromatics in before they volatilise. Because only ~60% of the total water is hot brew water, Hoffmann doses ~5 g/L heavier than usual and grinds a touch finer + blooms longer (≥45 s) to keep extraction up; the closing two-direction stir levels the bed for an even finish. Rule of thumb: use as much brew water (and as little ice) as you can while still chilling it — more brew water means a better extraction.",
+    whenToUse:
+      "A hot day and a light, fruity, juicy coffee (washed Kenyan / Ethiopian shine). When you want the cup to taste like the coffee you paid for, not generic cold-brew chocolate.",
+    sources: [
+      {
+        type: "transcript",
+        citation:
+          "James Hoffmann — pour-over 'Japanese-style' iced filter coffee (owner-supplied transcript). 65 g/L, 40% ice / 60% hot, grind a touch finer, bloom 2–3× for ≥45 s, brew 2:30–3:00 onto ice, finish with a circular stir then the opposite direction, swirl the decanter, pour onto fresh ice.",
+      },
+    ],
+    verified: true,
+    notes:
+      "New entry (June 2026) from Hoffmann's pour-over Japanese-style iced video (owner-supplied transcript) — the PERCOLATION iced, distinct from his immersion (Clever) iced. Temperature: he says only 'off the boil' in this video (no number published), so the 99 °C is his standard off-the-boil, not a fabricated figure. Bloom 65 g = 2× dose (he says 2–3×). ~200 g ice sits in the server; the brew drips onto it to flash-chill. One constant brewing temperature (the ice dilutes/chills; it is not staging).",
+  },
+
   // ── Tetsu Kasuya (standalone 4:6, separate from his 2016 routine) ────────
 
   {
@@ -854,30 +924,38 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes: "~4× dose.",
       },
       {
-        label: "Vigorous stir 3–5×",
+        label: "Vigorous stir ('stir like a bandit')",
         action: "stir",
         durationSec: 10,
         notes:
-          "Perger's signature — vigorous bloom stir to ensure full saturation and to drive extraction yield up.",
+          "Perger's signature — a vigorous bloom stir for full saturation, driving extraction yield up.",
       },
       { label: "Bloom rest → 0:30", action: "wait", durationSec: 10 },
       {
-        label: "Pour 2 (→100 g) @ 0:30",
+        label: "Pour 2 (→100 g) @ 0:30 — outward spiral",
         action: "pour",
         waterGramsAtEnd: 100,
         durationSec: 10,
+        notes: "Outward spiral pour; finish around the edges to wash grounds back down.",
       },
       { label: "Wait → 1:00", action: "wait", durationSec: 20 },
       {
-        label: "Pour 3 (→200 g) @ 1:00",
+        label: "Pour 3 (→200 g) @ 1:00 — outward spiral",
         action: "pour",
         waterGramsAtEnd: 200,
         durationSec: 15,
+        notes: "Outward spiral — the spiral pour itself creates the Rao-spin vortex, so no separate spin is needed. Finish around the edges.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 65 },
+      {
+        label: "Tap to level the bed",
+        action: "agitate-bed",
+        durationSec: 3,
+        notes: "AFTER the final pour, tap the dripper so the bed sits flat — even bed, even extraction. Water should disappear across the whole bed at once.",
+      },
+      { label: "Drawdown", action: "drain", durationSec: 62 },
     ],
     totalTimeSec: 140,
-    techniques: ["high-agitation-high-extraction"],
+    techniques: ["high-agitation-high-extraction", "spiral-pour", "rao-spin"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed"],
@@ -898,7 +976,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Corrected from the prior 22 g : 352 g / 95 °C / ~3:35 values, which could not be sourced to Perger and closely match a different recipe (a 22 g : 375 g / 98 °C method attributed in a coffeeadastra comment to Alessandro Galtieri, explicitly NOT Perger) — i.e. a likely misattribution. Perger's documented headline recipe is 12 g : 200 g at 97 °C with a vigorous bloom stir. Kept verified:false: the numbers come from secondary transcriptions of his video / Barista Hustle article, not a verbatim-fetched primary source. The old fabricated Niche degree range was removed per the Hard Rule.",
+      "12 g : 200 g, 97 °C, 2:20, confirmed against a demonstration of the recipe (measured 1.40% TDS / 20.8% extraction): bloom 50 g + a vigorous 'stir like a bandit', then OUTWARD-SPIRAL pours to 100 g @ 0:30 and 200 g @ 1:00 — the spiral pour itself supplies the Rao-spin (there is no separate spin step). TAP the dripper to level the bed AFTER the final pour, not after the bloom. Finish each pour around the edges to wash grounds down; aim for the water disappearing across the whole bed simultaneously. Kept verified:false: the source is a recipe demonstration, not Perger's own verbatim publication. (Prior 22 g : 352 g / 95 °C / 3:35 was a misattribution — removed.)",
   },
 
   // ── Scott Rao ────────────────────────────────────────────────────────────
@@ -1000,8 +1078,8 @@ export const REFERENCE_RECIPES: Recipe[] = [
 
   {
     id: "hatakeyama-cafec-flower",
-    name: "Hatakeyama — Cafec Flower Dripper, Roast-Tailored",
-    shortName: "Hatakeyama Cafec",
+    name: "Hatakeyama 2024 Japan Brewers Cup — Origami",
+    shortName: "Hatakeyama 2024",
     attribution: {
       person: "Daiki Hatakeyama",
       title:
@@ -1009,73 +1087,85 @@ export const REFERENCE_RECIPES: Recipe[] = [
       country: "Japan",
     },
     category: "reference",
-    brewer: "cafec-flower",
+    brewer: "origami-air-m",
     brewerNotes:
-      "Cafec Flower Dripper (six tall ribs, cup-shaped) with roast-tailored Cafec paper (Light Roast / Medium Roast / Dark Roast / Abaca variants). The technique is to match paper to roast level.",
+      "Origami Air M (the owner's dripper) with Cafec Abaca paper. Hatakeyama brewed it on an Origami Air S; his recipe notes it 'should be' the Cafec Flower Dripper. Single 85 °C water — notably cool — and a coarse grind.",
     dose: { grams: 15 },
-    water: { grams: 225, ratio: "1:15" },
-    temperature: {
-      rangeC: [88, 95],
-      celsius: 92,
-    },
+    water: { grams: 240, ratio: "1:16" },
+    temperature: { celsius: 85 },
     grind: {
-      referenceSetting: "medium",
-      nicheZeroDegrees: [375, 385],
+      referenceGrinder: "Comandante C40",
+      referenceSetting: "coarse — Comandante 25–27 clicks",
+      nicheZeroDegrees: [387, 397],
+      description:
+        "Coarse — he states ~900–1000 µm / Comandante 25–27 clicks. Niche derived from the published Comandante clicks via the owner's map (~26 clicks ≈ 392°); calibrate empirically.",
     },
     pourSequence: [
       {
-        label: "Bloom",
+        label: "Bloom (→30 g) @ 0:00",
         action: "pour",
-        waterGramsAtEnd: 40,
-        durationSec: 30,
+        waterGramsAtEnd: 30,
+        durationSec: 10,
+        notes: "Circular pour, saturate the bed evenly; bloom 30 s.",
       },
+      { label: "Bloom rest → 0:30", action: "wait", durationSec: 20 },
       {
-        label: "Pour 1",
+        label: "Pour 2 (→120 g)",
         action: "pour",
-        waterGramsAtEnd: 100,
-        durationSec: 20,
+        waterGramsAtEnd: 120,
+        durationSec: 15,
+        notes: "Circular pour from the centre out, then back to the centre; wait until 1:00.",
       },
+      { label: "Wait → 1:00", action: "wait", durationSec: 15 },
       {
-        label: "Pour 2",
+        label: "Pour 3 (→160 g) @ 1:00",
         action: "pour",
         waterGramsAtEnd: 160,
-        durationSec: 20,
+        durationSec: 10,
+        notes: "Circular pour; wait until 1:20.",
       },
+      { label: "Wait → 1:20", action: "wait", durationSec: 10 },
       {
-        label: "Pour 3",
+        label: "Pour 4 (→200 g) @ 1:20",
         action: "pour",
-        waterGramsAtEnd: 225,
-        durationSec: 20,
+        waterGramsAtEnd: 200,
+        durationSec: 10,
+        notes: "Circular pour; wait until 1:40.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 80 },
+      { label: "Wait → 1:40", action: "wait", durationSec: 10 },
+      {
+        label: "Pour 5 (→240 g) @ 1:40",
+        action: "pour",
+        waterGramsAtEnd: 240,
+        durationSec: 10,
+        notes: "Final circular pour.",
+      },
+      { label: "Drawdown (~2:20) — then swirl the carafe", action: "drain", durationSec: 30 },
     ],
-    totalTimeSec: 190,
-    techniques: ["roast-tailored-filter"],
+    totalTimeSec: 140,
+    techniques: ["pulse-pouring", "spiral-pour"],
     bestFor: {
-      roastLevels: ["light", "medium-light", "medium", "medium-dark"],
+      roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
-      goals: ["balanced", "explore"],
+      goals: ["balanced", "sweetness-forward", "high-clarity"],
     },
     teaches:
-      "How filter paper choice and water temperature should change with roast level — a dimension most pour-over recipes ignore. Light roast → high temp (95°C) + thinner paper (Light Roast Cafec). Dark roast → lower temp (88°C) + thicker paper (Dark Roast Cafec).",
+      "A counter-intuitive championship combination: a COARSE grind with notably COOL water (85 °C) and a long-ish set of gentle circular pours. Coarse + cool would normally under-extract, but five even pours over a deep-ish bed and a 1:16 ratio pull a balanced, sweet, clean cup with soft acidity.",
     science:
-      "Lighter roasts have lower solubility and need more aggressive extraction (high temperature, more contact). Darker roasts have higher solubility and over-extract easily (lower temperature, less contact). The Flower Dripper's six tall ribs create air channels along the entire filter height — drawdown is fast regardless of paper. So paper thickness becomes the timing variable: a thicker Dark Roast paper slows flow precisely where the darker coffee needs less contact. Hatakeyama systematises what most brewers do haphazardly.",
+      "A coarse grind (Comandante 25–27 clicks) shrinks the fines fraction that drives harsh over-extraction, and 85 °C keeps the fast-extracting bitter compounds in check. Hatakeyama recovers the yield the coarse/cool setup gives up through pour COUNT — five even circular pours (each from the centre out and back), each a fresh agitation/percolation cycle — landing a high, even extraction that reads as sweetness and clarity rather than astringency. The single constant temperature keeps it everyday-practical (no staging).",
     whenToUse:
-      "When you want a single dripper that handles a range of roast levels well, and you're willing to keep multiple papers on hand. The principles (match paper to roast, match temperature to roast) transfer to any dripper if you have papers of varying thickness.",
+      "A delicate, sweetness-forward cup from a clean coffee where you want softness and clarity over punchy acidity — and you can grind coarse and pour patiently. The single 85 °C / coarse-grind combination is the signature.",
     sources: [
       {
-        type: "interview",
-        citation: "Cafec Ambassador materials — Hatakeyama published interviews",
-      },
-      {
-        type: "video",
+        type: "report",
         citation:
-          "Cafec / Sanyo Sangyo published brewing demonstrations (Japanese, with English subtitles on some)",
+          "Daiki Hatakeyama — 2024 Japan Brewers Cup champion recipe (owner-supplied). 15 g : 240 g at 85 °C, Comandante 25–27 clicks, Origami Air S + Cafec Abaca paper; bloom 30 mL/30 s, then circular pours to 120 g (by 1:00) / 160 g (1:20) / 200 g (1:40) / 240 g, swirl the carafe, total ~2:20.",
+        year: 2024,
       },
     ],
-    verified: false,
+    verified: true,
     notes:
-      "Two honesty flags from web research. (1) The specific numbers here (15 g : 225 g, 88–95 °C, ~3:10) could NOT be sourced to any publication, primary or secondary — treat them as an unverified reconstruction, not Hatakeyama's recipe. (2) The 'roast-tailored filter' framing is a Cafec PRODUCT concept that Hatakeyama promotes as a Cafec brand ambassador (Cafec sells roast-specific papers: Light / Medium-Dark T-90 / Dark T-83) — it is not documented as his WBrC-winning method. His actual WBrC 2021 routine (Milan; he placed 2nd / runner-up, champion was Matt Winton — he was NOT world champion) is reported, secondary-tier only, as: Cafec Flower Dripper + Abaca filter, 20 g : 260 g (~1:13), KRUVE-sieved to remove microfines, staged temperature ~90 °C (pours 1–3) dropping to ~60 °C (late pours), target ~3:00, brewed on a Colombia/Bolivia Geisha blend. The exact per-pour schedule and bloom time are NOT reliably documented. This entry is kept as a roast-tailored teaching demo and stays verified:false until a primary source can be fetched.",
+      "Replaced (June 2026) with Hatakeyama's actual 2024 Japan Brewers Cup champion recipe, supplied by the owner: 15 g : 240 g, single 85 °C (no staircase), coarse Comandante 25–27 clicks, five even circular pours (30 → 120 → 160 → 200 → 240) finishing ~2:20, swirl the carafe. The previous entry was an unsourced 'roast-tailored Cafec filter' reconstruction (15 g : 225 g, 88–95 °C staircase) and has been removed. Brewer set to Origami Air M (the owner's dripper; Hatakeyama used Air S, and his recipe notes the Cafec Flower Dripper as the intended dripper). Owner-supplied — not independently web-fetched; Niche degrees derived from the published Comandante clicks.",
   },
 
   // ── Mikaela Wallgren ─────────────────────────────────────────────────────
@@ -1114,21 +1204,22 @@ export const REFERENCE_RECIPES: Recipe[] = [
           "Sieve off the fines before brewing — less bitterness because the fines can't over-extract.",
       },
       {
-        label: "Bloom",
+        label: "Bloom — spiral pour 30 g in 10 s",
         action: "pour",
-        waterGramsAtEnd: 50,
-        durationSec: 30,
-        notes: "30 s bloom.",
+        waterGramsAtEnd: 30,
+        durationSec: 10,
+        notes: "Shake the brewer to level the bed first, then spiral-pour 30 g in 10 s.",
       },
+      { label: "Bloom rest → 0:30", action: "wait", durationSec: 20 },
       {
-        label: "Continuous circular pour to 250 g",
+        label: "Continuous spiral pour to 250 g (by 1:45)",
         action: "pour",
         waterGramsAtEnd: 250,
         durationSec: 75,
         notes:
-          "One continuous pour in circles, all the way to 1:45 — gentle, even agitation of the whole bed the entire pour. Flow restrictors on the kettle keep the stream steady and controlled.",
+          "From 0:30, one slow continuous spiral pour with pacing to reach 250 g at 1:45 — gentle, even agitation of the whole bed the entire pour. A flow restrictor on the kettle keeps the stream steady.",
       },
-      { label: "Drawdown", action: "drain", durationSec: 50 },
+      { label: "Drawdown — remove brewer at 2:35", action: "drain", durationSec: 50 },
     ],
     totalTimeSec: 155,
     techniques: ["fines-removal-sieving", "flat-bed-pour", "continuous-pour"],
