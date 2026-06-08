@@ -295,7 +295,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "moccamaster",
-    brewerNotes: "Standard Technivorm Moccamaster (KBGV / KBG Select) — NOT a special edition. Hoffmann's 3.5-min / 97–98 °C measurement is from this regular machine in his 6-brewer comparison.",
+    brewerNotes: "Standard Technivorm Moccamaster (KBGV / KBG Select) — NOT a special edition. Hoffmann's 3.5-min / 97–98 °C measurement is from this regular machine in his 6-brewer comparison. Flow-rate switch (community/creator tip, Coffee House): use the HALF-pot setting (slower flow) for a small dose so the bed saturates properly, and the FULL-pot setting (faster flow) for a full ~1 L batch. A full 1 L pot runs ~5–6 min; the ~3:30 here is for the 750 g batch.",
     dose: { grams: 50 },
     water: { grams: 750, ratio: "1:15" },
     temperature: { celsius: 96, rangeC: [92, 98] },
@@ -343,6 +343,11 @@ export const REFERENCE_RECIPES: Recipe[] = [
         type: "video",
         citation:
           "James Hoffmann — Moccamaster Jubilee 68 review: Technivorm temp range 'kind of 92 to 96 °C'; his optional technique = bloom + one stir at the start, a tiny stir at the end (explicitly not required). Transcribed in-session.",
+      },
+      {
+        type: "video",
+        citation:
+          "Coffee House (Luke) — Moccamaster recipe tutorial (community/creator, NOT a named-expert canon source): half pot 33 g : 500 g (1:15), full pot 60 g : 1 L (1:16.7, ~5–6 min), grind coarser for the bigger pot, sift fines (~200 µm) for clarity, rinse the paper, stir the bloom, half/full flow-rate switch. Used only for the flow-switch + full-litre timing note above. Transcribed in-session.",
       },
     ],
     verified: true,
