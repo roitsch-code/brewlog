@@ -514,7 +514,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     category: "reference",
     brewer: "v60",
     brewerNotes:
-      "Hario V60 or Hario Switch/Neo, size 02. Kasuya's 2026 routine to 'maximize the charm of light roast through full extraction': a very coarse grind, high water temperature, and ten even 30 g pours.",
+      "Hario V60 or the Hario 'Neo' dripper, size 02 — Kasuya designed it with the Neo in mind (water tracks the ribs, distributing the small 30 g pours evenly) but stresses you absolutely don't need one and personally brews it on a V60. Flat-bottom brewers were untested as of the 2026 video. His 2026 routine to 'maximize the charm of light roast through full extraction': a very coarse grind, high water temperature, and ten even 30 g pours.",
     dose: { grams: 20 },
     water: { grams: 300, ratio: "1:15" },
     temperature: { celsius: 96, rangeC: [95, 96] },
@@ -523,7 +523,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       referenceSetting: "40–45 clicks (super coarse)",
       nicheZeroDegrees: [435, 455],
       description:
-        "Super coarse — Kasuya publishes the setting as Comandante 40–45 clicks. The Niche degree range here is DERIVED from the project's click→degree conversion (grind-settings.md, ~3.3°/click) and is extrapolated well beyond the measured 23–29-click anchors, so calibrate it empirically against the ~3:30 finish rather than trusting the number.",
+        "Super coarse — Comandante C40 at 40–45 clicks. In the 2026 video Kasuya calls 40 clicks the dependable default ('pretty hard to fail') and 45 'extreme' — it can come out thin/pale depending on the coffee (his own 45-click demo looked a little light). If the cup is too weak, go a notch finer (fewer clicks) or gently agitate the server during the brew. The Niche degree range here is DERIVED from the project's click→degree conversion (grind-settings.md, ~3.3°/click) and extrapolated well beyond the measured 23–29-click anchors, so calibrate it empirically against the ~3:30 finish rather than trusting the number.",
     },
     pourSequence: [
       {
@@ -554,7 +554,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
         action: "pour",
         waterGramsAtEnd: 120,
         durationSec: 5,
-        notes: "From about here the bed sits lower and the brew speeds up.",
+        notes: "Keep the water moving — don't let it pool in the dripper; let each pour flow straight through.",
       },
       { label: "Wait → 1:15", action: "wait", durationSec: 10 },
       {
@@ -590,6 +590,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
         action: "pour",
         waterGramsAtEnd: 270,
         durationSec: 5,
+        notes: "Around here the bed clogs a little and flow slows — surprising at this coarse a grind, but expected as fines settle.",
       },
       { label: "Wait → 2:30", action: "wait", durationSec: 10 },
       {
@@ -606,25 +607,25 @@ export const REFERENCE_RECIPES: Recipe[] = [
     bestFor: {
       roastLevels: ["very-light", "light", "medium-light"],
       processes: ["washed", "natural", "honey"],
-      goals: ["balanced", "high-clarity", "sweetness-forward"],
+      goals: ["sweetness-forward", "body-forward", "balanced"],
     },
     teaches:
       "How to reach full extraction on a light roast without bitterness by grinding very coarse and compensating with many even pours and near-boiling water. The coarse grind removes the fines that would over-extract; the ten 30 g pulses and 95–96 °C restore the yield the coarse grind gives up.",
     science:
-      "A super-coarse grind shrinks the fines fraction — the particles that over-extract first and carry most of the harsh, astringent compounds — which lowers the extraction ceiling. Kasuya pushes that ceiling back up two ways: near-boiling water (95–96 °C raises the extraction rate across all compound classes) and ten discrete 30 g pours, each a fresh agitation cycle that renews the concentration gradient at the grounds' surface. The bed stays shallow and well mixed and the flow speeds up as the level drops (the recipe notes this), so the cup reaches a high, even yield that reads as sweetness and clarity rather than the bitterness usually associated with high extraction.",
+      "A super-coarse grind (Comandante 40–45 clicks) shrinks the fines fraction — the particles that over-extract first and carry most of the harsh, astringent compounds — which lowers the extraction ceiling. At a 1:15 ratio a grind this coarse would normally land under 1% TDS; Kasuya pushes the yield back up to ~1.3% two ways: near-boiling water (95–96 °C raises the extraction rate across all compound classes) and TEN discrete 30 g pours. His central claim is that the NUMBER of percolation cycles is what builds mouthfeel — each pour passes water through the bed again, dissolving more body- and texture-forming compounds, so ten pours yield a thick, almost syrupy body you can't get from a 2–3 pour brew (he notes 7–8 pours already help noticeably). Early pours drain straight through; the bed clogs slightly near the end (~2:00–2:15). The deliberate trade-off: the dominant sweetness tones the acidity down, so this is not the method for an acidity-forward cup.",
     whenToUse:
-      "A light, delicate, expensive coffee where you want to pull as much sweetness and aromatic complexity as possible while keeping the cup clean — and you have a grinder that holds a tight particle distribution at a very coarse setting.",
+      "A light, delicate, expensive coffee where you want maximum sweetness and a thick, syrupy body while keeping the cup clean — and you have a grinder that holds a tight particle distribution at a very coarse setting. Skip it if you specifically want to showcase bright acidity, which this method deliberately softens. Kasuya rates it especially for light roasts (the high 95–96 °C is not ideal for dark).",
     sources: [
       {
-        type: "blog",
+        type: "video",
         citation:
-          "Tetsu Kasuya (@tetsukasuya) — 'Super Coarse 10-Pour Recipe', Instagram post (2026)",
+          "Tetsu Kasuya (Philocoffea) — 2026 YouTube video, his 10th-anniversary 'Multi-Pour Recipe' (also floated as 'Neo Brew' / 'Click 45'). Parameters transcribed directly from the video demonstration.",
         year: 2026,
       },
     ],
     verified: true,
     notes:
-      "Transcribed directly from Kasuya's own Instagram post. Parameters (20 g : 300 g, 95–96 °C, super-coarse Comandante 40–45 clicks, ten 30 g pours, bloom 30 s then 15 s cadence, finish ~3:30) are as published. The only non-published value is the Niche Zero degree range, which is derived from the project's click→degree conversion and extrapolated beyond its measured anchors — calibrate empirically. Brews at one constant temperature (no staging).",
+      "Transcribed directly from Kasuya's 2026 YouTube video (Philocoffea's internal name: the 'Multi-Pour Recipe'). Headline parameters (20 g : 300 g = 1:15, 95–96 °C, super-coarse Comandante 40–45 clicks with 40 the dependable default, ten 30 g pours, bloom 30 s then a pour every 15 s, finishing ~3:30, reaching ~1.3% TDS) are as Kasuya states them in the demonstration. He recommends 20 g specifically because the alternative 15 g : 225 g makes awkward 22.5 g pours that are hard to count; 7–8 pours also work if ten is too many. Positioned as an evolution of the 4:6 method — the over-extended late-pour segmentation he dismissed in 2016. The only non-published value is the Niche Zero degree range, derived from the project's click→degree conversion and extrapolated beyond its measured anchors — calibrate empirically. One constant temperature (no staging).",
   },
 
   // ── Patrik Rolf / April Coffee ────────────────────────────────────────────
