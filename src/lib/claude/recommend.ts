@@ -310,8 +310,8 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 
 Time constraints:
 - "quick" (~2 min): AeroPress, Wölfl Orea Fast. targetTimeSec ≤ 150.
-- "normal" (~5 min): V60, Kalita, Orea, Clever. targetTimeSec 240–300.
-- "unhurried" (7 min+): Moccamaster, extended Clever, Kasuya 4:6. targetTimeSec ≥ 360.
+- "normal" (~5 min): V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 210–300.
+- "unhurried" (7 min+): extended Clever, Gagné Long AeroPress (~10 min). targetTimeSec ≥ 360.
 
 LAYER 5 — HISTORY & LEARNING
 A terrain narrative will appear describing what keeps happening in your log.
@@ -519,8 +519,8 @@ Worked examples — verify your arithmetic before outputting:
     "inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s"  ← 10+10+90+10+30 = 150 ✓
   AeroPress inverted, targetTimeSec=180 (3:00):
     "inverted · add water 10s · stir 2–3× 10s · steep 2:00 · stir 10s · press 30s"  ← 10+10+120+10+30 = 180 ✓
-  Moccamaster, targetTimeSec=480 (8:00):
-    "fill tank 30s · brew 7:30"  ← 30+450 = 480 ✓
+  Moccamaster, targetTimeSec=210 (3:30 — Hoffmann measured ~3.5 min for 750g):
+    "fill tank 20s · brew 3:10"  ← 20+190 = 210 ✓
 Formula: steep = targetTimeSec − (pour + stirs + press/drain overhead). Compute steep last.
 
 DRAIN / DRAWDOWN OVERHEAD IS ROUGHLY CONSTANT — it does NOT scale up with water volume.

@@ -298,27 +298,28 @@ export const REFERENCE_RECIPES: Recipe[] = [
     brewerNotes: "Technivorm Moccamaster KBGV / KBG Select",
     dose: { grams: 50 },
     water: { grams: 750, ratio: "1:15" },
-    temperature: { celsius: 96 },
+    temperature: { celsius: 96, rangeC: [92, 98] },
     grind: {
       referenceSetting: "medium-coarse",
       nicheZeroDegrees: [410, 420],
     },
     pourSequence: [
       {
-        label: "Fill water tank",
+        label: "Fill tank (750 g water), add 50 g coffee leveled",
         action: "pour",
         waterGramsAtEnd: 750,
-        durationSec: 30,
+        durationSec: 20,
+        notes: "Fill the reservoir; level the bed in the flat-bottom basket, then switch on.",
       },
       {
-        label: "Auto-brew (machine does the work)",
+        label: "Machine brews",
         action: "wait",
-        durationSec: 450,
+        durationSec: 190,
         notes:
-          "Moccamaster pulses water through the showerhead. No user agitation needed or possible.",
+          "The Moccamaster brews ~750 g in about 3:30 at 92–98 °C; the showerhead flow self-agitates enough for a high, even extraction. Hoffmann's optional hack: once the first water hits, let it bloom briefly and give ONE stir, plus a tiny stir near the end — not required, the machine is built to not need it.",
       },
     ],
-    totalTimeSec: 480,
+    totalTimeSec: 210,
     techniques: ["machine-drip-brew"],
     bestFor: {
       roastLevels: ["medium-light", "medium"],
@@ -329,23 +330,24 @@ export const REFERENCE_RECIPES: Recipe[] = [
     teaches:
       "How a well-designed batch brewer can produce filter-quality coffee at scale. The Moccamaster's pulsing showerhead approximates a multi-pour V60 without operator skill.",
     science:
-      "The Moccamaster heats water in a tube, then releases it in pulses through a perforated showerhead — each pulse approximates a small V60 pour. The flat-bottomed paper filter sits in a Kalita-like basket: even bed, slow drawdown, well-extracted cup. The 1:15 ratio is conventional; the medium-coarse grind compensates for the longer total brew time (~8 minutes for 750g).",
+      "The Moccamaster heats water in a tube, then releases it over the bed through a perforated showerhead with enough force to self-agitate the slurry — which is why Hoffmann measured it extracting HIGH in his 6-brewer comparison. It brews ~750 g in about 3:30 (Hoffmann's measured time) with exit water at 97–98 °C, sitting in his stated 'good brewing range' of 92–96 °C once up to temperature. The flat-bottomed paper filter sits in a Kalita-like basket: even bed, well-extracted cup. The 1:15 ratio and medium-coarse grind are conventional Moccamaster figures.",
     whenToUse:
       "When brewing for two or more people, or when you want filter coffee without the labour. Not for single-cup brewing — the showerhead doesn't saturate properly below ~500ml.",
     sources: [
       {
         type: "video",
         citation:
-          "James Hoffmann — 'How to Make the Best Coffee at Home' Moccamaster chapter",
-        year: 2022,
+          "James Hoffmann — batch-brewer comparison (6 home filter machines): measured the Technivorm Moccamaster at ~3.5 min brew time for 750 g, exit water 97–98 °C, high extraction from showerhead self-agitation. Transcribed in-session.",
       },
       {
-        type: "book",
+        type: "video",
         citation:
-          "Hoffmann, J. — *How to Make the Best Coffee at Home* (Octopus, 2022)",
+          "James Hoffmann — Moccamaster Jubilee 68 review: Technivorm temp range 'kind of 92 to 96 °C'; his optional technique = bloom + one stir at the start, a tiny stir at the end (explicitly not required). Transcribed in-session.",
       },
     ],
     verified: true,
+    notes:
+      "Brew time CORRECTED June 2026 from 8:00 to ~3:30 (480 → 210 s). In Hoffmann's own 6-brewer comparison the Technivorm brews 750 g in 3.5 minutes with exit water at 97–98 °C; the prior 8-minute figure was unsourced and ~2× too long. Temperature range 92–98 °C set from his measurements (exit 97–98, 'good range' 92–96). Dose/ratio (50 g : 750 g, 1:15) and grind are standard Moccamaster figures — Hoffmann does not state a ratio in these two videos. The stir hack is his, but optional (the machine is designed to not need agitation).",
   },
 
   {
