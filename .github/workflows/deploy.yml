@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
 
+# Serialise deploys. Without this, two pushes (or a double-delivered push event)
+# can start two deploy jobs that race on the VPS git checkout — one job's
+# `git fetch` updates refs/remotes/origin/main while the other still expects the
+# old value, giving "cannot lock ref 'refs/remotes/origin/main'" and a failed
+# deploy (June 2026). Queue instead of cancel so an in-flight deploy always
+# finishes cleanly; the next run resets to whatever origin/main is by then.
+concurrency:
+  group: deploy-hetzner
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -32,8 +42,12 @@ jobs:
           ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
+            # Clear any stale ref lock left by a crashed/raced prior fetch, then
+            # reset to FETCH_HEAD (doesn't require updating the remote-tracking
+            # ref, so it can't fail on "cannot lock ref refs/remotes/origin/main").
+            rm -f .git/refs/remotes/origin/main.lock 2>/dev/null || true
             git fetch origin main
-            git reset --hard origin/main
+            git reset --hard FETCH_HEAD
 
             # One-shot migration: apply 0017 if it hasn't run yet.
             # The SQL is fully idempotent (column add uses IF NOT EXISTS;
