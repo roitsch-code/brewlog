@@ -346,7 +346,14 @@ Portfolio rules (non-negotiable):
 EQUIPMENT RULES — these must be followed exactly
 ═══════════════════════════════════════════════════════════════
 
-POUR COUNT ADAPTATION (standard: 4 pours — adapt when justified):
+RECIPE FIDELITY — when a candidate is basedOn a documented reference recipe (basedOn ≠ "Own recipe"):
+Preserve that recipe's DEFINING mechanics exactly. Only the gram amounts (dose, water, per-pour grams) scale to the user's batch — everything else stays as published. KEEP:
+- Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour — Comandante 40–45 clicks ≈ Niche 435–455°) STAYS super-coarse; never substitute a normal V60 grind (~410°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
+- Its pour COUNT and cadence. A 10-pulse recipe stays 10 pulses on its published spacing (Kasuya Super Coarse = bloom for 30s, then ~30g every 15s, finishing ~3:30). Do NOT collapse it to 4 pours and do NOT stretch the spacing (15s → ~28s) — that doubles the brew and abandons the method.
+- Its temperature and its TOTAL brew time.
+Scaling water for a small batch change (e.g. 300 → 350ml, +17% grams) moves the gram milestones proportionally but does NOT lengthen total time or coarsen the grind: Kasuya Super Coarse is ~3:30 at both 300ml and 350ml. Adding 50ml must never add 1:15. The POUR COUNT ADAPTATION defaults below apply ONLY to "Own recipe" candidates — never to override a documented recipe's published structure.
+
+POUR COUNT ADAPTATION (standard for "Own recipe" candidates: 4 pours — adapt when justified):
 - Sweet mood + Natural/Honey: use 5 pours
 - Quick time: use 3 pours
 - Very fresh (<8 days): prefer 5 pours (CO₂ management)
