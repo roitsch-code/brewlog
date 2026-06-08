@@ -412,8 +412,8 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
 
   {
     id: "wac-2024-stanica",
-    name: "Stanica 2024 — Inverted AeroPress + Melodrip + Bypass",
-    shortName: "Stanica 2024",
+    name: "Stanica 2024 — WAC Champion (Flow Control AeroPress)",
+    shortName: "Stanica 2024 (WAC)",
     attribution: {
       person: "George Stanica",
       title: "2024 World AeroPress Champion",
@@ -423,96 +423,78 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     category: "championship",
     brewer: "aeropress",
     brewerNotes:
-      "INVERTED AeroPress, plunger at the 4th mark, standard paper filter (rinsed). Pours go through a Melodrip. His WAC 2024 competition routine. Brew water 88–93 °C; dilution = warm kettle water + room-temp water.",
+      "UPRIGHT AeroPress with the Flow Control Filter Cap and TWO regular paper filters (rinsed), set over a carafe — NOT inverted. Regular filtered water, 90–110 ppm. This is the recipe he WON the 2024 World AeroPress Championship with.",
     dose: { grams: 18 },
-    water: { grams: 100, ratio: "1:5.5 (extraction) + bypass → ~150–165 g cup" },
-    temperature: { celsius: 90, rangeC: [88, 93] },
+    water: { grams: 225, ratio: "1:12.5 (brew) + 15–30 g bypass → ~240–255 g cup" },
+    temperature: { celsius: 93 },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "medium / medium-coarse (~800 µm, ~26 clicks)",
-      nicheZeroDegrees: [388, 396],
+      referenceSetting: "25 clicks (~750 µm)",
+      nicheZeroDegrees: [385, 392],
       description:
-        "Medium/medium-coarse, ~800 µm (~26 Comandante clicks). Niche derived from the clicks (~26 ≈ 392°); calibrate empirically.",
+        "Comandante 25 clicks (~750 µm). Niche derived from the published clicks (~25 ≈ 387°); calibrate empirically.",
     },
     pourSequence: [
       {
-        label: "Invert (plunger 4th mark), 18 g coffee",
-        action: "invert",
-        durationSec: 0,
-        notes: "Inverted, plunger set at the 4th mark; add 18 g coffee.",
-      },
-      {
-        label: "First pour 50 g via Melodrip",
-        action: "melodrip",
+        label: "Pour 50 g water (93 °C)",
+        action: "pour",
         waterGramsAtEnd: 50,
-        durationSec: 6,
-        notes: "Pour 50 g of 88–93 °C water through a Melodrip (~5–6 s).",
+        durationSec: 5,
+        notes: "Upright, Flow Control cap, 18 g coffee already in. Pour 50 g to wet the bed.",
       },
-      { label: "Bloom → 0:30", action: "wait", durationSec: 24 },
+      { label: "Bloom → 0:30", action: "wait", durationSec: 25 },
       {
-        label: "Second pour 50 g via Melodrip (→100 g)",
-        action: "melodrip",
-        waterGramsAtEnd: 100,
-        durationSec: 6,
+        label: "Pour to 225 g",
+        action: "pour",
+        waterGramsAtEnd: 225,
+        durationSec: 15,
       },
       {
         label: "NSEW stir 10 s",
         action: "stir",
         durationSec: 10,
-        notes: "Light paddle stir North-South-East-West. Rinse the cap filter and crack the kettle lid to cool the dilution water.",
+        notes: "Gentle paddle stir North-South-East-West.",
       },
-      { label: "Wait → 1:20", action: "wait", durationSec: 34 },
+      { label: "Wait → 1:30", action: "wait", durationSec: 35 },
       {
-        label: "Press out air (inverted, ~10 s)",
+        label: "Press slowly (~40 s)",
         action: "press",
-        durationSec: 10,
-        notes: "At 1:20, cap on, gently press while inverted just to push the air out.",
+        durationSec: 40,
+        notes: "Insert the plunger and press slowly — about 40 s to extract everything.",
       },
       {
-        label: "Swirl, then flip onto the server",
-        action: "flip",
-        durationSec: 3,
-        notes: "Gently swirl inverted, then flip onto your server.",
-      },
-      { label: "Wait → 1:35", action: "wait", durationSec: 2 },
-      {
-        label: "Press slowly 30–40 s → ~80 g concentrate",
-        action: "press",
-        durationSec: 35,
-        notes: "From 1:35, press slowly until you have ~80 g of concentrate.",
-      },
-      {
-        label: "Dilute → ~150–165 g cup",
+        label: "Dilute with 15–30 g room-temp water",
         action: "bypass",
-        waterGramsAtEnd: 160,
+        waterGramsAtEnd: 250,
         durationSec: 5,
-        notes: "Add warm kettle water to bring the ~80 g concentrate to 130–135 g, then add 20–30 g room-temp (25 °C) water.",
+        notes:
+          "Add 15–30 g room-temperature water to taste → ~240–255 g cup. Let it cool 2–3 min before drinking.",
       },
     ],
     totalTimeSec: 135,
-    techniques: ["aeropress-inversion", "concentrate-and-bypass"],
+    techniques: ["concentrate-and-bypass"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural", "honey"],
       goals: ["high-clarity", "balanced", "explore"],
     },
     teaches:
-      "His WAC 2024 routine: over-extract a tight ~1:5.5 concentrate inverted with gentle Melodrip pours, press to ~80 g, then rebuild the cup with warm + room-temp bypass water. Concentrate-and-bypass makes extraction strength and drink strength independent controls.",
+      "The recipe he WON the 2024 World AeroPress Championship with: an UPRIGHT take on concentrate-and-bypass — brew a modestly strong cup with the Flow Control cap, then dial it back with a small splash of room-temp water. Strength and flavour stay independent, without the mess and risk of an inverted flip.",
     science:
-      "Pulling a small 1:5.5 concentrate at 88–93 °C extracts deeply into Zone 2 (sugars, body) without the watery cup a 1:16 brew gives; the Melodrip breaks the pour into many fine streams so the small bed saturates with almost no turbulence. Pressing fully means the bypass water only sets concentration, not extraction — warm water to 130–135 g rebuilds body, and a final 20–30 g of room-temp water cools and lengthens it. The NSEW stir agitates the small bed evenly without a vortex.",
+      "Two rinsed paper filters plus the Flow Control cap slow the flow and add filtration for a cleaner, filter-like cup. Brewing at 18 g : 225 g (1:12.5) and pressing pulls a fuller extraction than a standard 1:16 AeroPress; the 15–30 g room-temp bypass then sets drinking strength without further extraction (the puck is already pressed). 93 °C and a coarse 25-click grind keep the cup sweet and balanced rather than sharp. Regular 90–110 ppm filtered water — not a low-mineral championship blend.",
     whenToUse:
-      "When you want filter-style clarity at the intensity of a concentrate, with full control over final strength. Competition-grade light roasts that feel under-extracted on a standard AeroPress.",
+      "An everyday, forgiving AeroPress that drinks like a clean, sweet filter cup. Upright + Flow Control means no inversion risk; tune strength with the bypass amount.",
     sources: [
       {
-        type: "report",
+        type: "official-competition",
         citation:
-          "George Stanica — 2024 World AeroPress Championship recipe with dilution (owner-supplied): inverted, plunger 4th mark, 18 g, ~800 µm; 100 g brew water at 88–93 °C via Melodrip (50 g + 30 s bloom + 50 g), NSEW stir 10 s, press out air at 1:20, flip, press to ~80 g concentrate at 1:35, dilute with warm water to 130–135 g + 20–30 g room-temp.",
+          "George Stanica — 2024 World AeroPress Championship WINNING recipe (owner-supplied): upright, Flow Control cap + 2 rinsed filters, 18 g, Comandante 25 clicks (~750 µm); 50 g + 30 s bloom + to 225 g at 93 °C / 90–110 ppm, NSEW stir 10 s, press slowly at 1:30 (~40 s), dilute 15–30 g room-temp water → ~240–255 g.",
         year: 2024,
       },
     ],
     verified: true,
     notes:
-      "George Stanica's WAC 2024 competition routine (owner-supplied, with the full dilution). Inverted + Melodrip; 100 g brew water → ~80 g concentrate → diluted to ~150–165 g with warm + room-temp bypass. He won the 2024 World AeroPress Championship (Lisbon). One constant brewing temperature (88–93 °C); the warm/room-temp dilution water is bypass, not staging. An alternative UPRIGHT Flow-Control home version also circulates (18 g : 225 g, 93 °C, Comandante 25 clicks, NSEW stir, press at 1:30, dilute 15–30 g) — this entry is the competition recipe. Parameters owner-supplied; Niche derived from the Comandante clicks.",
+      "George Stanica's WAC 2024 WINNING recipe (owner-supplied): UPRIGHT Flow Control AeroPress, 18 g : 225 g at 93 °C, NSEW stir, press at 1:30, dilute 15–30 g room-temp water. He won the 2024 World AeroPress Championship (Lisbon) with THIS recipe. Stanica's separate INVERTED Melodrip recipe — 100 g brew → ~80 g concentrate → ~150–165 g — is a different recipe and lives in its own entry (`stanica-inverted-melodrip`); it is NOT the recipe he won with. One constant brewing temperature; the dilution water is bypass, not staging. Parameters owner-supplied; Niche derived from the Comandante clicks.",
   },
 
   {

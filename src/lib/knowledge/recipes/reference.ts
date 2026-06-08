@@ -979,6 +979,111 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "12 g : 200 g, 97 °C, 2:20, confirmed against a demonstration of the recipe (measured 1.40% TDS / 20.8% extraction): bloom 50 g + a vigorous 'stir like a bandit', then OUTWARD-SPIRAL pours to 100 g @ 0:30 and 200 g @ 1:00 — the spiral pour itself supplies the Rao-spin (there is no separate spin step). TAP the dripper to level the bed AFTER the final pour, not after the bloom. Finish each pour around the edges to wash grounds down; aim for the water disappearing across the whole bed simultaneously. Kept verified:false: the source is a recipe demonstration, not Perger's own verbatim publication. (Prior 22 g : 352 g / 95 °C / 3:35 was a misattribution — removed.)",
   },
 
+  // ── George Stanica (alternative inverted recipe; NOT his WAC winner) ──────
+
+  {
+    id: "stanica-inverted-melodrip",
+    name: "Stanica — Inverted AeroPress + Melodrip + Bypass",
+    shortName: "Stanica Inverted",
+    attribution: {
+      person: "George Stanica",
+      title: "2024 World AeroPress Champion",
+      country: "Romania",
+    },
+    category: "reference",
+    brewer: "aeropress",
+    brewerNotes:
+      "INVERTED AeroPress, plunger at the 4th mark, standard paper filter (rinsed). Pours go through a Melodrip. A SEPARATE Stanica recipe — NOT the one he won the WAC with (that's the upright Flow Control recipe). Brew water 88–93 °C; dilution = warm kettle water + room-temp water.",
+    dose: { grams: 18 },
+    water: { grams: 100, ratio: "1:5.5 (extraction) + bypass → ~150–165 g cup" },
+    temperature: { celsius: 90, rangeC: [88, 93] },
+    grind: {
+      referenceGrinder: "Comandante C40",
+      referenceSetting: "medium / medium-coarse (~800 µm, ~26 clicks)",
+      nicheZeroDegrees: [388, 396],
+      description:
+        "Medium/medium-coarse, ~800 µm (~26 Comandante clicks). Niche derived from the clicks (~26 ≈ 392°); calibrate empirically.",
+    },
+    pourSequence: [
+      {
+        label: "Invert (plunger 4th mark), 18 g coffee",
+        action: "invert",
+        durationSec: 0,
+        notes: "Inverted, plunger set at the 4th mark; add 18 g coffee.",
+      },
+      {
+        label: "First pour 50 g via Melodrip",
+        action: "melodrip",
+        waterGramsAtEnd: 50,
+        durationSec: 6,
+        notes: "Pour 50 g of 88–93 °C water through a Melodrip (~5–6 s).",
+      },
+      { label: "Bloom → 0:30", action: "wait", durationSec: 24 },
+      {
+        label: "Second pour 50 g via Melodrip (→100 g)",
+        action: "melodrip",
+        waterGramsAtEnd: 100,
+        durationSec: 6,
+      },
+      {
+        label: "NSEW stir 10 s",
+        action: "stir",
+        durationSec: 10,
+        notes: "Light paddle stir North-South-East-West. Rinse the cap filter and crack the kettle lid to cool the dilution water.",
+      },
+      { label: "Wait → 1:20", action: "wait", durationSec: 34 },
+      {
+        label: "Press out air (inverted, ~10 s)",
+        action: "press",
+        durationSec: 10,
+        notes: "At 1:20, cap on, gently press while inverted just to push the air out.",
+      },
+      {
+        label: "Swirl, then flip onto the server",
+        action: "flip",
+        durationSec: 3,
+        notes: "Gently swirl inverted, then flip onto your server.",
+      },
+      { label: "Wait → 1:35", action: "wait", durationSec: 2 },
+      {
+        label: "Press slowly 30–40 s → ~80 g concentrate",
+        action: "press",
+        durationSec: 35,
+        notes: "From 1:35, press slowly until you have ~80 g of concentrate.",
+      },
+      {
+        label: "Dilute → ~150–165 g cup",
+        action: "bypass",
+        waterGramsAtEnd: 160,
+        durationSec: 5,
+        notes: "Add warm kettle water to bring the ~80 g concentrate to 130–135 g, then add 20–30 g room-temp (25 °C) water.",
+      },
+    ],
+    totalTimeSec: 135,
+    techniques: ["aeropress-inversion", "concentrate-and-bypass"],
+    bestFor: {
+      roastLevels: ["light", "medium-light"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["high-clarity", "balanced", "explore"],
+    },
+    teaches:
+      "An inverted concentrate-and-bypass routine: over-extract a tight ~1:5.5 concentrate with gentle Melodrip pours, press to ~80 g, then rebuild the cup with warm + room-temp bypass water. Extraction strength and drink strength become independent controls.",
+    science:
+      "Pulling a small 1:5.5 concentrate at 88–93 °C extracts deeply into Zone 2 (sugars, body) without the watery cup a 1:16 brew gives; the Melodrip breaks the pour into many fine streams so the small bed saturates with almost no turbulence. Pressing fully means the bypass water only sets concentration, not extraction — warm water to 130–135 g rebuilds body, and a final 20–30 g of room-temp water cools and lengthens it. The NSEW stir agitates the small bed evenly without a vortex.",
+    whenToUse:
+      "When you want filter-style clarity at the intensity of a concentrate, with full control over final strength — and you don't mind the inverted flip + a Melodrip.",
+    sources: [
+      {
+        type: "report",
+        citation:
+          "George Stanica — inverted Melodrip AeroPress recipe with dilution (owner-supplied): inverted, plunger 4th mark, 18 g, ~800 µm; 100 g brew water at 88–93 °C via Melodrip (50 g + 30 s bloom + 50 g), NSEW stir 10 s, press out air at 1:20, flip, press to ~80 g concentrate at 1:35, dilute with warm water to 130–135 g + 20–30 g room-temp.",
+      },
+    ],
+    verified: true,
+    notes:
+      "A SEPARATE Stanica recipe (owner-supplied), NOT the one he won the 2024 World AeroPress Championship with — that's the upright Flow Control recipe in `wac-2024-stanica`. Inverted + Melodrip; 100 g brew → ~80 g concentrate → ~150–165 g cup. One constant brewing temperature (88–93 °C); the warm/room-temp dilution water is bypass, not staging. Parameters owner-supplied; Niche derived from the Comandante clicks.",
+  },
+
   // ── Scott Rao ────────────────────────────────────────────────────────────
 
   {
