@@ -487,8 +487,8 @@ CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and 
 - Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
 - Origami Air M clarity: 28g:420ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
 - Origami Air M sweet: 30g:450ml | Natural/Honey 93°C | 403–408° | bloom → light stir 1–2× at 0:10 → 3 pours → ~3:00 (targetTimeSec: 180)
-- Wölfl 2024 Orea FAST: 17g:270ml | Water 1:3 (55ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
-- Kasuya 4:6 (V60, no Assist): 20g:300ml | Water 1:3 (55ppm) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30–4:00
+- Wölfl 2024 Orea FAST: 17g:270ml | soft low-mineral water (he used an Apax concentrate; no public TDS — do NOT state a ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
+- Kasuya 4:6 (V60, no Assist): 20g:300ml | soft water (Kasuya: light 93°C / medium 88 / dark 83) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30
 - Hoffmann AeroPress: 11g:200g | 85°C | 377–382° | inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s (targetTimeSec: 150)
 - AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water 10s · stir 2–3× 10s · press 20s · swirl cup after adding 140g bypass water (targetTimeSec: 90)
 - Clever Extended: 20g:300ml | 92°C | 421–431° | pour water 15s · swirl 5s · steep 4:20 · swirl 5s · swirl 5s · drain 40s (targetTimeSec: 330)

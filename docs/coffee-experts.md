@@ -44,12 +44,12 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hoffmann AeroPress** | Inverted AeroPress | 11g : 200g | 85–100°C † | 356–366° | 3:35 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C | 410–420° | 8:00 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |
-| **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 92°C | 411–421° | 3:30 | true |
+| **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 93°C † (88 med / 83 dark) | 411–421° | 3:30 | true |
 | **Kasuya Super Coarse 10-Pour** | V60 / Neo | 20g : 300g | 95–96°C | 435–455° § | 3:30 | true |
 | **April House V60 (Rolf)** | V60 | 20g : 300g | 92°C | — (calibrate) | 3:20–3:30 | true |
-| **Gagné Long AeroPress** | AeroPress + Prismo | 20g : 200g | 80°C | 365–375° | 6:25 | true |
+| **Gagné Long AeroPress** | AeroPress + Prismo | 18g : 260g | 100°C | calibrate | 10:00 | true |
 | **Perger High-Extraction V60** | V60 | 12g : 200g | 97°C | — (calibrate) | 2:20 | false |
-| **Rao Rule of Thirds** | V60 | 22g : 352g | 96°C | 396–404° | 3:25 | true |
+| **Rao V60 Spin Method** | V60 | 20g : 330g | 97°C | calibrate | 4:00–4:30 | true |
 | **Hatakeyama Cafec Flower (roast-tailored)** | Cafec Flower Dripper | 15g : 225g *(unsourced — flagged)* | 88–95°C (by roast) | 396–406° | 3:10 | false |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 22g : 330g | 94°C | 396–406° | 3:35 | false |
 
@@ -66,9 +66,9 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Hoffmann Immersion Iced** — Flash-chilling preserves aromatics that cold-brew loses to its long extraction time. 75 g coffee per litre of total water; total water split ~2/3 hot brew + ~1/3 ice (e.g. 37.5 g : 330 g hot + ~170 g ice = 1:13.3 final). Hot extraction at 1:8.8 then diluted by ice to the drinking ratio.
 - **Kasuya Super Coarse 10-Pour** — Full extraction of a light roast WITHOUT bitterness: grind super-coarse (Comandante 40–45 clicks; 40 is the dependable default, 45 is extreme and can run thin) to drop out the over-extracting fines, then claw the yield back with near-boiling water (95–96 °C) and ten even 30 g pulses (bloom 30 s, then a 30 g pour every 15 s). At 1:15 this grind would normally give <1% TDS; the ten percolation cycles pull it to ~1.3% and, crucially, build a thick, almost syrupy **body** — Kasuya's point is that the *number* of pours is what creates mouthfeel (7–8 already help). Early pours drain straight through; the bed clogs slightly near the end (~2:00–2:15). Trade-off: sweetness dominates and **acidity is deliberately toned down** — not for an acidity-forward cup. Designed around the Hario Neo but he brews it on a V60; flat-bottom untested. A different Kasuya recipe from the 4:6 method — even pours, not phase-separated — pitched as its 10th-anniversary evolution. Source: his 2026 YouTube video ("Multi-Pour Recipe"), transcribed.
 - **April House V60 (Rolf)** — April's agitation-forward house recipe: six even 50g pours on a ~30s cadence, each poured deliberately aggressively, finished with one stir. The opposite of a minimal-agitation brew. (Replaces a prior "Minimum Variables" entry that was a misattribution — no such single-continuous-pour Rolf recipe exists.)
-- **Gagné Long AeroPress** — The "second sweet spot": fine grind + 80°C + 5-minute steep. Bitter Zone 3 compounds extract orders of magnitude slower at low temp; long steep saturates Zone 2 fully without invading Zone 3.
+- **Gagné Long AeroPress** — A long (~10-minute) **HOT** steep (100°C, 18g:260g) in an upright AeroPress with a no-drip Prismo valve, finished with a very gentle ~1-minute press. Contact time + gentleness reach ~23.5% extraction — full, sweet, clean — without astringency. (Corrected June 2026 against Gagné's own blog: the previous "80°C second sweet spot / low-temp" framing was a misattribution — his published recipe is hot.)
 - **Perger High-Extraction V60** — Vigorous bloom stir + fine grind + spinning swirl during drawdown drives extraction yield above 22%. Bitterness comes from over-extracting the wrong compounds, not high yield itself.
-- **Rao Rule of Thirds** — Equal-volume thirds + Rao spin (vortex swirl). Lower extraction variance run-to-run, easier to troubleshoot.
+- **Rao V60 Spin Method** — 20g:330g at 97°C: aggressive bloom spin, then **two** pours (to 200g, to 330g) each followed by a brief gentle spin to refill the ribbed channels; ~4:00–4:30. The defining feature is the spin, NOT equal thirds. (Corrected June 2026 against Rao's own published recipe: he explicitly argues AGAINST breaking a V60 into more than two parts, so the prior "Rule of Thirds / equal thirds / 22g:352g" attribution was wrong.)
 - **Hatakeyama Cafec Flower** — Match filter paper thickness to roast level. Light roast → thin paper (faster flow tolerable); dark roast → thick paper (slows flow where less contact is needed).
 - **Wallgren Kalita** — Sieve out fines pre-brew. Fines over-extract relative to the rest of the grind; removing them tightens the extraction distribution and produces a startlingly clean cup.
 
@@ -157,7 +157,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **boiling-water-coarse-grind** *(Turbo)* | Cameron/Hendon (*Matter* 2020); Hedrick popularised | 100°C raises extraction rate across all zones; coarse grind partially cancels — net is high yield in short time. | *(no verified recipe — espresso-origin; filter "turbo pour-over" is a community application)* |
-| **low-temp-long-steep** *(Gagné second sweet spot)* | Gagné | Bitter Zone-3 compounds extract orders of magnitude slower at 80°C — fine grind + long steep saturates Zone 2 without Zone 3. | gagne-long-aeropress |
+| **low-temp-long-steep** | General (physics documented by Gagné) | Bitter Zone-3 compounds extract orders of magnitude slower at ~80°C — a long cool steep saturates Zone 2 without Zone 3. *(NOT Gagné's AeroPress recipe, which is hot — see correction.)* | cold-bloom / low-temp experimental recipes |
 
 ### 3b. Agitation
 
@@ -175,7 +175,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **phase-separated-pouring** *(4:6)* | Kasuya | First 40% (two pours) controls acid/sweet axis; last 60% (3+ pours) controls strength. | wbrc-2016-kasuya, kasuya-4-6-standard |
-| **rule-of-thirds** | Rao | Equal-volume pours after the bloom. Lower run-to-run variance. | rao-rule-of-thirds |
+| **rule-of-thirds** | General (NOT Rao) | Equal-volume pours after the bloom. Lower run-to-run variance. *(Mis-attributed to Rao historically — he opposes >2 pours; corrected.)* | — |
 
 ### 3d. Pre-brew
 
@@ -227,10 +227,10 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 |---|---|---|
 | **James Hoffmann** | Better 1 Cup, Ultimate Clever, AeroPress, Moccamaster, Immersion Iced | swirl-not-stir, water-first (popularised), concentrate-and-bypass (popularised), flash-chilling (popularised) |
 | **Tetsu Kasuya** | WBrC 2016, 4:6 standard | phase-separated-pouring |
-| **Scott Rao** | Rule of Thirds | rao-spin, rule-of-thirds |
+| **Scott Rao** | V60 Spin Method (bloom spin + two pours) | rao-spin |
 | **Matt Perger** | High-Extraction V60 | high-agitation-high-extraction |
 | **Patrik Rolf** | April House V60 | (agitation-forward — none atomic) |
-| **Jonathan Gagné** | Long-Brew AeroPress + Prismo | low-temp-long-steep |
+| **Jonathan Gagné** | Long-Brew AeroPress + Prismo (HOT, 100°C) | immersion-steep |
 | **Daiki Hatakeyama** | Cafec Flower (roast-tailored) | roast-tailored-filter |
 | **Mikaela Wallgren** | Kalita with Sieved Fines | fines-removal-sieving |
 | **Lance Hedrick** | (popularised the espresso "turbo"; no verified filter recipe) | boiling-water-coarse-grind (popularised) |
