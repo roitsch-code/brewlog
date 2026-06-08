@@ -295,7 +295,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     category: "reference",
     brewer: "moccamaster",
-    brewerNotes: "Technivorm Moccamaster KBGV / KBG Select",
+    brewerNotes: "Standard Technivorm Moccamaster (KBGV / KBG Select) — NOT a special edition. Hoffmann's 3.5-min / 97–98 °C measurement is from this regular machine in his 6-brewer comparison.",
     dose: { grams: 50 },
     water: { grams: 750, ratio: "1:15" },
     temperature: { celsius: 96, rangeC: [92, 98] },
