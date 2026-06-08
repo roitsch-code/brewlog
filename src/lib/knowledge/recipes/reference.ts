@@ -143,7 +143,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     category: "reference",
     brewer: "clever",
     brewerNotes:
-      "Clever Dripper (full-immersion brewer with valve at the base), Melitta-style #4 paper, rinsed. Water-first technique credited to Workshop Coffee (London), popularised by Hoffmann. Demo brew was 15 g : 250 g; Hoffmann's stated preference is ~60–65 g/L, so 18 g : 300 g sits in the same band.",
+      "Clever Dripper (full-immersion brewer with valve at the base), Melitta-style #4 paper (Filtropa or Melitta), rinsed — hot tap water is fine, no need to re-boil. Max practical ~400 ml (500 at a push). The Clever's lid gives no taste benefit (Hoffmann skips it). Water-first technique credited to Workshop Coffee (London), popularised by Hoffmann. Demo brew was 15 g : 250 g; Hoffmann's stated preference is ~60–65 g/L (down from 75), so 18 g : 300 g sits in the same band.",
     dose: { grams: 18 },
     water: { grams: 300, ratio: "1:16.7" },
     temperature: { celsius: 100, rangeC: [96, 100] },
@@ -210,7 +210,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     ],
     verified: true,
     notes:
-      "Corrected from Hoffmann's own video: water is poured straight off the boil (was 96°C); he DOES give a little stir to mix the coffee and a crust-break stir at 2 min (the previous 'no-stir' framing was wrong); ~30 s settle + ~1 min drawdown puts total near 3:30 (was 3:00). Dose/ratio kept at 18 g : 300 g — within his stated 60–65 g/L preference; his on-camera demo used 15 g : 250 g at the same ratio band.",
+      "Re-verified against Hoffmann's own Clever video (transcript, 2025): every parameter matches — water-first off the boil, add coffee + little stir, 2-min steep, break crust (stir or shake), ~30 s settle, ~1 min drawdown (45 s–1:15 by grinder) → ~3:30–4:00 total. Medium-fine ~2-cup V60 grind ('finer than most expect'). Dose/ratio 18 g : 300 g sits in his stated 60–65 g/L preference (down from 75 g/L); his on-camera demo used 15 g : 250 g at the same ratio band. Rinse can be hot tap water; max ~400 ml; lid gives no benefit.",
   },
 
   {
@@ -377,14 +377,14 @@ export const REFERENCE_RECIPES: Recipe[] = [
     },
     pourSequence: [
       {
-        label: "Hot water onto coffee (~330 g, off the boil)",
+        label: "Pour hot water FIRST (~330 g, off the boil)",
         action: "pour",
         waterGramsAtEnd: 330,
         durationSec: 15,
         notes:
-          "Brew as hot as you can — 2/3 of the total water (~330 g of 500 g). Preheat the brewer.",
+          "Water-first (the Clever benefits from it): pour 2/3 of the total water (~330 g of 500 g) as hot as you can into the preheated brewer, THEN add the coffee.",
       },
-      { label: "Mix", action: "stir", durationSec: 5, notes: "Stir/distribute to wet all the grounds." },
+      { label: "Add coffee + stir to mix", action: "stir", durationSec: 5, notes: "Drop the coffee on, stir/distribute to wet all the grounds (a needle distributor helps but isn't essential)." },
       { label: "Steep", action: "wait", durationSec: 290, notes: "~5-minute steep. Tolerant: 4–7 min is fine. Fetch the ice at the 4-minute mark so it's as cold as possible." },
       {
         label: "Drain onto ~170 g ice",
