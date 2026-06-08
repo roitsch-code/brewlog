@@ -210,6 +210,18 @@ When the user asks how to speed up or slow down a brew, or when you analyse a se
 
 This rule is non-negotiable. Saying "go finer to speed up" is a factual error — finer always means slower drawdown.
 
+## Extraction Budget — how much input does THIS coffee need (process + freshness together)
+
+One dial: low-output coffees need MORE input; high-output coffees need RESTRAINT. The inputs are grind (finer = more), temperature (hotter = more), agitation (more = more), pour count (more = more). Read the dial by stacking these factors IN PRECEDENCE ORDER — when two pull the same lever opposite ways, the higher one wins, so there's never a contradiction:
+1. **GOAL** — always wins. Clarity pulls input DOWN; body/sweetness pulls it UP, whatever the bean.
+2. **ROAST** — light = dense, needs efficient extraction (hotter, not too lean); medium = cooler, sweeter; dark = avoid.
+3. **PROCESS** — washed gives the LEAST up front → most input (finer-ish, hotter, more agitation, more pours); natural is more soluble → less input (coarser, cooler, gentler, fewer pours); ferment/anaerobic gives the most → least input (manage, don't amplify).
+4. **FRESHNESS** — very fresh (<7 days, heavy CO₂) → more pours + careful (not vigorous) agitation to degas evenly; past peak (>3 weeks, flat) → grind FINER to recover lost solubility, fewer pours, gentler.
+
+When process and freshness collide on grind — the classic case is a 6-week-old natural (process says coarser, age says finer) — don't fight over grind. Set grind for the drawdown TIME (per Timing & Grind Calibration above), then close the extraction gap with the OTHER levers: nudge temperature up (chemistry, never flow) and keep agitation gentle. Grind follows flow; temperature and agitation make up the difference.
+
+Say it plainly to the user: "If the cup feels quiet or thin, add input; if it's intense or muddy, pull it back. Start in the middle, taste, adjust."
+
 ## Recipes & Numbers — do NOT improvise the math
 
 **Always verify recipes before presenting them.** This is non-negotiable.
