@@ -129,6 +129,10 @@ const RememberSchema = z.object({
   // Provenance only — the observation text carries the per-coffee targeting.
   coffeeId: z.string().optional(),
   coffeeName: z.string().optional(),
+  // The endorsement strength. "trying" (default) = Save to try; "confirmed" =
+  // the user is sure (the post-brew card's Confirmed action). Both the
+  // insights row and the per-coffee card adopt it.
+  status: z.enum(["trying", "confirmed"]).optional(),
 });
 
 /**
@@ -145,11 +149,16 @@ const RememberSchema = z.object({
  *      hand-saved advice supersedes the auto-generated per-coffee insight.
  *
  * The user tapping the button is an explicit endorsement, so both are
- * written with status='trying' (an active reminder). The insights row uses
+ * written with status='trying' by default (an active reminder) — or
+ * 'confirmed' when the caller passes status='confirmed' (the post-brew
+ * insight card's Confirmed action). The insights row uses
  * source='user-confirmed' (an allowed CHECK value, so no migration is
- * needed). status='trying' is preserved by the insights orchestrator across
- * /taste regenerations AND keeps the coffee card from regenerating under the
- * user, so a chat note is never silently wiped.
+ * needed). Both 'trying' and 'confirmed' are preserved by the insights
+ * orchestrator across /taste regenerations AND keep the coffee card from
+ * regenerating under the user, so a hand-saved note is never silently wiped.
+ *
+ * Callers: the home chat's "Remember this for …" pill, and the post-brew
+ * Summary insight card (Save to try / Confirmed).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -159,6 +168,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid body" }, { status: 400 });
     }
     const { observation, suggestion } = parsed.data;
+    const saveStatus: InsightStatus = parsed.data.status ?? "trying";
     const citationFields = (parsed.data.citationFields ?? [])
       .map((f) => f.trim().toLowerCase())
       .filter((f): f is (typeof CITATION_FIELDS)[number] =>
@@ -187,7 +197,7 @@ export async function POST(req: NextRequest) {
         const card: CoffeeCoachInsight = {
           observation,
           suggestion,
-          status: "trying",
+          status: saveStatus,
           generatedAtSessionMs: coffeeLatest[0]?.ms ?? 0,
           generatedAt: new Date().toISOString(),
         };
@@ -226,7 +236,7 @@ export async function POST(req: NextRequest) {
       citationFields,
       latestSessionMs: latestMs,
       source: "user-confirmed",
-      status: "trying",
+      status: saveStatus,
       dismissedAt: null,
       snoozedUntil: null,
       userNote: null,
