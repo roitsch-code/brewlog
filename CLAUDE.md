@@ -630,6 +630,11 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 - **Page gutter:** `px-5` (20 px). Don't use `px-8` — it's not a defined gutter width
 - **Light scope marker:** `[data-light-scope]` attribute set by `LightShell` wraps the whole `(light)` route group; the `globals.css` shim catches inline `var(--card)` etc. for un-migrated components — but NOT hardcoded hex like `#2A241C`, which needs explicit Light tokens at the source
 
+### Voice & tone
+- **Reference:** @./docs/voice-and-tone.md — full voice/tone guide for UI copy AND AI-generated text. Covers what BTTS sounds like (knowledgeable friend, not coach; pragmatic; editorial), what it doesn't (no apology, no emoji, no hype-default adjectives, no HTTP codes user-side), per-surface worked examples (errors / empty states / destructive confirms / coach cards / chat replies), and a self-test before shipping copy.
+- **When to consult:** any new UI copy, any prompt change for `/api/greeting`, `/api/recommend`, `/api/brew-insight`, `/api/insights`, `/api/explore-agent`, or any rewrite of error/empty-state strings.
+- **Per-surface examples carry file paths.** Update the doc examples when the source surface's copy changes.
+
 ### iOS PWA / install gotcha
 - iOS caches `apple-mobile-web-app-status-bar-style` **at PWA install time** — changing the meta tag does NOT update an already-installed home-screen app. To pick up the change the user must delete the PWA from the home screen AND clear Safari → Advanced → Website Data for the domain, then re-install.
 
