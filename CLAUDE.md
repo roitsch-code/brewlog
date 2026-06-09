@@ -663,6 +663,7 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 | **Kettle** | Fellow Stagg EKG — gooseneck, precise temp control, 60-min hold |
 | **Grinder** | Niche Zero — uses **degree (°) settings**, continuous (no clicks) |
 | Travel grinder | Comandante C40 MK2 — uses **clicks**, not degrees |
+| **Scale** | Acaia Lunar (2017) + Acaia Pearl (älter, exaktes Jahr nicht bestätigt) — 0.1 g precision. |
 | **Water** | BWT Bestmax Premium V (bypass 0): ~370 ppm hard local tap → **~220 ppm** filtered (GH 5–6 / KH 4 °dH), daily driver for naturals/honeys · **clarity blend** 1:2 filtered+distilled = **~73 ppm** (KH ~1.3 °dH) for washed florals & championship methods (Kasuya/Wölfl) |
 
 ### Hard rule: single-user PROJECT, not a product — no onboarding
