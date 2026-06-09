@@ -221,7 +221,8 @@ export const TECHNIQUES: Technique[] = [
     name: "Melodrip-Controlled Pouring",
     shortName: "Melodrip",
     attribution: {
-      person: "George Peng (used to win WBrC 2025)",
+      person:
+        "George Peng (WBrC 2025 champion — his routine was removed from this corpus with the staged-temperature purge, June 2026); Martin Wölfl (WBrC 2024) also pours through one",
       year: 2025,
     },
     category: "agitation",
@@ -399,7 +400,7 @@ export const TECHNIQUES: Technique[] = [
       "Multiple Cafec papers (Light Roast / Medium Roast / Dark Roast / Abaca) OR equivalent flow-rate-varied papers from another brand",
     ],
     compatibleBrewers: ["cafec-flower", "v60"],
-    exemplifiedBy: ["hatakeyama-cafec-flower"],
+    exemplifiedBy: [],
     sources: [
       {
         type: "interview",
@@ -409,7 +410,7 @@ export const TECHNIQUES: Technique[] = [
     ],
     verified: false,
     notes:
-      "Clarified during web research: matching paper thickness to roast level is a Cafec PRODUCT concept (Cafec sells roast-specific papers: Light / Medium-Dark T-90 / Dark T-83) that Daiki Hatakeyama promotes as a Cafec brand ambassador. It is a real, teachable principle — but it is NOT documented as his WBrC 2021 competition method (his reported competition signatures were a Cafec Flower Dripper + Abaca filter, KRUVE-sieved grind, and staged 90→60 °C temperature on a Geisha blend). Treat this as a sound Cafec technique, not a verified championship routine.",
+      "Clarified during web research: matching paper thickness to roast level is a Cafec PRODUCT concept (Cafec sells roast-specific papers: Light / Medium-Dark T-90 / Dark T-83) that Daiki Hatakeyama promotes as a Cafec brand ambassador. It is a real, teachable principle — but it is NOT documented as his WBrC 2021 competition method (his reported competition signatures were a Cafec Flower Dripper + Abaca filter, KRUVE-sieved grind, and staged 90→60 °C temperature on a Geisha blend). Treat this as a sound Cafec technique, not a verified championship routine. Exemplar removed June 2026: the hatakeyama-cafec-flower recipe id now carries his real 2024 JBrC routine (Origami + Abaca, coarse + 85 °C), which does not demonstrate roast-tailored paper choice — no recipe in the corpus currently exemplifies this technique.",
   },
 
   // ── Post-brew ────────────────────────────────────────────────────────────
@@ -486,17 +487,13 @@ export const TECHNIQUES: Technique[] = [
     mechanism:
       "A standard upright AeroPress drips through the paper filter during steep — the drip rate is non-zero even before pressing. For short steeps that's negligible; for longer steeps (60s+) the drip changes the in-brewer ratio mid-extraction. Inverting holds all the water until you cap, flip, and press, giving exact control of total contact time.",
     whenToUse:
-      "Any AeroPress recipe with a steep longer than 60 seconds. Most championship AeroPress routines use inversion.",
+      "AeroPress recipes with a steep longer than 60 seconds when no sealing cap (Prismo / Flow Control) is available. Note: the recent WAC winners in this corpus (Stanica 2024, Nemo Pop 2025) brew UPRIGHT with a Flow Control cap, and Hoffmann's Ultimate is upright by design — inversion is one way to stop the drip, not the championship default.",
     contraindications: [
       "Quick AeroPress recipes (<45s steep) — inversion adds steps without changing the cup meaningfully",
       "First-time users — there's a real risk of spilling water during the flip",
     ],
     compatibleBrewers: ["aeropress"],
-    exemplifiedBy: [
-      "hoffmann-aeropress-standard",
-      "wac-2024-stanica",
-      "gagne-long-aeropress",
-    ],
+    exemplifiedBy: ["stanica-inverted-melodrip"],
     sources: [
       {
         type: "article",
@@ -505,6 +502,8 @@ export const TECHNIQUES: Technique[] = [
       },
     ],
     verified: true,
+    notes:
+      "Exemplars corrected June 2026: this entry previously cited hoffmann-aeropress-standard, wac-2024-stanica and gagne-long-aeropress — all three of which are UPRIGHT recipes after the primary-source audit. The only genuinely inverted recipe in the corpus is stanica-inverted-melodrip.",
   },
 
   // ── Water ────────────────────────────────────────────────────────────────
