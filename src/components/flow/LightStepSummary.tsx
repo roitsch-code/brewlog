@@ -92,7 +92,7 @@ export default function LightStepSummary() {
         finishSaved(true);
       } catch (err) {
         console.error("Offline queue error:", err);
-        setSaveError("Couldn't save offline — please try again");
+        setSaveError("Couldn't queue this brew on your phone. Try again.");
       } finally {
         setSaving(false);
       }
@@ -118,7 +118,7 @@ export default function LightStepSummary() {
         const detailMsg = firstField
           ? `${firstField[0]}: ${firstField[1][0]}`
           : errBody.details?.formErrors?.[0];
-        const baseMsg = errBody.error || `Save failed (${res.status})`;
+        const baseMsg = errBody.error || "Couldn't save this brew. Try again in a moment.";
         setSaveError(detailMsg ? `${baseMsg} — ${detailMsg}` : baseMsg);
       }
     } catch (err) {
@@ -130,7 +130,7 @@ export default function LightStepSummary() {
         finishSaved(true);
       } catch (queueErr) {
         console.error("Offline queue error:", queueErr);
-        setSaveError("Failed to save — please try again");
+        setSaveError("Couldn't save this brew. Try again — your notes are still here.");
       }
     } finally {
       setSaving(false);
