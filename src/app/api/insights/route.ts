@@ -32,14 +32,12 @@ const snoozeVisibilityFilter = or(
  * Default (no query): runs the Opus regeneration check (cache-aware) and
  * returns all rows. The /taste page filters client-side by status.
  *
- * ?status=trying (etc.): returns only rows matching that status. Used by
- * /coffees/[id] and /brew/new Context step to pull active reminders for
- * a specific coffee context — they filter further by attribute overlap
- * client-side.
- *
- * ?status=trying,new: comma-separated list also accepted for surfaces
- * that want both 'new' and 'trying' candidates (the coffee detail
- * coach card prefers 'trying' but falls back to 'new').
+ * ?status=trying (etc.): returns only rows matching that status, skipping
+ * the regeneration. ?status=trying,new (comma-separated) also accepted.
+ * NOTE: currently no UI consumer — /coffees/[id] and the /brew/new Context
+ * step read the per-coffee /api/coffees/[id]/insight instead (migration
+ * 0015 replaced the old attribute-overlap matching). Kept as a lightweight
+ * filtered read for future surfaces.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -294,9 +292,13 @@ export async function PATCH(req: NextRequest) {
         // (e.g. the GET cache check). 'doesnt-apply' is the spiritual
         // successor of dismissed.
         dismissedAt: status === "doesnt-apply" ? now : null,
-        // Confirmation also bumps source so /recommend can weight it.
-        // Any other transition resets to 'opus'.
-        source: status === "confirmed" ? "user-confirmed" : "opus",
+        // Confirmation bumps source so /recommend can weight it. Other
+        // transitions leave source untouched — a chat-authored note
+        // (source='user-confirmed' at creation) must keep its provenance,
+        // because regeneration uses it as a never-delete tier. The old
+        // reset-to-'opus' here meant Save → Skip → 7 days could silently
+        // delete a note the user wrote.
+        ...(status === "confirmed" ? { source: "user-confirmed" as const } : {}),
         updatedAt: now,
       })
       .where(eq(insights.id, id));

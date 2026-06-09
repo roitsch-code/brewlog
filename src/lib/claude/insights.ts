@@ -395,7 +395,10 @@ async function callOpusForInsights(userMessage: string): Promise<InsightItem[] |
 }
 
 async function replaceInsights(items: InsightItem[], latestMs: number): Promise<void> {
-  // Four-tier preservation across regenerations:
+  // Preservation across regenerations:
+  //   - source='user-confirmed'                          → keep verbatim, ALWAYS
+  //     (user-authored or user-endorsed notes are never deleted by regen —
+  //     not even after a snooze expires; they resurface in the queue instead)
   //   - status='trying' | 'confirmed' | 'doesnt-apply'   → keep verbatim
   //   - status='snoozed' AND snoozed_until > now()       → keep verbatim
   //   - status='snoozed' AND snoozed_until <= now()      → treat as 'new'
@@ -410,6 +413,7 @@ async function replaceInsights(items: InsightItem[], latestMs: number): Promise<
   const isActiveSnooze = (row: typeof old[number]) =>
     row.status === "snoozed" && row.snoozedUntil != null && row.snoozedUntil > now;
   const isPreserved = (row: typeof old[number]) =>
+    row.source === "user-confirmed" ||
     row.status === "trying" || row.status === "confirmed" || row.status === "doesnt-apply" || isActiveSnooze(row);
 
   const acted = old.filter(isPreserved);
