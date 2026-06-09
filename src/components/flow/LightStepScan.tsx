@@ -191,7 +191,7 @@ export default function LightStepScan() {
       }
     } catch (err) {
       console.error(err);
-      setScanError("Could not analyze the photo. Please try again or enter details manually.");
+      setScanError("Couldn't read this photo. Try again or enter the details manually.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -311,7 +311,7 @@ export default function LightStepScan() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setUrlError(data.error || "Could not extract details from that page.");
+        setUrlError(data.error || "Couldn't pull details from that page. Try a different URL or enter the details manually.");
         return;
       }
       const { extracted, clarifications, roasterPrior } = data as {
