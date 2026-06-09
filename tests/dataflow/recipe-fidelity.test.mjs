@@ -20,7 +20,7 @@ import { join } from "node:path";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const entry = `export { reconcileToReference, resolveReference } from ${JSON.stringify(
+const entry = `export { reconcileToReference, resolveReference, reconcileWaterToPourPlan } from ${JSON.stringify(
   path.join(ROOT, "src/lib/claude/recipeFidelity.ts"),
 )};`;
 const dir = await mkdtemp(join(tmpdir(), "fidelity-"));
@@ -33,7 +33,9 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { reconcileToReference, resolveReference } = await import(pathToFileURL(out).href);
+const { reconcileToReference, resolveReference, reconcileWaterToPourPlan } = await import(
+  pathToFileURL(out).href
+);
 
 // The exact mangled recipe from the screenshot: Kasuya Super Coarse 10-Pour
 // scaled to 350ml, but with a normal grind and a stretched ~4:45 total.
@@ -142,6 +144,119 @@ test("a small, legitimate adaptation passes (no over-triggering)", () => {
   };
   const { changed } = reconcileToReference(tweaked, "Kasuya Super Coarse 10-Pour");
   assert.equal(changed, false, "a small in-tolerance tweak must pass");
+});
+
+// ── reconcileWaterToPourPlan — headline-vs-pour-plan consistency guard ──────
+
+test("waterGrams is snapped to the pour plan when the header disagrees", () => {
+  // The reported case: header says 225g, pour plan pours to 230g (an inverted
+  // AeroPress immersion adapted from Stanica's 18g:225g reference).
+  const recipe = {
+    doseGrams: 15,
+    waterGrams: 225, // stale — copied from the reference header
+    waterTempC: 90,
+    grindSize: "26",
+    targetTimeSec: 230,
+    pourSteps: [
+      { label: "Pour", action: "pour", waterGramsAtEnd: 80, durationSec: 10 },
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 80, durationSec: 35 },
+      { label: "Final pour", action: "final", waterGramsAtEnd: 230, durationSec: 15 },
+      { label: "Steep", action: "wait", durationSec: 145 },
+      { label: "Flip & press", action: "press", durationSec: 40 },
+    ],
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed.waterGrams, 230, "header water should follow the pour plan");
+  // Everything else is untouched (dose/temp/grind have no second source here).
+  assert.equal(fixed.doseGrams, 15);
+  assert.equal(fixed.waterTempC, 90);
+});
+
+test("a consistent recipe is returned unchanged (same object)", () => {
+  const recipe = {
+    doseGrams: 15,
+    waterGrams: 250,
+    waterTempC: 94,
+    grindSize: "380°",
+    targetTimeSec: 180,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 45, durationSec: 45 },
+      { label: "Pour", action: "pour", waterGramsAtEnd: 150, durationSec: 30 },
+      { label: "Final pour", action: "final", waterGramsAtEnd: 250, durationSec: 30 },
+    ],
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed, recipe, "no divergence → original object returned");
+});
+
+test("bypass water is excluded — concentrate recipes keep their brew-water header", () => {
+  // Stanica-style: brew to 225g, then 25g room-temp bypass. waterGrams = brew
+  // water (225), NOT 225+25 — the bypass step must not inflate the header.
+  const recipe = {
+    doseGrams: 18,
+    waterGrams: 225,
+    waterTempC: 93,
+    grindSize: "388°",
+    targetTimeSec: 135,
+    pourSteps: [
+      { label: "Pour", action: "pour", waterGramsAtEnd: 225, durationSec: 30 },
+      { label: "Steep", action: "wait", durationSec: 60 },
+      { label: "Press", action: "press", durationSec: 30 },
+      { label: "Bypass", action: "bypass", waterGramsAtEnd: 250, durationSec: 10 },
+    ],
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed.waterGrams, 225, "bypass must not inflate the brew-water header");
+});
+
+test("iced recipes keep waterGrams as the hot-water amount", () => {
+  // Hoffmann Immersion Iced: 250g hot onto 150g ice. waterGrams = 250 (hot),
+  // iceGrams = 150 separate. The pour plan reaches 250; ice is not a pour.
+  const recipe = {
+    doseGrams: 20,
+    waterGrams: 250,
+    iceGrams: 150,
+    waterTempC: 95,
+    grindSize: "421°",
+    targetTimeSec: 300,
+    pourSteps: [
+      { label: "Pour water", action: "pour", waterGramsAtEnd: 250, durationSec: 15 },
+      { label: "Steep", action: "wait", durationSec: 220 },
+      { label: "Drain onto ice", action: "drain", durationSec: 55 },
+    ],
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed.waterGrams, 250, "hot-water header preserved");
+  assert.equal(fixed.iceGrams, 150);
+});
+
+test("an incomplete pour plan (final pour has no milestone) is left untouched", () => {
+  const recipe = {
+    doseGrams: 30,
+    waterGrams: 500,
+    waterTempC: 94,
+    grindSize: "400°",
+    targetTimeSec: 210,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 45 },
+      { label: "Final pour", action: "final", durationSec: 60 }, // no milestone
+    ],
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed.waterGrams, 500, "incomplete plan must not drag the header down");
+});
+
+test("recipes without pourSteps are left untouched", () => {
+  const recipe = {
+    doseGrams: 15,
+    waterGrams: 250,
+    waterTempC: 92,
+    grindSize: "380°",
+    targetTimeSec: 180,
+    pourSequence: "50 – 150 – 250",
+  };
+  const fixed = reconcileWaterToPourPlan(recipe);
+  assert.equal(fixed, recipe);
 });
 
 test("unverified references are not snapped (we don't trust reconstructed steps)", () => {

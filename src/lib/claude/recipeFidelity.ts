@@ -46,6 +46,50 @@ export interface FidelityResult {
   reference?: string;
 }
 
+/** Pour-type steps that add water to the bed (so their cumulative milestone is
+ * part of the brew-water total). bypass/drain/press/stir/etc. are excluded:
+ * bypass water is dilution counted separately, and the rest move no new water. */
+const WATER_POUR_ACTIONS = new Set<BrewStepAction>(["bloom", "pour", "final", "melodrip"]);
+
+/**
+ * Internal-consistency guard — runs on EVERY recipe, independent of any
+ * reference match.
+ *
+ * The model sometimes fills the headline `waterGrams` with a reference recipe's
+ * published number while writing the actually-adapted recipe into `pourSteps`
+ * (and the prose). The reported case: the card header read 225g while the pour
+ * plan poured "to 230g" and the rationale described 1:15.3 — the same recipe
+ * showing two different water totals, and the recommend grid disagreeing with
+ * the brew screen. The pour plan is the operative truth: it's what the timer
+ * advances through and what the user actually pours to. So snap `waterGrams`
+ * to the final water-into-bed milestone whenever they diverge.
+ *
+ * Only acts when the pour plan is COMPLETE (the last water-adding pour carries a
+ * cumulative milestone) so a half-specified `pourSteps` can never drag the
+ * headline down to a mid-brew number. Counts bloom/pour/final/melodrip only —
+ * bypass (dilution) and drain steps are excluded, so concentrate-and-bypass
+ * recipes (waterGrams = brew water) and iced recipes (waterGrams = hot water)
+ * keep their correct, intentionally-smaller headline.
+ */
+export function reconcileWaterToPourPlan(recipe: BrewRecipe): BrewRecipe {
+  const steps = recipe.pourSteps;
+  if (!Array.isArray(steps) || steps.length === 0) return recipe;
+
+  const pours = steps.filter((s) => WATER_POUR_ACTIONS.has(s.action));
+  const lastPour = pours[pours.length - 1];
+  // Require a complete plan: the final water-adding pour must declare its
+  // cumulative milestone, otherwise we don't trust it as the brew-water total.
+  if (!lastPour || typeof lastPour.waterGramsAtEnd !== "number") return recipe;
+
+  const planned = Math.max(
+    ...pours.map((s) => (typeof s.waterGramsAtEnd === "number" ? s.waterGramsAtEnd : 0)),
+  );
+  if (planned > 0 && typeof recipe.waterGrams === "number" && planned !== recipe.waterGrams) {
+    return { ...recipe, waterGrams: planned };
+  }
+  return recipe;
+}
+
 /** Normalise a name for fuzzy matching — lowercase, punctuation → spaces. */
 function norm(s: string): string {
   return s
