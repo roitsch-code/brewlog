@@ -971,6 +971,13 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 
 basedOn — name the documented recipe this candidate adapts, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"). If the candidate isn't based on any documented recipe, set "Own recipe". Always present.
 
+RECIPE FIELD CONSISTENCY — the recipe's structured fields ARE the brew the user makes; the app shows them as the headline and feeds pourSteps to the timer. They must all describe ONE recipe:
+- doseGrams / waterGrams / waterTempC / grindSize / targetTimeSec are the recipe you are actually instructing. When you adapt a reference recipe, put the ADAPTED numbers here — NEVER leave the reference recipe's published dose/water/temp in these fields while the pourSteps and prose describe a different brew. (The failure to avoid: header reads 18g:225g:93°C copied from the reference, while the pour plan pours to 230g and the rationale says "1:15.3 at 90°C" — three different recipes in one candidate.)
+- waterGrams MUST equal the final cumulative waterGramsAtEnd of your last water-adding pour (bloom/pour/final/melodrip — NOT bypass, which is separate dilution). The pourSequence milestones, the pourSteps milestones, and waterGrams must agree to the gram.
+- doseGrams and waterGrams must match any ratio you state in whyChosen / hypothesis / predictedCupProfile (a "1:15.3" claim means waterGrams ≈ doseGrams × 15.3). waterTempC must match any temperature you mention in the prose. Compute the prose from the fields, never the reverse.
+
+CANDIDATE TITLES must be DISTINCT across the candidates in one response — the two candidates are different experiments, so they must read as different on the chip selector and the brew screen. Never give two candidates the same title (e.g. two "Inverted Long Immersion"); name each for the variable it tests.
+
 Return valid JSON only.`;
 
   const response = await client.messages.create({
