@@ -8,6 +8,7 @@ import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
+import Chip from "@/components/ui/light/Chip";
 
 /**
  * Light System fork of /components/flow/StepSummary.tsx.
@@ -43,6 +44,8 @@ export default function LightStepSummary() {
   const [terrain, setTerrain] = useState<string | null>(null);
   const [adjustment, setAdjustment] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
+  // Post-brew insight → Coach workflow. null = actions still showing.
+  const [insightAction, setInsightAction] = useState<null | "saved" | "dismissed">(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -144,6 +147,70 @@ export default function LightStepSummary() {
     (brew?.selectedCandidateIdx != null
       ? rec?.candidates?.[brew.selectedCandidateIdx]?.recipe
       : undefined) ?? rec?.primaryRecipe;
+
+  // ── Post-brew insight → Coach save ────────────────────────────────────
+  // Map the post-brew card onto an insight: the concrete next-time lever is
+  // the suggestion (the rule-based `adjustment`, or the `terrain` line when
+  // it carries the advice itself), anchored to a data-grounded observation
+  // built from this session. Saving writes a status='trying'/'confirmed' row
+  // (so /recommend applies it next time) + the coffee's coach_insight card.
+  const isExternal = draft.mode === "external";
+  const coffeeName =
+    [coffee?.roaster, coffee?.name].filter(Boolean).join(" ").trim() || "This coffee";
+  const hasTerrain = !!(terrain && terrain.trim().length >= 10);
+  const hasAdjustment = !!(adjustment && adjustment.trim().length >= 10);
+  // A data-grounded "what happened" line for when there's only a single piece
+  // of advice text to anchor (mirrors the insights table's observation intent).
+  const sessionFacts: string[] = [];
+  if (result?.rating != null) sessionFacts.push(`${result.rating}★`);
+  if (result?.freeNotes?.trim()) sessionFacts.push(`“${result.freeNotes.trim()}”`);
+  else if (result?.flavorNotes?.length)
+    sessionFacts.push(`tasted ${result.flavorNotes.slice(0, 3).join(", ")}`);
+  if (brew?.methodUsed && summaryRecipe)
+    sessionFacts.push(
+      `${brew.methodUsed} ${summaryRecipe.doseGrams}g/${summaryRecipe.waterGrams}g ${summaryRecipe.waterTempC}°C`,
+    );
+  const factsLine = sessionFacts.length ? `${coffeeName}: ${sessionFacts.join(" · ")}` : coffeeName;
+  // When both rows are shown, save exactly what the user read (terrain =
+  // observation, adjustment = suggestion). With a single text, that text is
+  // the advice (suggestion) and the facts line anchors it (observation).
+  const savableObservation = (hasTerrain && hasAdjustment ? terrain! : factsLine).trim();
+  const savableSuggestion = (hasAdjustment ? adjustment! : terrain ?? "").trim();
+  // Only offer the save workflow on home brews with a real, actionable note.
+  const canSaveInsight =
+    !isExternal && savableSuggestion.length >= 10 && savableObservation.length >= 10;
+
+  const handleInsightAction = async (action: "trying" | "confirmed" | "doesnt-apply") => {
+    if (action === "doesnt-apply") {
+      // Nothing was ever persisted, so this just clears the card.
+      setInsightAction("dismissed");
+      return;
+    }
+    setInsightAction("saved"); // optimistic — also prevents a double-tap
+    const citationFields = [
+      coffee?.process ? "process" : null,
+      coffee?.roastLevel ? "roast" : null,
+      coffee?.origin ? "origin" : null,
+      coffee?.variety ? "variety" : null,
+      brew?.methodUsed || rec?.primaryMethod ? "method" : null,
+    ].filter((f): f is string => f !== null);
+    try {
+      await fetch("/api/insights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          observation: savableObservation,
+          suggestion: savableSuggestion,
+          citationFields,
+          coffeeId: coffee?.coffeeId,
+          coffeeName,
+          status: action === "confirmed" ? "confirmed" : "trying",
+        }),
+      });
+    } catch {
+      /* optimistic — leave the saved confirmation up rather than nag */
+    }
+  };
 
   // ── Saved success state ─────────────────────────────────────────────
   if (saved) {
@@ -269,6 +336,30 @@ export default function LightStepSummary() {
                     <p className="text-[14px] leading-relaxed text-light-foreground/80">{adjustment}</p>
                   </div>
                 )}
+
+                {/* Coach workflow — persist the advice so the next brew of
+                    this coffee actually honours it (matches the /taste Coach
+                    cards: Save to try / Confirmed / Doesn't apply). */}
+                {canSaveInsight &&
+                  (insightAction ? (
+                    <p className="border-t border-light-foreground/10 pt-3 text-[12px] text-light-muted-foreground">
+                      {insightAction === "saved"
+                        ? "Saved — I’ll bring this up next time you brew this coffee."
+                        : "Dismissed."}
+                    </p>
+                  ) : (
+                    <div className="border-t border-light-foreground/10 pt-3 flex flex-wrap gap-2">
+                      <Chip size="sm" onClick={() => handleInsightAction("trying")}>
+                        Save to try
+                      </Chip>
+                      <Chip size="sm" onClick={() => handleInsightAction("confirmed")}>
+                        Confirmed
+                      </Chip>
+                      <Chip size="sm" onClick={() => handleInsightAction("doesnt-apply")}>
+                        Doesn’t apply
+                      </Chip>
+                    </div>
+                  ))}
               </>
             )}
           </div>
