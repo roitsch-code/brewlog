@@ -29,7 +29,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
-import { reconcileToReference } from "./recipeFidelity";
+import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -104,7 +104,11 @@ function sanitizeRecipe(recipe: Record<string, unknown>): BrewRecipe {
   } else {
     delete out.pourSteps;
   }
-  return out as unknown as BrewRecipe;
+  // Headline water must match the pour plan the timer runs — the model
+  // occasionally leaves waterGrams on a reference recipe's published number
+  // while the pourSteps describe the adapted brew (the "225g header vs pour-
+  // to-230g plan" report). Snap the headline to the pour plan.
+  return reconcileWaterToPourPlan(out as unknown as BrewRecipe);
 }
 
 /**
