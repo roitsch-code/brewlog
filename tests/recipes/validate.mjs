@@ -190,6 +190,19 @@ for (const r of ALL_RECIPES) {
   if (typeof r.verified !== "boolean") E(id, "verified is not a boolean");
 }
 
+// ── Technique → recipe reverse check ────────────────────────────────────────
+// Recipes referencing techniques is checked above; this is the OTHER
+// direction: every technique's exemplifiedBy id must point at a recipe
+// that still exists. Catches the dangling-exemplar class (a recipe gets
+// removed/renamed and the technique keeps citing it — happened with the
+// staged-temperature purge and the June 2026 inversion-exemplar fix).
+const recipeIds = new Set(ALL_RECIPES.map((r) => r.id));
+for (const t of TECHNIQUES) {
+  for (const rid of t.exemplifiedBy || []) {
+    if (!recipeIds.has(rid)) E(`technique:${t.id}`, `exemplifiedBy "${rid}" not in recipe corpus`);
+  }
+}
+
 // ── Corpus-level summary ────────────────────────────────────────────────────
 const byCat = {};
 const byBrewer = {};
