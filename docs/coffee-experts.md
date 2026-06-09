@@ -6,7 +6,7 @@
 > - Varieties — `src/lib/knowledge/varieties/data.ts`
 > - Techniques — `src/lib/knowledge/techniques/data.ts`
 >
-> Consumed per turn by `/recommend`, `/explore`, and `/explore-agent`.
+> Consumed per turn by `/recommend` and `/explore-agent` (the standalone `/api/explore` route was removed — the chat lives on the home page over `/explore-agent`).
 
 ---
 
@@ -14,8 +14,8 @@
 
 Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time, plus the technique it teaches and the verification status.
 
-`verified: true` = mechanics agreed across the official video, the official write-up, and at least one independent transcription.
-`verified: false` = headline parameters (dose, water, temp, brewer) are well-attested but the pour sequence is reconstructed from third-party transcriptions that diverge.
+`verified: true` = parameters cross-checked in-session against the originator's own primary publication (their video, blog post, or book). Aggregator transcriptions are never sufficient on their own — see the "never fabricate parameters" Hard Rule in CLAUDE.md (sub-rules 5–6), which supersedes the older "official video + write-up + one independent transcription" definition.
+`verified: false` = headline parameters (dose, water, temp, brewer) are well-attested but the details could not be confirmed against a primary source (or, for general techniques, no single originator publishes canonical mechanics).
 
 ### 1a. Championship recipes (WBrC + WAC)
 
@@ -47,7 +47,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hoffmann Ultimate AeroPress** | **Upright** AeroPress | 11g : 200g | light boiling / 90–95 med / 85 dark | 356–366° | 3:00 | true |
 | **Hoffmann Moccamaster Method** | Technivorm Moccamaster | 50g : 750g | 96°C (92–98) | 410–420° | 3:30 | true |
 | **Hoffmann Immersion Iced** | Clever onto ice | 37.5g : 500g (~330g hot + ~170g ice) | 96–100°C | 400–410° | 6:05 | true |
-| **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 93°C † (88 med / 83 dark) | 411–421° | 3:30 | true |
+| **Kasuya 4:6 (standard)** | V60 | 20g : 300g | 93°C † (88 med / 83 dark) | 390–400° | 3:30 | true |
 | **Kasuya Super Coarse 10-Pour** | V60 / Neo | 20g : 300g | 95–96°C | 435–455° § | 3:30 | true |
 | **April House V60 (Rolf)** | V60 | 20g : 300g | 92°C | — (calibrate) | 3:20–3:30 | true |
 | **Gagné Long AeroPress** | AeroPress + Prismo | 18g : 260g | 100°C | calibrate | 10:00 | true |
@@ -168,7 +168,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
-| **rao-spin** | Rao | Vortex swirl drags water down through puck centre rather than wall-first; counteracts V60 channeling. | rao-rule-of-thirds |
+| **rao-spin** | Rao | Vortex swirl drags water down through puck centre rather than wall-first; counteracts V60 channeling. | rao-rule-of-thirds *(fossil id — the recipe's content is Rao's V60 Spin Method, see §1b)* |
 | **swirl-not-stir** | Hoffmann (popularised) | Swirl achieves saturation through bulk-puck motion, leaving fines distributed evenly. Stir agitates fines into the slurry. | hoffmann-v60-better-one-cup, rao-rule-of-thirds |
 | **high-agitation-high-extraction** | Perger | Vigorous bloom stir + fine grind + drawdown swirl drives extraction yield above 22%. | perger-high-extraction-v60 |
 | **minimal-agitation** | General (no single originator; **not** Rolf) | Single continuous pour, no stir. Removes pour count and pour spacing as variables. | wallgren-kalita-sieved |
@@ -187,7 +187,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
 | **fines-removal-sieving** | Wallgren (2016) | Discard particles <200µm pre-brew. Tightens extraction distribution. | wallgren-kalita-sieved |
-| **roast-tailored-filter** | Hatakeyama | Match paper thickness to roast level — light roast → thin paper, dark roast → thick paper. | hatakeyama-cafec-flower |
+| **roast-tailored-filter** | Hatakeyama (as Cafec ambassador) | Match paper thickness to roast level — light roast → thin paper, dark roast → thick paper. | — *(no exemplar: the `hatakeyama-cafec-flower` id now carries his real 2024 JBrC Origami recipe, which doesn't demonstrate this)* |
 
 ### 3e. Post-brew
 
@@ -200,7 +200,7 @@ WCR-grounded priors. Genetic / agronomic facts (parentage, identification year) 
 
 | Technique | Author | Mechanism (1 line) | Exemplified by |
 |---|---|---|---|
-| **aeropress-inversion** | AeroPress competition community | Steep without dripping; cap, flip, press for exact contact-time control. | hoffmann-aeropress-standard, wac-2024-stanica, gagne-long-aeropress |
+| **aeropress-inversion** | AeroPress competition community | Steep without dripping; cap, flip, press for exact contact-time control. | stanica-inverted-melodrip *(exemplars corrected June 2026 — the previously listed Hoffmann / Stanica-WAC / Gagné recipes are all UPRIGHT)* |
 
 ### 3g. Water
 
@@ -236,7 +236,7 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 | **Matt Perger** | High-Extraction V60 | high-agitation-high-extraction |
 | **Patrik Rolf** | April House V60 | (agitation-forward — none atomic) |
 | **Jonathan Gagné** | Long-Brew AeroPress + Prismo (HOT, 100°C) | immersion-steep |
-| **Daiki Hatakeyama** | Cafec Flower (roast-tailored) | roast-tailored-filter |
+| **Daiki Hatakeyama** | 2024 JBrC Origami (coarse + cool 85°C) | roast-tailored-filter (promotes as Cafec ambassador; no corpus exemplar) |
 | **Mikaela Wallgren** | Kalita with Sieved Fines | fines-removal-sieving |
 | **Lance Hedrick** | (popularised the espresso "turbo"; no verified filter recipe) | boiling-water-coarse-grind (popularised) |
 | **Cameron / Hendon** | (*Matter* 2020 — espresso "turbo" origin) | boiling-water-coarse-grind (foundation) |
