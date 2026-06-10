@@ -16,6 +16,8 @@ import {
 } from "@/lib/utils/pourSequence";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
+import { useBrewStepNotifications } from "@/hooks/useBrewStepNotifications";
+import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -131,8 +133,25 @@ export default function LightStepBrew() {
   // legacy path for older recommendations.
   const proseSequence = !guideSteps && !steps && recipe?.pourSequence ? recipe.pourSequence : null;
 
+  // iOS shell: schedule a lock-screen notification at every step boundary so
+  // cues survive a locked phone. Silent no-op in browsers — the Web Audio cue
+  // + vibration below remain the foreground path (no double cue: the shell
+  // suppresses foreground banners via presentationOptions: []).
+  const boundaries = buildBrewBoundaries(steps, guideSteps, recipe?.targetTimeSec);
+  const { cancelAll: cancelStepNotifications } = useBrewStepNotifications(
+    boundaries,
+    elapsed,
+    started,
+  );
+
   return (
-    <LightFlowShell onNext={() => handleDone()} nextLabel="Done Brewing">
+    <LightFlowShell
+      onNext={() => {
+        cancelStepNotifications();
+        handleDone();
+      }}
+      nextLabel="Done Brewing"
+    >
       <div className="flex flex-col gap-5">
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">

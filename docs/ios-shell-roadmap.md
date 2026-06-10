@@ -27,10 +27,10 @@ This file is the source of truth for the iOS shell project across sessions. The 
 
 *Updated at the end of every advancing session. A fresh session reads this immediately after Context + Multi-session model.*
 
-- **Current phase:** pre-Phase-1. Roadmap doc + CLAUDE.md reference shipped (PR TBD). No code touched in `src/`, `native/`, or `.github/workflows/ios-*` yet.
-- **Blocked on owner?** No.
-- **Apple Developer enrollment status:** not started — the €99 enrollment from the Owner Checklist is the gate for Phases 3–4. Phase 1 (web-side notification bridge) and Phase 2 (`native/` scaffold) ship without it.
-- **Next entry-point:** create `src/lib/native/brewNotifications.ts` per the Phase 1 spec below.
+- **Current phase:** Phase 1 SHIPPED — web-side notification bridge (`src/lib/native/brewNotifications.ts` + `src/hooks/useBrewStepNotifications.ts` + LightStepBrew wiring + boundary tests). Runtime no-op until the shell exists.
+- **Blocked on owner?** No (Apple approval pending runs in parallel).
+- **Apple Developer enrollment status:** submitted 2026-06-10 with the private Apple ID, purchase processing — Apple says up to 48 h. Gates Phases 3–4 only. The 4 GitHub secrets + App ID + ASC app entry (checklist items 2–5) still pending behind it.
+- **Next entry-point:** Phase 2 — create the `native/` scaffold (`package.json`, `capacitor.config.ts`, `www/index.html`, `exportOptions.plist`, assets, README) + add `"native"` to root `tsconfig.json` `exclude`.
 
 ## Architecture (decided, research-verified)
 
@@ -196,4 +196,12 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 - **Open / blocked:** Apple Developer enrollment not started (blocks Phases 3–4 only — Phase 1 + 2 are pure code).
 - **Traps found:** —
 - **Next entry-point:** create `src/lib/native/brewNotifications.ts` per the Phase 1 spec (pure-web module, zero `@capacitor/*` deps, ambient types).
-- **PRs / commits this session:** #286, Apple-ID follow-up PR
+- **PRs / commits this session:** #286, #287, #288
+
+### 2026-06-10 — Phase 1 (web-side notification bridge)
+
+- **Done:** `src/lib/native/brewNotifications.ts` (pure-web bridge module — ambient `window.Capacitor` types, zero `@capacitor/*` deps; `buildBrewBoundaries` skips bloom/setup/t=0 steps, appends a "brew finishing" boundary at target when ≥5 s after the last step; `ensurePermission` caches denial; `scheduleBrew` is cancel-then-schedule on a fixed id range 9300–9339 with a 2 s minimum lead; `cancelBrew` sweeps the full range so a mid-brew reload can't orphan notifications). `src/hooks/useBrewStepNotifications.ts` (schedule at first tick on the timer's own wall-clock anchor; reschedule on >1.5 s anchor drift = Stop→Resume; cancel on Reset/Done/unmount and via the visible-but-paused watchdog — backgrounding does NOT cancel, `visibilityState` distinguishes). `LightStepBrew.tsx` wired additively (boundaries + hook + cancel before `handleDone` on Done Brewing). Tests: `tests/dataflow/brew-notifications.test.mjs` bundles the real TS (esbuild, recipe-fidelity pattern) and locks the notification schedule to the on-screen step schedule. Owner side: Apple Developer enrollment submitted (private Apple ID, browser path), purchase processing per Apple up to 48 h.
+- **Open / blocked:** checklist items 2–5 (API key, secrets, App ID, ASC app) wait on Apple's approval; Phases 3–4 gated behind them. Phase 2 is pure code, ready now.
+- **Traps found:** —
+- **Next entry-point:** Phase 2 — `native/` scaffold + `tsconfig.json` exclude (foldable into the Phase 3 session if preferred).
+- **PRs / commits this session:** Phase 1 PR (number assigned on open)
