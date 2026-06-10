@@ -141,7 +141,9 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 ## Owner manual checklist (only Apple-web-UI steps, all doable from an iPhone)
 
-1. Enroll in the Apple Developer Program (€99/yr, approval hours–2 days); note the Team ID.
+> **Apple ID disambiguation (decided 2026-06-10):** the owner has two Apple IDs — a work ID (signed into the MacBook) and a private ID (signed into the iPhone). Everything in this project runs on the **private** Apple ID: Developer Program enrollment, App Store Connect, TestFlight redemption on the iPhone. The work ID must NOT be used — it may belong to the employer's developer team, which would pull app ownership and legal responsibility into a company context. The MacBook's iCloud login is irrelevant: CI builds sign via API key (no Apple ID at all), and for the local-debug fallback Xcode has its own account list (Xcode → Settings → Accounts) independent of the macOS login — add the private ID there, no need to re-log the Mac.
+
+1. Enroll in the Apple Developer Program with the **private** Apple ID (€99/yr, approval hours–2 days); note the Team ID.
 2. App Store Connect → Users and Access → Integrations: create a Team API key (role **App Manager**); record Issuer ID + Key ID, download the `.p8` (one-time download).
 3. Add the 4 GitHub secrets (repo Settings → Secrets → Actions).
 4. developer.apple.com → Identifiers: register App ID `com.roitsch.btts` (no extra capabilities needed).
@@ -190,8 +192,8 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 ### 2026-06-10 — pre-Phase-1 (multi-session scaffold)
 
-- **Done:** Approved iOS shell plan ported into the repo as this doc; CLAUDE.md updated to auto-load it via `@./docs/ios-shell-roadmap.md`; Status & next entry-point section seeded. No code under `src/`, `native/`, or `.github/workflows/ios-*` was touched.
+- **Done:** Approved iOS shell plan ported into the repo as this doc; CLAUDE.md updated to auto-load it via `@./docs/ios-shell-roadmap.md`; Status & next entry-point section seeded. No code under `src/`, `native/`, or `.github/workflows/ios-*` was touched. Follow-up same day: Apple ID disambiguation added to the Owner checklist (work ID on the MacBook vs private ID on the iPhone — everything runs on the private ID; see the checklist callout).
 - **Open / blocked:** Apple Developer enrollment not started (blocks Phases 3–4 only — Phase 1 + 2 are pure code).
 - **Traps found:** —
 - **Next entry-point:** create `src/lib/native/brewNotifications.ts` per the Phase 1 spec (pure-web module, zero `@capacitor/*` deps, ambient types).
-- **PRs / commits this session:** (filled in once PR is opened)
+- **PRs / commits this session:** #286, Apple-ID follow-up PR
