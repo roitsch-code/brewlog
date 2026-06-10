@@ -141,7 +141,7 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 ## Owner manual checklist (only Apple-web-UI steps, all doable from an iPhone)
 
-> **Apple ID disambiguation (decided 2026-06-10):** the owner has two Apple IDs — a work ID (signed into the MacBook) and a private ID (signed into the iPhone). Everything in this project runs on the **private** Apple ID: Developer Program enrollment, App Store Connect, TestFlight redemption on the iPhone. The work ID must NOT be used — it may belong to the employer's developer team, which would pull app ownership and legal responsibility into a company context. The MacBook's iCloud login is irrelevant: CI builds sign via API key (no Apple ID at all), and for the local-debug fallback Xcode has its own account list (Xcode → Settings → Accounts) independent of the macOS login — add the private ID there, no need to re-log the Mac.
+> **Apple ID disambiguation (decided 2026-06-10):** the owner has two Apple IDs — a work ID (signed into the MacBook's iCloud) and a private ID (signed into the iPhone). Everything in this project runs on the **private** Apple ID: Developer Program enrollment, App Store Connect, TestFlight redemption on the iPhone. The work ID must NOT be used — it may belong to the employer's developer team, which would pull app ownership and legal responsibility into a company context. **The MacBook's iCloud login does NOT need to change.** Do all Apple-side admin steps below in a **browser** (best: Safari on the iPhone, where the private ID is already active; alt: a private/incognito window on the Mac). Avoid the macOS Developer.app — it forces the iCloud-signed-in Apple ID and would put you on the wrong account. Browser logins on developer.apple.com / appstoreconnect.apple.com accept whatever Apple ID you enter, independent of any iCloud session. For the local-debug fallback (only if a CI build hits a wall), Xcode has its own account list (Xcode → Settings → Accounts) independent of the macOS login — add the private ID there, no need to re-log the Mac.
 
 1. Enroll in the Apple Developer Program with the **private** Apple ID (€99/yr, approval hours–2 days); note the Team ID.
 2. App Store Connect → Users and Access → Integrations: create a Team API key (role **App Manager**); record Issuer ID + Key ID, download the `.p8` (one-time download).
@@ -171,7 +171,7 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 *Grows over time. Every trap hit once goes here so a future session reads it before starting. Entries stay short; link to the commit or PR that fixed it.*
 
-- *(empty so far — entries are added as we hit them)*
+- **The Mac "Apple Developer" app forces the iCloud-signed-in Apple ID** (2026-06-10). The owner's MacBook is signed into iCloud with the work Apple ID — the Developer.app on macOS uses that and offers no account switcher. **Workaround:** never use the Developer app for this project; do all Apple-side admin in a browser. (a) Best path: Safari on the iPhone → developer.apple.com / appstoreconnect.apple.com, where the iPhone's private Apple ID is already in use. (b) Mac path: open a private/incognito window so cached iCloud cookies don't auto-select the work ID, then log in with the private ID. Browser logins are independent of the Mac's iCloud login. The Mac's iCloud login does NOT need to be changed.
 
 ## Session log
 
