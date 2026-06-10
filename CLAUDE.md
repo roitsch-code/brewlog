@@ -654,6 +654,14 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 
 ---
 
+## iOS Shell Project (in progress)
+
+Multi-session arc to turn BTTS into a native iOS app via a Capacitor remote-URL shell distributed through TestFlight internal testing — closes the documented "Step alerts during background are missed" gap and unlocks Acaia BT + widget + Live Activity + Apple Watch on later milestones.
+
+**Working doc:** @./docs/ios-shell-roadmap.md — read its "Multi-session execution model" and the latest "Session log" entry before touching anything in `src/lib/native/`, `src/hooks/useBrewStepNotifications.ts`, the `native/` directory, or `.github/workflows/ios-*`. Every session that advances the project updates the doc (session-log entry + any new Stolperstein) in the same commit as the code.
+
+---
+
 ## User / Equipment Profile
 
 | Device | Details |
