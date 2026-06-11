@@ -388,3 +388,116 @@
   40%  { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+ *  Living Field + Haiku motion (fluidity pass)
+ *
+ *  Autonomous blob drift (transform-only → GPU compositor, never the
+ *  `background`-repaint trap), the home-haiku lifecycle, and the resting
+ *  defaults for the interactive --field-* vars. The reduced-motion block at
+ *  the end disables every continuous animation.
+ * ───────────────────────────────────────────────────────────────────────────*/
+
+/* FieldBlobs — four slow, co-prime drifts. Translate in vmax because the drift
+   layer is 0-size (a % translate would resolve against 0). */
+@keyframes blob-drift-1 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  33%  { transform: translate3d(3vmax, -2vmax, 0) scale(1.08); }
+  66%  { transform: translate3d(-2vmax, 3vmax, 0) scale(0.96); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes blob-drift-2 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(-3vmax, -1.5vmax, 0) rotate(8deg) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+@keyframes blob-drift-3 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  40%  { transform: translate3d(1.5vmax, 3vmax, 0) scale(1.05); }
+  75%  { transform: translate3d(-1.5vmax, -2vmax, 0) scale(0.97); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes blob-drift-4 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(2.5vmax, 2vmax, 0) rotate(-6deg) scale(1.1); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+
+/* Resting values so the blobs sit still before useFieldMotion mounts (SSR +
+   first paint) and whenever Reduce Motion is on. */
+[data-light-scope] {
+  --field-drift-x: 0px;
+  --field-drift-y: 0px;
+  --field-tilt: 0deg;
+  --field-scroll: 0px;
+  --field-pulse: 0;
+}
+
+/* Home haiku — loading skeleton sheen (faint anthracite sweep). */
+@keyframes haiku-shimmer {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -20% 0; }
+}
+.haiku-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    hsl(0 0% 14% / 0.05) 0%,
+    hsl(0 0% 14% / 0.12) 50%,
+    hsl(0 0% 14% / 0.05) 100%
+  );
+  background-size: 220% 100%;
+  animation: haiku-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Home haiku — per-word entrance: each word condenses out of soft focus. */
+@keyframes haiku-settle {
+  from { opacity: 0; filter: blur(8px); transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; filter: blur(0);   transform: translateY(0)   scale(1); }
+}
+
+/* Home haiku — exit: the line dissolves back into blur. */
+@keyframes haiku-dissolve {
+  from { opacity: 1; filter: blur(0);    transform: scale(1); }
+  to   { opacity: 0; filter: blur(10px); transform: scale(1.02); }
+}
+
+/* Home haiku — restrained warm sheen across the settled line (kill-switch in
+   HaikuStarter). The band is warm anthracite, NOT white/neon, so the type
+   stays legible and on-brand. */
+@keyframes haiku-sheen {
+  from { background-position: 120% 0; }
+  to   { background-position: -20% 0; }
+}
+.haiku-sheen {
+  background-image: linear-gradient(
+    100deg,
+    hsl(0 0% 14%) 0%, hsl(0 0% 14%) 42%,
+    hsl(28 30% 34%) 50%,
+    hsl(0 0% 14%) 58%, hsl(0 0% 14%) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: haiku-sheen 9s linear infinite;
+}
+
+/* Respect Reduce Motion: blobs rest in place, the haiku appears statically. */
+@media (prefers-reduced-motion: reduce) {
+  [data-field-blob] { animation: none !important; }
+  .haiku-shimmer { animation: none !important; }
+  .haiku-word {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+  }
+  .haiku-exit { animation: none !important; }
+  .haiku-sheen {
+    animation: none !important;
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: hsl(0 0% 14%);
+  }
+}

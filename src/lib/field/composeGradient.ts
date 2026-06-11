@@ -14,6 +14,20 @@
 import { ZONES, type ZoneId } from "./zones";
 import type { FieldModifiers, FieldZones, ZoneWeight } from "./types";
 
+// ── Field richness dials (warm-but-richer; NO neon, NO dark theme) ──────────
+// The Field used to wash itself out: the linear base dropped 15 saturation /
+// 10 lightness and the coloured hotspots capped low. "Warm but richer" eases
+// that back a notch so the (now drifting) colour reads, while the cream still
+// dominates at rest. These six numbers are the whole richness surface — safe
+// to nudge on-device. Guardrails: keep BASE_DIM ≥ 4 and BLOB_ALPHA ≤ 0.6 so
+// the cream never tips into a saturated wash.
+const BASE_DESAT = 8; // linear-base desaturation (was the hard-coded 15)
+const BASE_DIM = 6; // linear-base dimming (was the hard-coded 10)
+const RADIAL_ALPHA_BOOST = 0.12; // added to each hotspot's alpha …
+const RADIAL_ALPHA_CAP = 0.9; // … then clamped so no hotspot blows to a hard disc
+const BLOB_ALPHA = 0.55; // alpha of the drifting FieldBlobs (the living layer)
+const BLOB_SAT_BOOST = 6; // blobs a touch more saturated than the base so motion reads
+
 interface Hsl {
   h: number; // 0–360 (allowed to go past during interpolation, wrap at render)
   s: number; // 0–100
@@ -59,6 +73,11 @@ function applyMods(hsl: Hsl, mods: FieldModifiers): Hsl {
     s: clamp(hsl.s + mods.saturation, 0, 100),
     l: clamp(hsl.l + mods.lightness, 0, 100),
   };
+}
+
+/** Boost a hotspot alpha by the richness dial, clamped so it never blows out. */
+function boostAlpha(alpha: number): number {
+  return clamp(alpha + RADIAL_ALPHA_BOOST, 0, RADIAL_ALPHA_CAP);
 }
 
 /**
@@ -143,8 +162,8 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
     const baseColour = sampleZone(zw.id, 0.5, 0.5, 0.5);
     const dimmed: Hsl = {
       h: baseColour.h,
-      s: clamp(baseColour.s - 15, 0, 100),
-      l: clamp(baseColour.l - 10, 0, 100),
+      s: clamp(baseColour.s - BASE_DESAT, 0, 100),
+      l: clamp(baseColour.l - BASE_DIM, 0, 100),
     };
     const final = applyMods(dimmed, mods);
     const pos = baseTops.length === 1 ? 0 : (i * 100) / (baseTops.length - 1);
@@ -155,12 +174,12 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
   // ── Layer 2 — bottom-left hotspot ─────────────────────────────────
   const l2Colour = applyMods(sampleZone(z0.id, 0.5, 1.0, 0.5), mods);
   const l2Pos = rotatePos(12, 92, rotationDeg);
-  const layer2 = `radial-gradient(circle at ${l2Pos.x.toFixed(0)}% ${l2Pos.y.toFixed(0)}%, ${hslToCss(l2Colour, 0.8)} 0%, transparent 60%)`;
+  const layer2 = `radial-gradient(circle at ${l2Pos.x.toFixed(0)}% ${l2Pos.y.toFixed(0)}%, ${hslToCss(l2Colour, boostAlpha(0.8))} 0%, transparent 60%)`;
 
   // ── Layer 3 — mid-right warm ──────────────────────────────────────
   const l3Colour = applyMods(sampleZone(z1.id, 0.5, 0.5, 1.0), mods);
   const l3Pos = rotatePos(95, 45, rotationDeg);
-  const layer3 = `radial-gradient(circle at ${l3Pos.x.toFixed(0)}% ${l3Pos.y.toFixed(0)}%, ${hslToCss(l3Colour, 0.7)} 0%, transparent 50%)`;
+  const layer3 = `radial-gradient(circle at ${l3Pos.x.toFixed(0)}% ${l3Pos.y.toFixed(0)}%, ${hslToCss(l3Colour, boostAlpha(0.7))} 0%, transparent 50%)`;
 
   // ── Layer 4 — mid-left anchor ─────────────────────────────────────
   // Third zone if present, else echo of highest with hue rotated +10°.
@@ -168,12 +187,12 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
     ? applyMods(sampleZone(z2.id, 0.5, 0.5, 1.0), mods)
     : applyMods(sampleZone(z0.id, 0.5, 0.5, 1.0, /* hueOffset */ 10), mods);
   const l4Pos = rotatePos(18, 50, rotationDeg);
-  const layer4 = `radial-gradient(circle at ${l4Pos.x.toFixed(0)}% ${l4Pos.y.toFixed(0)}%, ${hslToCss(l4Colour, 0.85)} 0%, transparent 55%)`;
+  const layer4 = `radial-gradient(circle at ${l4Pos.x.toFixed(0)}% ${l4Pos.y.toFixed(0)}%, ${hslToCss(l4Colour, boostAlpha(0.85))} 0%, transparent 55%)`;
 
   // ── Layer 5 — upper-mid cool mauve ────────────────────────────────
   const l5Colour = applyMods(sampleZone(z0.id, 0.5, 0.0, 1.0), mods);
   const l5Pos = rotatePos(55, 25, rotationDeg);
-  const layer5 = `radial-gradient(circle at ${l5Pos.x.toFixed(0)}% ${l5Pos.y.toFixed(0)}%, ${hslToCss(l5Colour, 0.55)} 0%, transparent 50%)`;
+  const layer5 = `radial-gradient(circle at ${l5Pos.x.toFixed(0)}% ${l5Pos.y.toFixed(0)}%, ${hslToCss(l5Colour, boostAlpha(0.55))} 0%, transparent 50%)`;
 
   // ── Layer 6 — top-right highlight (the "lit ceiling") ─────────────
   const l6Colour = applyMods(sampleZone(z0.id, 0.5, 1.0, 1.0), mods);
@@ -186,4 +205,55 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
   // *reverse* painter — the first item in the comma list paints last
   // (on top). So we list Layer 6 FIRST and Layer 1 LAST.
   return [layer6, layer5, layer4, layer3, layer2, layer1].join(", ");
+}
+
+export interface FieldBlob {
+  /** hsl(...) colour string — carries its own alpha. */
+  color: string;
+  /** Resting centre X, viewport %. */
+  cx: number;
+  /** Resting centre Y, viewport %. */
+  cy: number;
+}
+
+/**
+ * The four drifting blob layers of the living Field (motion §A).
+ *
+ * Lifts the same sorted zones the base gradient uses (z0/z1/z2) out as four
+ * individually-transformable radial blobs so they can drift over the static
+ * base — flow comes from the relative motion, never from repainting the base.
+ * Resting positions echo composeFieldGradient's hotspot anchors (layers
+ * 6/2/3/4) so the at-rest frame ≈ the painted base. Pure + deterministic,
+ * same contract as composeFieldGradient.
+ */
+export function fieldBlobColors(fieldZones: FieldZones): FieldBlob[] {
+  const zones = [...fieldZones.zones].sort((a, b) => b.weight - a.weight);
+  if (zones.length === 0) return [];
+
+  const mods = fieldZones.modifiers;
+  const z0 = zones[0];
+  const z1 = zones[1] ?? zones[0];
+  const z2 = zones[2] ?? null;
+
+  // Saturate the blobs a touch above the base so the drift reads, hold a
+  // constant alpha, and apply the same global modifiers as every other layer.
+  const richer = (hsl: Hsl): Hsl => ({
+    h: hsl.h,
+    s: clamp(hsl.s + BLOB_SAT_BOOST, 0, 100),
+    l: hsl.l,
+  });
+  const blob = (hsl: Hsl): string => hslToCss(richer(applyMods(hsl, mods)), BLOB_ALPHA);
+
+  return [
+    { color: blob(sampleZone(z0.id, 0.5, 1.0, 1.0)), cx: 88, cy: 12 }, // top-right (≈ layer 6)
+    { color: blob(sampleZone(z0.id, 0.5, 1.0, 0.5)), cx: 15, cy: 88 }, // bottom-left (≈ layer 2)
+    { color: blob(sampleZone(z1.id, 0.5, 0.5, 1.0)), cx: 92, cy: 46 }, // mid-right (≈ layer 3)
+    {
+      color: blob(
+        z2 ? sampleZone(z2.id, 0.5, 0.5, 1.0) : sampleZone(z0.id, 0.5, 0.5, 1.0, 10),
+      ),
+      cx: 16,
+      cy: 52,
+    }, // mid-left (≈ layer 4)
+  ];
 }

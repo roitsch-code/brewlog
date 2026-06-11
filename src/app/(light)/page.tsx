@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
 import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
+import HaikuStarter from "@/components/ui/light/HaikuStarter";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import type { Session } from "@/lib/types/session";
 import type { NavAction } from "@/app/api/explore-agent/route";
@@ -430,18 +431,12 @@ export default function HomePage() {
           </button>
         </header>
 
-        <section className="flex-1 min-h-0">
-          {showStarter ? (
-            <div className="flex h-full items-center px-5">
-              {starter && (
-                <p className="font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground">
-                  {starter}
-                </p>
-              )}
-            </div>
-          ) : (
-            <ChatThread messages={messages} loading={loading} />
-          )}
+        {/* The haiku is an absolute, pointer-events-none overlay so it can
+            dissolve over the ChatThread that mounts underneath the moment the
+            user starts composing — instead of the old hard ternary swap. */}
+        <section className="relative flex-1 min-h-0">
+          {!showStarter && <ChatThread messages={messages} loading={loading} />}
+          <HaikuStarter text={starter} show={showStarter} />
         </section>
 
         <ChatInput
