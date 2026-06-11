@@ -19,14 +19,14 @@ import type { FieldModifiers, FieldZones, ZoneWeight } from "./types";
 // 10 lightness and the coloured hotspots capped low. "Warm but richer" eases
 // that back a notch so the (now drifting) colour reads, while the cream still
 // dominates at rest. These six numbers are the whole richness surface — safe
-// to nudge on-device. Guardrails: keep BASE_DIM ≥ 4 and BLOB_ALPHA ≤ 0.6 so
+// to nudge on-device. Guardrails: keep BASE_DIM ≥ 4 and BLOB_ALPHA ≤ 0.7 so
 // the cream never tips into a saturated wash.
 const BASE_DESAT = 8; // linear-base desaturation (was the hard-coded 15)
 const BASE_DIM = 6; // linear-base dimming (was the hard-coded 10)
 const RADIAL_ALPHA_BOOST = 0.12; // added to each hotspot's alpha …
 const RADIAL_ALPHA_CAP = 0.9; // … then clamped so no hotspot blows to a hard disc
-const BLOB_ALPHA = 0.55; // alpha of the drifting FieldBlobs (the living layer)
-const BLOB_SAT_BOOST = 6; // blobs a touch more saturated than the base so motion reads
+const BLOB_ALPHA = 0.62; // alpha of the drifting FieldBlobs (the living layer)
+const BLOB_SAT_BOOST = 12; // blobs clearly more saturated than the base so the drift reads
 
 interface Hsl {
   h: number; // 0–360 (allowed to go past during interpolation, wrap at render)
@@ -244,16 +244,19 @@ export function fieldBlobColors(fieldZones: FieldZones): FieldBlob[] {
   });
   const blob = (hsl: Hsl): string => hslToCss(richer(applyMods(hsl, mods)), BLOB_ALPHA);
 
+  // Spread the lightness wide (1.0 → 0.0) so the moving blobs carry visible
+  // light/deep regions — on the pale default palette an even lightness reads as
+  // a static wash. satPos 1.0 takes the top of each zone's range for colour.
   return [
-    { color: blob(sampleZone(z0.id, 0.5, 1.0, 1.0)), cx: 88, cy: 12 }, // top-right (≈ layer 6)
-    { color: blob(sampleZone(z0.id, 0.5, 1.0, 0.5)), cx: 15, cy: 88 }, // bottom-left (≈ layer 2)
-    { color: blob(sampleZone(z1.id, 0.5, 0.5, 1.0)), cx: 92, cy: 46 }, // mid-right (≈ layer 3)
+    { color: blob(sampleZone(z0.id, 0.5, 1.0, 1.0)), cx: 88, cy: 12 }, // top-right highlight (≈ layer 6)
+    { color: blob(sampleZone(z0.id, 0.5, 1.0, 0.0)), cx: 15, cy: 88 }, // bottom-left, deepest (≈ layer 2)
+    { color: blob(sampleZone(z1.id, 0.5, 1.0, 0.6)), cx: 92, cy: 46 }, // mid-right (≈ layer 3)
     {
       color: blob(
-        z2 ? sampleZone(z2.id, 0.5, 0.5, 1.0) : sampleZone(z0.id, 0.5, 0.5, 1.0, 10),
+        z2 ? sampleZone(z2.id, 0.5, 1.0, 0.3) : sampleZone(z0.id, 0.5, 1.0, 0.3, 10),
       ),
       cx: 16,
       cy: 52,
-    }, // mid-left (≈ layer 4)
+    }, // mid-left, deep (≈ layer 4)
   ];
 }
