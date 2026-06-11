@@ -461,27 +461,6 @@
   to   { opacity: 0; filter: blur(10px); transform: scale(1.02); }
 }
 
-/* Home haiku — restrained warm sheen across the settled line (kill-switch in
-   HaikuStarter). The band is warm anthracite, NOT white/neon, so the type
-   stays legible and on-brand. */
-@keyframes haiku-sheen {
-  from { background-position: 120% 0; }
-  to   { background-position: -20% 0; }
-}
-.haiku-sheen {
-  background-image: linear-gradient(
-    100deg,
-    hsl(0 0% 14%) 0%, hsl(0 0% 14%) 42%,
-    hsl(28 30% 34%) 50%,
-    hsl(0 0% 14%) 58%, hsl(0 0% 14%) 100%
-  );
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: haiku-sheen 9s linear infinite;
-}
-
 /* Respect Reduce Motion: blobs rest in place, the haiku appears statically. */
 @media (prefers-reduced-motion: reduce) {
   [data-field-blob] { animation: none !important; }
@@ -493,11 +472,4 @@
     transform: none !important;
   }
   .haiku-exit { animation: none !important; }
-  .haiku-sheen {
-    animation: none !important;
-    background-image: none;
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-    color: hsl(0 0% 14%);
-  }
 }
