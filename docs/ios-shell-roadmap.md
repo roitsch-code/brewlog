@@ -39,6 +39,7 @@ This file is the source of truth for the iOS shell project across sessions. The 
 - **Notifications**: schedule all step boundaries once at brew start with plugin config `presentationOptions: []` — iOS silently swallows them while the app is foregrounded (the existing Web Audio cue covers foreground), and shows lock-screen banner + sound when backgrounded/locked. No visibilitychange choreography needed. Permission prompt fires in-foreground right after the user taps Start Brew, once ever.
 - **Signing**: Xcode **cloud signing** via App Store Connect API key (`xcodebuild -allowProvisioningUpdates -authenticationKey*`) — no certificates, no p12s, no fastlane. Only 4 GitHub secrets.
 - **Upload**: `apple-actions/upload-testflight-build@v5`. TestFlight **internal** testing = no Apple review; builds reach the phone ~15–30 min after CI with automatic distribution.
+- **Version skew (stated principle):** the web app deploys continuously; the shell rebuilds monthly. Native capabilities ship in the shell BEFORE any web code that calls them is deployed; web code always feature-detects via `Capacitor.isNativePlatform()` / plugin presence. Sequence for every new plugin (first hit: G1, when `@capacitor-community/bluetooth-le` JS enters the web bundle): shell PR with the native plugin → TestFlight build installed on the phone → THEN the web-side code merges.
 - **Auth in shell**: existing PIN login (WebAuthn is unreliable in WKWebView). `cf_session` is an httpOnly server-set cookie → persists in WKWebView, ITP 7-day cap doesn't apply; PIN re-login roughly monthly (30-day expiry).
 
 ## Verified repo facts the implementation builds on
@@ -80,7 +81,9 @@ Triggers: `workflow_dispatch` + monthly cron (1st of month — comfortably insid
 2. Write `~/private_keys/AuthKey_${KEY_ID}.p8` from the secret.
 3. `xcodebuild archive … CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER -allowProvisioningUpdates -authenticationKeyPath/-KeyID/-KeyIssuerID` (cloud signing auto-creates the distribution cert/profile; run number = unique build number).
 4. `xcodebuild -exportArchive` with `native/exportOptions.plist`.
-5. `apple-actions/upload-testflight-build@v5` with the same API-key secrets.
+5. `apple-actions/upload-testflight-build` with the same API-key secrets — **pin to the latest verified release tag at implementation time.** Check the action repo's *Releases page*, NOT its README usage example (verified 2026-06-11: latest release is v5.2.1 while the README still shows `@v4` — see Stolperstein log). Update this doc to the pinned tag when the workflow lands. The action's `uses-non-exempt-encryption: 'false'` input duplicates the Phase 3 plutil step — fine to set both.
+
+**Cron-failure alert (owner decided 2026-06-11: YES):** the workflow alerts on failure via the existing coffee-alert webhook infrastructure (`/api/webhooks/coffee-alert` — exact wiring decided in the Phase 4 session), so a silently failing monthly rebuild can't ride unnoticed into the 90-day build expiry. GitHub's failure e-mail stays as the backstop.
 
 ### Phase 5 (optional polish, later)
 `server.errorPath` offline page for cold-launch-with-no-network; App-Bound Domains only if in-shell service-worker offline mode is ever wanted (v1 targets the live site; the Safari PWA keeps full offline mode).
@@ -116,13 +119,14 @@ Each milestone is independently shippable on the v1 shell. Two infrastructure tr
 
 - The deliberately-easy first extension milestone: a small SwiftUI timeline widget showing rotation bags / last brew, fetching a tiny authenticated JSON endpoint directly via URLSession from the widget process (Apple-documented pattern — no bridge plugin needed). Needs a long-lived token endpoint since the session cookie lives in WKWebView.
 - Refresh budget ~40–70/day — generous for data that changes a few times a day.
-- **One-time shared cost it pays down:** adding a widget-extension target to the committed Xcode project without a Mac (scripted pbxproj edit or one-time generation on a runner — XcodeGen exists as fallback), own bundle id (`com.roitsch.btts.widgets`), and cloud signing for multi-target archives (`-allowProvisioningUpdates` handles extensions automatically — verified, with known-but-solvable CI config friction). Everything G3 needs, de-risked on the simplest possible extension.
+- **One-time shared cost it pays down:** adding a widget-extension target to the committed Xcode project without a Mac — **primary path: one-time generation on a runner or XcodeGen; a scripted pbxproj edit is the fragile option, last resort only** (decide for real in the G2 session) — own bundle id (`com.roitsch.btts.widgets`), and cloud signing for multi-target archives (`-allowProvisioningUpdates` handles extensions automatically — verified, with known-but-solvable CI config friction). Everything G3 needs, de-risked on the simplest possible extension.
 
 ### G3 — Live Activity brew timer (3–5 days on top of G2)
 
 - Plugin: `@ludufre/capacitor-live-activities` (v8.0.0 May 2026, iOS 16.2+) — **layouts defined from JS as JSON** (lock screen + all Dynamic Island states, incl. timer elements); no SwiftUI authoring. Reuses G2's extension target + signing.
 - **Key mechanic:** `Text(timerInterval:)` is system-rendered — elapsed/countdown keeps ticking on the lock screen even when WKWebView JS is frozen. Step-text changes need explicit `updateActivity()` calls; ActivityKit cannot schedule future content locally.
 - **v1 of the Live Activity:** foreground-driven updates only (during a brew the app is open + wake-locked, so JS is alive at every step boundary) + a stale-tolerant layout (whole-brew progress bar + "next: 180g at 1:30" static text). Locked-phone step progression would need APNs ActivityKit pushes from the Hetzner server (all boundaries known at brew start, so schedulable) — real backend work, defer; the lock-screen notifications from v1 already cover locked-phone step alerts.
+- **Wake-lock assumption — verify in Phase 4 e2e:** "open + wake-locked" relies on the Screen Wake Lock API holding in WKWebView, which is NOT guaranteed to match Safari. The Phase 4 end-to-end checklist carries the test + the `@capacitor-community/keep-awake` fallback.
 - No frequent-update entitlement needed at brew-step cadence.
 
 ### G4 — Apple Watch (tiered; the expensive tier is optional)
@@ -159,6 +163,8 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 - Cloud signing can be flaky on a brand-new account (pending agreements) — retry usually fixes; fastlane match is the documented fallback, only adopt if needed.
 - Notification delivery is second-granular (±~1 s) — fine for humans with kettles. iOS 64-pending cap is far above any brew's step count.
 - If the owner taps "Don't Allow" on the permission prompt, brews continue exactly as today; re-enable via Settings → BTTS → Notifications (noted in README).
+- A silently failing monthly cron rebuild kills the app at day 90 (TestFlight build expiry); monthly cadence gives ~3 attempts but noticing depends on GitHub e-mail. **Decided 2026-06-11: the `ios-testflight` workflow alerts on failure via the existing coffee-alert webhook infrastructure** (see Phase 4); GitHub e-mail stays as backstop.
+- Force-quitting the shell mid-brew leaves the already-scheduled step notifications to fire orphaned — OS-level, the id-range sweep only runs on the next `scheduleBrew`. Accepted for single-user; a launch-time sweep in the shell would close it (documented Phase 1 limitation, alongside prose-only legacy recipes producing no notifications).
 - No service worker in the shell → in-shell offline mode is weaker than the Safari PWA; the PWA remains installed and unaffected.
 
 ## Verification
@@ -166,12 +172,14 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 - **Phase 1**: `npx tsc --noEmit` + existing `node --test` suite must stay green; CI screenshots artifact confirms the brew flow renders unchanged (the bridge is a runtime no-op in Chromium). Merged via the normal PR flow → auto-deploys; verify on the live PWA that a brew behaves identically.
 - **Phases 2–4**: each workflow run IS the test — bootstrap must produce a mergeable `native/ios` PR; the TestFlight workflow must end with a processed build visible in App Store Connect.
 - **End-to-end**: owner installs via TestFlight, logs in with PIN, starts a real brew, locks the phone — pour-step notifications must arrive on the lock screen at the right offsets; finishing/resetting a brew must leave no stray notifications.
+- **Wake lock in WKWebView**: start a real brew in the shell and do not touch the phone — the display must not dim/lock for the full brew duration (`useWakeLock` uses the Screen Wake Lock API, whose WKWebView support is not guaranteed to match Safari — unverified assumption that G3 v1 also leans on). If the wake lock does not hold, adopt `@capacitor-community/keep-awake` in the shell (native plugin, trivial) and re-test.
 
 ## Stolperstein log
 
 *Grows over time. Every trap hit once goes here so a future session reads it before starting. Entries stay short; link to the commit or PR that fixed it.*
 
 - **The Mac "Apple Developer" app forces the iCloud-signed-in Apple ID** (2026-06-10). The owner's MacBook is signed into iCloud with the work Apple ID — the Developer.app on macOS uses that and offers no account switcher. **Workaround:** never use the Developer app for this project; do all Apple-side admin in a browser. (a) Best path: Safari on the iPhone → developer.apple.com / appstoreconnect.apple.com, where the iPhone's private Apple ID is already in use. (b) Mac path: open a private/incognito window so cached iCloud cookies don't auto-select the work ID, then log in with the private ID. Browser logins are independent of the Mac's iCloud login. The Mac's iCloud login does NOT need to be changed.
+- **GitHub-Action version strings — neither a plan doc nor the action's README is authoritative** (2026-06-11). This doc carried `upload-testflight-build@v5`; an external review countered with "the README documents `@v4`"; the repo's **Releases page** (the actual source of truth) shows v5.2.1 as latest — so the plan string happened to be right and the README is what lags. Rule: pin any action to the latest tag verified on its Releases page at implementation time, never trust a transcribed version string (including this doc's).
 
 ## Session log
 
@@ -204,4 +212,12 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 - **Open / blocked:** checklist items 2–5 (API key, secrets, App ID, ASC app) wait on Apple's approval; Phases 3–4 gated behind them. Phase 2 is pure code, ready now.
 - **Traps found:** —
 - **Next entry-point:** Phase 2 — `native/` scaffold + `tsconfig.json` exclude (foldable into the Phase 3 session if preferred).
-- **PRs / commits this session:** Phase 1 PR (number assigned on open)
+- **PRs / commits this session:** #289
+
+### 2026-06-11 — pre-Phase-2 (external review pass on the roadmap)
+
+- **Done:** Four review items folded in. (1) Version-skew principle added to Architecture — native plugins ship in the shell BEFORE web code that calls them; always feature-detect; first hit is G1. (2) Wake-lock-in-WKWebView flagged as an unverified assumption — G3 note + Phase 4 end-to-end test item with `@capacitor-community/keep-awake` as the fallback. (3) Upload-action version verified against the repo's Releases page (latest v5.2.1; the README lags at `@v4`) — pin at implementation time; Stolperstein entry added. (4) Cron-failure alert decided by owner: YES — `ios-testflight` alerts on failure via the coffee-alert webhook infra (Phase 4 note + Risks updated). Also: G2 extension-target path reordered (runner generation / XcodeGen primary, scripted pbxproj edit demoted to last resort); force-quit-mid-brew orphaned-notifications limitation documented in Risks.
+- **Open / blocked:** Apple approval still pending (checklist items 2–5 behind it). No code touched this session — doc-only.
+- **Traps found:** action-version trap (see Stolperstein log).
+- **Next entry-point:** unchanged — Phase 2 `native/` scaffold + `tsconfig.json` exclude.
+- **PRs / commits this session:** (number assigned on open)
