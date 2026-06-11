@@ -6,8 +6,8 @@ import { usePresence } from "@/hooks/usePresence";
 const EXIT_MS = 280;
 const STAGGER_MS = 52;
 const POP_MS = 680;
-const DISTURB_MAX_BLUR = 7; // px — finger-over-haiku smudge
-const DISTURB_FALLOFF = 120; // px — distance over which the blur fades to 0
+const DISTURB_MAX_BLUR = 6; // px — peak blur of a word right under the finger
+const DISTURB_FALLOFF = 85; // px — radius of the blur "lens" around the finger
 
 const P_CLASS =
   "font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground";
@@ -45,12 +45,12 @@ function HaikuSkeleton() {
 
 /**
  * Home welcome-haiku (fluidity pass §E). Shimmer while it loads → a LIQUID
- * per-word entrance (each word springs in from a different direction, with an
- * overshoot, in a scattered order — not a left-to-right typewriter) → a soft
- * dissolve when the user starts composing. Once settled, dragging a finger over
- * the line blurs it (the same soft blur it arrives with). One inline-block
- * structure throughout so the line never re-wraps. Motion gated by
- * prefers-reduced-motion (the .haiku-word rule in globals.css).
+ * per-word entrance (words spring in from different directions with an
+ * overshoot, in a scattered order — not a typewriter) → a soft dissolve when
+ * the user starts composing. Once settled, dragging a finger over the line
+ * blurs ONLY the few words under the fingertip (a travelling lens), not the
+ * whole poem. One inline-block structure throughout so the line never re-wraps.
+ * Motion gated by prefers-reduced-motion (the .haiku-word rule in globals.css).
  */
 export default function HaikuStarter({ text, show }: { text: string; show: boolean }) {
   const { mounted, state } = usePresence(show, EXIT_MS);
@@ -63,6 +63,9 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
 
   const pRef = useRef<HTMLParagraphElement | null>(null);
 
+  // Entrance finished — drop the per-word animation (its `both` fill would
+  // otherwise pin `filter` and block the touch-lens) and arm the lens. The
+  // animation's end state equals the natural state, so dropping it is invisible.
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (loading || exiting) {
@@ -73,25 +76,43 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
     return () => clearTimeout(t);
   }, [loading, exiting, settleDoneMs]);
 
-  // Finger-over-haiku smudge: blur the line by proximity to the pointer, on its
-  // own rAF (direct filter, no React re-render). Only once the entrance is done
-  // — during it the words own their filter, during the exit the dissolve does.
+  // Touch-blur LENS: blur each word by its distance to the finger, so only the
+  // words it passes over smudge (and ease back behind it). Per-word direct
+  // filter on one rAF — no React re-render. Word centres are cached (the line
+  // is static once settled) and re-measured on resize.
   useEffect(() => {
     const p = pRef.current;
     if (!p || !ready || exiting) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let target = 0;
-    let cur = 0;
+    const spans = Array.from(p.querySelectorAll<HTMLElement>("[data-hw]"));
+    if (spans.length === 0) return;
+
+    const measure = () =>
+      spans.map((s) => {
+        const r = s.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+    let centers = measure();
+    const remeasure = () => {
+      centers = measure();
+    };
+
+    const target = new Array<number>(spans.length).fill(0);
+    const cur = new Array<number>(spans.length).fill(0);
     let raf = 0;
     let running = false;
     const frame = () => {
-      cur += (target - cur) * 0.2;
-      p.style.filter = cur > 0.05 ? `blur(${cur.toFixed(2)}px)` : "";
-      if (Math.abs(target - cur) < 0.04) {
-        running = false;
-        return;
+      let moving = false;
+      for (let i = 0; i < spans.length; i++) {
+        cur[i] += (target[i] - cur[i]) * 0.28;
+        spans[i].style.filter = cur[i] > 0.05 ? `blur(${cur[i].toFixed(2)}px)` : "";
+        if (Math.abs(target[i] - cur[i]) > 0.04) moving = true;
       }
-      raf = requestAnimationFrame(frame);
+      if (moving) {
+        raf = requestAnimationFrame(frame);
+      } else {
+        running = false;
+      }
     };
     const kick = () => {
       if (!running) {
@@ -100,18 +121,27 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
       }
     };
     const onMove = (e: PointerEvent) => {
-      const r = p.getBoundingClientRect();
-      const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right);
-      const dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom);
-      const d = Math.hypot(dx, dy);
-      target = DISTURB_MAX_BLUR * Math.max(0, 1 - d / DISTURB_FALLOFF);
+      for (let i = 0; i < centers.length; i++) {
+        const d = Math.hypot(centers[i].x - e.clientX, centers[i].y - e.clientY);
+        target[i] = DISTURB_MAX_BLUR * Math.max(0, 1 - d / DISTURB_FALLOFF);
+      }
+      kick();
+    };
+    const clear = () => {
+      for (let i = 0; i < target.length; i++) target[i] = 0;
       kick();
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", clear, { passive: true });
+    window.addEventListener("pointercancel", clear, { passive: true });
+    window.addEventListener("resize", remeasure);
     return () => {
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", clear);
+      window.removeEventListener("pointercancel", clear);
+      window.removeEventListener("resize", remeasure);
       cancelAnimationFrame(raf);
-      p.style.filter = "";
+      for (const s of spans) s.style.filter = "";
     };
   }, [ready, exiting]);
 
@@ -154,11 +184,16 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
             return (
               <span
                 key={i}
+                data-hw
                 className="haiku-word inline-block"
-                style={{
-                  animation: `haiku-pop-${variant} ${POP_MS}ms ease-out both`,
-                  animationDelay: `${delays[wi] ?? 0}ms`,
-                }}
+                style={
+                  ready
+                    ? undefined
+                    : {
+                        animation: `haiku-pop-${variant} ${POP_MS}ms ease-out both`,
+                        animationDelay: `${delays[wi] ?? 0}ms`,
+                      }
+                }
               >
                 {w}
               </span>
