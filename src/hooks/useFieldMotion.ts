@@ -21,9 +21,9 @@ import { useEffect, useRef } from "react";
  * doesn't bubble its scroll and we don't want to touch it.
  */
 
-const MAX_DRIFT = 12; // px — pointer lean
-const MAX_TILT = 1.5; // deg
-const MAX_SCROLL = 20; // px — parallax travel cap
+const MAX_DRIFT = 18; // px — pointer lean
+const MAX_TILT = 2.5; // deg
+const MAX_SCROLL = 30; // px — parallax travel cap
 const GLIDE = 0.06; // pointer/tilt easing per frame (the "fluid" lag)
 const PULSE_GLIDE = 0.12; // tap-swell easing per frame
 const SCROLL_DECAY = 0.9; // scroll-momentum decay per frame

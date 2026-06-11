@@ -402,24 +402,24 @@
    layer is 0-size (a % translate would resolve against 0). */
 @keyframes blob-drift-1 {
   0%   { transform: translate3d(0, 0, 0) scale(1); }
-  33%  { transform: translate3d(3vmax, -2vmax, 0) scale(1.08); }
-  66%  { transform: translate3d(-2vmax, 3vmax, 0) scale(0.96); }
+  33%  { transform: translate3d(11vmax, -8vmax, 0) scale(1.12); }
+  66%  { transform: translate3d(-8vmax, 10vmax, 0) scale(0.9); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 @keyframes blob-drift-2 {
   0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  50%  { transform: translate3d(-3vmax, -1.5vmax, 0) rotate(8deg) scale(1.06); }
+  50%  { transform: translate3d(-12vmax, -7vmax, 0) rotate(10deg) scale(1.1); }
   100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
 }
 @keyframes blob-drift-3 {
   0%   { transform: translate3d(0, 0, 0) scale(1); }
-  40%  { transform: translate3d(1.5vmax, 3vmax, 0) scale(1.05); }
-  75%  { transform: translate3d(-1.5vmax, -2vmax, 0) scale(0.97); }
+  40%  { transform: translate3d(7vmax, 12vmax, 0) scale(1.08); }
+  75%  { transform: translate3d(-9vmax, -7vmax, 0) scale(0.92); }
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 @keyframes blob-drift-4 {
   0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-  50%  { transform: translate3d(2.5vmax, 2vmax, 0) rotate(-6deg) scale(1.1); }
+  50%  { transform: translate3d(10vmax, 9vmax, 0) rotate(-8deg) scale(1.14); }
   100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
 }
 

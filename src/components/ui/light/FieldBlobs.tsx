@@ -10,10 +10,10 @@ import type { FieldZones } from "@/lib/field/types";
 // live in globals.css and translate in vmax (the drift layer is 0-size, so a
 // % translate would resolve against 0).
 const DRIFT = [
-  { name: "blob-drift-1", dur: "23s", delay: "-8s" },
-  { name: "blob-drift-2", dur: "31s", delay: "-19s" },
-  { name: "blob-drift-3", dur: "29s", delay: "-3s" },
-  { name: "blob-drift-4", dur: "37s", delay: "-25s" },
+  { name: "blob-drift-1", dur: "16s", delay: "-6s" },
+  { name: "blob-drift-2", dur: "21s", delay: "-13s" },
+  { name: "blob-drift-3", dur: "18s", delay: "-3s" },
+  { name: "blob-drift-4", dur: "24s", delay: "-17s" },
 ];
 
 // Two of the four pick up scroll-momentum parallax (§D) for a sense of depth.
@@ -51,7 +51,7 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
             style={{
               left: `${b.cx}%`,
               top: `${b.cy}%`,
-              transform: `translate(var(--field-drift-x, 0px), ${y}) rotate(var(--field-tilt, 0deg)) scale(calc(1 + var(--field-pulse, 0) * 0.03))`,
+              transform: `translate(var(--field-drift-x, 0px), ${y}) rotate(var(--field-tilt, 0deg)) scale(calc(1 + var(--field-pulse, 0) * 0.05))`,
             }}
           >
             <div

@@ -21,7 +21,7 @@ export default function FieldGrain() {
         backgroundImage: `url("data:image/svg+xml,${NOISE}")`,
         backgroundSize: "180px 180px",
         mixBlendMode: "soft-light",
-        opacity: 0.05,
+        opacity: 0.09,
       }}
     />
   );

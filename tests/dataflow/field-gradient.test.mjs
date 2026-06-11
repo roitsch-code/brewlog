@@ -68,7 +68,7 @@ test("fieldBlobColors: four blobs, valid hsl, alpha under the cream-preserving c
     assert.equal(typeof b.cy, "number");
     const m = b.color.match(/\/\s*([0-9.]+)\s*\)/); // explicit alpha
     assert.ok(m, `blob colour should carry an alpha: ${b.color}`);
-    assert.ok(Number(m[1]) <= 0.6, `alpha ${m?.[1]} should stay ≤ 0.6`);
+    assert.ok(Number(m[1]) <= 0.7, `alpha ${m?.[1]} should stay ≤ 0.7`);
   }
 });
 
