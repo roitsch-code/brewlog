@@ -6,25 +6,21 @@ import { composeFieldGradient } from "@/lib/field/composeGradient";
 import { useFieldMotion } from "@/hooks/useFieldMotion";
 import FieldBlobs from "./FieldBlobs";
 import FieldGrain from "./FieldGrain";
+import FieldBloom from "./FieldBloom";
 
 /**
  * Generative Field v1.1 + living motion (fluidity pass).
  *
- * Three stacked layers inside the fixed sandwich:
- *   1. base   — the original composed per-coffee gradient (static, blurred);
- *               unchanged in spirit, so it's the steady floor the blobs ride.
- *   2. blobs  — the same coffee zones lifted out as four slowly-drifting radial
- *               blobs; flow comes from them moving over the static base.
- *   3. grain  — static film grain, soft-light, for tooth.
+ *   scroll layer  — the whole colour field translates with scroll (--field-shift-y)
+ *     1. base   — the static per-coffee gradient (blurred floor)
+ *     2. blobs  — coffee zones lifted out as drifting radial blobs (the flow)
+ *     3. grain  — static film grain, soft-light
+ *   bloom         — a warm glow that follows the finger (--ptr-*), in viewport
+ *                   coords so it doesn't scroll-shift
  *
- * `useFieldMotion` writes --field-* CSS vars on the wrapper; the blob layers
- * read them, so pointer / scroll / tap nudge the Field with ZERO React
- * re-render. `isolation: isolate` keeps the grain's blend mode contained to
- * the Field so it never tints the page content above it.
- *
- * Bold-tier hook (deferred): an feDisplacementMap "quicksilver lens" over the
- * blobs/base would slot here — animated feTurbulence → displacement filter on
- * the inner layers. Out of this slice (GPU + taste risk).
+ * `useFieldMotion` writes the --field-* / --ptr-* vars; the layers read them, so
+ * pointer / scroll / tap nudge the Field with ZERO React re-render. `isolation`
+ * keeps the bloom/grain blends contained to the Field.
  */
 export default function Field() {
   const { fieldZones, rotation } = useContext(FieldContext);
@@ -41,20 +37,32 @@ export default function Field() {
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
       style={{ isolation: "isolate" }}
     >
-      {/* 1 — static per-coffee base */}
+      {/* Scroll-parallax layer — the field is oversized, so it has room to move
+          without revealing an edge. */}
       <div
-        className="absolute inset-[-10%]"
+        className="absolute inset-0"
         style={{
-          background: gradient,
-          filter: "blur(60px)",
-          transform: "scale(1.18)",
-          transformOrigin: "center",
+          transform: "translate3d(0, var(--field-shift-y, 0px), 0)",
+          willChange: "transform",
         }}
-      />
-      {/* 2 — drifting colour blobs (the living layer) */}
-      <FieldBlobs fieldZones={fieldZones} />
-      {/* 3 — film grain */}
-      <FieldGrain />
+      >
+        {/* 1 — static per-coffee base */}
+        <div
+          className="absolute inset-[-12%]"
+          style={{
+            background: gradient,
+            filter: "blur(60px)",
+            transform: "scale(1.2)",
+            transformOrigin: "center",
+          }}
+        />
+        {/* 2 — drifting colour blobs (the living layer) */}
+        <FieldBlobs fieldZones={fieldZones} />
+        {/* 3 — film grain */}
+        <FieldGrain />
+      </div>
+      {/* 4 — warm bloom that follows the finger */}
+      <FieldBloom />
     </div>
   );
 }
