@@ -222,9 +222,8 @@ export interface FieldBlob {
  * Lifts the same sorted zones the base gradient uses (z0/z1/z2) out as four
  * individually-transformable radial blobs so they can drift over the static
  * base — flow comes from the relative motion, never from repainting the base.
- * Resting positions echo composeFieldGradient's hotspot anchors (layers
- * 6/2/3/4) so the at-rest frame ≈ the painted base. Pure + deterministic,
- * same contract as composeFieldGradient.
+ * The four span a wide light↔deep range so the motion reads on the pale
+ * default palette. Pure + deterministic, same contract as composeFieldGradient.
  */
 export function fieldBlobColors(fieldZones: FieldZones): FieldBlob[] {
   const zones = [...fieldZones.zones].sort((a, b) => b.weight - a.weight);
@@ -235,28 +234,24 @@ export function fieldBlobColors(fieldZones: FieldZones): FieldBlob[] {
   const z1 = zones[1] ?? zones[0];
   const z2 = zones[2] ?? null;
 
-  // Saturate the blobs a touch above the base so the drift reads, hold a
-  // constant alpha, and apply the same global modifiers as every other layer.
-  const richer = (hsl: Hsl): Hsl => ({
-    h: hsl.h,
-    s: clamp(hsl.s + BLOB_SAT_BOOST, 0, 100),
-    l: hsl.l,
-  });
-  const blob = (hsl: Hsl): string => hslToCss(richer(applyMods(hsl, mods)), BLOB_ALPHA);
+  // A blob colour: the zone's hue, saturation pushed to the top of its range
+  // (+ boost), and an EXPLICIT lightness so the four blobs span a wide
+  // light↔deep range. On the pale default palette an even lightness reads as a
+  // static wash — moving LIGHT highlights against DEEP warm shadows is what
+  // makes the flow actually visible.
+  const blob = (zoneId: ZoneId, lightness: number, hueOffset = 0): string => {
+    const sampled = sampleZone(zoneId, 0.5, 1.0, 0.5, hueOffset);
+    const tuned = applyMods(
+      { h: sampled.h, s: clamp(sampled.s + BLOB_SAT_BOOST, 0, 100), l: lightness },
+      mods,
+    );
+    return hslToCss(tuned, BLOB_ALPHA);
+  };
 
-  // Spread the lightness wide (1.0 → 0.0) so the moving blobs carry visible
-  // light/deep regions — on the pale default palette an even lightness reads as
-  // a static wash. satPos 1.0 takes the top of each zone's range for colour.
   return [
-    { color: blob(sampleZone(z0.id, 0.5, 1.0, 1.0)), cx: 88, cy: 12 }, // top-right highlight (≈ layer 6)
-    { color: blob(sampleZone(z0.id, 0.5, 1.0, 0.0)), cx: 15, cy: 88 }, // bottom-left, deepest (≈ layer 2)
-    { color: blob(sampleZone(z1.id, 0.5, 1.0, 0.6)), cx: 92, cy: 46 }, // mid-right (≈ layer 3)
-    {
-      color: blob(
-        z2 ? sampleZone(z2.id, 0.5, 1.0, 0.3) : sampleZone(z0.id, 0.5, 1.0, 0.3, 10),
-      ),
-      cx: 16,
-      cy: 52,
-    }, // mid-left, deep (≈ layer 4)
+    { color: blob(z0.id, 84), cx: 86, cy: 14 }, // top-right highlight (bright)
+    { color: blob(z0.id, 52), cx: 16, cy: 86 }, // bottom-left warm shadow (deep)
+    { color: blob(z1.id, 76), cx: 90, cy: 50 }, // mid-right (mid-bright)
+    { color: blob(z2 ? z2.id : z0.id, 54, z2 ? 0 : 12), cx: 14, cy: 48 }, // mid-left shadow (deep)
   ];
 }
