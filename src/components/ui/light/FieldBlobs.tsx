@@ -33,24 +33,24 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
       <style jsx global>{`
         @keyframes blobflow-1 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          33% { transform: translate3d(26vmax, -21vmax, 0) scale(1.22); }
-          66% { transform: translate3d(-21vmax, 24vmax, 0) scale(0.82); }
+          33% { transform: translate3d(30vmax, -24vmax, 0) scale(1.24); }
+          66% { transform: translate3d(-24vmax, 30vmax, 0) scale(0.82); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes blobflow-2 {
           0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(-29vmax, -18vmax, 0) rotate(14deg) scale(1.2); }
+          50% { transform: translate3d(-26vmax, -32vmax, 0) rotate(14deg) scale(1.22); }
           100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
         }
         @keyframes blobflow-3 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          40% { transform: translate3d(19vmax, 28vmax, 0) scale(1.16); }
-          75% { transform: translate3d(-24vmax, -18vmax, 0) scale(0.84); }
+          40% { transform: translate3d(24vmax, 30vmax, 0) scale(1.16); }
+          75% { transform: translate3d(-28vmax, -24vmax, 0) scale(0.84); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes blobflow-4 {
           0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(25vmax, 22vmax, 0) rotate(-12deg) scale(1.26); }
+          50% { transform: translate3d(28vmax, -26vmax, 0) rotate(-12deg) scale(1.26); }
           100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
         }
       `}</style>
@@ -81,12 +81,12 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
                 position: "absolute",
                 left: 0,
                 top: 0,
-                width: "66vmax",
-                height: "66vmax",
+                width: "78vmax",
+                height: "78vmax",
                 transform: "translate(-50%, -50%)",
                 borderRadius: "50%",
                 background: `radial-gradient(circle, ${b.color} 0%, transparent 68%)`,
-                filter: "blur(34px)",
+                filter: "blur(38px)",
               }}
             />
           </div>

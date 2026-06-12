@@ -21,9 +21,12 @@
   film grain + finger-following bloom) and the liquid welcome-haiku (shimmer → scattered
   per-word spring entrance → soft dissolve → per-word touch lens). All motion is on the GPU
   compositor; React is never in the per-frame loop. Reduced-motion gracefully static.
-- **Last tuned (2026-06-12):** haiku entrance slowed a notch; home Field movement enlarged
-  (bigger sweeps, larger discs, slower flow); welcome haiku no longer disappears the instant
-  you tap the mic (waits for an actual transcript).
+- **Last tuned (2026-06-12):** deep blobs re-anchored to span the full height (one upper-left
+  behind the wordmark, one low) + wider upward-biased drift + bigger discs (66→78vmax) so the
+  STRONG colour now wanders through the headers and bleeds past the top edge — previously it was
+  pinned to the lower screen. Positional/scale only, NOT colourwise. (Earlier same day: haiku
+  entrance slowed a notch; home Field movement enlarged; haiku no longer disappears on a bare
+  mic tap.)
 - **Most-likely next asks (owner taste, on-device):** background bigger/smaller still →
   `FieldBlobs.tsx` dials; haiku faster/slower → `HaikuStarter.tsx` dials; finger glow
   stronger/weaker → `FieldBloom.tsx` + `useFieldMotion.ts`. See **Tuning dials** below.
@@ -163,9 +166,11 @@ unit-testable; the CI screenshot job only captures the *resting* frame.
 
 | Want | Dial | Now | Direction |
 |---|---|---|---|
-| **Bigger sweeps** (blobs travel further) | the `vmax` numbers inside `@keyframes blobflow-1..4` | ~19–29 vmax | ↑ for more, ↓ for calmer. Keep ≲ disc-size so a blob never fully clears the screen. |
-| **Larger areas / patterns** | inner disc `width`/`height` | `66vmax` | ↑ for bigger soft fields, ↓ for tighter blobs |
-| **Softer / more mesh-like** | inner disc `filter: blur()` | `34px` | ↑ softer, ↓ crisper |
+| **Bigger sweeps** (blobs travel further) | the `vmax` numbers inside `@keyframes blobflow-1..4` | ~24–32 vmax | ↑ for more, ↓ for calmer. Keep ≲ disc-size so a blob never fully clears the screen. |
+| **Where the strong colour sits** (top vs bottom) | the `cx/cy` anchors in `fieldBlobColors()` (`composeGradient.ts`) | deep blobs at `cy 24` (upper-left, behind the wordmark) + `cy 82` (lower-left) | drop a deep `cy` for more top colour; raise it to keep colour low. This is the "wander into the headers" dial. |
+| **Colour into the top, via motion** | the negative-Y peaks in `blobflow-2`/`-4` (the deep-blob keyframes) | `-32vmax` / `-26vmax` | ↑ (more negative) sweeps the deep blobs further up + off the top edge |
+| **Larger areas / patterns** | inner disc `width`/`height` | `78vmax` | ↑ for bigger soft fields, ↓ for tighter blobs |
+| **Softer / more mesh-like** | inner disc `filter: blur()` | `38px` | ↑ softer, ↓ crisper |
 | **Slower / faster flow** | the `s` durations in `DRIFT[]` | `23/29/26/33s` | ↑ slower (STARIS is slow), ↓ faster. Keep them co-prime-ish so the composite doesn't visibly re-sync. |
 | **More "breathing"** | the `scale(...)` in `blobflow-*` | ~0.82–1.26 | widen the spread |
 | **More / fewer blobs** | `fieldBlobColors()` in `composeGradient.ts` (returns 4) + the `DRIFT`/keyframe count | 4 | keep `DRIFT.length` ≥ blob count |
@@ -291,4 +296,27 @@ When adding any new motion, add its selector to that globals.css block in the sa
   background wants to go bigger still / the haiku slower still — both are one-number changes in the
   dials table. Then optionally: smooth Field rotation, NavigationOverlay fade.
 - **Traps found:** — (all pre-existing, logged above).
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — strong colour into the top + all-dark floating chrome
+- **Done (background):** the *deep* blobs were anchored low (cy 86/48) so strong colour was
+  pinned to the lower screen. Re-anchored in `fieldBlobColors()` to span the full height — one
+  deep blob upper-left (`cy 24`, behind the wordmark/header), one kept low (`cy 82`); widened the
+  `blobflow-*` sweeps (~24–32vmax) and biased the deep-blob keyframes UP (`blobflow-2` −32vmax,
+  `blobflow-4` −26vmax) so colour wanders through the headers; discs `66→78vmax`, blur `34→38px`
+  for the "beyond the screen" overflow. Positional/scale only — `BLOB_ALPHA`/saturation untouched,
+  so `field-gradient.test.mjs` stays green. New dials-table rows document the anchor + upward-sweep
+  levers.
+- **Done (chrome — separate concern, owner picked "all-dark"):** new `shadow-light-float`
+  elevation token (`tailwind.config.ts`); the home Burger, the `+`/clear/cancel round controls,
+  the whole chat bar and the Action Pill went solid anthracite + cream icons/text + the lift, with
+  the in-bar send/mic/remove-X/chip inverted to cream-on-dark. Same dark+lift swap applied to the
+  `h-11 w-11` header buttons across every `(light)` route + the NavigationOverlay close for
+  consistency. Detail-page photo-hero buttons + pop-over menus left cream (different context). Not
+  a motion change — logged here only because it rides the same liquid-design pass.
+- **Open / next:** owner eyeballs both on device. Background: bigger-still / lower-still are
+  one-number anchor+sweep tweaks. Chrome: shadow softness is the `light-float` token.
+- **Traps found:** — (ChatInput edit-ordering footgun handled in-session: invert inner
+  `bg-light-foreground text-light-text-on-dark` BEFORE swapping the glass controls to it, or the
+  new control class gets re-inverted by the substring match).
 - **PRs this session:** (number assigned on open)
