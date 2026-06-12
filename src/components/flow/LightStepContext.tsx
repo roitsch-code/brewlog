@@ -295,7 +295,7 @@ export default function LightStepContext() {
     <LightFlowShell onNext={handleNext} nextDisabled={!isComplete} nextLabel="Get my recipe">
       <Hero
         eyebrow={`Context${draft.coffee?.name ? ` · ${draft.coffee.name}` : ""}`}
-        question={<>What&rsquo;s the vibe?</>}
+        question="What’s the vibe?"
       />
 
       {coffeeMemory && (coffeeMemory.writtenSummary || coffeeMemory.whatToExplore) && (

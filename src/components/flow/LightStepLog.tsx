@@ -262,7 +262,7 @@ export default function LightStepLog() {
 
   return (
     <LightFlowShell onNext={handleNext} nextDisabled={!canProceed} nextLabel="Save">
-      <Hero eyebrow="Taste Log" question={<>How was it?</>} />
+      <Hero eyebrow="Taste Log" question="How was it?" />
 
       {/* Rating — central hero-adjacent affordance */}
       <div className="flex flex-col items-center gap-3 pb-8">
