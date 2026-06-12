@@ -7,9 +7,9 @@ import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
 import CTA from "@/components/ui/light/CTA";
 import { formatSeconds } from "@/lib/utils/formatTime";
-import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
-import { getLoadingHints, COFFEE_HINTS } from "@/lib/coffeeHints";
+import LiquidHeadline, { liquidEntranceMs, LH_EXIT_MS } from "@/components/ui/light/LiquidHeadline";
+import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
@@ -66,40 +66,33 @@ export default function LightStepRecommend() {
     else disableWakeLock();
   }, [isRecommending, enableWakeLock, disableWakeLock]);
 
-  const [hints, setHints] = useState<string[]>(() => getLoadingHints(8));
-  const [hintIdx, setHintIdx] = useState(0);
+  // Rotating insight deck for the crafting screen: a shuffled subset shown one
+  // at a time — big (Fraunces 40, like the welcome haiku), scattered-in, held
+  // long enough to read, then dissolved the OPPOSITE way (down) before the next
+  // sets up. Pulled straight from the code-canonical short COFFEE_HINTS so the
+  // big format always fits (no /api/hints round-trip, no risk of a long string).
+  const [insights] = useState<string[]>(() => shuffleSubset(COFFEE_HINTS, 12));
+  const [insightIdx, setInsightIdx] = useState(0);
+  const [insightVisible, setInsightVisible] = useState(true);
+
+  const currentInsight = insights[insightIdx] ?? "";
+  const insightWordCount = currentInsight.trim() === "" ? 0 : currentInsight.trim().split(/\s+/).length;
+  // Visible window = entrance time + a read buffer, so it stands long enough to read.
+  const dwellMs = liquidEntranceMs(insightWordCount) + 2600;
 
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/hints")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { hints: string[] } | null) => {
-        if (cancelled) return;
-        if (data && Array.isArray(data.hints) && data.hints.length >= 8) {
-          setHints(shuffleSubset(data.hints, 8));
-        } else {
-          setHints(shuffleSubset(COFFEE_HINTS, 8));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setHints(shuffleSubset(COFFEE_HINTS, 8));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const hintTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => {
-    if (isRecommending) {
-      hintTimer.current = setInterval(() => setHintIdx((i) => (i + 1) % hints.length), 10000);
-    } else if (hintTimer.current) {
-      clearInterval(hintTimer.current);
+    if (!isRecommending || insights.length === 0) return;
+    if (insightVisible) {
+      const t = setTimeout(() => setInsightVisible(false), dwellMs);
+      return () => clearTimeout(t);
     }
-    return () => {
-      if (hintTimer.current) clearInterval(hintTimer.current);
-    };
-  }, [isRecommending, hints.length]);
+    // Dissolving — once it's gone (LH_EXIT_MS), advance and set up the next.
+    const t = setTimeout(() => {
+      setInsightIdx((i) => (i + 1) % insights.length);
+      setInsightVisible(true);
+    }, LH_EXIT_MS);
+    return () => clearTimeout(t);
+  }, [insightVisible, isRecommending, insights.length, dwellMs]);
 
   useEffect(() => {
     setSelectedIdx(0);
@@ -124,18 +117,19 @@ export default function LightStepRecommend() {
   // ── Loading state ─────────────────────────────────────────────────────
   if (isRecommending) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center px-8">
-        <CoffeeBeanGlow size={72} />
-        <p className="label-eyebrow mt-8">Crafting your recipe…</p>
-        <div className="mt-12 max-w-xs mx-auto w-full text-center space-y-2 min-h-[6rem] flex flex-col items-center justify-start">
-          <p className="label-eyebrow">Did you know?</p>
-          <p
-            key={hintIdx}
-            className="text-[13px] leading-relaxed text-light-foreground/70 animate-hint-cycle"
-          >
-            {hints[hintIdx]}
-          </p>
-        </div>
+      <div className="relative min-h-dvh flex flex-col items-center justify-center px-8 text-center">
+        <p
+          className="label-eyebrow absolute left-0 right-0 text-center"
+          style={{ top: "calc(env(safe-area-inset-top) + 1.75rem)" }}
+        >
+          Crafting your recipe…
+        </p>
+        <LiquidHeadline
+          text={currentInsight}
+          show={insightVisible}
+          dissolveDir="down"
+          className="font-fraunces font-semibold text-[40px] leading-[1.1] tracking-[-0.01em] text-light-foreground text-center max-w-[15ch]"
+        />
       </div>
     );
   }

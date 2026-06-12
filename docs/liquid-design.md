@@ -21,12 +21,13 @@
   film grain + finger-following bloom) and the liquid welcome-haiku (shimmer → scattered
   per-word spring entrance → soft dissolve → per-word touch lens). All motion is on the GPU
   compositor; React is never in the per-frame loop. Reduced-motion gracefully static.
-- **Last tuned (2026-06-12):** deep blobs re-anchored to span the full height (one upper-left
-  behind the wordmark, one low) + wider upward-biased drift + bigger discs (66→78vmax) so the
-  STRONG colour now wanders through the headers and bleeds past the top edge — previously it was
-  pinned to the lower screen. Positional/scale only, NOT colourwise. (Earlier same day: haiku
-  entrance slowed a notch; home Field movement enlarged; haiku no longer disappears on a bare
-  mic tap.)
+- **Last tuned (2026-06-12):** extracted the haiku entrance into a reusable `LiquidHeadline` —
+  the Hero questions ("What are you brewing today?", "What's the vibe?") now scatter in, and the
+  recipe-crafting screen dropped the bean glow + "Did you know?" for a big rotating insight
+  (scatter in → hold → dissolve DOWN = the opposite of the haiku → next). Refreshed `COFFEE_HINTS`
+  to short, headline-sized lines. The `+` attachment card is now dark chrome. (Earlier same day:
+  deep blobs re-anchored so strong colour wanders into the headers; all-dark floating home chrome;
+  welcome haiku sticks through the `+` sheet and returns on cancel.)
 - **Most-likely next asks (owner taste, on-device):** background bigger/smaller still →
   `FieldBlobs.tsx` dials; haiku faster/slower → `HaikuStarter.tsx` dials; finger glow
   stronger/weaker → `FieldBloom.tsx` + `useFieldMotion.ts`. See **Tuning dials** below.
@@ -138,8 +139,11 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 
 | File | Role | Dials it owns |
 |---|---|---|
-| `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
-| `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. | — |
+| `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). Home welcome-haiku ONLY (it has the touch-lens). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
+| `src/components/ui/light/LiquidHeadline.tsx` | The haiku's per-word scatter entrance, extracted + reusable (NO touch-lens). Owns `lh-pop-*` + `lh-dissolve-up/down` keyframes (co-located) + reduced-motion gate. Used by `Hero` (entrance only, `as="h1"`) and the recipe-crafting insight (entrance + `dissolveDir="down"` = the OPPOSITE of the haiku's up-float). Keyed on `text` so it replays the entrance whenever the headline changes. | `LH_POP_MS` / `LH_STAGGER_MS` (entrance speed), `LH_EXIT_MS` (dissolve), the `lh-dissolve-down` translate/scale (the "opposite" feel) |
+| `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, dissolve down, next sets up. Replaced the bean glow + "Did you know?". | `dwellMs` (= `liquidEntranceMs(words) + 2600` read buffer), the deck size (`shuffleSubset(…, 12)`), `max-w-[15ch]` (wrap width) |
+| `src/components/ui/light/Hero.tsx` | Page hero — animates the question via `LiquidHeadline` when it's a plain string (callers pass `question="What's the vibe?"`); rich JSX stays static. | whether a hero animates (string vs JSX) |
+| `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. Backs both `HaikuStarter` and `LiquidHeadline`. | — |
 | `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !composing` (declarative — NOT a one-way latch, so the haiku returns when a draft clears). | when the haiku shows / dissolves (the `composing` flag) |
 | `src/components/ui/light/ChatInput.tsx` | Reports `onComposingChange(isCompositionActive)` — true only with a real draft (text / photo / coffee / uploading). Opening the `+` sheet or a bare mic tap is NOT composing, so the haiku sticks; clearing the draft re-runs its entrance. The `+` sheet is overlaid (`absolute bottom-full` in a `relative` input row) so opening it doesn't grow the footer and shove the centred haiku up. | what counts as "composing" (dismisses the haiku) |
 
@@ -340,4 +344,26 @@ When adding any new motion, add its selector to that globals.css block in the sa
   want the old focus-dissolve back.
 - **Traps found:** the latch had a THIRD setter (`handleSend` set `interacted=true` post-send) +
   a conversation-load setter — both removed; `messages.length>0` already hides the starter.
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — reusable LiquidHeadline: Hero entrance + recipe-crafting insight + dark + card
+- **Done:** extracted the welcome-haiku's per-word scatter entrance into
+  `src/components/ui/light/LiquidHeadline.tsx` (co-located `lh-pop-*` + `lh-dissolve-up/down`
+  keyframes + reduced-motion gate, NO touch-lens; `as` prop keeps the Hero an `<h1>`; keyed on
+  `text` so it replays on change). `HaikuStarter` left untouched (it keeps its lens). **Hero** now
+  animates the question when it's a plain string — converted the 5 flow callers from
+  `question={<>…</>}` to `question="…"` ("What are you brewing today?", "What's the vibe?", "How
+  was it?", "Where are you?", "Log a drip bag."). **Recipe-crafting screen** (`LightStepRecommend`)
+  dropped `CoffeeBeanGlow` + the "Did you know?" 13px ticker for a big `LiquidHeadline` insight that
+  scatters in, holds `liquidEntranceMs(words)+2600`ms to read, then dissolves DOWN (the opposite of
+  the haiku's up-float) before the next sets up; a small "Crafting your recipe…" eyebrow stays
+  pinned top so the wait reads as working. Insights pulled straight from `COFFEE_HINTS` (no
+  `/api/hints` round-trip) — **rewrote that file** from 284 long em-dash facts to ~56 short,
+  headline-sized, fact-checked lines (BTTS voice; no fabricated specifics per the Hard Rule).
+- **Open / next:** owner eyeballs on device (force-quit/reopen). Tunables flagged: dwell read-buffer
+  (2600ms), wrap width (`max-w-[15ch]`), whether to keep the "Crafting your recipe…" eyebrow, and
+  the `lh-dissolve-down` direction. Confirm the short insight set reads right / wants more entries.
+- **Traps found:** Hero questions were JSX fragments, not strings — a string-only animator needs
+  the callers converted (and `coachQuestion` at LightStepLog:538 is a `CoachQuestionSheet` prop,
+  NOT a Hero — left alone).
 - **PRs this session:** (number assigned on open)
