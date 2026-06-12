@@ -74,7 +74,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
         onClick={onClose}
         aria-label="Close menu"
         style={{ top: "calc(env(safe-area-inset-top) + 1.25rem)" }}
-        className="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150"
+        className="absolute right-5 flex h-11 w-11 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float"
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>

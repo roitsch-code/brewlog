@@ -94,7 +94,7 @@ export default function PastConversationDetailPage() {
             type="button"
             onClick={() => router.push("/past-conversations")}
             aria-label="Back"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float"
           >
             <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
           </button>
@@ -105,7 +105,7 @@ export default function PastConversationDetailPage() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/80 backdrop-blur-light-card backdrop-saturate-150"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float"
           >
             <Menu className="h-5 w-5" strokeWidth={1.5} />
           </button>

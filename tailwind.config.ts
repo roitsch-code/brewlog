@@ -100,6 +100,11 @@ const config: Config = {
         "glow-strong": "0 0 90px rgba(232,197,168,0.18)",
         // Light System v1.0 §2.3, §4.3 — pressed-card inset shadow.
         "light-card-pressed": "inset 0 2px 4px rgba(60, 40, 30, 0.12)",
+        // Floating-chrome elevation — warm-dark soft outer lift so the
+        // anthracite home controls (Burger, +, round controls, chat bar,
+        // Action Pill) read as lifted above the living Field instead of
+        // muddying into it. Distinct from the inset pressed-card shadow.
+        "light-float": "0 6px 20px -6px rgba(30, 22, 16, 0.28), 0 2px 6px -2px rgba(30, 22, 16, 0.18)",
       },
       backdropBlur: {
         // Light System v1.0 §2.3 — glass blur on cards/sheets/overlays.
