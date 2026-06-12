@@ -140,8 +140,8 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 | File | Role | Dials it owns |
 |---|---|---|
 | `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). Home welcome-haiku ONLY (it has the touch-lens). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
-| `src/components/ui/light/LiquidHeadline.tsx` | The haiku's per-word scatter entrance, extracted + reusable (NO touch-lens). Owns `lh-pop-*` + `lh-dissolve-up/down` keyframes (co-located) + reduced-motion gate. Used by `Hero` (entrance only, `as="h1"`) and the recipe-crafting insight (entrance + `dissolveDir="down"` = the OPPOSITE of the haiku's up-float). Keyed on `text` so it replays the entrance whenever the headline changes. | `LH_POP_MS` / `LH_STAGGER_MS` (entrance speed), `LH_EXIT_MS` (dissolve), the `lh-dissolve-down` translate/scale (the "opposite" feel) |
-| `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, dissolve down, next sets up. Replaced the bean glow + "Did you know?". | `dwellMs` (= `liquidEntranceMs(words) + 2600` read buffer), the deck size (`shuffleSubset(…, 12)`), `max-w-[15ch]` (wrap width) |
+| `src/components/ui/light/LiquidHeadline.tsx` | The haiku's per-word scatter entrance, extracted + reusable (NO touch-lens). Owns `lh-pop-*` + `lh-out-*-up/down` keyframes (co-located) + reduced-motion gate. **Exit is the entrance in REVERSE** — each word retreats one after another (last word in, first out), scattered + staggered, NOT a whole-line fade; `dissolveDir` only sets where they drift ("down" sinks/shrinks = the opposite of the haiku's up-float). Per-word duration via the `--lh-dur` CSS var so timings are prop-driven. Used by `Hero` (entrance only, `as="h1"`) and the recipe-crafting insight. Keyed on `text` so it replays the entrance whenever the headline changes. | props `popMs` / `staggerMs` / `exitMs` (per-instance speed); `LH_POP_MS` / `LH_STAGGER_MS` (Hero defaults); `liquidEntranceMs` / `liquidExitMs` helpers; the `lh-out-*` translate/scale (the "opposite" feel) |
+| `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, leave word-by-word in reverse (sinking down), next sets up. Slow + calm on purpose. Replaced the bean glow + "Did you know?". | `INSIGHT_POP_MS` 1000 / `INSIGHT_STAGGER_MS` 110 / `INSIGHT_EXIT_MS` 850 / `INSIGHT_READ_MS` 4800 (the settled read time); the deck size (`shuffleSubset(…, 12)`); `max-w-[15ch]` (wrap width) |
 | `src/components/ui/light/Hero.tsx` | Page hero — animates the question via `LiquidHeadline` when it's a plain string (callers pass `question="What's the vibe?"`); rich JSX stays static. | whether a hero animates (string vs JSX) |
 | `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. Backs both `HaikuStarter` and `LiquidHeadline`. | — |
 | `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !composing` (declarative — NOT a one-way latch, so the haiku returns when a draft clears). | when the haiku shows / dissolves (the `composing` flag) |
@@ -366,4 +366,25 @@ When adding any new motion, add its selector to that globals.css block in the sa
 - **Traps found:** Hero questions were JSX fragments, not strings — a string-only animator needs
   the callers converted (and `coachQuestion` at LightStepLog:538 is a `CoachQuestionSheet` prop,
   NOT a Hero — left alone).
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — recipe insight: slower, per-word reverse exit, longer hold (+ scroll-to-top fix)
+- **Done (motion):** the rotating recipe insight read as stressful — too fast, and the dissolve was
+  a one-shot whole-line fade. Reworked `LiquidHeadline`'s exit to be the **entrance in reverse**:
+  each word retreats one after another (last word in, first out), scattered + staggered, drifting in
+  the `dissolveDir` direction (recipe = "down", sink + shrink). Made all timings prop-driven via a
+  `--lh-dur` CSS var (so the Hero stays snappy at the defaults while the recipe is slow). Recipe now
+  runs at `INSIGHT_POP_MS` 1000 / `INSIGHT_STAGGER_MS` 110 / `INSIGHT_EXIT_MS` 850 and holds
+  `INSIGHT_READ_MS` 4800ms fully settled before leaving (was ~2600 + a 360ms whole-line fade). Added
+  `liquidExitMs()` so the rotation waits exactly until every word has gone.
+- **Done (scroll — separate concern, same session):** "How was it?" (and every step) opened at the
+  previous step's scroll offset. Root cause: the app scrolls inside `ScrollContainer` (a 100dvh
+  overflow div in the root layout), but `LightFlowShell` reset `window.scrollTo(0)` — a no-op on the
+  real scroller. Fix: `ScrollContainer` now resets itself to top on every route change (`usePathname`)
+  and exports `SCROLL_CONTAINER_ID`; `LightFlowShell` resets that element by id on step change (window
+  call kept as a fallback). All pages/steps now open at the top.
+- **Open / next:** owner eyeballs the new pace on device — `INSIGHT_*` are all one-number dials if it
+  wants to go slower/faster or hold longer still.
+- **Traps found:** `window.scrollTo` is a no-op when the real scroller is a custom overflow container
+  that persists in the root layout — reset the element, and also on `usePathname` for route changes.
 - **PRs this session:** (number assigned on open)

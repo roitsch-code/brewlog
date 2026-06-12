@@ -8,7 +8,7 @@ import Chip from "@/components/ui/light/Chip";
 import CTA from "@/components/ui/light/CTA";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
-import LiquidHeadline, { liquidEntranceMs, LH_EXIT_MS } from "@/components/ui/light/LiquidHeadline";
+import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/light/LiquidHeadline";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
@@ -37,6 +37,14 @@ function shuffleSubset(arr: string[], count: number): string[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
+
+// Recipe-crafting insight animation — deliberately slow + calm (the earlier
+// fast rotation read as stressful). Raise any of these to slow further / hold
+// longer; INSIGHT_READ_MS is the pure settled reading time before it leaves.
+const INSIGHT_POP_MS = 1000; // per-word entrance spring
+const INSIGHT_STAGGER_MS = 110; // gap between words (entrance + exit)
+const INSIGHT_EXIT_MS = 850; // per-word exit duration
+const INSIGHT_READ_MS = 4800; // how long it sits fully settled before leaving
 
 const ROLE_LABELS: Record<CandidateRole, string> = {
   anchor: "Anchor",
@@ -77,8 +85,10 @@ export default function LightStepRecommend() {
 
   const currentInsight = insights[insightIdx] ?? "";
   const insightWordCount = currentInsight.trim() === "" ? 0 : currentInsight.trim().split(/\s+/).length;
-  // Visible window = entrance time + a read buffer, so it stands long enough to read.
-  const dwellMs = liquidEntranceMs(insightWordCount) + 2600;
+  // Visible window = entrance time + a generous read buffer, so it stands long
+  // enough to read calmly before it starts to leave.
+  const dwellMs = liquidEntranceMs(insightWordCount, INSIGHT_POP_MS, INSIGHT_STAGGER_MS) + INSIGHT_READ_MS;
+  const insightExitMs = liquidExitMs(insightWordCount, INSIGHT_EXIT_MS, INSIGHT_STAGGER_MS);
 
   useEffect(() => {
     if (!isRecommending || insights.length === 0) return;
@@ -86,13 +96,13 @@ export default function LightStepRecommend() {
       const t = setTimeout(() => setInsightVisible(false), dwellMs);
       return () => clearTimeout(t);
     }
-    // Dissolving — once it's gone (LH_EXIT_MS), advance and set up the next.
+    // Leaving — once every word has gone, advance and set up the next.
     const t = setTimeout(() => {
       setInsightIdx((i) => (i + 1) % insights.length);
       setInsightVisible(true);
-    }, LH_EXIT_MS);
+    }, insightExitMs);
     return () => clearTimeout(t);
-  }, [insightVisible, isRecommending, insights.length, dwellMs]);
+  }, [insightVisible, isRecommending, insights.length, dwellMs, insightExitMs]);
 
   useEffect(() => {
     setSelectedIdx(0);
@@ -128,6 +138,9 @@ export default function LightStepRecommend() {
           text={currentInsight}
           show={insightVisible}
           dissolveDir="down"
+          popMs={INSIGHT_POP_MS}
+          staggerMs={INSIGHT_STAGGER_MS}
+          exitMs={INSIGHT_EXIT_MS}
           className="font-fraunces font-semibold text-[40px] leading-[1.1] tracking-[-0.01em] text-light-foreground text-center max-w-[15ch]"
         />
       </div>
