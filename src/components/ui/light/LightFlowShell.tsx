@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { useFlowStore, type FlowStep } from "@/store/flowStore";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { DEFAULT_FIELD_ZONES } from "@/lib/field/defaultZones";
+import { SCROLL_CONTAINER_ID } from "@/components/layout/ScrollContainer";
 import CTA from "./CTA";
 
 /**
@@ -79,12 +80,16 @@ export default function LightFlowShell({
   useFieldConfig(fieldConfig);
 
   // Reset scroll to the top on every step transition. Without this,
-  // tapping Continue from a long Scan screen lands the user
-  // mid-Context with the eyebrow off-screen. Each step is a fresh
-  // page in the user's mental model — they should always see the
-  // Hero first. `instant` avoids the smooth animation that would
-  // jar the field rotation transition.
+  // tapping Continue from a long Scan screen lands the user mid-Context
+  // with the eyebrow off-screen (most jarring on "How was it?", which
+  // opens right after the tall brew-timer screen). Each step is a fresh
+  // page in the user's mental model — they should always see the Hero
+  // first. The app scrolls inside ScrollContainer (a 100dvh overflow div),
+  // NOT the window, so reset THAT element; the window call is a fallback
+  // for any context where the window is the scroller. `instant` avoids the
+  // smooth animation that would jar the field rotation transition.
   useEffect(() => {
+    document.getElementById(SCROLL_CONTAINER_ID)?.scrollTo({ top: 0, behavior: "instant" });
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [step]);
 
