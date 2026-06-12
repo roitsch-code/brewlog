@@ -40,14 +40,14 @@ export default function AttachmentSheet({
         className="fixed inset-0 z-40 cursor-default"
       />
 
-      <div className="absolute bottom-full left-0 z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/25 bg-light-card-default p-2 shadow-light-float backdrop-blur-light-card backdrop-saturate-150">
+      <div className="absolute bottom-full left-0 z-50 mb-2 mr-auto max-w-[280px] rounded-2xl bg-light-foreground p-2 shadow-light-float">
         <button
           type="button"
           onClick={onPickPhoto}
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left transition-colors active:bg-light-text-on-dark/10"
         >
-          <ImageIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
-          <span className="font-chivo text-[15px] font-medium text-light-foreground">
+          <ImageIcon className="h-5 w-5 text-light-text-on-dark/80" strokeWidth={1.5} />
+          <span className="font-chivo text-[15px] font-medium text-light-text-on-dark">
             Photo
           </span>
         </button>
@@ -55,10 +55,10 @@ export default function AttachmentSheet({
           type="button"
           onClick={onPickCoffee}
           disabled={coffeeLibraryEmpty}
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left disabled:opacity-40"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left transition-colors active:bg-light-text-on-dark/10 disabled:opacity-40"
         >
-          <CoffeeIcon className="h-5 w-5 text-light-foreground/80" strokeWidth={1.5} />
-          <span className="font-chivo text-[15px] font-medium text-light-foreground">
+          <CoffeeIcon className="h-5 w-5 text-light-text-on-dark/80" strokeWidth={1.5} />
+          <span className="font-chivo text-[15px] font-medium text-light-text-on-dark">
             {coffeeLibraryEmpty ? "Reference coffee (library empty)" : "Reference coffee"}
           </span>
         </button>
