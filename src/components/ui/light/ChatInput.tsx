@@ -40,7 +40,13 @@ export interface SendPayload {
 interface ChatInputProps {
   loading: boolean;
   onSend: (payload: SendPayload) => void;
-  onComposeStart?: () => void;
+  /**
+   * Live composition state: true when a draft exists (text / photo / coffee
+   * ref / uploading), false when idle. NOT triggered by a bare mic tap or an
+   * open + sheet. Drives the home welcome-haiku (show when idle, dissolve when
+   * composing, re-enter when cleared).
+   */
+  onComposingChange?: (composing: boolean) => void;
   /** True while the assistant's reply is being read aloud. */
   assistantSpeaking?: boolean;
   /** Stop the current TTS playback (silence the assistant). */
@@ -70,7 +76,7 @@ async function uploadPhoto(file: File): Promise<string> {
 export default function ChatInput({
   loading,
   onSend,
-  onComposeStart,
+  onComposingChange,
   assistantSpeaking = false,
   onCancelSpeak,
   onUnlockAudio,
@@ -86,7 +92,6 @@ export default function ChatInput({
   const [coffeeList, setCoffeeList] = useState<CompactCoffee[]>([]);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
-  const composeStartedRef = useRef(false);
   // True once the current composition has picked up any voice-transcribed
   // text. Reset on send and on clear. Drives the SendPayload flag the home
   // page reads to decide whether to read the assistant reply aloud — typed
@@ -150,16 +155,8 @@ export default function ChatInput({
     }, delay);
   };
 
-  const markComposed = () => {
-    if (!composeStartedRef.current) {
-      composeStartedRef.current = true;
-      onComposeStart?.();
-    }
-  };
-
   const voice = useVoiceCapture({
     onTranscript: (transcript) => {
-      markComposed();
       voiceInitiatedRef.current = true;
       setText(transcript);
       if (editorRef.current) {
@@ -192,12 +189,20 @@ export default function ChatInput({
   const isVoiceActive = isRecording || isTranscribing;
   const isCompositionActive = hasText || hasPhoto || hasCoffee || uploadingImage;
 
+  // Report live composition state up so the home page can show the welcome
+  // haiku whenever the screen is idle (no messages, nothing being composed)
+  // and dissolve / re-run its entrance as a draft starts and clears. Opening
+  // the + sheet or a bare mic tap is deliberately NOT composing — the haiku
+  // sticks through those and only leaves once real content lands.
+  useEffect(() => {
+    onComposingChange?.(isCompositionActive);
+  }, [isCompositionActive, onComposingChange]);
+
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     setText(e.currentTarget.textContent ?? "");
   };
 
   const handleFocus = () => {
-    markComposed();
     // The user is composing — silence the assistant so it doesn't talk over
     // their reply. iOS audio also needs a gesture before later playbacks; the
     // focus event itself isn't a gesture, but follow-up taps within this
@@ -212,7 +217,6 @@ export default function ChatInput({
   };
 
   const handleFileSelected = async (file: File) => {
-    markComposed();
     setUploadError(null);
     setUploadingImage(true);
     setAttachedCoffee(null); // §3.3 — one attachment at a time
@@ -255,7 +259,6 @@ export default function ChatInput({
     setText("");
     setAttachedImageUrl(null);
     setAttachedCoffee(null);
-    composeStartedRef.current = false;
     voiceInitiatedRef.current = false;
     editorRef.current?.blur();
   };
@@ -263,10 +266,10 @@ export default function ChatInput({
   const startVoice = async () => {
     if (loading || sendActive) return;
     setVoiceError(null);
-    // Deliberately do NOT markComposed() here: the bare mic tap shouldn't
-    // dismiss the welcome haiku before a word is spoken (and leave it gone if
-    // the user cancels). The haiku dissolves when a transcript actually lands —
-    // onTranscript() calls markComposed() — so recording keeps it on screen.
+    // Recording is deliberately NOT "composing" (isCompositionActive excludes
+    // voice), so the bare mic tap keeps the welcome haiku on screen — it only
+    // dissolves once a transcript lands and fills the editor (text → composing).
+    // Cancelling leaves the haiku untouched.
     // The mic tap is a user gesture — prime iOS audio now so the reply
     // (which we'll route to TTS because this composition is voice-initiated)
     // plays without an autoplay block.
@@ -291,7 +294,6 @@ export default function ChatInput({
   };
 
   const handleCoffeeSelected = (coffee: CompactCoffee) => {
-    markComposed();
     setAttachedImageUrl(null); // §3.3 — one attachment at a time
     setAttachedCoffee(coffee);
     setPickerOpen(false);
@@ -315,15 +317,6 @@ export default function ChatInput({
           </div>
         )}
 
-        {sheetOpen && (
-          <AttachmentSheet
-            onClose={() => setSheetOpen(false)}
-            onPickPhoto={handlePickPhoto}
-            onPickCoffee={handlePickCoffeeRef}
-            coffeeLibraryEmpty={coffeeList.length === 0}
-          />
-        )}
-
         <input
           ref={photoInputRef}
           type="file"
@@ -332,7 +325,17 @@ export default function ChatInput({
           onChange={handleInputChange}
         />
 
-        <div className="flex items-center gap-3">
+        <div className="relative flex items-center gap-3">
+          {/* Overlaid, not in flow — anchored above the input row so opening it
+              doesn't grow the footer and shove the centred welcome haiku up. */}
+          {sheetOpen && (
+            <AttachmentSheet
+              onClose={() => setSheetOpen(false)}
+              onPickPhoto={handlePickPhoto}
+              onPickCoffee={handlePickCoffeeRef}
+              coffeeLibraryEmpty={coffeeList.length === 0}
+            />
+          )}
           {isVoiceActive ? (
             <button
               type="button"
