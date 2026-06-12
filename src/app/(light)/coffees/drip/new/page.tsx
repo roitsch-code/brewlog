@@ -146,7 +146,7 @@ export default function LogDripBagPage() {
         </button>
       </div>
 
-      <Hero eyebrow="Drip bag" question={<>Log a drip bag.</>} />
+      <Hero eyebrow="Drip bag" question="Log a drip bag." />
 
       <div className="mt-6 space-y-10">
         {/* ── IDENTITY ─────────────────────────────────────── */}

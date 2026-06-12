@@ -185,7 +185,7 @@ export default function LightStepMode() {
       nextLabel="Continue"
       nextDisabled={!effectivePlaceName}
     >
-      <Hero eyebrow="Coffee Shop" question={<>Where are you?</>} />
+      <Hero eyebrow="Coffee Shop" question="Where are you?" />
 
       <div className="space-y-10">
         <Section

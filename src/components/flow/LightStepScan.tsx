@@ -578,7 +578,7 @@ export default function LightStepScan() {
   return (
     <LightFlowShell onNext={canProceed ? nextStep : undefined} nextDisabled={!canProceed} nextLabel={isDripBag ? "Document →" : "Continue →"}>
       <div className="px-5 py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
-        <Hero eyebrow="New Session" question={<>What are you brewing today?</>} />
+        <Hero eyebrow="New Session" question="What are you brewing today?" />
 
         {/* Hidden file input for the Photo card — no `capture` attr so
             iOS opens its full native picker (Photo Library / Take
