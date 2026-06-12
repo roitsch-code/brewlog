@@ -200,9 +200,32 @@ export default function CoffeeDetailPage() {
 
   return (
     <div className="min-h-svh bg-transparent flex flex-col">
-      {/* Hero — rounded-inset bag photo (shared BagPhoto treatment), with the
-          back / menu controls and the title overlaid on the rounded image. */}
-      <div className="relative px-5" style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}>
+      {/* Hero — back / menu in a header row OVER the Field, ABOVE the
+          rounded-inset bag photo, so the controls no longer sit on the image. */}
+      <div className="px-5" style={{ paddingTop: "calc(env(safe-area-inset-top) + 1rem)" }}>
+        <div className="flex items-center justify-between mb-3">
+          {/* Back button — return to /coffees list */}
+          <button
+            onClick={() => router.push("/coffees")}
+            aria-label="Back to library"
+            className="w-11 h-11 rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Burger menu — opens NavigationOverlay (every Light surface has it). */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+            className="w-11 h-11 rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <Menu className="w-5 h-5" strokeWidth={1.5} />
+          </button>
+        </div>
+
         {coffee.bagPhotoUrl ? (
           <BagPhoto url={coffee.bagPhotoUrl} alt={coffee.name}>
             <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -240,28 +263,6 @@ export default function CoffeeDetailPage() {
           </>
         )}
 
-        {/* Back button — return to /coffees list */}
-        <button
-          onClick={() => router.push("/coffees")}
-          aria-label="Back to library"
-          className="absolute z-10 left-8 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
-          style={{ top: "calc(env(safe-area-inset-top) + 1.5rem)" }}
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        {/* Burger menu — opens NavigationOverlay (every Light surface has it). */}
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Open menu"
-          className="absolute z-10 right-8 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
-          style={{ top: "calc(env(safe-area-inset-top) + 1.5rem)" }}
-        >
-          <Menu className="w-5 h-5" strokeWidth={1.5} />
-        </button>
       </div>
 
       {/* Stats row */}
