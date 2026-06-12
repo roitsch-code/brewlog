@@ -7,10 +7,10 @@ import type { FieldZones } from "@/lib/field/types";
 // Co-prime-ish durations + negative start-delays so the four drifts never sit
 // at 0% together and the composite doesn't visibly re-sync.
 const DRIFT = [
-  "blobflow-1 15s ease-in-out -4s infinite",
-  "blobflow-2 19s ease-in-out -11s infinite",
-  "blobflow-3 17s ease-in-out -2s infinite",
-  "blobflow-4 23s ease-in-out -15s infinite",
+  "blobflow-1 23s ease-in-out -6s infinite",
+  "blobflow-2 29s ease-in-out -15s infinite",
+  "blobflow-3 26s ease-in-out -4s infinite",
+  "blobflow-4 33s ease-in-out -21s infinite",
 ];
 
 /**
@@ -20,8 +20,10 @@ const DRIFT = [
  * blobs against a stale cached stylesheet (the cause of "haiku moves, blobs
  * dead"). Three nested layers: the outer leans from the --field-* vars, the
  * middle runs the transform-only drift keyframe (GPU compositor, no filter), the
- * inner is the blurred colour disc — painted once and merely moved. Travel is
- * big and the discs are smallish so the flow is unmistakable on the pale field.
+ * inner is the blurred colour disc — painted once and merely moved. Tuned big
+ * and slow (large discs, wide vmax travel, 23–33s cycles) for a STARIS-style
+ * mesh that flows in large areas across the pale field. See docs/liquid-design.md
+ * ("Tuning dials") to push the scale further — colours are NOT a dial here.
  */
 export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
   const blobs = useMemo(() => fieldBlobColors(fieldZones), [fieldZones]);
@@ -31,24 +33,24 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
       <style jsx global>{`
         @keyframes blobflow-1 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          33% { transform: translate3d(18vmax, -14vmax, 0) scale(1.18); }
-          66% { transform: translate3d(-14vmax, 16vmax, 0) scale(0.86); }
+          33% { transform: translate3d(26vmax, -21vmax, 0) scale(1.22); }
+          66% { transform: translate3d(-21vmax, 24vmax, 0) scale(0.82); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes blobflow-2 {
           0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(-20vmax, -12vmax, 0) rotate(12deg) scale(1.14); }
+          50% { transform: translate3d(-29vmax, -18vmax, 0) rotate(14deg) scale(1.2); }
           100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
         }
         @keyframes blobflow-3 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          40% { transform: translate3d(13vmax, 19vmax, 0) scale(1.12); }
-          75% { transform: translate3d(-16vmax, -12vmax, 0) scale(0.88); }
+          40% { transform: translate3d(19vmax, 28vmax, 0) scale(1.16); }
+          75% { transform: translate3d(-24vmax, -18vmax, 0) scale(0.84); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes blobflow-4 {
           0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(17vmax, 15vmax, 0) rotate(-10deg) scale(1.2); }
+          50% { transform: translate3d(25vmax, 22vmax, 0) rotate(-12deg) scale(1.26); }
           100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
         }
       `}</style>
@@ -79,12 +81,12 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
                 position: "absolute",
                 left: 0,
                 top: 0,
-                width: "48vmax",
-                height: "48vmax",
+                width: "66vmax",
+                height: "66vmax",
                 transform: "translate(-50%, -50%)",
                 borderRadius: "50%",
                 background: `radial-gradient(circle, ${b.color} 0%, transparent 68%)`,
-                filter: "blur(30px)",
+                filter: "blur(34px)",
               }}
             />
           </div>

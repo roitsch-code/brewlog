@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePresence } from "@/hooks/usePresence";
 
 const EXIT_MS = 280;
-const STAGGER_MS = 52;
-const POP_MS = 680;
+const STAGGER_MS = 64; // gap between word pops — raise to slow the entrance
+const POP_MS = 770; // each word's own spring duration — raise to slow the entrance
 const DISTURB_MAX_BLUR = 6; // px — peak blur of a word right under the finger
 const DISTURB_FALLOFF = 85; // px — radius of the blur "lens" around the finger
 

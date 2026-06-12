@@ -149,7 +149,7 @@ All Light. The Dark `Step*.tsx` files (`FlowShell`, `StepMode`, `StepScan`, `Ste
 | `LightStepSummary.tsx` | Review + save session |
 
 **Light UI primitives (`src/components/ui/light/`):**
-`LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders `composeFieldGradient(zones, rotation)` fixed -z-10), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork), `ConnectionStatus` (top-center pill rendered by `LightShell` — shows Offline / Syncing / "didn't sync — tap to retry"; owns the offline-save flush, re-checking `navigator.onLine` on mount + `visibilitychange` rather than the unreliable iOS online event).
+`LightShell` (wraps `(light)` group, sets `[data-light-scope]`), `LightFlowShell` (drives `useFieldConfig` per step, scrolls top on step change), `Field` (reads FieldContext → renders the **living motion stack** fixed -z-10: static `composeFieldGradient(zones, rotation)` base + `FieldBlobs` drift + `FieldGrain` + finger-following `FieldBloom`, driven by `useFieldMotion` CSS vars — see docs/liquid-design.md), `FieldBlobs` / `FieldGrain` / `FieldBloom` (the Field motion layers), `HaikuStarter` (home welcome-haiku — shimmer → scattered per-word spring entrance → dissolve → per-word touch lens), `Card`, `Section`, `Footnote`, `Chip`, `Hero` (eyebrow + Fraunces 40px question), `CTA` (anthracite button + cream text), `CTAWarmth`, `ActionPill` (Brew-Again candidates on home), `ChatInput`, `ChatThread`, `AttachmentSheet`, `NavigationOverlay` (full-screen menu — Home / Past Conversations / New Session / Coffee Library / Nearby / Café Library / Taste Profile), `ReferenceCoffeePicker`, `StarRating` (rotation toggle + log rating), `CircularTimer` (Light fork — anchored to Date.now, visibility-snap), `CoffeeBeanGlow` (anthracite stroke fork), `ConnectionStatus` (top-center pill rendered by `LightShell` — shows Offline / Syncing / "didn't sync — tap to retry"; owns the offline-save flush, re-checking `navigator.onLine` on mount + `visibilitychange` rather than the unreliable iOS online event).
 
 **Shared / Dark-era UI primitives (`src/components/ui/`):**
 `Button`, `CoffeeBeanGlow` (kept for `PhotoUpload`; CSS shim `[data-light-scope] { filter: brightness(0) }` inverts it to anthracite at the consumer), `FlavorWheel` (now Light palette in place — canvas transparent, cream-glass panels, anthracite text/icons), `BrewMethodIcon` (inverted via the same shim), `NumberStepper`, `PhotoUpload`, `PlaceSearch`, `ProgressDots`, `StarRating` (still consumed by `CafeMap` only), `ThinkingDots`, `WaveformBars`.
@@ -267,6 +267,8 @@ lib/
 | `src/hooks/useWakeLock.ts` | Keep screen on during active brew |
 | `src/hooks/useVoiceCapture.ts` | Mic recording + level metering for inline-chat voice input (BTTS Home) |
 | `src/hooks/useVoicePlayback.ts` | Streaming TTS playback for inline-chat voice output (BTTS Home) |
+| `src/hooks/useFieldMotion.ts` | ★ Living-Field motion driver — one rAF loop writes `--field-*`/`--ptr-*` CSS vars (pointer lean, scroll parallax, tap swell, finger bloom) on the Field root; layers read them, zero React re-render. Reduced-motion-gated. See docs/liquid-design.md |
+| `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}` — keeps a node mounted through its exit animation (haiku dissolve). Replaces framer-motion AnimatePresence |
 | `src/middleware.ts` | Auth check + redirects |
 | `.claude/hooks/session-start.sh` | Web Claude Code session bootstrap — runs `npm install` so tools work on cold start (gated on `$CLAUDE_CODE_REMOTE`) |
 | `scripts/seed-insights.mjs` | Populate knowledge base (run once on new installs) |
@@ -659,6 +661,16 @@ Cause for sub-rules 5–8: a follow-up audit of all 19 named-expert recipe entri
 Multi-session arc to turn BTTS into a native iOS app via a Capacitor remote-URL shell distributed through TestFlight internal testing — closes the documented "Step alerts during background are missed" gap and unlocks Acaia BT + widget + Live Activity + Apple Watch on later milestones.
 
 **Working doc:** @./docs/ios-shell-roadmap.md — read its "Multi-session execution model" and the latest "Session log" entry before touching anything in `src/lib/native/`, `src/hooks/useBrewStepNotifications.ts`, the `native/` directory, or `.github/workflows/ios-*`. Every session that advances the project updates the doc (session-log entry + any new Stolperstein) in the same commit as the code.
+
+---
+
+## Liquid / motion design (in progress)
+
+The "fluidity pass" — the living Field background (static base gradient + drifting colour blobs + film grain + finger-following bloom) and the liquid welcome-haiku (scattered per-word spring entrance → dissolve → per-word touch lens). All motion runs on the GPU compositor (CSS `@keyframes` + CSS vars written by one rAF loop); React is never in the per-frame loop.
+
+**Working doc:** @./docs/liquid-design.md — read its "Tuning dials" table before any "make the background bigger / the haiku slower / the glow stronger" change, and its top rule before debugging "motion is dead in the PWA." Touch points: `src/components/ui/light/{Field,FieldBlobs,FieldGrain,FieldBloom,HaikuStarter}.tsx`, `src/hooks/{useFieldMotion,usePresence}.ts`, `src/lib/field/composeGradient.ts`, and the motion blocks in `globals.css`. Every advancing session updates the doc (session-log entry + dials kept honest) in the same commit as the code.
+
+**Load-bearing rule:** continuously-iterated `@keyframes` (blob drift, haiku entrance) live **co-located in the component** via `<style jsx global>`, NEVER in `globals.css` — the installed PWA serves a stale cached `globals.css` even after the JS updates, so keyframes there silently don't animate (the "haiku moves, background dead" bug). After any deploy, force-quit + reopen the PWA to drop the cache.
 
 ---
 
