@@ -290,14 +290,16 @@
     filter: brightness(0);
   }
 
-  /* Light System — warm the Leaflet (Positron) tile pane on /cafes/map.
-   * Positron ships cold gray; sepia + a small hue-rotate toward pink
-   * pushes it into the same warm rosé/cream territory as the Field so
-   * the map doesn't read as a foreign element inside the Light shell.
-   * Scoped to leaflet-tile-pane (under [data-light-scope]) so it doesn't
-   * touch markers / labels / popups, which stay anthracite. */
+  /* Light System — COLOUR the Leaflet (Positron) tile pane on /cafes/map.
+   * Positron ships cold gray. Instead of washing it cream (old-school),
+   * push it toward the Field's soft rose/peach: a deeper hue-rotate + more
+   * saturation so the map picks up the app's fruity/floral palette while
+   * streets/labels stay legible. Cautious by design — tune the four numbers
+   * on device (raise saturate / push hue-rotate more negative for more
+   * colour). Scoped to leaflet-tile-pane (under [data-light-scope]) so it
+   * doesn't touch markers / labels / popups, which stay anthracite. */
   [data-light-scope] .leaflet-tile-pane {
-    filter: sepia(0.4) hue-rotate(-15deg) saturate(0.7) brightness(1.04);
+    filter: sepia(0.4) hue-rotate(-25deg) saturate(0.95) brightness(1.03);
   }
 }
 
