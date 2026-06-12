@@ -32,17 +32,6 @@ function scatterDelays(n: number): number[] {
   return delay;
 }
 
-function HaikuSkeleton() {
-  const widths = ["72%", "90%", "54%"];
-  return (
-    <div aria-hidden className="w-full space-y-3.5">
-      {widths.map((w, i) => (
-        <div key={i} className="haiku-shimmer h-7 rounded-full" style={{ width: w }} />
-      ))}
-    </div>
-  );
-}
-
 /**
  * Home welcome-haiku (fluidity pass §E). Shimmer while it loads → a LIQUID
  * per-word entrance (words spring in from different directions with an
@@ -167,9 +156,7 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
           100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
         }
       `}</style>
-      {loading ? (
-        <HaikuSkeleton />
-      ) : (
+      {loading ? null : (
         <p
           ref={pRef}
           className={exiting ? `${P_CLASS} haiku-exit` : P_CLASS}
