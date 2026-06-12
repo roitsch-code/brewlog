@@ -142,7 +142,7 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 | `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). Home welcome-haiku ONLY (it has the touch-lens). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
 | `src/components/ui/light/LiquidHeadline.tsx` | The haiku's per-word scatter entrance, extracted + reusable (NO touch-lens). Owns `lh-pop-*` + `lh-out-*-up/down` keyframes (co-located) + reduced-motion gate. **Exit is the entrance in REVERSE** — each word retreats one after another (last word in, first out), scattered + staggered, NOT a whole-line fade; `dissolveDir` only sets where they drift ("down" sinks/shrinks = the opposite of the haiku's up-float). Per-word duration via the `--lh-dur` CSS var so timings are prop-driven. Used by `Hero` (entrance only, `as="h1"`) and the recipe-crafting insight. Keyed on `text` so it replays the entrance whenever the headline changes. | props `popMs` / `staggerMs` / `exitMs` (per-instance speed); `LH_POP_MS` / `LH_STAGGER_MS` (Hero defaults); `liquidEntranceMs` / `liquidExitMs` helpers; the `lh-out-*` translate/scale (the "opposite" feel) |
 | `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, leave word-by-word in reverse (sinking down), next sets up. Slow + calm on purpose. Pinned-top status is `<CraftingStatus>` (replaced the bean glow + the uppercase-grey "CRAFTING…" / "Did you know?" eyebrow). | `INSIGHT_POP_MS` 1000 / `INSIGHT_STAGGER_MS` 110 / `INSIGHT_EXIT_MS` 850 / `INSIGHT_READ_MS` 4800 (the settled read time); the deck size (`shuffleSubset(…, 12)`); `max-w-[15ch]` (wrap width) |
-| `src/components/ui/light/CraftingStatus.tsx` | Recipe-screen status line — black, sentence-case (card-title style), cycling phases ("Reading your context" → … → "Adapting it to your beans", holds on the last) + an animated 1-2-3 ellipsis. Co-located styled-jsx keyframes + reduced-motion gate. | `PHASES` (the phrases), `PHASE_MS` 2400 (advance speed), the `craft-d1/2/3` dot keyframes |
+| `src/components/ui/light/CraftingStatus.tsx` | Recipe-screen status line — black, sentence-case (card-title style) + animated 1-2-3 ellipsis. Cycles a `phases` list (passed in) and HOLDS on the last; the list is the **real per-bean factors** (`buildCraftingPhases` in `src/lib/craftingPhases.ts` — origin/process/variety/roast/freshness/mood/time/water/method → reference recipes → grind+temp → pours → "Adapting it to your beans"), personalized to the scanned coffee's own values, generic fallback otherwise (never fabricated). Paced to span the real ~minute, not 7s. Co-located styled-jsx keyframes + reduced-motion gate. | `buildCraftingPhases` (the walk + wording), `PHASE_MS` 4800 (advance speed), the `craft-d1/2/3` dot keyframes |
 | `src/components/ui/light/Hero.tsx` | Page hero — animates the question via `LiquidHeadline` when it's a plain string. The scan / context / log questions now **vary between visits** (`nextHeroQuestion` in `src/lib/heroQuestions.ts`, localStorage rotation; set in a mount effect so SSR stays stable and the scatter-in plays once). | whether a hero animates (string vs JSX); the variant lists in `heroQuestions.ts` |
 | `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. Backs both `HaikuStarter` and `LiquidHeadline`. | — |
 | `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !composing` (declarative — NOT a one-way latch, so the haiku returns when a draft clears). | when the haiku shows / dissolves (the `composing` flag) |
@@ -407,4 +407,27 @@ When adding any new motion, add its selector to that globals.css block in the sa
   `PHASES`/`PHASE_MS`, the hero variant wording, the map `saturate`/`hue-rotate`.
 - **Traps found:** the hero pick must run in a mount effect, not render — `localStorage`/random in
   render causes an SSR hydration mismatch + a double scatter-in.
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — crafting status = real per-bean factor walk (not fake steps) + coffee-detail controls off the photo
+- **Done (status):** the recipe wait is ONE blocking Opus call (~30–60s, no streamed sub-steps —
+  `recommend.ts:983`, `max_tokens 5000`), so the old 4 generic phases raced through in ~7s on the 2.4s
+  timer then hung on "Adapting it to your beans" for the rest. Owner's call: not streaming, not
+  stretching the same four — **walk the real factors that build the two recipes for THIS bean**. New
+  pure `src/lib/craftingPhases.ts` `buildCraftingPhases(coffee, context)` returns an ordered list using
+  the coffee's OWN stored values (origin/region/process/variety/roast/freshness/mood/occasion/time/
+  water/method) with generic fallbacks on empty/"Unknown"/"Other" (no fabrication), then the real build
+  steps (pull reference recipes → grind+temp → pours → hold on "Adapting it to your beans").
+  `CraftingStatus` now takes a `phases` prop and `PHASE_MS` 2400→**4800** so the walk spans the real
+  minute; `LightStepRecommend` memoizes the list from `draft.coffee`/`draft.context`. Test:
+  `tests/dataflow/crafting-phases.test.mjs` (bundles the real helper — personalization, fallbacks,
+  freshness, the held tail).
+- **Done (coffee detail):** the back + burger were overlaid ON the rounded bag photo (#303). Moved them
+  into a flex header row ABOVE the photo, over the Field, and onto the standard dark header treatment
+  (`bg-light-foreground`/`text-light-text-on-dark`/`shadow-light-float`, `w-11 h-11`) for legibility +
+  consistency with every other `(light)` route. Photo sits below.
+- **Open / next:** on device, tune `craftingPhases` wording / `PHASE_MS`; confirm the detail header
+  spacing. The broader "less cream" pass still pending.
+- **Traps found:** — (`buildCraftingPhases` only ever shows stored values; placeholder guard prevents
+  "the Other process" / "Unknown variety" leaking).
 - **PRs this session:** (number assigned on open)
