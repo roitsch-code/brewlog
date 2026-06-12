@@ -1,37 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { buildCraftingPhases } from "@/lib/craftingPhases";
 
 /**
  * Recipe-crafting status line — replaces the old static uppercase-grey
  * "CRAFTING YOUR RECIPE…" eyebrow. Black, sentence-case, in the card-title
  * style (Chivo 15/500 anthracite — see CardTitle in Card.tsx), with an animated
- * 1-2-3 ellipsis and a cycling phase telling you roughly what's happening.
+ * 1-2-3 ellipsis and a cycling phase that walks the REAL factors going into the
+ * recipe for this bean (passed in via `phases` — see buildCraftingPhases).
  *
- * The recipe is a single /recommend request, so the phases are indicative
- * (timed), not live progress. It advances through them and HOLDS on the last,
- * so a long wait doesn't loop back to "Reading your context".
+ * The recipe is a single /recommend Opus call with no streamed sub-steps, so
+ * the walk is paced (not live progress): it advances through the factors and
+ * HOLDS on the last ("Adapting it to your beans") so a long wait doesn't loop.
+ * PHASE_MS is sized so the walk spans the real ~minute rather than racing.
  *
  * Keyframes co-located (styled-jsx) per the PWA-cache rule; reduced motion
  * freezes the dots and swaps phases instantly.
  */
 
-const PHASES = [
-  "Reading your context",
-  "Looking through the recipes",
-  "Lining up a couple of options",
-  "Adapting it to your beans",
-];
-const PHASE_MS = 2400;
+const DEFAULT_PHASES = buildCraftingPhases();
+const PHASE_MS = 4800;
 
-export default function CraftingStatus({ className }: { className?: string }) {
+export default function CraftingStatus({
+  phases = DEFAULT_PHASES,
+  className,
+}: {
+  phases?: string[];
+  className?: string;
+}) {
   const [i, setI] = useState(0);
+  const last = Math.max(phases.length - 1, 0);
 
   useEffect(() => {
-    if (i >= PHASES.length - 1) return; // hold on the final phase
-    const t = setTimeout(() => setI((n) => Math.min(n + 1, PHASES.length - 1)), PHASE_MS);
+    if (i >= last) return; // hold on the final factor
+    const t = setTimeout(() => setI((n) => Math.min(n + 1, last)), PHASE_MS);
     return () => clearTimeout(t);
-  }, [i]);
+  }, [i, last]);
 
   return (
     <p
@@ -39,7 +44,7 @@ export default function CraftingStatus({ className }: { className?: string }) {
       className={`font-chivo text-[15px] font-medium leading-tight text-light-foreground ${className ?? ""}`}
     >
       <span key={i} className="craft-phrase">
-        {PHASES[i]}
+        {phases[i] ?? ""}
       </span>
       <span className="craft-dots" aria-hidden>
         <span>.</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Section from "@/components/ui/light/Section";
@@ -10,6 +10,7 @@ import { formatSeconds } from "@/lib/utils/formatTime";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/light/LiquidHeadline";
 import CraftingStatus from "@/components/ui/light/CraftingStatus";
+import { buildCraftingPhases } from "@/lib/craftingPhases";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
@@ -67,6 +68,12 @@ const CONFIDENCE_LABELS: Record<CandidateConfidence, string> = {
 export default function LightStepRecommend() {
   const { draft, setStep, isRecommending, recommendError, setBrew } = useFlowStore();
   const rec = draft.recommendation;
+  // Status walk for the loading screen — the real factors going into the recipe
+  // for THIS coffee/context (personalized where the scanned bag has the data).
+  const craftingPhases = useMemo(
+    () => buildCraftingPhases(draft.coffee, draft.context),
+    [draft.coffee, draft.context],
+  );
   const [selectedIdx, setSelectedIdx] = useState(0);
 
   const { enableWakeLock, disableWakeLock } = useWakeLock();
@@ -133,7 +140,7 @@ export default function LightStepRecommend() {
           className="absolute left-0 right-0 flex justify-center px-8"
           style={{ top: "calc(env(safe-area-inset-top) + 1.75rem)" }}
         >
-          <CraftingStatus className="text-center" />
+          <CraftingStatus phases={craftingPhases} className="text-center" />
         </div>
         <LiquidHeadline
           text={currentInsight}
