@@ -263,7 +263,10 @@ export default function ChatInput({
   const startVoice = async () => {
     if (loading || sendActive) return;
     setVoiceError(null);
-    markComposed();
+    // Deliberately do NOT markComposed() here: the bare mic tap shouldn't
+    // dismiss the welcome haiku before a word is spoken (and leave it gone if
+    // the user cancels). The haiku dissolves when a transcript actually lands —
+    // onTranscript() calls markComposed() — so recording keeps it on screen.
     // The mic tap is a user gesture — prime iOS audio now so the reply
     // (which we'll route to TTS because this composition is voice-initiated)
     // plays without an autoplay block.
