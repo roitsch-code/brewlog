@@ -9,6 +9,7 @@ import CTA from "@/components/ui/light/CTA";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/light/LiquidHeadline";
+import CraftingStatus from "@/components/ui/light/CraftingStatus";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
@@ -128,12 +129,12 @@ export default function LightStepRecommend() {
   if (isRecommending) {
     return (
       <div className="relative min-h-dvh flex flex-col items-center justify-center px-8 text-center">
-        <p
-          className="label-eyebrow absolute left-0 right-0 text-center"
+        <div
+          className="absolute left-0 right-0 flex justify-center px-8"
           style={{ top: "calc(env(safe-area-inset-top) + 1.75rem)" }}
         >
-          Crafting your recipe…
-        </p>
+          <CraftingStatus className="text-center" />
+        </div>
         <LiquidHeadline
           text={currentInsight}
           show={insightVisible}
