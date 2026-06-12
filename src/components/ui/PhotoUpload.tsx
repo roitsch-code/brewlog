@@ -45,7 +45,7 @@ export default function PhotoUpload({ onFile, preview, loading, className }: Pho
 
       {preview ? (
         /* Preview — with loading overlay while analysing */
-        <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-brew-border">
+        <div className="relative w-full h-64 rounded-3xl overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={preview} alt="Coffee bag" className={`w-full h-full object-cover transition-opacity duration-300 ${loading ? "opacity-40" : "opacity-100"}`} />
           {loading ? (

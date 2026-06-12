@@ -141,8 +141,9 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 |---|---|---|
 | `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). Home welcome-haiku ONLY (it has the touch-lens). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
 | `src/components/ui/light/LiquidHeadline.tsx` | The haiku's per-word scatter entrance, extracted + reusable (NO touch-lens). Owns `lh-pop-*` + `lh-out-*-up/down` keyframes (co-located) + reduced-motion gate. **Exit is the entrance in REVERSE** — each word retreats one after another (last word in, first out), scattered + staggered, NOT a whole-line fade; `dissolveDir` only sets where they drift ("down" sinks/shrinks = the opposite of the haiku's up-float). Per-word duration via the `--lh-dur` CSS var so timings are prop-driven. Used by `Hero` (entrance only, `as="h1"`) and the recipe-crafting insight. Keyed on `text` so it replays the entrance whenever the headline changes. | props `popMs` / `staggerMs` / `exitMs` (per-instance speed); `LH_POP_MS` / `LH_STAGGER_MS` (Hero defaults); `liquidEntranceMs` / `liquidExitMs` helpers; the `lh-out-*` translate/scale (the "opposite" feel) |
-| `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, leave word-by-word in reverse (sinking down), next sets up. Slow + calm on purpose. Replaced the bean glow + "Did you know?". | `INSIGHT_POP_MS` 1000 / `INSIGHT_STAGGER_MS` 110 / `INSIGHT_EXIT_MS` 850 / `INSIGHT_READ_MS` 4800 (the settled read time); the deck size (`shuffleSubset(…, 12)`); `max-w-[15ch]` (wrap width) |
-| `src/components/ui/light/Hero.tsx` | Page hero — animates the question via `LiquidHeadline` when it's a plain string (callers pass `question="What's the vibe?"`); rich JSX stays static. | whether a hero animates (string vs JSX) |
+| `src/components/flow/LightStepRecommend.tsx` | Recipe-crafting loading screen: a `LiquidHeadline` insight deck (shuffled `COFFEE_HINTS`) shown big (Fraunces 40), one at a time — scatter-in, hold to read, leave word-by-word in reverse (sinking down), next sets up. Slow + calm on purpose. Pinned-top status is `<CraftingStatus>` (replaced the bean glow + the uppercase-grey "CRAFTING…" / "Did you know?" eyebrow). | `INSIGHT_POP_MS` 1000 / `INSIGHT_STAGGER_MS` 110 / `INSIGHT_EXIT_MS` 850 / `INSIGHT_READ_MS` 4800 (the settled read time); the deck size (`shuffleSubset(…, 12)`); `max-w-[15ch]` (wrap width) |
+| `src/components/ui/light/CraftingStatus.tsx` | Recipe-screen status line — black, sentence-case (card-title style), cycling phases ("Reading your context" → … → "Adapting it to your beans", holds on the last) + an animated 1-2-3 ellipsis. Co-located styled-jsx keyframes + reduced-motion gate. | `PHASES` (the phrases), `PHASE_MS` 2400 (advance speed), the `craft-d1/2/3` dot keyframes |
+| `src/components/ui/light/Hero.tsx` | Page hero — animates the question via `LiquidHeadline` when it's a plain string. The scan / context / log questions now **vary between visits** (`nextHeroQuestion` in `src/lib/heroQuestions.ts`, localStorage rotation; set in a mount effect so SSR stays stable and the scatter-in plays once). | whether a hero animates (string vs JSX); the variant lists in `heroQuestions.ts` |
 | `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. Backs both `HaikuStarter` and `LiquidHeadline`. | — |
 | `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !composing` (declarative — NOT a one-way latch, so the haiku returns when a draft clears). | when the haiku shows / dissolves (the `composing` flag) |
 | `src/components/ui/light/ChatInput.tsx` | Reports `onComposingChange(isCompositionActive)` — true only with a real draft (text / photo / coffee / uploading). Opening the `+` sheet or a bare mic tap is NOT composing, so the haiku sticks; clearing the draft re-runs its entrance. The `+` sheet is overlaid (`absolute bottom-full` in a `relative` input row) so opening it doesn't grow the footer and shove the centred haiku up. | what counts as "composing" (dismisses the haiku) |
@@ -387,4 +388,23 @@ When adding any new motion, add its selector to that globals.css block in the sa
   wants to go slower/faster or hold longer still.
 - **Traps found:** `window.scrollTo` is a no-op when the real scroller is a custom overflow container
   that persists in the root layout — reset the element, and also on `usePathname` for route changes.
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — recipe status line + varying hero questions + image consistency + scan width + map colour
+- **Done (motion-ish):** new `CraftingStatus` replaces the uppercase-grey "CRAFTING YOUR RECIPE…"
+  eyebrow on the recipe screen — black, sentence-case (card-title style), with a cycling phase line
+  + an animated 1-2-3 ellipsis (co-located keyframes, reduced-motion gated). Hero questions for
+  scan/context/log now alternate between a few phrasings (`src/lib/heroQuestions.ts`, localStorage
+  rotation, set in a mount effect — empty-initial so SSR stays stable and the `LiquidHeadline`
+  scatter-in plays once).
+- **Done (non-motion polish, same PR):** shared `BagPhoto` (rounded-3xl inset + cream scrim) now on
+  coffee-detail, Save-brew, and (shape-matched) the scan preview, so the bag image is consistent.
+  Scan content width fixed (removed a redundant inner `px-5` that double-padded it ~40px narrower).
+  Nearby map tiles re-tinted from flat cream toward a soft rose/peach (fruity/floral) via the
+  `.leaflet-tile-pane` filter — owner wants "away from cream"; cautious first step, values are dials.
+- **Open / next:** the broader **"get rid of cream"** is a flagged future pass (cream is the Light
+  system's foundation — background, card glass, scrims, tokens). On device, tune: `CraftingStatus`
+  `PHASES`/`PHASE_MS`, the hero variant wording, the map `saturate`/`hue-rotate`.
+- **Traps found:** the hero pick must run in a mount effect, not render — `localStorage`/random in
+  render causes an SSR hydration mismatch + a double scatter-in.
 - **PRs this session:** (number assigned on open)

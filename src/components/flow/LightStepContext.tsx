@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Hero from "@/components/ui/light/Hero";
+import { nextHeroQuestion, CONTEXT_QUESTIONS } from "@/lib/heroQuestions";
 import Section from "@/components/ui/light/Section";
 import Footnote from "@/components/ui/light/Footnote";
 import Card, { CardTitle, CardSubText, CardIcon } from "@/components/ui/light/Card";
@@ -168,6 +169,10 @@ interface CoffeeMemory {
 export default function LightStepContext() {
   const { draft, setContext, setStep, setIsRecommending, setRecommendError } = useFlowStore();
   const ctx = (draft.context || {}) as Partial<SessionContext>;
+  const [heroQuestion, setHeroQuestion] = useState("");
+  useEffect(() => {
+    setHeroQuestion(nextHeroQuestion("context", CONTEXT_QUESTIONS));
+  }, []);
   const [customMl, setCustomMl] = useState<string>("");
   // Tracks which approach card is selected. Drives the footnote only;
   // /api/recommend never receives a manual preferredMethod from this
@@ -295,7 +300,7 @@ export default function LightStepContext() {
     <LightFlowShell onNext={handleNext} nextDisabled={!isComplete} nextLabel="Get my recipe">
       <Hero
         eyebrow={`Context${draft.coffee?.name ? ` · ${draft.coffee.name}` : ""}`}
-        question="What’s the vibe?"
+        question={heroQuestion}
       />
 
       {coffeeMemory && (coffeeMemory.writtenSummary || coffeeMemory.whatToExplore) && (
