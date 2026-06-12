@@ -248,10 +248,15 @@ export function fieldBlobColors(fieldZones: FieldZones): FieldBlob[] {
     return hslToCss(tuned, BLOB_ALPHA);
   };
 
+  // Anchors span the FULL height (not bottom-biased) so the deep blobs carry
+  // strong colour up into the header and off the top edge — not just the lower
+  // screen. idx1 is the upper-left deep anchor (behind the wordmark); idx3 keeps
+  // one deep anchor low so colour still spans bottom→top. Lightness values
+  // unchanged — this is positional, NOT a saturation change.
   return [
-    { color: blob(z0.id, 84), cx: 86, cy: 14 }, // top-right highlight (bright)
-    { color: blob(z0.id, 52), cx: 16, cy: 86 }, // bottom-left warm shadow (deep)
-    { color: blob(z1.id, 76), cx: 90, cy: 50 }, // mid-right (mid-bright)
-    { color: blob(z2 ? z2.id : z0.id, 54, z2 ? 0 : 12), cx: 14, cy: 48 }, // mid-left shadow (deep)
+    { color: blob(z0.id, 84), cx: 80, cy: 10 }, // top-right highlight (bright)
+    { color: blob(z0.id, 52), cx: 22, cy: 24 }, // upper-left warm shadow (deep) — strong colour into the header
+    { color: blob(z1.id, 76), cx: 92, cy: 56 }, // mid-right (mid-bright)
+    { color: blob(z2 ? z2.id : z0.id, 54, z2 ? 0 : 12), cx: 14, cy: 82 }, // lower-left shadow (deep) — anchors the bottom
   ];
 }

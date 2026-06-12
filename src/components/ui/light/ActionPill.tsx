@@ -207,7 +207,7 @@ export default function ActionPill({ action }: { action: NavAction }) {
       onClick={() => void handleClick()}
       disabled={locked}
       title={action.reason}
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-sm active:opacity-90 disabled:opacity-80"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-light-float active:opacity-90 disabled:opacity-80"
     >
       {isRemember && saveState === "saved" ? (
         <Check className="h-4 w-4 text-light-text-on-dark" strokeWidth={1.75} />

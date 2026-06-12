@@ -339,7 +339,7 @@ export default function ChatInput({
               onClick={() => voice.cancel()}
               disabled={isTranscribing}
               aria-label="Cancel recording"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -348,7 +348,7 @@ export default function ChatInput({
               type="button"
               onClick={() => onCancelSpeak?.()}
               aria-label="Stop talking"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -358,7 +358,7 @@ export default function ChatInput({
               onClick={clearComposition}
               disabled={loading || uploadingImage}
               aria-label={loading ? "Sending" : "Clear"}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150 disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
@@ -367,19 +367,19 @@ export default function ChatInput({
               type="button"
               onClick={openSheet}
               aria-label="Attach"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-light-foreground/25 bg-light-card-default text-light-foreground/70 backdrop-blur-light-card backdrop-saturate-150"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float"
             >
               <Plus className="h-5 w-5" strokeWidth={1.5} />
             </button>
           )}
 
           {loading ? (
-            <div className="h-11 flex-1 rounded-full border border-light-foreground/25 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150" />
+            <div className="h-11 flex-1 rounded-full bg-light-foreground shadow-light-float" />
           ) : isVoiceActive ? (
-            <div className="flex h-11 flex-1 items-center gap-2 rounded-full border border-light-foreground/25 bg-light-card-default pl-5 pr-1.5 backdrop-blur-light-card backdrop-saturate-150">
+            <div className="flex h-11 flex-1 items-center gap-2 rounded-full bg-light-foreground pl-5 pr-1.5 shadow-light-float">
               <WaveformBars
                 getLevel={voice.getLevel}
-                color="hsl(20 14% 12%)"
+                color="hsl(36 55% 96%)"
                 height={20}
                 bars={28}
                 className="flex-1"
@@ -387,7 +387,7 @@ export default function ChatInput({
               {isTranscribing ? (
                 <div
                   aria-label="Transcribing"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center text-light-foreground/60"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center text-light-text-on-dark/60"
                 >
                   <Loader2 className="h-5 w-5 animate-spin" strokeWidth={1.5} />
                 </div>
@@ -396,14 +396,14 @@ export default function ChatInput({
                   type="button"
                   onClick={() => void voice.stop()}
                   aria-label="Stop recording"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-text-on-dark text-light-foreground"
                 >
                   <Square className="h-3.5 w-3.5 fill-current" strokeWidth={0} />
                 </button>
               )}
             </div>
           ) : (
-            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl border border-light-foreground/25 bg-light-card-default py-1.5 pl-5 pr-1.5 backdrop-blur-light-card backdrop-saturate-150">
+            <div className="flex min-h-11 flex-1 flex-col gap-2 rounded-3xl bg-light-foreground py-1.5 pl-5 pr-1.5 shadow-light-float">
               {(attachedImageUrl || uploadingImage) && (
                 <div className="relative h-20 w-20">
                   {attachedImageUrl ? (
@@ -414,9 +414,9 @@ export default function ChatInput({
                       className="block h-full w-full rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center rounded-xl bg-light-foreground/10">
+                    <div className="flex h-full w-full items-center justify-center rounded-xl bg-light-text-on-dark/10">
                       <Loader2
-                        className="h-5 w-5 animate-spin text-light-foreground/60"
+                        className="h-5 w-5 animate-spin text-light-text-on-dark/60"
                         strokeWidth={1.5}
                       />
                     </div>
@@ -426,7 +426,7 @@ export default function ChatInput({
                       type="button"
                       onClick={() => setAttachedImageUrl(null)}
                       aria-label="Remove photo"
-                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
+                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-light-text-on-dark text-light-foreground"
                     >
                       <X className="h-3 w-3" strokeWidth={2.25} />
                     </button>
@@ -434,16 +434,16 @@ export default function ChatInput({
                 </div>
               )}
               {attachedCoffee && (
-                <div className="flex max-w-full items-start gap-2 rounded-xl border border-light-foreground/25 bg-light-card-default px-2.5 py-1.5">
+                <div className="flex max-w-full items-start gap-2 rounded-xl border border-light-text-on-dark/20 bg-light-text-on-dark/10 px-2.5 py-1.5">
                   <CoffeeIcon
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-light-foreground/80"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-light-text-on-dark/80"
                     strokeWidth={1.5}
                   />
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="line-clamp-1 break-words font-chivo text-[11px] font-normal text-light-muted-foreground">
+                    <span className="line-clamp-1 break-words font-chivo text-[11px] font-normal text-light-text-on-dark/60">
                       {attachedCoffee.roaster}
                     </span>
-                    <span className="line-clamp-2 break-words font-chivo text-[13px] font-medium text-light-foreground">
+                    <span className="line-clamp-2 break-words font-chivo text-[13px] font-medium text-light-text-on-dark">
                       {attachedCoffee.name}
                     </span>
                   </div>
@@ -451,7 +451,7 @@ export default function ChatInput({
                     type="button"
                     onClick={() => setAttachedCoffee(null)}
                     aria-label="Remove coffee reference"
-                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark"
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-light-text-on-dark text-light-foreground"
                   >
                     <X className="h-3 w-3" strokeWidth={2.25} />
                   </button>
@@ -473,12 +473,12 @@ export default function ChatInput({
                     // URLs, no-space tokens) wrap inside the pill instead
                     // of pushing the editor wider than its container.
                     style={{ overflowWrap: "anywhere" }}
-                    className="block min-h-8 w-full whitespace-pre-wrap break-words font-chivo text-[16px] font-normal leading-[2rem] text-light-foreground focus:outline-none"
+                    className="block min-h-8 w-full whitespace-pre-wrap break-words font-chivo text-[16px] font-normal leading-[2rem] text-light-text-on-dark focus:outline-none"
                   />
                   {!hasText && (
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute left-0 top-0 font-chivo text-[16px] font-normal leading-[2rem] text-light-muted-foreground"
+                      className="pointer-events-none absolute left-0 top-0 font-chivo text-[16px] font-normal leading-[2rem] text-light-text-on-dark/55"
                     >
                       Ask anything…
                     </span>
@@ -490,7 +490,7 @@ export default function ChatInput({
                     onClick={send}
                     disabled={uploadingImage}
                     aria-label="Send"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark disabled:opacity-30"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-light-text-on-dark text-light-foreground disabled:opacity-30"
                   >
                     <ArrowUp className="h-4 w-4" strokeWidth={2.25} />
                   </button>
@@ -499,7 +499,7 @@ export default function ChatInput({
                     type="button"
                     onClick={startVoice}
                     aria-label="Voice"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-light-foreground/60"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-light-text-on-dark/60"
                   >
                     <AudioLines className="h-5 w-5" strokeWidth={1.5} />
                   </button>
