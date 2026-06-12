@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
@@ -7,6 +7,7 @@ import PhotoUpload from "@/components/ui/PhotoUpload";
 import Chip from "@/components/ui/light/Chip";
 import Card, { CardIcon, CardTitle, CardSubText } from "@/components/ui/light/Card";
 import Hero from "@/components/ui/light/Hero";
+import { nextHeroQuestion, SCAN_QUESTIONS } from "@/lib/heroQuestions";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
 import { Camera, PenLine, Link2, Coffee, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
@@ -61,6 +62,10 @@ const ROASTER_QA_STYLE_CHIPS = ["Very light", "Light", "Light-medium", "Medium",
 export default function LightStepScan() {
   const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isDripBag, setIsDripBag, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset } = useFlowStore();
   const router = useRouter();
+  const [heroQuestion, setHeroQuestion] = useState("");
+  useEffect(() => {
+    setHeroQuestion(nextHeroQuestion("scan", SCAN_QUESTIONS));
+  }, []);
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModeChoice | null>(null);
@@ -577,8 +582,8 @@ export default function LightStepScan() {
 
   return (
     <LightFlowShell onNext={canProceed ? nextStep : undefined} nextDisabled={!canProceed} nextLabel={isDripBag ? "Document →" : "Continue →"}>
-      <div className="px-5 py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
-        <Hero eyebrow="New Session" question="What are you brewing today?" />
+      <div className="py-4 flex flex-col gap-5" style={{ paddingBottom: "2rem" }}>
+        <Hero eyebrow="New Session" question={heroQuestion} />
 
         {/* Hidden file input for the Photo card — no `capture` attr so
             iOS opens its full native picker (Photo Library / Take

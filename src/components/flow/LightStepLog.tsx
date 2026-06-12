@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useFlowStore } from "@/store/flowStore";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Hero from "@/components/ui/light/Hero";
+import { nextHeroQuestion, LOG_QUESTIONS } from "@/lib/heroQuestions";
 import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
 import LightStarRating from "@/components/ui/light/StarRating";
@@ -58,6 +59,10 @@ export default function LightStepLog() {
     (selIdx != null ? rec?.candidates?.[selIdx]?.recipe : undefined) ??
     rec?.primaryRecipe;
 
+  const [heroQuestion, setHeroQuestion] = useState("");
+  useEffect(() => {
+    setHeroQuestion(nextHeroQuestion("log", LOG_QUESTIONS));
+  }, []);
   const [rating, setRating] = useState(0);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [body, setBody] = useState("");
@@ -262,7 +267,7 @@ export default function LightStepLog() {
 
   return (
     <LightFlowShell onNext={handleNext} nextDisabled={!canProceed} nextLabel="Save">
-      <Hero eyebrow="Taste Log" question="How was it?" />
+      <Hero eyebrow="Taste Log" question={heroQuestion} />
 
       {/* Rating — central hero-adjacent affordance */}
       <div className="flex flex-col items-center gap-3 pb-8">
