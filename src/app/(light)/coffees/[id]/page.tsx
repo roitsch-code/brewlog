@@ -9,6 +9,7 @@ import StarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+import BagPhoto from "@/components/ui/light/BagPhoto";
 import { CoffeeCoachCard } from "@/components/coach/CoachCard";
 import { useFieldConfig } from "@/lib/field/FieldContext";
 import { rememberSessionField } from "@/lib/field/cache";
@@ -199,67 +200,68 @@ export default function CoffeeDetailPage() {
 
   return (
     <div className="min-h-svh bg-transparent flex flex-col">
-      {/* Hero */}
-      <div className="relative">
+      {/* Hero — rounded-inset bag photo (shared BagPhoto treatment), with the
+          back / menu controls and the title overlaid on the rounded image. */}
+      <div className="relative px-5" style={{ paddingTop: "calc(env(safe-area-inset-top) + 0.75rem)" }}>
         {coffee.bagPhotoUrl ? (
-          <div className="relative h-72">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coffee.bagPhotoUrl} alt={coffee.name} className="w-full h-full object-cover" />
-            {/* Cream-to-transparent scrim so the anthracite title stays
-                readable over a bag photo of any colour. The dark
-                card-scrim utility is for the dark theme — using it here
-                left anthracite text painted on near-black, illegible. */}
-            <div
-              aria-hidden
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: gradientCreamScrim }}
-            />
-          </div>
+          <BagPhoto url={coffee.bagPhotoUrl} alt={coffee.name}>
+            <div className="absolute bottom-0 left-0 right-0 p-5">
+              {coffee.process && (
+                <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+              )}
+              <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
+              <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
+              {roastDate && (
+                <p className="text-light-foreground/40 text-xs mt-0.5">
+                  Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          </BagPhoto>
         ) : (
-          <div className="h-40 bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center">
-            <svg className="w-12 h-12 text-light-muted-foreground opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15a3.75 3.75 0 01-3.75 3.75H7.95A3.75 3.75 0 014.2 15m15.6 0H4.2m15.6 0H4.2" />
-            </svg>
-          </div>
+          <>
+            <div className="h-40 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center">
+              <svg className="w-12 h-12 text-light-muted-foreground opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15a3.75 3.75 0 01-3.75 3.75H7.95A3.75 3.75 0 014.2 15m15.6 0H4.2m15.6 0H4.2" />
+              </svg>
+            </div>
+            <div className="pt-4">
+              {coffee.process && (
+                <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+              )}
+              <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
+              <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
+              {roastDate && (
+                <p className="text-light-foreground/40 text-xs mt-0.5">
+                  Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+              )}
+            </div>
+          </>
         )}
 
         {/* Back button — return to /coffees list */}
         <button
           onClick={() => router.push("/coffees")}
           aria-label="Back to library"
-          className="absolute left-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
-          style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
+          className="absolute z-10 left-8 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground"
+          style={{ top: "calc(env(safe-area-inset-top) + 1.5rem)" }}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Burger menu — opens NavigationOverlay (Markus: every Light
-            surface should have it, BottomNav is gone for /coffees). */}
+        {/* Burger menu — opens NavigationOverlay (every Light surface has it). */}
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
           aria-label="Open menu"
-          className="absolute right-4 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
-          style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
+          className="absolute z-10 right-8 w-10 h-10 rounded-full bg-light-card-default/85 backdrop-blur-light-card backdrop-blur-sm flex items-center justify-center text-light-foreground active:scale-95 transition-transform"
+          style={{ top: "calc(env(safe-area-inset-top) + 1.5rem)" }}
         >
           <Menu className="w-5 h-5" strokeWidth={1.5} />
         </button>
-
-        {/* Title overlay */}
-        <div className={`${coffee.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
-          {coffee.process && (
-            <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
-          )}
-          <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
-          <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
-          {roastDate && (
-            <p className="text-light-foreground/40 text-xs mt-0.5">
-              Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-            </p>
-          )}
-        </div>
       </div>
 
       {/* Stats row */}

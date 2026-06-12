@@ -5,6 +5,7 @@ import { useFlowStore } from "@/store/flowStore";
 import { useRouter } from "next/navigation";
 import { enqueueSession } from "@/lib/storage/saveQueue";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
+import BagPhoto from "@/components/ui/light/BagPhoto";
 import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
@@ -252,25 +253,7 @@ export default function LightStepSummary() {
   return (
     <LightFlowShell>
       {coffee?.bagPhotoUrl ? (
-        <div className="relative -mx-5 mb-6 h-64 overflow-hidden rounded-3xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={coffee.bagPhotoUrl}
-            alt="Coffee bag"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          {/* Cream-to-transparent bottom scrim so the anthracite caption
-              stays readable over an arbitrary bag photo. Specifically
-              NOT the Dark card-scrim utility (which is black-to-
-              transparent and would invert the text colour expectation). */}
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(to top, hsl(30 60% 92% / 0.92) 0%, hsl(30 60% 92% / 0.35) 45%, transparent 80%)",
-            }}
-          />
+        <BagPhoto url={coffee.bagPhotoUrl} className="mb-6">
           <div className="absolute bottom-0 left-0 right-0 p-5">
             <h2 className="font-fraunces text-[28px] leading-tight text-light-foreground">
               {coffee.name || "Unknown Coffee"}
@@ -279,7 +262,7 @@ export default function LightStepSummary() {
               <p className="text-[13px] text-light-foreground/70 mt-1">{coffee.roaster}</p>
             )}
           </div>
-        </div>
+        </BagPhoto>
       ) : (
         <div className="mb-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-5 py-8">
           <h2 className="font-fraunces text-[28px] leading-tight text-light-foreground">
