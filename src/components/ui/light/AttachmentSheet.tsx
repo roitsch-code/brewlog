@@ -40,7 +40,7 @@ export default function AttachmentSheet({
         className="fixed inset-0 z-40 cursor-default"
       />
 
-      <div className="relative z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/25 bg-light-card-default p-2 shadow-light-float backdrop-blur-light-card backdrop-saturate-150">
+      <div className="absolute bottom-full left-0 z-50 mb-2 mr-auto max-w-[280px] rounded-2xl border border-light-foreground/25 bg-light-card-default p-2 shadow-light-float backdrop-blur-light-card backdrop-saturate-150">
         <button
           type="button"
           onClick={onPickPhoto}

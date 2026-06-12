@@ -140,8 +140,8 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 |---|---|---|
 | `src/components/ui/light/HaikuStarter.tsx` | Shimmer → entrance → dissolve → touch lens; owns the `haiku-pop-*` keyframes (co-located). | `STAGGER_MS`, `POP_MS` (entrance speed), `EXIT_MS` (dissolve), `DISTURB_MAX_BLUR`, `DISTURB_FALLOFF` (lens) |
 | `src/hooks/usePresence.ts` | Generic delayed-unmount `(present, exitMs) → {mounted, state}`. Replaces framer-motion AnimatePresence. | — |
-| `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !interacted`. | when the haiku shows / dissolves (the `interacted` flip) |
-| `src/components/ui/light/ChatInput.tsx` | `markComposed()` flips `interacted` → dissolves the haiku. Fires on focus / typing / photo / **transcript** (not on the bare mic tap — see voice fix). | which compose actions dismiss the haiku |
+| `src/app/(light)/page.tsx` | Renders the haiku as an absolute overlay over `ChatThread`; `showStarter = messages.length===0 && !composing` (declarative — NOT a one-way latch, so the haiku returns when a draft clears). | when the haiku shows / dissolves (the `composing` flag) |
+| `src/components/ui/light/ChatInput.tsx` | Reports `onComposingChange(isCompositionActive)` — true only with a real draft (text / photo / coffee / uploading). Opening the `+` sheet or a bare mic tap is NOT composing, so the haiku sticks; clearing the draft re-runs its entrance. The `+` sheet is overlaid (`absolute bottom-full` in a `relative` input row) so opening it doesn't grow the footer and shove the centred haiku up. | what counts as "composing" (dismisses the haiku) |
 
 **Shared CSS** — `src/app/globals.css`: `haiku-shimmer`, `haiku-dissolve` (static, used), the
 `prefers-reduced-motion` disable block (`[data-field-blob]`, `.haiku-word`, `.haiku-exit`,
@@ -319,4 +319,25 @@ When adding any new motion, add its selector to that globals.css block in the sa
 - **Traps found:** — (ChatInput edit-ordering footgun handled in-session: invert inner
   `bg-light-foreground text-light-text-on-dark` BEFORE swapping the glass controls to it, or the
   new control class gets re-inverted by the substring match).
+- **PRs this session:** (number assigned on open)
+
+### 2026-06-12 — welcome haiku: sticks through the + sheet, returns on cancel
+- **Done:** the haiku used a one-way `interacted` latch (flipped true on first focus/photo/etc.,
+  never reset) — so once you poked the `+` sheet and backed out, it stayed gone on an otherwise
+  empty screen. Replaced with a **declarative** model: `ChatInput` reports
+  `onComposingChange(isCompositionActive)` (true only with a real draft — text/photo/coffee/
+  uploading; NOT a bare mic tap, NOT an open `+` sheet), and the page computes
+  `showStarter = messages.length===0 && !composing`. The existing `usePresence` + `ready`
+  machinery already re-runs the scatter entrance when `show` flips back true, so the haiku
+  **returns with its setup animation** when a draft clears. Removed the dead
+  `markComposed`/`composeStartedRef`/`onComposeStart` plumbing. Also fixed the **"jump"**: the
+  `+` `AttachmentSheet` was in the footer flow, so opening it grew the footer and shoved the
+  centred haiku up — it's now overlaid (`absolute bottom-full` inside a `relative` input row), so
+  the footer height is constant and the haiku stays put.
+- **Open / next:** owner verifies on device — `+` → sheet (haiku stays put), X out → haiku
+  re-enters; type → dissolve; mic tap → haiku stays until a transcript lands. Note: focusing the
+  empty field no longer dissolves the haiku on its own (only real content does) — flag if you
+  want the old focus-dissolve back.
+- **Traps found:** the latch had a THIRD setter (`handleSend` set `interacted=true` post-send) +
+  a conversation-load setter — both removed; `messages.length>0` already hides the starter.
 - **PRs this session:** (number assigned on open)

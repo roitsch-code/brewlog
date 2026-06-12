@@ -112,7 +112,7 @@ export default function HomePage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [recentSessions, setRecentSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
-  const [interacted, setInteracted] = useState(false);
+  const [composing, setComposing] = useState(false);
   // Empty initial — the daily Starter is the AI-generated greeting from
   // /api/greeting (cached per (date, time-bucket) in localStorage). No
   // hardcoded placeholder: the slot stays empty until the real line
@@ -157,7 +157,6 @@ export default function HomePage() {
             ...(m.actions ? { actions: m.actions } : {}),
           }))
         );
-        if (data.messages.length > 0) setInteracted(true);
       })
       .catch(() => {});
     return () => {
@@ -208,7 +207,11 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  const showStarter = messages.length === 0 && !interacted;
+  // The welcome haiku shows whenever the screen is idle: no conversation yet
+  // AND nothing being composed. `composing` is reported live by ChatInput, so
+  // opening the + sheet or tapping the mic keeps the haiku (those aren't
+  // composing) and clearing a draft brings it back with its entrance animation.
+  const showStarter = messages.length === 0 && !composing;
 
   const persistMessage = (
     role: "user" | "assistant",
@@ -251,7 +254,6 @@ export default function HomePage() {
     const next = [...messages, userMsg];
     setMessages(next);
     setLoading(true);
-    setInteracted(true);
 
     // Persist the user message in parallel with the agent request.
     void persistMessage("user", text, {
@@ -442,7 +444,7 @@ export default function HomePage() {
         <ChatInput
           loading={loading}
           onSend={handleSend}
-          onComposeStart={() => setInteracted(true)}
+          onComposingChange={setComposing}
           assistantSpeaking={voice.speaking}
           onCancelSpeak={voice.cancel}
           onUnlockAudio={voice.unlock}
