@@ -119,6 +119,7 @@ export default function HomePage() {
   // lands, which is better UX than flashing a generic "Welcome…" string.
   const [starter, setStarter] = useState<string>("");
   const conversationIdRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const voice = useVoicePlayback();
 
   // Recent sessions for the agent's personal-context block.
@@ -282,6 +283,8 @@ export default function HomePage() {
         return { role: m.role, content: m.content };
       });
 
+      const controller = new AbortController();
+      abortRef.current = controller;
       const res = await fetch("/api/explore-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -290,6 +293,7 @@ export default function HomePage() {
           recentSessions,
           ...(imageUrl ? { attachedImageUrl: imageUrl } : {}),
         }),
+        signal: controller.signal,
       });
 
       if (!res.ok || !res.body) {
@@ -403,14 +407,34 @@ export default function HomePage() {
           ...(assistantActions ? { actions: assistantActions } : {}),
         });
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Couldn't reach BTTS. Check your connection." },
-      ]);
+    } catch (err) {
+      // Stop button aborted the request — keep whatever streamed, no error bubble.
+      const aborted = err instanceof DOMException && err.name === "AbortError";
+      if (!aborted) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Couldn't reach BTTS. Check your connection." },
+        ]);
+      } else {
+        // Stopped before any text arrived — drop the empty assistant bubble.
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === "assistant" && !last.content && !last.actions) {
+            return prev.slice(0, -1);
+          }
+          return prev;
+        });
+      }
     } finally {
+      abortRef.current = null;
       setLoading(false);
     }
+  };
+
+  // Stop button while a reply streams — abort the request and silence any TTS.
+  const handleStop = () => {
+    abortRef.current?.abort();
+    voice.cancel();
   };
 
   return (
@@ -444,6 +468,7 @@ export default function HomePage() {
         <ChatInput
           loading={loading}
           onSend={handleSend}
+          onStop={handleStop}
           onComposingChange={setComposing}
           assistantSpeaking={voice.speaking}
           onCancelSpeak={voice.cancel}

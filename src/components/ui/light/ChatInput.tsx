@@ -41,6 +41,8 @@ export interface SendPayload {
 interface ChatInputProps {
   loading: boolean;
   onSend: (payload: SendPayload) => void;
+  /** Abort the in-flight reply — wired to the Stop (X) button shown while loading. */
+  onStop?: () => void;
   /**
    * Live composition state: true when a draft exists (text / photo / coffee
    * ref / uploading), false when idle. NOT triggered by a bare mic tap or an
@@ -77,6 +79,7 @@ async function uploadPhoto(file: File): Promise<string> {
 export default function ChatInput({
   loading,
   onSend,
+  onStop,
   onComposingChange,
   assistantSpeaking = false,
   onCancelSpeak,
@@ -347,6 +350,15 @@ export default function ChatInput({
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
+          ) : loading ? (
+            <button
+              type="button"
+              onClick={() => onStop?.()}
+              aria-label="Stop"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float active:scale-95 transition-transform"
+            >
+              <X className="h-5 w-5" strokeWidth={1.5} />
+            </button>
           ) : assistantSpeaking && !isCompositionActive ? (
             <button
               type="button"
@@ -356,7 +368,7 @@ export default function ChatInput({
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
-          ) : loading ? null : isCompositionActive ? (
+          ) : isCompositionActive ? (
             <button
               type="button"
               onClick={clearComposition}
