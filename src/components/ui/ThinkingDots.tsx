@@ -5,12 +5,19 @@
  * spinner per spec §6.2. Used inline where the next assistant message
  * will appear; left-aligned, no bubble, no avatar.
  */
-export default function ThinkingDots({ className = "" }: { className?: string }) {
+export default function ThinkingDots({
+  className = "",
+  color,
+}: {
+  className?: string;
+  /** Dot colour. Omit to keep the default `var(--text-secondary)` (Dark-era chat thread). */
+  color?: string;
+}) {
   return (
     <div className={`flex items-center gap-1.5 ${className}`} aria-label="Thinking">
-      <span className="thinking-dot" />
-      <span className="thinking-dot" style={{ animationDelay: "120ms" }} />
-      <span className="thinking-dot" style={{ animationDelay: "240ms" }} />
+      <span className="thinking-dot" style={{ background: color }} />
+      <span className="thinking-dot" style={{ background: color, animationDelay: "120ms" }} />
+      <span className="thinking-dot" style={{ background: color, animationDelay: "240ms" }} />
       <style jsx>{`
         .thinking-dot {
           width: 6px;
