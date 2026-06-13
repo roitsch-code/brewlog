@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, X, AudioLines, ArrowUp, Square, Loader2, Coffee as CoffeeIcon } from "lucide-react";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import WaveformBars from "@/components/ui/WaveformBars";
+import ThinkingDots from "@/components/ui/ThinkingDots";
 import AttachmentSheet from "@/components/ui/light/AttachmentSheet";
 import ReferenceCoffeePicker, { type CompactCoffee } from "@/components/ui/light/ReferenceCoffeePicker";
 
@@ -355,12 +356,12 @@ export default function ChatInput({
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
             </button>
-          ) : isCompositionActive || loading ? (
+          ) : loading ? null : isCompositionActive ? (
             <button
               type="button"
               onClick={clearComposition}
-              disabled={loading || uploadingImage}
-              aria-label={loading ? "Sending" : "Clear"}
+              disabled={uploadingImage}
+              aria-label="Clear"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float disabled:opacity-50"
             >
               <X className="h-5 w-5" strokeWidth={1.5} />
@@ -377,7 +378,9 @@ export default function ChatInput({
           )}
 
           {loading ? (
-            <div className="h-11 flex-1 rounded-full bg-light-foreground shadow-light-float" />
+            <div className="flex min-h-11 flex-1 items-center rounded-3xl bg-light-foreground pl-5 pr-5 shadow-light-float">
+              <ThinkingDots color="hsl(36 55% 96%)" />
+            </div>
           ) : isVoiceActive ? (
             <div className="flex h-11 flex-1 items-center gap-2 rounded-full bg-light-foreground pl-5 pr-1.5 shadow-light-float">
               <WaveformBars
