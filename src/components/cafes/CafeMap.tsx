@@ -45,38 +45,40 @@ async function geocafe(name: string, location?: string): Promise<{ lat: number; 
 }
 
 /* ── Marker palette ────────────────────────────────────────────
- * Anthracite (#242424 ≈ light-foreground hsl(0 0% 14%)) + cream
- * (#FAF3ED ≈ hsl(36 55% 96%)) so pins read against Positron's neutral
- * light-gray tiles without needing a brand-color accent.
+ * Pins colour-coded by type, in the app's warm rose→coral→mauve Field
+ * family (cream dot #FAF3ED ≈ hsl(36 55% 96%)). They read true on the
+ * warm-graded Voyager tiles because the tile filter is scoped to the
+ * tile pane only, never the markers.
  *
- *   visited default  → solid anthracite body, cream dot
- *   visited selected → cream body, anthracite ring + dot, slightly larger
- *   ghost default    → outline-only anthracite (unvisited curated places)
- *   ghost selected   → cream fill, anthracite outline + solid dot
+ *   visited default  → coral fill (#E07A4E) + cream dot, soft shadow
+ *   visited selected → deep terracotta (#C6502E) + cream ring/dot — pops
+ *   ghost default    → muted-rose outline (#B07C84), unvisited curated places
+ *   ghost selected   → muted-rose fill + cream ring/dot
+ *   you-are-here     → mauve dot (#C8A6C0) + cream border + mauve pulse
  */
-const PIN_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#242424"/>
+const PIN_HTML = `<svg width="28" height="36" viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 2px rgba(70,30,15,0.35))">
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#E07A4E"/>
   <circle cx="14" cy="14" r="5" fill="#FAF3ED"/>
 </svg>`;
 
-const PIN_SELECTED_HTML = `<svg width="32" height="40" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FAF3ED" stroke="#242424" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="5" fill="#242424"/>
+const PIN_SELECTED_HTML = `<svg width="32" height="40" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 3px 4px rgba(70,30,15,0.4))">
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#C6502E" stroke="#FAF3ED" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="5" fill="#FAF3ED"/>
 </svg>`;
 
 const GHOST_PIN_HTML = `<svg width="24" height="31" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#242424" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="4" fill="none" stroke="#242424" stroke-width="2"/>
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="none" stroke="#B07C84" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="none" stroke="#B07C84" stroke-width="2"/>
 </svg>`;
 
-const GHOST_PIN_SELECTED_HTML = `<svg width="28" height="36" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#FAF3ED" stroke="#242424" stroke-width="2.5"/>
-  <circle cx="14" cy="14" r="4" fill="#242424"/>
+const GHOST_PIN_SELECTED_HTML = `<svg width="28" height="36" viewBox="-2 -2 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(70,30,15,0.32))">
+  <path d="M14 0C6.268 0 0 6.268 0 14C0 24.5 14 36 14 36C14 36 28 24.5 28 14C28 6.268 21.732 0 14 0Z" fill="#B07C84" stroke="#FAF3ED" stroke-width="2.5"/>
+  <circle cx="14" cy="14" r="4" fill="#FAF3ED"/>
 </svg>`;
 
 const YOU_ARE_HERE_HTML = `
-<style>@keyframes ect-pulse{0%,100%{box-shadow:0 0 0 5px rgba(36,36,36,0.28)}50%{box-shadow:0 0 0 10px rgba(36,36,36,0.08)}}</style>
-<div style="width:12px;height:12px;border-radius:50%;background:#242424;border:2px solid #FAF3ED;box-shadow:0 0 0 5px rgba(36,36,36,0.28);animation:ect-pulse 1.8s ease-in-out infinite"></div>`;
+<style>@keyframes ect-pulse{0%,100%{box-shadow:0 0 0 5px rgba(200,166,192,0.40)}50%{box-shadow:0 0 0 10px rgba(200,166,192,0.10)}}</style>
+<div style="width:13px;height:13px;border-radius:50%;background:#C8A6C0;border:2px solid #FAF3ED;box-shadow:0 0 0 5px rgba(200,166,192,0.40);animation:ect-pulse 1.8s ease-in-out infinite"></div>`;
 
 function normalizeName(s: string): string {
   return s.trim().toLowerCase();
@@ -192,9 +194,10 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false });
       mapRef.current = map;
 
-      // Positron — Carto's neutral light-gray tile set. Sits cleanly behind
-      // anthracite markers + cream cards without competing for attention.
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      // Voyager — Carto's colourful basemap (green parks, blue water, warm
+      // roads). Real colour, graded warm toward the app's Field palette by the
+      // tile-pane filter co-located in this component's <style jsx global>.
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         maxZoom: 19,
         detectRetina: true,
       }).addTo(map);
@@ -507,6 +510,16 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
 
   return (
     <div className="relative w-full h-full">
+      {/* Warm grade for the Voyager tiles — co-located here, NOT in globals.css,
+          so the installed PWA can't serve it stale (the documented cache trap).
+          Scoped to the tile pane only, so the coloured pins/labels stay true.
+          The four numbers are dials: more saturate / more-negative hue-rotate
+          = more colour; more sepia = warmer/creamier. */}
+      <style jsx global>{`
+        [data-light-scope] .leaflet-tile-pane {
+          filter: sepia(0.1) saturate(1.15) hue-rotate(-8deg) brightness(1.02);
+        }
+      `}</style>
       <div ref={containerRef} className="absolute inset-0" />
 
       {/* Search input — pushed below the floating page header (Nearby +
