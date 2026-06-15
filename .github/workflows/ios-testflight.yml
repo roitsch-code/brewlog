@@ -1,0 +1,105 @@
+name: iOS TestFlight
+
+# Builds the BTTS iOS shell and uploads it to TestFlight (internal testing — no
+# Apple review). Runs:
+#   - manually (workflow_dispatch) — use this for the first build
+#   - monthly (cron) — TestFlight builds expire after 90 days; a monthly rebuild
+#     keeps a fresh build installed with ~3 attempts of headroom
+#   - on push to main touching native/** — rebuild when the shell config changes
+#
+# Signing is Xcode CLOUD signing via an App Store Connect API key: no certs, no
+# p12s, no fastlane. The 4 secrets below are the only setup.
+#
+# Failure signal: GitHub e-mails the owner automatically on a failed run. (No
+# webhook — the coffee-alert endpoint only writes a DB row, it can't reach the
+# phone.)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of every month
+  push:
+    branches: [main]
+    paths:
+      - "native/**"
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+
+      - name: Install Capacitor toolchain
+        working-directory: native
+        run: npm ci
+
+      - name: Sync the iOS project
+        working-directory: native
+        run: npx cap sync ios
+
+      - name: Write the App Store Connect API key
+        # PEM contents pasted whole into the secret (BEGIN/END lines included).
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s\n' "${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          chmod 600 ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
+
+      - name: Inject the team into export options
+        # Keep the repo free of the account identifier — the team comes from the
+        # secret at build time.
+        run: plutil -replace teamID -string "$APPLE_TEAM_ID" native/exportOptions.plist
+
+      - name: Archive
+        working-directory: native/ios/App
+        run: |
+          xcodebuild archive \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+
+      - name: Export the .ipa
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist native/exportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Locate the built .ipa
+        id: ipa
+        run: echo "path=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v5.2.1
+        with:
+          app-path: ${{ steps.ipa.outputs.path }}
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
