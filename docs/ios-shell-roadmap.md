@@ -27,10 +27,10 @@ This file is the source of truth for the iOS shell project across sessions. The 
 
 *Updated at the end of every advancing session. A fresh session reads this immediately after Context + Multi-session model.*
 
-- **Current phase:** Phase 2 SHIPPED — `native/` Capacitor 8 scaffold (`package.json` + committed `package-lock.json`, `capacitor.config.ts`, `www/index.html`, `exportOptions.plist`, `assets/logo.svg`, `.gitignore`, `README.md`) + `"native"` added to root `tsconfig.json` exclude + `.dockerignore`. Config validated by the cap CLI (appId / server.url / `presentationOptions: []` / `contentInset: never` all resolve). Phase 1 web bridge already shipped.
-- **Blocked on owner?** Partially — Phases 3–4 need the owner to do checklist items 2–5 (API key + 4 GitHub secrets + App ID + ASC app). Enrollment itself is now done.
-- **Apple Developer enrollment status:** **ACTIVE (2026-06-15)** — cleared via the support hotline after a 92-hour "complete your purchase" limbo (private Apple ID). See Stolperstein log.
-- **Next entry-point:** Phase 3 — `.github/workflows/ios-bootstrap.yml` (`macos-15`, `workflow_dispatch`): `npm ci` in `native/` → `npx cap add ios` → `npx capacitor-assets generate --ios` → `plutil` encryption flag → commit `native/ios/` via PR. BLOCKED until the owner finishes checklist items 2–5 (the build needs the secrets).
+- **Current phase:** Phases 3 + 4 SHIPPED — `.github/workflows/ios-bootstrap.yml` (generates `native/ios/`, opens a PR) and `.github/workflows/ios-testflight.yml` (archive → export → upload via cloud signing). Phases 1 + 2 already shipped. The 4 GitHub secrets are in place (owner, 2026-06-15).
+- **Blocked on owner?** No code blockers. The remaining steps are owner button-presses in the GitHub Actions tab + Apple web UI (App ID + ASC app record must exist before `ios-testflight` succeeds).
+- **Apple Developer enrollment status:** **ACTIVE (2026-06-15)**, 4 GitHub secrets added. See Stolperstein log for the 92-h enrollment limbo.
+- **Next entry-point (owner action):** run **iOS Bootstrap** from the Actions tab → merge the PR it opens (commits `native/ios/`) → run **iOS TestFlight**. Then read the run log — a fresh-account signing or scheme/Info.plist detail may need one follow-up tweak (expected first-build iteration).
 
 ## Architecture (decided, research-verified)
 
@@ -73,18 +73,19 @@ native/
 ```
 Plus (done): `"native"` added to root `tsconfig.json` `exclude` (alongside `lovable-v7`); `native/` added to `.dockerignore` (own `@capacitor/*` deps, must not enter the Next build worker scan path — same precedent as `lovable-v7`). Config parse-validated by the cap CLI.
 
-### Phase 3 — One-shot bootstrap workflow `.github/workflows/ios-bootstrap.yml`
-`workflow_dispatch`, `macos-15`: `npm ci` in `native/` → `npx cap add ios` → `npx @capacitor/assets generate --ios` → `plutil -replace ITSAppUsesNonExemptEncryption -bool false …/Info.plist` (kills the per-build export-compliance prompt) → sanity `npx cap sync ios` → commit `native/ios/` to a branch + open a PR the owner merges from their phone.
+### Phase 3 — One-shot bootstrap workflow `.github/workflows/ios-bootstrap.yml` — ✅ SHIPPED (2026-06-15)
+`workflow_dispatch`, `macos-15`, `permissions: contents+pull-requests: write`: `npm ci` in `native/` → `npx cap add ios` → `npm run assets` (`capacitor-assets generate --ios`, cream bg) → `plutil -replace ITSAppUsesNonExemptEncryption -bool false ios/App/App/Info.plist` (kills the per-build export-compliance prompt) → sanity `npx cap sync ios` → branch `ios/bootstrap-generated`, `git add native/ios`, `gh pr create` (uses `GITHUB_TOKEN`). Owner merges that PR. Needs NO Apple secrets.
 
-### Phase 4 — Build & upload workflow `.github/workflows/ios-testflight.yml`
-Triggers: `workflow_dispatch` + monthly cron (1st of month — comfortably inside the 90-day expiry) + push to main on `native/**`. Job (`macos-15`, `concurrency: ios-testflight`):
+### Phase 4 — Build & upload workflow `.github/workflows/ios-testflight.yml` — ✅ SHIPPED (2026-06-15)
+Triggers: `workflow_dispatch` + monthly cron `0 6 1 * *` (1st of month, inside the 90-day expiry) + push to main on `native/**`. Job (`macos-15`, `concurrency: ios-testflight`, `timeout-minutes: 40`):
 1. `npm ci` + `npx cap sync ios` in `native/` (CocoaPods preinstalled on runners).
-2. Write `~/private_keys/AuthKey_${KEY_ID}.p8` from the secret.
-3. `xcodebuild archive … CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER -allowProvisioningUpdates -authenticationKeyPath/-KeyID/-KeyIssuerID` (cloud signing auto-creates the distribution cert/profile; run number = unique build number).
-4. `xcodebuild -exportArchive` with `native/exportOptions.plist`.
-5. `apple-actions/upload-testflight-build` with the same API-key secrets — **pin to the latest verified release tag at implementation time.** Check the action repo's *Releases page*, NOT its README usage example (verified 2026-06-11: latest release is v5.2.1 while the README still shows `@v4` — see Stolperstein log). Update this doc to the pinned tag when the workflow lands. The action's `uses-non-exempt-encryption: 'false'` input duplicates the Phase 3 plutil step — fine to set both.
+2. Write `~/private_keys/AuthKey_${KEY_ID}.p8` from the secret (`printf '%s\n' … chmod 600`, house style).
+3. `plutil -replace teamID -string "$APPLE_TEAM_ID" native/exportOptions.plist` (team from secret, not hard-coded).
+4. `xcodebuild archive` (`-workspace native/ios/App/App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS'`, `CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=$GITHUB_RUN_NUMBER -allowProvisioningUpdates -authenticationKeyPath/-KeyID/-KeyIssuerID`).
+5. `xcodebuild -exportArchive` with `native/exportOptions.plist` (same auth flags) → glob the `.ipa`.
+6. `apple-actions/upload-testflight-build@v5.2.1` (pinned — latest on the Releases page; README lags at `@v4`) with `app-path` / `issuer-id` / `api-key-id` / `api-private-key`.
 
-**Cron-failure alert (owner decided 2026-06-11: YES):** the workflow alerts on failure via the existing coffee-alert webhook infrastructure (`/api/webhooks/coffee-alert` — exact wiring decided in the Phase 4 session), so a silently failing monthly rebuild can't ride unnoticed into the 90-day build expiry. GitHub's failure e-mail stays as the backstop.
+**Failure signal: GitHub's built-in workflow-failure e-mail.** The 2026-06-11 "alert via coffee-alert webhook" decision was **reversed (owner, 2026-06-15)** — that webhook only writes a `coffee_alerts` DB row (no push/phone delivery; would also pollute the in-app alerts UI), so it can't serve as an urgent CI-failure alert. A real phone push stays the deferred (C)-tier APNs item in the Feature backlog.
 
 ### Phase 5 (optional polish, later)
 `server.errorPath` offline page for cold-launch-with-no-network; App-Bound Domains only if in-shell service-worker offline mode is ever wanted (v1 targets the live site; the Safari PWA keeps full offline mode).
@@ -172,11 +173,11 @@ Owner-brainstormed June 2026 — what the shell unlocks beyond the G1–G4 miles
 > **Apple ID disambiguation (decided 2026-06-10):** the owner has two Apple IDs — a work ID (signed into the MacBook's iCloud) and a private ID (signed into the iPhone). Everything in this project runs on the **private** Apple ID: Developer Program enrollment, App Store Connect, TestFlight redemption on the iPhone. The work ID must NOT be used — it may belong to the employer's developer team, which would pull app ownership and legal responsibility into a company context. **The MacBook's iCloud login does NOT need to change.** Do all Apple-side admin steps below in a **browser** (best: Safari on the iPhone, where the private ID is already active; alt: a private/incognito window on the Mac). Avoid the macOS Developer.app — it forces the iCloud-signed-in Apple ID and would put you on the wrong account. Browser logins on developer.apple.com / appstoreconnect.apple.com accept whatever Apple ID you enter, independent of any iCloud session. For the local-debug fallback (only if a CI build hits a wall), Xcode has its own account list (Xcode → Settings → Accounts) independent of the macOS login — add the private ID there, no need to re-log the Mac.
 
 1. ✅ **DONE (2026-06-15)** — Enrolled in the Apple Developer Program with the **private** Apple ID (€99/yr). Activation hung ~92 h in a "complete your purchase" loop; cleared via the support hotline. Note the Team ID from developer.apple.com → Membership.
-2. ⬅️ **NEXT** — App Store Connect → Users and Access → Integrations: create a Team API key (role **App Manager**); record Issuer ID + Key ID, download the `.p8` (one-time download).
-3. Add the 4 GitHub secrets (repo Settings → Secrets → Actions).
-4. developer.apple.com → Identifiers: register App ID `com.roitsch.btts` (no extra capabilities needed).
-5. App Store Connect → New App: iOS, "BTTS", that bundle ID.
-6. Run `ios-bootstrap` from the Actions tab; merge its PR; run `ios-testflight`.
+2. ✅ **DONE (2026-06-15)** — App Store Connect → Users and Access → **Integrations → Teamschlüssel** → Team API key (role **App Manager**); recorded Issuer ID + Key ID, downloaded the `.p8`.
+3. ✅ **DONE (2026-06-15)** — All 4 GitHub secrets added (`APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_API_KEY_P8` = full PEM incl. BEGIN/END lines, `APPLE_TEAM_ID`).
+4. ⬅️ **VERIFY before running `ios-testflight`** — developer.apple.com → Identifiers: register App ID `com.roitsch.btts` (no extra capabilities needed).
+5. ⬅️ **VERIFY before running `ios-testflight`** — App Store Connect → New App: iOS, "BTTS", that bundle ID.
+6. ⬅️ **NEXT** — Run `ios-bootstrap` from the Actions tab; merge its PR; run `ios-testflight`.
 7. TestFlight → Internal Testing → group with automatic distribution → add self.
 8. Install the TestFlight app, accept the invite, install BTTS, log in with PIN.
 9. Recurring: yearly membership renewal; occasional ASC license-agreement acceptances (CI fails loudly when one is pending); PIN re-login ~monthly.
@@ -187,7 +188,7 @@ Owner-brainstormed June 2026 — what the shell unlocks beyond the G1–G4 miles
 - Cloud signing can be flaky on a brand-new account (pending agreements) — retry usually fixes; fastlane match is the documented fallback, only adopt if needed.
 - Notification delivery is second-granular (±~1 s) — fine for humans with kettles. iOS 64-pending cap is far above any brew's step count.
 - If the owner taps "Don't Allow" on the permission prompt, brews continue exactly as today; re-enable via Settings → BTTS → Notifications (noted in README).
-- A silently failing monthly cron rebuild kills the app at day 90 (TestFlight build expiry); monthly cadence gives ~3 attempts but noticing depends on GitHub e-mail. **Decided 2026-06-11: the `ios-testflight` workflow alerts on failure via the existing coffee-alert webhook infrastructure** (see Phase 4); GitHub e-mail stays as backstop.
+- A silently failing monthly cron rebuild kills the app at day 90 (TestFlight build expiry); monthly cadence gives ~3 attempts but noticing depends on **GitHub's failure e-mail** (the accepted signal). *(The 2026-06-11 idea of also alerting via the coffee-alert webhook was reversed 2026-06-15 — that endpoint only writes a DB row, it can't reach the phone. A real push is the deferred C-tier APNs item.)*
 - Force-quitting the shell mid-brew leaves the already-scheduled step notifications to fire orphaned — OS-level, the id-range sweep only runs on the next `scheduleBrew`. Accepted for single-user; a launch-time sweep in the shell would close it (documented Phase 1 limitation, alongside prose-only legacy recipes producing no notifications).
 - No service worker in the shell → in-shell offline mode is weaker than the Safari PWA; the PWA remains installed and unaffected.
 
@@ -253,4 +254,12 @@ Owner-brainstormed June 2026 — what the shell unlocks beyond the G1–G4 miles
 - **Open / blocked:** Phase 3 needs owner checklist items 2–5 first (API key + 4 GitHub secrets + App ID + ASC app). Now that enrollment is active these are all doable.
 - **Traps found:** Capacitor major was **8, not 7** (the plan's transcribed "7" was stale) — Stolperstein added; same lesson as the action-version trap.
 - **Next entry-point:** Phase 3 — `.github/workflows/ios-bootstrap.yml`, once the owner has created the API key + secrets.
+- **PRs / commits this session:** #309
+
+### 2026-06-15 — Phases 3 + 4 (CI build → TestFlight workflows)
+
+- **Done:** `.github/workflows/ios-bootstrap.yml` (macos-15, workflow_dispatch, `contents+pull-requests: write`; `cap add ios` → `npm run assets` → plutil encryption flag → `cap sync` → `gh pr create` for `native/ios/`) and `.github/workflows/ios-testflight.yml` (workflow_dispatch + monthly cron + push-on-`native/**`; write `.p8` from secret → inject teamID into exportOptions → `xcodebuild archive` → `-exportArchive` → `apple-actions/upload-testflight-build@v5.2.1`, cloud signing via `-allowProvisioningUpdates` + API key). Owner side: all **4 GitHub secrets added**, enrollment active. Doc: Phases 3+4 marked shipped, checklist items 2–3 done / 4–5 flagged to verify, cron-alert decision **reversed** (coffee-alert webhook dropped — no phone delivery; GitHub e-mail is the signal). Both YAML files parse-validated; secret names confirmed to match exactly.
+- **Open / blocked:** owner button-presses only — run `ios-bootstrap` → merge its PR → run `ios-testflight`. App ID `com.roitsch.btts` + the ASC app record must exist before the upload step succeeds (flagged in the checklist). Expect a possible first-build signing/scheme tweak after reading the run log (fresh-account iteration, per Risks).
+- **Traps found:** the coffee-alert webhook has **no phone-delivery path** (storage-only) — it can't serve as a CI-failure alert; reversed the 2026-06-11 decision.
+- **Next entry-point:** owner runs the workflows; if the first `ios-testflight` run fails, read the log and patch `ios-testflight.yml` (likely scheme name, Info.plist, or a pending ASC agreement).
 - **PRs / commits this session:** (number assigned on open)
