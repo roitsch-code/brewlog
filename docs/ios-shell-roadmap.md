@@ -27,14 +27,14 @@ This file is the source of truth for the iOS shell project across sessions. The 
 
 *Updated at the end of every advancing session. A fresh session reads this immediately after Context + Multi-session model.*
 
-- **Current phase:** Phase 1 SHIPPED — web-side notification bridge (`src/lib/native/brewNotifications.ts` + `src/hooks/useBrewStepNotifications.ts` + LightStepBrew wiring + boundary tests). Runtime no-op until the shell exists.
-- **Blocked on owner?** No (Apple approval pending runs in parallel).
-- **Apple Developer enrollment status:** submitted 2026-06-10 with the private Apple ID, purchase processing — Apple says up to 48 h. Gates Phases 3–4 only. The 4 GitHub secrets + App ID + ASC app entry (checklist items 2–5) still pending behind it.
-- **Next entry-point:** Phase 2 — create the `native/` scaffold (`package.json`, `capacitor.config.ts`, `www/index.html`, `exportOptions.plist`, assets, README) + add `"native"` to root `tsconfig.json` `exclude`.
+- **Current phase:** Phase 2 SHIPPED — `native/` Capacitor 8 scaffold (`package.json` + committed `package-lock.json`, `capacitor.config.ts`, `www/index.html`, `exportOptions.plist`, `assets/logo.svg`, `.gitignore`, `README.md`) + `"native"` added to root `tsconfig.json` exclude + `.dockerignore`. Config validated by the cap CLI (appId / server.url / `presentationOptions: []` / `contentInset: never` all resolve). Phase 1 web bridge already shipped.
+- **Blocked on owner?** Partially — Phases 3–4 need the owner to do checklist items 2–5 (API key + 4 GitHub secrets + App ID + ASC app). Enrollment itself is now done.
+- **Apple Developer enrollment status:** **ACTIVE (2026-06-15)** — cleared via the support hotline after a 92-hour "complete your purchase" limbo (private Apple ID). See Stolperstein log.
+- **Next entry-point:** Phase 3 — `.github/workflows/ios-bootstrap.yml` (`macos-15`, `workflow_dispatch`): `npm ci` in `native/` → `npx cap add ios` → `npx capacitor-assets generate --ios` → `plutil` encryption flag → commit `native/ios/` via PR. BLOCKED until the owner finishes checklist items 2–5 (the build needs the secrets).
 
 ## Architecture (decided, research-verified)
 
-- **Capacitor 7 remote-URL shell**: `server.url = "https://bettertastethansorry.com"` (domain confirmed in `Caddyfile`). No bundled web assets — the Next.js app stays server-rendered on Hetzner; the shell is additive, the Safari PWA keeps working. Bridge injection into the remote origin is verified behavior (single-origin app, no `allowNavigation`).
+- **Capacitor 8 remote-URL shell**: `server.url = "https://bettertastethansorry.com"` (domain confirmed in `Caddyfile`). No bundled web assets — the Next.js app stays server-rendered on Hetzner; the shell is additive, the Safari PWA keeps working. Bridge injection into the remote origin is verified behavior (single-origin app, no `allowNavigation`). *(Pinned to Capacitor 8 at Phase-2 implementation — `@capacitor/core|ios|cli` 8.4.0, `local-notifications` 8.2.0, `assets` 3.0.5; the plan had said 7, but 8 was current on npm — see Stolperstein log.)*
 - **Bundle ID** `com.roitsch.btts`, display name **BTTS**, lives in `native/` with its own `package.json` so the Next app's dependencies stay untouched. Generated `native/ios/` Xcode project is committed (Pods are not — `pod install` runs in CI).
 - **Notifications**: schedule all step boundaries once at brew start with plugin config `presentationOptions: []` — iOS silently swallows them while the app is foregrounded (the existing Web Audio cue covers foreground), and shows lock-screen banner + sound when backgrounded/locked. No visibilitychange choreography needed. Permission prompt fires in-foreground right after the user taps Start Brew, once ever.
 - **Signing**: Xcode **cloud signing** via App Store Connect API key (`xcodebuild -allowProvisioningUpdates -authenticationKey*`) — no certificates, no p12s, no fastlane. Only 4 GitHub secrets.
@@ -59,18 +59,19 @@ This file is the source of truth for the iOS shell project across sessions. The 
 - **Edit `src/components/flow/LightStepBrew.tsx`** — ~12 additive lines: `useMemo` boundaries, hook call, `cancelAll()` added to `handleDone`. No existing effects/transitions touched; no double-cue (foreground banners suppressed by config).
 - Optional same PR: login page defaults to the PIN tab when `Capacitor.isNativePlatform?.()` is true.
 
-### Phase 2 — `native/` scaffold (authorable on Linux)
+### Phase 2 — `native/` scaffold (authorable on Linux) — ✅ SHIPPED (2026-06-15)
 ```
 native/
-  package.json            # @capacitor/{core,ios,local-notifications}@^7; dev: cli, assets
-  capacitor.config.ts     # appId, appName "BTTS", server.url, LocalNotifications presentationOptions: []
+  package.json            # @capacitor/{core,ios,local-notifications}@^8; dev: cli, assets@^3
+  package-lock.json       # committed (npm ci in CI)
+  capacitor.config.ts     # appId com.roitsch.btts, appName "BTTS", server.url, LocalNotifications presentationOptions: [], ios.contentInset: never
   www/index.html          # placeholder (Capacitor requires webDir even in remote mode)
-  exportOptions.plist     # app-store-connect, automatic signing
-  assets/                 # 1024px icon + splash from public/ PWA icons
-  .gitignore              # node_modules, ios/App/Pods, build artifacts
+  exportOptions.plist     # app-store-connect, automatic signing (teamID injected from secret)
+  assets/logo.svg         # 1024×1024 source (copied from public/icons/icon-source.svg) for @capacitor/assets
+  .gitignore              # node_modules, ios/App/Pods, cordova-plugins, build artifacts
   README.md               # how the shell works, workflow runbook, "Don't Allow" recovery note
 ```
-Plus: add `"native"` to root `tsconfig.json` `exclude` (alongside `lovable-v7`) so the Capacitor config stays out of the Next typecheck.
+Plus (done): `"native"` added to root `tsconfig.json` `exclude` (alongside `lovable-v7`); `native/` added to `.dockerignore` (own `@capacitor/*` deps, must not enter the Next build worker scan path — same precedent as `lovable-v7`). Config parse-validated by the cap CLI.
 
 ### Phase 3 — One-shot bootstrap workflow `.github/workflows/ios-bootstrap.yml`
 `workflow_dispatch`, `macos-15`: `npm ci` in `native/` → `npx cap add ios` → `npx @capacitor/assets generate --ios` → `plutil -replace ITSAppUsesNonExemptEncryption -bool false …/Info.plist` (kills the per-build export-compliance prompt) → sanity `npx cap sync ios` → commit `native/ios/` to a branch + open a PR the owner merges from their phone.
@@ -139,6 +140,29 @@ Each milestone is independently shippable on the v1 shell. Two infrastructure tr
 
 G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (widget — pipeline de-risk) → G3 (Live Activity, gets Tier-1 watch free) → reassess whether Tier-2 watch is still wanted.
 
+## Feature backlog (native capabilities, tiered by cost)
+
+Owner-brainstormed June 2026 — what the shell unlocks beyond the G1–G4 milestones. Sorted by the work each needs; pick off after the v1 shell is on the phone. None of these is committed scope yet.
+
+**(A) v1 shell, immediate — only local plugins + data we already have:**
+- **Status-bar + whole-screen styling** (`@capacitor/status-bar`). Today iOS freezes the PWA status-bar style at install time (CLAUDE.md gotcha); the shell sets it at runtime, per-screen. Chrome-less WKWebView = the full viewport is ours + native splash.
+- **Real haptics** (`@capacitor/haptics`). The brew timer already calls `navigator.vibrate(80)` in `LightStepBrew.tsx` — **iOS Safari ignores the Vibration API entirely**, so it's silently dead today. The plugin gives real Taptic feedback (impact/notification styles) per step.
+- **Cold-brew / long-steep timer** (NEW feature). Runs on the existing Phase-1 LocalNotifications bridge via the *schedule-one-notification* model: store the start, schedule a single "cold brew ready" notification 12–24 h out, compute elapsed on reopen. iOS does NOT run JS in the background for hours — but it doesn't need to. A "long brew" mode (no pour guide, just start → reminder → log) is a small standalone feature. *(A live 20-h lock-screen countdown is out — Live Activities are hours, not a day.)*
+- **Roast-freshness nudges.** The app knows every `coffees.roastDate` + the bloom-window logic (`getBloomDuration`: 50/45/30 s). Schedule a local notification at the peak window ("Quiquira hits peak tomorrow"). Proactive, uses data already in the model.
+
+**(B) extension work — shares the one-time Xcode-target + signing surgery (this is what G2 de-risks):**
+- **Widgets:** "Coffees in Rotation"; "Brew this" → deep-link straight into the Context step via `@capacitor/app` URL handling + the existing `startBrewAgain()` flow; "Scan this Bag" → opens the camera. (G2.)
+- **Share-Sheet "Add to BTTS":** share a coffee URL/photo from Safari/Instagram → routes into the EXISTING `analyze-url` / `analyze-bag` flow. Turns manual URL-pasting into one tap; leverages a feature already built.
+- **Live Activity** (G3) + **Siri / App Shortcuts** ("Hey Siri, start my morning V60" → opens the brew with the rotation bag).
+
+**(C) server work — Hetzner + APNs, more than just the shell:**
+- **Real push for the DORMANT coffee-alerts feature.** The `coffee_alerts` table + `/api/webhooks/coffee-alert` endpoint already exist with no delivery path. Shell + an APNs sender on Hetzner would finally push "your wishlist coffee is back in stock." Activates half-built infrastructure; needs a server-side APNs integration (real backend work, not a plugin).
+- **Acaia BT auto-advance:** the scale detects target weight → auto-advances the pour step (fuses the G1 BT track with the timer).
+
+**Endgame:** native SwiftUI Apple Watch app (wet-hands remote: start/stop/next from the wrist, guaranteed per-step haptics regardless of iPhone lock state). G4 Tier 2.
+
+**Best effort/payoff picks (owner's gut, June 2026):** (1) status-bar + haptics — makes it *feel* native, immediate; (2) cold-brew timer — new feature, nearly free on the Phase-1 bridge; (3) Share-Sheet import — kills the URL-paste chore.
+
 ## GitHub secrets (complete list — 4)
 
 `APP_STORE_CONNECT_ISSUER_ID`, `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_API_KEY_P8` (paste the .p8 contents), `APPLE_TEAM_ID`.
@@ -147,8 +171,8 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 > **Apple ID disambiguation (decided 2026-06-10):** the owner has two Apple IDs — a work ID (signed into the MacBook's iCloud) and a private ID (signed into the iPhone). Everything in this project runs on the **private** Apple ID: Developer Program enrollment, App Store Connect, TestFlight redemption on the iPhone. The work ID must NOT be used — it may belong to the employer's developer team, which would pull app ownership and legal responsibility into a company context. **The MacBook's iCloud login does NOT need to change.** Do all Apple-side admin steps below in a **browser** (best: Safari on the iPhone, where the private ID is already active; alt: a private/incognito window on the Mac). Avoid the macOS Developer.app — it forces the iCloud-signed-in Apple ID and would put you on the wrong account. Browser logins on developer.apple.com / appstoreconnect.apple.com accept whatever Apple ID you enter, independent of any iCloud session. For the local-debug fallback (only if a CI build hits a wall), Xcode has its own account list (Xcode → Settings → Accounts) independent of the macOS login — add the private ID there, no need to re-log the Mac.
 
-1. Enroll in the Apple Developer Program with the **private** Apple ID (€99/yr, approval hours–2 days); note the Team ID.
-2. App Store Connect → Users and Access → Integrations: create a Team API key (role **App Manager**); record Issuer ID + Key ID, download the `.p8` (one-time download).
+1. ✅ **DONE (2026-06-15)** — Enrolled in the Apple Developer Program with the **private** Apple ID (€99/yr). Activation hung ~92 h in a "complete your purchase" loop; cleared via the support hotline. Note the Team ID from developer.apple.com → Membership.
+2. ⬅️ **NEXT** — App Store Connect → Users and Access → Integrations: create a Team API key (role **App Manager**); record Issuer ID + Key ID, download the `.p8` (one-time download).
 3. Add the 4 GitHub secrets (repo Settings → Secrets → Actions).
 4. developer.apple.com → Identifiers: register App ID `com.roitsch.btts` (no extra capabilities needed).
 5. App Store Connect → New App: iOS, "BTTS", that bundle ID.
@@ -180,6 +204,7 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 
 - **The Mac "Apple Developer" app forces the iCloud-signed-in Apple ID** (2026-06-10). The owner's MacBook is signed into iCloud with the work Apple ID — the Developer.app on macOS uses that and offers no account switcher. **Workaround:** never use the Developer app for this project; do all Apple-side admin in a browser. (a) Best path: Safari on the iPhone → developer.apple.com / appstoreconnect.apple.com, where the iPhone's private Apple ID is already in use. (b) Mac path: open a private/incognito window so cached iCloud cookies don't auto-select the work ID, then log in with the private ID. Browser logins are independent of the Mac's iCloud login. The Mac's iCloud login does NOT need to be changed.
 - **GitHub-Action version strings — neither a plan doc nor the action's README is authoritative** (2026-06-11). This doc carried `upload-testflight-build@v5`; an external review countered with "the README documents `@v4`"; the repo's **Releases page** (the actual source of truth) shows v5.2.1 as latest — so the plan string happened to be right and the README is what lags. Rule: pin any action to the latest tag verified on its Releases page at implementation time, never trust a transcribed version string (including this doc's).
+- **Capacitor was on major 8, not 7, at Phase-2 build** (2026-06-15). The whole plan said "Capacitor 7", but `npm view @capacitor/core version` returned **8.4.0** (ios/cli 8.4.0, local-notifications 8.2.0, assets 3.0.5). Pinned to `^8` and updated the doc — reality wins. Same lesson as the action-version trap: verify the live registry at implementation, don't trust a version transcribed into a plan weeks earlier. (`presentationOptions: []` and `server.url` are unchanged across 7→8; the cap CLI parsed the config cleanly.) Note: the dev-only `@capacitor/assets` 3.0.5 pulls old transitive deps → 8 npm-audit warnings; it runs only in CI for icon generation, never ships in the app.
 
 ## Session log
 
@@ -220,4 +245,12 @@ G1 (Acaia — biggest daily payoff, smallest cost, independent track) → G2 (wi
 - **Open / blocked:** Apple approval still pending (checklist items 2–5 behind it). No code touched this session — doc-only.
 - **Traps found:** action-version trap (see Stolperstein log).
 - **Next entry-point:** unchanged — Phase 2 `native/` scaffold + `tsconfig.json` exclude.
+- **PRs / commits this session:** #290
+
+### 2026-06-15 — Phase 2 (`native/` scaffold) + idea backlog + enrollment cleared
+
+- **Done:** Apple Developer enrollment **ACTIVE** (cleared via hotline after a 92-h "complete your purchase" limbo). Built the `native/` Capacitor **8** scaffold: `package.json` + committed `package-lock.json` (`@capacitor/core|ios|cli` 8.4.0, `local-notifications` 8.2.0, `assets` 3.0.5), `capacitor.config.ts` (appId `com.roitsch.btts`, `server.url` = production, `LocalNotifications.presentationOptions: []`, `ios.contentInset: never`), `www/index.html` placeholder, `exportOptions.plist` (app-store-connect, automatic, teamID injected from secret), `assets/logo.svg` (copied from `public/icons/icon-source.svg`, 1024×1024), `.gitignore`, `README.md`. Root edits: `"native"` → `tsconfig.json` exclude; `native/` → `.dockerignore`. Verified: `npm install` resolved + lockfile committed, cap CLI parse-validated the config (all key values resolve), root `tsc` clean, full suite green (34 src + 32 tests). Added the **Feature backlog** section (owner brainstorm, tiered A/B/C + endgame). Confirmed `LocalNotifications.presentationOptions` is a real config key (empty array suppresses foreground banner).
+- **Open / blocked:** Phase 3 needs owner checklist items 2–5 first (API key + 4 GitHub secrets + App ID + ASC app). Now that enrollment is active these are all doable.
+- **Traps found:** Capacitor major was **8, not 7** (the plan's transcribed "7" was stale) — Stolperstein added; same lesson as the action-version trap.
+- **Next entry-point:** Phase 3 — `.github/workflows/ios-bootstrap.yml`, once the owner has created the API key + secrets.
 - **PRs / commits this session:** (number assigned on open)

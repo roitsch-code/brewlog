@@ -1,0 +1,19 @@
+{
+  "name": "btts-native",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BTTS iOS Capacitor shell — wraps the live Next.js app on Hetzner via a remote server.url. No bundled web assets; additive to the Safari PWA.",
+  "scripts": {
+    "sync": "cap sync ios",
+    "assets": "capacitor-assets generate --ios --iconBackgroundColor '#F3E5DC' --splashBackgroundColor '#F3E5DC'"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
+    "@capacitor/local-notifications": "^8.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.0"
+  }
+}
