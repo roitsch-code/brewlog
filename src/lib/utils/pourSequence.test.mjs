@@ -1,159 +1,48 @@
-// Unit tests for the pour-over timing formula. Pure math, zero dependencies —
-// run with:  node --test src/lib/utils/pourSequence.test.mjs
+// Unit tests for the pour-over timing + step model.
+// Run with:  node --test src/lib/utils/pourSequence.test.mjs
 //
-// The tests duplicate the logic instead of importing from the .ts module so
-// this file runs under plain Node with no TypeScript loader. If the math in
-// pourSequence.ts ever changes, update this file too — the point of the tests
-// is that the formula keeps producing the exact milestones documented below.
+// These bundle the REAL src/lib/utils/pourSequence.ts with esbuild (same harness
+// as brew-notifications.test.mjs) so they assert the actual shipped logic — no
+// duplicated copy to drift out of sync. (The resolveBrewedRecipe section lower
+// down still re-declares its logic — that's a different module, unchanged here.)
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { build } from "esbuild";
+import { pathToFileURL } from "node:url";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import path from "node:path";
 
-// ── Re-declared pure logic (MUST stay in sync with src/lib/utils/pourSequence.ts) ──
-
-function getBloomDuration(roastDate, now = Date.now()) {
-  if (roastDate) {
-    const daysOld = Math.floor((now - new Date(roastDate).getTime()) / 86_400_000);
-    if (daysOld < 7) return 50;
-    if (daysOld < 22) return 45;
-    return 30;
-  }
-  return 45;
-}
-
-function leadingGrams(token) {
-  const m = token.match(/^\s*(\d+)/);
-  return m ? Number(m[1]) : null;
-}
-
-function tokenTemperature(token) {
-  const t = token.match(/[@(]\s*@?\s*(\d{2,3})\s*°?\s*[cC]?/);
-  return t ? Number(t[1]) : undefined;
-}
-
-function tokenNote(token) {
-  const s = token
-    .replace(/^\s*\d+\s*/, "")
-    .replace(/[@(]\s*@?\s*\d{2,3}\s*°?\s*[cC]?\s*\)?/g, "")
-    .replace(/[()]/g, "")
-    .trim();
-  return s.length > 0 ? s : undefined;
-}
-
-function buildPourOver(milestones, targetTimeSec, roastDate, now = Date.now()) {
-  const n = milestones.length;
-  if (n < 2) return null;
-  const bloomDur = getBloomDuration(roastDate, now);
-  const drawdownReserve = Math.round(targetTimeSec * 0.33);
-  const remaining = targetTimeSec - bloomDur - drawdownReserve;
-  const interval = n > 2 ? remaining / (n - 2) : 0;
-  return milestones.map((m, i) => ({
-    index: i,
-    label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
-    cumulativeGrams: m.grams,
-    pourGrams: i === 0 ? m.grams : m.grams - milestones[i - 1].grams,
-    startTimeSec: i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval),
-    action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
-    temperatureC: m.temperatureC,
-    notes: m.notes,
-    agitation: m.agitation,
-  }));
-}
-
-function parsePourSteps(sequence, targetTimeSec, roastDate, now = Date.now()) {
-  const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
-  const grams = parts.map(leadingGrams);
-  if (parts.length < 2 || grams.some((g) => g === null)) return null;
-  const milestones = parts.map((p, i) => ({
-    grams: grams[i],
-    temperatureC: tokenTemperature(p),
-    notes: tokenNote(p),
-  }));
-  return buildPourOver(milestones, targetTimeSec, roastDate, now);
-}
-
-function defaultDuration(action) {
-  switch (action) {
-    case "press": return 25;
-    case "wait": return 60;
-    case "stir":
-    case "swirl":
-    case "agitate-bed": return 10;
-    case "drain": return 30;
-    case "bypass": return 5;
-    case "invert":
-    case "flip": return 0;
-    default: return 10;
-  }
-}
-
-function isSetupAction(action, label) {
-  if (action === "invert") return true;
-  return /^\s*(assemble|position|set.?up|load|rinse|place)\b/i.test(label);
-}
-
-function buildGuideSteps(recipe) {
-  const src = recipe.pourSteps;
-  if (!src || src.length === 0) return null;
-  let clock = 0;
-  return src.map((step, i) => {
-    const action = step.action;
-    const isSetup = isSetupAction(action, step.label);
-    const durationSec = step.durationSec ?? defaultDuration(action);
-    const startTimeSec = isSetup ? 0 : clock;
-    if (!isSetup) clock += durationSec;
-    return {
-      index: i,
-      label: step.label,
-      action,
-      startTimeSec,
-      durationSec,
-      temperatureC: step.temperatureC,
-      notes: step.notes,
-      cumulativeGrams: step.waterGramsAtEnd,
-      isSetup,
-    };
-  });
-}
-
-const isAgitationStep = (a) => a === "swirl" || a === "stir" || a === "agitate-bed";
-
-function pourStepsFromStructured(recipe, roastDate, now = Date.now()) {
-  const src = recipe.pourSteps;
-  if (!src || src.length === 0) return null;
-  const milestones = [];
-  let last = -1;
-  for (const s of src) {
-    if (s.waterGramsAtEnd != null) {
-      milestones.push({ grams: s.waterGramsAtEnd, temperatureC: s.temperatureC, notes: s.notes, agitation: null });
-      last = milestones.length - 1;
-    } else if (isAgitationStep(s.action) && last >= 0) {
-      milestones[last].agitation = s.action === "swirl" ? "swirl" : "stir";
-    }
-  }
-  return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
-}
-
-function hasImmersionShape(recipe) {
-  const src = recipe.pourSteps;
-  if (!src || src.length === 0) return false;
-  return src.some(
-    (s) =>
-      s.action === "invert" ||
-      s.action === "flip" ||
-      s.action === "press" ||
-      s.action === "bypass" ||
-      (s.action === "wait" && (s.durationSec ?? 0) >= 45),
-  );
-}
-
-function getActiveIdx(elapsed, steps) {
-  let idx = 0;
-  for (let i = 0; i < steps.length; i++) {
-    if (elapsed >= steps[i].startTimeSec) idx = i;
-  }
-  return idx;
-}
+const ROOT = process.cwd();
+const entry = `
+export {
+  getBloomDuration, parsePourSteps, pourStepsFromStructured, buildGuideSteps,
+  hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec, POUR_RATE_GPS,
+} from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
+`;
+const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
+const out = join(dir, "p.mjs");
+await build({
+  stdin: { contents: entry, resolveDir: ROOT, loader: "ts" },
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  outfile: out,
+  logLevel: "silent",
+});
+const {
+  getBloomDuration,
+  parsePourSteps,
+  pourStepsFromStructured,
+  buildGuideSteps,
+  hasImmersionShape,
+  getActiveIdx,
+  isAgitationPourAction,
+  pourDurationSec,
+  POUR_RATE_GPS,
+} = await import(pathToFileURL(out).href);
 
 // Fixed clock: Apr 17 2026. Lets roast-date branches be exercised deterministically.
 const NOW = new Date("2026-04-17T00:00:00Z").getTime();
@@ -418,9 +307,16 @@ test("getActiveIdx: advances exactly at each step's startTime", () => {
   assert.equal(getActiveIdx(500, steps), 3); // stays on final after target time
 });
 
-// ── pourStepsFromStructured: agitation is recipe-driven ─────────────────────
+// ── pourStepsFromStructured: agitation is a discrete, flow-rate-timed step ───
 
-test("pourStepsFromStructured: attaches swirl/stir only where the recipe agitates", () => {
+test("pourDurationSec / POUR_RATE_GPS: pour time = grams ÷ rate", () => {
+  assert.equal(POUR_RATE_GPS, 4);
+  assert.equal(pourDurationSec(100), 25); // 100g ÷ 4 g/s
+  assert.equal(pourDurationSec(50), 13); // 12.5 → 13
+  assert.equal(pourDurationSec(0), 1); // floor of 1s, never 0
+});
+
+test("pourStepsFromStructured: swirl/stir become their own steps, timed AFTER the pour", () => {
   const recipe = {
     targetTimeSec: 240,
     pourSteps: [
@@ -434,12 +330,49 @@ test("pourStepsFromStructured: attaches swirl/stir only where the recipe agitate
   };
   const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
   assert.ok(steps);
-  assert.deepEqual(steps.map((s) => s.agitation), ["stir", null, "swirl"]);
+  // Pours @0/45/161 (peak bloom 45, drawdown reserve 79, one 116s interval).
+  // Stir lands at bloom-start 0 + pourDuration(50g)=13. Swirl at final-start
+  // 161 + pourDuration(100g)=25 = 186.
+  assert.deepEqual(
+    steps.map((s) => [s.action, s.startTimeSec]),
+    [
+      ["bloom", 0],
+      ["stir", 13],
+      ["pour", 45],
+      ["final", 161],
+      ["swirl", 186],
+    ],
+  );
+  // Agitation steps carry no grams and inherit the preceding pour's total.
+  const stir = steps.find((s) => s.action === "stir");
+  const swirl = steps.find((s) => s.action === "swirl");
+  assert.equal(stir.pourGrams, 0);
+  assert.equal(stir.cumulativeGrams, 50);
+  assert.equal(swirl.pourGrams, 0);
+  assert.equal(swirl.cumulativeGrams, 300);
 });
 
-test("pourStepsFromStructured: reduced-agitation recipe shows NO agitation", () => {
-  // The screenshot bug: a recipe with no swirl/stir steps must yield agitation
-  // null everywhere — no stray Swirl button on the final pour / drawdown.
+test("pourStepsFromStructured: agitate-bed maps to a 'tap' step", () => {
+  const recipe = {
+    targetTimeSec: 210,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 40 },
+      { label: "Pour", action: "pour", waterGramsAtEnd: 250 },
+      { label: "Tap to level", action: "agitate-bed" },
+      { label: "Drawdown", action: "drain", durationSec: 40 },
+    ],
+  };
+  const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
+  assert.ok(steps);
+  const tap = steps.find((s) => s.action === "tap");
+  assert.ok(tap, "agitate-bed → tap step");
+  assert.ok(isAgitationPourAction(tap.action));
+  assert.equal(tap.label, "Tap to level");
+});
+
+test("pourStepsFromStructured: reduced-agitation recipe yields NO agitation steps", () => {
+  // A recipe with no swirl/stir/tap steps must produce zero agitation steps —
+  // no stray Swirl on the final pour / drawdown.
   const recipe = {
     targetTimeSec: 270,
     pourSteps: [
@@ -451,7 +384,8 @@ test("pourStepsFromStructured: reduced-agitation recipe shows NO agitation", () 
   };
   const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
   assert.ok(steps);
-  assert.ok(steps.every((s) => s.agitation === null), "every milestone agitation is null");
+  assert.equal(steps.length, 3, "bloom + pour + final, nothing inserted");
+  assert.ok(steps.every((s) => !isAgitationPourAction(s.action)), "no agitation steps");
 });
 
 // ── resolveBrewedRecipe: read the SELECTED candidate, not primary ───────────

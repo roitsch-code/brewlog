@@ -28,21 +28,47 @@
 
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "@/lib/types/session";
 
+/**
+ * Pour rate (grams/second) at which the user pours from the kettle — the rate
+ * of the POUR itself, NOT the drip-through flow rate. Used to place an agitation
+ * step at the moment a pour FINISHES: a pour of `g` grams takes `g / POUR_RATE`
+ * seconds, so a swirl/stir/tap called for "after the pour" lands at
+ * `pourStart + g / POUR_RATE`.
+ *
+ * Owner-set 2026-06-15: ~4 g/s (a gentle, controlled gooseneck pour on the
+ * Fellow Stagg EKG — matches the silky/floral house style). This is the ONE
+ * place to change it; re-measure (pour 100 g, time it) and update here.
+ */
+export const POUR_RATE_GPS = 4;
+
+/** Seconds to physically pour `grams` at POUR_RATE_GPS (≥1s, rounded). */
+export function pourDurationSec(grams: number): number {
+  return Math.max(1, Math.round(grams / POUR_RATE_GPS));
+}
+
+/** Discrete agitation actions that now get their OWN timed step in the
+ * percolation timeline (instead of being folded onto a pour as an attribute). */
+export type AgitationAction = "swirl" | "stir" | "tap";
+
 export interface PourStep {
   index: number;
   label: string;
   cumulativeGrams: number;
   pourGrams: number;
   startTimeSec: number;
-  action: "bloom" | "pour" | "final";
+  /** Water-bearing actions (bloom/pour/final) plus discrete agitation actions
+   * (swirl/stir/tap) — agitation is now a real step, timed to land right after
+   * the pour it follows finishes pouring. */
+  action: "bloom" | "pour" | "final" | AgitationAction;
   /** Per-pour temperature for staged-temperature recipes (Hsu, Peng). */
   temperatureC?: number;
   /** Free-text hint shown alongside the active pour. */
   notes?: string;
-  /** Agitation the recipe calls for AT this pour. Explicit `"stir"`/`"swirl"`
-   * shows the button; explicit `null` suppresses it (minimal-agitation recipe);
-   * `undefined` = unknown (legacy grams string) → renderer applies its default. */
-  agitation?: "stir" | "swirl" | null;
+}
+
+/** True for the discrete agitation step actions (swirl/stir/tap). */
+export function isAgitationPourAction(a: PourStep["action"]): a is AgitationAction {
+  return a === "swirl" || a === "stir" || a === "tap";
 }
 
 /** A timed, action-aware step for non-percolation methods (immersion,
@@ -108,13 +134,24 @@ function tokenNote(token: string): string | undefined {
   return stripped.length > 0 ? stripped : undefined;
 }
 
-/** One cumulative-grams milestone, with optional per-pour temperature/note. */
+/** One cumulative-grams milestone, with optional per-pour temperature/note and
+ * an agitation the recipe calls for AFTER this pour (becomes its own step). */
 interface Milestone {
   grams: number;
   temperatureC?: number;
   notes?: string;
-  agitation?: "stir" | "swirl" | null;
+  /** Agitation to perform right after this pour finishes — emitted as a
+   * discrete, flow-rate-timed step. `undefined`/absent = none. */
+  agitationAfter?: AgitationAction;
+  /** Optional note carried onto the agitation step. */
+  agitationNote?: string;
 }
+
+const AGITATION_LABEL: Record<AgitationAction, string> = {
+  swirl: "Swirl",
+  stir: "Stir",
+  tap: "Tap to level",
+};
 
 /**
  * Time a set of cumulative-grams milestones with the drawdown-reserve formula:
@@ -122,6 +159,12 @@ interface Milestone {
  * (n − 2) intervals so the final pour lands at (target − reserve). Shared by the
  * string parser and the structured-percolation builder so both produce an
  * identical schedule.
+ *
+ * Agitation is now a DISCRETE step: when a milestone carries `agitationAfter`,
+ * a swirl/stir/tap step is inserted at `pourStart + pourDurationSec(pourGrams)`
+ * — i.e. the instant that pour finishes pouring at the user's pour rate —
+ * clamped to land before the next pour (or, for the final pour, before target).
+ * So "swirl after the pour" is timed by physics, not guessed.
  */
 function buildPourOver(
   milestones: Milestone[],
@@ -137,17 +180,47 @@ function buildPourOver(
   const remaining = targetTimeSec - bloomDur - drawdownReserve;
   const interval = n > 2 ? remaining / (n - 2) : 0;
 
-  return milestones.map((m, i) => ({
-    index: i,
-    label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
-    cumulativeGrams: m.grams,
-    pourGrams: i === 0 ? m.grams : m.grams - milestones[i - 1].grams,
-    startTimeSec: i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval),
-    action: (i === 0 ? "bloom" : i === n - 1 ? "final" : "pour") as PourStep["action"],
-    temperatureC: m.temperatureC,
-    notes: m.notes,
-    agitation: m.agitation,
-  }));
+  const pourStartSec = (i: number) => (i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval));
+
+  const out: PourStep[] = [];
+  milestones.forEach((m, i) => {
+    const pourGrams = i === 0 ? m.grams : m.grams - milestones[i - 1].grams;
+    const start = pourStartSec(i);
+    out.push({
+      index: 0, // re-indexed after interleaving
+      label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
+      cumulativeGrams: m.grams,
+      pourGrams,
+      startTimeSec: start,
+      action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
+      temperatureC: m.temperatureC,
+      notes: m.notes,
+    });
+
+    if (m.agitationAfter) {
+      // The pour finishes pouring `pourGrams` after `pourDurationSec` seconds.
+      // Clamp so the agitation always lands before the next pour starts (or,
+      // on the final pour, before the target finish) — never overlapping.
+      const ceiling = (i < n - 1 ? pourStartSec(i + 1) : targetTimeSec) - 1;
+      const agStart = Math.min(start + pourDurationSec(pourGrams), Math.max(start + 1, ceiling));
+      out.push({
+        index: 0,
+        label: AGITATION_LABEL[m.agitationAfter],
+        cumulativeGrams: m.grams,
+        pourGrams: 0,
+        startTimeSec: agStart,
+        action: m.agitationAfter,
+        notes: m.agitationNote,
+      });
+    }
+  });
+
+  // Stable-sort by start time (agitation already lands inside its pour's gap,
+  // but the explicit sort keeps getActiveIdx / StepDots strictly monotonic) and
+  // re-index in timeline order.
+  out.sort((a, b) => a.startTimeSec - b.startTimeSec);
+  out.forEach((s, i) => (s.index = i));
+  return out;
 }
 
 /**
@@ -207,12 +280,14 @@ export function pourStepsFromStructured(
         grams: s.waterGramsAtEnd,
         temperatureC: s.temperatureC,
         notes: s.notes,
-        agitation: null,
       });
       last = milestones.length - 1;
     } else if (isAgitationStep(s.action) && last >= 0) {
-      // Attach this agitation to the pour it follows (bloom-stir, post-pour swirl).
-      milestones[last].agitation = s.action === "swirl" ? "swirl" : "stir";
+      // Attach this agitation to the pour it follows (bloom-stir, post-pour
+      // swirl, tap-to-level) — it becomes its own flow-rate-timed step.
+      milestones[last].agitationAfter =
+        s.action === "swirl" ? "swirl" : s.action === "agitate-bed" ? "tap" : "stir";
+      milestones[last].agitationNote = s.notes;
     }
   }
   return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
