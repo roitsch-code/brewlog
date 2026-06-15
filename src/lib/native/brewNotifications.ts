@@ -1,26 +1,22 @@
 /**
- * Brew-step lock-screen notifications — the web side of the iOS shell bridge.
+ * Brew-step BOUNDARIES + a legacy-notification sweep.
  *
- * Pure-web module with ZERO npm dependencies on `@capacitor/*`. When BTTS runs
- * inside the Capacitor shell (TestFlight build, see docs/ios-shell-roadmap.md),
- * the native bridge injects `window.Capacitor` with a `LocalNotifications`
- * plugin proxy; this module schedules an iOS local notification at every
- * pour/step boundary so the cues survive a locked phone — closing the
- * documented "Step alerts during background are missed" gap. In any normal
- * browser (Safari PWA, desktop, CI Chromium) every export is a silent no-op
- * and the existing Web Audio cue + vibration remain the only cues.
+ * History: this module used to SCHEDULE iOS lock-screen notifications at every
+ * pour/step boundary (so a locked/pocketed phone + its watch would buzz). That
+ * was removed by owner request (2026-06-15): the brew runs with the app open +
+ * wake-locked, so the phone is never on its lock screen — the notifications
+ * only ever fired as **orphans after a force-quit** (iOS can't cancel a
+ * scheduled notification once the app is killed). The foreground Taptic haptics
+ * (`brewHaptics.ts`) are the only cue now; real wrist-always haptics will come
+ * from a native Apple Watch app (roadmap G4 Tier 2), which is lifecycle-bound
+ * and so can't orphan.
  *
- * Design (Phase 1 of the roadmap):
- *  - The full step schedule is known at brew start (`PourStep[]`/`GuideStep[]`
- *    carry `startTimeSec`), so everything is scheduled ONCE, anchored to the
- *    timer's wall-clock start. No background JS needed — iOS fires on time.
- *  - The shell's LocalNotifications config uses `presentationOptions: []`, so
- *    a foregrounded app swallows the banners (Web Audio covers foreground);
- *    locked/backgrounded shows the banner. No double cue.
- *  - A bridge failure must never break the brew timer: every native call is
- *    try/caught and failure degrades to exactly today's behavior.
- *  - Prose-only legacy sequences produce no notifications (documented
- *    limitation — they carry no machine-readable boundaries).
+ * What stays:
+ *  - `buildBrewBoundaries()` — the pure step→cue schedule, now consumed only by
+ *    `useBrewStepHaptics` (haptics fire LIVE off these times).
+ *  - `sweepBrewNotifications()` — a one-shot cancel of the old fixed id range,
+ *    called once on app open (LightShell) to clear any orphans a pre-removal
+ *    build may have left pending. Pure no-op off the native shell.
  */
 
 import type { PourStep, GuideStep } from "@/lib/utils/pourSequence";
@@ -28,30 +24,7 @@ import { isAgitationPourAction } from "@/lib/utils/pourSequence";
 
 // ── Ambient bridge types (no @capacitor/* imports — strict-TS clean) ────────
 
-interface LocalNotificationLike {
-  id: number;
-  title: string;
-  body: string;
-  schedule: { at: Date };
-  /** iOS: setting ANY non-nil sound flips the notification from passively
-   * delivered (silent banner, no haptic) to "alerting" — it then plays a sound
-   * AND fires the default vibration on the iPhone + mirrors the haptic to a
-   * paired Apple Watch (when the phone is locked/asleep). A missing custom file
-   * falls back to the system default tone. Omitting this field is why early
-   * builds buzzed nothing. */
-  sound?: string;
-  /** iOS interruption level. `timeSensitive` lets a pour cue break through a
-   * Focus / Do-Not-Disturb mode and reads as urgent — the right semantic for a
-   * live brew timer. (Breaking through Focus also needs the Time-Sensitive
-   * entitlement on the App ID; without it this degrades gracefully to a normal
-   * alert.) */
-  interruptionLevel?: "passive" | "active" | "timeSensitive" | "critical";
-}
-
 interface LocalNotificationsLike {
-  checkPermissions(): Promise<{ display: string }>;
-  requestPermissions(): Promise<{ display: string }>;
-  schedule(options: { notifications: LocalNotificationLike[] }): Promise<unknown>;
   cancel(options: { notifications: Array<{ id: number }> }): Promise<unknown>;
 }
 
@@ -76,15 +49,11 @@ export interface BrewBoundary {
   body: string;
 }
 
-/** Fixed notification id range — cancel always sweeps the whole range so a
- * mid-brew reload can't leave orphans from the previous page load. iOS caps
- * pending local notifications at 64; no brew has anywhere near 40 steps. */
+/** The fixed notification id range a pre-removal build scheduled into. The
+ * sweep cancels the whole range so any orphan from before this change clears on
+ * the next app open. */
 const ID_BASE = 9300;
 const ID_RANGE = 40;
-
-/** Skip boundaries closer than this to "now" when scheduling — the user is
- * looking at the screen and the foreground cue already covers them. */
-const MIN_LEAD_MS = 2000;
 
 function formatClock(sec: number): string {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
@@ -175,73 +144,13 @@ function getPlugin(): LocalNotificationsLike | null {
   }
 }
 
-/** True only inside the Capacitor shell with the plugin present. */
-export function isNativeShell(): boolean {
-  return getPlugin() !== null;
-}
-
-/** iOS never re-prompts after a denial — cache it so a denied user doesn't pay
- * a failed permission round-trip on every brew. */
-let permissionDenied = false;
-
 /**
- * Resolve notification permission, prompting at most once (in-foreground,
- * right after Start Brew — the moment the user's intent is clearest).
+ * One-shot: cancel any brew notification a pre-removal build left pending in the
+ * fixed id range. Call once on app open (LightShell). Brews no longer schedule
+ * notifications, so this only ever clears legacy orphans. Pure no-op off the
+ * native shell or if the plugin is absent — never throws.
  */
-export async function ensurePermission(): Promise<boolean> {
-  const plugin = getPlugin();
-  if (!plugin || permissionDenied) return false;
-  try {
-    const status = await plugin.checkPermissions();
-    if (status.display === "granted") return true;
-    if (status.display === "denied") {
-      permissionDenied = true;
-      return false;
-    }
-    const req = await plugin.requestPermissions();
-    if (req.display === "granted") return true;
-    permissionDenied = true;
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Cancel-then-schedule the full brew. `anchorMs` is the wall-clock timestamp
- * of brew start (Date.now() − elapsed·1000 — same anchor the timer runs on).
- * Boundaries already past or within MIN_LEAD_MS are skipped.
- */
-export async function scheduleBrew(boundaries: BrewBoundary[], anchorMs: number): Promise<void> {
-  const plugin = getPlugin();
-  if (!plugin) return;
-  try {
-    await cancelBrew();
-    const now = Date.now();
-    const notifications = boundaries.slice(0, ID_RANGE).flatMap((b, i) => {
-      const at = new Date(anchorMs + b.atSec * 1000);
-      if (at.getTime() - now < MIN_LEAD_MS) return [];
-      return [
-        {
-          id: ID_BASE + i,
-          title: b.title,
-          body: b.body,
-          schedule: { at },
-          // Make the cue alerting, not passive — sound + iPhone vibration +
-          // Apple Watch haptic on a locked phone. See LocalNotificationLike.
-          sound: "default",
-          interruptionLevel: "timeSensitive" as const,
-        },
-      ];
-    });
-    if (notifications.length > 0) await plugin.schedule({ notifications });
-  } catch {
-    /* bridge failure — brew continues with foreground cues only */
-  }
-}
-
-/** Cancel every brew notification (full fixed id range). */
-export async function cancelBrew(): Promise<void> {
+export async function sweepBrewNotifications(): Promise<void> {
   const plugin = getPlugin();
   if (!plugin) return;
   try {
