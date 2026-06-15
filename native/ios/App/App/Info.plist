@@ -26,6 +26,12 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>BTTS uses the camera to scan coffee bags and read their details.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>BTTS uses the microphone for voice chat — talk to your coffee assistant instead of typing.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BTTS uses your photos to read a coffee bag you have already photographed.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
