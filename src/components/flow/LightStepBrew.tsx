@@ -11,12 +11,14 @@ import {
   buildGuideSteps,
   hasImmersionShape,
   getActiveIdx,
+  isAgitationPourAction,
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepNotifications } from "@/hooks/useBrewStepNotifications";
+import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
 /**
@@ -61,14 +63,6 @@ export default function LightStepBrew() {
   const recipeName = selectedCandidate?.title;
   const basedOn = basedOnReference(selectedCandidate?.basedOn, selectedCandidate?.title);
 
-  // Belt-and-suspenders: even if the structured steps aren't explicit, a recipe
-  // that describes itself as minimal/reduced agitation must never show a swirl
-  // affordance. Scans the candidate's own words + any step notes.
-  const suppressAgitation = /minimal agitation|reduced agitation|no swirl|no stir|no agitation|without agitation/i.test(
-    `${selectedCandidate?.title ?? ""} ${selectedCandidate?.whyChosen ?? ""} ${(recipe?.pourSteps ?? [])
-      .map((s) => s.notes ?? "")
-      .join(" ")}`,
-  );
 
   const [elapsed, setElapsed] = useState(0);
   const [started, setStarted] = useState(false);
@@ -144,6 +138,12 @@ export default function LightStepBrew() {
     started,
   );
 
+  // iOS shell: real foreground Taptic cues — a 3-2-1 countdown then a strong
+  // buzz at every step boundary, fired live while the app is awake + foreground
+  // (where lock-screen notifications never show and navigator.vibrate is dead).
+  // Native-only no-op elsewhere.
+  useBrewStepHaptics(boundaries, elapsed, started);
+
   return (
     <LightFlowShell
       onNext={() => {
@@ -193,8 +193,6 @@ export default function LightStepBrew() {
             elapsed={elapsed}
             targetTimeSec={recipe.targetTimeSec}
             started={started}
-            process={draft.coffee?.process}
-            suppressAgitation={suppressAgitation}
           />
         )}
 
@@ -213,60 +211,50 @@ interface LivePourSequenceProps {
   elapsed: number;
   targetTimeSec: number;
   started: boolean;
-  process?: string;
-  /** Recipe is minimal/reduced agitation — never show a swirl/stir affordance. */
-  suppressAgitation?: boolean;
 }
 
-/**
- * Decide whether (and how) to offer an agitation tap for a pour — RECIPE-DRIVEN.
- * Explicit `agitation` from the structured recipe wins (`null` = none). When the
- * recipe is silent (legacy grams string, `agitation === undefined`), default to
- * a bloom-only swirl/stir; NO default agitation on mid or final pours — that
- * stray "Swirl" on the drawdown card was the reported bug.
- */
-function resolveAgitation(
-  step: PourStep,
-  isWashed: boolean,
-  suppress: boolean,
-): { isStir: boolean; label: string } | null {
-  if (suppress) return null;
-  if (step.agitation === null) return null;
-  if (step.agitation === "stir") return { isStir: true, label: "Stir" };
-  if (step.agitation === "swirl") return { isStir: false, label: "Swirl" };
-  if (step.action === "bloom") return { isStir: isWashed, label: isWashed ? "Stir" : "Swirl" };
-  return null;
+/** Short SwirlButton label for an agitation step. */
+function agitationButtonLabel(action: PourStep["action"]): string {
+  return action === "stir" ? "Stir" : action === "tap" ? "Tap" : "Swirl";
 }
 
-function LivePourSequence({
-  steps,
-  elapsed,
-  targetTimeSec,
-  started,
-  process,
-  suppressAgitation = false,
-}: LivePourSequenceProps) {
+function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
-  const isWashed = process?.toLowerCase() === "washed";
-  const bloomCueActive =
-    started && activeStep?.action === "bloom" && elapsed >= 20 && elapsed < 40;
-  const finalStep = steps[steps.length - 1];
-  const finalCueActive =
-    started &&
-    activeStep?.action === "final" &&
-    elapsed >= finalStep.startTimeSec + 28 &&
-    elapsed < finalStep.startTimeSec + 55;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
-  const lastPourStart = steps[steps.length - 1].startTimeSec;
-  const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastPourStart) * 0.35));
-  const allPoursDone = started && elapsed >= lastPourStart + pourGraceSec;
+  // The last step is the final pour OR a trailing tap/swirl after it — either
+  // way, draining begins once we're a grace beyond it.
+  const lastStepStart = steps[steps.length - 1].startTimeSec;
+  const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastStepStart) * 0.35));
+  const allPoursDone = started && elapsed >= lastStepStart + pourGraceSec;
 
   const [flashKey, setFlashKey] = useState(0);
   useEffect(() => {
     if (activeIdx > 0) setFlashKey((k) => k + 1);
   }, [activeIdx]);
+
+  // Countdown footer ("Swirl in 0:05") — shared by the pour + agitation cards.
+  const countdownFooter =
+    nextStep && nextCountdown !== null && nextCountdown <= 20 && nextCountdown > 0 ? (
+      <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
+        <span className="text-[12px] text-light-muted-foreground">{nextStep.label}</span>
+        <span
+          // key={nextCountdown} so React replaces the DOM node on every tick.
+          // Otherwise the infinite opacity pulse can be mid-cycle when the digit
+          // changes (6 → 5), and iOS Safari leaves the previous glyph faintly
+          // visible behind the new one.
+          key={nextCountdown}
+          className={`font-mono-num text-[14px] ${
+            nextCountdown <= 5
+              ? "font-bold text-light-foreground animate-countdown-pulse"
+              : "font-medium text-light-muted-foreground"
+          }`}
+        >
+          in 0:{String(nextCountdown).padStart(2, "0")}
+        </span>
+      </div>
+    ) : null;
 
   if (!started) {
     return (
@@ -281,34 +269,27 @@ function LivePourSequence({
             isLast={false}
           />
 
-          {steps.map((step, i) => {
-            const ag = resolveAgitation(step, isWashed, suppressAgitation);
-            const agitation = ag ? (ag.isStir ? "Stir to agitate" : "Gentle swirl") : null;
-            return (
-              <TimelineRow
-                key={i}
-                time={step.startTimeSec === 0 ? "0:00" : formatSeconds(step.startTimeSec)}
-                label={
-                  <div>
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
-                      <span className="font-mono-num text-[12px] font-semibold text-light-foreground">+{step.pourGrams}g</span>
-                      <span className="font-mono-num text-[12px] text-light-muted-foreground">→ {step.cumulativeGrams}g</span>
-                      {step.temperatureC != null && (
-                        <span className="font-mono-num text-[12px] text-light-muted-foreground">· {step.temperatureC}°C</span>
-                      )}
-                    </div>
-                    {agitation && (
-                      <span className="text-[12px] text-light-muted-foreground block mt-0.5">
-                        {agitation}
-                      </span>
+          {steps.map((step, i) => (
+            <TimelineRow
+              key={i}
+              time={step.startTimeSec === 0 ? "0:00" : formatSeconds(step.startTimeSec)}
+              label={
+                isAgitationPourAction(step.action) ? (
+                  <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
+                ) : (
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
+                    <span className="font-mono-num text-[12px] font-semibold text-light-foreground">+{step.pourGrams}g</span>
+                    <span className="font-mono-num text-[12px] text-light-muted-foreground">→ {step.cumulativeGrams}g</span>
+                    {step.temperatureC != null && (
+                      <span className="font-mono-num text-[12px] text-light-muted-foreground">· {step.temperatureC}°C</span>
                     )}
                   </div>
-                }
-                isLast={i === steps.length - 1}
-              />
-            );
-          })}
+                )
+              }
+              isLast={i === steps.length - 1}
+            />
+          ))}
 
           <TimelineRow
             time={formatSeconds(targetTimeSec)}
@@ -322,7 +303,34 @@ function LivePourSequence({
 
   return (
     <div className="space-y-3">
-      {activeStep && !allPoursDone && (
+      {activeStep && !allPoursDone && isAgitationPourAction(activeStep.action) && (
+        // Agitation step — its own prominent moment (the cue the 3-2-1 buzz lands on).
+        <div
+          key={`step-${flashKey}`}
+          className="rounded-3xl bg-light-card-selected backdrop-blur-light-card backdrop-saturate-150 shadow-light-card-pressed p-4 animate-step-activate"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="label-eyebrow mb-1">Now</p>
+              <p className="font-fraunces text-[24px] leading-tight text-light-foreground">
+                {activeStep.label}
+              </p>
+              <p className="text-[12px] text-light-muted-foreground mt-2">
+                {activeStep.notes ?? defaultPourNote(activeStep.action)}
+              </p>
+            </div>
+            <SwirlButton
+              isStir={activeStep.action === "stir"}
+              label={agitationButtonLabel(activeStep.action)}
+              cueActive
+            />
+          </div>
+          {countdownFooter}
+        </div>
+      )}
+
+      {activeStep && !allPoursDone && !isAgitationPourAction(activeStep.action) && (
+        // Pour step — grams only; agitation is now a discrete step of its own.
         <div
           key={`step-${flashKey}`}
           className="rounded-3xl bg-light-card-selected backdrop-blur-light-card backdrop-saturate-150 shadow-light-card-pressed p-4 animate-step-activate"
@@ -348,45 +356,8 @@ function LivePourSequence({
                 {activeStep.notes ?? defaultPourNote(activeStep.action)}
               </p>
             </div>
-
-            {(() => {
-              const ag = resolveAgitation(activeStep, isWashed, suppressAgitation);
-              if (!ag) return null;
-              return (
-                <SwirlButton
-                  isStir={ag.isStir}
-                  label={ag.label}
-                  cueActive={
-                    activeStep.action === "bloom"
-                      ? bloomCueActive
-                      : activeStep.action === "final"
-                        ? finalCueActive
-                        : false
-                  }
-                />
-              );
-            })()}
           </div>
-
-          {nextCountdown !== null && nextCountdown <= 20 && nextCountdown > 0 && (
-            <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
-              <span className="text-[12px] text-light-muted-foreground">{nextStep!.label}</span>
-              <span
-                // key={nextCountdown} so React replaces the DOM node on every
-                // tick. Otherwise the infinite opacity pulse can be mid-cycle
-                // when the digit changes (6 → 5), and iOS Safari leaves the
-                // previous glyph faintly visible behind the new one.
-                key={nextCountdown}
-                className={`font-mono-num text-[14px] ${
-                  nextCountdown <= 5
-                    ? "font-bold text-light-foreground animate-countdown-pulse"
-                    : "font-medium text-light-muted-foreground"
-                }`}
-              >
-                in 0:{String(nextCountdown).padStart(2, "0")}
-              </span>
-            </div>
-          )}
+          {countdownFooter}
         </div>
       )}
 
@@ -402,10 +373,6 @@ function LivePourSequence({
                 Target finish: {formatSeconds(targetTimeSec)}
               </p>
             </div>
-            {(() => {
-              const ag = resolveAgitation(steps[steps.length - 1], isWashed, suppressAgitation);
-              return ag ? <SwirlButton isStir={ag.isStir} label={ag.label} /> : null;
-            })()}
           </div>
         </div>
       )}
@@ -460,10 +427,20 @@ function StepDots({
   activeIdx: number;
   allDone: boolean;
 }) {
-  const pourLabels = steps.map((_, i) =>
-    i === 0 ? "Bloom" : i === steps.length - 1 ? "Final" : `P${i + 1}`,
-  );
-  const labels = ["Ready", ...pourLabels, "Drain"];
+  // Label each dot by its action: agitation steps get their own short tag,
+  // pours are numbered among the pours only (so an interleaved swirl doesn't
+  // bump the pour count).
+  let pourNo = 0;
+  const stepLabels = steps.map((step) => {
+    if (isAgitationPourAction(step.action)) {
+      return step.action === "stir" ? "Stir" : step.action === "tap" ? "Tap" : "Swirl";
+    }
+    pourNo += 1;
+    if (step.action === "bloom") return "Bloom";
+    if (step.action === "final") return "Final";
+    return `P${pourNo}`;
+  });
+  const labels = ["Ready", ...stepLabels, "Drain"];
   const total = labels.length;
   const currentPos = allDone ? total - 1 : activeIdx === -1 ? 0 : activeIdx + 1;
   const fillPct = total > 1 ? (currentPos / (total - 1)) * 100 : 0;
@@ -510,7 +487,13 @@ function defaultPourNote(action: PourStep["action"]): string {
     case "bloom":
       return "Pour in slow circles from centre outward";
     case "final":
-      return "Last pour — swirl gently after";
+      return "Last pour";
+    case "swirl":
+      return "Gentle swirl to even the bed";
+    case "stir":
+      return "Stir evenly to settle the bed";
+    case "tap":
+      return "Tap to settle and level the bed";
     default:
       return "Slow spiral from centre outward";
   }

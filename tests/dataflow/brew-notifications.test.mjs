@@ -25,7 +25,7 @@ const entry = `
 export { buildBrewBoundaries } from ${JSON.stringify(
   path.join(ROOT, "src/lib/native/brewNotifications.ts"),
 )};
-export { parsePourSteps, buildGuideSteps } from ${JSON.stringify(
+export { parsePourSteps, buildGuideSteps, pourStepsFromStructured } from ${JSON.stringify(
   path.join(ROOT, "src/lib/utils/pourSequence.ts"),
 )};
 `;
@@ -39,9 +39,8 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { buildBrewBoundaries, parsePourSteps, buildGuideSteps } = await import(
-  pathToFileURL(out).href
-);
+const { buildBrewBoundaries, parsePourSteps, buildGuideSteps, pourStepsFromStructured } =
+  await import(pathToFileURL(out).href);
 
 // ── Percolation (V60 grams string → PourStep[]) ─────────────────────────────
 
@@ -77,6 +76,40 @@ test("percolation: per-pour temperature annotation lands in the body", () => {
   const boundaries = buildBrewBoundaries(steps, null, 240);
   // Bloom carries the 70°C but is skipped; later pours have no temp → plain body.
   assert.equal(boundaries[0].body, "→ 220g total");
+});
+
+// ── Percolation agitation: swirl/stir/tap get their own timed boundary ──────
+
+test("percolation: a recipe's swirl becomes its own notification boundary", () => {
+  // Bloom 60g, stir after bloom, pour to 250, final to 420, swirl after final.
+  const recipe = {
+    targetTimeSec: 240,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 60 },
+      { label: "Stir", action: "stir" },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 250 },
+      { label: "Final", action: "final", waterGramsAtEnd: 420 },
+      { label: "Swirl", action: "swirl" },
+    ],
+  };
+  // No roastDate → default 45s bloom (matches buildBrewBoundaries' own path).
+  const steps = pourStepsFromStructured(recipe, undefined, Date.parse("2026-04-17T00:00:00Z"));
+  assert.ok(steps);
+
+  const boundaries = buildBrewBoundaries(steps, null, 240);
+  // Agitation steps must appear as boundaries titled by the action (NOT "+0g").
+  const titles = boundaries.map((b) => b.title);
+  assert.ok(titles.includes("Stir"), "stir boundary present");
+  assert.ok(titles.includes("Swirl"), "swirl boundary present");
+  // The stir boundary lands at the bloom step's agitation time, and its body is
+  // the action hint — never a grams string.
+  const stir = boundaries.find((b) => b.title === "Stir");
+  assert.equal(stir.body, "after the pour");
+  // Boundaries stay in chronological order.
+  assert.deepEqual(
+    boundaries.map((b) => b.atSec),
+    [...boundaries.map((b) => b.atSec)].sort((a, b) => a - b),
+  );
 });
 
 // ── Immersion / AeroPress (structured steps → GuideStep[]) ──────────────────

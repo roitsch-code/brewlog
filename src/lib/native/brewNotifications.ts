@@ -24,6 +24,7 @@
  */
 
 import type { PourStep, GuideStep } from "@/lib/utils/pourSequence";
+import { isAgitationPourAction } from "@/lib/utils/pourSequence";
 
 // ── Ambient bridge types (no @capacitor/* imports — strict-TS clean) ────────
 
@@ -103,9 +104,19 @@ export function buildBrewBoundaries(
   const out: BrewBoundary[] = [];
 
   if (steps && steps.length > 0) {
-    // Percolation (V60/Orea/Kalita/Chemex) — cumulative-grams pours.
+    // Percolation (V60/Orea/Kalita/Chemex) — cumulative-grams pours plus
+    // discrete agitation steps (swirl/stir/tap), each timed to its own moment.
     for (const s of steps) {
       if (s.startTimeSec <= 0) continue;
+      if (isAgitationPourAction(s.action)) {
+        // Agitation step: no grams — the cue IS the action.
+        out.push({
+          atSec: s.startTimeSec,
+          title: s.label,
+          body: s.notes ?? "after the pour",
+        });
+        continue;
+      }
       const parts = [`→ ${s.cumulativeGrams}g total`];
       if (s.temperatureC != null) parts.push(`${s.temperatureC}°C`);
       out.push({
