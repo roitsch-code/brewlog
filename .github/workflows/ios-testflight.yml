@@ -40,7 +40,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Capacitor 8's CLI requires Node >= 22 (the repo's other workflows
+          # run on 20; the iOS ones must not).
+          node-version: 22
           cache: npm
           cache-dependency-path: native/package-lock.json
 
