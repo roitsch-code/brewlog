@@ -18,6 +18,7 @@ import {
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
+import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
 /**
@@ -140,6 +141,11 @@ export default function LightStepBrew() {
   // while the app is awake. Native-only no-op elsewhere.
   const boundaries = buildBrewBoundaries(steps, guideSteps, recipe?.targetTimeSec);
   useBrewStepHaptics(boundaries, elapsed, started);
+  // The decisive cue: hand the whole schedule to a paired Apple Watch at brew
+  // start so the wrist buzzes per step even while the phone screen is on (the
+  // wake-locked brew case, where iOS won't mirror notifications). Native-only
+  // no-op until the watchOS app ships. See src/lib/native/brewWatch.ts.
+  useBrewStepWatch(boundaries, elapsed, started, recipeName ?? "Brew");
 
   return (
     <LightFlowShell
