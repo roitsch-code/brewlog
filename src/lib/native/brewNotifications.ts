@@ -32,6 +32,19 @@ interface LocalNotificationLike {
   title: string;
   body: string;
   schedule: { at: Date };
+  /** iOS: setting ANY non-nil sound flips the notification from passively
+   * delivered (silent banner, no haptic) to "alerting" — it then plays a sound
+   * AND fires the default vibration on the iPhone + mirrors the haptic to a
+   * paired Apple Watch (when the phone is locked/asleep). A missing custom file
+   * falls back to the system default tone. Omitting this field is why early
+   * builds buzzed nothing. */
+  sound?: string;
+  /** iOS interruption level. `timeSensitive` lets a pour cue break through a
+   * Focus / Do-Not-Disturb mode and reads as urgent — the right semantic for a
+   * live brew timer. (Breaking through Focus also needs the Time-Sensitive
+   * entitlement on the App ID; without it this degrades gracefully to a normal
+   * alert.) */
+  interruptionLevel?: "passive" | "active" | "timeSensitive" | "critical";
 }
 
 interface LocalNotificationsLike {
@@ -197,7 +210,18 @@ export async function scheduleBrew(boundaries: BrewBoundary[], anchorMs: number)
     const notifications = boundaries.slice(0, ID_RANGE).flatMap((b, i) => {
       const at = new Date(anchorMs + b.atSec * 1000);
       if (at.getTime() - now < MIN_LEAD_MS) return [];
-      return [{ id: ID_BASE + i, title: b.title, body: b.body, schedule: { at } }];
+      return [
+        {
+          id: ID_BASE + i,
+          title: b.title,
+          body: b.body,
+          schedule: { at },
+          // Make the cue alerting, not passive — sound + iPhone vibration +
+          // Apple Watch haptic on a locked phone. See LocalNotificationLike.
+          sound: "default",
+          interruptionLevel: "timeSensitive" as const,
+        },
+      ];
     });
     if (notifications.length > 0) await plugin.schedule({ notifications });
   } catch {
