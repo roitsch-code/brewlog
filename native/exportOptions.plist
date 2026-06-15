@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Export options for `xcodebuild -exportArchive` (Phase 4, ios-testflight.yml).
+
+  Automatic cloud signing: the workflow passes the App Store Connect API key via
+  -allowProvisioningUpdates -authenticationKey*, which creates the distribution
+  certificate + provisioning profile on the fly. teamID is injected by the
+  workflow from the APPLE_TEAM_ID secret (sed/PlistBuddy) — it is intentionally
+  NOT hard-coded here so the repo carries no account identifier.
+-->
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>destination</key>
+  <string>export</string>
+  <key>uploadSymbols</key>
+  <true/>
+</dict>
+</plist>
