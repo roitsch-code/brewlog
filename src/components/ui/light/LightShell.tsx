@@ -1,9 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { FieldProvider } from "@/lib/field/FieldContext";
+import { sweepBrewNotifications } from "@/lib/native/brewNotifications";
 import Field from "./Field";
 import ConnectionStatus from "./ConnectionStatus";
+
+// Run the legacy-notification sweep once per app session, not per route mount.
+let didSweepNotifications = false;
 
 /**
  * Light System v1.0 + v1.1 — route-scoped shell.
@@ -25,6 +29,15 @@ import ConnectionStatus from "./ConnectionStatus";
  * ConnectionStatus owns the offline indicator + offline-save sync.
  */
 export default function LightShell({ children }: { children: ReactNode }) {
+  // Clear any brew notification a pre-removal build left scheduled in iOS's
+  // queue (they only ever orphaned after a force-quit). One-shot on app open;
+  // no-op off the native shell. Brews no longer schedule notifications.
+  useEffect(() => {
+    if (didSweepNotifications) return;
+    didSweepNotifications = true;
+    void sweepBrewNotifications();
+  }, []);
+
   return (
     <FieldProvider>
       <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">

@@ -17,7 +17,6 @@ import {
 } from "@/lib/utils/pourSequence";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
-import { useBrewStepNotifications } from "@/hooks/useBrewStepNotifications";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
@@ -127,29 +126,17 @@ export default function LightStepBrew() {
   // legacy path for older recommendations.
   const proseSequence = !guideSteps && !steps && recipe?.pourSequence ? recipe.pourSequence : null;
 
-  // iOS shell: schedule a lock-screen notification at every step boundary so
-  // cues survive a locked phone. Silent no-op in browsers — the Web Audio cue
-  // + vibration below remain the foreground path (no double cue: the shell
-  // suppresses foreground banners via presentationOptions: []).
+  // The step cue schedule (one entry per pour + agitation step). Lock-screen
+  // notifications were removed (they only ever orphaned after a force-quit — see
+  // brewNotifications.ts); these boundaries now drive the foreground Taptic
+  // haptics only — a 3-2-1 countdown then a strong buzz at each step, fired live
+  // while the app is awake. Native-only no-op elsewhere.
   const boundaries = buildBrewBoundaries(steps, guideSteps, recipe?.targetTimeSec);
-  const { cancelAll: cancelStepNotifications } = useBrewStepNotifications(
-    boundaries,
-    elapsed,
-    started,
-  );
-
-  // iOS shell: real foreground Taptic cues — a 3-2-1 countdown then a strong
-  // buzz at every step boundary, fired live while the app is awake + foreground
-  // (where lock-screen notifications never show and navigator.vibrate is dead).
-  // Native-only no-op elsewhere.
   useBrewStepHaptics(boundaries, elapsed, started);
 
   return (
     <LightFlowShell
-      onNext={() => {
-        cancelStepNotifications();
-        handleDone();
-      }}
+      onNext={handleDone}
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
