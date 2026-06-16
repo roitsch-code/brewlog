@@ -18,6 +18,8 @@ import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
 import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
+import { useAcaiaScale } from "@/hooks/useAcaiaScale";
+import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -78,6 +80,27 @@ export default function LightStepBrew() {
     [enableWakeLock],
   );
 
+  // ── Live scale (Acaia) ─────────────────────────────────────────────────────
+  // The brew screen owns the scale so the live flow coach reads the SAME weight
+  // + sample stream the ScalePanel shows. Downsample the ~10–20 Hz BLE stream to
+  // ~5 Hz into a rolling ~6 s window — a ref, so samples never trigger renders.
+  const samplesRef = useRef<WeightSample[]>([]);
+  const lastSampleMsRef = useRef(0);
+  const pushSample = useCallback((grams: number, atMs: number) => {
+    if (atMs - lastSampleMsRef.current < 200) return;
+    lastSampleMsRef.current = atMs;
+    const buf = samplesRef.current;
+    buf.push({ atMs, grams });
+    const cutoff = atMs - 6000;
+    while (buf.length > 0 && buf[0].atMs < cutoff) buf.shift();
+  }, []);
+  const scale = useAcaiaScale({ onSample: pushSample });
+
+  // Clear the sample window on reset so a re-brew never coaches off stale pours.
+  useEffect(() => {
+    if (elapsed === 0) samplesRef.current = [];
+  }, [elapsed]);
+
   const handleDone = useCallback(
     (actualSec?: number) => {
       disableWakeLock();
@@ -133,6 +156,10 @@ export default function LightStepBrew() {
   // while the app is awake. Native-only no-op elsewhere.
   const boundaries = timeline ? boundariesFromTimeline(timeline) : [];
   useBrewStepHaptics(boundaries, elapsed, started);
+
+  // Live pour-flow comparison. Off the native shell / immersion / no weight yet
+  // → cue "none", so the coach UI renders nothing (no-scale path unchanged).
+  const coach = coachFlow(timeline, elapsed, started, scale.weight, samplesRef.current);
   // The decisive cue: hand the whole schedule to a paired Apple Watch at brew
   // start so the wrist buzzes per step even while the phone screen is on (the
   // wake-locked brew case, where iOS won't mirror notifications). Native-only
@@ -145,7 +172,7 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
-        <ScalePanel />
+        <ScalePanel {...scale} />
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
@@ -186,6 +213,7 @@ export default function LightStepBrew() {
             elapsed={elapsed}
             targetTimeSec={recipe.targetTimeSec}
             started={started}
+            coach={coach}
           />
         )}
 
@@ -204,6 +232,42 @@ interface LivePourSequenceProps {
   elapsed: number;
   targetTimeSec: number;
   started: boolean;
+  /** Live pour-flow comparison (scale connected). Null/"none" → nothing renders. */
+  coach?: FlowComparison | null;
+}
+
+/** Live "pour slower / faster / keep the flow" cue on the active pour card.
+ * Renders only when the scale is connected and on a grams-curve (percolation). */
+function CoachCue({ coach }: { coach: FlowComparison }) {
+  const color =
+    coach.state === "on-track"
+      ? "text-light-success"
+      : coach.state === "ahead" || coach.state === "behind"
+        ? "text-light-accent-overtime"
+        : "text-light-foreground";
+  return (
+    <div
+      key={coach.cue}
+      className="mt-3 rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-3 py-2 animate-step-activate"
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className={`font-fraunces text-[20px] leading-none ${color}`}>{coach.message}</span>
+        {coach.liveGrams != null && (
+          <span className="font-mono-num text-[15px] font-semibold text-light-foreground">
+            {Math.round(coach.liveGrams)}g
+          </span>
+        )}
+      </div>
+      {coach.detail && (
+        <p className="font-mono-num text-[11px] text-light-muted-foreground mt-1">{coach.detail}</p>
+      )}
+    </div>
+  );
+}
+
+/** Whether a coach result is worth surfacing on the pour card. */
+function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
+  return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
 }
 
 /** Short SwirlButton label for an agitation step. */
@@ -211,7 +275,7 @@ function agitationButtonLabel(action: PourStep["action"]): string {
   return action === "stir" ? "Stir" : action === "tap" ? "Tap" : "Swirl";
 }
 
-function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSequenceProps) {
+function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
@@ -350,6 +414,7 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started }: LivePourSe
               </p>
             </div>
           </div>
+          {showsCoach(coach) && <CoachCue coach={coach} />}
           {countdownFooter}
         </div>
       )}

@@ -8,11 +8,21 @@
  * In the shell it offers a Connect action, then shows live grams + Tare while
  * connected. v1: read-only weight + tare; pour auto-advance comes later.
  */
-import { useAcaiaScale } from "@/hooks/useAcaiaScale";
+import type { UseAcaiaScale } from "@/hooks/useAcaiaScale";
 
-export function ScalePanel() {
-  const { available, status, weight, connect, disconnect, tare } = useAcaiaScale();
-
+/**
+ * Presentational scale card — the brew screen owns the `useAcaiaScale` state
+ * (so the live flow coach can read the same weight + sample stream) and passes
+ * it in. Renders nothing off the native shell (`available` false).
+ */
+export function ScalePanel({
+  available,
+  status,
+  weight,
+  connect,
+  disconnect,
+  tare,
+}: UseAcaiaScale) {
   if (!available) return null;
 
   const connected = status === "connected";

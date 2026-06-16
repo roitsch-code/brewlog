@@ -30,7 +30,15 @@ export interface UseAcaiaScale {
   tare: () => void;
 }
 
-export function useAcaiaScale(): UseAcaiaScale {
+export interface UseAcaiaScaleOptions {
+  /** Called on every weight sample with a wall-clock timestamp — feeds the live
+   * flow coach's rolling window. Additive; no effect off the native shell. */
+  onSample?: (grams: number, atMs: number) => void;
+}
+
+export function useAcaiaScale(opts: UseAcaiaScaleOptions = {}): UseAcaiaScale {
+  const onSampleRef = useRef(opts.onSample);
+  onSampleRef.current = opts.onSample;
   // Resolve capability after mount so SSR markup stays stable (server = false).
   const [available, setAvailable] = useState(false);
   const [status, setStatus] = useState<AcaiaUiStatus>("idle");
@@ -45,7 +53,10 @@ export function useAcaiaScale(): UseAcaiaScale {
     if (!acaiaCapable() || handleRef.current) return;
     try {
       const handle = await connectAcaia({
-        onWeight: (grams) => setWeight(grams),
+        onWeight: (grams) => {
+          setWeight(grams);
+          onSampleRef.current?.(grams, Date.now());
+        },
         onStatus: (s) => setStatus(s),
       });
       handleRef.current = handle;
