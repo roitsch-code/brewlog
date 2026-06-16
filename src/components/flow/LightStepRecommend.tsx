@@ -12,6 +12,7 @@ import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/
 import CraftingStatus from "@/components/ui/light/CraftingStatus";
 import { buildCraftingPhases } from "@/lib/craftingPhases";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
+import { MAX_CHARS } from "@/lib/insights/loadingInsightLint";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
@@ -85,11 +86,39 @@ export default function LightStepRecommend() {
   // Rotating insight deck for the crafting screen: a shuffled subset shown one
   // at a time — big (Fraunces 40, like the welcome haiku), scattered-in, held
   // long enough to read, then dissolved the OPPOSITE way (down) before the next
-  // sets up. Pulled straight from the code-canonical short COFFEE_HINTS so the
-  // big format always fits (no /api/hints round-trip, no risk of a long string).
-  const [insights] = useState<string[]>(() => shuffleSubset(COFFEE_HINTS, 12));
+  // sets up. Seeded synchronously from the code-canonical short COFFEE_HINTS so
+  // the big format always fits and the first frame paints instantly (offline
+  // too); the auto-refreshed pool is merged in below, purely additive.
+  const [insights, setInsights] = useState<string[]>(() => shuffleSubset(COFFEE_HINTS, 12));
   const [insightIdx, setInsightIdx] = useState(0);
   const [insightVisible, setInsightVisible] = useState(true);
+
+  // Merge the auto-refreshed insight pool (/api/loading-insights) with the
+  // static seed. The seed is the floor — always present, instant, offline-safe
+  // — so DB rows only add, and any fetch failure leaves the seed-only shuffle
+  // in place. Length-capped defensively so a bad row can't break the headline.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/loading-insights")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { insights?: string[] } | null) => {
+        if (cancelled || !data?.insights?.length) return;
+        const seen = new Set<string>();
+        const merged: string[] = [];
+        for (const s of [...data.insights, ...COFFEE_HINTS]) {
+          const key = s.trim().toLowerCase();
+          if (s.length <= MAX_CHARS && !seen.has(key)) {
+            seen.add(key);
+            merged.push(s);
+          }
+        }
+        if (merged.length > 0) setInsights(shuffleSubset(merged, 12));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const currentInsight = insights[insightIdx] ?? "";
   const insightWordCount = currentInsight.trim() === "" ? 0 : currentInsight.trim().split(/\s+/).length;

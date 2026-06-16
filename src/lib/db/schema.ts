@@ -295,3 +295,34 @@ export type NewSessionRow = typeof sessions.$inferInsert;
 export type CoffeeRow = typeof coffees.$inferSelect;
 export type NewCoffeeRow = typeof coffees.$inferInsert;
 export type PlaceRow = typeof places.$inferSelect;
+
+// ── Loading-screen insight pool (migration 0018) ─────────────────────────
+// Auto-refreshed pool of short headline insights for the recipe-creation
+// loading screen. Grown/swapped by the scheduled agent in
+// /api/loading-insights/refresh; read by /api/loading-insights. Every row is
+// grounded in a source (see the migration header). The static COFFEE_HINTS
+// array remains the synchronous seed + offline fallback.
+export type LoadingInsightSource = "corpus" | "brews" | "web";
+export type LoadingInsightStatus = "live" | "retired";
+
+export const loadingInsights = pgTable(
+  "loading_insights",
+  {
+    id: text("id").primaryKey(),
+    text: text("text").notNull(),
+    source: text("source").$type<LoadingInsightSource>().notNull(),
+    sourceRef: text("source_ref"),
+    status: text("status").$type<LoadingInsightStatus>().notNull().default("live"),
+    score: numeric("score").notNull().default("1"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAtMs: bigint("created_at_ms", { mode: "number" }).notNull(),
+    verifiedAtMs: bigint("verified_at_ms", { mode: "number" }),
+  },
+  (t) => ({
+    statusIdx: index("loading_insights_status_idx").on(t.status),
+    createdAtMsIdx: index("loading_insights_created_at_ms_idx").on(t.createdAtMs.desc()),
+  })
+);
+
+export type LoadingInsightRow = typeof loadingInsights.$inferSelect;
+export type NewLoadingInsightRow = typeof loadingInsights.$inferInsert;
