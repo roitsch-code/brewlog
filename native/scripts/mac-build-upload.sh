@@ -97,7 +97,7 @@ xcodebuild archive \
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
 
 # ── (2) build the Payload and MANUALLY re-sign (HealthKit path) ───────────────
-say "Re-sign app + watch with the distribution cert (HealthKit entitlement)"
+say "Re-sign app + watch with the distribution cert (push + time-sensitive)"
 rm -rf "$WORK"; mkdir -p "$WORK/Payload"
 cp -R "$ARCHIVE/Products/Applications/App.app" "$WORK/Payload/App.app"
 APP="$WORK/Payload/App.app"
@@ -112,6 +112,13 @@ cp "$WATCH_PROFILE" "$WATCH/embedded.mobileprovision"
 security cms -D -i "$APP_PROFILE"   | plutil -extract Entitlements xml1 -o "$WORK/app.ent"   -
 security cms -D -i "$WATCH_PROFILE" | plutil -extract Entitlements xml1 -o "$WORK/watch.ent" -
 
+# Add the Time Sensitive Notifications entitlement so watchOS delivers each
+# step push IMMEDIATELY instead of batching it (~15 s late otherwise). It's a
+# registration-free entitlement (not an App-ID capability), so it signs through
+# on top of the profile's aps-environment.
+/usr/libexec/PlistBuddy -c "Add :com.apple.developer.usernotifications.time-sensitive bool true" "$WORK/watch.ent" 2>/dev/null \
+  || /usr/libexec/PlistBuddy -c "Set :com.apple.developer.usernotifications.time-sensitive true" "$WORK/watch.ent"
+
 sign() { codesign -f -s "$IDENTITY" --timestamp "$@"; }
 
 # Bottom-up: nested frameworks first, then the watch app, then the iOS app.
@@ -125,8 +132,9 @@ say "Verify"
 codesign -v --deep --strict "$APP"
 echo "Payload root (must be App.app ONLY):"; ls "$WORK/Payload"
 echo "Watch embedded:"; ls "$APP/Watch"
-echo "HealthKit in signed watch entitlements:"
-codesign -d --entitlements - "$WATCH" 2>/dev/null | grep -i healthkit || echo "  (none — STOP, do not ship)"
+echo "watch push entitlements (want aps-environment + time-sensitive, NO healthkit):"
+codesign -d --entitlements - "$WATCH" 2>/dev/null | grep -iE "aps-environment|time-sensitive" || echo "  (MISSING — check signing)"
+codesign -d --entitlements - "$WATCH" 2>/dev/null | grep -qi healthkit && echo "  WARNING: healthkit still present (will be rejected 90683)" || true
 echo "iOS build:"; /usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP/Info.plist"
 echo "watch build:"; /usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$WATCH/Info.plist"
 
