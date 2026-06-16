@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC_PATHS = ["/login", "/api/auth", "/api/research", "/api/admin"];
+// /api/loading-insights: the refresh sub-route is CRON_SECRET-gated and the GET
+// read is requireAuth-gated, so both enforce their own auth past this allow.
+const PUBLIC_PATHS = ["/login", "/api/auth", "/api/research", "/api/admin", "/api/loading-insights"];
 const STATIC_PATHS = ["/_next", "/favicon.ico", "/sw.js", "/manifest.json", "/icons", "/screenshots"];
 
 export async function middleware(req: NextRequest) {
