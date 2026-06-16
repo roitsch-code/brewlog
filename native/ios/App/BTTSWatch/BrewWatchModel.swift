@@ -28,10 +28,16 @@ import HealthKit
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
 
+    enum FireKind {
+        case countdown // a light 3-2-1 tick leading INTO a step
+        case step // the strong "act now" buzz AT the step
+    }
+
     struct Fire: Identifiable {
         let id = UUID()
         let at: Date
         let label: String
+        let kind: FireKind
         var fired = false
     }
 
@@ -69,8 +75,22 @@ final class BrewWatchModel: NSObject, ObservableObject {
 
     private func startBrew(recipeName: String, fires incoming: [Fire]) {
         let now = Date()
-        // Keep the whole schedule for display, but only future fires can buzz.
-        let sorted = incoming.sorted { $0.at < $1.at }
+        // `incoming` are the STEP fires. Expand each into a 3-2-1 countdown
+        // (light taps at −3 / −2 / −1 s) plus the strong step buzz AT the step,
+        // so the wrist counts you in and you can react ON the beat — "3, 2, 1,
+        // POUR" — instead of buzzing only once the moment is already here. This
+        // mirrors the phone's foreground haptics (useBrewStepHaptics).
+        var schedule: [Fire] = []
+        for step in incoming {
+            for lead in [3.0, 2.0, 1.0] {
+                schedule.append(
+                    Fire(at: step.at.addingTimeInterval(-lead), label: step.label, kind: .countdown))
+            }
+            schedule.append(Fire(at: step.at, label: step.label, kind: .step))
+        }
+        let sorted = schedule.sorted { $0.at < $1.at }
+        // Only future fires can buzz; past ones (and countdowns that fall before
+        // brew start) are pre-marked done so we never machine-gun a backlog.
         self.fires = sorted.map { var f = $0; if $0.at <= now { f.fired = true }; return f }
         self.recipeName = recipeName
         self.isBrewing = true
@@ -104,14 +124,19 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private func tick() {
         guard isBrewing else { return }
         let now = Date()
-        var didFire = false
+        var didFireStep = false
         for i in fires.indices where !fires[i].fired && fires[i].at <= now {
             fires[i].fired = true
-            currentLabel = fires[i].label
-            buzz()
-            didFire = true
+            switch fires[i].kind {
+            case .countdown:
+                buzzCountdown()
+            case .step:
+                currentLabel = fires[i].label
+                buzz()
+                didFireStep = true
+            }
         }
-        if didFire { refreshLabels(now: now) }
+        if didFireStep { refreshLabels(now: now) }
         // Auto-wind-down a few seconds after the last step, so a forgotten
         // brew doesn't hold the workout session open indefinitely.
         if let last = fires.last?.at, now.timeIntervalSince(last) > 8 {
@@ -120,7 +145,9 @@ final class BrewWatchModel: NSObject, ObservableObject {
     }
 
     private func refreshLabels(now: Date) {
-        if let next = fires.first(where: { !$0.fired }) {
+        // Point the watch face at the next STEP (not the in-between countdown
+        // ticks), so "next: Pour 2" + its time read cleanly.
+        if let next = fires.first(where: { !$0.fired && $0.kind == .step }) {
             nextLabel = next.label
             nextFireAt = next.at
         } else {
@@ -142,6 +169,13 @@ final class BrewWatchModel: NSObject, ObservableObject {
         for t in offsets {
             DispatchQueue.main.asyncAfter(deadline: .now() + t) { device.play(.notification) }
         }
+    }
+
+    /// A single light tick for each 3-2-1 countdown beat before a step —
+    /// deliberately distinct from the strong step `buzz()` so the wrist reads as
+    /// "tick, tick, tick, POUR" and you can react in time.
+    private func buzzCountdown() {
+        WKInterfaceDevice.current().play(.click)
     }
 
     // MARK: - Workout session (keeps haptics alive with the screen off / wrist down)
@@ -181,7 +215,10 @@ final class BrewWatchModel: NSObject, ObservableObject {
                     guard let atMs = dict["atMs"] as? Double ?? (dict["atMs"] as? NSNumber)?.doubleValue
                     else { return nil }
                     let label = dict["label"] as? String ?? "Next step"
-                    return Fire(at: Date(timeIntervalSince1970: atMs / 1000.0), label: label)
+                    // Incoming fires are STEP boundaries; startBrew expands each
+                    // into its 3-2-1 countdown + the step buzz.
+                    return Fire(
+                        at: Date(timeIntervalSince1970: atMs / 1000.0), label: label, kind: .step)
                 }
                 guard !parsed.isEmpty else { return }
                 self.startBrew(recipeName: name, fires: parsed)
