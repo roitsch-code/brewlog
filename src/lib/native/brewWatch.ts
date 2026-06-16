@@ -72,29 +72,6 @@ export function isNativeWatch(): boolean {
   return getPlugin() !== null;
 }
 
-// ── Diagnostics (temporary — surfaced on the brew screen to debug the watch) ──
-// Records the last handoff result so the brew screen can show exactly where the
-// phone→watch chain stands without a device-side debugger.
-let lastSend = "";
-
-/**
- * A compact live status string for the brew screen: is this the native shell,
- * is the BrewWatch plugin exposed to JS, and what did the last handoff do.
- * Pure read — safe every render.
- */
-export function watchDiag(): string {
-  try {
-    if (typeof window === "undefined") return "";
-    const cap = (window as unknown as { Capacitor?: CapacitorLike }).Capacitor;
-    if (!cap) return "watch: no shell";
-    const native = cap.isNativePlatform?.() ? "Y" : "N";
-    const plugin = cap.Plugins?.BrewWatch ? "Y" : "N";
-    return `watch: native=${native} plugin=${plugin}${lastSend ? " " + lastSend : ""}`;
-  } catch {
-    return "watch: err";
-  }
-}
-
 /**
  * Convert the brew's relative-second boundaries into absolute epoch-ms fire
  * times. `startedAtMs` is the wall-clock moment the brew timer hit zero (= now
@@ -114,24 +91,10 @@ export function startBrewOnWatch(
   recipeName: string,
 ): void {
   const plugin = getPlugin();
-  if (!plugin) {
-    lastSend = "send=skip(no plugin)";
-    return;
-  }
+  if (!plugin) return;
   const fires = boundariesToFires(boundaries, startedAtMs);
-  if (fires.length === 0) {
-    lastSend = "send=skip(0 fires)";
-    return;
-  }
-  lastSend = `send=${fires.length}`;
-  plugin.startBrew({ recipeName, fires }).then(
-    () => {
-      lastSend = `sent ${fires.length} ok`;
-    },
-    () => {
-      lastSend = `send=err(${fires.length})`;
-    },
-  );
+  if (fires.length === 0) return;
+  void plugin.startBrew({ recipeName, fires }).catch(() => {});
 }
 
 /** Tell the watch the brew ended / reset. No-op off the native shell. */
