@@ -57,7 +57,7 @@ settings = {
   "TARGETED_DEVICE_FAMILY" => "4",
   "SDKROOT" => "watchos",
   "ASSETCATALOG_COMPILER_APPICON_NAME" => "AppIcon",
-  "SKIP_INSTALL" => "NO",
+  "SKIP_INSTALL" => "YES", # embedded-only: keep the watch app OUT of Payload root (a stray top-level copy breaks watch-app install)
   "MARKETING_VERSION" => "1.0",
   "CURRENT_PROJECT_VERSION" => "1",
 }
