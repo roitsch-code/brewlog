@@ -82,11 +82,18 @@ export default function LightStepBrew() {
   const handleDone = useCallback(
     (actualSec?: number) => {
       disableWakeLock();
+      // Guard the arg: if a click event leaks in via onNext={handleDone} it is
+      // truthy, so `actualSec ?? elapsed` would store the (non-serializable)
+      // event as actualTimeSec — which threw inside the localStorage-persisted
+      // store and left the brew stuck on this screen, unable to log (#320
+      // regression). Coerce anything that isn't a finite number to elapsed.
+      const finalSec =
+        typeof actualSec === "number" && Number.isFinite(actualSec) ? actualSec : elapsed;
       setBrew({
         ...draft.brew,
         methodUsed: method,
         followedRecipe: true,
-        actualTimeSec: actualSec ?? elapsed,
+        actualTimeSec: finalSec,
       });
       setStep("log");
     },
@@ -136,7 +143,7 @@ export default function LightStepBrew() {
 
   return (
     <LightFlowShell
-      onNext={handleDone}
+      onNext={() => handleDone()}
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
