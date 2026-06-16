@@ -7,47 +7,47 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0E3AAAD15299EBCFFB2AE41F /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5CFE3682E22C7004E39D93B /* MainViewController.swift */; };
+		0AA79F44951B65948557986D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F89CB67A9B3AAAE925DF42CE /* Foundation.framework */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
-		3A5EC9141FECC04716ED4FB7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C4F3F7BAB957224398DBFFB /* ContentView.swift */; };
-		45C50BE23636701FD58F5F7C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BECE2F50A3BB00392D958631 /* ContentView.swift */; };
+		4CB7CA691B7F140786E150B0 /* BrewWatchPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC17B86BECA4677A39EFDC2 /* BrewWatchPlugin.swift */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
-		4F3BD5733260EA70B437B272 /* BTTSWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1EAE1EC8315C4971C605AA8 /* BTTSWatchApp.swift */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
-		5BB5F93B065A024F8041C820 /* BTTSWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D42A98B35A6F70202BB1ACA /* BTTSWatchApp.swift */; };
-		6F56B3D9F613CE2BD2385108 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F89CB67A9B3AAAE925DF42CE /* Foundation.framework */; };
-		774A7BE9B48DAFB1BC70C1AA /* BrewWatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD5FCA57A8607B2EDA1975F /* BrewWatchModel.swift */; };
-		AC84E96FB00BF06BAEAAA33F /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F89CB67A9B3AAAE925DF42CE /* Foundation.framework */; };
-		AF1569AE88CBD01FB1F13CEC /* BrewWatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1288A6590CDB2882C45E285B /* BrewWatchModel.swift */; };
-		B0A54FE0781A0E38B10CDC5E /* Assets.xcassets in Sources */ = {isa = PBXBuildFile; fileRef = 7ECB303B7B1194B095EADD28 /* Assets.xcassets */; };
-		CDFE82DC5270E9F8D4440261 /* BrewWatchPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CC4EC14BFA1D73FE2836B91 /* BrewWatchPlugin.swift */; };
-		F31C738237056B263DC5B2CD /* Assets.xcassets in Sources */ = {isa = PBXBuildFile; fileRef = D4EE7E35958E432845FA517A /* Assets.xcassets */; };
-		F5F876C8D6F464880B35C778 /* BTTSWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = E4794BC77AD94706A3A8A3FC /* BTTSWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		51F9BA67156DB26450AB3A9C /* Assets.xcassets in Sources */ = {isa = PBXBuildFile; fileRef = EEA2DE86DFE05F3A4C6167F1 /* Assets.xcassets */; };
+		68CB60A62B9EA3D68F42FDA2 /* BTTSWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447813FE0126BF9BF8DF128A /* BTTSWatchApp.swift */; };
+		71CC38BE382B9654FDDE7C5F /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80E13ACF55D77ED133744A9 /* MainViewController.swift */; };
+		7C03FAE13D9F8EBA0CEDEE45 /* BrewWatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5539515709EE7D261C1397BB /* BrewWatchModel.swift */; };
+		8867513C5906571B5AE6193B /* Assets.xcassets in Sources */ = {isa = PBXBuildFile; fileRef = 2F586320D8815DCF40BD8040 /* Assets.xcassets */; };
+		970B0E42DC7FADD5A3557AB4 /* BrewWatchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0983163A9190F5E5E187C00B /* BrewWatchModel.swift */; };
+		CC9BFCE8C09959A96AAD79E0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BC838766165B48714683FB /* ContentView.swift */; };
+		DAB4930B3EE81F1EBED0B983 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00E9A8AA7EFECE3F30B79421 /* ContentView.swift */; };
+		E0B29512E643F03A7735EF78 /* BTTSWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9172FA1686F0B47F2E61252E /* BTTSWatchApp.swift */; };
+		E1843B0590FC59BB94738EAE /* BTTSWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 15C48B3D9C6777AFBED6742D /* BTTSWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F7B6C7C85CE5EB8193FA3F98 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F89CB67A9B3AAAE925DF42CE /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		4FDBBA512B66E789DC501A7B /* PBXContainerItemProxy */ = {
+		12BAFB23B3B3C2A317399027 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 504EC2FC1FED79650016851F /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 89D3A9EB759B4954D6CF119A;
+			remoteGlobalIDString = 01BD61A56F4DE4030A1042E4;
 			remoteInfo = BTTSWatch;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		8E25E3824B37D7F3656B4242 /* Embed Watch Content */ = {
+		E1F43A36893BF7E8D1E5955F /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
 			dstSubfolderSpec = 16;
 			files = (
-				F5F876C8D6F464880B35C778 /* BTTSWatch.app in Embed Watch Content */,
+				E1843B0590FC59BB94738EAE /* BTTSWatch.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -55,12 +55,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1288A6590CDB2882C45E285B /* BrewWatchModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchModel.swift; sourceTree = "<group>"; };
-		1C4F3F7BAB957224398DBFFB /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		00E9A8AA7EFECE3F30B79421 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0983163A9190F5E5E187C00B /* BrewWatchModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchModel.swift; sourceTree = "<group>"; };
+		15C48B3D9C6777AFBED6742D /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F586320D8815DCF40BD8040 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
-		3CC4EC14BFA1D73FE2836B91 /* BrewWatchPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchPlugin.swift; sourceTree = "<group>"; };
-		3DD5FCA57A8607B2EDA1975F /* BrewWatchModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchModel.swift; sourceTree = "<group>"; };
 		3EA64EBAA08776AEC41928D0 /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		447813FE0126BF9BF8DF128A /* BTTSWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BTTSWatchApp.swift; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -69,29 +70,23 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
-		7D42A98B35A6F70202BB1ACA /* BTTSWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BTTSWatchApp.swift; sourceTree = "<group>"; };
-		7ECB303B7B1194B095EADD28 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5539515709EE7D261C1397BB /* BrewWatchModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchModel.swift; sourceTree = "<group>"; };
+		5C552E78990C9128A84F9CFF /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		784D334F2B5D97AD53E86FB4 /* BTTSWatch.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = BTTSWatch.entitlements; sourceTree = "<group>"; };
 		823DCE1B0BD9052E29751C0B /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9172FA1686F0B47F2E61252E /* BTTSWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BTTSWatchApp.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
-		9D2D5461153C6A629A90875E /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B3EBF85ED691BF6605E95FE9 /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BECE2F50A3BB00392D958631 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		D1EAE1EC8315C4971C605AA8 /* BTTSWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BTTSWatchApp.swift; sourceTree = "<group>"; };
-		D4EE7E35958E432845FA517A /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B80E13ACF55D77ED133744A9 /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		C0BC838766165B48714683FB /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C0C080195B81E82654F1725B /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CBC17B86BECA4677A39EFDC2 /* BrewWatchPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BrewWatchPlugin.swift; sourceTree = "<group>"; };
 		E4794BC77AD94706A3A8A3FC /* BTTSWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BTTSWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5CFE3682E22C7004E39D93B /* MainViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		EEA2DE86DFE05F3A4C6167F1 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F89CB67A9B3AAAE925DF42CE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0C697A267ED533CA60F31572 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AC84E96FB00BF06BAEAAA33F /* Foundation.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		504EC3011FED79650016851F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -100,17 +95,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		649B78E46735E2624A34B15C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F7B6C7C85CE5EB8193FA3F98 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2796BC508CC89A8095311357 /* BTTSWatch */ = {
+		471A03050E5648B0C354007D /* BTTSWatch */ = {
 			isa = PBXGroup;
 			children = (
-				D1EAE1EC8315C4971C605AA8 /* BTTSWatchApp.swift */,
-				1288A6590CDB2882C45E285B /* BrewWatchModel.swift */,
-				BECE2F50A3BB00392D958631 /* ContentView.swift */,
-				7ECB303B7B1194B095EADD28 /* Assets.xcassets */,
-				9D2D5461153C6A629A90875E /* Info.plist */,
+				9172FA1686F0B47F2E61252E /* BTTSWatchApp.swift */,
+				0983163A9190F5E5E187C00B /* BrewWatchModel.swift */,
+				C0BC838766165B48714683FB /* ContentView.swift */,
+				2F586320D8815DCF40BD8040 /* Assets.xcassets */,
+				5C552E78990C9128A84F9CFF /* Info.plist */,
+				784D334F2B5D97AD53E86FB4 /* BTTSWatch.entitlements */,
 			);
 			name = BTTSWatch;
 			path = BTTSWatch;
@@ -123,7 +127,7 @@
 				504EC3061FED79650016851F /* App */,
 				504EC3051FED79650016851F /* Products */,
 				E88909646E8979C4DE464D5D /* Frameworks */,
-				2796BC508CC89A8095311357 /* BTTSWatch */,
+				471A03050E5648B0C354007D /* BTTSWatch */,
 			);
 			sourceTree = "<group>";
 		};
@@ -135,6 +139,8 @@
 				B3EBF85ED691BF6605E95FE9 /* BTTSWatch.app */,
 				3EA64EBAA08776AEC41928D0 /* BTTSWatch.app */,
 				E4794BC77AD94706A3A8A3FC /* BTTSWatch.app */,
+				C0C080195B81E82654F1725B /* BTTSWatch.app */,
+				15C48B3D9C6777AFBED6742D /* BTTSWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -150,8 +156,8 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
-				3CC4EC14BFA1D73FE2836B91 /* BrewWatchPlugin.swift */,
-				F5CFE3682E22C7004E39D93B /* MainViewController.swift */,
+				CBC17B86BECA4677A39EFDC2 /* BrewWatchPlugin.swift */,
+				B80E13ACF55D77ED133744A9 /* MainViewController.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -175,35 +181,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		504EC3031FED79650016851F /* App */ = {
+		01BD61A56F4DE4030A1042E4 /* BTTSWatch */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */;
+			buildConfigurationList = C2C4625BF27B261185FCD1CA /* Build configuration list for PBXNativeTarget "BTTSWatch" */;
 			buildPhases = (
-				504EC3001FED79650016851F /* Sources */,
-				504EC3011FED79650016851F /* Frameworks */,
-				504EC3021FED79650016851F /* Resources */,
-				8E25E3824B37D7F3656B4242 /* Embed Watch Content */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				EBBD54CBBE983795D52985A9 /* PBXTargetDependency */,
-			);
-			name = App;
-			packageProductDependencies = (
-				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
-			);
-			productName = App;
-			productReference = 504EC3041FED79650016851F /* App.app */;
-			productType = "com.apple.product-type.application";
-		};
-		89D3A9EB759B4954D6CF119A /* BTTSWatch */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 924E10B5980ED8AC7D954155 /* Build configuration list for PBXNativeTarget "BTTSWatch" */;
-			buildPhases = (
-				436A07E87ECB10197394BFBC /* Sources */,
-				0C697A267ED533CA60F31572 /* Frameworks */,
-				2708DDC51B02FDF31AF18729 /* Resources */,
+				FDEB72C35D790F2FE6E0AA9C /* Sources */,
+				649B78E46735E2624A34B15C /* Frameworks */,
+				2EB034DB49A3BCFB0F7BEB4A /* Resources */,
 			);
 			buildRules = (
 			);
@@ -211,7 +195,29 @@
 			);
 			name = BTTSWatch;
 			productName = BTTSWatch;
-			productReference = E4794BC77AD94706A3A8A3FC /* BTTSWatch.app */;
+			productReference = 15C48B3D9C6777AFBED6742D /* BTTSWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		504EC3031FED79650016851F /* App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */;
+			buildPhases = (
+				504EC3001FED79650016851F /* Sources */,
+				504EC3011FED79650016851F /* Frameworks */,
+				504EC3021FED79650016851F /* Resources */,
+				E1F43A36893BF7E8D1E5955F /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				279542A02698ACE4811FA84E /* PBXTargetDependency */,
+			);
+			name = App;
+			packageProductDependencies = (
+				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
+			);
+			productName = App;
+			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -247,13 +253,13 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
-				89D3A9EB759B4954D6CF119A /* BTTSWatch */,
+				01BD61A56F4DE4030A1042E4 /* BTTSWatch */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		2708DDC51B02FDF31AF18729 /* Resources */ = {
+		2EB034DB49A3BCFB0F7BEB4A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -276,35 +282,35 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		436A07E87ECB10197394BFBC /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4F3BD5733260EA70B437B272 /* BTTSWatchApp.swift in Sources */,
-				AF1569AE88CBD01FB1F13CEC /* BrewWatchModel.swift in Sources */,
-				45C50BE23636701FD58F5F7C /* ContentView.swift in Sources */,
-				B0A54FE0781A0E38B10CDC5E /* Assets.xcassets in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		504EC3001FED79650016851F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
-				CDFE82DC5270E9F8D4440261 /* BrewWatchPlugin.swift in Sources */,
-				0E3AAAD15299EBCFFB2AE41F /* MainViewController.swift in Sources */,
+				4CB7CA691B7F140786E150B0 /* BrewWatchPlugin.swift in Sources */,
+				71CC38BE382B9654FDDE7C5F /* MainViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEB72C35D790F2FE6E0AA9C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E0B29512E643F03A7735EF78 /* BTTSWatchApp.swift in Sources */,
+				970B0E42DC7FADD5A3557AB4 /* BrewWatchModel.swift in Sources */,
+				CC9BFCE8C09959A96AAD79E0 /* ContentView.swift in Sources */,
+				8867513C5906571B5AE6193B /* Assets.xcassets in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		EBBD54CBBE983795D52985A9 /* PBXTargetDependency */ = {
+		279542A02698ACE4811FA84E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = BTTSWatch;
-			target = 89D3A9EB759B4954D6CF119A /* BTTSWatch */;
-			targetProxy = 4FDBBA512B66E789DC501A7B /* PBXContainerItemProxy */;
+			target = 01BD61A56F4DE4030A1042E4 /* BTTSWatch */;
+			targetProxy = 12BAFB23B3B3C2A317399027 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -328,7 +334,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		44ECD2E2619EA3865A81D5FD /* Debug */ = {
+		2AA04F7BE9E1579B08D9A2AD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -346,9 +352,10 @@
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
 				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
-			name = Debug;
+			name = Release;
 		};
 		504EC3141FED79650016851F /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -503,7 +510,7 @@
 			};
 			name = Release;
 		};
-		59FDE5735529FAAB451AF325 /* Release */ = {
+		54D1550D558A7450841F2A3C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -521,12 +528,33 @@
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		77DA796E824342913887FCAB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BTTSWatch/Info.plist;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roitsch.btts.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
 				VALIDATE_PRODUCT = YES;
 				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Release;
 		};
-		9C07F332D4BEF9C38B87C10B /* Debug */ = {
+		EA1EAF4DA8C673417AFDCF31 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
@@ -546,28 +574,6 @@
 				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Debug;
-		};
-		B03C924291C2FC6F2C5D1F58 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = BTTSWatch/Info.plist;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.roitsch.btts.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				VALIDATE_PRODUCT = YES;
-				WATCHOS_DEPLOYMENT_TARGET = 9.0;
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -590,11 +596,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		924E10B5980ED8AC7D954155 /* Build configuration list for PBXNativeTarget "BTTSWatch" */ = {
+		C2C4625BF27B261185FCD1CA /* Build configuration list for PBXNativeTarget "BTTSWatch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B03C924291C2FC6F2C5D1F58 /* Release */,
-				9C07F332D4BEF9C38B87C10B /* Debug */,
+				2AA04F7BE9E1579B08D9A2AD /* Release */,
+				54D1550D558A7450841F2A3C /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
