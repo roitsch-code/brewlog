@@ -18,6 +18,8 @@ import {
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
+import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
+import { watchDiag } from "@/lib/native/brewWatch";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
 /**
@@ -140,6 +142,11 @@ export default function LightStepBrew() {
   // while the app is awake. Native-only no-op elsewhere.
   const boundaries = buildBrewBoundaries(steps, guideSteps, recipe?.targetTimeSec);
   useBrewStepHaptics(boundaries, elapsed, started);
+  // The decisive cue: hand the whole schedule to a paired Apple Watch at brew
+  // start so the wrist buzzes per step even while the phone screen is on (the
+  // wake-locked brew case, where iOS won't mirror notifications). Native-only
+  // no-op until the watchOS app ships. See src/lib/native/brewWatch.ts.
+  useBrewStepWatch(boundaries, elapsed, started, recipeName ?? "Brew");
 
   return (
     <LightFlowShell
@@ -147,6 +154,12 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
+        {(() => {
+          const d = watchDiag();
+          return d && d !== "watch: no shell" ? (
+            <p className="text-center text-[10px] text-light-muted-foreground/70">{d}</p>
+          ) : null;
+        })()}
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
