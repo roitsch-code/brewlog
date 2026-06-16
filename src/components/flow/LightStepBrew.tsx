@@ -6,20 +6,17 @@ import LightCircularTimer from "@/components/ui/light/CircularTimer";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
-  parsePourSteps,
-  pourStepsFromStructured,
-  buildGuideSteps,
-  hasImmersionShape,
   getActiveIdx,
   isAgitationPourAction,
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
+import { buildBrewTimeline } from "@/lib/brew/timeline";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
-import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
+import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 
 /**
@@ -116,31 +113,25 @@ export default function LightStepBrew() {
 
   const roastDate = draft.coffee?.roastDate;
 
-  // Immersion / AeroPress / staged routines (steep, flip, press, bypass) →
-  // action-aware step guide built from the recipe's structured steps.
-  const guideSteps = recipe && hasImmersionShape(recipe) ? buildGuideSteps(recipe) : null;
+  // The canonical "intended flow" for this recipe — one builder that lowers both
+  // percolation and immersion into a single model (the source of truth the live
+  // flow coach compares the actual pour against). It also exposes the SAME
+  // renderer-ready arrays the two renderers always consumed, so the brew guide is
+  // unchanged. See src/lib/brew/timeline.ts.
+  const timeline = recipe ? buildBrewTimeline(recipe, roastDate) : null;
 
-  // Percolation → cumulative-grams pour-over renderer. Prefer structured steps
-  // (they carry per-pour temperature + notes); fall back to the legacy grams
-  // string. Either way the drawdown-reserve timing is identical.
-  const steps =
-    !guideSteps && recipe
-      ? pourStepsFromStructured(recipe, roastDate) ??
-        (recipe.pourSequence && recipe.targetTimeSec
-          ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate)
-          : null)
-      : null;
-
-  // Genuine prose immersion ("·"-separated string, no structured steps) — the
-  // legacy path for older recommendations.
-  const proseSequence = !guideSteps && !steps && recipe?.pourSequence ? recipe.pourSequence : null;
+  // Percolation → cumulative-grams pour-over renderer; immersion → action-aware
+  // step guide; prose → legacy "·"-separated string. All derived once above.
+  const steps = timeline?.pourSteps ?? null;
+  const guideSteps = timeline?.guideSteps ?? null;
+  const proseSequence = timeline?.proseSequence ?? null;
 
   // The step cue schedule (one entry per pour + agitation step). Lock-screen
   // notifications were removed (they only ever orphaned after a force-quit — see
   // brewNotifications.ts); these boundaries now drive the foreground Taptic
   // haptics only — a 3-2-1 countdown then a strong buzz at each step, fired live
   // while the app is awake. Native-only no-op elsewhere.
-  const boundaries = buildBrewBoundaries(steps, guideSteps, recipe?.targetTimeSec);
+  const boundaries = timeline ? boundariesFromTimeline(timeline) : [];
   useBrewStepHaptics(boundaries, elapsed, started);
   // The decisive cue: hand the whole schedule to a paired Apple Watch at brew
   // start so the wrist buzzes per step even while the phone screen is on (the
