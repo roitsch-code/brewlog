@@ -19,7 +19,6 @@ import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
-import { watchDiag } from "@/lib/native/brewWatch";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
 
 /**
@@ -154,12 +153,6 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
-        {(() => {
-          const d = watchDiag();
-          return d && d !== "watch: no shell" ? (
-            <p className="text-center text-[10px] text-light-muted-foreground/70">{d}</p>
-          ) : null;
-        })()}
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
