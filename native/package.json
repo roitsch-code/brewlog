@@ -8,6 +8,7 @@
     "assets": "capacitor-assets generate --ios --iconBackgroundColor '#F3E5DC' --splashBackgroundColor '#F3E5DC'"
   },
   "dependencies": {
+    "@capacitor-community/bluetooth-le": "^8.2.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "^8.4.0",
