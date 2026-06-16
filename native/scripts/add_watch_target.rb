@@ -48,6 +48,7 @@ watch_group = project.main_group.new_group("BTTSWatch", "BTTSWatch")
 swift_refs = %w[BTTSWatchApp.swift BrewWatchModel.swift ContentView.swift].map { |f| watch_group.new_reference(f) }
 assets_ref = watch_group.new_reference("Assets.xcassets")
 watch_group.new_reference("Info.plist") # referenced via INFOPLIST_FILE, not a build phase
+watch_group.new_reference("BTTSWatch.entitlements") # referenced via CODE_SIGN_ENTITLEMENTS
 
 # --- The watch app target -----------------------------------------------------
 watch_target = project.new_target(:application, "BTTSWatch", :watchos, "9.0", nil, :swift)
@@ -57,6 +58,7 @@ settings = {
   "PRODUCT_BUNDLE_IDENTIFIER" => WATCH_BUNDLE_ID,
   "PRODUCT_NAME" => "$(TARGET_NAME)",
   "INFOPLIST_FILE" => "BTTSWatch/Info.plist",
+  "CODE_SIGN_ENTITLEMENTS" => "BTTSWatch/BTTSWatch.entitlements", # HealthKit (workout session keeps background haptics alive)
   "GENERATE_INFOPLIST_FILE" => "NO",
   "CODE_SIGN_STYLE" => "Automatic",
   "SWIFT_VERSION" => "5.0",
