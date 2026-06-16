@@ -20,6 +20,7 @@ import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
 import { buildBrewBoundaries } from "@/lib/native/brewNotifications";
+import { ScalePanel } from "@/components/flow/ScalePanel";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -153,6 +154,7 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
+        <ScalePanel />
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
