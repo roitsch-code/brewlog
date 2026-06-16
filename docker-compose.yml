@@ -43,6 +43,13 @@ services:
       ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
       ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID}
       ELEVENLABS_BASE_URL: ${ELEVENLABS_BASE_URL}
+      # APNs push (Apple Watch brew cues). Empty until the "Set APNs secrets on
+      # VPS" workflow writes them into .env; the app no-ops without them.
+      APNS_KEY_P8: ${APNS_KEY_P8:-}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      APNS_BUNDLE_ID: ${APNS_BUNDLE_ID:-com.roitsch.btts.watchkitapp}
+      APNS_PRODUCTION: ${APNS_PRODUCTION:-true}
     expose:
       - "3000"
 
