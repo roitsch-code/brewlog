@@ -396,12 +396,24 @@ export default function LightStepLog() {
         {!isExternal && (
           <Section eyebrow="How it brewed">
             <div className="space-y-4">
-              <SensoryRow
-                label="Flow"
-                options={FLOW_OPTIONS.map((o) => ({ id: o, label: FLOW_LABELS[o] }))}
-                value={flow}
-                onChange={setFlow}
-              />
+              {draft.brew?.flowSource === "measured" && draft.brew.flow ? (
+                // The scale measured the pour — show the grade read-only instead
+                // of asking, so the user can't overwrite the measured flow.
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-light-muted-foreground">Flow</span>
+                  <span className="text-[14px] text-light-foreground">
+                    {FLOW_LABELS[draft.brew.flow]}{" "}
+                    <span className="text-light-muted-foreground">· measured</span>
+                  </span>
+                </div>
+              ) : (
+                <SensoryRow
+                  label="Flow"
+                  options={FLOW_OPTIONS.map((o) => ({ id: o, label: FLOW_LABELS[o] }))}
+                  value={flow}
+                  onChange={setFlow}
+                />
+              )}
               <SensoryRow
                 label="Timing"
                 options={TIMING_OPTIONS.map((o) => ({ id: o, label: TIMING_LABELS[o] }))}
