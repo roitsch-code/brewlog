@@ -16,8 +16,9 @@
 #   - Xcode + command line tools
 #   - the xcodeproj ruby gem  (gem install xcodeproj --user-install --no-document)
 #   - keychain identity: Apple Distribution: Markus Reuter (WTZD878P9H)
-#   - profiles "BTTS AppStore Dist" + "BTTS Watch AppStore Dist" in
+#   - profiles "BTTS AppStore Dist" + "BTTS Watch Push Dist" in
 #       ~/Library/Developer/Xcode/UserData/Provisioning Profiles/
+#       (the watch profile carries aps-environment — created via the ASC API)
 #   - ASC API key at ~/.appstoreconnect/private_keys/AuthKey_A57ZL8HND3.p8
 #
 set -euo pipefail
@@ -31,7 +32,9 @@ fi
 # ── Fixed identifiers (persist across builds) ────────────────────────────────
 IDENTITY="Apple Distribution: Markus Reuter (WTZD878P9H)"
 APP_PROFILE_NAME="BTTS AppStore Dist"
-WATCH_PROFILE_NAME="BTTS Watch AppStore Dist"
+# Build 13+: the watch carries the Push (aps-environment) capability, not
+# HealthKit. This profile was created via the ASC API and carries aps-environment.
+WATCH_PROFILE_NAME="BTTS Watch Push Dist"
 ASC_KEY_ID="A57ZL8HND3"
 ASC_ISSUER="aae3f951-3c39-4c49-bbb0-f7176ecf3459"
 ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
