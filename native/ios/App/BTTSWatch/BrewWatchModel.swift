@@ -1,43 +1,41 @@
 import Foundation
+import HealthKit
+import UserNotifications
 import WatchConnectivity
 import WatchKit
-import HealthKit
 
 /**
  The brain of the BTTS watch app.
 
  The iPhone hands us the whole brew schedule once at brew start (absolute
- epoch-ms fire times). We run the timeline locally and play a wrist haptic at
- each step — so the wrist buzzes regardless of what the iPhone screen is doing
- (the decisive case: phone on the counter, screen on, where iOS will not mirror
- notifications to the watch).
+ epoch-ms STEP fire times). We hold it locally so a phone↔watch hiccup mid-brew
+ can't drop a cue.
 
- Running the schedule on the watch (rather than having the phone message us per
- step) makes it resilient: a phone↔watch link hiccup mid-brew can't drop a buzz,
- because we already hold every fire time.
+ HOW THE WRIST CUES FIRE — the load-bearing decision.
+ watchOS aggressively suspends a backgrounded app when the wrist drops. The
+ earlier approach (a repeating `Timer` that called `WKInterfaceDevice.play()`)
+ fought that and lost: wrist-down the timer stalled, then on wrist-raise it
+ "caught up" and dumped every missed buzz at once — useless. So cues are now
+ delivered as **scheduled local notifications** (`UNUserNotificationCenter`),
+ which the OS fires at the exact time with a haptic regardless of app state —
+ the same mechanism alarm/timer apps rely on. For each step we schedule a
+ "Get ready" pre-cue a few seconds before, plus a cue AT the step.
 
- Buzzing with the WRIST DOWN / screen off: watchOS will NOT fire
- `WKInterfaceDevice` haptics for a backgrounded app — the documented EXCEPTION
- is an app with an active `HKWorkoutSession` (this is exactly how interval/HIIT
- timers buzz the wrist with the screen off). So at brew start we begin a
- lightweight workout session; while it runs the app stays alive in the
- background and every step buzzes even with the wrist down. We end it the moment
- the brew finishes. (The app must still be OPENED at brew start — Apple won't
- let a closed watch app start a session or buzz on its own.)
+ The `HKWorkoutSession` is kept only to keep the app alive so the on-screen
+ current/next labels stay live when you raise your wrist mid-brew — it no longer
+ carries the haptics. The ticker updates labels only; it never buzzes, so it
+ can't dump a backlog.
  */
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
 
-    enum FireKind {
-        case countdown // a light 3-2-1 tick leading INTO a step
-        case step // the strong "act now" buzz AT the step
-    }
+    /// Seconds before a step to fire the "get ready" pre-cue.
+    private static let readyLead: TimeInterval = 5
 
     struct Fire: Identifiable {
         let id = UUID()
         let at: Date
         let label: String
-        let kind: FireKind
         var fired = false
     }
 
@@ -60,12 +58,14 @@ final class BrewWatchModel: NSObject, ObservableObject {
             s.delegate = self
             s.activate()
         }
+        UNUserNotificationCenter.current().delegate = self
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         requestWorkoutAuthorization()
     }
 
     /// Ask once for permission to record a workout. We only need this to keep
-    /// the app alive for background haptics — no health data is recorded beyond
-    /// the bare session. Prompt appears the first time the watch app launches.
+    /// the app alive (live labels) — no health data is recorded beyond the bare
+    /// session. Prompt appears the first time the watch app launches.
     private func requestWorkoutAuthorization() {
         guard HKHealthStore.isHealthDataAvailable() else { return }
         healthStore.requestAuthorization(toShare: [HKObjectType.workoutType()], read: []) { _, _ in }
@@ -75,28 +75,15 @@ final class BrewWatchModel: NSObject, ObservableObject {
 
     private func startBrew(recipeName: String, fires incoming: [Fire]) {
         let now = Date()
-        // `incoming` are the STEP fires. Expand each into a 3-2-1 countdown
-        // (light taps at −3 / −2 / −1 s) plus the strong step buzz AT the step,
-        // so the wrist counts you in and you can react ON the beat — "3, 2, 1,
-        // POUR" — instead of buzzing only once the moment is already here. This
-        // mirrors the phone's foreground haptics (useBrewStepHaptics).
-        var schedule: [Fire] = []
-        for step in incoming {
-            for lead in [3.0, 2.0, 1.0] {
-                schedule.append(
-                    Fire(at: step.at.addingTimeInterval(-lead), label: step.label, kind: .countdown))
-            }
-            schedule.append(Fire(at: step.at, label: step.label, kind: .step))
-        }
-        let sorted = schedule.sorted { $0.at < $1.at }
-        // Only future fires can buzz; past ones (and countdowns that fall before
-        // brew start) are pre-marked done so we never machine-gun a backlog.
+        let sorted = incoming.sorted { $0.at < $1.at }
+        // Keep the whole schedule for the on-screen labels; past fires can't alert.
         self.fires = sorted.map { var f = $0; if $0.at <= now { f.fired = true }; return f }
         self.recipeName = recipeName
         self.isBrewing = true
         self.currentLabel = "Brewing"
-        startWorkoutSession()
-        startTicker()
+        scheduleNotifications(for: sorted, now: now) // the reliable wrist-down cues
+        startWorkoutSession() // keeps the live screen alive on wrist-raise
+        startTicker() // on-screen labels only — NO haptics
         refreshLabels(now: now)
         WKInterfaceDevice.current().play(.start) // brew handed over to the wrist
     }
@@ -109,12 +96,54 @@ final class BrewWatchModel: NSObject, ObservableObject {
         fires = []
         ticker?.invalidate()
         ticker = nil
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         endWorkoutSession()
     }
 
+    // MARK: - Local notifications (the actual wrist cues)
+
+    /// Schedule a "Get ready" pre-cue (`readyLead` s before) + a cue AT each
+    /// step. The OS fires these with a haptic at the exact time even when the
+    /// app is suspended / the wrist is down — no catch-up, no backlog.
+    private func scheduleNotifications(for steps: [Fire], now: Date) {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        var requests: [UNNotificationRequest] = []
+        for (i, step) in steps.enumerated() {
+            let readyAt = step.at.addingTimeInterval(-Self.readyLead)
+            if readyAt.timeIntervalSince(now) > 1.5 {
+                requests.append(
+                    makeNotification(
+                        id: "btts-ready-\(i)", title: "Get ready", body: step.label, fireAt: readyAt,
+                        now: now))
+            }
+            if step.at.timeIntervalSince(now) > 1.0 {
+                requests.append(
+                    makeNotification(
+                        id: "btts-now-\(i)", title: step.label, body: "Now", fireAt: step.at, now: now))
+            }
+        }
+        for r in requests { center.add(r) }
+    }
+
+    private func makeNotification(
+        id: String, title: String, body: String, fireAt: Date, now: Date
+    ) -> UNNotificationRequest {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        if #available(watchOS 9.0, *) { content.interruptionLevel = .timeSensitive }
+        let interval = max(1, fireAt.timeIntervalSince(now))
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+        return UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+    }
+
+    // MARK: - On-screen label ticker (no haptics)
+
     private func startTicker() {
         ticker?.invalidate()
-        let t = Timer(timeInterval: 0.2, repeats: true) { [weak self] _ in
+        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(t, forMode: .common)
@@ -124,30 +153,22 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private func tick() {
         guard isBrewing else { return }
         let now = Date()
-        var didFireStep = false
+        var advanced = false
         for i in fires.indices where !fires[i].fired && fires[i].at <= now {
             fires[i].fired = true
-            switch fires[i].kind {
-            case .countdown:
-                buzzCountdown()
-            case .step:
-                currentLabel = fires[i].label
-                buzz()
-                didFireStep = true
-            }
+            currentLabel = fires[i].label
+            advanced = true
         }
-        if didFireStep { refreshLabels(now: now) }
-        // Auto-wind-down a few seconds after the last step, so a forgotten
-        // brew doesn't hold the workout session open indefinitely.
+        if advanced { refreshLabels(now: now) }
+        // Auto-wind-down a few seconds after the last step, so a forgotten brew
+        // doesn't hold the workout session open indefinitely.
         if let last = fires.last?.at, now.timeIntervalSince(last) > 8 {
             endBrew()
         }
     }
 
     private func refreshLabels(now: Date) {
-        // Point the watch face at the next STEP (not the in-between countdown
-        // ticks), so "next: Pour 2" + its time read cleanly.
-        if let next = fires.first(where: { !$0.fired && $0.kind == .step }) {
+        if let next = fires.first(where: { !$0.fired }) {
             nextLabel = next.label
             nextFireAt = next.at
         } else {
@@ -156,29 +177,7 @@ final class BrewWatchModel: NSObject, ObservableObject {
         }
     }
 
-    /// The wrist cue at a step boundary — a long, unmissable "act now" pattern.
-    /// Earlier the taps were 0.3 s apart and watchOS COALESCED them, so only the
-    /// first ("big buzz") landed. `.notification` is itself a ~0.5 s double-tap,
-    /// so we space the repeats ≥0.55 s — far enough that each is felt as a
-    /// distinct pulse — and fire FIVE for a sustained ~2.2 s buzz train.
-    /// (Built-in haptics have a fixed amplitude; the user's "Prominent Haptic" +
-    /// Haptic Strength settings are the raw-strength lever.)
-    private func buzz() {
-        let device = WKInterfaceDevice.current()
-        let offsets: [Double] = [0, 0.55, 1.1, 1.65, 2.2]
-        for t in offsets {
-            DispatchQueue.main.asyncAfter(deadline: .now() + t) { device.play(.notification) }
-        }
-    }
-
-    /// A single light tick for each 3-2-1 countdown beat before a step —
-    /// deliberately distinct from the strong step `buzz()` so the wrist reads as
-    /// "tick, tick, tick, POUR" and you can react in time.
-    private func buzzCountdown() {
-        WKInterfaceDevice.current().play(.click)
-    }
-
-    // MARK: - Workout session (keeps haptics alive with the screen off / wrist down)
+    // MARK: - Workout session (keeps the app alive for the live labels)
 
     private func startWorkoutSession() {
         guard workoutSession == nil, HKHealthStore.isHealthDataAvailable() else { return }
@@ -191,9 +190,7 @@ final class BrewWatchModel: NSObject, ObservableObject {
             session.startActivity(with: Date())
             workoutSession = session
         } catch {
-            // No workout session → still buzzes while the app is in the
-            // foreground (the ticker keeps running); just not with the wrist down.
-            workoutSession = nil
+            workoutSession = nil // labels just won't update in the background; cues still fire
         }
     }
 
@@ -215,10 +212,7 @@ final class BrewWatchModel: NSObject, ObservableObject {
                     guard let atMs = dict["atMs"] as? Double ?? (dict["atMs"] as? NSNumber)?.doubleValue
                     else { return nil }
                     let label = dict["label"] as? String ?? "Next step"
-                    // Incoming fires are STEP boundaries; startBrew expands each
-                    // into its 3-2-1 countdown + the step buzz.
-                    return Fire(
-                        at: Date(timeIntervalSince1970: atMs / 1000.0), label: label, kind: .step)
+                    return Fire(at: Date(timeIntervalSince1970: atMs / 1000.0), label: label)
                 }
                 guard !parsed.isEmpty else { return }
                 self.startBrew(recipeName: name, fires: parsed)
@@ -242,6 +236,22 @@ extension BrewWatchModel: WCSessionDelegate {
 
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         handle(applicationContext)
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate (so cues alert + haptic in the foreground too)
+
+extension BrewWatchModel: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        if #available(watchOS 9.0, *) {
+            completionHandler([.banner, .sound, .list])
+        } else {
+            completionHandler([.alert, .sound])
+        }
     }
 }
 
