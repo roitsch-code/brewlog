@@ -10,6 +10,7 @@ import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import Chip from "@/components/ui/light/Chip";
+import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
 
 /**
  * Light System fork of /components/flow/StepSummary.tsx.
@@ -282,6 +283,8 @@ export default function LightStepSummary() {
           </div>
         ) : null}
 
+        {brew?.flowAnalysis && <PourAnalysisCard analysis={brew.flowAnalysis} />}
+
         {(insightLoading || terrain || adjustment) && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4 space-y-3">
             {insightLoading ? (
@@ -418,6 +421,73 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-[13px] text-light-muted-foreground shrink-0">{label}</span>
       <span className="text-[14px] text-light-foreground text-right">{value}</span>
+    </div>
+  );
+}
+
+// ── Pour analysis (measured from a connected Acaia scale) ────────────────────
+
+function mmss(sec: number): string {
+  const s = Math.max(0, Math.round(sec));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function AnalysisStat({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div className="rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-3 py-2">
+      <p className="text-[10px] uppercase tracking-wide text-light-muted-foreground">{label}</p>
+      <p className={`font-mono-num text-[15px] mt-0.5 ${accent ?? "text-light-foreground"}`}>{value}</p>
+    </div>
+  );
+}
+
+function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
+  const gradeLabel =
+    analysis.derivedFlow === "perfect"
+      ? "On target"
+      : analysis.derivedFlow === "too-fast"
+        ? "Ran fast"
+        : "Ran slow";
+  const gradeColor =
+    analysis.derivedFlow === "perfect" ? "text-light-success" : "text-light-accent-overtime";
+
+  // The pour that drifted furthest from its scheduled time (worth a teaching line).
+  const drifted = analysis.perPour
+    .filter((p) => p.errorSec != null)
+    .sort((a, b) => Math.abs(b.errorSec as number) - Math.abs(a.errorSec as number))[0];
+  const steady =
+    analysis.pourSteadiness == null ? null : analysis.pourSteadiness < 0.3 ? "Steady" : "Uneven";
+
+  return (
+    <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="label-eyebrow">Pour analysis</p>
+        <span className="text-[10px] uppercase tracking-wide text-light-muted-foreground">measured</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <AnalysisStat
+          label="Total"
+          value={`${mmss(analysis.totalTimeSec)} / ${mmss(analysis.targetTimeSec)}`}
+          accent={gradeColor}
+        />
+        <AnalysisStat label="Flow" value={gradeLabel} accent={gradeColor} />
+        {analysis.avgFlowRateGPS != null && (
+          <AnalysisStat label="Avg pour" value={`${analysis.avgFlowRateGPS} g/s`} />
+        )}
+        {analysis.overshootG != null && analysis.overshootG > 2 && (
+          <AnalysisStat label="Overshoot" value={`+${analysis.overshootG}g`} />
+        )}
+        {steady && <AnalysisStat label="Stream" value={steady} />}
+      </div>
+      {drifted && Math.abs(drifted.errorSec as number) >= 3 && (
+        <p className="text-[12px] text-light-muted-foreground mt-3">
+          {drifted.label} hit {drifted.targetGrams}g{" "}
+          {(drifted.errorSec as number) > 0
+            ? `${Math.round(drifted.errorSec as number)}s late`
+            : `${Math.abs(Math.round(drifted.errorSec as number))}s early`}
+          .
+        </p>
+      )}
     </div>
   );
 }

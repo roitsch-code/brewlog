@@ -1,3 +1,5 @@
+import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
+
 export type SessionMode = "home" | "external";
 export type SessionType = "coffee" | "wine";
 
@@ -159,6 +161,12 @@ export interface BrewLog {
   actualTempC?: number;              // actual temp used (pre-filled, editable)
   followedAgitation?: "yes" | "partially" | "no";
   agitationNote?: string;            // free text: what I actually did
+  /** Objective pour analysis from a connected Acaia scale (nested in this JSONB
+   * column — no migration). Present only when a weight curve was captured. */
+  flowAnalysis?: FlowAnalysis;
+  /** Whether `flow` came from the scale curve or the user's self-report. When
+   * "measured", flow = flowAnalysis.derivedFlow. */
+  flowSource?: "measured" | "self-report";
 }
 
 export interface TasteResult {

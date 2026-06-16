@@ -11,7 +11,7 @@ import {
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
-import { buildBrewTimeline } from "@/lib/brew/timeline";
+import { buildBrewTimeline, type BrewTimeline } from "@/lib/brew/timeline";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
@@ -20,6 +20,7 @@ import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
+import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx.
@@ -75,6 +76,7 @@ export default function LightStepBrew() {
       if (e === 1) {
         setStarted(true);
         enableWakeLock();
+        brewStartMsRef.current = Date.now() - 1000; // elapsed=1 ≈ 1 s after start
       }
     },
     [enableWakeLock],
@@ -84,22 +86,46 @@ export default function LightStepBrew() {
   // The brew screen owns the scale so the live flow coach reads the SAME weight
   // + sample stream the ScalePanel shows. Downsample the ~10–20 Hz BLE stream to
   // ~5 Hz into a rolling ~6 s window — a ref, so samples never trigger renders.
-  const samplesRef = useRef<WeightSample[]>([]);
+  const samplesRef = useRef<WeightSample[]>([]); // ~6 s rolling window for the live coach
+  const fullCurveRef = useRef<FlowCurvePoint[]>([]); // whole-brew curve for post-brew analysis
+  const brewStartMsRef = useRef(0);
   const lastSampleMsRef = useRef(0);
+  const lastCurveMsRef = useRef(0);
   const pushSample = useCallback((grams: number, atMs: number) => {
-    if (atMs - lastSampleMsRef.current < 200) return;
-    lastSampleMsRef.current = atMs;
-    const buf = samplesRef.current;
-    buf.push({ atMs, grams });
-    const cutoff = atMs - 6000;
-    while (buf.length > 0 && buf[0].atMs < cutoff) buf.shift();
+    // Live-coach window: ~5 Hz, keep the last 6 s.
+    if (atMs - lastSampleMsRef.current >= 200) {
+      lastSampleMsRef.current = atMs;
+      const buf = samplesRef.current;
+      buf.push({ atMs, grams });
+      const cutoff = atMs - 6000;
+      while (buf.length > 0 && buf[0].atMs < cutoff) buf.shift();
+    }
+    // Whole-brew curve: ~2 Hz, in brew-relative seconds, for the post-brew report.
+    if (brewStartMsRef.current > 0 && atMs - lastCurveMsRef.current >= 500) {
+      lastCurveMsRef.current = atMs;
+      const tSec = (atMs - brewStartMsRef.current) / 1000;
+      if (tSec >= 0) {
+        const curve = fullCurveRef.current;
+        curve.push({ tSec, grams });
+        if (curve.length > 600) curve.shift(); // safety cap (~5 min @ 2 Hz)
+      }
+    }
   }, []);
   const scale = useAcaiaScale({ onSample: pushSample });
 
-  // Clear the sample window on reset so a re-brew never coaches off stale pours.
+  // Clear capture on reset so a re-brew never coaches/analyses off stale pours.
   useEffect(() => {
-    if (elapsed === 0) samplesRef.current = [];
+    if (elapsed === 0) {
+      samplesRef.current = [];
+      fullCurveRef.current = [];
+      brewStartMsRef.current = 0;
+      lastCurveMsRef.current = 0;
+    }
   }, [elapsed]);
+
+  // The current timeline, in a ref, so handleDone can analyse without being
+  // re-created every render (timeline is a fresh object each render).
+  const timelineRef = useRef<BrewTimeline | null>(null);
 
   const handleDone = useCallback(
     (actualSec?: number) => {
@@ -111,11 +137,18 @@ export default function LightStepBrew() {
       // regression). Coerce anything that isn't a finite number to elapsed.
       const finalSec =
         typeof actualSec === "number" && Number.isFinite(actualSec) ? actualSec : elapsed;
+      // If a scale captured the pour, derive the objective flow analysis and let
+      // it drive the flow grade (so the log screen needn't ask). Null off-scale /
+      // on immersion → nothing changes.
+      const analysis = analyzeFlow(timelineRef.current, fullCurveRef.current, finalSec);
       setBrew({
         ...draft.brew,
         methodUsed: method,
         followedRecipe: true,
         actualTimeSec: finalSec,
+        ...(analysis
+          ? { flowAnalysis: analysis, flowSource: "measured", flow: analysis.derivedFlow }
+          : {}),
       });
       setStep("log");
     },
@@ -148,6 +181,7 @@ export default function LightStepBrew() {
   const steps = timeline?.pourSteps ?? null;
   const guideSteps = timeline?.guideSteps ?? null;
   const proseSequence = timeline?.proseSequence ?? null;
+  timelineRef.current = timeline;
 
   // The step cue schedule (one entry per pour + agitation step). Lock-screen
   // notifications were removed (they only ever orphaned after a force-quit — see
