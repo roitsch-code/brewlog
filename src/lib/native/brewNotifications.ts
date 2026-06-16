@@ -21,6 +21,7 @@
 
 import type { PourStep, GuideStep } from "@/lib/utils/pourSequence";
 import { isAgitationPourAction } from "@/lib/utils/pourSequence";
+import type { BrewTimeline } from "@/lib/brew/timeline";
 
 // ── Ambient bridge types (no @capacitor/* imports — strict-TS clean) ────────
 
@@ -129,6 +130,17 @@ export function buildBrewBoundaries(
   }
 
   return out; // prose-only legacy sequence — no machine-readable boundaries
+}
+
+/**
+ * The cue schedule for a canonical {@link BrewTimeline}. A thin wrapper over
+ * `buildBrewBoundaries` using the timeline's own renderer arrays, so the haptic
+ * + watch schedule is provably IDENTICAL to the pre-timeline code (the
+ * golden-equivalence test asserts the deep-equal). The single call site for
+ * "boundaries from the intended flow".
+ */
+export function boundariesFromTimeline(timeline: BrewTimeline): BrewBoundary[] {
+  return buildBrewBoundaries(timeline.pourSteps, timeline.guideSteps, timeline.targetTimeSec);
 }
 
 // ── Native bridge access ─────────────────────────────────────────────────────
