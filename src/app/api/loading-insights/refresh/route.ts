@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import Anthropic from "@anthropic-ai/sdk";
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { loadingInsights, sessions } from "@/lib/db/schema";
 import type { LoadingInsightSource, NewLoadingInsightRow } from "@/lib/db/schema";
@@ -13,7 +13,7 @@ import { buildHistorySummary } from "@/lib/claude/historyUtils";
 import { lintLoadingInsight, normalizeForDedupe } from "@/lib/insights/loadingInsightLint";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -45,6 +45,21 @@ Return ONLY a JSON array: [{"n": <snippet number>, "text": "<line>"}]. Omit any 
 const CHECK_SYSTEM = `For each numbered pair, decide whether the CLAIM is fully supported by its SOURCE — i.e. every fact asserted in the claim is stated or directly implied by the source, with nothing invented.
 
 Return ONLY a JSON array of booleans in order, e.g. [true,false,true]. No prose.`;
+
+const WEB_SYSTEM = `You research specialty coffee (filter brewing, processing, origin, varieties, water, extraction science) and distill it into ONE-LINE insights for a loading screen.
+
+VOICE (BTTS): a knowledgeable friend talking about coffee. Editorial, plain. No hype, no emoji, no exclamation marks, no "did you know", no second-person command.
+
+Use web search to find real, current material from reputable sources (specialty roasters, James Hoffmann, Barista Hustle, competition pages, coffee-science writers). For EACH insight you propose you MUST attach a VERBATIM quote from a source you actually found that supports it, plus that source's url.
+
+HARD RULES — a no-fabrication guarantee depends on these, follow them exactly:
+- The line must restate a fact contained IN ITS QUOTE. Add nothing the quote does not say.
+- Prefer the general principle over trivia. Avoid naming competitions, years, or people unless the fact is meaningless without the name. A cultivar/variety name is fine.
+- No numbers, ppm, temperatures, ratios, or dates UNLESS they appear verbatim in the quote.
+- ≤ 80 characters. ≤ 15 words. One sentence. A trailing period is optional.
+- If you cannot attach a real supporting quote, DROP that insight rather than invent one.
+
+Return ONLY a JSON array: [{"text": "<line>", "quote": "<verbatim supporting sentence from the source>", "url": "<source url>"}]. No prose around the JSON.`;
 
 interface Snippet {
   source: LoadingInsightSource;
@@ -78,6 +93,75 @@ function textOf(resp: Anthropic.Message): string {
   return block && "text" in block ? block.text : "";
 }
 
+// Self-bootstrap the table (idempotent). Migration 0018 is the canonical schema
+// record, but the path to apply it on the VPS isn't always reachable from a
+// session; CREATE TABLE IF NOT EXISTS here makes the agent self-healing on any
+// environment. The GET read stays defensive until the first run creates it.
+async function ensureTable(): Promise<void> {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS loading_insights (
+      id              text PRIMARY KEY,
+      text            text NOT NULL,
+      source          text NOT NULL,
+      source_ref      text,
+      status          text NOT NULL DEFAULT 'live',
+      score           numeric NOT NULL DEFAULT 1,
+      created_at      timestamptz NOT NULL DEFAULT now(),
+      created_at_ms   bigint NOT NULL,
+      verified_at_ms  bigint
+    )
+  `);
+  await db.execute(
+    sql`CREATE UNIQUE INDEX IF NOT EXISTS loading_insights_text_lower_idx ON loading_insights (lower(text))`,
+  );
+  await db.execute(
+    sql`CREATE INDEX IF NOT EXISTS loading_insights_status_idx ON loading_insights (status)`,
+  );
+  await db.execute(
+    sql`CREATE INDEX IF NOT EXISTS loading_insights_created_at_ms_idx ON loading_insights (created_at_ms DESC)`,
+  );
+}
+
+// Web source — the freshest material and the riskiest. The model searches real
+// sources and must attach a verbatim supporting quote to every line; that quote
+// becomes the grounding sourceText, so the SAME deterministic gate + claim-check
+// apply. Residual risk (a fabricated quote) is accepted for this low-stakes
+// surface and minimised by the "prefer general, no specifics unless in the
+// quote" rule. Never blocks the run — corpus/brews already produced candidates.
+async function generateWebCandidates(): Promise<{ text: string; snippet: Snippet }[]> {
+  // web_search is a server tool the SDK types don't cover, hence `as any`
+  // (same pattern as /api/research).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const resp = await (client.messages.create as any)({
+    model: "claude-sonnet-4-6",
+    max_tokens: 2000,
+    system: WEB_SYSTEM,
+    tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }],
+    messages: [
+      {
+        role: "user",
+        content:
+          "Find 6–10 fresh, true specialty-coffee insights for the loading screen. Attach a verbatim supporting quote + url to each. Return only the JSON array.",
+      },
+    ],
+  });
+  const blocks = (resp?.content ?? []) as Array<{ type: string; text?: string }>;
+  const raw = blocks.find((b) => b.type === "text")?.text ?? "";
+  const items = extractJsonArray(raw) ?? [];
+  const out: { text: string; snippet: Snippet }[] = [];
+  for (const item of items) {
+    if (typeof item !== "object" || item === null) continue;
+    const rec = item as { text?: unknown; quote?: unknown; url?: unknown };
+    const text = typeof rec.text === "string" ? rec.text.trim() : "";
+    const quote = typeof rec.quote === "string" ? rec.quote.trim() : "";
+    const url = typeof rec.url === "string" ? rec.url.trim() : "";
+    // No real supporting quote → no grounding → drop.
+    if (text === "" || quote.length < 12) continue;
+    out.push({ text, snippet: { source: "web", ref: url || "web", sourceText: quote } });
+  }
+  return out;
+}
+
 /**
  * POST (CRON_SECRET bearer) — refresh the loading-screen insight pool.
  *
@@ -87,8 +171,9 @@ function textOf(resp: Anthropic.Message): string {
  * model claim-check before inserting. This machine review REPLACES the human
  * review the user chose to skip — nothing ungrounded reaches the screen.
  *
- * Slice 1: corpus + brews only. The (riskier) web source lands in slice 2
- * behind the same gate.
+ * Sources: the verified corpus (recipes / varieties / techniques), brew
+ * aggregates, and live web research — each behind the same gate. The table
+ * self-bootstraps, so a missing migration can't leave the agent broken.
  */
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -98,6 +183,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    await ensureTable();
+
     // 1. Existing live texts → dedup set (and a DB-level unique index backs it).
     const liveRows = await db
       .select({ text: loadingInsights.text })
@@ -151,7 +238,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ generated: 0, inserted: 0, reason: "no-snippets" });
     }
 
-    // 3. Generate one candidate line per snippet.
+    // 3. Generate one candidate line per corpus/brews snippet.
     const snippetBlock = snippets
       .map((s, i) => `[${i + 1}] ${s.sourceText}`)
       .join("\n\n");
@@ -162,20 +249,38 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "user", content: `SNIPPETS:\n\n${snippetBlock}` }],
     });
     const genItems = extractJsonArray(textOf(genResp)) ?? [];
-
-    // 4. Deterministic gate — grounded against the candidate's OWN snippet.
-    const gated: { text: string; snippet: Snippet }[] = [];
+    const rawCandidates: { text: string; snippet: Snippet }[] = [];
     for (const item of genItems) {
       if (typeof item !== "object" || item === null) continue;
       const rec = item as { n?: unknown; text?: unknown };
       const n = typeof rec.n === "number" ? rec.n : NaN;
       const text = typeof rec.text === "string" ? rec.text.trim() : "";
       const snippet = snippets[n - 1];
-      if (!snippet || text === "") continue;
-      const { ok } = lintLoadingInsight(text, { sourceText: snippet.sourceText, existing });
+      if (snippet && text !== "") rawCandidates.push({ text, snippet });
+    }
+
+    // 3b. Web source — fresh material grounded in a model-supplied verbatim
+    // quote, behind the SAME gate. Wrapped so an unavailable/failing web_search
+    // never blocks the corpus/brews candidates.
+    let webCount = 0;
+    try {
+      const web = await generateWebCandidates();
+      webCount = web.length;
+      rawCandidates.push(...web);
+    } catch (webErr) {
+      console.warn("loading-insights web source failed; corpus/brews only", webErr);
+    }
+
+    // 4. Deterministic gate — each candidate grounded against its OWN source.
+    const gated: { text: string; snippet: Snippet }[] = [];
+    for (const cand of rawCandidates) {
+      const { ok } = lintLoadingInsight(cand.text, {
+        sourceText: cand.snippet.sourceText,
+        existing,
+      });
       if (!ok) continue;
-      existing.add(normalizeForDedupe(text)); // catch intra-batch dups
-      gated.push({ text, snippet });
+      existing.add(normalizeForDedupe(cand.text)); // catch intra-batch dups
+      gated.push(cand);
     }
 
     // 5. Model claim-check — semantic backstop the regex can't do. If it can't
@@ -236,7 +341,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       snippets: snippets.length,
-      generated: genItems.length,
+      web: webCount,
+      candidates: rawCandidates.length,
       gated: gated.length,
       inserted: newRows.length,
       retired,
