@@ -26,6 +26,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>BTTS connects to your Acaia scale over Bluetooth to read live weight and flow during a brew.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>BTTS uses the camera to scan coffee bags and read their details.</string>
 	<key>NSMicrophoneUsageDescription</key>
