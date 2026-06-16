@@ -13,8 +13,16 @@ import WatchKit
 
  Running the schedule on the watch (rather than having the phone message us per
  step) makes it resilient: a phone↔watch link hiccup mid-brew can't drop a buzz,
- because we already hold every fire time. A WKExtendedRuntimeSession (self-care
- category) keeps us alive to buzz when the wrist drops and the screen sleeps.
+ because we already hold every fire time.
+
+ Staying alive without raising the wrist: a `WKExtendedRuntimeSession`
+ (self-care category — needs only the `WKBackgroundModes` Info.plist key, NO
+ entitlement) keeps the app running so it can buzz when the screen dims. It is
+ started in the foreground at brew start and dies only if the user leaves the
+ app via the Digital Crown. (If on-device testing shows self-care doesn't fire
+ background haptics reliably with the wrist fully down, the fallback is an
+ HKWorkoutSession — the documented exception for background haptics — which
+ needs a HealthKit entitlement + distribution-cert signing setup.)
  */
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
@@ -110,12 +118,19 @@ final class BrewWatchModel: NSObject, ObservableObject {
         }
     }
 
-    /// The wrist cue at a step boundary. Strong + clearly felt.
+    /// The wrist cue at a step boundary. A strong, unmistakable triple pattern
+    /// (like a navigation alert) — a single `.notification` tap is too easy to
+    /// miss with the wrist down. `.notification` is watchOS's strongest built-in
+    /// haptic; we repeat it three times ~0.3 s apart so it reads as a deliberate
+    /// "act now" buzz rather than an incidental tick.
     private func buzz() {
-        WKInterfaceDevice.current().play(.notification)
+        let device = WKInterfaceDevice.current()
+        device.play(.notification)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { device.play(.notification) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { device.play(.notification) }
     }
 
-    // MARK: - Extended runtime (buzz with the screen off / wrist down)
+    // MARK: - Extended runtime (keep the app alive to buzz with the screen dim)
 
     private func startRuntimeSession() {
         guard runtimeSession == nil else { return }

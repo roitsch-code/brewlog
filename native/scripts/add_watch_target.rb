@@ -30,10 +30,17 @@ app_target.build_phases.select { |p|
 if (g = project.main_group["BTTSWatch"])
   g.remove_from_project
 end
-# Drop a prior BrewWatchPlugin.swift ref so we don't double-add it.
+# Drop prior refs to our app-target Swift files so we don't double-add them.
+# MainViewController.swift registers BrewWatchPlugin via capacitorDidLoad — an
+# app-local plugin is NOT auto-discovered by Capacitor (only npm plugins land
+# in packageClassList), so without this registration the JS side sees
+# window.Capacitor.Plugins.BrewWatch as undefined and never reaches the watch.
+APP_SWIFT_FILES = %w[BrewWatchPlugin.swift MainViewController.swift]
 app_group = project.main_group["App"] or abort("App group not found")
-if (old = app_group.files.find { |f| f.display_name == "BrewWatchPlugin.swift" })
-  old.remove_from_project
+APP_SWIFT_FILES.each do |name|
+  if (old = app_group.files.find { |f| f.display_name == name })
+    old.remove_from_project
+  end
 end
 
 # --- Watch file references ----------------------------------------------------
@@ -65,9 +72,9 @@ watch_target.build_configurations.each do |config|
   settings.each { |k, v| config.build_settings[k] = v }
 end
 
-# --- Phone-side plugin into the App target ------------------------------------
-plugin_ref = app_group.new_reference("BrewWatchPlugin.swift")
-app_target.add_file_references([plugin_ref])
+# --- Phone-side plugin + bridge VC into the App target ------------------------
+app_refs = APP_SWIFT_FILES.map { |name| app_group.new_reference(name) }
+app_target.add_file_references(app_refs)
 
 # --- Embed the watch app into the iOS app + build dependency ------------------
 app_target.add_dependency(watch_target)
