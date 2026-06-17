@@ -113,24 +113,12 @@ struct BTTSWidgetEntryView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header — eyebrow + Scan
-            HStack(alignment: .center) {
-                Text("IN ROTATION")
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(1.4)
-                    .foregroundColor(ink.opacity(0.6))
-                Spacer()
-                Link(destination: URL(string: "btts://scan")!) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "viewfinder").font(.system(size: 11, weight: .bold))
-                        Text("Scan").font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 6)
-                    .background(Capsule().fill(ink.opacity(0.92)))
-                }
-            }
+            // Header — centered eyebrow (Scan lives in its own widget now)
+            Text("IN ROTATION")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.4)
+                .foregroundColor(ink.opacity(0.6))
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Spacer(minLength: 6)
 
@@ -140,9 +128,10 @@ struct BTTSWidgetEntryView: View {
                 HStack(alignment: .center, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
                         if !c.roaster.isEmpty {
+                            // Same size/treatment as the "IN ROTATION" eyebrow.
                             Text(c.roaster.uppercased())
-                                .font(.system(size: 10, weight: .bold))
-                                .tracking(0.8)
+                                .font(.system(size: 11, weight: .bold))
+                                .tracking(1.4)
                                 .foregroundColor(ink.opacity(0.55))
                                 .lineLimit(1)
                         }
