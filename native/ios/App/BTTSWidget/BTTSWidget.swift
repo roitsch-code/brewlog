@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 // MARK: - Data
 
@@ -14,11 +15,10 @@ struct RotationCoffee: Decodable, Identifiable {
 
 private let appGroup = "group.com.roitsch.btts"
 private let storeKey = "rotation"
+private let indexKey = "widgetIndex"
 
 /// Reads the rotation list from the shared App Group. Returns a short reason
-/// code alongside an empty result so the widget can SHOW why it's empty (App
-/// Group missing vs. no data written vs. decode failure) — on-widget diagnosis
-/// of the app→widget handoff.
+/// code alongside an empty result so the widget can SHOW why it's empty.
 private func loadRotation() -> (coffees: [RotationCoffee], reason: String) {
     guard let defaults = UserDefaults(suiteName: appGroup) else { return ([], "no group") }
     guard let raw = defaults.string(forKey: storeKey), !raw.isEmpty else { return ([], "no data") }
@@ -28,6 +28,32 @@ private func loadRotation() -> (coffees: [RotationCoffee], reason: String) {
         return (list, list.isEmpty ? "empty list" : "")
     } catch {
         return ([], "decode err")
+    }
+}
+
+// MARK: - Interactive paging (iOS 17+)
+
+/// Advances the featured bag by `delta`, wrapping around. Stored in the App
+/// Group so the timeline reads it. iOS reloads the widget after the intent runs
+/// — the manual "carousel" navigation, since iOS can't swipe inside a widget.
+struct AdvanceCarouselIntent: AppIntent {
+    static var title: LocalizedStringResource = "Show another rotation bag"
+
+    @Parameter(title: "Delta") var delta: Int
+
+    init() { self.delta = 1 }
+    init(delta: Int) { self.delta = delta }
+
+    func perform() async throws -> some IntentResult {
+        let (coffees, _) = loadRotation()
+        if !coffees.isEmpty, let defaults = UserDefaults(suiteName: appGroup) {
+            let cur = defaults.integer(forKey: indexKey)
+            var next = (cur + delta) % coffees.count
+            if next < 0 { next += coffees.count }
+            defaults.set(next, forKey: indexKey)
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
     }
 }
 
@@ -60,28 +86,23 @@ struct Provider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BTTSEntry) -> Void) {
-        let (coffees, reason) = loadRotation()
-        completion(BTTSEntry(date: Date(), coffee: coffees.first, index: 0, total: coffees.count, reason: reason))
+        completion(currentEntry())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<BTTSEntry>) -> Void) {
+        // Manual carousel: the featured bag is whatever index the arrow buttons
+        // last set. No time-based rotation — the user pages with ‹ ›.
+        completion(Timeline(entries: [currentEntry()], policy: .never))
+    }
+
+    private func currentEntry() -> BTTSEntry {
         let (coffees, reason) = loadRotation()
-        var entries: [BTTSEntry] = []
-        let now = Date()
-        if coffees.isEmpty {
-            entries.append(BTTSEntry(date: now, coffee: nil, index: 0, total: 0, reason: reason))
-        } else {
-            // Carousel: feature one bag per hour, cycling through the rotation.
-            // The app calls reloadAllTimelines() on open, so a fresh rotation
-            // list resets this immediately; between opens it rotates on its own.
-            let steps = max(coffees.count, 6)
-            for h in 0..<steps {
-                let idx = h % coffees.count
-                let date = Calendar.current.date(byAdding: .hour, value: h, to: now) ?? now
-                entries.append(BTTSEntry(date: date, coffee: coffees[idx], index: idx, total: coffees.count, reason: ""))
-            }
+        guard !coffees.isEmpty else {
+            return BTTSEntry(date: Date(), coffee: nil, index: 0, total: 0, reason: reason)
         }
-        completion(Timeline(entries: entries, policy: .atEnd))
+        let stored = UserDefaults(suiteName: appGroup)?.integer(forKey: indexKey) ?? 0
+        let idx = ((stored % coffees.count) + coffees.count) % coffees.count
+        return BTTSEntry(date: Date(), coffee: coffees[idx], index: idx, total: coffees.count, reason: "")
     }
 }
 
@@ -113,10 +134,11 @@ struct BTTSWidgetEntryView: View {
 
             Spacer(minLength: 6)
 
-            // Featured bag (the carousel slot) or the empty state
             if let c = entry.coffee {
-                Link(destination: URL(string: "btts://brew?coffeeId=\(c.id)")!) {
-                    VStack(alignment: .leading, spacing: 4) {
+                // Featured bag — name/roaster on the left, dedicated Brew pill
+                // on the right (mirrors the coffee-library row).
+                HStack(alignment: .center, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
                         if !c.roaster.isEmpty {
                             Text(c.roaster.uppercased())
                                 .font(.system(size: 10, weight: .bold))
@@ -125,13 +147,21 @@ struct BTTSWidgetEntryView: View {
                                 .lineLimit(1)
                         }
                         Text(c.name)
-                            .font(.system(size: 24, weight: .semibold, design: .serif))
+                            .font(.system(size: 22, weight: .semibold, design: .serif))
                             .foregroundColor(ink)
                             .lineLimit(2)
                             .minimumScaleFactor(0.7)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
+                    Link(destination: URL(string: "btts://brew?coffeeId=\(c.id)")!) {
+                        Text("Brew")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(ink))
+                    }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 4) {
@@ -152,16 +182,37 @@ struct BTTSWidgetEntryView: View {
 
             Spacer(minLength: 6)
 
-            // Carousel position dots
+            // Manual carousel controls: ‹ prev · dots · next ›
             if entry.total > 1 {
-                HStack(spacing: 5) {
-                    ForEach(0..<entry.total, id: \.self) { i in
-                        Circle()
-                            .fill(ink.opacity(i == entry.index ? 0.85 : 0.28))
-                            .frame(width: 6, height: 6)
+                HStack(spacing: 0) {
+                    Button(intent: AdvanceCarouselIntent(delta: -1)) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(ink.opacity(0.7))
+                            .frame(width: 26, height: 22)
+                            .background(Capsule().fill(Color.white.opacity(0.35)))
                     }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 0)
+                    HStack(spacing: 5) {
+                        ForEach(0..<entry.total, id: \.self) { i in
+                            Circle()
+                                .fill(ink.opacity(i == entry.index ? 0.85 : 0.28))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                    Spacer(minLength: 0)
+
+                    Button(intent: AdvanceCarouselIntent(delta: 1)) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(ink.opacity(0.7))
+                            .frame(width: 26, height: 22)
+                            .background(Capsule().fill(Color.white.opacity(0.35)))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .containerBackground(for: .widget) { fieldGradient }
