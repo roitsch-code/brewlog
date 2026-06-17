@@ -15,41 +15,73 @@ struct RotationCoffee: Decodable, Identifiable {
 private let appGroup = "group.com.roitsch.btts"
 private let storeKey = "rotation"
 
-private func loadRotation() -> [RotationCoffee] {
-    guard let defaults = UserDefaults(suiteName: appGroup),
-          let raw = defaults.string(forKey: storeKey),
-          let data = raw.data(using: .utf8),
-          let list = try? JSONDecoder().decode([RotationCoffee].self, from: data)
-    else { return [] }
-    return list
+/// Reads the rotation list from the shared App Group. Returns a short reason
+/// code alongside an empty result so the widget can SHOW why it's empty (App
+/// Group missing vs. no data written vs. decode failure) — on-widget diagnosis
+/// of the app→widget handoff.
+private func loadRotation() -> (coffees: [RotationCoffee], reason: String) {
+    guard let defaults = UserDefaults(suiteName: appGroup) else { return ([], "no group") }
+    guard let raw = defaults.string(forKey: storeKey), !raw.isEmpty else { return ([], "no data") }
+    guard let data = raw.data(using: .utf8) else { return ([], "bad utf8") }
+    do {
+        let list = try JSONDecoder().decode([RotationCoffee].self, from: data)
+        return (list, list.isEmpty ? "empty list" : "")
+    } catch {
+        return ([], "decode err")
+    }
 }
 
-// MARK: - Palette (BTTS Light tokens)
+// MARK: - Palette (fruity Field tones — deliberately no beige/brown)
 
-private let cream = Color(red: 0.953, green: 0.898, blue: 0.863)        // #F3E5DC
-private let anthracite = Color(red: 0.165, green: 0.141, blue: 0.110)   // #2A241C
+private let ink = Color(red: 0.227, green: 0.133, blue: 0.188) // deep plum ink
+private let fieldGradient = LinearGradient(
+    colors: [
+        Color(red: 0.969, green: 0.773, blue: 0.827), // rose
+        Color(red: 0.961, green: 0.620, blue: 0.525), // peach
+        Color(red: 0.933, green: 0.494, blue: 0.400), // coral
+    ],
+    startPoint: .topLeading,
+    endPoint: .bottomTrailing
+)
 
 // MARK: - Timeline
 
 struct BTTSEntry: TimelineEntry {
     let date: Date
-    let coffees: [RotationCoffee]
+    let coffee: RotationCoffee?
+    let index: Int
+    let total: Int
+    let reason: String
 }
 
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> BTTSEntry {
-        BTTSEntry(date: Date(), coffees: [])
+        BTTSEntry(date: Date(), coffee: nil, index: 0, total: 0, reason: "")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BTTSEntry) -> Void) {
-        completion(BTTSEntry(date: Date(), coffees: loadRotation()))
+        let (coffees, reason) = loadRotation()
+        completion(BTTSEntry(date: Date(), coffee: coffees.first, index: 0, total: coffees.count, reason: reason))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<BTTSEntry>) -> Void) {
-        // The app pushes fresh data + calls reloadAllTimelines() on open, so we
-        // don't need a refresh cadence — `.never` until the next explicit reload.
-        let entry = BTTSEntry(date: Date(), coffees: loadRotation())
-        completion(Timeline(entries: [entry], policy: .never))
+        let (coffees, reason) = loadRotation()
+        var entries: [BTTSEntry] = []
+        let now = Date()
+        if coffees.isEmpty {
+            entries.append(BTTSEntry(date: now, coffee: nil, index: 0, total: 0, reason: reason))
+        } else {
+            // Carousel: feature one bag per hour, cycling through the rotation.
+            // The app calls reloadAllTimelines() on open, so a fresh rotation
+            // list resets this immediately; between opens it rotates on its own.
+            let steps = max(coffees.count, 6)
+            for h in 0..<steps {
+                let idx = h % coffees.count
+                let date = Calendar.current.date(byAdding: .hour, value: h, to: now) ?? now
+                entries.append(BTTSEntry(date: date, coffee: coffees[idx], index: idx, total: coffees.count, reason: ""))
+            }
+        }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
 
@@ -58,71 +90,81 @@ struct Provider: TimelineProvider {
 struct BTTSWidgetEntryView: View {
     var entry: Provider.Entry
 
-    private var tiles: [RotationCoffee] { Array(entry.coffees.prefix(3)) }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header — eyebrow + Scan
             HStack(alignment: .center) {
-                Text("In rotation")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(anthracite.opacity(0.55))
+                Text("IN ROTATION")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.4)
+                    .foregroundColor(ink.opacity(0.6))
                 Spacer()
                 Link(destination: URL(string: "btts://scan")!) {
                     HStack(spacing: 4) {
-                        Image(systemName: "camera").font(.system(size: 11, weight: .semibold))
+                        Image(systemName: "viewfinder").font(.system(size: 11, weight: .bold))
                         Text("Scan").font(.system(size: 12, weight: .semibold))
                     }
-                    .foregroundColor(cream)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Capsule().fill(anthracite))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(ink.opacity(0.92)))
                 }
             }
 
-            if tiles.isEmpty {
-                Spacer(minLength: 0)
-                Text("Open BTTS to pick today's bag.")
-                    .font(.system(size: 13))
-                    .foregroundColor(anthracite.opacity(0.6))
-                Spacer(minLength: 0)
-            } else {
-                ForEach(tiles) { coffee in
-                    Link(destination: URL(string: "btts://brew?coffeeId=\(coffee.id)")!) {
-                        HStack(spacing: 8) {
-                            VStack(alignment: .leading, spacing: 1) {
-                                if !coffee.roaster.isEmpty {
-                                    Text(coffee.roaster)
-                                        .font(.system(size: 10))
-                                        .foregroundColor(anthracite.opacity(0.5))
-                                        .lineLimit(1)
-                                }
-                                Text(coffee.name)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(anthracite)
-                                    .lineLimit(1)
-                            }
-                            Spacer(minLength: 4)
-                            Text("Brew")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(cream)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Capsule().fill(anthracite))
+            Spacer(minLength: 6)
+
+            // Featured bag (the carousel slot) or the empty state
+            if let c = entry.coffee {
+                Link(destination: URL(string: "btts://brew?coffeeId=\(c.id)")!) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if !c.roaster.isEmpty {
+                            Text(c.roaster.uppercased())
+                                .font(.system(size: 10, weight: .bold))
+                                .tracking(0.8)
+                                .foregroundColor(ink.opacity(0.55))
+                                .lineLimit(1)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(0.35))
-                        )
+                        Text(c.name)
+                            .font(.system(size: 24, weight: .semibold, design: .serif))
+                            .foregroundColor(ink)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.7)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No bags in rotation")
+                        .font(.system(size: 17, weight: .semibold, design: .serif))
+                        .foregroundColor(ink)
+                    Text("Star a coffee as in-rotation, then open BTTS.")
+                        .font(.system(size: 12))
+                        .foregroundColor(ink.opacity(0.7))
+                    if !entry.reason.isEmpty {
+                        Text(entry.reason)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(ink.opacity(0.4))
                     }
                 }
-                Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
+            Spacer(minLength: 6)
+
+            // Carousel position dots
+            if entry.total > 1 {
+                HStack(spacing: 5) {
+                    ForEach(0..<entry.total, id: \.self) { i in
+                        Circle()
+                            .fill(ink.opacity(i == entry.index ? 0.85 : 0.28))
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(cream, for: .widget)
+        .containerBackground(for: .widget) { fieldGradient }
     }
 }
 
