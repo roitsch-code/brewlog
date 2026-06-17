@@ -1,27 +1,27 @@
 name: iOS TestFlight
 
-# Builds the BTTS iOS shell and uploads it to TestFlight (internal testing — no
-# Apple review). Runs:
-#   - manually (workflow_dispatch) — use this for the first build
-#   - monthly (cron) — TestFlight builds expire after 90 days; a monthly rebuild
-#     keeps a fresh build installed with ~3 attempts of headroom
-#   - on push to main touching native/** — rebuild when the shell config changes
+# Builds the BTTS iOS shell and uploads it to TestFlight.
 #
-# Signing is Xcode CLOUD signing via an App Store Connect API key: no certs, no
-# p12s, no fastlane. The 4 secrets below are the only setup.
+# PARKED — manual trigger ONLY (2026-06-17). The auto-triggers (push on native/**
+# + monthly cron) were removed because this CI path is currently BROKEN and was
+# firing a red run (→ owner e-mail/push) on every native change:
+#   - it archives with `-workspace App.xcworkspace`, which does not exist under
+#     Capacitor 8's SPM layout (it's `-project App.xcodeproj`), and
+#   - cloud signing here CANNOT bake the HealthKit entitlement the watch app now
+#     carries, so even a fixed archive would ship a watch build with HealthKit
+#     silently dropped.
+# Builds are done on the Mac via native/scripts/mac-build-upload.sh until this
+# workflow is reworked (roadmap "monthly-rebuild / CI fix": needs the
+# distribution p12 + the two .mobileprovision files as secrets + a manual
+# bottom-up re-sign). Left dispatch-only so it can be run by hand / fixed later,
+# but it no longer spams failures.
 #
-# Failure signal: GitHub e-mails the owner automatically on a failed run. (No
-# webhook — the coffee-alert endpoint only writes a DB row, it can't reach the
-# phone.)
+# NOTE: dropping the monthly cron also drops the (already non-functional) safety
+# net against the 90-day TestFlight build expiry — track monthly Mac rebuilds
+# manually until the CI fix lands.
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of every month
-  push:
-    branches: [main]
-    paths:
-      - "native/**"
 
 concurrency:
   group: ios-testflight
