@@ -28,6 +28,12 @@ Every candidate line, from every source, must clear **both**:
 
 Only survivors of both are written.
 
+**Length is generated short, not just enforced.** The generation prompts target ~55 chars / ≤12
+words (well under the 80-char cap) with worked examples, so lines arrive short. A line that fails
+the gate on **length only** isn't thrown away — a **repair pass** (one extra call) tightens it and
+re-runs it through the full gate (grounding included). This stops the wasteful "generate long →
+kill for length" loop; the 80-char gate is the final backstop, not the primary filter.
+
 ---
 
 ## Architecture
@@ -129,7 +135,7 @@ to `retired` (never deleted).
 | `src/lib/coffeeHints.ts` | `COFFEE_HINTS` — the static seed + offline floor (hand-verified) |
 | `src/lib/insights/loadingInsightLint.ts` | the deterministic gate (shared SoT) |
 | `src/app/api/loading-insights/route.ts` | `GET` — live rows for the screen; defensive (returns `[]` on any failure, incl. pre-migration) |
-| `src/app/api/loading-insights/refresh/route.ts` | `POST` (CRON_SECRET) — the agent: ensureTable → generate (corpus+brews+web) → gate → claim-check → insert → retire |
+| `src/app/api/loading-insights/refresh/route.ts` | `POST` (CRON_SECRET) — the agent: ensureTable → generate (corpus+brews+web) → gate → repair too-long → claim-check → insert → retire |
 | `src/components/flow/LightStepRecommend.tsx` | merges the fetched pool with the seed, length-capped, `shuffleSubset(…, 12)` |
 | `src/middleware.ts` | `/api/loading-insights` added to `PUBLIC_PATHS` (refresh = CRON_SECRET-gated, GET = requireAuth-gated) |
 | `src/lib/db/migrations/0018_add_loading_insights.sql` | canonical schema record |
@@ -157,10 +163,12 @@ A missed run is harmless (seed floor).
 
 - **Run it now:** Actions → "Refresh loading insights" → **Run workflow** (or **Re-run jobs** on a
   past run). Otherwise it fires monthly on its own.
-- **Reading a run:** the `refresh` step prints the JSON the route returns, e.g.
-  `{"snippets":27,"web":8,"candidates":35,"gated":22,"inserted":22,"retired":0}` —
-  snippets pulled · web lines returned · total candidates · passed the gate+check · inserted ·
-  retired over the cap. A big gap between `candidates` and `gated` means the gate is being strict.
+- **Reading a run:** the `refresh` step prints a readable audit — a counts line plus the full
+  `PASSED` and `KILLED` lists, each killed line tagged with the rule that dropped it
+  (`ungrounded:<token>`, `duplicate`, `claim-check`, …). The raw JSON the route returns carries the
+  same: `{snippets, web, candidates, repaired, gated, inserted, retired, passed[], killed[]}`
+  (`repaired` = too-long lines recovered by the repair pass). A big `killed` count for
+  `ungrounded:*` means the gate is correctly dropping unsupported lines.
 
 > **`curl` dependency:** the app image is `node:20-alpine`, which has **no curl** by default. The
 > Dockerfile (`runner` stage) installs it (`apk add --no-cache curl`) because the in-container
