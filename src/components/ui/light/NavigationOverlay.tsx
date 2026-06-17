@@ -37,6 +37,7 @@ const ITEMS: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Past Conversations", href: "/past-conversations" },
   { label: "New Session", href: "/brew/new" },
+  { label: "Cold Brew", href: "/cold-brew" },
   { label: "Coffee Library", href: "/coffees" },
   { label: "Nearby", href: "/cafes/map" },
   { label: "Café Library", href: "/cafes" },
