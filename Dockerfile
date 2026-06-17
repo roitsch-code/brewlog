@@ -19,6 +19,14 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# curl is required by the in-container scheduled jobs that POST to localhost:
+# deploy/ofelia.ini (research / conversations-cleanup / coffees-compact) and the
+# "Refresh loading insights" GitHub Actions workflow all run
+# `docker compose exec app curl …`. node:alpine ships without curl, so without
+# this those crons silently fail with "curl: not found". Installed as root,
+# before the USER switch below.
+RUN apk add --no-cache curl
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
