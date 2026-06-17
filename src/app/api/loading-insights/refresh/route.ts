@@ -272,13 +272,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Deterministic gate — each candidate grounded against its OWN source.
+    // `killed` records every rejected line + WHY, so a run is fully auditable.
+    const killed: { source: LoadingInsightSource; text: string; reasons: string[] }[] = [];
     const gated: { text: string; snippet: Snippet }[] = [];
     for (const cand of rawCandidates) {
-      const { ok } = lintLoadingInsight(cand.text, {
+      const { ok, reasons } = lintLoadingInsight(cand.text, {
         sourceText: cand.snippet.sourceText,
         existing,
       });
-      if (!ok) continue;
+      if (!ok) {
+        killed.push({ source: cand.snippet.source, text: cand.text, reasons });
+        continue;
+      }
       existing.add(normalizeForDedupe(cand.text)); // catch intra-batch dups
       gated.push(cand);
     }
@@ -300,7 +305,11 @@ export async function POST(req: NextRequest) {
         });
         const verdicts = extractJsonArray(textOf(checkResp));
         if (verdicts && verdicts.length === gated.length) {
-          survivors = gated.filter((_, i) => verdicts[i] === true);
+          survivors = [];
+          gated.forEach((g, i) => {
+            if (verdicts[i] === true) survivors.push(g);
+            else killed.push({ source: g.snippet.source, text: g.text, reasons: ["claim-check"] });
+          });
         }
       } catch {
         /* keep gate survivors on claim-check failure */
@@ -346,6 +355,9 @@ export async function POST(req: NextRequest) {
       gated: gated.length,
       inserted: newRows.length,
       retired,
+      // Full per-line audit so a run shows what passed and what was killed (+why).
+      passed: survivors.map((s) => ({ source: s.snippet.source, text: s.text })),
+      killed,
     });
   } catch (err) {
     console.error("loading-insights refresh failed", err);
