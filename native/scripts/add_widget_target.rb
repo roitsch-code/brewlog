@@ -35,21 +35,28 @@ app_target.build_phases.select { |p|
 if (g = project.main_group["BTTSWidget"])
   g.remove_from_project
 end
-# Drop a prior WidgetBridge.swift ref so we don't double-add it to the App target.
+# Drop prior refs to our App-target files so we don't double-add them.
 app_group = project.main_group["App"] or abort("App group not found")
-if (old = app_group.files.find { |f| f.display_name == "WidgetBridge.swift" })
-  old.remove_from_project
+%w[WidgetBridge.swift LiveActivityPlugin.swift BrewActivityAttributes.swift].each do |name|
+  if (old = app_group.files.find { |f| f.display_name == name })
+    old.remove_from_project
+  end
 end
 
 # --- Widget file references ----------------------------------------------------
 widget_group = project.main_group.new_group("BTTSWidget", "BTTSWidget")
-swift_refs = %w[BTTSWidget.swift].map { |f| widget_group.new_reference(f) }
+swift_refs = %w[BTTSWidget.swift BrewLiveActivity.swift].map { |f| widget_group.new_reference(f) }
 widget_group.new_reference("Info.plist") # referenced via INFOPLIST_FILE, not a build phase
 widget_group.new_reference("BTTSWidget.entitlements") # referenced via CODE_SIGN_ENTITLEMENTS
 
+# Shared ActivityAttributes — ONE file compiled into BOTH the widget and the App
+# target (the Live Activity type the app starts/updates and the widget renders).
+# Lives in App/, referenced from the App group; added to both targets below.
+attrs_ref = app_group.new_reference("BrewActivityAttributes.swift")
+
 # --- The widget extension target ----------------------------------------------
 widget_target = project.new_target(:app_extension, "BTTSWidget", :ios, "17.0", nil, :swift)
-widget_target.add_file_references(swift_refs)
+widget_target.add_file_references(swift_refs + [attrs_ref])
 
 wsettings = {
   "PRODUCT_BUNDLE_IDENTIFIER" => WIDGET_BUNDLE_ID,
@@ -83,7 +90,11 @@ end
 # add_watch_target.rb's APP_SWIFT_FILES); the class must compile, so the source
 # must be in the App target. (App.entitlements is referenced via the build
 # setting, not as a compiled source, so it is NOT added here.)
-app_target.add_file_references([app_group.new_reference("WidgetBridge.swift")])
+app_target.add_file_references([
+  app_group.new_reference("WidgetBridge.swift"),
+  app_group.new_reference("LiveActivityPlugin.swift"),
+  attrs_ref,
+])
 
 # --- Embed the widget into the app's PlugIns + build dependency ---------------
 app_target.add_dependency(widget_target)
