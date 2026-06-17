@@ -120,6 +120,8 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `insights` | ★ Coach observations over the full session corpus. **Opus** (`src/lib/claude/insights.ts`). GET = cache-aware Opus regeneration + full list for /taste (client-side status filtering); a `?status=` filtered read exists but currently has no UI consumer (both per-coffee surfaces read `/api/coffees/[id]/insight` since migration 0015). PATCH `{ id, status }` advances an insight through a **two-stage** workflow (migration 0017): **New** (`new` → Save to try / Confirmed / Doesn't apply) then **Saved** (`trying` → It helped=`confirmed` / Didn't help=`doesnt-apply` / Skip=`snoozed`). `snoozed` rows set `snoozed_until` (default +7 days) and are hidden until it passes, then resurface and regen treats them like `new` — EXCEPT `source='user-confirmed'` rows, which regeneration never deletes (June 2026 fix; previously Save → Skip → 7 days could silently delete a hand-saved note, because PATCH also used to reset `source` to `'opus'` on snooze). Confirm is the only transition that changes `source` (→ `user-confirmed`). The regeneration only replaces `status='new'` (and expired-snooze opus) rows; user-acted rows are preserved and re-emitted similar observations inherit the existing status (text-match on first 80 chars). **POST** writes a chat-authored coach note (tap-to-save from the home chat's `remember_advice` pill, and the post-brew Summary insight card) to **two** places: (a) an insights row (`status='trying'` or `'confirmed'` / `source='user-confirmed'`), deduped on the first 80 chars and anchored to the current corpus `latestSessionMs` so it never freezes regeneration; and (b) the targeted coffee's `coach_insight` column so the note becomes that bag's card on `/coffees/[id]` — a precise per-coffee write that supersedes the auto-generated per-coffee insight (rotation-gated card; a note saved for an out-of-rotation bag won't render a card). The two copies' statuses are NOT synced (see explore-agent row caveat). (PR #215, migrations 0014 + 0017) |
 | `coffees/[id]/insight` | GET / PATCH — the **per-coffee** coach card (`coffees.coach_insight`, migration 0015, **Opus** via `src/lib/claude/coffeeInsight.ts`). GET returns the cached insight, regenerating when this coffee has a newer session AND status is `new`/`doesnt-apply` (never while `trying`/`confirmed` — don't move the card under the user). PATCH advances the card's own status. Consumed by `CoffeeCoachCard` (/coffees/[id]) and the /brew/new Context reminder pill. |
 | `admin/prewarm-coffee-insights` | POST (CRON_SECRET bearer) — one-shot Opus pre-warm of per-coffee insights for every rotation coffee, so /coffees/[id] cards appear instantly after migration 0015 / a rotation batch. Preserves `trying`/`confirmed` cards. |
+| `loading-insights` | GET — live rows of the **auto-refreshed loading-screen insight pool** shown during the recipe-crafting wait (`LightStepRecommend`). Defensive: returns `[]` on any failure (incl. pre-migration) so the static `COFFEE_HINTS` seed always covers it. requireAuth-gated. |
+| `loading-insights/refresh` | ★ POST (CRON_SECRET) — the **insight agent**. Generates short headline lines grounded in the verified corpus (recipes/varieties/techniques) + brew aggregates + live `web_search` (each web line must carry a verbatim quote), runs every candidate through a deterministic gate (`src/lib/insights/loadingInsightLint.ts`) **and** a model claim-check, inserts survivors, retires oldest over a 150 cap. Full-auto, **NO human review** — the machine gate replaces it so nothing ungrounded reaches the screen (the "never fabricate" rule). Table self-bootstraps (`CREATE TABLE IF NOT EXISTS`). Monthly via `.github/workflows/loading-insights-refresh.yml` (SSH → `docker compose exec app curl`, reuses deploy key). **Full reference: `docs/loading-insights.md`.** |
 | `coach-question` | POST — post-rating micro-dialogue (Sonnet). Called by `LightStepLog` only when a client-side ambiguity heuristic fires (`shouldAskCoach`); returns one short question + 3 answer chips, stored as `tasteResult.coachAnswer` and read downstream by /recommend + /insights. |
 | `hints` | GET contextual brewing hints |
 | `news` | GET coffee news feed |
@@ -167,7 +169,9 @@ Removed during the Light cleanup (PR #137): `BottomNav`, Dark `Chip`, `RadarChar
 
 ```
 lib/
-├── coffeeHints.ts          # Static contextual brewing hints used by /api/hints
+├── coffeeHints.ts          # ★ COFFEE_HINTS — static seed + offline floor for the recipe-screen insight pool (docs/loading-insights.md)
+├── insights/
+│   └── loadingInsightLint.ts  # ★ Deterministic gate for the loading-screen insight agent — shared SoT (agent + read route + screen + CI)
 ├── auth/
 │   ├── requireAuth.ts      # Server helper: throws if no valid session cookie
 │   └── session.ts          # JWT session cookie create/verify (jose)
@@ -214,7 +218,8 @@ lib/
 │   ├── 0014_add_insight_status.sql         # status workflow column on insights (`new`/`trying`/`confirmed`/`doesnt-apply`), PR #215
 │   ├── 0015_add_coffee_coach_insight.sql    # coffees.coach_insight jsonb — per-coffee Opus insight (CoffeeCoachCard source)
 │   ├── 0016_add_drip_bags.sql               # drip_bags table — single-serve drip-bag documentation records, isolated from the corpus
-│   └── 0017_add_insight_snooze.sql          # insights.snoozed_until + 'snoozed' status (two-stage coach workflow, +7-day skip)
+│   ├── 0017_add_insight_snooze.sql          # insights.snoozed_until + 'snoozed' status (two-stage coach workflow, +7-day skip)
+│   └── 0018_add_loading_insights.sql        # loading_insights table — auto-refreshed loading-screen insight pool (also self-bootstrapped by the refresh route)
 │   # NOTE: 0001+ are applied manually via `psql` on the VPS — Drizzle journal does not track them.
 │   # Applying schema/code that references a new column BEFORE running the migration on the VPS
 │   # makes Drizzle SELECT 500 (column-strict). Always migrate VPS first, deploy code second.
@@ -283,7 +288,7 @@ lib/
 
 ### Database tables (Drizzle + Postgres)
 
-`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits`, `insights`, `drip_bags` (14 tables; `lessons` from PR #210 also exists but is read-by-nothing post-#211 — its `/lessons` page, `/api/lessons` route, and `src/lib/claude/lessons.ts` distiller were all removed, only the table + migrations 0012/0013_add_lesson_questions remain as dead schema).
+`sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts`, `places`, `conversations`, `conversation_messages`, `cafe_visits`, `insights`, `drip_bags`, `loading_insights` (15 tables; `lessons` from PR #210 also exists but is read-by-nothing post-#211 — its `/lessons` page, `/api/lessons` route, and `src/lib/claude/lessons.ts` distiller were all removed, only the table + migrations 0012/0013_add_lesson_questions remain as dead schema).
 
 Recent additions:
 - `coffees.field_zones jsonb` (migration 0008) — persisted Field composition per coffee
@@ -320,6 +325,13 @@ All migrations applied manually on the VPS — see migration NOTE above.
 ## Current Status — Snapshot June 2026
 
 ### ✅ Done
+
+**Auto-refreshed loading-screen insight agent (June 2026, PRs #342 / #345 / #346 / #347)**
+- The recipe-crafting loading screen (`LightStepRecommend`) rotated a static `COFFEE_HINTS` array; now a scheduled agent grows/swaps the pool **monthly, full-auto, no human review**. Because the owner chose no review and "never fabricate" is non-negotiable, a **machine gate replaces the human one**: every candidate — from the verified corpus, brew aggregates, AND live `web_search` — must be grounded in a cited source (numbers + mid-line proper nouns must appear in it), pass `src/lib/insights/loadingInsightLint.ts` + a model claim-check, before insert. Web lines carry a verbatim quote as their grounding; residual web-fabrication risk is accepted for this low-stakes surface.
+- `loading_insights` table (migration 0018, **also self-bootstrapped** via `CREATE TABLE IF NOT EXISTS` in the refresh route — the integration can't dispatch the migration workflow, `403`). GET `/api/loading-insights` is defensive (→ seed on any failure); `LightStepRecommend` merges pool + seed, and the seed is the unbreakable floor (instant, offline-safe, never regresses).
+- Runs via `.github/workflows/loading-insights-refresh.yml` (monthly cron + `workflow_dispatch`): SSHes in with the **deploy key** and triggers `docker compose exec -T app curl` from inside the container — zero new secrets, reads the container's own `CRON_SECRET`, no Ofelia restart.
+- **The Dockerfile now installs `curl`** (`node:20-alpine` shipped without it). This ALSO unbroke the existing Ofelia crons (`/api/research`, `/api/conversations/cleanup`, `/api/coffees/compact`), which had been silently failing on `curl: not found` (Ofelia only Slacks on error, which isn't wired). Don't remove curl.
+- Full reference: **`docs/loading-insights.md`** (architecture, the gate, the sources, ops, tuning dials). Tests: `tests/dataflow/loading-insight-lint.test.mjs`.
 
 **Recipe-fidelity system + extraction-budget framework + primary-source audit + deploy fix (June 2026, PRs #265–#278)**
 - **Recipe fidelity (two layers).** (1) Prompt rule in `recommend.ts` (#265): when a candidate is `basedOn` a documented recipe, preserve its grind/cadence/temp/total-time and scale ONLY the grams — adding 50ml must never add 1:15. (2) Deterministic backstop `src/lib/claude/recipeFidelity.ts` (#266): `reconcileToReference()` runs after parsing and snaps a drifted candidate's mechanics back to the VERIFIED scaled corpus recipe. Verified-refs only, 0.5–2.5× scale only, skips iced/bypass. Tests: `tests/dataflow/recipe-fidelity.test.mjs`. Root cause was the Kasuya Super-Coarse "+50ml→+1:15 / lost super-coarse grind" mangle (the model rewrote the recipe at generation time; the timing math was innocent).
