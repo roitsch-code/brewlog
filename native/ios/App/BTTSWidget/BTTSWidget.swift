@@ -218,8 +218,83 @@ struct BTTSWidget: Widget {
             BTTSWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("BTTS Rotation")
-        .description("Brew a bag in rotation, or scan a new one.")
+        .description("Brew a bag in rotation.")
         .supportedFamilies([.systemMedium])
+    }
+}
+
+// MARK: - Scan widget (small, static — opens the bag scanner)
+
+private let peachGradient = LinearGradient(
+    colors: [
+        Color(red: 0.988, green: 0.871, blue: 0.804), // pale peach
+        Color(red: 0.969, green: 0.706, blue: 0.580), // peach
+        Color(red: 0.949, green: 0.604, blue: 0.486), // apricot
+    ],
+    startPoint: .top,
+    endPoint: .bottom
+)
+
+struct ScanEntry: TimelineEntry {
+    let date: Date
+}
+
+struct ScanProvider: TimelineProvider {
+    func placeholder(in context: Context) -> ScanEntry { ScanEntry(date: Date()) }
+    func getSnapshot(in context: Context, completion: @escaping (ScanEntry) -> Void) {
+        completion(ScanEntry(date: Date()))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<ScanEntry>) -> Void) {
+        completion(Timeline(entries: [ScanEntry(date: Date())], policy: .never))
+    }
+}
+
+struct ScanWidgetEntryView: View {
+    var entry: ScanProvider.Entry
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Text("NEW SESSION")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.4)
+                .foregroundColor(ink.opacity(0.6))
+
+            Spacer(minLength: 2)
+
+            Image(systemName: "camera")
+                .font(.system(size: 20, weight: .regular))
+                .foregroundColor(ink.opacity(0.85))
+                .frame(width: 48, height: 36)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.white.opacity(0.35))
+                )
+
+            Spacer(minLength: 2)
+
+            Text("Scan\na bag")
+                .font(.system(size: 25, weight: .semibold, design: .serif))
+                .multilineTextAlignment(.center)
+                .foregroundColor(ink)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .containerBackground(for: .widget) { peachGradient }
+        .widgetURL(URL(string: "btts://scan"))
+    }
+}
+
+struct ScanWidget: Widget {
+    let kind = "BTTSScanWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: ScanProvider()) { entry in
+            ScanWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Scan a bag")
+        .description("Open the bag scanner.")
+        .supportedFamilies([.systemSmall])
     }
 }
 
@@ -227,5 +302,6 @@ struct BTTSWidget: Widget {
 struct BTTSWidgetBundle: WidgetBundle {
     var body: some Widget {
         BTTSWidget()
+        ScanWidget()
     }
 }
