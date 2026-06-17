@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect } from "react";
 import { FieldProvider } from "@/lib/field/FieldContext";
 import { sweepBrewNotifications } from "@/lib/native/brewNotifications";
+import NativeWidgetBridge from "@/components/native/NativeWidgetBridge";
 import Field from "./Field";
 import ConnectionStatus from "./ConnectionStatus";
 
@@ -43,6 +44,7 @@ export default function LightShell({ children }: { children: ReactNode }) {
       <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">
         <Field />
         <ConnectionStatus />
+        <NativeWidgetBridge />
         {children}
       </div>
     </FieldProvider>
