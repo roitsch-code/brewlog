@@ -29,13 +29,37 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
-          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
-            set -e
-            cd ${{ secrets.DEPLOY_PATH }}
-            # Trigger from inside the app container so $CRON_SECRET expands from
-            # the container's own env (single quotes keep the host/SSH shells from
-            # touching it). -fsS makes curl exit non-zero on an HTTP error, so a
-            # failed refresh fails this job loudly.
-            docker compose exec -T app sh -c 'curl -fsS -X POST http://localhost:3000/api/loading-insights/refresh -H "Authorization: Bearer $CRON_SECRET"'
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Trigger from inside the app container so $CRON_SECRET expands from the
+          # container's own env (single quotes keep the host/SSH shells off it).
+          # -fsS makes curl non-zero on an HTTP error. Capture the JSON body to a
+          # file so we can print a readable per-line audit (proposed/killed/passed).
+          set +e
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE' > /tmp/resp.json 2>/tmp/resp.err
+          cd ${{ secrets.DEPLOY_PATH }}
+          docker compose exec -T app sh -c 'curl -fsS -X POST http://localhost:3000/api/loading-insights/refresh -H "Authorization: Bearer $CRON_SECRET"'
           REMOTE
+          rc=$?
+          set -e
+
+          echo "----- raw response -----"
+          cat /tmp/resp.json
+
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::refresh failed (ssh/curl exit $rc)"
+            cat /tmp/resp.err
+            exit 1
+          fi
+
+          echo
+          echo "----- audit -----"
+          jq -r '
+            "counts: \(.candidates) proposed · \(.inserted) inserted · \(.killed | length) killed",
+            "",
+            "PASSED (\(.passed | length)):",
+            (.passed[] | "  + [\(.source)] \(.text)"),
+            "",
+            "KILLED (\(.killed | length)):",
+            (.killed[] | "  - [\(.source)] \(.text)  -> \(.reasons | join(\", \"))")
+          ' /tmp/resp.json || echo "(could not format JSON; see raw response above)"
