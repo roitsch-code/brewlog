@@ -3,6 +3,13 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # Doc-only changes don't affect the running app — skip the deploy so a
+    # documentation commit can't rotate the JS chunk hashes and strand an
+    # installed PWA on a stale service-worker cache (the June-2026 widget
+    # incident; see docs/ios-shell-roadmap.md Stolperstein log).
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 # Serialise deploys. Without this, two pushes (or a double-delivered push event)
 # can start two deploy jobs that race on the VPS git checkout — one job's
