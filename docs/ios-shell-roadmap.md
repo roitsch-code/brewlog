@@ -124,11 +124,21 @@ Each milestone is independently shippable on the v1 shell. Two infrastructure tr
 - **What it buys in the brew flow:** live grams + flow rate on the timer screen, tare from the app, auto-log final dose/water into the session, optional pour auto-advance from rate-of-change (manual tap stays).
 - **Residual risk:** iOS connection-timing quirks (Beanconqueror has two iOS connection modes + magic 150 ms sleeps for a reason) and scale auto-sleep. First step is a one-evening on-device spike: shell + plugin + verbatim decoder, confirm weight events stream from the Lunar.
 
-### G2 — Home-screen widget (2–3 days; validates the extension pipeline)
+### G2 — Home-screen widget (🟡 CODE COMPLETE 2026-06-17, awaiting one Apple-side prereq + a Mac build)
 
-- The deliberately-easy first extension milestone: a small SwiftUI timeline widget showing rotation bags / last brew, fetching a tiny authenticated JSON endpoint directly via URLSession from the widget process (Apple-documented pattern — no bridge plugin needed). Needs a long-lived token endpoint since the session cookie lives in WKWebView.
-- Refresh budget ~40–70/day — generous for data that changes a few times a day.
-- **One-time shared cost it pays down:** adding a widget-extension target to the committed Xcode project without a Mac — **primary path: one-time generation on a runner or XcodeGen; a scripted pbxproj edit is the fragile option, last resort only** (decide for real in the G2 session) — own bundle id (`com.roitsch.btts.widgets`), and cloud signing for multi-target archives (`-allowProvisioningUpdates` handles extensions automatically — verified, with known-but-solvable CI config friction). Everything G3 needs, de-risked on the simplest possible extension.
+**Scope (owner-decided, deliberately tight):** ONE **medium** home-screen widget, two functions only — **rotation bags → tap-to-brew** and **scan a bag**. Explicitly NOT: last-brew (owner: "sucks"), freshness, coach, greeting, lock-screen, small/other sizes. Text-only tiles in v1 (photos deferred).
+
+**Data path (decided — App Group, NOT a URLSession-fetch widget):** the original plan was a widget that fetches an authenticated JSON endpoint (needs a long-lived token). Dropped in favour of an **App Group shared store**: the app, on open, pushes the in-rotation coffees to a custom `WidgetBridge` Capacitor plugin → `UserDefaults(suiteName: "group.com.roitsch.btts")` + `WidgetCenter.reloadAllTimelines()`. No token, no auth surface, no network in the widget. Rotation changes rarely and the user opens the app to brew anyway, so app-run-gated freshness is fine.
+
+**Extension-target-without-a-Mac-GUI:** the roadmap fretted over this ("runner generation / XcodeGen / fragile pbxproj edit"). It was already solved by the watch — `native/scripts/add_widget_target.rb` is a direct sibling of `add_watch_target.rb` (the `xcodeproj` gem), idempotent, run after `cap sync` + the watch script. Bundle id `com.roitsch.btts.BTTSWidget`.
+
+**What's built:**
+- *Web (PR #365, merged/feature-detected, inert off the shell):* `widgetDeepLinks.ts` (handles `btts://brew?coffeeId=X` → `startBrewAgain` → Context; `btts://scan` → reset → `/brew/new`; pure `parseWidgetUrl` unit-tested), `widgetBridge.ts` (push rotation to the App Group via the `WidgetBridge` plugin), `NativeWidgetBridge` mounted in `LightShell` (deep-link listener + tile refresh on open). Test: `tests/dataflow/widget-deeplinks.test.mjs`.
+- *Native (this PR):* `@capacitor/app` added to the shell (delivers `appUrlOpen`; AppDelegate already forwards `open url` to the Capacitor proxy), `btts` scheme in `Info.plist` (CFBundleURLTypes), `WidgetBridge.swift` + registration in `MainViewController`, the WidgetKit extension (`BTTSWidget/BTTSWidget.swift` medium widget + `Info.plist` + `BTTSWidget.entitlements`), App Group entitlement on the App (`App/App.entitlements`), `add_widget_target.rb`, and the `mac-build-upload.sh` step.
+
+**THE ONE APPLE-SIDE PREREQ before the build (App Groups can't be cloud-auto-created reliably):** in the Apple Developer portal (browser, iPhone-OK) → Certificates, IDs & Profiles → **Identifiers → App Groups → register `group.com.roitsch.btts`**; then edit App ID **`com.roitsch.btts` → App Groups capability → tick that group**. The widget App ID `com.roitsch.btts.BTTSWidget` is auto-created by `-allowProvisioningUpdates` during the build and automatic signing assigns the existing group to it. If the build fails on the widget's app-group entitlement, enable App Groups on that auto-created widget App ID too and re-run. (Same capability-enablement pattern as push/HealthKit, which the ASC Admin key can also script if preferred.)
+
+**Then:** `native/scripts/mac-build-upload.sh <N>` (now runs both target scripts) → install → add the BTTS medium widget to the home screen → tap a rotation tile (lands in Context) / tap Scan (opens the scanner). Expect a possible build-iteration on first run (extension signing / app-group, like the watch).
 
 ### G3 — Live Activity brew timer (3–5 days on top of G2)
 
@@ -482,3 +492,14 @@ The p12 was built from the on-disk `/tmp/dist.key` + `/tmp/dist.cer` (cert valid
 - **Traps found:** App-Manager-vs-Admin key on cloud-sign export; `macos-15` Xcode-16 vs Apple's iOS-26-SDK mandate (both in Stolperstein log).
 - **Next entry-point:** G1 Acaia on-device BLE spike. The monthly rebuild is hands-off now.
 - **PRs / commits this session:** #360 (lovable + park iOS CI), #361 (orphaned APNs test), #362 (CI automation), #363 (macos-26).
+
+### 2026-06-17 — G1 marked done; G2 widget built (web + native, code complete)
+- **Done (housekeeping):** owner confirmed **G1 Acaia works on-device** ("works brilliantly") — marked DONE & verified across the Status section + memory; it is NOT pending, stop re-proposing the spike.
+- **Done (G2 widget — owner picked it as the next track, scope locked to a MEDIUM widget with exactly two functions: rotation→brew + scan; explicitly no last-brew/freshness/coach/greeting/lock-screen).**
+  - **Web (PR #365):** `src/lib/native/widgetDeepLinks.ts` (`btts://brew?coffeeId=X` → `startBrewAgain` → Context; `btts://scan` → reset → `/brew/new`; pure `parseWidgetUrl`), `src/lib/native/widgetBridge.ts` (push rotation to the App Group via the app-local `WidgetBridge` plugin), `NativeWidgetBridge` in `LightShell`. `tests/dataflow/widget-deeplinks.test.mjs` (8 cases). tsc + test green. Feature-detected → inert on the Safari PWA.
+  - **Native (this PR):** `@capacitor/app` in the shell; `btts` URL scheme in `Info.plist`; `WidgetBridge.swift` + registration in `MainViewController`; the WidgetKit extension `BTTSWidget/` (medium SwiftUI widget reading the App Group, tap-to-brew tiles + Scan, Light cream/anthracite palette); App Group entitlement on the app (`App/App.entitlements`) + widget; `add_widget_target.rb` (sibling of the watch script, idempotent); `mac-build-upload.sh` runs it. Ruby syntax + all plists validated locally; Swift/widget NOT compile-tested (no Mac).
+  - **Decisions:** App Group shared store (not a token-authed URLSession-fetch widget) — no auth surface; the watch's `xcodeproj`-gem approach already solved "add an extension target without a Mac GUI."
+- **Open / blocked:** ONE Apple-side prereq before the build — register App Group `group.com.roitsch.btts` + enable App Groups on App ID `com.roitsch.btts` (portal, browser). Then `mac-build-upload.sh <N>` → install → add the medium widget. Expect a possible first-build signing/app-group iteration (extension, like the watch).
+- **Traps found:** — (the extension-target-without-GUI fear was already retired by the watch script; noted in the G2 section).
+- **Next entry-point:** owner does the App Group portal step → runs the Mac build → adds the widget + verifies tap-to-brew / scan. Then G2 is done; reassess G3 (Live Activity).
+- **PRs / commits this session:** #365 (web half), + this branch `feat/widget-native` (native half).
