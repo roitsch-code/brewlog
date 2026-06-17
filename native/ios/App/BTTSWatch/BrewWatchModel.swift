@@ -1,6 +1,7 @@
 import Foundation
 import WatchConnectivity
 import WatchKit
+import HealthKit
 import os
 
 private let wlog = Logger(subsystem: "com.roitsch.btts.watchkitapp", category: "brewwatch")
@@ -9,23 +10,24 @@ private let wlog = Logger(subsystem: "com.roitsch.btts.watchkitapp", category: "
  BTTS watch app — runs the brew timeline locally and buzzes the wrist at each
  step, even with the screen off / wrist down, while the iPhone is active.
 
- WHY THIS WORKS (after several wrong turns):
- - watchOS will NOT play `WKInterfaceDevice.play()` haptics for a backgrounded
-   app (that was build 8-11's bug), and it DELAYS notifications to the watch
-   while the phone is active (that was build 12-16, ~15 s late).
- - The fix is a `WKExtendedRuntimeSession` of type **physical-therapy** (declared
-   in Info.plist `WKBackgroundModes`). Physical-therapy sessions RUN IN THE
-   BACKGROUND and keep the app alive, and the session's own
-   `notifyUser(hapticType:)` plays a haptic that fires wrist-down / screen-off —
-   directly on the watch, with no notification routing and no delay.
+ HAPTIC MECHANISM (build 19 — back to the one that was CONFIRMED working in
+ build 8): watchOS will NOT fire `WKInterfaceDevice` haptics for a backgrounded
+ app — the documented EXCEPTION is an app with an active `HKWorkoutSession`
+ (exactly how interval/HIIT timers buzz the wrist with the screen off). So at
+ brew start we begin a lightweight workout session; while it runs the app stays
+ alive in the background and every step buzzes even with the wrist down. We end
+ it the moment the brew finishes. (The app must still be OPENED at brew start —
+ Apple won't let a closed watch app start a session or buzz on its own.)
 
- DELIVERY (build 18 hardening): the iPhone re-sends the whole schedule every ~3 s
- while the brew runs, over BOTH `sendMessage` (when reachable) and
- `transferUserInfo`/`updateApplicationContext` (durable). The schedule carries a
- stable `brewId` so a re-send while already running is ignored (no session
- restart). On launch we also drain any context that arrived before activation.
- So a single missed reachability window can no longer drop the brew — whenever
- the watch app next becomes reachable it picks the schedule up and starts.
+ NOTE: build 17/18 tried a physical-therapy `WKExtendedRuntimeSession` +
+ `notifyUser` instead, to dodge the HealthKit signing hassle — that mechanism
+ did NOT buzz (rx reached the watch, but no haptic). HKWorkoutSession is the
+ one that works; reverted to it.
+
+ DELIVERY (kept from build 18): the iPhone re-sends the whole schedule every ~3 s
+ over sendMessage + transferUserInfo + updateApplicationContext, with a stable
+ `brewId` the watch dedupes on — so a missed reachability window can't drop the
+ brew. The on-screen diagnostic line + os.Logger stay until this is signed off.
  */
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
@@ -49,18 +51,34 @@ final class BrewWatchModel: NSObject, ObservableObject {
     @Published var msgCount = 0
     @Published var lastFires = 0
     @Published var lastEvent = "none"
+    @Published var workout = "none"
 
     private var fires: [Fire] = []
     private var ticker: Timer?
-    private var runtimeSession: WKExtendedRuntimeSession?
+    private let healthStore = HKHealthStore()
+    private var workoutSession: HKWorkoutSession?
     private var currentBrewId: Double = 0
 
+    // MARK: - Lifecycle
+
     func activateSession() {
-        guard WCSession.isSupported() else { wlog.error("WCSession unsupported"); return }
-        let s = WCSession.default
-        s.delegate = self
-        s.activate()
-        wlog.log("activate() called")
+        if WCSession.isSupported() {
+            let s = WCSession.default
+            s.delegate = self
+            s.activate()
+            wlog.log("WCSession activate() called")
+        }
+        requestWorkoutAuthorization()
+    }
+
+    /// Ask once for permission to record a workout. We only need this to keep
+    /// the app alive for background haptics — no health data is recorded beyond
+    /// the bare session. Prompt appears the first time the watch app launches.
+    private func requestWorkoutAuthorization() {
+        guard HKHealthStore.isHealthDataAvailable() else { wlog.error("health data unavailable"); return }
+        healthStore.requestAuthorization(toShare: [HKObjectType.workoutType()], read: []) { ok, err in
+            wlog.log("workout auth ok=\(ok) err=\(String(describing: err), privacy: .public)")
+        }
     }
 
     // MARK: - Brew lifecycle
@@ -80,9 +98,10 @@ final class BrewWatchModel: NSObject, ObservableObject {
         self.currentLabel = "Brewing"
         self.lastEvent = "start \(self.fires.count)"
         wlog.log("startBrew name=\(recipeName, privacy: .public) fires=\(self.fires.count) brewId=\(brewId, privacy: .public)")
-        startRuntimeSession() // keeps the app alive in the background for the brew
+        startWorkoutSession()
         startTicker()
         refreshLabels(now: now)
+        WKInterfaceDevice.current().play(.start) // brew handed over to the wrist
     }
 
     private func endBrew() {
@@ -95,22 +114,8 @@ final class BrewWatchModel: NSObject, ObservableObject {
         lastEvent = "end"
         ticker?.invalidate()
         ticker = nil
-        runtimeSession?.invalidate()
-        runtimeSession = nil
+        endWorkoutSession()
         wlog.log("endBrew")
-    }
-
-    // MARK: - Extended runtime session (physical-therapy → background-running)
-
-    private func startRuntimeSession() {
-        runtimeSession?.invalidate()
-        let session = WKExtendedRuntimeSession()
-        session.delegate = self
-        // Must be started while the app is foreground — it is, the user just
-        // opened the watch app at brew start.
-        session.start()
-        runtimeSession = session
-        wlog.log("runtime session start() requested")
     }
 
     // MARK: - Timeline ticker + haptics
@@ -125,33 +130,39 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private func tick() {
         guard isBrewing else { return }
         let now = Date()
-        var advanced = false
+        var didFire = false
         for i in fires.indices where !fires[i].fired && fires[i].at <= now {
-            let late = now.timeIntervalSince(fires[i].at)
             fires[i].fired = true
             currentLabel = fires[i].label
-            advanced = true
-            // Late-skip guard: if we somehow caught up after a stall, don't dump
-            // a backlog of buzzes — only fire if this step is essentially on time.
-            if late <= 3 { buzz() }
+            buzz()
+            didFire = true
         }
-        if advanced { refreshLabels(now: now) }
-        // Wind down a few seconds after the last step so the session doesn't
-        // hold longer than needed.
+        if didFire { refreshLabels(now: now) }
+        // Auto-wind-down a few seconds after the last step, so a forgotten brew
+        // doesn't hold the workout session open indefinitely.
         if let last = fires.last?.at, now.timeIntervalSince(last) > 8 {
             endBrew()
         }
     }
 
-    /// The wrist cue — the SESSION's haptic, which fires in the background /
-    /// wrist-down (unlike WKInterfaceDevice.play()).
+    /// The wrist cue at a step boundary — a long, unmissable "act now" pattern.
+    /// `.notification` is itself a ~0.5 s double-tap; we space repeats ≥0.55 s so
+    /// each is felt as a distinct pulse and fire FIVE for a ~2.2 s buzz train.
     private func buzz() {
-        guard let s = runtimeSession, s.state == .running else {
-            wlog.error("buzz skipped — session not running")
-            return
+        let device = WKInterfaceDevice.current()
+        let offsets: [Double] = [0, 0.55, 1.1, 1.65, 2.2]
+        for t in offsets {
+            DispatchQueue.main.asyncAfter(deadline: .now() + t) { device.play(.notification) }
         }
-        s.notifyUser(hapticType: .notification, repeatHandler: nil)
         wlog.log("BUZZ")
+    }
+
+    /// Manual isolation test (a button on the idle screen): play one device
+    /// haptic right now. If THIS doesn't buzz, watch haptics are off/silenced.
+    func testBuzz() {
+        WKInterfaceDevice.current().play(.notification)
+        lastEvent = "test-buzz"
+        wlog.log("test buzz")
     }
 
     private func refreshLabels(now: Date) {
@@ -162,6 +173,35 @@ final class BrewWatchModel: NSObject, ObservableObject {
             nextLabel = nil
             nextFireAt = nil
         }
+    }
+
+    // MARK: - Workout session (keeps haptics alive with the screen off / wrist down)
+
+    private func startWorkoutSession() {
+        guard workoutSession == nil, HKHealthStore.isHealthDataAvailable() else {
+            workout = "unavailable"; wlog.error("workout unavailable / already running"); return
+        }
+        let config = HKWorkoutConfiguration()
+        config.activityType = .other
+        config.locationType = .indoor
+        do {
+            let session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
+            session.delegate = self
+            session.startActivity(with: Date())
+            workoutSession = session
+            workout = "running"
+            wlog.log("workout session started")
+        } catch {
+            workoutSession = nil
+            workout = "failed"
+            wlog.error("workout session start failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func endWorkoutSession() {
+        workoutSession?.end()
+        workoutSession = nil
+        workout = "none"
     }
 
     // MARK: - Payload parsing
@@ -203,39 +243,35 @@ extension BrewWatchModel: WCSessionDelegate {
             self.wcState = state == .activated ? "active" : "inactive(\(state.rawValue))"
             self.reachable = session.isReachable
             wlog.log("activationDidComplete state=\(state.rawValue) reachable=\(session.isReachable)")
-            // Drain any application context that arrived before we activated.
             let ctx = session.receivedApplicationContext
             if !ctx.isEmpty { self.handle(ctx, via: "ctx@launch") }
         }
     }
     func sessionReachabilityDidChange(_ session: WCSession) {
         DispatchQueue.main.async { self.reachable = session.isReachable }
-        wlog.log("reachability=\(session.isReachable)")
     }
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { handle(message, via: "msg") }
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) { handle(applicationContext, via: "ctx") }
     func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) { handle(userInfo, via: "userInfo") }
 }
 
-// MARK: - WKExtendedRuntimeSessionDelegate
+// MARK: - HKWorkoutSessionDelegate
 
-extension BrewWatchModel: WKExtendedRuntimeSessionDelegate {
-    func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
-        // A confirmation tap that the wrist took over the brew.
-        wlog.log("runtime session DID START")
-        extendedRuntimeSession.notifyUser(hapticType: .start, repeatHandler: nil)
-    }
-
-    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
-        wlog.log("runtime session WILL EXPIRE")
-    }
-
-    func extendedRuntimeSession(
-        _ extendedRuntimeSession: WKExtendedRuntimeSession,
-        didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason,
-        error: Error?
+extension BrewWatchModel: HKWorkoutSessionDelegate {
+    func workoutSession(
+        _ workoutSession: HKWorkoutSession,
+        didChangeTo toState: HKWorkoutSessionState,
+        from fromState: HKWorkoutSessionState,
+        date: Date
     ) {
-        wlog.error("runtime session invalidated reason=\(reason.rawValue) err=\(String(describing: error), privacy: .public)")
-        if runtimeSession === extendedRuntimeSession { runtimeSession = nil }
+        wlog.log("workout state \(fromState.rawValue)->\(toState.rawValue)")
+    }
+
+    func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
+        DispatchQueue.main.async { [weak self] in
+            self?.workout = "failed"
+            if self?.workoutSession === workoutSession { self?.workoutSession = nil }
+        }
+        wlog.error("workout failed: \(error.localizedDescription, privacy: .public)")
     }
 }

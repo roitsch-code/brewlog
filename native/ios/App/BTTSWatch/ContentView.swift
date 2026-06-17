@@ -36,12 +36,16 @@ struct ContentView: View {
                 Text("Open this at brew start — each step buzzes your wrist, screen off.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                // Diagnostic line (build 18) — read this off the watch if a brew
-                // doesn't show up here. Remove once the handoff is confirmed.
-                Text("WC \(model.wcState) · reach \(model.reachable ? "Y" : "N") · rx \(model.msgCount) · fires \(model.lastFires) · \(model.lastEvent)")
+                // Diagnostic line (build 19) — read this off the watch if a brew
+                // doesn't show up here. Remove once the haptic is confirmed.
+                Text("WC \(model.wcState) · reach \(model.reachable ? "Y" : "N") · rx \(model.msgCount) · fires \(model.lastFires)\nworkout \(model.workout) · \(model.lastEvent)")
                     .font(.system(size: 11).monospaced())
                     .foregroundStyle(.tertiary)
                     .padding(.top, 4)
+                // Isolation test: does a plain device haptic buzz at all?
+                Button("Test buzz") { model.testBuzz() }
+                    .font(.footnote)
+                    .padding(.top, 2)
             }
             Spacer(minLength: 0)
         }

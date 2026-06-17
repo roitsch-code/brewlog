@@ -26,7 +26,11 @@
 	<string>com.roitsch.btts</string>
 	<key>WKBackgroundModes</key>
 	<array>
-		<string>physical-therapy</string>
+		<string>workout-processing</string>
 	</array>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>BTTS runs a brief workout session during a brew so your wrist keeps getting each step's haptic cue while the screen is off. No health data is recorded beyond the session itself.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>BTTS runs a brief workout session during a brew so your wrist keeps getting each step's haptic cue while the screen is off. No health data is read.</string>
 </dict>
 </plist>
