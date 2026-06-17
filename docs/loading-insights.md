@@ -28,11 +28,12 @@ Every candidate line, from every source, must clear **both**:
 
 Only survivors of both are written.
 
-**Length is generated short, not just enforced.** The generation prompts target ~55 chars / ≤12
-words (well under the 80-char cap) with worked examples, so lines arrive short. A line that fails
-the gate on **length only** isn't thrown away — a **repair pass** (one extra call) tightens it and
-re-runs it through the full gate (grounding included). This stops the wasteful "generate long →
-kill for length" loop; the 80-char gate is the final backstop, not the primary filter.
+**Length handling.** The generation prompts state the spec — **≤ 80 characters / ≤ 15 words, use the
+space** — with worked examples (one short, one at the 80-char max). A line that fails the gate on
+**length only** isn't thrown away — a **repair pass** (one extra call) tightens it back to ≤ 80
+(only as much as needed, not shorter) and re-runs it through the full gate (grounding included).
+This stops the wasteful "generate long → kill for length" loop; the 80-char gate is the final
+backstop, not the primary filter.
 
 ---
 

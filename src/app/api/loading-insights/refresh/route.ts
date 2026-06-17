@@ -34,13 +34,9 @@ const GEN_SYSTEM = `You write ONE short coffee insight per snippet for a loading
 
 VOICE (BTTS): a knowledgeable friend talking about coffee. Editorial, pragmatic, plain. No hype, no emoji, no exclamation marks, no "did you know", no second-person command ("try…", "you should…"). State the thing.
 
-LENGTH IS A HARD CONSTRAINT — it renders as one short headline:
-- Aim for 6–11 words, about 55 characters. NEVER exceed 80 characters or 15 words.
-- One short clause. Cut every filler word. If it won't fit, narrow the FACT — never summarise the whole snippet.
-- Right length:
+LENGTH: ≤ 80 characters and ≤ 15 words — one clause. Use the space; the only hard rule is never exceed 80. State one fact, not a summary of the snippet. Both of these fit fine:
   "Coffee is a fruit; the bean is its seed."
-  "Naturals dry inside the cherry, so they taste fruitier."
-  "Swirl, don't stir — it moves the bed without churning fines."
+  "Swirl the slurry instead of stirring — it levels the bed without churning fines."
 
 GROUNDING — a no-fabrication guarantee depends on this:
 - Restate a fact found IN ITS SNIPPET. Add nothing the snippet does not say. If a snippet yields no clean, true, SHORT line, OMIT it.
@@ -53,7 +49,7 @@ const CHECK_SYSTEM = `For each numbered pair, decide whether the CLAIM is fully 
 
 Return ONLY a JSON array of booleans in order, e.g. [true,false,true]. No prose.`;
 
-const REPAIR_SYSTEM = `Each line below is a coffee insight that is slightly too long for an 80-character headline. Rewrite each to AT MOST 70 characters and 12 words, keeping the SAME fact — cut filler words, not meaning. Add nothing new. No emoji, no exclamation marks.
+const REPAIR_SYSTEM = `Each line below is a coffee insight that is a little over the 80-character headline limit. Rewrite each to AT MOST 80 characters and 15 words, keeping the SAME fact — cut only what's needed to fit, don't make it shorter than necessary. Add nothing new. No emoji, no exclamation marks.
 
 Return ONLY a JSON array: [{"n": <number>, "text": "<shortened line>"}]. Omit any you cannot shorten without losing the fact.`;
 
@@ -63,10 +59,7 @@ VOICE (BTTS): a knowledgeable friend talking about coffee. Editorial, plain. No 
 
 Use web search to find real, current material from reputable sources (specialty roasters, James Hoffmann, Barista Hustle, competition pages, coffee-science writers). For EACH insight you propose you MUST attach a VERBATIM quote from a source you actually found that supports it, plus that source's url.
 
-LENGTH IS A HARD CONSTRAINT — it renders as one 40px headline:
-- Aim for 6–11 words, about 55 characters. NEVER exceed 80 characters or 15 words.
-- One short clause; cut every filler word. Narrow the fact rather than summarising.
-- Right length: "Naturals dry inside the cherry, so they taste fruitier." / "Swirl, don't stir — it moves the bed without churning fines."
+LENGTH: ≤ 80 characters and ≤ 15 words — one clause. Use the space; the only hard rule is never exceed 80. State one fact, not a summary. Both fit fine: "Coffee is a fruit; the bean is its seed." / "Swirl the slurry instead of stirring — it levels the bed without churning fines."
 
 GROUNDING — a no-fabrication guarantee depends on these:
 - The line must restate a fact contained IN ITS QUOTE. Add nothing the quote does not say.
