@@ -15,8 +15,7 @@ import { buildBrewTimeline, type BrewTimeline } from "@/lib/brew/timeline";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
-import { useBrewStepWatchPush } from "@/hooks/useBrewStepWatchPush";
-import { initWatchTokenRelay } from "@/lib/native/watchPush";
+import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
 import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
@@ -124,11 +123,6 @@ export default function LightStepBrew() {
     }
   }, [elapsed]);
 
-  // Relay the watch's APNs push token to the server (the build-13+ watch hands
-  // its token to the phone; we register it so per-step pushes can target the
-  // watch). No-op off the native shell.
-  useEffect(() => initWatchTokenRelay(), []);
-
   // The current timeline, in a ref, so handleDone can analyse without being
   // re-created every render (timeline is a fresh object each render).
   const timelineRef = useRef<BrewTimeline | null>(null);
@@ -200,11 +194,11 @@ export default function LightStepBrew() {
   // Live pour-flow comparison. Off the native shell / immersion / no weight yet
   // → cue "none", so the coach UI renders nothing (no-scale path unchanged).
   const coach = coachFlow(timeline, elapsed, started, scale.weight, samplesRef.current);
-  // The decisive cue on the wrist: at each step, the phone fires an APNs push to
-  // the watch (via the server) at the same instant it buzzes itself — so the
-  // watch buzzes synced to the phone, with the watch app CLOSED. Native-only
-  // no-op; the server no-ops without an APNs config / registered token.
-  useBrewStepWatchPush(boundaries, elapsed, started);
+  // Hand the whole step schedule to the paired Apple Watch at brew start; the
+  // watch app runs the timeline and buzzes the wrist per step via a
+  // physical-therapy extended-runtime session (fires screen-off / wrist-down,
+  // directly on the watch — no notification delay). Native-only no-op.
+  useBrewStepWatch(boundaries, elapsed, started, recipeName ?? "Brew");
 
   return (
     <LightFlowShell
