@@ -1,13 +1,12 @@
 name: Refresh loading insights
 
 # Monthly refresh of the recipe-creation loading-screen insight pool
-# (src/app/api/loading-insights/refresh). Hits the public, CRON_SECRET-gated
-# endpoint directly — no VPS shell and no Ofelia restart needed, unlike the
-# in-container cron jobs. A missed run is harmless: the screen always falls back
-# to the static COFFEE_HINTS seed.
-#
-# Requires the repo secret CRON_SECRET (same value as the VPS env var). If it's
-# absent the run fails loudly (red X) so the gap can't ride unnoticed.
+# (src/app/api/loading-insights/refresh). SSHes into the VPS with the SAME deploy
+# key the Deploy workflow uses, then triggers the refresh from INSIDE the app
+# container — exactly like the in-container Ofelia crons, reading the container's
+# own CRON_SECRET. No new secrets, nothing to configure, and the secret is never
+# exposed to GitHub. A missed run is harmless: the screen always falls back to
+# the static COFFEE_HINTS seed.
 #
 # The schedule fires on the default branch automatically; workflow_dispatch lets
 # you run it now (e.g. to populate the pool immediately after first deploy).
@@ -25,21 +24,18 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger refresh
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      - name: Trigger refresh on the VPS
         run: |
-          if [ -z "$CRON_SECRET" ]; then
-            echo "::error::CRON_SECRET repo secret is not set — add it (same value as the VPS env) so the refresh can authenticate."
-            exit 1
-          fi
-          code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
-            -X POST https://bettertastethansorry.com/api/loading-insights/refresh \
-            -H "Authorization: Bearer $CRON_SECRET")
-          echo "HTTP $code"
-          cat /tmp/resp.json 2>/dev/null || true
-          echo
-          if [ "$code" != "200" ]; then
-            echo "::error::Refresh returned HTTP $code"
-            exit 1
-          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            # Trigger from inside the app container so $CRON_SECRET expands from
+            # the container's own env (single quotes keep the host/SSH shells from
+            # touching it). -fsS makes curl exit non-zero on an HTTP error, so a
+            # failed refresh fails this job loudly.
+            docker compose exec -T app sh -c 'curl -fsS -X POST http://localhost:3000/api/loading-insights/refresh -H "Authorization: Bearer $CRON_SECRET"'
+          REMOTE
