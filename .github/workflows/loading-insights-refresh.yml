@@ -55,7 +55,7 @@ jobs:
           echo
           echo "----- audit -----"
           jq -r '
-            "counts: \(.candidates) proposed · \(.inserted) inserted · \(.killed | length) killed",
+            "counts: \(.candidates) proposed · \(.repaired // 0) repaired · \(.inserted) inserted · \(.killed | length) killed",
             "",
             "PASSED (\(.passed | length)):",
             (.passed[] | "  + [\(.source)] \(.text)"),

@@ -30,33 +30,48 @@ const POOL_CAP = 150;
 // "needs a few rated sessions" bar.
 const MIN_SESSIONS_FOR_BREWS = 4;
 
-const GEN_SYSTEM = `You write ONE short coffee insight per snippet for a loading screen — a big Fraunces headline shown while a brew recipe is generated.
+const GEN_SYSTEM = `You write ONE short coffee insight per snippet for a loading screen — a big 40px headline shown while a brew recipe is generated. Pick the single most interesting fact in the snippet and state it crisply.
 
 VOICE (BTTS): a knowledgeable friend talking about coffee. Editorial, pragmatic, plain. No hype, no emoji, no exclamation marks, no "did you know", no second-person command ("try…", "you should…"). State the thing.
 
-HARD RULES — these protect a no-fabrication guarantee, follow them exactly:
-- Each line must restate a fact found IN ITS SNIPPET. Add nothing the snippet does not say. If a snippet yields no clean, true, interesting line, OMIT it.
+LENGTH IS A HARD CONSTRAINT — it renders as one short headline:
+- Aim for 6–11 words, about 55 characters. NEVER exceed 80 characters or 15 words.
+- One short clause. Cut every filler word. If it won't fit, narrow the FACT — never summarise the whole snippet.
+- Right length:
+  "Coffee is a fruit; the bean is its seed."
+  "Naturals dry inside the cherry, so they taste fruitier."
+  "Swirl, don't stir — it moves the bed without churning fines."
+
+GROUNDING — a no-fabrication guarantee depends on this:
+- Restate a fact found IN ITS SNIPPET. Add nothing the snippet does not say. If a snippet yields no clean, true, SHORT line, OMIT it.
 - Prefer the general principle over trivia. Avoid naming competitions, years, or people UNLESS the fact is meaningless without the name. A cultivar name ("Pink Bourbon", "Geisha") is fine; "won the 2016 World Brewers Cup" is not.
 - No numbers, ppm, temperatures, ratios, or dates UNLESS they appear verbatim in the snippet.
-- ≤ 80 characters. ≤ 15 words. One sentence. A trailing period is optional.
 
-Return ONLY a JSON array: [{"n": <snippet number>, "text": "<line>"}]. Omit any snippet you cannot serve well. No prose around the JSON.`;
+Return ONLY a JSON array: [{"n": <snippet number>, "text": "<line>"}]. Omit any snippet you cannot serve well AND short. No prose around the JSON.`;
 
 const CHECK_SYSTEM = `For each numbered pair, decide whether the CLAIM is fully supported by its SOURCE — i.e. every fact asserted in the claim is stated or directly implied by the source, with nothing invented.
 
 Return ONLY a JSON array of booleans in order, e.g. [true,false,true]. No prose.`;
 
-const WEB_SYSTEM = `You research specialty coffee (filter brewing, processing, origin, varieties, water, extraction science) and distill it into ONE-LINE insights for a loading screen.
+const REPAIR_SYSTEM = `Each line below is a coffee insight that is slightly too long for an 80-character headline. Rewrite each to AT MOST 70 characters and 12 words, keeping the SAME fact — cut filler words, not meaning. Add nothing new. No emoji, no exclamation marks.
+
+Return ONLY a JSON array: [{"n": <number>, "text": "<shortened line>"}]. Omit any you cannot shorten without losing the fact.`;
+
+const WEB_SYSTEM = `You research specialty coffee (filter brewing, processing, origin, varieties, water, extraction science) and distill it into ONE short headline insight per item for a loading screen.
 
 VOICE (BTTS): a knowledgeable friend talking about coffee. Editorial, plain. No hype, no emoji, no exclamation marks, no "did you know", no second-person command.
 
 Use web search to find real, current material from reputable sources (specialty roasters, James Hoffmann, Barista Hustle, competition pages, coffee-science writers). For EACH insight you propose you MUST attach a VERBATIM quote from a source you actually found that supports it, plus that source's url.
 
-HARD RULES — a no-fabrication guarantee depends on these, follow them exactly:
+LENGTH IS A HARD CONSTRAINT — it renders as one 40px headline:
+- Aim for 6–11 words, about 55 characters. NEVER exceed 80 characters or 15 words.
+- One short clause; cut every filler word. Narrow the fact rather than summarising.
+- Right length: "Naturals dry inside the cherry, so they taste fruitier." / "Swirl, don't stir — it moves the bed without churning fines."
+
+GROUNDING — a no-fabrication guarantee depends on these:
 - The line must restate a fact contained IN ITS QUOTE. Add nothing the quote does not say.
 - Prefer the general principle over trivia. Avoid naming competitions, years, or people unless the fact is meaningless without the name. A cultivar/variety name is fine.
 - No numbers, ppm, temperatures, ratios, or dates UNLESS they appear verbatim in the quote.
-- ≤ 80 characters. ≤ 15 words. One sentence. A trailing period is optional.
 - If you cannot attach a real supporting quote, DROP that insight rather than invent one.
 
 Return ONLY a JSON array: [{"text": "<line>", "quote": "<verbatim supporting sentence from the source>", "url": "<source url>"}]. No prose around the JSON.`;
@@ -273,19 +288,75 @@ export async function POST(req: NextRequest) {
 
     // 4. Deterministic gate — each candidate grounded against its OWN source.
     // `killed` records every rejected line + WHY, so a run is fully auditable.
+    // A line that fails ONLY on length goes to the repair pass (4b) instead of
+    // being thrown away — it's usually a good fact that's just a few chars long.
     const killed: { source: LoadingInsightSource; text: string; reasons: string[] }[] = [];
     const gated: { text: string; snippet: Snippet }[] = [];
+    const repairQueue: { snippet: Snippet; text: string }[] = [];
+    const isLengthOnly = (reasons: string[]) =>
+      reasons.length > 0 &&
+      reasons.every((r) => r.startsWith("too-long") || r.startsWith("too-many-words"));
     for (const cand of rawCandidates) {
       const { ok, reasons } = lintLoadingInsight(cand.text, {
         sourceText: cand.snippet.sourceText,
         existing,
       });
-      if (!ok) {
+      if (ok) {
+        existing.add(normalizeForDedupe(cand.text)); // catch intra-batch dups
+        gated.push(cand);
+      } else if (isLengthOnly(reasons)) {
+        repairQueue.push({ snippet: cand.snippet, text: cand.text });
+      } else {
         killed.push({ source: cand.snippet.source, text: cand.text, reasons });
-        continue;
       }
-      existing.add(normalizeForDedupe(cand.text)); // catch intra-batch dups
-      gated.push(cand);
+    }
+
+    // 4b. Repair pass — tighten the too-long lines ONCE and re-gate them, so a
+    // good insight isn't discarded for being a few characters over. The tightened
+    // line still has to clear the full gate (grounding included).
+    let repairedCount = 0;
+    if (repairQueue.length > 0) {
+      try {
+        const list = repairQueue.map((r, i) => `[${i + 1}] ${r.text}`).join("\n");
+        const repairResp = await client.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 800,
+          system: REPAIR_SYSTEM,
+          messages: [{ role: "user", content: list }],
+        });
+        const repaired = extractJsonArray(textOf(repairResp)) ?? [];
+        const byIndex = new Map<number, string>();
+        for (const item of repaired) {
+          if (typeof item !== "object" || item === null) continue;
+          const rec = item as { n?: unknown; text?: unknown };
+          const n = typeof rec.n === "number" ? rec.n : NaN;
+          const text = typeof rec.text === "string" ? rec.text.trim() : "";
+          if (!Number.isNaN(n) && text !== "") byIndex.set(n, text);
+        }
+        repairQueue.forEach((r, i) => {
+          const tightened = byIndex.get(i + 1);
+          if (!tightened) {
+            killed.push({ source: r.snippet.source, text: r.text, reasons: ["too-long"] });
+            return;
+          }
+          const { ok, reasons } = lintLoadingInsight(tightened, {
+            sourceText: r.snippet.sourceText,
+            existing,
+          });
+          if (ok) {
+            existing.add(normalizeForDedupe(tightened));
+            gated.push({ text: tightened, snippet: r.snippet });
+            repairedCount++;
+          } else {
+            killed.push({ source: r.snippet.source, text: tightened, reasons });
+          }
+        });
+      } catch (repairErr) {
+        console.warn("loading-insights repair pass failed", repairErr);
+        for (const r of repairQueue) {
+          killed.push({ source: r.snippet.source, text: r.text, reasons: ["too-long"] });
+        }
+      }
     }
 
     // 5. Model claim-check — semantic backstop the regex can't do. If it can't
@@ -352,6 +423,7 @@ export async function POST(req: NextRequest) {
       snippets: snippets.length,
       web: webCount,
       candidates: rawCandidates.length,
+      repaired: repairedCount,
       gated: gated.length,
       inserted: newRows.length,
       retired,
