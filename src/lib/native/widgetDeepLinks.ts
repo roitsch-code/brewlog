@@ -86,7 +86,8 @@ async function brewCoffeeById(coffeeId: string, nav: Nav): Promise<void> {
 /** Result of parsing a `btts://…` widget URL. `null` = not ours / malformed. */
 export type WidgetAction =
   | { kind: "scan" }
-  | { kind: "brew"; coffeeId: string | null };
+  | { kind: "brew"; coffeeId: string | null }
+  | { kind: "share"; url: string | null };
 
 /**
  * Pure parse of a `btts://…` URL into an action. Side-effect-free + store-free,
@@ -105,6 +106,7 @@ export function parseWidgetUrl(url: string): WidgetAction | null {
   const action = (parsed.host || parsed.pathname.replace(/\//g, "")).toLowerCase();
   if (action === "scan") return { kind: "scan" };
   if (action === "brew") return { kind: "brew", coffeeId: parsed.searchParams.get("coffeeId") };
+  if (action === "share") return { kind: "share", url: parsed.searchParams.get("url") };
   return null;
 }
 
@@ -124,6 +126,16 @@ export async function handleWidgetUrl(url: string, nav: Nav): Promise<void> {
       return;
     }
     await brewCoffeeById(action.coffeeId, nav);
+    return;
+  }
+  if (action.kind === "share") {
+    // Shared from the iOS Share Sheet ("Add to BTTS"): land in the scan flow and
+    // auto-analyze the URL (LightStepScan reads pendingScanUrl on mount).
+    const s = useFlowStore.getState();
+    s.reset();
+    s.setMode("home");
+    if (action.url) s.setPendingScanUrl(action.url);
+    nav("/brew/new");
   }
 }
 

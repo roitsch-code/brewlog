@@ -31,11 +31,15 @@ interface FlowState {
   isRecommending: boolean;
   recommendError: string | null;
   clarificationMessages: ClarificationMessage[];
+  /** A URL shared into the app via the iOS Share Sheet ("Add to BTTS"), to be
+   * auto-analyzed by the scan step on mount, then cleared. */
+  pendingScanUrl: string | null;
 
   // Actions
   setStep: (step: FlowStep) => void;
   setMode: (mode: SessionMode) => void;
   setSkipScan: (v: boolean) => void;
+  setPendingScanUrl: (url: string | null) => void;
   setIsDripBag: (v: boolean) => void;
   setCoffee: (coffee: Partial<CoffeeIdentity>) => void;
   setPlace: (place: ExternalPlace) => void;
@@ -70,6 +74,7 @@ export const useFlowStore = create<FlowState>()(
       draft: initialDraft,
       fieldZones: null,
       skipScan: false,
+      pendingScanUrl: null,
       isDripBag: false,
       isAnalyzing: false,
       isRecommending: false,
@@ -79,6 +84,7 @@ export const useFlowStore = create<FlowState>()(
       setStep: (step) => set({ step }),
       setMode: (mode) => set((s) => ({ draft: { ...s.draft, mode } })),
       setSkipScan: (v) => set({ skipScan: v }),
+      setPendingScanUrl: (pendingScanUrl) => set({ pendingScanUrl }),
       setIsDripBag: (v) => set({ isDripBag: v }),
       setCoffee: (coffee) =>
         set((s) => ({ draft: { ...s.draft, coffee: { ...s.draft.coffee, ...coffee } as CoffeeIdentity } })),
@@ -95,7 +101,7 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

@@ -105,6 +105,7 @@ jobs:
           npm run assets || true   # Splash.imageset is absent; the icons (what matters) still generate
           ruby scripts/add_watch_target.rb
           ruby scripts/add_widget_target.rb   # WidgetKit extension — after cap sync + the watch script
+          ruby scripts/add_share_target.rb    # Share Extension ("Add to BTTS")
 
       - name: Write the App Store Connect API key
         run: |
