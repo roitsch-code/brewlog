@@ -16,6 +16,7 @@ import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
 import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
+import { useBrewLiveActivity } from "@/hooks/useBrewLiveActivity";
 import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
@@ -199,6 +200,18 @@ export default function LightStepBrew() {
   // physical-therapy extended-runtime session (fires screen-off / wrist-down,
   // directly on the watch — no notification delay). Native-only no-op.
   useBrewStepWatch(boundaries, elapsed, started, recipeName ?? "Brew");
+
+  // Live Activity — live brew timer on the lock screen / Dynamic Island. The
+  // timer + progress tick natively; the step label updates on step change.
+  // Native-only no-op.
+  useBrewLiveActivity(
+    boundaries,
+    elapsed,
+    started,
+    recipeName ?? "Brew",
+    draft.coffee?.name ?? "",
+    recipe?.targetTimeSec ?? 0,
+  );
 
   return (
     <LightFlowShell
