@@ -124,7 +124,7 @@ Each milestone is independently shippable on the v1 shell. Two infrastructure tr
 - **What it buys in the brew flow:** live grams + flow rate on the timer screen, tare from the app, auto-log final dose/water into the session, optional pour auto-advance from rate-of-change (manual tap stays).
 - **Residual risk:** iOS connection-timing quirks (Beanconqueror has two iOS connection modes + magic 150 ms sleeps for a reason) and scale auto-sleep. First step is a one-evening on-device spike: shell + plugin + verbatim decoder, confirm weight events stream from the Lunar.
 
-### G2 — Home-screen widget (🟡 CODE COMPLETE 2026-06-17, awaiting one Apple-side prereq + a Mac build)
+### G2 — Home-screen widget (✅ BUILT + UPLOADED to TestFlight 2026-06-17 via CI run 27687715915; awaiting owner add-to-home-screen + on-device verify)
 
 **Scope (owner-decided, deliberately tight):** ONE **medium** home-screen widget, two functions only — **rotation bags → tap-to-brew** and **scan a bag**. Explicitly NOT: last-brew (owner: "sucks"), freshness, coach, greeting, lock-screen, small/other sizes. Text-only tiles in v1 (photos deferred).
 
@@ -505,4 +505,5 @@ The p12 was built from the on-disk `/tmp/dist.key` + `/tmp/dist.cer` (cert valid
 - **Open / blocked:** the build runs via the **`ios-testflight.yml` CI workflow** (updated this session to run `add_widget_target.rb` + assert the widget embeds in PlugIns) — Claude triggers it with `gh workflow run`; the owner does NOTHING in a terminal. App Groups expected to be handled by automatic signing; portal toggle only if a run fails. Mistake corrected this session: I'd told the owner to run `mac-build-upload.sh` — that's a Mac fallback, never the owner's job.
 - **Traps found:** the real trap was process, not code — handing the owner a Mac terminal command instead of triggering the existing CI build. The whole point of `ios-testflight.yml` is hands-off builds. Don't regress.
 - **Next entry-point:** watch the dispatched `ios-testflight` run; on green → owner installs + adds the widget. On red → read the log, fix (likely app-group signing), re-dispatch. Then G2 done; reassess G3.
+- **RESULT (same session):** first dispatch (run 27687291581) FAILED — app-group entitlement mismatch (owner had registered the group but not ASSIGNED it to the App IDs; see Stolperstein). Owner ticked the group onto `com.roitsch.btts` + the auto-created `com.roitsch.btts.BTTSWidget` in the portal. Re-dispatch (run **27687715915**) went **fully green — widget embedded in `App.app/PlugIns`, `altool` UPLOAD SUCCEEDED**. G2 widget is on TestFlight; only owner add-to-home-screen + tap verify remains. The CI workflow now permanently builds the widget too, so monthly rebuilds carry it.
 - **PRs / commits this session:** #365 (web half), + this branch `feat/widget-native` (native half).
