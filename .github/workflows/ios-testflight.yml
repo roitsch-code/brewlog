@@ -1,27 +1,36 @@
 name: iOS TestFlight
 
-# Builds the BTTS iOS shell and uploads it to TestFlight.
+# Builds the BTTS iOS shell (iPhone app + Apple Watch app) and uploads it to
+# TestFlight — AUTOMATICALLY, every month, so the 90-day TestFlight build expiry
+# can never silently kill the installed app. Also runnable on demand.
 #
-# PARKED — manual trigger ONLY (2026-06-17). The auto-triggers (push on native/**
-# + monthly cron) were removed because this CI path is currently BROKEN and was
-# firing a red run (→ owner e-mail/push) on every native change:
-#   - it archives with `-workspace App.xcworkspace`, which does not exist under
-#     Capacitor 8's SPM layout (it's `-project App.xcodeproj`), and
-#   - cloud signing here CANNOT bake the HealthKit entitlement the watch app now
-#     carries, so even a fixed archive would ship a watch build with HealthKit
-#     silently dropped.
-# Builds are done on the Mac via native/scripts/mac-build-upload.sh until this
-# workflow is reworked (roadmap "monthly-rebuild / CI fix": needs the
-# distribution p12 + the two .mobileprovision files as secrets + a manual
-# bottom-up re-sign). Left dispatch-only so it can be run by hand / fixed later,
-# but it no longer spams failures.
+# Signing — the important subtlety:
+#   The app + watch use Xcode-managed AUTOMATIC signing driven by the App Store
+#   Connect API key (-allowProvisioningUpdates). That is the ONLY path that bakes
+#   the watch's Time-Sensitive-Notifications entitlement into the provisioning
+#   profile (proven on the Mac for builds 15+; a manually-built profile lacks it
+#   and the upload is rejected with 90163). So CI does NOT hand-build profiles —
+#   it imports the distribution CERTIFICATE into a throwaway keychain (so the
+#   runner can sign at all) and lets Xcode create the profiles in the cloud from
+#   the API key. This mirrors native/scripts/mac-build-upload.sh exactly.
 #
-# NOTE: dropping the monthly cron also drops the (already non-functional) safety
-# net against the 90-day TestFlight build expiry — track monthly Mac rebuilds
-# manually until the CI fix lands.
+# Secrets (6):
+#   APP_STORE_CONNECT_KEY_ID / _ISSUER_ID / _API_KEY_P8  the ASC API key (PEM)
+#   APPLE_TEAM_ID                                         Developer Program team id
+#   APPLE_DIST_CERT_P12       base64 of the Apple Distribution cert + key (.p12)
+#   APPLE_DIST_CERT_PASSWORD  the .p12 password
+#
+# The ONLY recurring human task: the distribution certificate expires
+# 2027-06-16. When it does, a run fails loudly (GitHub e-mails the owner) —
+# regenerate the cert and refresh the two APPLE_DIST_CERT_* secrets. Until then
+# this is fully hands-off.
 
 on:
   workflow_dispatch:
+  schedule:
+    # 06:00 UTC on the 1st of every month. TestFlight builds expire after 90
+    # days, so a monthly cadence keeps ~3 attempts of headroom before expiry.
+    - cron: "0 6 1 * *"
 
 concurrency:
   group: ios-testflight
@@ -40,50 +49,82 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Capacitor 8's CLI requires Node >= 22 (the repo's other workflows
-          # run on 20; the iOS ones must not).
+          # Capacitor 8's CLI requires Node >= 22.
           node-version: 22
           cache: npm
           cache-dependency-path: native/package-lock.json
 
-      - name: Install Capacitor toolchain
-        working-directory: native
-        run: npm ci
+      - name: Import the distribution signing certificate
+        env:
+          P12_B64: ${{ secrets.APPLE_DIST_CERT_P12 }}
+          P12_PW: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN="$RUNNER_TEMP/btts-signing.keychain-db"
+          KC_PW="$(openssl rand -base64 24)"
+          security create-keychain -p "$KC_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"   # don't auto-lock mid-build
+          security unlock-keychain -p "$KC_PW" "$KEYCHAIN"
+          echo "$P12_B64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$P12_PW" \
+            -T /usr/bin/codesign -T /usr/bin/security -A
+          # let codesign use the key without an interactive prompt
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PW" "$KEYCHAIN" >/dev/null
+          # our keychain first in the search list, keep the login keychain (for WWDR etc.)
+          security list-keychains -d user -s "$KEYCHAIN" \
+            $(security list-keychains -d user | sed 's/[" ]//g')
+          security default-keychain -s "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/dist.p12"
+          security find-identity -v -p codesigning "$KEYCHAIN" | grep -i "Apple Distribution" \
+            || { echo "::error::distribution identity not usable after import"; exit 1; }
 
-      - name: Sync the iOS project
+      - name: Install the xcodeproj gem (watch-target injector)
+        run: gem install xcodeproj --no-document
+
+      - name: Sync Capacitor project + re-add the watch target
         working-directory: native
-        run: npx cap sync ios
+        run: |
+          set -euo pipefail
+          npm ci
+          npx cap sync ios
+          npm run assets || true   # Splash.imageset is absent; the icons (what matters) still generate
+          ruby scripts/add_watch_target.rb
 
       - name: Write the App Store Connect API key
-        # PEM contents pasted whole into the secret (BEGIN/END lines included).
         run: |
           mkdir -p ~/private_keys
           printf '%s\n' "${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
 
       - name: Inject the team into export options
-        # Keep the repo free of the account identifier — the team comes from the
-        # secret at build time.
         run: plutil -replace teamID -string "$APPLE_TEAM_ID" native/exportOptions.plist
 
-      - name: Archive
+      - name: Compute a unique, monotonically-increasing build number
+        id: ver
+        # Minutes since the Unix epoch: a single integer (~29.6M, fits int32),
+        # always larger than the last hand-numbered Mac build (19) and strictly
+        # increasing over time, so TestFlight never rejects a duplicate/older
+        # CFBundleVersion. Monthly runs can't collide at minute granularity.
+        run: echo "build=$(( $(date -u +%s) / 60 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Archive (Xcode-managed automatic signing)
         working-directory: native/ios/App
         run: |
           xcodebuild archive \
-            -workspace App.xcworkspace \
+            -project App.xcodeproj \
             -scheme App \
             -configuration Release \
-            -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CURRENT_PROJECT_VERSION="${{ steps.ver.outputs.build }}" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
             -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 
-      - name: Export the .ipa
+      - name: Export the signed .ipa
         run: |
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
@@ -94,14 +135,27 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 
-      - name: Locate the built .ipa
-        id: ipa
-        run: echo "path=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Verify the IPA shape before upload
+        # App.app must be the ONLY thing at Payload root, with the watch app
+        # embedded inside it (the SKIP_INSTALL=NO stray-watch-app trap).
+        run: |
+          set -euo pipefail
+          IPA="$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)"
+          [ -n "$IPA" ] || { echo "::error::no .ipa produced"; exit 1; }
+          rm -rf "$RUNNER_TEMP/unzip"; mkdir -p "$RUNNER_TEMP/unzip"
+          unzip -qo "$IPA" -d "$RUNNER_TEMP/unzip"
+          echo "Payload root:"; ls "$RUNNER_TEMP/unzip/Payload"
+          appcount="$(ls "$RUNNER_TEMP/unzip/Payload" | grep -c '\.app$' || true)"
+          [ "$appcount" = "1" ] || { echo "::error::Payload root must contain exactly one .app, found $appcount"; exit 1; }
+          ls "$RUNNER_TEMP/unzip/Payload/App.app/Watch/"*.app >/dev/null 2>&1 \
+            || { echo "::error::watch app not embedded under App.app/Watch"; exit 1; }
 
       - name: Upload to TestFlight
-        uses: apple-actions/upload-testflight-build@v5.2.1
-        with:
-          app-path: ${{ steps.ipa.outputs.path }}
-          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          IPA="$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)"
+          xcrun altool --upload-app -f "$IPA" -t ios \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Restore exportOptions.plist (drop the injected team id)
+        if: always()
+        run: git checkout -- native/exportOptions.plist || true

@@ -23,11 +23,12 @@
 #
 set -euo pipefail
 
-BUILD="${1:-}"
-if [ -z "$BUILD" ]; then
-  echo "ERROR: pass the build number, e.g.  native/scripts/mac-build-upload.sh 9" >&2
-  exit 1
-fi
+# Build number. CI (ios-testflight.yml) now owns the cadence and numbers builds
+# as minutes-since-epoch (a big, ever-increasing integer). So this Mac fallback
+# must NOT default back to a small number like "20" — that would be LOWER than
+# the last CI build and TestFlight would reject it. Default to the same
+# epoch-minutes scheme; an explicit arg still wins for a one-off.
+BUILD="${1:-$(( $(date -u +%s) / 60 ))}"
 
 # ── Fixed identifiers (persist across builds) ────────────────────────────────
 # Build 15+: XCODE-MANAGED (automatic) signing. Xcode registers the watch's
