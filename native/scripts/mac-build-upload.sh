@@ -63,13 +63,14 @@ security find-identity -v -p codesigning | grep -q "$IDENTITY" \
 gem list -i xcodeproj >/dev/null 2>&1 \
   || { echo "ERROR: ruby gem 'xcodeproj' missing. Run: gem install xcodeproj --user-install --no-document" >&2; exit 1; }
 
-# ── (0) sync project + watch target ──────────────────────────────────────────
-say "Sync Capacitor project + watch target"
+# ── (0) sync project + watch + widget targets ────────────────────────────────
+say "Sync Capacitor project + watch + widget targets"
 cd "$NATIVE"
 npm install
 npx cap sync ios
 npm run assets || true   # Splash.imageset is missing; icons (the part that matters) still generate
 ruby scripts/add_watch_target.rb
+ruby scripts/add_widget_target.rb   # WidgetKit extension — must run AFTER cap sync + after the watch script
 
 # ── (1) archive with AUTOMATIC (Xcode-managed) signing ───────────────────────
 # -allowProvisioningUpdates + the ASC key let Xcode register the watch's
