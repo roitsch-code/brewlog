@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerWidgetDeepLinks } from "@/lib/native/widgetDeepLinks";
-import { isWidgetBridgeNative, pushRotationToWidget } from "@/lib/native/widgetBridge";
+import { isNativeShell, isWidgetBridgeNative, pushRotationToWidget } from "@/lib/native/widgetBridge";
 import type { Coffee } from "@/lib/types/coffee";
 
 /**
@@ -15,45 +15,66 @@ import type { Coffee } from "@/lib/types/coffee";
  *   2. Push the current in-rotation coffees into the widget's App Group store so
  *      the medium widget renders fresh tap-to-brew tiles.
  *
- * Renders nothing. Lives in LightShell so it survives route changes (the shell
- * wraps the whole (light) tree) and so the deep-link handler always has a live
- * router to navigate with.
+ * TEMPORARY: renders a small status line on the native shell so we can pin down
+ * why the widget tiles aren't filling (plugin missing vs. push count vs. fetch
+ * error). Removed once the widget data path is confirmed working.
  */
 export default function NativeWidgetBridge() {
   const router = useRouter();
+  const [diag, setDiag] = useState<string>("");
 
   useEffect(() => {
-    // Belt-and-braces: this bridge mounts in the global shell, so a throw here
-    // would crash the whole app. Everything is wrapped so it can NEVER do that.
     let cleanup: () => void = () => {};
     try {
       cleanup = registerWidgetDeepLinks((path) => router.push(path));
 
-      // Refresh the widget's rotation tiles on app open. Filtered client-side
-      // from the same /api/coffees the library uses; failure is silent (the
-      // widget just keeps its last tiles). Native-shell-only; no-op on the PWA.
-      if (isWidgetBridgeNative()) {
+      if (!isNativeShell()) {
+        return () => {
+          try { cleanup(); } catch { /* ignore */ }
+        };
+      }
+
+      if (!isWidgetBridgeNative()) {
+        setDiag("widget: plugin NOT found");
+      } else {
         fetch("/api/coffees", { cache: "no-store" })
-          .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : []))
+          .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : Promise.reject(new Error(`coffees ${r.status}`))))
           .then((list) => {
             const rotation = list
               .filter((c) => c.inRotation)
               .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }));
             pushRotationToWidget(rotation);
+            setDiag(`widget: plugin OK · ${list.length} coffees · ${rotation.length} in rotation pushed`);
           })
-          .catch(() => {});
+          .catch((e) => setDiag(`widget: plugin OK · fetch failed: ${e?.message ?? e}`));
       }
-    } catch {
-      // swallow — a widget bridge must never take the app down
+    } catch (e) {
+      setDiag(`widget: bridge error: ${(e as Error)?.message ?? e}`);
     }
     return () => {
-      try {
-        cleanup();
-      } catch {
-        /* ignore */
-      }
+      try { cleanup(); } catch { /* ignore */ }
     };
   }, [router]);
 
-  return null;
+  if (!diag) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: 8,
+        right: 8,
+        bottom: "calc(env(safe-area-inset-bottom) + 8px)",
+        zIndex: 9999,
+        background: "rgba(42,36,28,0.92)",
+        color: "#F3E5DC",
+        font: "11px/1.3 ui-monospace, monospace",
+        padding: "6px 10px",
+        borderRadius: 8,
+        textAlign: "center",
+        pointerEvents: "none",
+      }}
+    >
+      {diag}
+    </div>
+  );
 }

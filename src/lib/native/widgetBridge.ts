@@ -53,6 +53,18 @@ export function isWidgetBridgeNative(): boolean {
   return getPlugin() !== null;
 }
 
+/** True inside the Capacitor native shell (regardless of the WidgetBridge
+ * plugin) — used to tell "native but plugin missing" from "not native". */
+export function isNativeShell(): boolean {
+  try {
+    if (typeof window === "undefined") return false;
+    const cap = (window as unknown as { Capacitor?: CapacitorLike }).Capacitor;
+    return !!cap?.isNativePlatform?.();
+  } catch {
+    return false;
+  }
+}
+
 /** Push the current rotation list to the home-screen widget. No-op off the
  * native shell. Safe to call on every app open — it just refreshes the tiles. */
 export function pushRotationToWidget(coffees: WidgetRotationCoffee[]): void {
