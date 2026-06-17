@@ -38,7 +38,11 @@ concurrency:
 
 jobs:
   testflight:
-    runs-on: macos-15
+    # macos-26: Apple now MANDATES the iOS 26 SDK (Xcode 26) for all uploads —
+    # the macos-15 image only ships Xcode 16 (iOS 18.5 SDK) and the upload is
+    # rejected with a 409 "SDK version issue". macos-26 ships Xcode 26.5, the
+    # same toolchain the owner's Mac builds with.
+    runs-on: macos-26
     timeout-minutes: 40
     env:
       ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -53,6 +57,16 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: native/package-lock.json
+
+      - name: Select the newest installed Xcode (iOS 26 SDK)
+        # Belt-and-suspenders: the macos-26 default is already Xcode 26.5, but
+        # pin to the newest installed Xcode so a future image-default shift can't
+        # silently drop us below Apple's required SDK.
+        run: |
+          set -euo pipefail
+          LATEST="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
+          [ -n "$LATEST" ] && sudo xcode-select -s "$LATEST"
+          xcodebuild -version
 
       - name: Import the distribution signing certificate
         env:
