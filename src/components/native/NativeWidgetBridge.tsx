@@ -23,24 +23,36 @@ export default function NativeWidgetBridge() {
   const router = useRouter();
 
   useEffect(() => {
-    const cleanup = registerWidgetDeepLinks((path) => router.push(path));
+    // Belt-and-braces: this bridge mounts in the global shell, so a throw here
+    // would crash the whole app. Everything is wrapped so it can NEVER do that.
+    let cleanup: () => void = () => {};
+    try {
+      cleanup = registerWidgetDeepLinks((path) => router.push(path));
 
-    // Refresh the widget's rotation tiles on app open. Filtered client-side from
-    // the same /api/coffees the library uses; failure is silent (the widget just
-    // keeps its last tiles).
-    if (isWidgetBridgeNative()) {
-      fetch("/api/coffees", { cache: "no-store" })
-        .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : []))
-        .then((list) => {
-          const rotation = list
-            .filter((c) => c.inRotation)
-            .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }));
-          pushRotationToWidget(rotation);
-        })
-        .catch(() => {});
+      // Refresh the widget's rotation tiles on app open. Filtered client-side
+      // from the same /api/coffees the library uses; failure is silent (the
+      // widget just keeps its last tiles). Native-shell-only; no-op on the PWA.
+      if (isWidgetBridgeNative()) {
+        fetch("/api/coffees", { cache: "no-store" })
+          .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : []))
+          .then((list) => {
+            const rotation = list
+              .filter((c) => c.inRotation)
+              .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }));
+            pushRotationToWidget(rotation);
+          })
+          .catch(() => {});
+      }
+    } catch {
+      // swallow — a widget bridge must never take the app down
     }
-
-    return cleanup;
+    return () => {
+      try {
+        cleanup();
+      } catch {
+        /* ignore */
+      }
+    };
   }, [router]);
 
   return null;
