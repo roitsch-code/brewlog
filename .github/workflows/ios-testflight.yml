@@ -1,6 +1,7 @@
 name: iOS TestFlight
 
-# Builds the BTTS iOS shell (iPhone app + Apple Watch app) and uploads it to
+# Builds the BTTS iOS shell (iPhone app + Apple Watch app + home-screen widget)
+# and uploads it to
 # TestFlight — AUTOMATICALLY, every month, so the 90-day TestFlight build expiry
 # can never silently kill the installed app. Also runnable on demand.
 #
@@ -92,10 +93,10 @@ jobs:
           security find-identity -v -p codesigning "$KEYCHAIN" | grep -i "Apple Distribution" \
             || { echo "::error::distribution identity not usable after import"; exit 1; }
 
-      - name: Install the xcodeproj gem (watch-target injector)
+      - name: Install the xcodeproj gem (watch + widget target injectors)
         run: gem install xcodeproj --no-document
 
-      - name: Sync Capacitor project + re-add the watch target
+      - name: Sync Capacitor project + re-add the watch & widget targets
         working-directory: native
         run: |
           set -euo pipefail
@@ -103,6 +104,7 @@ jobs:
           npx cap sync ios
           npm run assets || true   # Splash.imageset is absent; the icons (what matters) still generate
           ruby scripts/add_watch_target.rb
+          ruby scripts/add_widget_target.rb   # WidgetKit extension — after cap sync + the watch script
 
       - name: Write the App Store Connect API key
         run: |
@@ -163,6 +165,8 @@ jobs:
           [ "$appcount" = "1" ] || { echo "::error::Payload root must contain exactly one .app, found $appcount"; exit 1; }
           ls "$RUNNER_TEMP/unzip/Payload/App.app/Watch/"*.app >/dev/null 2>&1 \
             || { echo "::error::watch app not embedded under App.app/Watch"; exit 1; }
+          ls "$RUNNER_TEMP/unzip/Payload/App.app/PlugIns/BTTSWidget.appex" >/dev/null 2>&1 \
+            || { echo "::error::widget extension not embedded under App.app/PlugIns"; exit 1; }
 
       - name: Upload to TestFlight
         run: |
