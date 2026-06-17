@@ -225,11 +225,11 @@ struct BTTSWidget: Widget {
 
 // MARK: - Scan widget (small, static — opens the bag scanner)
 
-private let peachGradient = LinearGradient(
+private let raspberryPeachGradient = LinearGradient(
     colors: [
-        Color(red: 0.988, green: 0.871, blue: 0.804), // pale peach
-        Color(red: 0.969, green: 0.706, blue: 0.580), // peach
-        Color(red: 0.949, green: 0.604, blue: 0.486), // apricot
+        Color(red: 0.886, green: 0.384, blue: 0.549), // raspberry
+        Color(red: 0.945, green: 0.553, blue: 0.514), // coral
+        Color(red: 0.969, green: 0.690, blue: 0.486), // peach
     ],
     startPoint: .top,
     endPoint: .bottom
@@ -262,13 +262,8 @@ struct ScanWidgetEntryView: View {
             Spacer(minLength: 2)
 
             Image(systemName: "camera")
-                .font(.system(size: 20, weight: .regular))
+                .font(.system(size: 26, weight: .regular))
                 .foregroundColor(ink.opacity(0.85))
-                .frame(width: 48, height: 36)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.white.opacity(0.35))
-                )
 
             Spacer(minLength: 2)
 
@@ -280,7 +275,7 @@ struct ScanWidgetEntryView: View {
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(for: .widget) { peachGradient }
+        .containerBackground(for: .widget) { raspberryPeachGradient }
         .widgetURL(URL(string: "btts://scan"))
     }
 }
