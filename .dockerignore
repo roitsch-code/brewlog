@@ -3,17 +3,10 @@
 # inside Next.js's build worker scan path. Add only what's verified
 # unneeded for `next build` or runtime.
 
-# Lovable v7 reference export — kept in git as a design source of
-# truth, but never bundled. Without this exclude, Next.js's build
-# worker scans lovable-v7/src/App.tsx, fails to resolve its Vite-only
-# dependencies (react-router-dom, @radix-ui/*, @tanstack/react-query)
-# and the deploy crashes with exit code 1 (deploy #183, May 2026).
-lovable-v7/
-
 # Capacitor iOS shell — has its own package.json (@capacitor/*) and the
 # generated Xcode project. Never part of `next build`; kept out of the
-# build context for the same reason as lovable-v7 (don't let the Next.js
-# worker scan it, don't bloat the image).
+# build context so the Next.js build worker doesn't scan it and the
+# image doesn't bloat.
 native/
 
 # Node + build caches — re-created inside the builder stage from a

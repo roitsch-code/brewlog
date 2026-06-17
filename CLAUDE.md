@@ -283,8 +283,7 @@ lib/
 | `scripts/geocode-places.mjs` | Geocode places.address via Nominatim (OSM); ~2 hrs for 6k+ rows due to 1 req/s rate limit |
 | `scripts/backfill-field-zones.mjs` | One-shot — call Haiku Messages API over plain `fetch` to map `coffees.tastingNotes` → `field_zones`. Ran on prod 2026-05 (23/23). Uses raw `fetch` because the Next.js standalone Docker image does not expose `@anthropic-ai/sdk` in `node_modules`. |
 | `docker-compose.yml` | 4-service stack: postgres, app, caddy, ofelia |
-| `.dockerignore` | Excludes `lovable-v7/`, `node_modules`, `.next`, `.env*` — `lovable-v7/` was dragging react-router-dom into the Next.js build context and failing the deploy. |
-| `lovable-v7/` | Read-only design reference (Lovable v7 export). Excluded from Docker build context. |
+| `.dockerignore` | Excludes `native/`, `node_modules`, `.next`, `.env*` from the Next.js build context. |
 
 ### Database tables (Drizzle + Postgres)
 
