@@ -60,7 +60,7 @@ const ROASTER_QA_LOCATION_CHIPS = ["Germany", "Netherlands", "UK", "USA", "Denma
 const ROASTER_QA_STYLE_CHIPS = ["Very light", "Light", "Light-medium", "Medium", "Varies"];
 
 export default function LightStepScan() {
-  const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isDripBag, setIsDripBag, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset } = useFlowStore();
+  const { draft, setCoffee, setMode, setStep, setSkipScan, setFieldZones, isDripBag, setIsDripBag, isAnalyzing, setIsAnalyzing, clarificationMessages, addClarificationMessage, clearClarifications, reset, pendingScanUrl, setPendingScanUrl } = useFlowStore();
   const router = useRouter();
   const [heroQuestion, setHeroQuestion] = useState("");
   useEffect(() => {
@@ -302,8 +302,20 @@ export default function LightStepScan() {
     } catch {}
   };
 
-  const handleUrlAnalyze = async () => {
-    const url = urlInput.trim();
+  // Auto-analyze a URL shared into the app via the iOS Share Sheet
+  // ("Add to BTTS"): the deep-link handler set pendingScanUrl, so prefill the
+  // URL field and run the analysis once, then clear it.
+  useEffect(() => {
+    if (!pendingScanUrl) return;
+    const shared = pendingScanUrl;
+    setUrlInput(shared);
+    setPendingScanUrl(null);
+    void handleUrlAnalyze(shared);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingScanUrl]);
+
+  const handleUrlAnalyze = async (override?: string) => {
+    const url = (override ?? urlInput).trim();
     if (!url) return;
     setIsAnalyzingUrl(true);
     setUrlError(null);
@@ -858,7 +870,7 @@ export default function LightStepScan() {
                 />
                 <button
                   type="button"
-                  onClick={handleUrlAnalyze}
+                  onClick={() => handleUrlAnalyze()}
                   disabled={!urlInput.trim() || isAnalyzingUrl}
                   aria-label={isAnalyzingUrl ? "Scanning" : "Scan URL"}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full active:scale-95 transition-all disabled:opacity-40"

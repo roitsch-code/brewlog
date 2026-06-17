@@ -66,6 +66,16 @@ test("triple-slash host-less form still parses", () => {
   assert.deepEqual(parseWidgetUrl("btts:///scan"), { kind: "scan" });
 });
 
+test("share link extracts the shared url", () => {
+  const r = parseWidgetUrl("btts://share?url=https%3A%2F%2Froaster.com%2Fbag");
+  assert.equal(r.kind, "share");
+  assert.equal(r.url, "https://roaster.com/bag");
+});
+
+test("share link with no url → null url", () => {
+  assert.deepEqual(parseWidgetUrl("btts://share"), { kind: "share", url: null });
+});
+
 test("non-btts schemes return null", () => {
   assert.equal(parseWidgetUrl("https://bettertastethansorry.com/brew?coffeeId=x"), null);
   assert.equal(parseWidgetUrl("http://evil.example/brew"), null);

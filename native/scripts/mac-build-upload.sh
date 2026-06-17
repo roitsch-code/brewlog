@@ -71,6 +71,7 @@ npx cap sync ios
 npm run assets || true   # Splash.imageset is missing; icons (the part that matters) still generate
 ruby scripts/add_watch_target.rb
 ruby scripts/add_widget_target.rb   # WidgetKit extension — must run AFTER cap sync + after the watch script
+ruby scripts/add_share_target.rb    # Share Extension ("Add to BTTS") — after the others
 
 # ── (1) archive with AUTOMATIC (Xcode-managed) signing ───────────────────────
 # -allowProvisioningUpdates + the ASC key let Xcode register the watch's
