@@ -113,6 +113,49 @@ jobs:
           printf '%s\n' "${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}" > ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
           chmod 600 ~/private_keys/AuthKey_${ASC_KEY_ID}.p8
 
+      - name: Free Apple Development certificate slots (avoid the cert cap)
+        # Each CI run is a fresh runner, so `-allowProvisioningUpdates` mints a NEW
+        # Apple Development certificate every archive. They accumulate and hit
+        # Apple's per-account development-cert cap → "account has reached the
+        # maximum number of certificates" + "No profiles for <new bundle id>".
+        # Revoke ALL existing DEVELOPMENT certs here (never DISTRIBUTION — that
+        # filter is strict); the archive step then mints exactly one fresh dev
+        # cert for this run, so we stay at 1. Non-fatal: a hiccup just leaves the
+        # archive to fail as before, never worse.
+        env:
+          ASC_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          node <<'NODE'
+          const crypto = require('crypto'), https = require('https');
+          const kid = process.env.ASC_KEY_ID, iss = process.env.ASC_ISSUER_ID, key = process.env.ASC_KEY_P8;
+          const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+          function token() {
+            const now = Math.floor(Date.now()/1000);
+            const signing = `${b64({alg:'ES256',kid,typ:'JWT'})}.${b64({iss,iat:now,exp:now+600,aud:'appstoreconnect-v1'})}`;
+            const sig = crypto.sign('SHA256', Buffer.from(signing), { key, dsaEncoding:'ieee-p1363' }).toString('base64url');
+            return `${signing}.${sig}`;
+          }
+          const T = token();
+          function api(method, path) {
+            return new Promise((res, rej) => {
+              const r = https.request({ host:'api.appstoreconnect.apple.com', path, method, headers:{ Authorization:`Bearer ${T}` } }, x => {
+                let d=''; x.on('data',c=>d+=c); x.on('end',()=>res({status:x.statusCode, body:d}));
+              });
+              r.on('error', rej); r.end();
+            });
+          }
+          (async () => {
+            const r = await api('GET', '/v1/certificates?limit=200');
+            const certs = (JSON.parse(r.body).data) || [];
+            const dev = certs.filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT'));
+            console.log(`certs total=${certs.length} development=${dev.length}`);
+            for (const c of dev) {
+              const d = await api('DELETE', `/v1/certificates/${c.id}`);
+              console.log(`revoke ${c.id} ${c.attributes.certificateType} -> ${d.status}`);
+            }
+          })().catch(e => { console.error('cert cleanup skipped:', e.message); });
+          NODE
+
       - name: Inject the team into export options
         run: plutil -replace teamID -string "$APPLE_TEAM_ID" native/exportOptions.plist
 
