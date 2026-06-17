@@ -21,7 +21,7 @@ export interface WatchFire {
 }
 
 interface BrewWatchPluginLike {
-  startBrew(options: { recipeName: string; fires: WatchFire[] }): Promise<void>;
+  startBrew(options: { recipeName: string; brewId: number; fires: WatchFire[] }): Promise<void>;
   endBrew(): Promise<void>;
 }
 
@@ -61,7 +61,9 @@ export function startBrewOnWatch(
   if (!plugin) return;
   const fires = boundariesToFires(boundaries, startedAtMs);
   if (fires.length === 0) return;
-  void plugin.startBrew({ recipeName, fires }).catch(() => {});
+  // startedAtMs doubles as the stable brewId — the watch dedupes on it, so the
+  // periodic re-send from the hook never restarts an already-running brew.
+  void plugin.startBrew({ recipeName, brewId: startedAtMs, fires }).catch(() => {});
 }
 
 /** Tell the watch the brew ended / reset. No-op off the native shell. */

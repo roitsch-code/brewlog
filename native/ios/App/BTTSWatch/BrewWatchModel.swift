@@ -1,6 +1,9 @@
 import Foundation
 import WatchConnectivity
 import WatchKit
+import os
+
+private let wlog = Logger(subsystem: "com.roitsch.btts.watchkitapp", category: "brewwatch")
 
 /**
  BTTS watch app — runs the brew timeline locally and buzzes the wrist at each
@@ -16,10 +19,13 @@ import WatchKit
    `notifyUser(hapticType:)` plays a haptic that fires wrist-down / screen-off —
    directly on the watch, with no notification routing and no delay.
 
- The iPhone hands over the whole step schedule (absolute epoch-ms fire times)
- over WatchConnectivity when the brew starts (the user opens this app once at
- brew start, so the session can be started while foreground — required). The
- watch then runs the timeline itself: a phone↔watch hiccup can't drop a buzz.
+ DELIVERY (build 18 hardening): the iPhone re-sends the whole schedule every ~3 s
+ while the brew runs, over BOTH `sendMessage` (when reachable) and
+ `transferUserInfo`/`updateApplicationContext` (durable). The schedule carries a
+ stable `brewId` so a re-send while already running is ignored (no session
+ restart). On launch we also drain any context that arrived before activation.
+ So a single missed reachability window can no longer drop the brew — whenever
+ the watch app next becomes reachable it picks the schedule up and starts.
  */
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
@@ -37,26 +43,43 @@ final class BrewWatchModel: NSObject, ObservableObject {
     @Published var nextLabel: String?
     @Published var nextFireAt: Date?
 
+    // Visible diagnostics (read off the watch face when idle).
+    @Published var wcState = "—"
+    @Published var reachable = false
+    @Published var msgCount = 0
+    @Published var lastFires = 0
+    @Published var lastEvent = "none"
+
     private var fires: [Fire] = []
     private var ticker: Timer?
     private var runtimeSession: WKExtendedRuntimeSession?
+    private var currentBrewId: Double = 0
 
     func activateSession() {
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else { wlog.error("WCSession unsupported"); return }
         let s = WCSession.default
         s.delegate = self
         s.activate()
+        wlog.log("activate() called")
     }
 
     // MARK: - Brew lifecycle
 
-    private func startBrew(recipeName: String, fires incoming: [Fire]) {
+    private func startBrew(brewId: Double, recipeName: String, fires incoming: [Fire]) {
+        // Idempotent re-send guard: same brew already running → ignore.
+        if isBrewing && brewId == currentBrewId {
+            wlog.log("duplicate start ignored brewId=\(brewId, privacy: .public)")
+            return
+        }
         let now = Date()
+        currentBrewId = brewId
         let sorted = incoming.sorted { $0.at < $1.at }
         self.fires = sorted.map { var f = $0; if $0.at <= now { f.fired = true }; return f }
         self.recipeName = recipeName
         self.isBrewing = true
         self.currentLabel = "Brewing"
+        self.lastEvent = "start \(self.fires.count)"
+        wlog.log("startBrew name=\(recipeName, privacy: .public) fires=\(self.fires.count) brewId=\(brewId, privacy: .public)")
         startRuntimeSession() // keeps the app alive in the background for the brew
         startTicker()
         refreshLabels(now: now)
@@ -68,10 +91,13 @@ final class BrewWatchModel: NSObject, ObservableObject {
         nextLabel = nil
         nextFireAt = nil
         fires = []
+        currentBrewId = 0
+        lastEvent = "end"
         ticker?.invalidate()
         ticker = nil
         runtimeSession?.invalidate()
         runtimeSession = nil
+        wlog.log("endBrew")
     }
 
     // MARK: - Extended runtime session (physical-therapy → background-running)
@@ -84,6 +110,7 @@ final class BrewWatchModel: NSObject, ObservableObject {
         // opened the watch app at brew start.
         session.start()
         runtimeSession = session
+        wlog.log("runtime session start() requested")
     }
 
     // MARK: - Timeline ticker + haptics
@@ -119,8 +146,12 @@ final class BrewWatchModel: NSObject, ObservableObject {
     /// The wrist cue — the SESSION's haptic, which fires in the background /
     /// wrist-down (unlike WKInterfaceDevice.play()).
     private func buzz() {
-        guard let s = runtimeSession, s.state == .running else { return }
+        guard let s = runtimeSession, s.state == .running else {
+            wlog.error("buzz skipped — session not running")
+            return
+        }
         s.notifyUser(hapticType: .notification, repeatHandler: nil)
+        wlog.log("BUZZ")
     }
 
     private func refreshLabels(now: Date) {
@@ -135,12 +166,16 @@ final class BrewWatchModel: NSObject, ObservableObject {
 
     // MARK: - Payload parsing
 
-    fileprivate func handle(_ payload: [String: Any]) {
+    fileprivate func handle(_ payload: [String: Any], via source: String) {
         DispatchQueue.main.async {
+            self.msgCount += 1
+            self.lastEvent = "rx:\(source)"
             let type = payload["type"] as? String ?? ""
+            wlog.log("rx \(source, privacy: .public) type=\(type, privacy: .public)")
             switch type {
             case "start":
                 let name = payload["recipeName"] as? String ?? "Brew"
+                let brewId = (payload["brewId"] as? Double) ?? (payload["brewId"] as? NSNumber)?.doubleValue ?? 0
                 let raw = payload["fires"] as? [[String: Any]] ?? []
                 let parsed: [Fire] = raw.compactMap { dict in
                     guard let atMs = dict["atMs"] as? Double ?? (dict["atMs"] as? NSNumber)?.doubleValue
@@ -148,8 +183,9 @@ final class BrewWatchModel: NSObject, ObservableObject {
                     let label = dict["label"] as? String ?? "Next step"
                     return Fire(at: Date(timeIntervalSince1970: atMs / 1000.0), label: label)
                 }
-                guard !parsed.isEmpty else { return }
-                self.startBrew(recipeName: name, fires: parsed)
+                self.lastFires = parsed.count
+                guard !parsed.isEmpty else { wlog.error("start with 0 fires"); return }
+                self.startBrew(brewId: brewId, recipeName: name, fires: parsed)
             case "end":
                 self.endBrew()
             default:
@@ -162,9 +198,23 @@ final class BrewWatchModel: NSObject, ObservableObject {
 // MARK: - WCSessionDelegate
 
 extension BrewWatchModel: WCSessionDelegate {
-    func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {}
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { handle(message) }
-    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) { handle(applicationContext) }
+    func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
+        DispatchQueue.main.async {
+            self.wcState = state == .activated ? "active" : "inactive(\(state.rawValue))"
+            self.reachable = session.isReachable
+            wlog.log("activationDidComplete state=\(state.rawValue) reachable=\(session.isReachable)")
+            // Drain any application context that arrived before we activated.
+            let ctx = session.receivedApplicationContext
+            if !ctx.isEmpty { self.handle(ctx, via: "ctx@launch") }
+        }
+    }
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        DispatchQueue.main.async { self.reachable = session.isReachable }
+        wlog.log("reachability=\(session.isReachable)")
+    }
+    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { handle(message, via: "msg") }
+    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) { handle(applicationContext, via: "ctx") }
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) { handle(userInfo, via: "userInfo") }
 }
 
 // MARK: - WKExtendedRuntimeSessionDelegate
@@ -172,16 +222,20 @@ extension BrewWatchModel: WCSessionDelegate {
 extension BrewWatchModel: WKExtendedRuntimeSessionDelegate {
     func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
         // A confirmation tap that the wrist took over the brew.
+        wlog.log("runtime session DID START")
         extendedRuntimeSession.notifyUser(hapticType: .start, repeatHandler: nil)
     }
 
-    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
+    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        wlog.log("runtime session WILL EXPIRE")
+    }
 
     func extendedRuntimeSession(
         _ extendedRuntimeSession: WKExtendedRuntimeSession,
         didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason,
         error: Error?
     ) {
+        wlog.error("runtime session invalidated reason=\(reason.rawValue) err=\(String(describing: error), privacy: .public)")
         if runtimeSession === extendedRuntimeSession { runtimeSession = nil }
     }
 }
