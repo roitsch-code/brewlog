@@ -3,71 +3,73 @@ import Capacitor
 import WatchConnectivity
 
 /**
- BrewWatch — phone-side bridge between the watch and the WKWebView (JS).
+ BrewWatch — phone-side bridge from the WKWebView (JS) to the Apple Watch app.
 
- New model (build 13): the watch is a push receiver. It registers for remote
- notifications and sends its APNs device token to the phone over
- WatchConnectivity. This plugin receives that token and surfaces it to JS — the
- web layer (`src/lib/native/watchPush.ts`) registers it with the server, which
- then pushes one alert to the watch per brew step. The phone no longer sends a
- schedule to the watch; per-step pushes go web → server → APNs.
+ The web layer (`src/lib/native/brewWatch.ts`) calls `startBrew` once when a
+ brew's timer hits zero, handing over the WHOLE step schedule as absolute
+ epoch-ms fire times. We forward it to the watch over WatchConnectivity; the
+ watch app runs the timeline itself and buzzes the wrist at each step via a
+ physical-therapy extended-runtime session (the only thing that buzzes the wrist
+ while the iPhone screen is ON).
+
+ Delivery: `sendMessage` for immediacy when the watch app is reachable
+ (foreground — it is, the user opened it at brew start), plus
+ `updateApplicationContext` as a durable fallback.
  */
 @objc(BrewWatchPlugin)
 public class BrewWatchPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "BrewWatchPlugin"
     public let jsName = "BrewWatch"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "getWatchToken", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startBrew", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "endBrew", returnType: CAPPluginReturnPromise),
     ]
 
     private var session: WCSession?
-    private var lastToken: String?
 
     override public func load() {
         guard WCSession.isSupported() else { return }
-        WatchSessionForwarder.shared.onToken = { [weak self] token in
-            self?.lastToken = token
-            self?.notifyListeners("watchToken", data: ["token": token])
-        }
         let s = WCSession.default
         s.delegate = WatchSessionForwarder.shared
         s.activate()
         session = s
     }
 
-    /// Return the latest watch APNs token the phone has received (or "").
-    @objc func getWatchToken(_ call: CAPPluginCall) {
-        call.resolve(["token": lastToken ?? ""])
+    @objc func startBrew(_ call: CAPPluginCall) {
+        guard WCSession.isSupported() else { call.resolve(); return }
+        let recipeName = call.getString("recipeName") ?? "Brew"
+        let firesIn = call.getArray("fires", JSObject.self) ?? []
+        var fires: [[String: Any]] = []
+        for f in firesIn {
+            guard let atMs = f["atMs"] as? Double ?? (f["atMs"] as? NSNumber)?.doubleValue else { continue }
+            let label = f["label"] as? String ?? "Next step"
+            fires.append(["atMs": atMs, "label": label])
+        }
+        send(["type": "start", "recipeName": recipeName, "fires": fires])
+        call.resolve()
+    }
+
+    @objc func endBrew(_ call: CAPPluginCall) {
+        send(["type": "end"])
+        call.resolve()
+    }
+
+    private func send(_ payload: [String: Any]) {
+        guard let s = session, s.activationState == .activated else { return }
+        if s.isReachable {
+            s.sendMessage(payload, replyHandler: nil, errorHandler: nil)
+        }
+        try? s.updateApplicationContext(payload)
     }
 }
 
 /**
- WCSession delegate that forwards the watch's APNs token to the plugin. A
- delegate is mandatory for the session to activate; the multi-device
- reactivation stubs are required by iOS.
+ Minimal WCSessionDelegate — the phone only SENDS for this feature, so the
+ callbacks are no-ops, but a delegate is mandatory for the session to activate.
  */
 final class WatchSessionForwarder: NSObject, WCSessionDelegate {
     static let shared = WatchSessionForwarder()
-    var onToken: ((String) -> Void)?
-
-    private func handle(_ message: [String: Any]) {
-        guard (message["type"] as? String) == "watchToken",
-              let token = message["token"] as? String, !token.isEmpty
-        else { return }
-        DispatchQueue.main.async { self.onToken?(token) }
-    }
-
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        handle(message)
-    }
-
-    func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
-        handle(applicationContext)
-    }
-
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {}
     func sessionDidBecomeInactive(_ session: WCSession) {}
-    func sessionDidDeactivate(_ session: WCSession) {
-        session.activate()
-    }
+    func sessionDidDeactivate(_ session: WCSession) { session.activate() }
 }
