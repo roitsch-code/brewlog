@@ -139,27 +139,44 @@ export function registerWidgetDeepLinks(nav: Nav): () => void {
   let handle: AppListenerHandle | null = null;
   let removed = false;
 
-  app
-    .addListener("appUrlOpen", (data) => {
-      void handleWidgetUrl(data.url, nav);
-    })
-    .then((h) => {
-      if (removed) h.remove();
-      else handle = h;
-    })
-    .catch(() => {});
+  // NB: addListener may return either a Promise<handle> OR the handle directly
+  // depending on the Capacitor build, so we never chain `.then` on it raw (that
+  // threw "addListener(...).then is not a function" and aborted the bridge).
+  // Wrap in Promise.resolve and isolate each call so neither can throw out.
+  try {
+    const res = app.addListener("appUrlOpen", (data) => {
+      void handleWidgetUrl(data?.url ?? "", nav);
+    });
+    Promise.resolve(res as unknown)
+      .then((h) => {
+        const handle_ = h as AppListenerHandle | undefined;
+        if (removed) handle_?.remove?.();
+        else handle = handle_ ?? null;
+      })
+      .catch(() => {});
+  } catch {
+    /* ignore — deep links just won't attach */
+  }
 
   // Cold start: the app was launched by the tap, so the event may have fired
   // before this listener attached — getLaunchUrl recovers it.
-  app
-    .getLaunchUrl()
-    .then((r) => {
-      if (r?.url) void handleWidgetUrl(r.url, nav);
-    })
-    .catch(() => {});
+  try {
+    Promise.resolve(app.getLaunchUrl() as unknown)
+      .then((r) => {
+        const url = (r as { url?: string } | null)?.url;
+        if (url) void handleWidgetUrl(url, nav);
+      })
+      .catch(() => {});
+  } catch {
+    /* ignore */
+  }
 
   return () => {
     removed = true;
-    handle?.remove();
+    try {
+      handle?.remove?.();
+    } catch {
+      /* ignore */
+    }
   };
 }

@@ -24,33 +24,37 @@ export default function NativeWidgetBridge() {
   const [diag, setDiag] = useState<string>("");
 
   useEffect(() => {
+    // Deep-link registration — isolated so a failure here can't block the
+    // rotation-data push below (the bug that left the widget empty).
     let cleanup: () => void = () => {};
     try {
       cleanup = registerWidgetDeepLinks((path) => router.push(path));
+    } catch {
+      /* deep links just won't attach */
+    }
 
-      if (!isNativeShell()) {
-        return () => {
-          try { cleanup(); } catch { /* ignore */ }
-        };
-      }
-
-      if (!isWidgetBridgeNative()) {
-        setDiag("widget: plugin NOT found");
-      } else {
-        fetch("/api/coffees", { cache: "no-store" })
-          .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : Promise.reject(new Error(`coffees ${r.status}`))))
-          .then((list) => {
-            const rotation = list
-              .filter((c) => c.inRotation)
-              .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }));
-            pushRotationToWidget(rotation);
-            setDiag(`widget: plugin OK · ${list.length} coffees · ${rotation.length} in rotation pushed`);
-          })
-          .catch((e) => setDiag(`widget: plugin OK · fetch failed: ${e?.message ?? e}`));
+    // Rotation-data push — fully independent of the deep-link registration.
+    try {
+      if (isNativeShell()) {
+        if (!isWidgetBridgeNative()) {
+          setDiag("widget: plugin NOT found");
+        } else {
+          fetch("/api/coffees", { cache: "no-store" })
+            .then((r) => (r.ok ? (r.json() as Promise<Coffee[]>) : Promise.reject(new Error(`coffees ${r.status}`))))
+            .then((list) => {
+              const rotation = list
+                .filter((c) => c.inRotation)
+                .map((c) => ({ id: c.id, roaster: c.roaster, name: c.name }));
+              pushRotationToWidget(rotation);
+              setDiag(`widget: plugin OK · ${list.length} coffees · ${rotation.length} in rotation pushed`);
+            })
+            .catch((e) => setDiag(`widget: plugin OK · fetch failed: ${e?.message ?? e}`));
+        }
       }
     } catch (e) {
-      setDiag(`widget: bridge error: ${(e as Error)?.message ?? e}`);
+      setDiag(`widget: push error: ${(e as Error)?.message ?? e}`);
     }
+
     return () => {
       try { cleanup(); } catch { /* ignore */ }
     };
