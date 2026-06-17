@@ -115,7 +115,7 @@ rm -rf "$WORK/unzip"; mkdir -p "$WORK/unzip"; unzip -qo "$IPA" -d "$WORK/unzip"
 WATCH_APP="$(ls -d "$WORK"/unzip/Payload/App.app/Watch/*.app 2>/dev/null | head -1)"
 if [ -n "$WATCH_APP" ]; then
   echo "Payload root (must be App.app ONLY):"; ls "$WORK/unzip/Payload"
-  echo "watch entitlements (want aps-environment + time-sensitive):"
+  echo "watch entitlements (physical-therapy is Info.plist-only — no capability entitlement expected):"
   codesign -d --entitlements - "$WATCH_APP" 2>/dev/null | grep -iE "aps-environment|time-sensitive" || echo "  (MISSING — check signing)"
 fi
 
