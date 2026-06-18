@@ -16,16 +16,18 @@
 import type { BrewBoundary } from "@/lib/native/brewNotifications";
 
 export interface BrewActivityState {
-  stepLabel: string;
+  currentStep: string;
+  nextStep: string;
+  /** Epoch ms when the NEXT step fires — the countdown target. */
+  nextStepMs: number;
+  /** Epoch ms when the current step started — progress-bar lower bound. */
+  stepStartMs: number;
   stepIndex: number;
   stepCount: number;
-  /** Epoch ms of the brew's target finish — drives the system timer/progress. */
-  endMs: number;
-  paused: boolean;
 }
 
 interface LiveActivityPluginLike {
-  start(o: { recipeName: string; coffeeName: string; startMs: number } & BrewActivityState): Promise<{ started?: boolean }>;
+  start(o: { recipeName: string; coffeeName: string } & BrewActivityState): Promise<{ started?: boolean }>;
   update(o: BrewActivityState): Promise<void>;
   end(): Promise<void>;
 }
@@ -51,21 +53,41 @@ export function isNativeLiveActivity(): boolean {
   return getPlugin() !== null;
 }
 
-/** The current brew step from the boundary schedule (the last boundary passed). */
-export function currentBrewStep(
+/**
+ * Build the activity state from the boundary schedule: the current step (last
+ * boundary passed), the next step + when it fires (the countdown target), and
+ * when the current step started (progress-bar lower bound). Before the first
+ * boundary the current step is "Bloom"; after the last, the "next" is Drawdown
+ * at the target finish.
+ */
+export function brewActivityState(
   boundaries: BrewBoundary[],
   elapsed: number,
-): { stepLabel: string; stepIndex: number; stepCount: number } {
-  let idx = -1;
+  brewStartMs: number,
+  targetTimeSec: number,
+): BrewActivityState {
+  let curIdx = -1;
   for (let i = 0; i < boundaries.length; i++) {
-    if (boundaries[i].atSec <= elapsed) idx = i;
+    if (boundaries[i].atSec <= elapsed) curIdx = i;
   }
-  const stepLabel = idx >= 0 ? boundaries[idx].title : "Bloom";
-  return { stepLabel, stepIndex: idx + 1, stepCount: boundaries.length };
+  const currentStep = curIdx >= 0 ? boundaries[curIdx].title : "Bloom";
+  const stepStartSec = curIdx >= 0 ? boundaries[curIdx].atSec : 0;
+  const nextIdx = curIdx + 1;
+  const hasNext = nextIdx < boundaries.length;
+  const nextStep = hasNext ? boundaries[nextIdx].title : "Drawdown";
+  const nextSec = hasNext ? boundaries[nextIdx].atSec : targetTimeSec;
+  return {
+    currentStep,
+    nextStep,
+    nextStepMs: brewStartMs + nextSec * 1000,
+    stepStartMs: brewStartMs + stepStartSec * 1000,
+    stepIndex: curIdx + 1,
+    stepCount: boundaries.length,
+  };
 }
 
 export function startBrewActivity(
-  opts: { recipeName: string; coffeeName: string; startMs: number } & BrewActivityState,
+  opts: { recipeName: string; coffeeName: string } & BrewActivityState,
 ): void {
   getPlugin()?.start(opts).catch(() => {});
 }
