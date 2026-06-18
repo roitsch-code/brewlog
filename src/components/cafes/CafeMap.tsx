@@ -208,9 +208,31 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       pinIconRef.current = pinIcon;
 
       locateMeFnRef.current = () => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+          setLocateError("Location isn't available on this device");
+          setTimeout(() => setLocateError(null), 3000);
+          return;
+        }
         setLocatingUser(true);
+
+        // Watchdog: iOS WKWebView / PWA can drop BOTH geolocation callbacks
+        // when the permission prompt is dismissed or the app is backgrounded,
+        // which would leave the button stuck disabled forever. This guarantees
+        // a reset so the button is always tappable again.
+        let settled = false;
+        const watchdog = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          setLocateError("Couldn't get your location. Try again.");
+          setTimeout(() => setLocateError(null), 3000);
+          setLocatingUser(false);
+        }, 16000);
+
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(watchdog);
             const { latitude: lat, longitude: lng } = pos.coords;
 
             userMarkerRef.current?.remove();
@@ -259,12 +281,22 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
 
             setLocatingUser(false);
           },
-          () => {
-            setLocateError("Location unavailable");
+          (err) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(watchdog);
+            setLocateError(
+              err.code === err.PERMISSION_DENIED
+                ? "Location access is off — enable it in Settings"
+                : "Couldn't get your location. Try again."
+            );
             setTimeout(() => setLocateError(null), 3000);
             setLocatingUser(false);
           },
-          { enableHighAccuracy: true, timeout: 10000 }
+          // Coarse + recent-cache fix: fast and reliable on a phone. High
+          // accuracy GPS routinely times out indoors — overkill for ranking
+          // nearby cafés, where city-block precision is plenty.
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
         );
       };
 
@@ -287,10 +319,10 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       (async () => {
         const userPos = await new Promise<{ lat: number; lng: number } | null>(resolve => {
           const timer = setTimeout(() => resolve(null), 5000);
-          navigator.geolocation.getCurrentPosition(
+          navigator.geolocation?.getCurrentPosition(
             pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
             () => { clearTimeout(timer); resolve(null); },
-            { enableHighAccuracy: true, timeout: 5000 }
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
           );
         });
         if (cancelled || !userPos || !mapRef.current) return;
