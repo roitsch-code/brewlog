@@ -1,16 +1,19 @@
 import UIKit
 import UniformTypeIdentifiers
+import UserNotifications
 
 /**
  Share Extension — "Add to BTTS". Appears in the iOS Share Sheet for URLs and
- text (e.g. a coffee product page shared from Safari / Instagram). It extracts
- the URL, opens the host app via the `btts://share?url=…` deep link, and
- dismisses. The app's deep-link handler (src/lib/native/widgetDeepLinks.ts) then
- lands in the scan flow and auto-analyzes the URL (/api/analyze-url).
+ text (a coffee product page shared from Safari / Instagram). It extracts the
+ URL and posts a local notification carrying it; tapping that notification opens
+ BTTS, which reads the URL (`btts_url`) and auto-analyzes it (/api/analyze-url).
 
- No App Group needed: the URL is small enough to pass inline in the deep link.
- Opening the host app from an extension uses the documented responder-chain
- `openURL:` walk (UIApplication isn't directly reachable from an extension).
+ Why a notification and not a direct open: since iOS 18, Apple BLOCKS app
+ extensions from opening their host app (UIApplication is unavailable in an
+ extension; the old responder-chain `openURL:` hack force-fails with "BUG IN
+ CLIENT OF UIKIT"). A local notification is Apple's documented, sanctioned way to
+ bring the host app forward from an extension. No App Group needed — the URL
+ rides in the notification's userInfo.
  */
 @objc(ShareViewController)
 class ShareViewController: UIViewController {
@@ -33,14 +36,12 @@ class ShareViewController: UIViewController {
         let urlType = UTType.url.identifier
         let textType = UTType.plainText.identifier
 
-        // Prefer an explicit URL attachment.
         if let p = providers.first(where: { $0.hasItemConformingToTypeIdentifier(urlType) }) {
             p.loadItem(forTypeIdentifier: urlType, options: nil) { data, _ in
                 completion((data as? URL)?.absoluteString)
             }
             return
         }
-        // Otherwise pull the first URL out of shared plain text.
         if let p = providers.first(where: { $0.hasItemConformingToTypeIdentifier(textType) }) {
             p.loadItem(forTypeIdentifier: textType, options: nil) { data, _ in
                 completion(Self.firstURL(in: data as? String))
@@ -57,40 +58,47 @@ class ShareViewController: UIViewController {
         return detector.firstMatch(in: text, range: range)?.url?.absoluteString
     }
 
-    // Selector stub so `#selector(openURL(_:))` resolves; the host app's
-    // responder provides the real implementation. We walk from `self.next` so
-    // this stub is skipped.
-    @objc func openURL(_ url: URL) {}
-
     private func finish(_ urlString: String?) {
-        guard let s = urlString,
-              let encoded = s.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let deep = URL(string: "btts://share?url=\(encoded)") else {
-            extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+        guard let s = urlString else {
+            complete()
             return
         }
-        openHostApp(deep)
-        // Tear the extension down AFTER the host-app launch has a beat to take —
-        // completing too early (0.15 s) cancels the pending open, which is why
-        // nothing happened. 0.8 s is comfortably enough.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+        postNotification(s) { [weak self] in self?.complete() }
+    }
+
+    /// Post a local notification carrying the shared URL. Tapping it opens BTTS,
+    /// where the LocalNotifications listener reads `btts_url` and runs the scan.
+    private func postNotification(_ urlString: String, then done: @escaping () -> Void) {
+        let center = UNUserNotificationCenter.current()
+        let post = {
+            let content = UNMutableNotificationContent()
+            content.title = "Add to BTTS"
+            content.body = "Tap to read this coffee into BTTS."
+            content.userInfo = ["btts_url": urlString]
+            content.sound = .default
+            let req = UNNotificationRequest(
+                identifier: "btts-share",
+                content: content,
+                trigger: nil // deliver immediately
+            )
+            center.add(req) { _ in DispatchQueue.main.async { done() } }
+        }
+        center.getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .authorized, .provisional:
+                post()
+            case .notDetermined:
+                center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                    if granted { post() } else { DispatchQueue.main.async { done() } }
+                }
+            default:
+                // Notifications denied — nothing we can do from an extension.
+                DispatchQueue.main.async { done() }
+            }
         }
     }
 
-    /// Open the host app with our custom-scheme deep link. NSExtensionContext.open
-    /// is tried first (harmless if unsupported), then the documented responder-
-    /// chain `openURL:` walk — the standard way a share extension opens its host.
-    private func openHostApp(_ url: URL) {
-        extensionContext?.open(url, completionHandler: nil)
-        let selector = #selector(openURL(_:))
-        var responder: UIResponder? = self.next
-        while let r = responder {
-            if r.responds(to: selector) {
-                r.perform(selector, with: url)
-                return
-            }
-            responder = r.next
-        }
+    private func complete() {
+        extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
     }
 }

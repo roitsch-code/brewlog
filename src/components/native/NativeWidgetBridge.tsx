@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { registerWidgetDeepLinks } from "@/lib/native/widgetDeepLinks";
+import { registerWidgetDeepLinks, registerShareNotificationTap } from "@/lib/native/widgetDeepLinks";
 import { isNativeShell, isWidgetBridgeNative, pushRotationToWidget } from "@/lib/native/widgetBridge";
 import type { Coffee } from "@/lib/types/coffee";
 
@@ -20,12 +20,19 @@ export default function NativeWidgetBridge() {
   const router = useRouter();
 
   useEffect(() => {
-    // Deep-link registration — isolated.
+    // Deep-link + Share-Extension-notification registration — isolated.
+    const nav = (path: string) => router.push(path);
     let cleanup: () => void = () => {};
+    let cleanupShare: () => void = () => {};
     try {
-      cleanup = registerWidgetDeepLinks((path) => router.push(path));
+      cleanup = registerWidgetDeepLinks(nav);
     } catch {
       /* deep links just won't attach */
+    }
+    try {
+      cleanupShare = registerShareNotificationTap(nav);
+    } catch {
+      /* share-notification tap just won't attach */
     }
 
     // Rotation-data push — independent of the deep-link registration.
@@ -47,6 +54,7 @@ export default function NativeWidgetBridge() {
 
     return () => {
       try { cleanup(); } catch { /* ignore */ }
+      try { cleanupShare(); } catch { /* ignore */ }
     };
   }, [router]);
 
