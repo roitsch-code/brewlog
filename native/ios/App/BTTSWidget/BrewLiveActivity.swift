@@ -48,9 +48,15 @@ struct BrewLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
+                // maxWidth caps the pill so a longer label can't balloon it;
+                // .trailing hugs the text toward the camera (space falls on the
+                // LEFT, where it was jammed); .padding(.leading) adds the inset.
                 Text("Next: \(context.state.nextStep)")
                     .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 96, alignment: .trailing)
+                    .padding(.leading, 8)
             } compactTrailing: {
                 countdown(context.state)
                     .font(.system(size: 13, weight: .semibold))
