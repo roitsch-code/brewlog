@@ -461,7 +461,7 @@ export const TECHNIQUES: Technique[] = [
       "Cold-brew aesthetics — flash-chilled is brighter and less rounded than cold brew",
     ],
     compatibleBrewers: ["v60", "kalita-wave", "clever", "aeropress", "chemex"],
-    exemplifiedBy: ["hoffmann-immersion-iced-clever"],
+    exemplifiedBy: ["hoffmann-immersion-iced-clever", "hedrick-flash-brew-iced"],
     sources: [
       {
         type: "video",

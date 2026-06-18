@@ -56,6 +56,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hatakeyama 2024 JBrC (Origami)** | Origami Air S/M + Cafec Abaca | 15g : 240g | **85°C** | 387–397° | 2:20 | true |
 | **Wallgren Kalita with Sieved Fines** | Kalita Wave 155 | 15g : 250g | 96°C | 388–398° | 2:35 | false |
 | **Hoffmann Japanese Iced V60** | V60 onto ice | 32.5g : 500g (300 hot + 200 ice) | off the boil | calibrate | 2:45 | true |
+| **Hedrick Flash Brew Iced** | V60 (add ice AFTER) | 20g : 240g hot (+60g ice after) | a bit under boiling | calibrate (coarser) | 3:50 | true |
 
 † **Hoffmann roast-temperature staircase (as he states it in the Better 1 Cup video):** light = **freshly boiled (100 °C)**, medium 96 °C, darkest roasts down to 90 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span. (Verified against the video transcription, June 2026.)
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
@@ -75,6 +76,7 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 - **Rao V60 Spin Method** — 20g:330g at 97°C: aggressive bloom spin, then **two** pours (to 200g, to 330g) each followed by a brief gentle spin to refill the ribbed channels; ~4:00–4:30. The defining feature is the spin, NOT equal thirds. (Corrected June 2026 against Rao's own published recipe: he explicitly argues AGAINST breaking a V60 into more than two parts, so the prior "Rule of Thirds / equal thirds / 22g:352g" attribution was wrong.)
 - **Hatakeyama 2024 JBrC** — His Japan Brewers Cup champion recipe: 15g:240g, a COARSE grind (Comandante 25–27) with notably COOL 85°C water, and five even circular pours (30 → 120 → 160 → 200 → 240) finishing ~2:20, then swirl the carafe. Coarse + cool, yield recovered through pour count → sweet, clean, soft acidity. (Replaces the old unsourced "roast-tailored Cafec filter" reconstruction.)
 - **Hoffmann Japanese Iced V60** — Pour-over iced: brew HOT (off the boil) onto ice. 65 g/L, 40% ice / 60% hot (≈300g hot + 200g ice), slightly finer grind, bloom 2–3× for ≥45s, brew 2:30–3:00, finish with a circular stir then the opposite direction, drip onto ice, swirl, pour onto fresh ice. Keeps the origin character cold brew flattens.
+- **Hedrick Flash Brew Iced (add ice AFTER)** — Hedrick's fix for flash brew: don't brew onto the ice, brew over an EMPTY server and add the ice afterward. Brewing onto ice forces a flooded ~60/40 split (only ~60% hot water → an absurd ~1:9 that under-extracts). Instead brew a normal 1:12 (20g : 240g hot, a bit under boiling, grind a touch coarser than a standard V60), then drop the reserved 20% (≈60g) in as ice and **stir hard** to flash-chill below ~10 °C, then pour over fresh ice. More hot water + coarser grind → a real ~18% extraction and ~1.35% drinking TDS — crisp, refreshing, keeps the aromatics cold brew flattens. Use good ice (same water chemistry or distilled). 75/25 or 85/15 depending on how slowly the ice melts.
 - **Wallgren Kalita** — Sieve out fines pre-brew. Fines over-extract relative to the rest of the grind; removing them tightens the extraction distribution and produces a startlingly clean cup.
 
 > *Removed:* the **Turbo V60 (Hedrick)** entry — "turbo" is an espresso technique (Cameron/Hendon, *Matter* 2020; popularised by Hedrick ~2021), and no primary source documents a Hedrick filter recipe with the parameters it carried. The boiling-water + coarse-grind mechanism survives as a technique (§3a), de-attributed.
@@ -258,7 +260,7 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 | **Jonathan Gagné** | Long-Brew AeroPress + Prismo (HOT, 100°C) | immersion-steep |
 | **Daiki Hatakeyama** | 2024 JBrC Origami (coarse + cool 85°C) | roast-tailored-filter (promotes as Cafec ambassador; no corpus exemplar) |
 | **Mikaela Wallgren** | Kalita with Sieved Fines | fines-removal-sieving |
-| **Lance Hedrick** | (popularised the espresso "turbo"; no verified filter recipe) | boiling-water-coarse-grind (popularised) |
+| **Lance Hedrick** | Flash Brew Iced (add ice after) | boiling-water-coarse-grind (popularised), flash-chilling (exemplified) |
 | **Cameron / Hendon** | (*Matter* 2020 — espresso "turbo" origin) | boiling-water-coarse-grind (foundation) |
 | **James Bailey** | (originated water-first; Hoffmann popularised) | water-first (origin) |
 | **Martin Wölfl** | WBrC 2024 | melodrip-controlled-pouring (exemplar); else composition of fast-flow + light agitation |
