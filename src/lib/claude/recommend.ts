@@ -499,6 +499,7 @@ COLD BREW RECIPES — use ONLY when occasion is "cold-brew". These are LONG COLD
 - Pick TWO contrasting candidates from the list below (e.g. a ready-to-drink vs a concentrate, or fine+finings vs coarse). Each candidate's basedOn = the source recipe name.
 - waterTempC: use the actual brew-water temperature — 22 for room-temp cold steeps; for the Hot-Bloom variant set it to the bloom temperature (95) and say in notes that only the small bloom is hot, the rest is cold.
 - CONCENTRATE recipes: state the dilution in notes (e.g. "concentrate — dilute 1:1 with water or milk"). waterGrams = the brew water; the user dilutes when serving.
+- VESSEL BY VOLUME (hard capacity — never exceed): a **jar / large immersion vessel** ("cold-brew-jar") is the default and holds any volume — use it for every batch >450ml and for all the 1:8/1:5 concentrates. A **Clever Dripper holds MAX 450ml total** — only for a small single cold brew (e.g. 40g:400g), NEVER 600ml/900ml/1L. An **AeroPress** is a small concentrate only (≤~200ml brew water). Recommending a 600ml+ Clever or AeroPress is a hard error.
 - Optional finish (any cold brew): "Tastes harsh? Add 1–2 drops of 20:80 saline (5g salt in 20g water) per cup — sodium suppresses bitterness." (James Hoffmann.) Mention it in notes, never as a required step.
 - Coffee fit (Hoffmann's tasting finding): light washed coffees give LESS to cold water — they read thin. Cold brew shines on medium/natural/chocolatey coffees. If the bag is a light washed and the user still wants cold, say so honestly in reasoning and lean to the Hoffmann fine+finings recipe (it extracts most) or suggest the Hot-Bloom variant to lift acidity.
 Recipes (scale grams to "amount"; keep grind + ratio + steep as published):
@@ -718,7 +719,10 @@ export async function generateRecommendation(
       "SURPRISE MODE: full creative freedom on method and recipe — hard capacity limits still apply. Be adventurous.",
     open: "standard single-cup dose (23g:350ml)",
   };
-  const guide = amountGuide[context.amount] ?? "target ~350g water / 23g dose";
+  const guide =
+    context.occasion === "cold-brew"
+      ? `COLD BREW batch — scale to the chosen amount (small ~350ml, big ~520ml, custom = exact, surprise = your call). VESSEL BY VOLUME: any volume goes in a jar / large immersion vessel ("cold-brew-jar", the default). A Clever holds MAX 450ml (small single brew only); an AeroPress is a ≤200ml concentrate only. NEVER put >450ml in a Clever or AeroPress. Concentrates (1:8 / 1:5) state the dilution in notes.`
+      : (amountGuide[context.amount] ?? "target ~350g water / 23g dose");
 
   const sessionGrinder = context.grinder || preferences.grinder || "Niche Zero";
   const isNiche = sessionGrinder.toLowerCase().includes("niche");
@@ -918,7 +922,9 @@ export async function generateRecommendation(
       variety: coffee.variety,
       goal: normaliseGoal(context.intent),
       occasion: context.occasion,
-      maxWaterMl: targetWaterMl,
+      // Cold brew batches in a jar — the small/big DRINK amount must not filter
+      // out the 1L reference recipes; vessel capacity is enforced in the prompt.
+      maxWaterMl: context.occasion === "cold-brew" ? undefined : targetWaterMl,
     },
     4
   );

@@ -65,6 +65,14 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
   if (!open) return null;
 
   const coldReady = coldBrew ? coldBrew.endMs <= Date.now() : false;
+  const coldLabel = (() => {
+    if (!coldBrew) return "";
+    if (coldReady) return "ready — log it";
+    const total = Math.floor((coldBrew.endMs - Date.now()) / 1000);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return h > 0 ? `${h}h ${m}m left` : `${Math.max(1, m)}m left`;
+  })();
 
   const resumeCold = () => {
     if (!coldBrew?.draft) return;
@@ -112,7 +120,7 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
           >
             Cold brew
             <span className="ml-2 align-middle text-[13px] font-normal text-light-muted-foreground">
-              {coldReady ? "ready — log it" : "steeping"}
+              {coldLabel}
             </span>
           </button>
         )}

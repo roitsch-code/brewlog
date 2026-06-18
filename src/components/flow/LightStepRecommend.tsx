@@ -6,7 +6,7 @@ import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
 import CTA from "@/components/ui/light/CTA";
-import { formatSeconds } from "@/lib/utils/formatTime";
+import { formatSeconds, formatDuration } from "@/lib/utils/formatTime";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/light/LiquidHeadline";
 import CraftingStatus from "@/components/ui/light/CraftingStatus";
@@ -148,6 +148,7 @@ export default function LightStepRecommend() {
   const candidates: RecommendationCandidate[] = rec?.candidates ?? [];
   const active = candidates[selectedIdx];
   const activeRecipe = active?.recipe;
+  const isColdSteep = (activeRecipe?.targetTimeSec ?? 0) >= 3600;
   const activeMethod = active?.method;
   const activeMethodLabel = activeMethod;
 
@@ -279,21 +280,39 @@ export default function LightStepRecommend() {
           )}
           <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
             <RecipeStat label="Grind" value={activeRecipe.grindSize} />
-            <RecipeStat label="Time" value={formatSeconds(activeRecipe.targetTimeSec)} />
+            <RecipeStat label={isColdSteep ? "Steep" : "Time"} value={formatDuration(activeRecipe.targetTimeSec)} />
           </div>
 
-          {activeRecipe.pourSequence && (
-            <div className="border-t border-light-foreground/10 pt-4">
-              <p className="label-eyebrow mb-4">Pour sequence</p>
-              <PourSequence
-                sequence={activeRecipe.pourSequence}
-                totalGrams={activeRecipe.waterGrams}
-                targetTimeSec={activeRecipe.targetTimeSec}
-                roastDate={draft.coffee?.roastDate}
-                method={activeMethod}
-                process={draft.coffee?.process}
-              />
-            </div>
+          {/* Cold brew is a long steep, not timed pours — show the method as a
+              simple ordered list (the pour-math table is meaningless here). */}
+          {isColdSteep ? (
+            activeRecipe.pourSteps && activeRecipe.pourSteps.length > 0 ? (
+              <div className="border-t border-light-foreground/10 pt-4">
+                <p className="label-eyebrow mb-4">Method</p>
+                <ol className="space-y-2.5">
+                  {activeRecipe.pourSteps.map((s, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span className="text-light-muted-foreground tabular-nums text-[13px] mt-0.5 w-4 shrink-0">{i + 1}</span>
+                      <p className="text-[14px] leading-snug text-light-foreground">{s.label}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null
+          ) : (
+            activeRecipe.pourSequence && (
+              <div className="border-t border-light-foreground/10 pt-4">
+                <p className="label-eyebrow mb-4">Pour sequence</p>
+                <PourSequence
+                  sequence={activeRecipe.pourSequence}
+                  totalGrams={activeRecipe.waterGrams}
+                  targetTimeSec={activeRecipe.targetTimeSec}
+                  roastDate={draft.coffee?.roastDate}
+                  method={activeMethod}
+                  process={draft.coffee?.process}
+                />
+              </div>
+            )
           )}
         </div>
       )}

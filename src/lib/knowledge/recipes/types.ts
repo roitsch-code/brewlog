@@ -29,7 +29,8 @@ export type BrewerType =
   | "chemex"
   | "solo-dripper"
   | "cafec-flower"
-  | "conical-paper";
+  | "conical-paper"
+  | "cold-brew-jar";
 
 export type RoastLevel =
   | "very-light"
