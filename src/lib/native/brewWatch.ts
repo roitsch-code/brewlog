@@ -11,7 +11,7 @@
  * Pure-web module, ZERO `@capacitor/*` imports (ambient types only). Off the
  * native shell every export is a silent no-op.
  */
-import type { BrewBoundary } from "@/lib/native/brewNotifications";
+import { type BrewBoundary, formatNowStep } from "@/lib/native/brewNotifications";
 
 export interface WatchFire {
   /** Epoch milliseconds at which the watch should buzz. */
@@ -48,7 +48,9 @@ export function isNativeWatch(): boolean {
 
 /** Convert the brew's relative-second boundaries into absolute epoch-ms fires. */
 export function boundariesToFires(boundaries: BrewBoundary[], startedAtMs: number): WatchFire[] {
-  return boundaries.map((b) => ({ atMs: startedAtMs + Math.round(b.atSec * 1000), label: b.title }));
+  // The watch app shows the step happening NOW, so the fire label is the
+  // now-format (step → cumulative total), e.g. "Pour 2 → 230g".
+  return boundaries.map((b) => ({ atMs: startedAtMs + Math.round(b.atSec * 1000), label: formatNowStep(b) }));
 }
 
 /** Hand the watch the full schedule at brew start. No-op off the native shell. */

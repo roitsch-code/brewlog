@@ -13,7 +13,7 @@
  * Pure-web module, ZERO `@capacitor/*` imports (ambient types). Off the native
  * shell every export is a silent no-op.
  */
-import type { BrewBoundary } from "@/lib/native/brewNotifications";
+import { type BrewBoundary, formatNowStep, formatNextStep } from "@/lib/native/brewNotifications";
 
 export interface BrewActivityState {
   currentStep: string;
@@ -70,11 +70,11 @@ export function brewActivityState(
   for (let i = 0; i < boundaries.length; i++) {
     if (boundaries[i].atSec <= elapsed) curIdx = i;
   }
-  const currentStep = curIdx >= 0 ? boundaries[curIdx].title : "Bloom";
+  const currentStep = curIdx >= 0 ? formatNowStep(boundaries[curIdx]) : "Bloom";
   const stepStartSec = curIdx >= 0 ? boundaries[curIdx].atSec : 0;
   const nextIdx = curIdx + 1;
   const hasNext = nextIdx < boundaries.length;
-  const nextStep = hasNext ? boundaries[nextIdx].title : "Drawdown";
+  const nextStep = hasNext ? formatNextStep(boundaries[nextIdx]) : "Drawdown";
   const nextSec = hasNext ? boundaries[nextIdx].atSec : targetTimeSec;
   return {
     currentStep,
