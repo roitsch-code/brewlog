@@ -33,8 +33,7 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         let attributes = BrewAttributes(
             recipeName: call.getString("recipeName") ?? "Brew",
-            coffeeName: call.getString("coffeeName") ?? "",
-            startDate: date(call, "startMs") ?? Date()
+            coffeeName: call.getString("coffeeName") ?? ""
         )
         do {
             _ = try Activity.request(
@@ -71,11 +70,12 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
     @available(iOS 16.1, *)
     private func contentState(_ call: CAPPluginCall) -> BrewAttributes.ContentState {
         BrewAttributes.ContentState(
-            stepLabel: call.getString("stepLabel") ?? "Brewing",
+            currentStep: call.getString("currentStep") ?? "Brewing",
+            nextStep: call.getString("nextStep") ?? "",
+            nextStepDate: date(call, "nextStepMs") ?? Date().addingTimeInterval(60),
+            stepStartDate: date(call, "stepStartMs") ?? Date(),
             stepIndex: call.getInt("stepIndex") ?? 0,
-            stepCount: call.getInt("stepCount") ?? 0,
-            endDate: date(call, "endMs") ?? Date().addingTimeInterval(180),
-            paused: call.getBool("paused") ?? false
+            stepCount: call.getInt("stepCount") ?? 0
         )
     }
 

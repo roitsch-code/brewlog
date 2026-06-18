@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { type BrewBoundary } from "@/lib/native/brewNotifications";
 import {
-  currentBrewStep,
+  brewActivityState,
   startBrewActivity,
   updateBrewActivity,
   endBrewActivity,
@@ -48,26 +48,18 @@ export function useBrewLiveActivity(
     const now = Date.now();
     const impliedStartMs = now - elapsed * 1000;
     const { boundaries, recipeName, coffeeName, targetTimeSec: target } = ctx.current;
-    const endMs = impliedStartMs + target * 1000;
-    const step = currentBrewStep(boundaries, elapsed);
+    const state = brewActivityState(boundaries, elapsed, impliedStartMs, target);
 
     const isNew =
       anchorRef.current === null || Math.abs(impliedStartMs - anchorRef.current) > 1500;
 
     if (isNew) {
       anchorRef.current = impliedStartMs;
-      lastStepRef.current = step.stepLabel;
-      startBrewActivity({
-        recipeName,
-        coffeeName,
-        startMs: impliedStartMs,
-        endMs,
-        ...step,
-        paused: false,
-      });
-    } else if (step.stepLabel !== lastStepRef.current) {
-      lastStepRef.current = step.stepLabel;
-      updateBrewActivity({ endMs, ...step, paused: false });
+      lastStepRef.current = state.currentStep;
+      startBrewActivity({ recipeName, coffeeName, ...state });
+    } else if (state.currentStep !== lastStepRef.current) {
+      lastStepRef.current = state.currentStep;
+      updateBrewActivity(state);
     }
   }, [elapsed, started, targetTimeSec]);
 

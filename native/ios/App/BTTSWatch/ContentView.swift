@@ -34,8 +34,8 @@ struct ContentView: View {
     @ViewBuilder
     private var content: some View {
         if model.isBrewing {
+            // Brewstep screen — the step happening NOW + a countdown to the next.
             VStack(alignment: .leading, spacing: 4) {
-                // Eyebrow — which recipe (context, not the focus).
                 Text(model.recipeName.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .tracking(0.8)
@@ -44,26 +44,20 @@ struct ContentView: View {
 
                 Spacer(minLength: 0)
 
-                if let next = model.nextLabel, let at = model.nextFireAt {
-                    Text("NEXT")
-                        .font(.system(size: 10, weight: .semibold))
-                        .tracking(1.2)
-                        .foregroundStyle(ink.opacity(0.5))
-                    Text(next)
-                        .font(.system(size: 17, weight: .semibold, design: .serif))
-                        .foregroundStyle(ink)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.8)
-                    // The hero: how long until the next step.
+                Text("NOW")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(ink.opacity(0.5))
+                Text(model.currentLabel.isEmpty ? "Brewing" : model.currentLabel)
+                    .font(.system(size: 17, weight: .semibold, design: .serif))
+                    .foregroundStyle(ink)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                // The hero: how long until the next step.
+                if let at = model.nextFireAt {
                     Text(at, style: .timer)
                         .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(ink)
-                } else {
-                    Text(model.currentLabel.isEmpty ? "Brewing" : model.currentLabel)
-                        .font(.system(size: 20, weight: .semibold, design: .serif))
-                        .foregroundStyle(ink)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.8)
                 }
 
                 Spacer(minLength: 0)
