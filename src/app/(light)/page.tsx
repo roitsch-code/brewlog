@@ -7,6 +7,7 @@ import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
 import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
 import HaikuStarter from "@/components/ui/light/HaikuStarter";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
+import { useFlowStore } from "@/store/flowStore";
 import type { Session } from "@/lib/types/session";
 import type { NavAction } from "@/app/api/explore-agent/route";
 
@@ -436,6 +437,21 @@ export default function HomePage() {
     abortRef.current?.abort();
     voice.cancel();
   };
+
+  // A coffee URL shared in via "Add to BTTS" (Share Sheet → its notification):
+  // auto-ask the chat about it, once. The native bridge set pendingChatUrl and
+  // routed here; clear it immediately and guard against a re-fire.
+  const pendingChatUrl = useFlowStore((s) => s.pendingChatUrl);
+  const setPendingChatUrl = useFlowStore((s) => s.setPendingChatUrl);
+  const sharedHandledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!pendingChatUrl || sharedHandledRef.current === pendingChatUrl) return;
+    sharedHandledRef.current = pendingChatUrl;
+    const url = pendingChatUrl;
+    setPendingChatUrl(null);
+    void handleSend({ text: `What do you think of this coffee: ${url}` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingChatUrl]);
 
   return (
     <>

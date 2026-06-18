@@ -34,12 +34,16 @@ interface FlowState {
   /** A URL shared into the app via the iOS Share Sheet ("Add to BTTS"), to be
    * auto-analyzed by the scan step on mount, then cleared. */
   pendingScanUrl: string | null;
+  /** A coffee URL shared in via "Add to BTTS" — the Home chat auto-asks
+   * "What do you think of this coffee: <url>" on mount, then clears it. */
+  pendingChatUrl: string | null;
 
   // Actions
   setStep: (step: FlowStep) => void;
   setMode: (mode: SessionMode) => void;
   setSkipScan: (v: boolean) => void;
   setPendingScanUrl: (url: string | null) => void;
+  setPendingChatUrl: (url: string | null) => void;
   setIsDripBag: (v: boolean) => void;
   setCoffee: (coffee: Partial<CoffeeIdentity>) => void;
   setPlace: (place: ExternalPlace) => void;
@@ -75,6 +79,7 @@ export const useFlowStore = create<FlowState>()(
       fieldZones: null,
       skipScan: false,
       pendingScanUrl: null,
+      pendingChatUrl: null,
       isDripBag: false,
       isAnalyzing: false,
       isRecommending: false,
@@ -85,6 +90,7 @@ export const useFlowStore = create<FlowState>()(
       setMode: (mode) => set((s) => ({ draft: { ...s.draft, mode } })),
       setSkipScan: (v) => set({ skipScan: v }),
       setPendingScanUrl: (pendingScanUrl) => set({ pendingScanUrl }),
+      setPendingChatUrl: (pendingChatUrl) => set({ pendingChatUrl }),
       setIsDripBag: (v) => set({ isDripBag: v }),
       setCoffee: (coffee) =>
         set((s) => ({ draft: { ...s.draft, coffee: { ...s.draft.coffee, ...coffee } as CoffeeIdentity } })),
@@ -101,7 +107,7 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a
