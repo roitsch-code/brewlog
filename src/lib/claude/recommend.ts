@@ -719,9 +719,28 @@ export async function generateRecommendation(
       "SURPRISE MODE: full creative freedom on method and recipe — hard capacity limits still apply. Be adventurous.",
     open: "standard single-cup dose (23g:350ml)",
   };
+  // Cold brew: resolve the chosen amount to an explicit target so a custom
+  // volume (e.g. 900ml) is honoured precisely — the small/big numbers and the
+  // exact custom ml both flow through here.
+  const coldBrewMl =
+    context.amount === "custom"
+      ? context.customWaterMl ?? null
+      : context.amount === "big"
+        ? 520
+        : context.amount === "small"
+          ? 350
+          : null; // surprise → model's call
   const guide =
     context.occasion === "cold-brew"
-      ? `COLD BREW batch — scale to the chosen amount (small ~350ml, big ~520ml, custom = exact, surprise = your call). VESSEL BY VOLUME: any volume goes in a jar / large immersion vessel ("cold-brew-jar", the default). A Clever holds MAX 450ml (small single brew only); an AeroPress is a ≤200ml concentrate only. NEVER put >450ml in a Clever or AeroPress. Concentrates (1:8 / 1:5) state the dilution in notes.`
+      ? `COLD BREW batch. ${
+          coldBrewMl
+            ? `Target ~${coldBrewMl}ml total brew water for BOTH candidates (±30ml) — the user asked for this exact volume; scale dose to the recipe's ratio (e.g. 1:10 RTD → ${Math.round(coldBrewMl / 10)}g, 1:8 concentrate → ${Math.round(coldBrewMl / 8)}g).`
+            : "Pick a sensible batch volume."
+        } VESSEL BY VOLUME: ${
+          coldBrewMl && coldBrewMl <= 450
+            ? "a Clever (≤450ml) or a jar both work"
+            : "this exceeds a Clever's 450ml — it MUST go in a jar / large immersion vessel (\"cold-brew-jar\")"
+        }. A Clever holds MAX 450ml; an AeroPress is a ≤200ml concentrate only. NEVER put >450ml in a Clever or AeroPress. Concentrates (1:8 / 1:5) state the dilution in notes.`
       : (amountGuide[context.amount] ?? "target ~350g water / 23g dose");
 
   const sessionGrinder = context.grinder || preferences.grinder || "Niche Zero";
