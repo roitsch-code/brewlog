@@ -455,6 +455,94 @@ export const EXPANDED_RECIPES: Recipe[] = [
     verified: false,
   },
 
+  {
+    id: "hedrick-flash-brew-iced",
+    name: "Hedrick Flash Brew Iced (Add Ice After)",
+    shortName: "Hedrick Flash Iced",
+    attribution: {
+      person: "Lance Hedrick",
+      country: "United States",
+    },
+    category: "reference",
+    brewer: "v60",
+    brewerNotes:
+      "V60 pour-over into an EMPTY server — no ice in the brewer. Brew 80% of the water hot, then drop the reserved 20% in as ice afterward and stir to flash-chill, then pour over fresh ice. Adding the ice after (not brewing over it) lets you use more hot water and a coarser grind than the classic brew-over-ice method.",
+    dose: { grams: 20 },
+    water: { grams: 240, ratio: "1:12 brewed (20 g : 240 g hot) — +60 g ice after = ~300 g total, ~1:15 nominal" },
+    temperature: { celsius: 96, rangeC: [93, 100] },
+    grind: {
+      referenceSetting:
+        "a bit coarser than a standard V60 — the extra hot water and longer contact mean you don't need to push extraction",
+    },
+    pourSequence: [
+      {
+        label: "Bloom (→60 g) @ 0:00",
+        action: "pour",
+        waterGramsAtEnd: 60,
+        durationSec: 10,
+        notes: "1:3 bloom (3× dose), a little under boiling, onto the grounds in an EMPTY server — the ice goes in later, not now.",
+      },
+      { label: "Bloom rest (to 1:00)", action: "wait", durationSec: 50 },
+      { label: "Pour 2 (→150 g) @ 1:00", action: "pour", waterGramsAtEnd: 150, durationSec: 10 },
+      { label: "Rest (to 1:45)", action: "wait", durationSec: 35 },
+      {
+        label: "Final pour (→240 g) @ 1:45",
+        action: "pour",
+        waterGramsAtEnd: 240,
+        durationSec: 20,
+        notes: "Pour controllably and gently — the extra pour is already enough agitation.",
+      },
+      {
+        label: "Swirl to flatten the bed",
+        action: "swirl",
+        durationSec: 5,
+        notes: "A small swirl to settle and level the bed for an even drawdown.",
+      },
+      {
+        label: "Drawdown (NO ice yet)",
+        action: "drain",
+        durationSec: 50,
+        notes: "Full brew finishes ~2:30–3:00; ~200 g of liquid in the server (the grounds hold ~2× their weight). The server is still ice-free.",
+      },
+      {
+        label: "Add the reserved 60 g as ICE + stir to chill (→5–10 °C)",
+        action: "stir",
+        durationSec: 45,
+        notes: "The flash-chill: drop 60 g of good ice (same/distilled water) into the hot brew and stir thoroughly until it's cool to the touch (~5–10 °C). Smaller cubes: add a few at a time and stir until they melt.",
+      },
+      {
+        label: "Pour over fresh ice + serve",
+        action: "bypass",
+        durationSec: 5,
+        notes: "Pour onto a glass of fresh ice; because the coffee is already cold it won't melt the ice or dilute further. Final ~1.35% TDS — crisp and refreshing.",
+      },
+    ],
+    totalTimeSec: 230,
+    techniques: ["flash-chilling", "bloom", "pulse-pouring"],
+    bestFor: {
+      roastLevels: ["light", "medium-light", "medium"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["aromatic", "sweetness-forward", "high-clarity"],
+      occasions: ["summer-time", "iced"],
+    },
+    teaches:
+      "Flash brew done Hedrick's way: brew over an EMPTY server and add the ice afterward. Reserving the ice (not brewing onto it) lets you brew 80% of the water hot at a real 1:12 — more hot water, a coarser grind and a higher extraction than the classic 60/40 brew-over-ice, which forces an absurdly low ~1:9.",
+    science:
+      "Brewing onto ice means the melt has to chill the whole pour, so the classic method floods the brewer with ice (~40%) and leaves only ~60% as hot brew water — an absurdly low ~1:9 that under-extracts and reads watery or harsh. Hedrick keeps the ice OUT during the brew: he brews a normal 1:12 (80% of the water, a bit under boiling, coarser grind), then drops the reserved 20% in as ice and stirs hard to flash-chill the finished coffee below ~10 °C in seconds. The brew gets enough water and contact to hit a real ~18% extraction; the fast post-brew chill still locks in the aromatics cold brew loses, and the final pour over fresh ice lands near a normal ~1.35% drinking TDS — crisp and refreshing, not sludgy.",
+    whenToUse:
+      "A hot day and a bright, floral/fruity light coffee you want cold without losing its character — the refreshing alternative to cold brew.",
+    sources: [
+      {
+        type: "transcript",
+        citation:
+          "Lance Hedrick — iced-coffee / 'flash brew' video (owner-supplied transcript, 2026): brew over an empty server, 20 g : 240 g hot (1:12) with 60 g ice reserved; 1:3 bloom for 1 min, pour to 150 g at 1:00, rest to 1:45, pour to 240 g, small swirl; then add the 60 g as ice and stir to ~5–10 °C, serve over fresh ice. Final ~1.35% TDS. Grind 'a bit coarser', temperature 'a little under boiling' — both stated qualitatively, no number published.",
+      },
+    ],
+    verified: true,
+    notes:
+      "Hedrick's preferred 'add ice after' flash brew, distinct from the classic brew-over-ice he critiques (his '60/40 → 1:9' example). 80% hot water / 20% ice by his framing (he also offers 75/25 or 85/15 depending on ice quality). Temperature: he says only 'a little less than boiling' for delicate coffees (boiling is acceptable for harder-to-extract ones) — the 96 °C is a representative off-boil value, not a fabricated figure. Grind: 'a bit coarser than a standard V60' — no Niche number published, so grind is calibrate-coarser, not invented. One constant brewing temperature (the ice chills/dilutes after the brew; it is not staging).",
+  },
+
   // ── Tim Wendelboe ────────────────────────────────────────────────────────
 
   {
