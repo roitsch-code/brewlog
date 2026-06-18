@@ -167,7 +167,7 @@ interface CoffeeMemory {
 }
 
 export default function LightStepContext() {
-  const { draft, setContext, setStep, setIsRecommending, setRecommendError } = useFlowStore();
+  const { draft, setContext, setStep, setIsRecommending, setRecommendError, setRecommendJobId } = useFlowStore();
   const ctx = (draft.context || {}) as Partial<SessionContext>;
   const [heroQuestion, setHeroQuestion] = useState("");
   useEffect(() => {
@@ -270,24 +270,29 @@ export default function LightStepContext() {
     };
     setIsRecommending(true);
     setRecommendError(null);
+    setRecommendJobId(null);
     setStep("recommend");
+    // Kick the ~1-min Opus call off as a SERVER-side background job and only
+    // hold its id. The generation no longer dies when the iOS PWA is
+    // backgrounded; the always-mounted RecommendJobWatcher polls the job and
+    // fills in the recipe when it lands (or surfaces an error). We await only
+    // the fast `/start` handshake here.
     try {
       let pastSessions: Awaited<ReturnType<typeof getRecentSessions>> = [];
       try {
         pastSessions = await getRecentSessions(100);
       } catch {}
-      const res = await fetch("/api/recommend", {
+      const res = await fetch("/api/recommend/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ coffee: draft.coffee, context: finalCtx, pastSessions }),
       });
       if (!res.ok) throw new Error(`Recommendation failed (${res.status})`);
-      const recommendation = await res.json();
-      if (!recommendation.primaryMethod) throw new Error("No recommendation returned");
-      useFlowStore.getState().setRecommendation(recommendation);
+      const { jobId } = await res.json();
+      if (!jobId) throw new Error("Recommendation failed to start");
+      setRecommendJobId(jobId);
     } catch (err) {
       setRecommendError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setIsRecommending(false);
     }
   };
