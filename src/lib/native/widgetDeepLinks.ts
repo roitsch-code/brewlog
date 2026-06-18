@@ -144,16 +144,14 @@ export async function handleWidgetUrl(url: string, nav: Nav): Promise<void> {
 }
 
 /**
- * Seed the scan flow with a URL shared into the app and navigate there;
- * LightStepScan auto-analyzes `pendingScanUrl` on mount. Shared by the
- * `btts://share` deep link and the Share-Extension notification tap.
+ * Hand a URL shared into the app to the HOME AI chat: the Home page auto-asks
+ * "What do you think of this coffee: <url>" and sends it. Shared by the
+ * `btts://share` deep link and the Share-Extension notification tap. (Bag-URL
+ * analysis lives in the chat now, not the scan step.)
  */
 export function routeToSharedUrl(url: string, nav: Nav): void {
-  const s = useFlowStore.getState();
-  s.reset();
-  s.setMode("home");
-  s.setPendingScanUrl(url);
-  nav("/brew/new");
+  useFlowStore.getState().setPendingChatUrl(url);
+  nav("/");
 }
 
 /**
