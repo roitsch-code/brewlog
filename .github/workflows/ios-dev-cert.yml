@@ -1,0 +1,114 @@
+name: iOS Dev Cert (one-off setup)
+
+# Creates ONE persistent Apple Development certificate and stores it as repo
+# secrets, so the TestFlight build reuses it instead of minting a fresh dev cert
+# every run (that churn is what triggered the "Your Certificate Has Been Revoked"
+# emails). Run once (workflow_dispatch). Safe to re-run — it revokes the old
+# persistent cert + the strays and writes a new one.
+#
+# PREREQ: a repo secret GH_PAT — a fine-grained Personal Access Token with
+# "Secrets: Read and write" on this repo (so the job can write the cert secrets).
+# Create at github.com/settings/personal-access-tokens, add at
+# Settings → Secrets and variables → Actions. You can delete the PAT afterwards.
+#
+# Writes: APPLE_DEV_CERT_P12, APPLE_DEV_CERT_PASSWORD, APPLE_DEV_CERT_ID.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    env:
+      ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+    steps:
+      - name: Require GH_PAT
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::Add a GH_PAT secret first (fine-grained PAT, Secrets: read/write on this repo)."
+            exit 1
+          fi
+
+      - name: Generate key + CSR
+        run: |
+          set -euo pipefail
+          openssl genrsa -out dev.key 2048
+          openssl req -new -key dev.key -out dev.csr -subj "/CN=BTTS CI Development/O=BTTS/C=US"
+
+      - name: Create the development certificate via the App Store Connect API
+        run: |
+          node <<'NODE'
+          const crypto = require('crypto'), https = require('https'), fs = require('fs');
+          const kid = process.env.ASC_KEY_ID, iss = process.env.ASC_ISSUER_ID, key = process.env.ASC_KEY_P8;
+          const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+          const now = Math.floor(Date.now() / 1000);
+          const signing = `${b64({alg:'ES256',kid,typ:'JWT'})}.${b64({iss,iat:now,exp:now+600,aud:'appstoreconnect-v1'})}`;
+          const T = `${signing}.${crypto.sign('SHA256', Buffer.from(signing), {key, dsaEncoding:'ieee-p1363'}).toString('base64url')}`;
+          function api(method, path, body) {
+            return new Promise((res, rej) => {
+              const data = body ? JSON.stringify(body) : null;
+              const r = https.request({ host:'api.appstoreconnect.apple.com', path, method,
+                headers: { Authorization:`Bearer ${T}`, 'Content-Type':'application/json',
+                  ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}) } },
+                x => { let d=''; x.on('data',c=>d+=c); x.on('end',()=>res({status:x.statusCode, body:d})); });
+              r.on('error', rej); if (data) r.write(data); r.end();
+            });
+          }
+          (async () => {
+            const csr = fs.readFileSync('dev.csr', 'utf8');
+            const r = await api('POST', '/v1/certificates', { data: { type:'certificates',
+              attributes: { certificateType:'DEVELOPMENT', csrContent: csr } } });
+            if (r.status >= 300) { console.error('create failed', r.status, r.body); process.exit(1); }
+            const d = JSON.parse(r.body).data;
+            fs.writeFileSync('dev.cer.b64', d.attributes.certificateContent);
+            fs.writeFileSync('cert_id.txt', d.id);
+            console.log('created development cert id', d.id);
+          })().catch(e => { console.error(e); process.exit(1); });
+          NODE
+
+      - name: Build the .p12
+        run: |
+          set -euo pipefail
+          base64 -d dev.cer.b64 > dev.cer
+          openssl x509 -in dev.cer -inform DER -out dev.pem -outform PEM
+          PW="$(openssl rand -base64 18)"
+          echo "::add-mask::$PW"
+          openssl pkcs12 -export -out dev.p12 -inkey dev.key -in dev.pem -passout pass:"$PW" -name "BTTS CI Development"
+          base64 -w0 dev.p12 > dev.p12.b64
+          echo "DEV_PW=$PW" >> "$GITHUB_ENV"
+
+      - name: Store the cert as repo secrets (via the PAT — values never logged)
+        run: |
+          set -euo pipefail
+          gh secret set APPLE_DEV_CERT_P12 --repo "$GITHUB_REPOSITORY" --body "$(cat dev.p12.b64)"
+          gh secret set APPLE_DEV_CERT_PASSWORD --repo "$GITHUB_REPOSITORY" --body "$DEV_PW"
+          gh secret set APPLE_DEV_CERT_ID --repo "$GITHUB_REPOSITORY" --body "$(cat cert_id.txt)"
+          echo "Stored APPLE_DEV_CERT_P12 / _PASSWORD / _ID."
+
+      - name: Revoke the OTHER development certs (clean slate — keep only the new one)
+        run: |
+          node <<'NODE'
+          const crypto = require('crypto'), https = require('https'), fs = require('fs');
+          const kid = process.env.ASC_KEY_ID, iss = process.env.ASC_ISSUER_ID, key = process.env.ASC_KEY_P8;
+          const keepId = fs.readFileSync('cert_id.txt','utf8').trim();
+          const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+          const now = Math.floor(Date.now() / 1000);
+          const signing = `${b64({alg:'ES256',kid,typ:'JWT'})}.${b64({iss,iat:now,exp:now+600,aud:'appstoreconnect-v1'})}`;
+          const T = `${signing}.${crypto.sign('SHA256', Buffer.from(signing), {key, dsaEncoding:'ieee-p1363'}).toString('base64url')}`;
+          function api(method, path) {
+            return new Promise((res, rej) => {
+              const r = https.request({ host:'api.appstoreconnect.apple.com', path, method,
+                headers: { Authorization:`Bearer ${T}` } }, x => { let d=''; x.on('data',c=>d+=c); x.on('end',()=>res({status:x.statusCode, body:d})); });
+              r.on('error', rej); r.end();
+            });
+          }
+          (async () => {
+            const r = await api('GET', '/v1/certificates?limit=200');
+            const dev = (JSON.parse(r.body).data || []).filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT') && c.id !== keepId);
+            console.log(`revoking ${dev.length} other dev certs (keeping ${keepId})`);
+            for (const c of dev) { const d = await api('DELETE', `/v1/certificates/${c.id}`); console.log(`revoke ${c.id} -> ${d.status}`); }
+          })().catch(e => { console.error(e); process.exit(1); });
+          NODE

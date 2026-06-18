@@ -69,10 +69,12 @@ jobs:
           [ -n "$LATEST" ] && sudo xcode-select -s "$LATEST"
           xcodebuild -version
 
-      - name: Import the distribution signing certificate
+      - name: Import the signing certificates (distribution + persistent dev)
         env:
           P12_B64: ${{ secrets.APPLE_DIST_CERT_P12 }}
           P12_PW: ${{ secrets.APPLE_DIST_CERT_PASSWORD }}
+          DEV_P12_B64: ${{ secrets.APPLE_DEV_CERT_P12 }}
+          DEV_P12_PW: ${{ secrets.APPLE_DEV_CERT_PASSWORD }}
         run: |
           set -euo pipefail
           KEYCHAIN="$RUNNER_TEMP/btts-signing.keychain-db"
@@ -83,13 +85,25 @@ jobs:
           echo "$P12_B64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
           security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$P12_PW" \
             -T /usr/bin/codesign -T /usr/bin/security -A
-          # let codesign use the key without an interactive prompt
+          rm -f "$RUNNER_TEMP/dist.p12"
+          # Persistent DEVELOPMENT cert (set up by ios-dev-cert): import it so
+          # Xcode automatic signing REUSES it instead of minting a fresh dev cert
+          # every run — the churn that pile-up-then-revoke emailed the owner.
+          if [ -n "${DEV_P12_B64:-}" ]; then
+            echo "$DEV_P12_B64" | base64 --decode > "$RUNNER_TEMP/dev.p12"
+            security import "$RUNNER_TEMP/dev.p12" -k "$KEYCHAIN" -P "$DEV_P12_PW" \
+              -T /usr/bin/codesign -T /usr/bin/security -A
+            rm -f "$RUNNER_TEMP/dev.p12"
+            echo "imported persistent development certificate"
+          else
+            echo "no persistent dev cert yet (run the ios-dev-cert workflow) — automatic signing will mint one"
+          fi
+          # let codesign use the keys without an interactive prompt
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PW" "$KEYCHAIN" >/dev/null
           # our keychain first in the search list, keep the login keychain (for WWDR etc.)
           security list-keychains -d user -s "$KEYCHAIN" \
             $(security list-keychains -d user | sed 's/[" ]//g')
           security default-keychain -s "$KEYCHAIN"
-          rm -f "$RUNNER_TEMP/dist.p12"
           security find-identity -v -p codesigning "$KEYCHAIN" | grep -i "Apple Distribution" \
             || { echo "::error::distribution identity not usable after import"; exit 1; }
 
@@ -123,9 +137,12 @@ jobs:
         # never hit the threshold → no revocations → no "certificate revoked"
         # emails. (The first version revoked ALL dev certs every run, which nuked
         # the owner's own cert + spammed emails — see Stolperstein.) Never touches
-        # DISTRIBUTION certs (strict filter). Non-fatal.
+        # DISTRIBUTION certs (strict filter) nor the persistent dev cert
+        # (APPLE_DEV_CERT_ID). With the persistent cert reused, no new certs mint,
+        # so this becomes a dormant backstop. Non-fatal.
         env:
           ASC_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          DEV_CERT_ID: ${{ secrets.APPLE_DEV_CERT_ID }}
         run: |
           node <<'NODE'
           const crypto = require('crypto'), https = require('https');
@@ -149,8 +166,9 @@ jobs:
           (async () => {
             const r = await api('GET', '/v1/certificates?limit=200');
             const certs = (JSON.parse(r.body).data) || [];
-            const dev = certs.filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT'));
-            console.log(`certs total=${certs.length} development=${dev.length}`);
+            const keepId = process.env.DEV_CERT_ID || '';
+            const dev = certs.filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT') && c.id !== keepId);
+            console.log(`certs total=${certs.length} development=${dev.length} (protecting ${keepId || 'none'})`);
             const KEEP = 8, THRESHOLD = 10;
             if (dev.length <= THRESHOLD) { console.log('under threshold — no revocation'); return; }
             const oldestFirst = dev.slice().sort((a,b) =>
