@@ -48,15 +48,14 @@ struct BrewLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                // maxWidth caps the pill so a longer label can't balloon it;
-                // .trailing hugs the text toward the camera (space falls on the
-                // LEFT, where it was jammed); .padding(.leading) adds the inset.
+                // NO width frame: a maxWidth frame expands to fill its bound and
+                // pads the text out → dead space toward the camera + truncation.
+                // Plain text hugs its own width; the timer-side fix (fixed-width
+                // countdown below) is what tamed the pill, not a leading cap.
                 Text("Next: \(context.state.nextStep)")
                     .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: 96, alignment: .trailing)
-                    .padding(.leading, 8)
+                    .padding(.leading, 6)
             } compactTrailing: {
                 countdown(context.state)
                     .font(.system(size: 13, weight: .semibold))
