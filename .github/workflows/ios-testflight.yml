@@ -151,7 +151,7 @@ jobs:
             const certs = (JSON.parse(r.body).data) || [];
             const dev = certs.filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT'));
             console.log(`certs total=${certs.length} development=${dev.length}`);
-            const KEEP = 4, THRESHOLD = 6;
+            const KEEP = 8, THRESHOLD = 10;
             if (dev.length <= THRESHOLD) { console.log('under threshold — no revocation'); return; }
             const oldestFirst = dev.slice().sort((a,b) =>
               new Date(a.attributes.createdDate).getTime() - new Date(b.attributes.createdDate).getTime());
