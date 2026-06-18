@@ -3,14 +3,16 @@ import Capacitor
 import ActivityKit
 
 /**
- LiveActivity — phone-side bridge from the WKWebView (JS) to a brew Live Activity
- (lock screen + Dynamic Island). The web layer (src/lib/native/liveActivity.ts)
- calls start at brew start, update when the step changes, end on reset/finish.
+ LiveActivity — phone-side bridge to a brew Live Activity (lock screen + Dynamic
+ Island + watch Smart Stack). Started with a PUSH TOKEN so the Hetzner server can
+ push each step's update over APNs — that's what makes it advance + re-count-down
+ while the phone is LOCKED (an app extension/suspended app can't update it itself).
 
- App-local plugin → registered manually in MainViewController.capacitorDidLoad
- (same mechanism as BrewWatch / WidgetBridge). All ActivityKit calls are gated
- to iOS 16.2+ so the iOS-15-min App target still builds; on older iOS every
- method is a graceful no-op.
+ The token arrives asynchronously via `pushTokenUpdates`; we forward it to JS
+ (`liveActivityToken` event), which registers it + the step schedule with the
+ server. `update` stays for a foreground instant-update; `end` tears it down.
+
+ App-local plugin → registered in MainViewController. ActivityKit gated to 16.2+.
  */
 @objc(LiveActivityPlugin)
 public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -27,7 +29,6 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             call.resolve(["started": false, "reason": "disabled"]); return
         }
-        // Never stack — end any leftovers first.
         for activity in Activity<BrewAttributes>.activities {
             Task { await activity.end(nil, dismissalPolicy: .immediate) }
         }
@@ -36,13 +37,25 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
             coffeeName: call.getString("coffeeName") ?? ""
         )
         do {
-            _ = try Activity.request(
+            let activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: contentState(call), staleDate: nil)
+                content: .init(state: contentState(call), staleDate: nil),
+                pushType: .token
             )
+            observeToken(activity)
             call.resolve(["started": true])
         } catch {
             call.resolve(["started": false, "error": error.localizedDescription])
+        }
+    }
+
+    @available(iOS 16.2, *)
+    private func observeToken(_ activity: Activity<BrewAttributes>) {
+        Task {
+            for await tokenData in activity.pushTokenUpdates {
+                let hex = tokenData.map { String(format: "%02x", $0) }.joined()
+                self.notifyListeners("liveActivityToken", data: ["token": hex])
+            }
         }
     }
 
@@ -69,18 +82,14 @@ public class LiveActivityPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @available(iOS 16.1, *)
     private func contentState(_ call: CAPPluginCall) -> BrewAttributes.ContentState {
-        BrewAttributes.ContentState(
+        let now = Date().timeIntervalSince1970
+        return BrewAttributes.ContentState(
             currentStep: call.getString("currentStep") ?? "Brewing",
             nextStep: call.getString("nextStep") ?? "",
-            nextStepDate: date(call, "nextStepMs") ?? Date().addingTimeInterval(60),
-            stepStartDate: date(call, "stepStartMs") ?? Date(),
+            nextStepEpoch: call.getDouble("nextStepEpoch") ?? (now + 60),
+            stepStartEpoch: call.getDouble("stepStartEpoch") ?? now,
             stepIndex: call.getInt("stepIndex") ?? 0,
             stepCount: call.getInt("stepCount") ?? 0
         )
-    }
-
-    private func date(_ call: CAPPluginCall, _ key: String) -> Date? {
-        guard let ms = call.getDouble(key) else { return nil }
-        return Date(timeIntervalSince1970: ms / 1000)
     }
 }
