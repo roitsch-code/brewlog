@@ -58,6 +58,19 @@ jobs:
             });
           }
           (async () => {
+            // Clean slate FIRST: Apple allows only one current Development cert,
+            // so a re-run hits 409 "You already have a current Development
+            // certificate". Revoke every existing DEVELOPMENT cert before
+            // creating the fresh one (their private keys live on dead runners
+            // anyway). Never touches DISTRIBUTION certs.
+            const list = await api('GET', '/v1/certificates?limit=200');
+            const existing = (JSON.parse(list.body).data || [])
+              .filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT'));
+            console.log(`revoking ${existing.length} existing development cert(s) for a clean slate`);
+            for (const c of existing) {
+              const d = await api('DELETE', `/v1/certificates/${c.id}`);
+              console.log(`revoke ${c.id} -> ${d.status}`);
+            }
             const csr = fs.readFileSync('dev.csr', 'utf8');
             const r = await api('POST', '/v1/certificates', { data: { type:'certificates',
               attributes: { certificateType:'DEVELOPMENT', csrContent: csr } } });
