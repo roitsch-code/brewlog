@@ -298,7 +298,7 @@ struct BTTSWidgetBundle: WidgetBundle {
     var body: some Widget {
         BTTSWidget()
         ScanWidget()
-        if #available(iOS 16.2, *) {
+        if #available(iOS 18.0, *) {
             BrewLiveActivity()
         }
     }
