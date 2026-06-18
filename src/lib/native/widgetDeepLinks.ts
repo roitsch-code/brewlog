@@ -39,9 +39,18 @@ interface AppPluginLike {
   ): Promise<AppListenerHandle>;
   getLaunchUrl(): Promise<{ url: string } | null>;
 }
+interface NotificationTapEvent {
+  notification?: { extra?: Record<string, unknown> };
+}
+interface LocalNotificationsLike {
+  addListener(
+    eventName: "localNotificationActionPerformed",
+    listener: (event: NotificationTapEvent) => void,
+  ): Promise<AppListenerHandle>;
+}
 interface CapacitorLike {
   isNativePlatform?: () => boolean;
-  Plugins?: { App?: AppPluginLike };
+  Plugins?: { App?: AppPluginLike; LocalNotifications?: LocalNotificationsLike };
 }
 
 function getApp(): AppPluginLike | null {
@@ -129,14 +138,61 @@ export async function handleWidgetUrl(url: string, nav: Nav): Promise<void> {
     return;
   }
   if (action.kind === "share") {
-    // Shared from the iOS Share Sheet ("Add to BTTS"): land in the scan flow and
-    // auto-analyze the URL (LightStepScan reads pendingScanUrl on mount).
-    const s = useFlowStore.getState();
-    s.reset();
-    s.setMode("home");
-    if (action.url) s.setPendingScanUrl(action.url);
-    nav("/brew/new");
+    if (action.url) routeToSharedUrl(action.url, nav);
+    else nav("/brew/new");
   }
+}
+
+/**
+ * Seed the scan flow with a URL shared into the app and navigate there;
+ * LightStepScan auto-analyzes `pendingScanUrl` on mount. Shared by the
+ * `btts://share` deep link and the Share-Extension notification tap.
+ */
+export function routeToSharedUrl(url: string, nav: Nav): void {
+  const s = useFlowStore.getState();
+  s.reset();
+  s.setMode("home");
+  s.setPendingScanUrl(url);
+  nav("/brew/new");
+}
+
+/**
+ * Register the Share-Extension notification-tap handler. The extension posts a
+ * local notification carrying the shared URL (`btts_url`); tapping it opens the
+ * app and fires `localNotificationActionPerformed`, where we read the URL and
+ * route into the scan flow. (Apple blocks extensions from opening the app
+ * directly since iOS 18 — a notification is the sanctioned path.) No-op off the
+ * native shell. Returns a cleanup function.
+ */
+export function registerShareNotificationTap(nav: Nav): () => void {
+  let plugin: LocalNotificationsLike | null = null;
+  try {
+    if (typeof window === "undefined") return () => {};
+    const cap = (window as unknown as { Capacitor?: CapacitorLike }).Capacitor;
+    if (!cap?.isNativePlatform?.()) return () => {};
+    plugin = cap.Plugins?.LocalNotifications ?? null;
+  } catch {
+    return () => {};
+  }
+  if (!plugin) return () => {};
+
+  let handle: AppListenerHandle | null = null;
+  let removed = false;
+  plugin
+    .addListener("localNotificationActionPerformed", (event) => {
+      const url = event?.notification?.extra?.btts_url;
+      if (typeof url === "string" && url) routeToSharedUrl(url, nav);
+    })
+    .then((h) => {
+      if (removed) h.remove();
+      else handle = h;
+    })
+    .catch(() => {});
+
+  return () => {
+    removed = true;
+    try { handle?.remove?.(); } catch { /* ignore */ }
+  };
 }
 
 /**
