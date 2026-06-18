@@ -251,6 +251,13 @@ export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undef
     return { recipe, changed: false, reasons: [] };
   }
 
+  // Cold-brew long steeps (targetTimeSec in the hours) aren't the "scaled
+  // percolation recipe" case this backstop is for — pour cadence + drawdown
+  // math don't apply. Leave them entirely to the COLD BREW prompt rules.
+  if (typeof recipe.targetTimeSec === "number" && recipe.targetTimeSec >= 3600) {
+    return { recipe, changed: false, reasons: [] };
+  }
+
   const refWater = ref.water?.grams ?? 0;
   const refDose = ref.dose?.grams ?? 0;
   const water = recipe.waterGrams;

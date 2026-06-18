@@ -19,6 +19,7 @@ import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
 import { useBrewLiveActivity } from "@/hooks/useBrewLiveActivity";
 import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
+import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
@@ -212,6 +213,36 @@ export default function LightStepBrew() {
     draft.coffee?.name ?? "",
     recipe?.targetTimeSec ?? 0,
   );
+
+  // Cold brew is a long cold immersion steep (hours) — no live pour timer. When
+  // the chosen recipe is a cold steep (occasion "cold-brew", or a recipe whose
+  // target time is in the hours), render the steep view: recipe card + a
+  // "Start steep" that schedules an iOS "ready" reminder, then hand off to log.
+  // All the hooks above still run (elapsed stays 0 → they all no-op), so the
+  // rules-of-hooks are respected; only the rendered output branches here.
+  const isColdSteep =
+    !!recipe &&
+    (draft.context?.occasion === "cold-brew" || (recipe.targetTimeSec ?? 0) >= 3600);
+
+  if (isColdSteep && recipe) {
+    const steepMinutes = Math.min(
+      1440,
+      Math.max(240, Math.round((recipe.targetTimeSec || 43200) / 60)),
+    );
+    return (
+      <LightFlowShell>
+        <ColdBrewSteep
+          recipe={recipe}
+          methodLabel={methodLabel}
+          recipeName={recipeName}
+          basedOn={basedOn}
+          coffeeName={draft.coffee?.name ?? ""}
+          steepMinutes={steepMinutes}
+          onLog={() => handleDone(recipe.targetTimeSec || steepMinutes * 60)}
+        />
+      </LightFlowShell>
+    );
+  }
 
   return (
     <LightFlowShell

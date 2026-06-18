@@ -251,6 +251,16 @@ function scoreRecipe(
   // Hard filter: must be brewable on equipment the user owns.
   if (!input.brewersAvailable.has(recipe.brewer)) return null;
 
+  // Hard filter: cold-brew long steeps and the rest of the corpus are mutually
+  // exclusive. A 12-hour cold steep must never surface for a morning V60, and a
+  // cold-brew occasion must never pull a hot pour-over. Identify a cold steep by
+  // its hours-long total time or its explicit cold-brew occasion tag.
+  const isColdBrewRecipe =
+    recipe.totalTimeSec >= 3600 ||
+    !!recipe.bestFor.occasions?.some((o) => o.toLowerCase() === "cold-brew");
+  const wantColdBrew = input.occasion?.toLowerCase() === "cold-brew";
+  if (isColdBrewRecipe !== wantColdBrew) return null;
+
   // Hard filter: if a water cap is set, exclude recipes whose total water
   // exceeds it by more than 20% (some recipes have published variants at
   // larger doses).

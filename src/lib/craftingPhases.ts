@@ -25,14 +25,18 @@ function real(v?: string | null): v is string {
 const OCCASION_LABELS: Record<string, string> = {
   "morning-ritual": "morning ritual",
   focus: "focus session",
-  experiment: "experiment",
-  "after-dinner": "after-dinner cup",
   social: "social pour",
+  experiment: "experiment",
+  "summer-time": "summer cup",
+  "cold-brew": "cold brew",
 };
 
 const TIME_LABELS: Record<string, string> = {
-  quick: "quick window",
   normal: "~5-minute window",
+  special: "fast shot",
+  "long-steep": "long cold steep",
+  // legacy tokens from older sessions
+  quick: "quick window",
   unhurried: "unhurried window",
 };
 
