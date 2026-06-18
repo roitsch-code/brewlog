@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/store/flowStore";
+import { getActiveColdBrew, type ColdBrew } from "@/lib/coldBrew/coldBrew";
 
 /**
  * BTTS Navigation Overlay (specs/home.md §7).
@@ -49,7 +52,26 @@ interface NavigationOverlayProps {
 }
 
 export default function NavigationOverlay({ open, onClose }: NavigationOverlayProps) {
+  const router = useRouter();
+  // A parked cold brew (steeping or ready) — surfaced here so it can be
+  // resumed to log, independent of whatever the live flow draft is now.
+  const [coldBrew, setColdBrew] = useState<ColdBrew | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const cb = getActiveColdBrew();
+    setColdBrew(cb && cb.draft ? cb : null);
+  }, [open]);
+
   if (!open) return null;
+
+  const coldReady = coldBrew ? coldBrew.endMs <= Date.now() : false;
+
+  const resumeCold = () => {
+    if (!coldBrew?.draft) return;
+    useFlowStore.getState().resumeColdBrew(coldBrew.draft, coldBrew.fieldZones ?? null);
+    onClose();
+    router.push("/brew/new");
+  };
 
   return (
     <div
@@ -82,6 +104,18 @@ export default function NavigationOverlay({ open, onClose }: NavigationOverlayPr
       {/* Destination list — Inter 24/500, foreground, gap-6 between items.
           pt-24 + pl-6 per §7.1. No icons (§7.3 anti-pattern). */}
       <nav className="flex flex-col gap-6 pl-6 pt-24">
+        {coldBrew && (
+          <button
+            type="button"
+            onClick={resumeCold}
+            className="text-left font-chivo text-[24px] font-medium text-light-foreground"
+          >
+            Cold brew
+            <span className="ml-2 align-middle text-[13px] font-normal text-light-muted-foreground">
+              {coldReady ? "ready — log it" : "steeping"}
+            </span>
+          </button>
+        )}
         {ITEMS.map((item) =>
           item.href ? (
             <Link
