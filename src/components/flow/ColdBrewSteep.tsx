@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { BrewRecipe, BrewPourStep } from "@/lib/types/session";
+import { useFlowStore } from "@/store/flowStore";
 import {
   getActiveColdBrew,
   startColdBrew,
@@ -96,7 +97,11 @@ export default function ColdBrewSteep({
 
   async function handleStart() {
     setBusy(true);
-    const cb = await startColdBrew(coffeeName, steepMinutes);
+    // Park a full snapshot of the flow so this cold brew can be resumed for
+    // logging after it steeps — even if other brews run in between (they
+    // overwrite the single live draft).
+    const { draft, fieldZones } = useFlowStore.getState();
+    const cb = await startColdBrew(coffeeName, steepMinutes, { draft, fieldZones });
     setActive(cb);
     setNow(Date.now());
     setBusy(false);

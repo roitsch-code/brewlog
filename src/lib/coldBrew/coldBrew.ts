@@ -13,12 +13,20 @@
  * (the in-app countdown still works); a desktop/PWA simply won't get the push.
  */
 
+import type { DraftSession } from "@/lib/types/session";
+import type { FieldZones } from "@/lib/field/types";
+
 export interface ColdBrew {
   /** Also the notification id (fixed — only one cold brew at a time). */
   id: number;
   coffeeName: string;
   startMs: number;
   endMs: number;
+  /** Snapshot of the brew flow at steep start, so the cold brew can be resumed
+   * to LOG it after steeping — independent of the single live flow draft, which
+   * other brews overwrite in between. Absent for legacy records. */
+  draft?: DraftSession;
+  fieldZones?: FieldZones | null;
 }
 
 const STORE_KEY = "btts.coldbrew.active";
@@ -69,11 +77,24 @@ function notifications(): LocalNotificationsLike | null {
   }
 }
 
-/** Start a cold brew: persist it + schedule the "ready" notification. */
-export async function startColdBrew(coffeeName: string, durationMinutes: number): Promise<ColdBrew> {
+/** Start a cold brew: persist it + schedule the "ready" notification. The
+ * optional snapshot parks the brew-flow draft so the cold brew can be resumed
+ * to log it after steeping, even if other brews run in between. */
+export async function startColdBrew(
+  coffeeName: string,
+  durationMinutes: number,
+  snapshot?: { draft: DraftSession; fieldZones: FieldZones | null },
+): Promise<ColdBrew> {
   const startMs = Date.now();
   const endMs = startMs + durationMinutes * 60_000;
-  const cb: ColdBrew = { id: NOTIF_ID, coffeeName: coffeeName.trim(), startMs, endMs };
+  const cb: ColdBrew = {
+    id: NOTIF_ID,
+    coffeeName: coffeeName.trim(),
+    startMs,
+    endMs,
+    draft: snapshot?.draft,
+    fieldZones: snapshot?.fieldZones ?? null,
+  };
   persist(cb);
 
   const plugin = notifications();
