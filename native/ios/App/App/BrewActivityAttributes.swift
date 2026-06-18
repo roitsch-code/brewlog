@@ -2,23 +2,24 @@ import Foundation
 import ActivityKit
 
 /// Shared between the App target (starts/updates/ends the activity) and the
-/// BTTSWidget target (renders it). ActivityKit is iOS 16.1+, so the type is
-/// availability-gated; the App target (min iOS 15) only touches it behind the
-/// same `#available` guards in LiveActivityPlugin.
+/// BTTSWidget target (renders it). ActivityKit is iOS 16.1+.
 ///
-/// The countdown is always to the NEXT step (`nextStepDate`), never the total
-/// brew. The "now" surfaces (lock screen, watch app) show `currentStep`; the
-/// "next" surfaces (Dynamic Island, watch Smart Stack) show `nextStep`. The
-/// progress bar fills over the current step (`stepStartDate`…`nextStepDate`).
+/// Times are epoch SECONDS (Double), not Date — so APNs push payloads carry plain
+/// numbers and decode unambiguously into the ContentState (Date's Codable
+/// encoding over push is fiddly). The views convert with
+/// `Date(timeIntervalSince1970:)`.
+///
+/// The countdown is always to the NEXT step (`nextStepEpoch`), never the total
+/// brew. "Now" surfaces show `currentStep` (formatted "<step> → <total>g"); "next"
+/// surfaces show `nextStep` (just the name). Progress fills over the current step
+/// (`stepStartEpoch`…`nextStepEpoch`).
 @available(iOS 16.1, *)
 struct BrewAttributes: ActivityAttributes {
     public struct ContentState: Codable, Hashable {
         var currentStep: String
         var nextStep: String
-        /// When the next step fires — the countdown target.
-        var nextStepDate: Date
-        /// When the current step started — lower bound of the progress bar.
-        var stepStartDate: Date
+        var nextStepEpoch: Double
+        var stepStartEpoch: Double
         var stepIndex: Int
         var stepCount: Int
     }

@@ -35,7 +35,7 @@ struct ContentView: View {
     private var content: some View {
         if model.isBrewing {
             // Brewstep screen — the step happening NOW + a countdown to the next.
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(model.recipeName.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .tracking(0.8)
@@ -49,15 +49,20 @@ struct ContentView: View {
                     .tracking(1.2)
                     .foregroundStyle(ink.opacity(0.5))
                 Text(model.currentLabel.isEmpty ? "Brewing" : model.currentLabel)
-                    .font(.system(size: 17, weight: .semibold, design: .serif))
+                    .font(.system(size: 20, weight: .semibold, design: .serif))
                     .foregroundStyle(ink)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.7)
+
+                Spacer(minLength: 0)
+
                 // The hero: how long until the next step.
                 if let at = model.nextFireAt {
                     Text(at, style: .timer)
-                        .font(.system(size: 30, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 40, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
                 }
 
                 Spacer(minLength: 0)

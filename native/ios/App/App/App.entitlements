@@ -6,5 +6,10 @@
 	<array>
 		<string>group.com.roitsch.btts</string>
 	</array>
+	<!-- Push — required for Live Activity push tokens (server pushes each brew
+	     step so the activity advances while the phone is locked). TestFlight uses
+	     the production APNs environment. -->
+	<key>aps-environment</key>
+	<string>production</string>
 </dict>
 </plist>
