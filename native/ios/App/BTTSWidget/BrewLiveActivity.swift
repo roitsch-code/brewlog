@@ -27,8 +27,12 @@ struct BrewLiveActivity: Widget {
         ActivityConfiguration(for: BrewAttributes.self) { context in
             BrewActivityContent(context: context)
         } dynamicIsland: { context in
-            // DYNAMIC ISLAND — "Next: <step>  0:26". Compact: hug the content (no
-            // fixed-width frames, which jammed the text left + ballooned the pill).
+            // DYNAMIC ISLAND — "Next: <step>  0:26".
+            // The timer text in the compact region is a documented ActivityKit bug:
+            // Text(timerInterval:) reserves width for the widest possible value
+            // (e.g. "59:59"), so the countdown gets a huge empty box → mis-shaped
+            // pill. FIX (Apple-forum 723316): pin it with a fixed .frame(width:) +
+            // minimumScaleFactor. Leading "Next: <step>" hugs its content.
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
                     HStack(spacing: 8) {
@@ -38,7 +42,8 @@ struct BrewLiveActivity: Widget {
                             .lineLimit(1)
                         countdown(context.state)
                             .font(.system(.headline, design: .rounded).weight(.bold))
-                            .layoutPriority(1)
+                            .frame(width: 56)
+                            .minimumScaleFactor(0.8)
                         Spacer(minLength: 0)
                     }
                 }
@@ -46,13 +51,15 @@ struct BrewLiveActivity: Widget {
                 Text("Next: \(context.state.nextStep)")
                     .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
-                    .padding(.leading, 2)
             } compactTrailing: {
                 countdown(context.state)
                     .font(.system(size: 13, weight: .semibold))
-                    .padding(.trailing, 2)
+                    .frame(width: 42)
+                    .minimumScaleFactor(0.8)
             } minimal: {
                 countdown(context.state)
+                    .frame(width: 42)
+                    .minimumScaleFactor(0.8)
             }
         }
         .supplementalActivityFamilies([.small]) // watch Smart Stack
@@ -97,7 +104,8 @@ struct BrewWatchSmartStackView: View {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 6)
+        .padding(.leading, 14)
+        .padding(.vertical, 2)
     }
 }
 
