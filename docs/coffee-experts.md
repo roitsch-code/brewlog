@@ -79,6 +79,26 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 > *Removed:* the **Turbo V60 (Hedrick)** entry — "turbo" is an espresso technique (Cameron/Hendon, *Matter* 2020; popularised by Hedrick ~2021), and no primary source documents a Hedrick filter recipe with the parameters it carried. The boiling-water + coarse-grind mechanism survives as a technique (§3a), de-attributed.
 
+### 1c. Cold brew (long cold immersion steep)
+
+The **Cold Brew** occasion (June 2026) routes to these. They're hours-long cold steeps, NOT iced/flash brews (those stay under Summer Time). `targetTimeSec` carries the steep duration; the brew step shows a recipe card + steep reminder, not a live pour timer. **Vessel by volume:** a jar / large immersion vessel (`cold-brew-jar`) holds any volume and is the default; a Clever holds ≤450ml; an AeroPress is a ≤200ml concentrate. Never exceed those.
+
+| Recipe | Vessel | Dose : Water | Output | Grind | Steep | Verified |
+|---|---|---|---|---|---|---|
+| **Hoffmann Fine + Finings** | jar | 75g : 1000g (1:13.3) | ready-to-drink | **fine ~250µm** | 12h fridge, decant | true |
+| **Specialty RTD 1:10** (European Coffee Trip) | jar | 90g : 900g (1:10) | ready-to-drink | coarse (~35 Comandante clicks) | 12–16h, paper-filter | true |
+| **Counter Culture 1:8** | jar | 125g : 1000g (1:8) | concentrate, dilute 1:1–2:1 | medium-coarse | 14h fridge | true |
+| **Stumptown** | jar | ~1:5.3 (e.g. 95g:500g) | concentrate, dilute 1:1 | coarse (French-press) | 16h (14–18) | true |
+| **AeroPress Overnight** | AeroPress | 30g : 130g (1:4.3) | concentrate, press over ice | coarse | 8–12h fridge | true |
+| **Clever Cold Brew** | Clever (≤450ml) | 40g : 400g (1:10) | ready-to-drink | coarse | 12–14h, drain valve | false (method) |
+| **Toddy-Style** | jar | 100g : 800g (1:8) | concentrate, dilute ~1:1 | very coarse | 12–16h room temp | true |
+| **AeroPress cold-immersion** (Hedrick) | AeroPress | 22g : 260g | concentrate | standard AP | 2–4h fridge, press | false |
+
+**Teaching / honest notes**
+- **Hoffmann Fine + Finings** — the contrarian one: grind FINE for full extraction (~20.5–22.8%) and use a fining agent (10 drops/L vegan liquid finings) so the fines settle and you decant a clean cup, instead of grinding coarse and throwing flavour away. Source: his 2023 "Everything I Learned About Cold Brew" (transcript-verified). His own tasting finding: **light washed coffees give LESS to cold water** (read thin) — cold brew shines on medium/natural/chocolatey; for a light bag, lean to this fine+finings recipe or the Hot-Bloom variant.
+- **Saline finish** (Hoffmann) — NOT part of any cold-brew recipe; a general iced tip: 1–2 drops of **20:80 saline** (5g salt in 20g water) per cup suppresses bitterness. Offered as an optional finish in the `/recommend` prompt, never a required step.
+- **Hot-Bloom variant** — a small hot bloom (~20% of the water at ~95°C, ~45s) before topping with cold lifts fruity acids cold water can't reach. Parameters are contested across sources (Seattle Coffee Gear, Dripbeans, Bruer, Trade), so it ships **prompt-only, unverified**, and is the **single sanctioned exception** to the no-staged-temperature rule (cold-brew only — see §5). It is deliberately NOT a corpus recipe (two temperatures would fail `validate.mjs`).
+
 ---
 
 ## 2. Varieties
@@ -255,4 +275,4 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 - **Anaerobic / heavily-experimental processing recipes.** The user avoids anaerobic; recipes targeting anaerobic-amplification are out of scope.
 - **`/brew-insight` (post-brew haiku) integration.** That endpoint still uses its narrow Rao/Perger/Gagné/Solis canon by design — the haiku is 1–2 sentences and doesn't need the full corpus injected. If widened later, it'll be a separate change.
 - **Hardcoded recipe paragraphs in `/recommend`'s system prompt.** Still present (`Wölfl 2024 Orea FAST`, Origami Air M variants, etc., in `src/lib/claude/recommend.ts`). They survive as a quick-reference embedded fallback; the structured corpus above is injected per turn alongside them. Future cleanup may remove the embedded list once we're sure the structured retrieval covers every case.
-- **Staged / two-temperature recipes.** The one hard temperature rule: every recipe brews at ONE constant temperature. Staging — some water hot and some cool within a single brew, descending-temp pours, cool-bloom-then-hot, etc. — is out, because it needs two water setups and isn't practical for everyday brewing (removed by request, June 2026: Hsu 2022, Peng 2025, "The Peak", plus six experimental cold-bloom / multi-temp entries). `/recommend` + `/explore-agent` are instructed never to stage temperature; achieve aromatic preservation via grind, ratio, low-mineral water and minimal agitation instead. Enforced by `tests/recipes/validate.mjs`, which fails any recipe whose steps carry more than one temperature. **Cold brew is NOT excluded** — it's a single *cold* constant temperature, so it's allowed; iced/flash-chill brews likewise extract at one hot temperature and then dilute over ice (one brewing temperature, not staging).
+- **Staged / two-temperature recipes.** The one hard temperature rule: every recipe brews at ONE constant temperature. Staging — some water hot and some cool within a single brew, descending-temp pours, cool-bloom-then-hot, etc. — is out, because it needs two water setups and isn't practical for everyday brewing (removed by request, June 2026: Hsu 2022, Peng 2025, "The Peak", plus six experimental cold-bloom / multi-temp entries). `/recommend` + `/explore-agent` are instructed never to stage temperature; achieve aromatic preservation via grind, ratio, low-mineral water and minimal agitation instead. Enforced by `tests/recipes/validate.mjs`, which fails any recipe whose steps carry more than one temperature. **Cold brew is NOT excluded** — it's a single *cold* constant temperature, so it's allowed; iced/flash-chill brews likewise extract at one hot temperature and then dilute over ice (one brewing temperature, not staging). **The one sanctioned exception (June 2026): the Cold-Brew "Hot-Bloom" variant** — a small hot bloom before a long cold steep. Because it genuinely uses two temperatures it is kept OUT of the corpus (it would fail `validate.mjs`) and lives only in the `/recommend` prompt, carved out explicitly and permitted for the cold-brew occasion alone — never for a hot pour-over.
