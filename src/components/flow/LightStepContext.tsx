@@ -9,7 +9,7 @@ import Section from "@/components/ui/light/Section";
 import Footnote from "@/components/ui/light/Footnote";
 import Card, { CardTitle, CardSubText, CardIcon } from "@/components/ui/light/Card";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
-import { Brain, FlaskConical, Moon, Users, CupSoda } from "lucide-react";
+import { Brain, FlaskConical, Snowflake, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
 import type { CoachInsight } from "@/components/coach/CoachCard";
 
@@ -60,7 +60,7 @@ async function getRecentSessions(limit: number): Promise<Session[]> {
  * Lovable's source variant (lovable-v7/src/pages/Index.tsx) compresses
  * the geometry to y=7..17 of the 24×24 viewBox — only 40% of the
  * vertical space — which renders visibly smaller than the lucide
- * icons next to it (Brain, Moon, Users, FlaskConical) that fill the
+ * icons next to it (Brain, Users, FlaskConical, Snowflake) that fill the
  * full box. Fix: keep the same artistic intent (rays + horizon + sun
  * arc, no arrow) but use the lucide Sunrise paths sans the arrow
  * chevron, which span the full box and visually match the other
@@ -93,9 +93,9 @@ const OCCASIONS = [
   { id: "morning-ritual", label: "Morning Ritual", Icon: SunriseNoArrow, footnote: "A slower, deliberate pour that anchors the start of a day." },
   { id: "focus", label: "Deep Focus", Icon: Brain, footnote: "A clean, mid-strength cup engineered for sustained attention." },
   { id: "social", label: "Social", Icon: Users, footnote: "A forgiving recipe that holds its character as it cools." },
-  { id: "after-dinner", label: "After Dinner", Icon: Moon, footnote: "A heavier, dessert-leaning brew that closes the day with body and sweetness." },
   { id: "experiment", label: "Experiment", Icon: FlaskConical, footnote: "The recipe will push ratios, methods or sequences you haven’t tried on this coffee." },
   { id: "summer-time", label: "Summer Time", Icon: CupSoda, footnote: "Bright and refreshing, leaning into clarity and travelling well over ice." },
+  { id: "cold-brew", label: "Cold Brew", Icon: Snowflake, footnote: "A long cold steep — hours, not minutes. Low acidity, smooth body; brew the night before." },
 ];
 
 const AMOUNTS = [
@@ -106,8 +106,8 @@ const AMOUNTS = [
 ];
 
 const TIMES = [
-  { id: "quick", label: "Quick", sub: "~2 min" },
-  { id: "normal", label: "Normal", sub: "~5 min" },
+  { id: "normal", label: "Normal", sub: "~3–5 min" },
+  { id: "special", label: "Special", sub: "a fast shot" },
 ];
 
 const GOALS = [
@@ -254,10 +254,15 @@ export default function LightStepContext() {
     updateCtx({ [key]: next } as Partial<SessionContext>);
   };
 
+  // Cold Brew is a long cold steep (hours) — the Time question (fast vs ~5 min)
+  // is meaningless for it, so we hide that card and don't gate on it. The steep
+  // duration comes from the recipe, not this bucket.
+  const isColdBrew = ctx.occasion === "cold-brew";
+
   const isComplete = !!(
     ctx.occasion &&
     ctx.amount &&
-    ctx.timeAvailable &&
+    (isColdBrew || ctx.timeAvailable) &&
     ctx.intent &&
     (ctx.amount !== "custom" || (customMl.trim() !== "" && Number(customMl) >= 50))
   );
@@ -266,6 +271,9 @@ export default function LightStepContext() {
     if (!isComplete) return;
     const finalCtx: SessionContext = {
       ...(ctx as SessionContext),
+      // Cold Brew steeps for hours — stamp an explicit time token so the saved
+      // session + recommend prompt read coherently instead of an empty bucket.
+      timeAvailable: isColdBrew ? "long-steep" : (ctx.timeAvailable ?? ""),
       customWaterMl: ctx.amount === "custom" ? Number(customMl) : undefined,
     };
     setIsRecommending(true);
@@ -409,23 +417,26 @@ export default function LightStepContext() {
           </div>
         </Section>
 
-        {/* TIME — 2 cards only (Lovable strict). No footnote. */}
-        <Section eyebrow="Time">
-          <div className="grid grid-cols-2 gap-3">
-            {TIMES.map((t) => (
-              <div key={t.id} className="h-[104px]">
-                <Card
-                  selected={ctx.timeAvailable === t.id}
-                  onClick={() => toggleField("timeAvailable", t.id)}
-                  ariaLabel={t.label}
-                >
-                  <CardTitle>{t.label}</CardTitle>
-                  <CardSubText>{t.sub}</CardSubText>
-                </Card>
-              </div>
-            ))}
-          </div>
-        </Section>
+        {/* TIME — 2 cards only (Lovable strict). No footnote. Hidden for Cold
+            Brew, whose steep is fixed in hours by the recipe, not this bucket. */}
+        {!isColdBrew && (
+          <Section eyebrow="Time">
+            <div className="grid grid-cols-2 gap-3">
+              {TIMES.map((t) => (
+                <div key={t.id} className="h-[104px]">
+                  <Card
+                    selected={ctx.timeAvailable === t.id}
+                    onClick={() => toggleField("timeAvailable", t.id)}
+                    ariaLabel={t.label}
+                  >
+                    <CardTitle>{t.label}</CardTitle>
+                    <CardSubText>{t.sub}</CardSubText>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* GOAL — 6 cards (Lovable parity). Educational footnote.
             Existing 5 IDs are kept; Aromatic / Floral added as the

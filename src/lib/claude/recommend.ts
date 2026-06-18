@@ -163,7 +163,8 @@ GOAL VOCABULARY:
 OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a soft default that applies ONLY when goal is "balanced" or "sweetness-forward". For Natural coffee with goal="high-clarity", "body-forward", or "aromatic", build to the goal, not the process default.
 
 OCCASION ROUTING (physical/temporal only, never taste-direction):
-- "summer-time" = iced coffee; route to Japanese Iced V60, Japanese Iced Kalita, AeroPress Iced, or Hoffmann Immersion Iced (Clever Dripper); "amount" = final drink including melted ice
+- "summer-time" = iced coffee brewed HOT over ice (flash / Japanese style); route to Japanese Iced V60, Japanese Iced Kalita, AeroPress Iced, or Hoffmann Immersion Iced (Clever Dripper); "amount" = final drink including melted ice
+- "cold-brew" = a LONG COLD IMMERSION STEEP (hours, not minutes) — NOT iced/flash brew. Build only from the COLD BREW RECIPES block below. See its rules: brew with room-temp/cold water in an immersion vessel, targetTimeSec is the STEEP DURATION in seconds (e.g. 12h = 43200), no live pour timer. Never route a cold-brew occasion to a hot pour-over or a Japanese-iced recipe.
 - All other occasions are background context. Do not infer goal from occasion.
 
 LAYER 2 — COFFEE
@@ -278,6 +279,9 @@ NO STAGED TEMPERATURE: Never recommend a staged- or multi-temperature brew (cool
   everyday brewing — it forces two water setups. Every recipe you emit uses ONE constant brew
   temperature. Achieve aromatic preservation through grind, ratio, low-mineral water, minimal
   agitation and a prompt drawdown instead — never through temperature staging.
+  THE ONE EXCEPTION: the Cold Brew "Hot-Bloom" variant (in the COLD BREW RECIPES block) — a small
+  hot bloom before a long cold steep. This is sanctioned ONLY for the cold-brew occasion and ONLY
+  for that named variant; it is never permitted in a hot pour-over / immersion brew.
 
 CHAMPIONSHIP TECHNIQUE RATIONALE:
 Wölfl 2024 (WAC): Ultra-fast turbulent Orea on naturals. Paradox: high agitation + fast drain
@@ -312,10 +316,11 @@ HARD CAPACITY LIMITS — never exceed, even in experiment mode:
 - Grind size output: ONE specific value. No ranges. Ever.
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
-Time constraints — the app offers only TWO choices, "quick" and "normal". There is no "unhurried" option:
-- "quick" (~2 min): AeroPress, Wölfl Orea Fast. targetTimeSec ≤ 150.
-- "normal" (~5 min): everything else — V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 180–330; aim for the ~4–5 min middle unless the method runs faster.
-(Legacy guard: if a session ever sends "unhurried", treat it as the slow end of "normal" — do not exceed ~330s. Very long brews like a 10-minute Gagné AeroPress are out of scope for the recommend flow.)
+Time constraints — the app offers TWO choices for normal occasions, "normal" and "special":
+- "normal" (~3–5 min): the everyday default — V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 180–330; aim for the ~4–5 min middle unless the method runs faster.
+- "special" = a FAST shot (~2 min or under): AeroPress, Wölfl Orea Fast, turbo-style. targetTimeSec ≤ 150. Cap at 3 pours.
+- "long-steep": only ever sent by the Cold Brew occasion — the steep IS the time. Ignore the fast/normal vocabulary entirely and follow the COLD BREW RECIPES block (targetTimeSec = steep seconds, e.g. 43200 for 12h).
+(Legacy guard: an old session may send "quick" — treat it as "special" (fast, ≤150s); "unhurried" — treat it as the slow end of "normal", ≤~330s.)
 
 LAYER 5 — HISTORY & LEARNING
 A terrain narrative will appear describing what keeps happening in your log.
@@ -376,7 +381,7 @@ Portfolio rules (non-negotiable):
 - If preferredMethod IS locked (user's explicit instruction): BOTH candidates MUST use that same locked brewer. The contrast comes from substantially different recipe physics on that brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single-continuous), different ratio (1:15 vs 1:17), different (but each constant) temperature (95°C vs 88°C), different agitation (high vs minimal), inverted vs upright (AeroPress), etc. Two AeroPresses with the same recipe and one number changed is NOT acceptable. They are still two scientific hypotheses, just constrained to one vessel.
 - Method selection is driven by: this coffee's chemistry (process, roast, freshness, origin, variety), brewing science (extraction physics, water chemistry, agitation), capacity constraints, and brew history as data. Never by user equipment preference. Never by a "primary brewer" default. Never by gating recipes behind a goal label.
 - All available methods (in the user's equipment list) are equally eligible a priori — every one of them. The science narrows the choice. The amount of detail a brewer happens to get in this prompt is NOT a signal of preference; a brewer with two sentences of notes is exactly as eligible as one with a dedicated rules block. Choose the brewer whose physics best serve THIS coffee and goal — never the one that's most familiar or most documented.
-- If time is "quick", all candidates must respect targetTimeSec ≤ 150
+- If time is "special", all candidates must respect targetTimeSec ≤ 150 (a fast shot). If time is "long-steep" (cold brew), this cap does not apply — follow the COLD BREW RECIPES block.
 
 ═══════════════════════════════════════════════════════════════
 EQUIPMENT RULES — these must be followed exactly
@@ -394,7 +399,7 @@ POUR COUNT (for "Own recipe" candidates only — documented recipes keep their p
 - Natural or ferment on a clarity/balanced goal: 3–4 pours — they're soluble; extra pours muddy them.
 - Sweetness or body goal: you MAY go to more pours to build mouthfeel (the Kasuya percolation-cycles effect — each pour adds body), but pair them with a COARSER grind so the extra cycles add texture without over-extracting. This is how a Natural can still earn more pours without contradicting "naturals need less input": the input moved from grind to pour count.
 - Freshness overlay: very fresh (<7 days) +1 pour for CO₂ management; past peak (>22 days) −1 pour, gentler.
-- Quick time: cap at 3 pours regardless.
+- Special (fast) time: cap at 3 pours regardless.
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
@@ -487,6 +492,24 @@ Grind finer than hot equivalent (shorter brew time, higher concentration).
 - Hoffmann Immersion Iced (Clever Dripper): 20g : 250g hot + 150g ice | 95°C | 421–431° | pour water 15s · swirl 5s · steep 3:40 · swirl 5s · drain onto ice 55s | ~5:00 (targetTimeSec: 300); waterGrams = 250, iceGrams = 150
 Agitation for iced percolation (Japanese style): swirl or stir same as hot equivalent (washed → stir, others → swirl) at bloom.
 Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
+
+COLD BREW RECIPES — use ONLY when occasion is "cold-brew". These are LONG COLD IMMERSION STEEPS, not iced/flash brews. Hard rules:
+- Water is room-temperature or cold (NOT hot). The cup is built by hours of cold contact, so there is NO live pour timer and NO pour sequence in the hot sense.
+- targetTimeSec = the STEEP DURATION in seconds (e.g. 8h = 28800, 12h = 43200, 16h = 57600). pourSteps describe the prep + steep + filter, not timed pours: a "combine coffee + water" step, a "stir" step, an optional "add finings" step, a long "wait/steep" step (its durationSec = the steep), then a "drain/decant" step.
+- Pick TWO contrasting candidates from the list below (e.g. a ready-to-drink vs a concentrate, or fine+finings vs coarse). Each candidate's basedOn = the source recipe name.
+- waterTempC: use the actual brew-water temperature — 22 for room-temp cold steeps; for the Hot-Bloom variant set it to the bloom temperature (95) and say in notes that only the small bloom is hot, the rest is cold.
+- CONCENTRATE recipes: state the dilution in notes (e.g. "concentrate — dilute 1:1 with water or milk"). waterGrams = the brew water; the user dilutes when serving.
+- Optional finish (any cold brew): "Tastes harsh? Add 1–2 drops of 20:80 saline (5g salt in 20g water) per cup — sodium suppresses bitterness." (James Hoffmann.) Mention it in notes, never as a required step.
+- Coffee fit (Hoffmann's tasting finding): light washed coffees give LESS to cold water — they read thin. Cold brew shines on medium/natural/chocolatey coffees. If the bag is a light washed and the user still wants cold, say so honestly in reasoning and lean to the Hoffmann fine+finings recipe (it extracts most) or suggest the Hot-Bloom variant to lift acidity.
+Recipes (scale grams to "amount"; keep grind + ratio + steep as published):
+- Hoffmann Fine + Finings (ready-to-drink): 75g : 1000g (1:13.3) | room-temp water | FINE ~250µm (mokapot / fine AeroPress; Niche ~345–360°, calibrate) | combine · stir · 10 drops/L vegan liquid finings (Mangrove Jack's) · stir · 12h fridge · decant off the sediment (no filter) | targetTimeSec 43200 | ~20.5–22.8% extraction; finings optional (silkier, higher yield).
+- Specialty RTD 1:10 (European Coffee Trip): 90g : 900g (1:10) | room-temp or cold water | coarse (Comandante ~35 clicks ≈ Niche ~420–435°) | combine · stir · 12–16h fridge · filter through a rinsed paper (V60/Chemex/Kalita) | targetTimeSec 50400 (14h) | ready-to-drink, clean.
+- Counter Culture Concentrate 1:8: 125g : 1000g (1:8) | fridge water | medium-coarse (~415–425°) | combine · stir · 14h fridge · paper filter for clarity (cheesecloth for body) | targetTimeSec 50400 | CONCENTRATE — dilute 1:1 to 2:1 with water or milk.
+- Stumptown Concentrate 1:5.3: scale ~1:5.3 (e.g. 95g : 500g) | room-temp water OK | coarse (French-press, ~425–440°) | combine · stir · 16h (14–18) · paper-polish filter, then chill | targetTimeSec 57600 | CONCENTRATE — dilute 1:1; keeps 7–10 days refrigerated.
+- AeroPress Overnight (concentrate): 30g : 130g (1:4.3) | cold water | coarse (~420°) | steep in the AeroPress chamber 8–12h in the fridge · press over ice | targetTimeSec 36000 (10h) | CONCENTRATE — dilute to taste with cold water or milk.
+- Clever Cold Brew (ready-to-drink): ~1:10 (e.g. 60g : 600g) | room-temp/cold water | coarse (~420–430°) | combine in the Clever (valve closed) · stir · 12–14h fridge · set on a cup to drain through its own paper | targetTimeSec 46800 (13h) | clean RTD; the built-in paper is the filter.
+- Toddy-Style Concentrate 1:8: 100g : 800g (1:8) | room-temp water | VERY coarse (~422–437°) | combine · stir · 12–16h room temp · filter (paper or cloth) | targetTimeSec 50400 | CONCENTRATE — dilute ~1:1 (Toddy: 1:2–1:3); keeps 1–2 weeks.
+- Hot-Bloom variant (lifts fruit/acidity; parameters approximate, mark as a variant): ~1:10 (e.g. 60g : 600g) | bloom ~20% of the water (~120g) at ~95°C for ~45s to pull aromatic acids cold water can't, THEN top up with cold water to full | coarse (~420°) | bloom · stir · top with cold · 12–16h fridge · filter | targetTimeSec 50400 | good when the bag is a brighter/lighter coffee.
 
 CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and capacity fit. Selection is driven by whether the recipe's extraction profile matches what THIS coffee needs, not by the goal label:
 - Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)

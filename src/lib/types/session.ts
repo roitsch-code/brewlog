@@ -22,10 +22,10 @@ export interface CoffeeIdentity {
 }
 
 export interface SessionContext {
-  occasion: string; // morning-ritual | focus | experiment | after-dinner | social
+  occasion: string; // morning-ritual | focus | social | experiment | summer-time | cold-brew
   amount: string; // small | big | batch | custom | surprise
   customWaterMl?: number; // used when amount === "custom"
-  timeAvailable: string; // quick | normal | unhurried
+  timeAvailable: string; // normal | special | long-steep (cold brew) — legacy: quick | unhurried
   moodPreference: string; // strong | balanced | light | sweet | curious
   grinder?: string; // e.g. "Niche Zero" | "Comandante C40" — determines ° vs clicks in recommendation
   waterSource?: string; // "tap" = BWT-filtered daily ~220ppm | "championship" = 1:2 filtered+distilled clarity blend ~73ppm
