@@ -10,6 +10,11 @@ on:
     paths-ignore:
       - "docs/**"
       - "**/*.md"
+      # CI/workflow files never affect the running app — a `.github` change must
+      # not trigger an app redeploy (which would rotate chunk hashes for nothing).
+      - ".github/**"
+      # The native iOS shell builds via ios-testflight.yml, never the web deploy.
+      - "native/**"
 
 # Serialise deploys. Without this, two pushes (or a double-delivered push event)
 # can start two deploy jobs that race on the VPS git checkout — one job's

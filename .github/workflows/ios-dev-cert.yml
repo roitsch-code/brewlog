@@ -76,7 +76,12 @@ jobs:
           openssl x509 -in dev.cer -inform DER -out dev.pem -outform PEM
           PW="$(openssl rand -base64 18)"
           echo "::add-mask::$PW"
-          openssl pkcs12 -export -out dev.p12 -inkey dev.key -in dev.pem -passout pass:"$PW" -name "BTTS CI Development"
+          # -legacy is REQUIRED: this runs on ubuntu (OpenSSL 3), whose default
+          # PKCS12 MAC (PBKDF2/SHA-256 + AES) macOS `security import` can't verify
+          # → "MAC verification failed (wrong password?)". -legacy forces the
+          # SHA1-MAC/3DES format the macOS runner reads. (The dist p12 imported
+          # fine only because it was made with macOS openssl.)
+          openssl pkcs12 -export -legacy -out dev.p12 -inkey dev.key -in dev.pem -passout pass:"$PW" -name "BTTS CI Development"
           base64 -w0 dev.p12 > dev.p12.b64
           echo "DEV_PW=$PW" >> "$GITHUB_ENV"
 
