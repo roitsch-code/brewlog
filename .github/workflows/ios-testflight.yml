@@ -118,10 +118,12 @@ jobs:
         # Apple Development certificate every archive. They accumulate and hit
         # Apple's per-account development-cert cap → "account has reached the
         # maximum number of certificates" + "No profiles for <new bundle id>".
-        # Revoke ALL existing DEVELOPMENT certs here (never DISTRIBUTION — that
-        # filter is strict); the archive step then mints exactly one fresh dev
-        # cert for this run, so we stay at 1. Non-fatal: a hiccup just leaves the
-        # archive to fail as before, never worse.
+        # GENTLE: only trim when APPROACHING the cap (> THRESHOLD), keeping the
+        # KEEP newest, revoking only the oldest beyond that. Normal monthly builds
+        # never hit the threshold → no revocations → no "certificate revoked"
+        # emails. (The first version revoked ALL dev certs every run, which nuked
+        # the owner's own cert + spammed emails — see Stolperstein.) Never touches
+        # DISTRIBUTION certs (strict filter). Non-fatal.
         env:
           ASC_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
         run: |
@@ -149,7 +151,13 @@ jobs:
             const certs = (JSON.parse(r.body).data) || [];
             const dev = certs.filter(c => String(c.attributes.certificateType||'').includes('DEVELOPMENT'));
             console.log(`certs total=${certs.length} development=${dev.length}`);
-            for (const c of dev) {
+            const KEEP = 4, THRESHOLD = 6;
+            if (dev.length <= THRESHOLD) { console.log('under threshold — no revocation'); return; }
+            const oldestFirst = dev.slice().sort((a,b) =>
+              new Date(a.attributes.createdDate).getTime() - new Date(b.attributes.createdDate).getTime());
+            const toRevoke = oldestFirst.slice(0, dev.length - KEEP);
+            console.log(`trimming ${toRevoke.length} oldest dev certs (keeping ${KEEP})`);
+            for (const c of toRevoke) {
               const d = await api('DELETE', `/v1/certificates/${c.id}`);
               console.log(`revoke ${c.id} ${c.attributes.certificateType} -> ${d.status}`);
             }
