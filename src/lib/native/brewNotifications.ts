@@ -48,6 +48,26 @@ export interface BrewBoundary {
   atSec: number;
   title: string;
   body: string;
+  /** Clean step name with no grams — e.g. "Pour 2", "Final pour", "Drawdown",
+   * "Swirl". Used verbatim on the "next" surfaces (Dynamic Island, Smart Stack). */
+  label: string;
+  /** Cumulative target weight to reach by the end of this pour, if it's a pour.
+   * The "now" surfaces show "<label> → <cumulativeGrams>g". Absent for agitation
+   * / drawdown / finishing steps. */
+  cumulativeGrams?: number;
+}
+
+/** Step text for the "now" surfaces (lock screen, watch app): the step plus the
+ * cumulative total to reach, with an arrow — "Pour 2 → 230g". No grams → just
+ * the label ("Swirl", "Drawdown"). */
+export function formatNowStep(b: BrewBoundary): string {
+  return b.cumulativeGrams != null ? `${b.label} → ${b.cumulativeGrams}g` : b.label;
+}
+
+/** Step text for the "next" surfaces (Dynamic Island, watch Smart Stack): just
+ * the step name, no grams. */
+export function formatNextStep(b: BrewBoundary): string {
+  return b.label;
 }
 
 /** The fixed notification id range a pre-removal build scheduled into. The
@@ -84,6 +104,7 @@ export function buildBrewBoundaries(
           atSec: s.startTimeSec,
           title: s.label,
           body: s.notes ?? "after the pour",
+          label: s.label,
         });
         continue;
       }
@@ -93,6 +114,8 @@ export function buildBrewBoundaries(
         atSec: s.startTimeSec,
         title: `${s.label} — +${s.pourGrams}g`,
         body: parts.join(" · "),
+        label: s.label,
+        cumulativeGrams: s.cumulativeGrams,
       });
     }
     if (targetTimeSec != null && targetTimeSec - (out[out.length - 1]?.atSec ?? 0) >= 5) {
@@ -100,6 +123,7 @@ export function buildBrewBoundaries(
         atSec: targetTimeSec,
         title: "Drawdown — brew finishing",
         body: `Target ${formatClock(targetTimeSec)} reached.`,
+        label: "Drawdown",
       });
     }
     return out;
@@ -117,6 +141,8 @@ export function buildBrewBoundaries(
         atSec: s.startTimeSec,
         title: s.label,
         body: parts.join(" · "),
+        label: s.label,
+        cumulativeGrams: s.cumulativeGrams ?? undefined,
       });
     }
     if (targetTimeSec != null && targetTimeSec - (out[out.length - 1]?.atSec ?? 0) >= 5) {
@@ -124,6 +150,7 @@ export function buildBrewBoundaries(
         atSec: targetTimeSec,
         title: "Brew finishing",
         body: `Target ${formatClock(targetTimeSec)} reached.`,
+        label: "Finishing",
       });
     }
     return out;
