@@ -57,26 +57,37 @@ class ShareViewController: UIViewController {
         return detector.firstMatch(in: text, range: range)?.url?.absoluteString
     }
 
+    // Selector stub so `#selector(openURL(_:))` resolves; the host app's
+    // responder provides the real implementation. We walk from `self.next` so
+    // this stub is skipped.
+    @objc func openURL(_ url: URL) {}
+
     private func finish(_ urlString: String?) {
-        if let s = urlString,
-           let encoded = s.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-           let deep = URL(string: "btts://share?url=\(encoded)") {
-            openHostApp(deep)
+        guard let s = urlString,
+              let encoded = s.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let deep = URL(string: "btts://share?url=\(encoded)") else {
+            extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+            return
         }
-        // Give the open a beat, then close the share sheet.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+        openHostApp(deep)
+        // Tear the extension down AFTER the host-app launch has a beat to take —
+        // completing too early (0.15 s) cancels the pending open, which is why
+        // nothing happened. 0.8 s is comfortably enough.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             self?.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
         }
     }
 
-    /// Walk the responder chain to find an object that responds to `openURL:`
-    /// (the host UIApplication) and ask it to open our custom-scheme deep link.
+    /// Open the host app with our custom-scheme deep link. NSExtensionContext.open
+    /// is tried first (harmless if unsupported), then the documented responder-
+    /// chain `openURL:` walk — the standard way a share extension opens its host.
     private func openHostApp(_ url: URL) {
-        let selector = sel_registerName("openURL:")
-        var responder: UIResponder? = self
+        extensionContext?.open(url, completionHandler: nil)
+        let selector = #selector(openURL(_:))
+        var responder: UIResponder? = self.next
         while let r = responder {
-            if r.responds(to: selector), r !== self {
-                _ = r.perform(selector, with: url)
+            if r.responds(to: selector) {
+                r.perform(selector, with: url)
                 return
             }
             responder = r.next
