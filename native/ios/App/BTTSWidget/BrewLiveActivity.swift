@@ -27,26 +27,30 @@ struct BrewLiveActivity: Widget {
         ActivityConfiguration(for: BrewAttributes.self) { context in
             BrewActivityContent(context: context)
         } dynamicIsland: { context in
-            // DYNAMIC ISLAND — "Next: <step>  0:26", tight (no edge-spreading gap).
+            // DYNAMIC ISLAND — "Next: <step>  0:26". Compact: hug the content (no
+            // fixed-width frames, which jammed the text left + ballooned the pill).
             DynamicIsland {
                 DynamicIslandExpandedRegion(.center) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
                         Text("Next: \(context.state.nextStep)")
                             .font(.headline)
                             .lineLimit(1)
                         countdown(context.state)
                             .font(.system(.headline, design: .rounded).weight(.bold))
                             .layoutPriority(1)
+                        Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 4)
                 }
             } compactLeading: {
                 Text("Next: \(context.state.nextStep)")
+                    .font(.system(size: 13, weight: .medium))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: 100)
+                    .padding(.leading, 2)
             } compactTrailing: {
-                countdown(context.state).frame(minWidth: 36)
+                countdown(context.state)
+                    .font(.system(size: 13, weight: .semibold))
+                    .padding(.trailing, 2)
             } minimal: {
                 countdown(context.state)
             }
@@ -93,6 +97,7 @@ struct BrewWatchSmartStackView: View {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, 6)
     }
 }
 
