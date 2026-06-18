@@ -182,6 +182,56 @@ jobs:
           })().catch(e => { console.error('cert cleanup skipped:', e.message); });
           NODE
 
+      - name: Enable Push Notifications on the app's App ID
+        # The Live Activity is started with a PUSH token (server pushes each step
+        # so it advances while the phone is locked) → the app needs the Push
+        # capability + the aps-environment entitlement. Automatic signing does NOT
+        # reliably auto-enable Push, and the ASC API has no programmatic toggle
+        # for some capabilities — but PUSH_NOTIFICATIONS IS settable here. Idempotent
+        # (a 409 if already enabled is ignored). Non-fatal so a hiccup never blocks
+        # the build; if Push is missing the archive's automatic signing will surface it.
+        env:
+          ASC_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          node <<'NODE'
+          const crypto = require('crypto'), https = require('https');
+          const kid = process.env.ASC_KEY_ID, iss = process.env.ASC_ISSUER_ID, key = process.env.ASC_KEY_P8;
+          const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+          function token() {
+            const now = Math.floor(Date.now()/1000);
+            const signing = `${b64({alg:'ES256',kid,typ:'JWT'})}.${b64({iss,iat:now,exp:now+600,aud:'appstoreconnect-v1'})}`;
+            const sig = crypto.sign('SHA256', Buffer.from(signing), { key, dsaEncoding:'ieee-p1363' }).toString('base64url');
+            return `${signing}.${sig}`;
+          }
+          const T = token();
+          function api(method, path, body) {
+            return new Promise((res, rej) => {
+              const data = body ? JSON.stringify(body) : null;
+              const headers = { Authorization:`Bearer ${T}` };
+              if (data) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = Buffer.byteLength(data); }
+              const r = https.request({ host:'api.appstoreconnect.apple.com', path, method, headers }, x => {
+                let d=''; x.on('data',c=>d+=c); x.on('end',()=>res({status:x.statusCode, body:d}));
+              });
+              r.on('error', rej); if (data) r.write(data); r.end();
+            });
+          }
+          (async () => {
+            const APP_ID = 'com.roitsch.btts';
+            const r = await api('GET', `/v1/bundleIds?filter[identifier]=${APP_ID}&limit=1`);
+            const bid = (JSON.parse(r.body).data || [])[0];
+            if (!bid) { console.log('bundleId not found yet — automatic signing will create it'); return; }
+            const post = await api('POST', '/v1/bundleIdCapabilities', {
+              data: {
+                type: 'bundleIdCapabilities',
+                attributes: { capabilityType: 'PUSH_NOTIFICATIONS' },
+                relationships: { bundleId: { data: { type: 'bundleIds', id: bid.id } } },
+              },
+            });
+            console.log(`enable PUSH_NOTIFICATIONS on ${APP_ID} -> ${post.status}` +
+              (post.status >= 400 ? ` (already enabled / ignored: ${post.body.slice(0,120)})` : ''));
+          })().catch(e => { console.error('push-capability step skipped:', e.message); });
+          NODE
+
       - name: Inject the team into export options
         run: plutil -replace teamID -string "$APPLE_TEAM_ID" native/exportOptions.plist
 

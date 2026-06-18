@@ -95,7 +95,9 @@ final class BrewWatchModel: NSObject, ObservableObject {
         self.fires = sorted.map { var f = $0; if $0.at <= now { f.fired = true }; return f }
         self.recipeName = recipeName
         self.isBrewing = true
-        self.currentLabel = "Brewing"
+        // If steps have already started when the schedule arrives (mid-brew
+        // hand-over), show the most recent one — not a stale "Brewing".
+        self.currentLabel = self.fires.last(where: { $0.fired })?.label ?? "Brewing"
         self.lastEvent = "start \(self.fires.count)"
         wlog.log("startBrew name=\(recipeName, privacy: .public) fires=\(self.fires.count) brewId=\(brewId, privacy: .public)")
         startWorkoutSession()
