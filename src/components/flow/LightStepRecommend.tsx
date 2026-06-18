@@ -268,14 +268,14 @@ export default function LightStepRecommend() {
       {activeRecipe && (
         <div className="mt-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5 space-y-4">
           <div className="grid grid-cols-3 gap-4 text-center">
-            <RecipeStat label="Dose" value={`${activeRecipe.doseGrams}g`} />
-            <RecipeStat label={activeRecipe.iceGrams ? "Hot Water" : "Water"} value={`${activeRecipe.waterGrams}g`} />
-            <RecipeStat label="Temp" value={`${activeRecipe.waterTempC}°C`} />
+            <RecipeStat label="Dose" value={gramsLabel(activeRecipe.doseGrams)} />
+            <RecipeStat label={activeRecipe.iceGrams ? "Hot Water" : "Water"} value={gramsLabel(activeRecipe.waterGrams)} />
+            <RecipeStat label="Temp" value={Number.isFinite(Number(activeRecipe.waterTempC)) ? `${Number(activeRecipe.waterTempC)}°C` : "—"} />
           </div>
           {activeRecipe.iceGrams != null && activeRecipe.iceGrams > 0 && (
             <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
-              <RecipeStat label="Ice" value={`${activeRecipe.iceGrams}g`} />
-              <RecipeStat label="Final cup" value={`${activeRecipe.waterGrams + activeRecipe.iceGrams}g`} />
+              <RecipeStat label="Ice" value={gramsLabel(activeRecipe.iceGrams)} />
+              <RecipeStat label="Final cup" value={gramsLabel(activeRecipe.waterGrams + activeRecipe.iceGrams)} />
             </div>
           )}
           <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
@@ -466,6 +466,13 @@ function PourSequence({
       })}
     </div>
   );
+}
+
+// Guard a grams value — the model can return a missing / non-numeric dose, and
+// "NaNg" / "undefinedg" must never reach the card. Round to a clean integer.
+function gramsLabel(n: unknown): string {
+  const v = Number(n);
+  return Number.isFinite(v) ? `${v}g` : "—";
 }
 
 function RecipeStat({ label, value }: { label: string; value: string }) {

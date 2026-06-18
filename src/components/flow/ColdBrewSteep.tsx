@@ -20,9 +20,22 @@ import {
  *   3. While steeping you can LEAVE — it keeps running, shows up in the menu as
  *      "Cold brew · Xh left", and you return to log it when it's done.
  *
- * Built on the Light design tokens (card glass, h-14 rounded-full primary CTA,
- * label-eyebrow, Fraunces headline) — same primitives as the rest of the flow.
+ * Composed from the SAME Light primitives as the hot-brew screen: the recipe
+ * card mirrors LightStepBrew (label-eyebrow + Fraunces name + a 4-up
+ * font-mono-num stat grid), the CTA is the canonical h-14 rounded-full pill.
  */
+
+// Grams / temperature display guards — the model occasionally returns a
+// missing or non-numeric value; never render "NaNg"/"undefined°". Round to a
+// clean integer or fall back to an em dash.
+function grams(n: unknown): string {
+  const v = Number(n);
+  return Number.isFinite(v) ? `${v}g` : "—";
+}
+function degrees(n: unknown): string {
+  const v = Number(n);
+  return Number.isFinite(v) ? `${v}°` : "—";
+}
 
 function fmtRemaining(ms: number): string {
   if (ms <= 0) return "Ready";
@@ -56,11 +69,12 @@ interface Props {
   onLog: () => void;
 }
 
+// Mirrors LightStepBrew's MiniStat exactly (label-eyebrow + font-mono-num).
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] text-light-muted-foreground">{label}</p>
-      <p className="text-light-foreground font-medium tabular-nums leading-tight">{value}</p>
+      <p className="label-eyebrow mb-0.5">{label}</p>
+      <p className="font-mono-num text-light-foreground text-[14px] font-medium truncate">{value}</p>
     </div>
   );
 }
@@ -138,13 +152,10 @@ export default function ColdBrewSteep({
           )}
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
-          <MiniStat label="Dose" value={`${recipe.doseGrams}g`} />
-          <MiniStat label="Water" value={`${recipe.waterGrams}g`} />
-          <MiniStat label="Temp" value={`${recipe.waterTempC}°`} />
-          <MiniStat label="Steep" value={fmtSteepLength(steepMinutes)} />
-        </div>
-        <div className="mt-3 border-t border-light-foreground/10 pt-3">
-          <MiniStat label="Grind" value={recipe.grindSize} />
+          <MiniStat label="Dose" value={grams(recipe.doseGrams)} />
+          <MiniStat label="Water" value={grams(recipe.waterGrams)} />
+          <MiniStat label="Temp" value={degrees(recipe.waterTempC)} />
+          <MiniStat label="Grind" value={recipe.grindSize || "—"} />
         </div>
       </div>
 
@@ -152,13 +163,13 @@ export default function ColdBrewSteep({
       {steps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
           <p className="label-eyebrow mb-3">Method</p>
-          <ol className="space-y-2.5">
+          <ol className="space-y-3">
             {steps.map((s, i) => (
               <li key={i} className="flex gap-3">
-                <span className="text-light-muted-foreground tabular-nums text-[13px] mt-0.5 w-4 shrink-0">
+                <span className="font-mono-num text-light-muted-foreground text-[14px] leading-snug tabular-nums w-4 shrink-0 text-right">
                   {i + 1}
                 </span>
-                <div className="min-w-0">
+                <div className="flex-1 min-w-0">
                   <p className="text-[14px] leading-snug text-light-foreground">{s.label}</p>
                   {s.notes && (
                     <p className="text-[12px] leading-snug text-light-muted-foreground mt-0.5">
@@ -178,7 +189,7 @@ export default function ColdBrewSteep({
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5">
           <p className="text-[14px] leading-relaxed text-light-foreground mb-5">
             Combine and stir, then start the {fmtSteepLength(steepMinutes)} steep. It runs in the
-            background — you can brew other coffee meanwhile, and we&apos;ll remind you when it&apos;s ready,
+            background — brew other coffee meanwhile, and we&apos;ll remind you when it&apos;s ready,
             even with the app closed.
           </p>
           <button
@@ -194,7 +205,7 @@ export default function ColdBrewSteep({
         // Steeping / ready
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5">
           <p className="label-eyebrow mb-1">{ready ? "Ready" : "Steeping"}</p>
-          <p className="font-fraunces text-[48px] leading-none text-light-foreground mb-2 tabular-nums">
+          <p className="font-mono-num text-[40px] leading-none text-light-foreground font-medium mb-2">
             {ready ? "Done" : `${fmtRemaining(remaining)} left`}
           </p>
           <p className="text-light-muted-foreground text-sm mb-4">
@@ -226,7 +237,9 @@ export default function ColdBrewSteep({
                 Leave it steeping
               </button>
               <p className="text-[12px] leading-relaxed text-light-muted-foreground mt-3">
-                It keeps steeping in the background. Find it any time under <span className="text-light-foreground">Cold brew</span> in the menu, and log it when it&apos;s ready.
+                It keeps steeping in the background. Find it any time under{" "}
+                <span className="text-light-foreground">Cold brew</span> in the menu, and log it
+                when it&apos;s ready.
               </p>
             </>
           )}
