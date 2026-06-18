@@ -58,6 +58,11 @@ interface FlowState {
   addClarificationMessage: (msg: ClarificationMessage) => void;
   clearClarifications: () => void;
   reset: () => void;
+  /** Re-hydrate a parked cold-brew session (snapshot stored at steep start) so
+   * the user can return to LOG it after steeping — even if they ran other
+   * brews in between (which overwrite the single live draft). Lands on the
+   * "brew" step, where the cold-steep view shows the ready/steeping state. */
+  resumeColdBrew: (draft: DraftSession, fieldZones: FieldZones | null) => void;
 }
 
 export interface ClarificationMessage {
@@ -108,6 +113,8 @@ export const useFlowStore = create<FlowState>()(
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
         set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+      resumeColdBrew: (draft, fieldZones) =>
+        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a
