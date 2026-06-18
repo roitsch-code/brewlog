@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { BrewRecipe, BrewPourStep } from "@/lib/types/session";
 import { useFlowStore } from "@/store/flowStore";
 import {
@@ -12,11 +13,15 @@ import {
 /**
  * Cold-brew steep view — rendered by LightStepBrew when the chosen recipe is a
  * long cold immersion steep (occasion "cold-brew"). Cold brew is hours, not
- * minutes, so there's no live pour timer: we show the recipe (prep + steps),
- * then a "Start steep" button that schedules an iOS local notification for when
- * it's ready (reusing the steep-reminder engine in lib/coldBrew/coldBrew.ts —
- * fires even with the app closed). When the steep is done the user taps "Log it"
- * to drop into the normal rating/notes flow.
+ * minutes, so there's no live pour timer:
+ *   1. Show the recipe (prep card + method steps).
+ *   2. "Start steep" schedules an iOS "ready" reminder (lib/coldBrew, fires with
+ *      the app closed) and parks the session so other brews can run in between.
+ *   3. While steeping you can LEAVE — it keeps running, shows up in the menu as
+ *      "Cold brew · Xh left", and you return to log it when it's done.
+ *
+ * Built on the Light design tokens (card glass, h-14 rounded-full primary CTA,
+ * label-eyebrow, Fraunces headline) — same primitives as the rest of the flow.
  */
 
 function fmtRemaining(ms: number): string {
@@ -24,10 +29,9 @@ function fmtRemaining(ms: number): string {
   const total = Math.floor(ms / 1000);
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
   if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  if (m > 0) return `${m}m`;
+  return `${total % 60}s`;
 }
 
 function fmtClock(ms: number): string {
@@ -52,11 +56,11 @@ interface Props {
   onLog: () => void;
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-[11px] text-light-muted-foreground">{label}</p>
-      <p className="text-light-foreground font-medium tabular-nums">{value}</p>
+      <p className="text-light-foreground font-medium tabular-nums leading-tight">{value}</p>
     </div>
   );
 }
@@ -70,6 +74,7 @@ export default function ColdBrewSteep({
   steepMinutes,
   onLog,
 }: Props) {
+  const router = useRouter();
   const [active, setActive] = useState<ColdBrew | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(0);
@@ -97,9 +102,6 @@ export default function ColdBrewSteep({
 
   async function handleStart() {
     setBusy(true);
-    // Park a full snapshot of the flow so this cold brew can be resumed for
-    // logging after it steeps — even if other brews run in between (they
-    // overwrite the single live draft).
     const { draft, fieldZones } = useFlowStore.getState();
     const cb = await startColdBrew(coffeeName, steepMinutes, { draft, fieldZones });
     setActive(cb);
@@ -122,7 +124,7 @@ export default function ColdBrewSteep({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Recipe prep card */}
+      {/* Recipe prep card — same shape as the hot-brew recipe card */}
       <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
         <div className="mb-3">
           <p className="label-eyebrow">{methodLabel}</p>
@@ -136,17 +138,17 @@ export default function ColdBrewSteep({
           )}
         </div>
         <div className="grid grid-cols-4 gap-2 text-center">
-          <Stat label="Dose" value={`${recipe.doseGrams}g`} />
-          <Stat label="Water" value={`${recipe.waterGrams}g`} />
-          <Stat label="Temp" value={`${recipe.waterTempC}°`} />
-          <Stat label="Steep" value={fmtSteepLength(steepMinutes)} />
+          <MiniStat label="Dose" value={`${recipe.doseGrams}g`} />
+          <MiniStat label="Water" value={`${recipe.waterGrams}g`} />
+          <MiniStat label="Temp" value={`${recipe.waterTempC}°`} />
+          <MiniStat label="Steep" value={fmtSteepLength(steepMinutes)} />
         </div>
-        <div className="mt-2 border-t border-light-foreground/10 pt-2">
-          <Stat label="Grind" value={recipe.grindSize} />
+        <div className="mt-3 border-t border-light-foreground/10 pt-3">
+          <MiniStat label="Grind" value={recipe.grindSize} />
         </div>
       </div>
 
-      {/* Steps */}
+      {/* Method steps */}
       {steps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
           <p className="label-eyebrow mb-3">Method</p>
@@ -170,43 +172,14 @@ export default function ColdBrewSteep({
         </div>
       )}
 
-      {/* Steep state */}
-      {!loaded ? null : active ? (
-        <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 p-6">
-          <p className="label-eyebrow mb-1">{ready ? "Ready" : "Steeping"}</p>
-          <p className="font-fraunces text-[44px] leading-none text-light-foreground mb-2 tabular-nums">
-            {fmtRemaining(remaining)}
-          </p>
-          <p className="text-light-muted-foreground text-sm mb-5">
-            {ready ? "Steep complete." : `Ready at ${fmtClock(active.endMs)} — we'll remind you, even if the app is closed.`}
-          </p>
-          <div className="h-1.5 rounded-full bg-light-foreground/15 overflow-hidden mb-6">
-            <div
-              className="h-full bg-light-foreground rounded-full transition-[width] duration-1000"
-              style={{ width: `${progress * 100}%` }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleLog}
-            disabled={busy}
-            className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold active:scale-[0.98] transition-transform disabled:opacity-60"
-          >
-            {ready ? "Log it" : "It's ready — log it"}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={busy}
-            className="w-full h-12 mt-2 rounded-full text-light-muted-foreground font-medium active:scale-[0.98] transition-transform disabled:opacity-60"
-          >
-            Cancel steep
-          </button>
-        </div>
-      ) : (
-        <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 border border-light-foreground/15 p-6">
-          <p className="text-light-foreground leading-relaxed mb-5">
-            Combine and stir, then start the {fmtSteepLength(steepMinutes)} steep. We&apos;ll remind you when it&apos;s ready — even if the app is closed.
+      {/* Action area */}
+      {!loaded ? null : !active ? (
+        // Not started — explain + Start
+        <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5">
+          <p className="text-[14px] leading-relaxed text-light-foreground mb-5">
+            Combine and stir, then start the {fmtSteepLength(steepMinutes)} steep. It runs in the
+            background — you can brew other coffee meanwhile, and we&apos;ll remind you when it&apos;s ready,
+            even with the app closed.
           </p>
           <button
             type="button"
@@ -215,6 +188,56 @@ export default function ColdBrewSteep({
             className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {busy ? "Starting…" : "Start steep"}
+          </button>
+        </div>
+      ) : (
+        // Steeping / ready
+        <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-5">
+          <p className="label-eyebrow mb-1">{ready ? "Ready" : "Steeping"}</p>
+          <p className="font-fraunces text-[48px] leading-none text-light-foreground mb-2 tabular-nums">
+            {ready ? "Done" : `${fmtRemaining(remaining)} left`}
+          </p>
+          <p className="text-light-muted-foreground text-sm mb-4">
+            {ready ? "Your cold brew has finished steeping." : `Ready at ${fmtClock(active.endMs)}`}
+          </p>
+          <div className="h-1.5 rounded-full bg-light-foreground/15 overflow-hidden mb-5">
+            <div
+              className="h-full bg-light-foreground rounded-full transition-[width] duration-1000"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+
+          {ready ? (
+            <button
+              type="button"
+              onClick={handleLog}
+              disabled={busy}
+              className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold active:scale-[0.98] transition-transform disabled:opacity-60"
+            >
+              Log it
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="w-full h-14 rounded-full bg-light-foreground text-light-text-on-dark font-semibold active:scale-[0.98] transition-transform"
+              >
+                Leave it steeping
+              </button>
+              <p className="text-[12px] leading-relaxed text-light-muted-foreground mt-3">
+                It keeps steeping in the background. Find it any time under <span className="text-light-foreground">Cold brew</span> in the menu, and log it when it&apos;s ready.
+              </p>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={busy}
+            className="w-full h-11 mt-2 rounded-full text-light-muted-foreground text-[14px] font-medium active:scale-[0.98] transition-transform disabled:opacity-60"
+          >
+            Cancel steep
           </button>
         </div>
       )}

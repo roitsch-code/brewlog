@@ -127,6 +127,13 @@ const EQUIPMENT_PATTERNS: Array<{
     match: (k) => k.includes("cafec") || k.includes("flower"),
     brewers: ["cafec-flower"],
   },
+  // Cold-brew jar / large immersion vessel — any pitcher or jar. Always part
+  // of the canonical kit (everyone has a jar), so big cold-brew batches have a
+  // valid home instead of being mis-tagged onto a small Clever/AeroPress.
+  {
+    match: (k) => k.includes("jar") || k.includes("coldbrew") || k.includes("pitcher"),
+    brewers: ["cold-brew-jar"],
+  },
 ];
 
 /**
@@ -147,6 +154,7 @@ export const CANONICAL_EQUIPMENT: string[] = [
   "AeroPress",
   "Moccamaster",
   "Chemex",
+  "ColdBrewJar",
 ];
 
 export function brewersAvailableFromEquipment(

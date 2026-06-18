@@ -41,7 +41,7 @@ const BREWERS = new Set([
   "v60", "orea-v4-fast", "orea-v4-wide", "orea-apex", "orea-classic", "orea-open",
   "origami-cone", "origami-wave", "origami-air-m", "clever", "kalita-wave",
   "aeropress", "aeropress-prismo", "moccamaster", "chemex", "solo-dripper",
-  "cafec-flower", "conical-paper",
+  "cafec-flower", "conical-paper", "cold-brew-jar",
 ]);
 const ROASTS = new Set(["very-light", "light", "medium-light", "medium", "medium-dark", "dark"]);
 const PROCESSES = new Set(["washed", "natural", "honey", "anaerobic", "experimental", "any"]);
