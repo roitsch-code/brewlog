@@ -27,36 +27,28 @@ struct BrewLiveActivity: Widget {
         ActivityConfiguration(for: BrewAttributes.self) { context in
             BrewActivityContent(context: context)
         } dynamicIsland: { context in
-            // DYNAMIC ISLAND ("action bar") — the NEXT step + countdown, no cup.
+            // DYNAMIC ISLAND — "Next: <step>  0:26", tight (no edge-spreading gap).
             DynamicIsland {
-                // Expanded (long-press): one clean row — "Next: <step>"  …  0:13.
                 DynamicIslandExpandedRegion(.center) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    HStack(spacing: 10) {
                         Text("Next: \(context.state.nextStep)")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.headline)
                             .lineLimit(1)
-                        Spacer(minLength: 8)
                         countdown(context.state)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(.system(.headline, design: .rounded).weight(.bold))
                             .layoutPriority(1)
                     }
-                    .padding(.horizontal, 6)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 4)
                 }
             } compactLeading: {
-                // Step name, capped so the pill stays small; a gap off the notch.
-                Text(context.state.nextStep)
-                    .font(.system(size: 13, weight: .medium))
+                Text("Next: \(context.state.nextStep)")
                     .lineLimit(1)
-                    .frame(maxWidth: 72)
-                    .padding(.leading, 4)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: 100)
             } compactTrailing: {
-                countdown(context.state)
-                    .font(.system(size: 13, weight: .semibold))
-                    .frame(minWidth: 38)
-                    .padding(.trailing, 2)
+                countdown(context.state).frame(minWidth: 36)
             } minimal: {
-                countdown(context.state).font(.system(size: 12, weight: .semibold))
+                countdown(context.state)
             }
         }
         .supplementalActivityFamilies([.small]) // watch Smart Stack
@@ -82,41 +74,40 @@ struct BrewActivityContent: View {
     }
 }
 
-/// Watch Smart Stack — "BTTS" header, then the NEXT step + countdown on one
-/// full-width row (system dark card → light text).
+/// Watch Smart Stack — three stacked lines so the step can NEVER be squeezed out
+/// by the countdown's reserved width: "BTTS", then "Next: <step>", then the timer.
 @available(iOS 18.0, *)
 struct BrewWatchSmartStackView: View {
     let context: ActivityViewContext<BrewAttributes>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 3) {
             Text("BTTS")
-                .font(.system(size: 16, weight: .bold, design: .serif))
-
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Next: \(context.state.nextStep)")
-                    .font(.system(size: 15, weight: .medium))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                Spacer(minLength: 6)
-                countdown(context.state)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .layoutPriority(1)
-            }
-            .frame(maxWidth: .infinity)
+                .font(.system(size: 14, weight: .bold, design: .serif))
+                .opacity(0.85)
+            Text("Next: \(context.state.nextStep)")
+                .font(.system(size: 15, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            countdown(context.state)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-/// iOS lock screen — the step happening NOW (with cumulative total) + a countdown
-/// to the next step on the same row, then a progress bar over the current step.
+/// iOS lock screen — the step happening NOW on its OWN line (so it always shows),
+/// then a progress bar + countdown row underneath.
 @available(iOS 18.0, *)
 struct BrewLockScreenView: View {
     let context: ActivityViewContext<BrewAttributes>
 
+    private var nowStep: String {
+        context.state.currentStep.isEmpty ? "Brewing" : context.state.currentStep
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 7) {
             Text(context.attributes.recipeName.uppercased())
                 .font(.system(size: 11, weight: .bold))
                 .tracking(0.8)
@@ -128,23 +119,24 @@ struct BrewLockScreenView: View {
                 .tracking(1.2)
                 .foregroundColor(laInk.opacity(0.5))
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(context.state.currentStep)
-                    .font(.system(size: 22, weight: .semibold, design: .serif))
-                    .foregroundColor(laInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                Spacer(minLength: 8)
-                countdown(context.state)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(laInk)
-                    .layoutPriority(1)
-            }
-            .frame(maxWidth: .infinity)
+            // The step — its own full-width line, big serif, can't be clipped.
+            Text(nowStep)
+                .font(.system(size: 24, weight: .semibold, design: .serif))
+                .foregroundColor(laInk)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            ProgressView(timerInterval: stepRange(context.state), countsDown: false)
-                .tint(laInk)
-                .labelsHidden()
+            HStack(spacing: 12) {
+                ProgressView(timerInterval: stepRange(context.state), countsDown: false)
+                    .tint(laInk)
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                countdown(context.state)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(laInk)
+                    .frame(minWidth: 54, alignment: .trailing)
+            }
         }
         .padding(16)
     }
