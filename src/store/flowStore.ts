@@ -30,6 +30,11 @@ interface FlowState {
   isAnalyzing: boolean;
   isRecommending: boolean;
   recommendError: string | null;
+  /** Id of the server-side background recommendation job, set when the recipe
+   * generation is kicked off and cleared when it resolves (or on reset). The
+   * always-mounted RecommendJobWatcher polls it so generation survives the app
+   * being backgrounded — see src/lib/recommend/jobStore.ts. */
+  recommendJobId: string | null;
   clarificationMessages: ClarificationMessage[];
   /** A URL shared into the app via the iOS Share Sheet ("Add to BTTS"), to be
    * auto-analyzed by the scan step on mount, then cleared. */
@@ -55,6 +60,7 @@ interface FlowState {
   setIsAnalyzing: (v: boolean) => void;
   setIsRecommending: (v: boolean) => void;
   setRecommendError: (err: string | null) => void;
+  setRecommendJobId: (id: string | null) => void;
   addClarificationMessage: (msg: ClarificationMessage) => void;
   clearClarifications: () => void;
   reset: () => void;
@@ -84,6 +90,7 @@ export const useFlowStore = create<FlowState>()(
       isAnalyzing: false,
       isRecommending: false,
       recommendError: null,
+      recommendJobId: null,
       clarificationMessages: [],
 
       setStep: (step) => set({ step }),
@@ -103,11 +110,12 @@ export const useFlowStore = create<FlowState>()(
       setIsAnalyzing: (v) => set({ isAnalyzing: v }),
       setIsRecommending: (v) => set({ isRecommending: v }),
       setRecommendError: (err) => set({ recommendError: err }),
+      setRecommendJobId: (id) => set({ recommendJobId: id }),
       addClarificationMessage: (msg) =>
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [] }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

@@ -191,7 +191,13 @@ export default function LightStepRecommend() {
         <p className="text-[14px] text-light-foreground">{recommendError}</p>
         <button
           type="button"
-          onClick={() => setStep("context")}
+          onClick={() => {
+            // Abandon any lingering job before re-running so a stale result
+            // can't refill after the user steps back.
+            useFlowStore.getState().setRecommendJobId(null);
+            useFlowStore.getState().setRecommendError(null);
+            setStep("context");
+          }}
           className="px-6 py-3 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 text-[14px] text-light-foreground active:scale-95 transition-transform"
         >
           Try again

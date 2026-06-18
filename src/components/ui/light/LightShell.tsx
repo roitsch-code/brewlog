@@ -6,6 +6,7 @@ import { sweepBrewNotifications } from "@/lib/native/brewNotifications";
 import NativeWidgetBridge from "@/components/native/NativeWidgetBridge";
 import Field from "./Field";
 import ConnectionStatus from "./ConnectionStatus";
+import RecommendJobWatcher from "./RecommendJobWatcher";
 
 // Run the legacy-notification sweep once per app session, not per route mount.
 let didSweepNotifications = false;
@@ -44,6 +45,7 @@ export default function LightShell({ children }: { children: ReactNode }) {
       <div data-light-scope="true" className="font-chivo text-light-foreground min-h-dvh">
         <Field />
         <ConnectionStatus />
+        <RecommendJobWatcher />
         <NativeWidgetBridge />
         {children}
       </div>
