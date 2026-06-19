@@ -48,9 +48,16 @@ interface LocalNotificationsLike {
     listener: (event: NotificationTapEvent) => void,
   ): Promise<AppListenerHandle>;
 }
+interface WidgetBridgeLike {
+  consumeSharedImage(): Promise<{ dataUrl?: string | null }>;
+}
 interface CapacitorLike {
   isNativePlatform?: () => boolean;
-  Plugins?: { App?: AppPluginLike; LocalNotifications?: LocalNotificationsLike };
+  Plugins?: {
+    App?: AppPluginLike;
+    LocalNotifications?: LocalNotificationsLike;
+    WidgetBridge?: WidgetBridgeLike;
+  };
 }
 
 function getApp(): AppPluginLike | null {
@@ -155,6 +162,27 @@ export function routeToSharedUrl(url: string, nav: Nav): void {
 }
 
 /**
+ * A photo was shared in ("Add to BTTS" on an album image). The Share Extension
+ * wrote it into the App Group; read it via WidgetBridge as a base64 data URL,
+ * stash it for the Home chat (which uploads + attaches + auto-asks), and go Home.
+ */
+async function consumeSharedImageToChat(nav: Nav): Promise<void> {
+  try {
+    if (typeof window === "undefined") return;
+    const cap = (window as unknown as { Capacitor?: CapacitorLike }).Capacitor;
+    const bridge = cap?.Plugins?.WidgetBridge;
+    if (!bridge) return;
+    const { dataUrl } = await bridge.consumeSharedImage();
+    if (typeof dataUrl === "string" && dataUrl.startsWith("data:")) {
+      useFlowStore.getState().setPendingChatImageData(dataUrl);
+      nav("/");
+    }
+  } catch {
+    /* nothing waiting / bridge missing — ignore */
+  }
+}
+
+/**
  * Register the Share-Extension notification-tap handler. The extension posts a
  * local notification carrying the shared URL (`btts_url`); tapping it opens the
  * app and fires `localNotificationActionPerformed`, where we read the URL and
@@ -179,7 +207,12 @@ export function registerShareNotificationTap(nav: Nav): () => void {
   plugin
     .addListener("localNotificationActionPerformed", (event) => {
       const url = event?.notification?.extra?.btts_url;
-      if (typeof url === "string" && url) routeToSharedUrl(url, nav);
+      if (typeof url === "string" && url) {
+        routeToSharedUrl(url, nav);
+        return;
+      }
+      const img = event?.notification?.extra?.btts_image;
+      if (typeof img === "string" && img) void consumeSharedImageToChat(nav);
     })
     .then((h) => {
       if (removed) h.remove();

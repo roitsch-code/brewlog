@@ -453,6 +453,37 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingChatUrl]);
 
+  // A PHOTO shared in via "Add to BTTS" (Share Sheet → album image): the native
+  // bridge read it from the App Group as a data URL. Upload it (so it gets a
+  // real S3 url like any chat photo), attach it, and auto-ask about it — once.
+  const pendingChatImageData = useFlowStore((s) => s.pendingChatImageData);
+  const setPendingChatImageData = useFlowStore((s) => s.setPendingChatImageData);
+  const sharedImageHandledRef = useRef(false);
+  useEffect(() => {
+    if (!pendingChatImageData || sharedImageHandledRef.current) return;
+    sharedImageHandledRef.current = true;
+    const dataUrl = pendingChatImageData;
+    setPendingChatImageData(null);
+    void (async () => {
+      try {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], `shared-${Date.now()}.jpg`, { type: blob.type || "image/jpeg" });
+        const form = new FormData();
+        form.append("file", file);
+        form.append("path", `uploads/chat-${Date.now()}-shared.jpg`);
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        if (!res.ok) throw new Error(`upload ${res.status}`);
+        const { url } = await res.json();
+        if (!url) throw new Error("no url");
+        await handleSend({ text: "What do you think of this coffee?", imageUrl: url });
+      } catch {
+        // Upload failed — let the user retry by attaching manually; reset guard.
+        sharedImageHandledRef.current = false;
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingChatImageData]);
+
   return (
     <>
       <main className="flex h-dvh flex-col">

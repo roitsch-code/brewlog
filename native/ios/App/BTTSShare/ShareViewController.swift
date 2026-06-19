@@ -24,8 +24,45 @@ class ShareViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        extractURL { [weak self] urlString in
-            DispatchQueue.main.async { self?.finish(urlString) }
+        // Photo first (a shared album image), then fall back to URL/text.
+        extractImage { [weak self] ok in
+            if ok {
+                DispatchQueue.main.async { self?.finishImage() }
+            } else {
+                self?.extractURL { urlString in
+                    DispatchQueue.main.async { self?.finish(urlString) }
+                }
+            }
+        }
+    }
+
+    private let appGroup = "group.com.roitsch.btts"
+    private let sharedImageName = "shared-image.jpg"
+
+    /// Load a shared image, re-encode to JPEG, and write it into the App Group
+    /// container so the host app's WidgetBridge can read it. The write MUST
+    /// finish inside the async completion handler before we post the
+    /// notification, or a large photo arrives blank (documented race).
+    private func extractImage(_ completion: @escaping (Bool) -> Void) {
+        guard let item = extensionContext?.inputItems.first as? NSExtensionItem,
+              let providers = item.attachments else { completion(false); return }
+        let imageType = UTType.image.identifier
+        guard let p = providers.first(where: { $0.hasItemConformingToTypeIdentifier(imageType) }) else {
+            completion(false); return
+        }
+        p.loadDataRepresentation(forTypeIdentifier: imageType) { [weak self] data, _ in
+            guard let self = self,
+                  let data = data,
+                  let img = UIImage(data: data),
+                  let jpeg = img.jpegData(compressionQuality: 0.85),
+                  let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: self.appGroup)
+            else { completion(false); return }
+            do {
+                try jpeg.write(to: container.appendingPathComponent(self.sharedImageName), options: .atomic)
+                completion(true)
+            } catch {
+                completion(false)
+            }
         }
     }
 
@@ -63,18 +100,27 @@ class ShareViewController: UIViewController {
             complete()
             return
         }
-        postNotification(s) { [weak self] in self?.complete() }
+        postNotification(userInfo: ["btts_url": s],
+                         body: "Tap to read this coffee into BTTS.") { [weak self] in self?.complete() }
     }
 
-    /// Post a local notification carrying the shared URL. Tapping it opens BTTS,
-    /// where the LocalNotifications listener reads `btts_url` and runs the scan.
-    private func postNotification(_ urlString: String, then done: @escaping () -> Void) {
+    /// A photo was written to the App Group — bring the app forward to attach it
+    /// to the Home chat. The bytes ride in the App Group, not the notification.
+    private func finishImage() {
+        postNotification(userInfo: ["btts_image": sharedImageName],
+                         body: "Tap to add this photo to the BTTS chat.") { [weak self] in self?.complete() }
+    }
+
+    /// Post a local notification that brings BTTS forward. Tapping it fires
+    /// `localNotificationActionPerformed`, where the web reads `btts_url` /
+    /// `btts_image` from `extra` and routes into the chat.
+    private func postNotification(userInfo: [String: Any], body: String, then done: @escaping () -> Void) {
         let center = UNUserNotificationCenter.current()
         let post = {
             let content = UNMutableNotificationContent()
             content.title = "Add to BTTS"
-            content.body = "Tap to read this coffee into BTTS."
-            content.userInfo = ["btts_url": urlString]
+            content.body = body
+            content.userInfo = userInfo
             content.sound = .default
             let req = UNNotificationRequest(
                 identifier: "btts-share",
