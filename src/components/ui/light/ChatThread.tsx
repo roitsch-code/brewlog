@@ -146,8 +146,8 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                   </div>
                 )}
                 {m.content && (
-                  <div className="max-w-[80%] rounded-2xl bg-light-card-default px-4 py-3 backdrop-blur-light-card backdrop-saturate-150">
-                    <p className="whitespace-pre-wrap font-chivo text-[15px] font-normal text-light-foreground">
+                  <div className="max-w-[80%] min-w-0 rounded-2xl bg-light-card-default px-4 py-3 backdrop-blur-light-card backdrop-saturate-150">
+                    <p className="whitespace-pre-wrap [overflow-wrap:anywhere] font-chivo text-[15px] font-normal text-light-foreground">
                       {m.content}
                     </p>
                   </div>
@@ -160,7 +160,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                     m.content.split(/\n\n+/).map((para, j) => (
                       <p
                         key={j}
-                        className="whitespace-pre-wrap font-chivo text-[15px] font-normal leading-[1.5] text-light-foreground"
+                        className="whitespace-pre-wrap [overflow-wrap:anywhere] font-chivo text-[15px] font-normal leading-[1.5] text-light-foreground"
                       >
                         {renderInlineMarkdown(para)}
                       </p>
