@@ -42,6 +42,10 @@ interface FlowState {
   /** A coffee URL shared in via "Add to BTTS" — the Home chat auto-asks
    * "What do you think of this coffee: <url>" on mount, then clears it. */
   pendingChatUrl: string | null;
+  /** A PHOTO shared in via "Add to BTTS" (Share Sheet → album image), as a
+   * base64 data URL read from the App Group. The Home chat uploads it, attaches
+   * it, and auto-asks about it on mount, then clears it. */
+  pendingChatImageData: string | null;
 
   // Actions
   setStep: (step: FlowStep) => void;
@@ -49,6 +53,7 @@ interface FlowState {
   setSkipScan: (v: boolean) => void;
   setPendingScanUrl: (url: string | null) => void;
   setPendingChatUrl: (url: string | null) => void;
+  setPendingChatImageData: (dataUrl: string | null) => void;
   setIsDripBag: (v: boolean) => void;
   setCoffee: (coffee: Partial<CoffeeIdentity>) => void;
   setPlace: (place: ExternalPlace) => void;
@@ -91,6 +96,7 @@ export const useFlowStore = create<FlowState>()(
       skipScan: false,
       pendingScanUrl: null,
       pendingChatUrl: null,
+      pendingChatImageData: null,
       isDripBag: false,
       isAnalyzing: false,
       isRecommending: false,
@@ -103,6 +109,7 @@ export const useFlowStore = create<FlowState>()(
       setSkipScan: (v) => set({ skipScan: v }),
       setPendingScanUrl: (pendingScanUrl) => set({ pendingScanUrl }),
       setPendingChatUrl: (pendingChatUrl) => set({ pendingChatUrl }),
+      setPendingChatImageData: (pendingChatImageData) => set({ pendingChatImageData }),
       setIsDripBag: (v) => set({ isDripBag: v }),
       setCoffee: (coffee) =>
         set((s) => ({ draft: { ...s.draft, coffee: { ...s.draft.coffee, ...coffee } as CoffeeIdentity } })),
@@ -120,9 +127,9 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [] }),
       resumeColdBrew: (draft, fieldZones) =>
-        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null }),
+        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

@@ -7,9 +7,11 @@
 # (it only adds its own target + group + embed phase; no overlap with theirs).
 # See docs/ios-shell-roadmap.md.
 #
-# No App Group / extra capability: the shared URL is passed inline in the
-# btts://share?url=… deep link, so automatic signing just needs the bundle id —
-# no portal capability assignment (unlike the widget's App Group).
+# App Group: a shared PHOTO can't ride in the deep link, so the extension writes
+# it into the group.com.roitsch.btts container and the host app reads it. Needs the
+# App Group entitlement on this target (BTTSShare.entitlements) AND a one-time portal
+# assignment of the group to the BTTSShare App ID (the ASC API can't script that —
+# same dance as the widget). Shared URLs still ride inline in btts://share?url=…
 require "xcodeproj"
 
 ROOT = File.expand_path("../ios/App", __dir__)
@@ -37,6 +39,7 @@ end
 share_group = project.main_group.new_group("BTTSShare", "BTTSShare")
 swift_refs = %w[ShareViewController.swift].map { |f| share_group.new_reference(f) }
 share_group.new_reference("Info.plist") # referenced via INFOPLIST_FILE
+  share_group.new_reference("BTTSShare.entitlements") # referenced via CODE_SIGN_ENTITLEMENTS
 
 # --- The share extension target -----------------------------------------------
 share_target = project.new_target(:app_extension, "BTTSShare", :ios, "15.0", nil, :swift)
@@ -48,6 +51,7 @@ settings = {
   "INFOPLIST_FILE" => "BTTSShare/Info.plist",
   "GENERATE_INFOPLIST_FILE" => "NO",
   "CODE_SIGN_STYLE" => "Automatic",
+  "CODE_SIGN_ENTITLEMENTS" => "BTTSShare/BTTSShare.entitlements",
   "SWIFT_VERSION" => "5.0",
   "IPHONEOS_DEPLOYMENT_TARGET" => "15.0",
   "TARGETED_DEVICE_FAMILY" => "1",

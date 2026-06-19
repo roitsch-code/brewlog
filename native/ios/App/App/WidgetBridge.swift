@@ -23,10 +23,28 @@ public class WidgetBridgePlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "WidgetBridge"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "setRotation", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "consumeSharedImage", returnType: CAPPluginReturnPromise),
     ]
 
     private let suiteName = "group.com.roitsch.btts"
     private let storeKey = "rotation"
+    private let sharedImageName = "shared-image.jpg"
+
+    /// Read (and delete) a photo the Share Extension wrote into the App Group
+    /// container, returned as a base64 data URL the web can upload + attach to
+    /// the Home chat. Resolves `{ dataUrl: null }` when nothing is waiting.
+    @objc func consumeSharedImage(_ call: CAPPluginCall) {
+        let fm = FileManager.default
+        guard let container = fm.containerURL(forSecurityApplicationGroupIdentifier: suiteName) else {
+            call.resolve(["dataUrl": NSNull()]); return
+        }
+        let fileURL = container.appendingPathComponent(sharedImageName)
+        guard let data = try? Data(contentsOf: fileURL) else {
+            call.resolve(["dataUrl": NSNull()]); return
+        }
+        try? fm.removeItem(at: fileURL) // consume once
+        call.resolve(["dataUrl": "data:image/jpeg;base64,\(data.base64EncodedString())"])
+    }
 
     @objc func setRotation(_ call: CAPPluginCall) {
         let incoming = call.getArray("coffees", JSObject.self) ?? []
