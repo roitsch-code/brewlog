@@ -5,6 +5,7 @@ import type { Map as LMap, Marker as LMarker } from "leaflet";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import type { CafeSummary, Place, CafeVisit, CafeVisitRating } from "@/lib/types/cafes";
 import StarRating from "@/components/ui/light/StarRating";
+import { getPosition, getPositionIfGranted } from "@/lib/native/geo";
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -207,18 +208,12 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       const youAreHereIcon = L.divIcon({ html: YOU_ARE_HERE_HTML, className: "", iconSize: [12, 12], iconAnchor: [6, 6] });
       pinIconRef.current = pinIcon;
 
-      locateMeFnRef.current = () => {
-        if (typeof navigator === "undefined" || !navigator.geolocation) {
-          setLocateError("Location isn't available on this device");
-          setTimeout(() => setLocateError(null), 3000);
-          return;
-        }
+      locateMeFnRef.current = async () => {
         setLocatingUser(true);
 
-        // Watchdog: iOS WKWebView / PWA can drop BOTH geolocation callbacks
-        // when the permission prompt is dismissed or the app is backgrounded,
-        // which would leave the button stuck disabled forever. This guarantees
-        // a reset so the button is always tappable again.
+        // Watchdog: even via the native plugin a permission prompt that's
+        // dismissed / an app backgrounded can leave the request hanging — this
+        // guarantees the button never gets stuck spinning.
         let settled = false;
         const watchdog = setTimeout(() => {
           if (settled) return;
@@ -226,78 +221,78 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
           setLocateError("Couldn't get your location. Try again.");
           setTimeout(() => setLocateError(null), 3000);
           setLocatingUser(false);
-        }, 16000);
+        }, 18000);
 
-        navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(watchdog);
-            const { latitude: lat, longitude: lng } = pos.coords;
+        try {
+          // getPosition() uses the native @capacitor/geolocation plugin inside
+          // the iOS app (the web API doesn't resolve over a remote WKWebView)
+          // and the browser API in the PWA. Coarse + cached → fast.
+          const { lat, lng } = await getPosition();
+          if (settled) return;
+          settled = true;
+          clearTimeout(watchdog);
 
-            userMarkerRef.current?.remove();
-            userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
+          userMarkerRef.current?.remove();
+          userMarkerRef.current = L.marker([lat, lng], { icon: youAreHereIcon, zIndexOffset: 1000 }).addTo(map);
 
-            // Ask the server for the nearest resolved places — no full-table
-            // download, the distance ranking happens in SQL.
-            let nearby: Place[] = [];
-            try {
-              const res = await fetch(`/api/places?near=${lat},${lng}`);
-              nearby = await res.json();
-            } catch { /* network error — treated as no results below */ }
+          // Ask the server for the nearest resolved places — no full-table
+          // download, the distance ranking happens in SQL.
+          let nearby: Place[] = [];
+          try {
+            const res = await fetch(`/api/places?near=${lat},${lng}`);
+            nearby = await res.json();
+          } catch { /* network error — treated as no results below */ }
 
-            const resolved = nearby.filter(p => p.lat != null && p.lng != null);
+          const resolved = nearby.filter(p => p.lat != null && p.lng != null);
 
-            if (resolved.length === 0) {
-              map.flyTo([lat, lng], 15);
-              setLocateError("No cafés in database for this area yet");
-              setTimeout(() => setLocateError(null), 3000);
-              setLocatingUser(false);
-              return;
-            }
-
-            // Small city mode: nearest place <50 km away and whole city fits in 25 → show all
-            const sorted = resolved
-              .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
-              .sort((a, b) => a.dist - b.dist);
-            const nearestCity = sorted[0].p.city;
-            const cityPlaces = resolved.filter(
-              p => p.city.toLowerCase() === nearestCity.toLowerCase()
-            );
-            const toShow =
-              sorted[0].dist < 50 && cityPlaces.length <= 25
-                ? cityPlaces
-                : sorted.slice(0, 25).map(x => x.p);
-
-            setPlaces(resolved);
-            setNearbyIds(new Set(toShow.map(p => p.id)));
-
-            // Fit map to user location + all nearby spots
-            const bounds = L.latLngBounds([
-              [lat, lng],
-              ...toShow.map(p => [p.lat!, p.lng!] as [number, number]),
-            ]);
-            map.fitBounds(bounds.pad(0.2));
-
-            setLocatingUser(false);
-          },
-          (err) => {
-            if (settled) return;
-            settled = true;
-            clearTimeout(watchdog);
-            setLocateError(
-              err.code === err.PERMISSION_DENIED
-                ? "Location access is off — enable it in Settings"
-                : "Couldn't get your location. Try again."
-            );
+          if (resolved.length === 0) {
+            map.flyTo([lat, lng], 15);
+            setLocateError("No coffee places in the database near you yet");
             setTimeout(() => setLocateError(null), 3000);
             setLocatingUser(false);
-          },
-          // Coarse + recent-cache fix: fast and reliable on a phone. High
-          // accuracy GPS routinely times out indoors — overkill for ranking
-          // nearby cafés, where city-block precision is plenty.
-          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-        );
+            return;
+          }
+
+          // Small city mode: nearest place <50 km away and whole city fits in 25 → show all
+          const sorted = resolved
+            .map(p => ({ p, dist: haversineKm(lat, lng, p.lat!, p.lng!) }))
+            .sort((a, b) => a.dist - b.dist);
+          const nearestCity = sorted[0].p.city;
+          const cityPlaces = resolved.filter(
+            p => p.city.toLowerCase() === nearestCity.toLowerCase()
+          );
+          const toShow =
+            sorted[0].dist < 50 && cityPlaces.length <= 25
+              ? cityPlaces
+              : sorted.slice(0, 25).map(x => x.p);
+
+          setPlaces(resolved);
+          setNearbyIds(new Set(toShow.map(p => p.id)));
+
+          // Fit map to user location + all nearby spots
+          const bounds = L.latLngBounds([
+            [lat, lng],
+            ...toShow.map(p => [p.lat!, p.lng!] as [number, number]),
+          ]);
+          map.fitBounds(bounds.pad(0.2));
+
+          setLocatingUser(false);
+        } catch (err) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(watchdog);
+          // Permission denied → point the user at Settings; everything else is
+          // a transient "try again" (web code 1 = denied; plugin message-matches).
+          const e = err as { code?: number; message?: string };
+          const denied = e?.code === 1 || /denied|permission/i.test(e?.message ?? "");
+          setLocateError(
+            denied
+              ? "Location access is off — enable it in Settings"
+              : "Couldn't get your location. Try again."
+          );
+          setTimeout(() => setLocateError(null), 3000);
+          setLocatingUser(false);
+        }
       };
 
       // Show the map immediately at a sensible default view. The map is
@@ -317,14 +312,12 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       // denied (or the 5s soft-timeout fires), the pin-loop fallback
       // below takes over.
       (async () => {
-        const userPos = await new Promise<{ lat: number; lng: number } | null>(resolve => {
-          const timer = setTimeout(() => resolve(null), 5000);
-          navigator.geolocation?.getCurrentPosition(
-            pos => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
-            () => { clearTimeout(timer); resolve(null); },
-            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
-          );
-        });
+        const userPos = await Promise.race<{ lat: number; lng: number } | null>([
+          // Silent — never prompts on mount; only returns if permission is
+          // already granted (native) or the browser resolves it.
+          getPositionIfGranted({ timeoutMs: 5000 }),
+          new Promise<null>(resolve => setTimeout(() => resolve(null), 5000)),
+        ]);
         if (cancelled || !userPos || !mapRef.current) return;
         userLocated = true;
         mapRef.current.setView([userPos.lat, userPos.lng], 14);

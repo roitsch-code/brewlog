@@ -43,6 +43,10 @@
 	<string>BTTS connects to your Acaia scale over Bluetooth to read live weight and flow during a brew.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>BTTS uses the camera to scan coffee bags and read their details.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>BTTS uses your location to show coffee places near you on the map.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>BTTS uses your location to show coffee places near you on the map.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>BTTS uses the microphone for voice chat — talk to your coffee assistant instead of typing.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
