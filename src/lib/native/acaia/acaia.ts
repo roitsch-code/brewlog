@@ -83,6 +83,10 @@ class DecoderWorker {
 }
 
 const HEARTBEAT_INTERVAL = 1000;
+// A notification gap longer than this means the weight stream genuinely stalled
+// (normal pouring streams at ~10 Hz) → re-subscribe to revive it. See
+// startHeartbeatMonitor.
+const NOTIFICATION_STALL_MS = 3000;
 const CONNECTION_MODE: string = "V2";
 
 export class AcaiaScale {
@@ -118,6 +122,7 @@ export class AcaiaScale {
 
   private recievesNotifications = false;
   private encodeNotificationRequestSend = false;
+  private last_notification_ms = 0;
 
   constructor(device_id: string, characteristics: Characteristic[], transport: AcaiaTransport) {
     this.device_id = device_id;
@@ -298,22 +303,45 @@ export class AcaiaScale {
 
   private handleNotification(value: ArrayBuffer): void {
     if (this.connected) {
+      this.last_notification_ms = Date.now();
       this.worker.addBuffer(value);
       this.heartbeat();
     }
   }
 
+  // DELIBERATE DEVIATION FROM BEANCONQUEROR — do NOT "restore upstream parity".
+  // Upstream's monitor only re-calls ident() (a no-op on the iOS V2 path once
+  // subscribed) and relies on incoming notifications to drive heartbeat(). That
+  // makes the keepalive self-sustaining ONLY while the scale streams: a single
+  // stall (BLE congestion / brief out-of-range / auto-dim) breaks the loop and
+  // the weight freezes with no recovery. Here the monitor instead (1) drives a
+  // real heartbeat itself every second — independent of the notification stream —
+  // and (2) re-subscribes when weight has genuinely stalled, so the stream
+  // revives on its own. Both use only the existing ported packets.
   private startHeartbeatMonitor(): void {
-    this.heartbeat_monitor_interval = setInterval(async () => {
-      if (Date.now() > this.last_heartbeat + HEARTBEAT_INTERVAL) {
+    this.heartbeat_monitor_interval = setInterval(() => {
+      if (!this.connected) return;
+      // Independent keepalive: heartbeat() flushes the command queue and sends a
+      // real encodeHeartbeat, self-throttled to ≤1/s via last_heartbeat — so
+      // driving it here too (not only from handleNotification) keeps the scale
+      // awake even when no notifications are arriving.
+      this.heartbeat();
+      // Stream genuinely stalled (no weight for a few seconds) → re-request it.
+      // Gated on recievesNotifications so it never fires before first subscribe,
+      // and on the multi-second gap so normal ~10 Hz pouring never trips it.
+      if (
+        this.recievesNotifications &&
+        Date.now() - this.last_notification_ms > NOTIFICATION_STALL_MS
+      ) {
+        this.encodeNotificationRequestSend = false; // let ident() re-send the request
         if (this.isV1Path()) {
-          await this.initScales();
+          void this.ident();
         } else {
-          this.initScales();
+          this.ident();
         }
-        this.logger.info("Sent heartbeat reviving request.");
+        this.logger.info("Weight stream stalled — re-subscribing.");
       }
-    }, HEARTBEAT_INTERVAL * 2);
+    }, HEARTBEAT_INTERVAL);
   }
 
   private stopHeartbeatMonitor(): void {
