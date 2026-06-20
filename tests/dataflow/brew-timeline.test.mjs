@@ -81,6 +81,22 @@ const RECIPES = {
     pourSequence: "50 – 180 – 320 – 500",
     waterGrams: 500,
   },
+  // V60 from the Home chat's start_brew: multiple rising-grams pours, a final
+  // swirl, and the ~2:00 DRAWDOWN encoded as a trailing wait. Must stay
+  // percolation (keeps the cumulative-grams renderer + the live flow coach) —
+  // the trailing wait must NOT misroute it to the immersion guide.
+  "percolation-v60-drawdown": {
+    ...base,
+    targetTimeSec: 270,
+    waterGrams: 450,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 90, durationSec: 8, notes: "swirl gently" },
+      { label: "Pour 1", action: "pour", waterGramsAtEnd: 270, durationSec: 50 },
+      { label: "Pour 2", action: "final", waterGramsAtEnd: 450, durationSec: 50 },
+      { label: "Final swirl", action: "swirl" },
+      { label: "Drawdown", action: "wait", durationSec: 120 },
+    ],
+  },
   "immersion-inverted-aeropress": {
     ...base,
     targetTimeSec: 150,
@@ -160,6 +176,28 @@ for (const [name, recipe] of Object.entries(RECIPES)) {
     assert.equal(activeStepAt(tl, 30, false), -1, "not started → -1");
   });
 }
+
+test("percolation: a trailing drawdown wait stays percolation (keeps the flow coach)", () => {
+  const recipe = RECIPES["percolation-v60-drawdown"];
+  // The trailing wait must NOT trigger the immersion guide.
+  assert.equal(hasImmersionShape(recipe), false, "trailing drawdown wait misrouted to immersion");
+  const tl = buildBrewTimeline(recipe, ROAST, NOW);
+  assert.equal(tl.shape, "percolation");
+  assert.equal(tl.hasGramsCurve, true, "no grams curve → coachFlow returns none → no flow coach");
+  assert.ok(tl.pourSteps && tl.pourSteps.length > 0, "must take the LivePourSequence path");
+  assert.equal(tl.guideSteps, null, "must NOT build immersion guide steps");
+});
+
+test("immersion: a MID-brew steep (wait before drain/press) still routes to the guide", () => {
+  // Guards that the drawdown fix didn't over-reach: Clever (wait → drain) and the
+  // inverted AeroPress (invert/press) must remain immersion.
+  assert.equal(hasImmersionShape(RECIPES["immersion-clever"]), true, "clever steep lost");
+  assert.equal(
+    hasImmersionShape(RECIPES["immersion-inverted-aeropress"]),
+    true,
+    "aeropress steep lost",
+  );
+});
 
 test("percolation: expectedGramsAt is monotonic 0 → final", () => {
   const tl = buildBrewTimeline(RECIPES["percolation-grams-string"], ROAST, NOW);

@@ -366,16 +366,37 @@ export function buildGuideSteps(recipe: BrewRecipe): GuideStep[] | null {
 
 /** True when a recipe's structured steps describe an immersion / AeroPress /
  * staged routine that belongs in the step guide rather than the cumulative-
- * grams pour-over renderer (steep-dominated, or with flip/press/invert/bypass). */
+ * grams pour-over renderer (steep-dominated, or with flip/press/invert/bypass).
+ *
+ * A long `wait` only signals immersion when it's a MID-BREW steep — i.e. some
+ * later step adds water (`waterGramsAtEnd`) or drains/presses/flips/inverts/
+ * bypasses. A long `wait` with nothing of those after it is just a pour-over's
+ * terminal DRAWDOWN, NOT a steep, and must stay percolation (so it keeps the
+ * cumulative-grams renderer + the live flow coach). This came up because the
+ * Home chat's `start_brew` encodes a V60's ~2:00 drawdown as a trailing `wait`,
+ * which used to misroute the whole pour-over to the immersion guide and drop the
+ * flow coach. Order-robust: a trailing "Final swirl" after the drawdown wait
+ * still doesn't qualify (swirl neither adds water nor drains/presses). */
 export function hasImmersionShape(recipe: BrewRecipe): boolean {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return false;
-  return src.some(
-    (s) =>
-      s.action === "invert" ||
-      s.action === "flip" ||
-      s.action === "press" ||
-      s.action === "bypass" ||
-      (s.action === "wait" && (s.durationSec ?? 0) >= 45),
-  );
+  const isSteepFollowUp = (a: BrewStepAction, hasWater: boolean): boolean =>
+    hasWater ||
+    a === "drain" ||
+    a === "press" ||
+    a === "flip" ||
+    a === "invert" ||
+    a === "bypass";
+  return src.some((s, i) => {
+    if (s.action === "invert" || s.action === "flip" || s.action === "press" || s.action === "bypass") {
+      return true;
+    }
+    if (s.action === "wait" && (s.durationSec ?? 0) >= 45) {
+      // Mid-brew steep only — a later step must add water or drain/press/flip.
+      return src
+        .slice(i + 1)
+        .some((later) => isSteepFollowUp(later.action, later.waterGramsAtEnd != null));
+    }
+    return false;
+  });
 }
