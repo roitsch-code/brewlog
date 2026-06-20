@@ -16,6 +16,8 @@ import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
 import { places } from "@/lib/db/schema";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
+import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
+import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import type { Session, BrewRecipe } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -397,6 +399,28 @@ const TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+/**
+ * Clean a chat-authored `start_brew` recipe so the brew timer can render it the
+ * same way a /recommend recipe renders. The model's tool input is raw: its step
+ * `action` wording drifts ("Plunge", "Steep", "Press") and it carries no
+ * `pourSequence` fallback string. Without this the AeroPress / immersion guide
+ * mis-routes (the renderer matches exact action words) and shows no steps. We:
+ *   1. action-normalize + validate the structured steps (shared with /recommend),
+ *   2. derive the legacy `pourSequence` backstop from those steps, and
+ *   3. snap the headline water to the actual pour plan (the "too much water"
+ *      header-vs-plan mismatch /recommend already corrects).
+ */
+function cleanChatRecipe(recipe: BrewRecipe | undefined): BrewRecipe | undefined {
+  if (!recipe) return undefined;
+  const pourSteps = sanitizePourSteps(recipe.pourSteps);
+  const out: BrewRecipe = {
+    ...recipe,
+    ...(pourSteps ? { pourSteps } : {}),
+    pourSequence: recipe.pourSequence ?? pourSequenceFromSteps(pourSteps),
+  };
+  return reconcileWaterToPourPlan(out);
+}
+
 // suggest_navigation and start_brew are terminal "action" tools — collected
 // into the response's actions, not round-tripped. The destination comes from
 // the TOOL NAME for start_brew (its input has no destination field), and from
@@ -411,7 +435,7 @@ function toNavAction(toolName: string, input: NavAction): NavAction {
       method: input.method,
       title: input.title,
       basedOn: input.basedOn,
-      recipe: input.recipe,
+      recipe: cleanChatRecipe(input.recipe),
     };
   }
   if (toolName === "remember_advice") {

@@ -7,8 +7,6 @@ import type {
   CandidateRole,
   CandidateConfidence,
   BrewRecipe,
-  BrewPourStep,
-  BrewStepAction,
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
@@ -30,6 +28,7 @@ import {
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
+import { sanitizePourSteps } from "../utils/pourSteps";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -56,40 +55,6 @@ const RecommendationResponseSchema = z.object({
   coffeeAssessment: z.string().optional(),
 });
 
-const STEP_ACTIONS: readonly BrewStepAction[] = [
-  "bloom", "pour", "final", "stir", "swirl", "wait",
-  "press", "invert", "flip", "drain", "bypass", "melodrip", "agitate-bed",
-];
-
-/** Map free-text / synonym actions onto the structured vocabulary so a minor
- * wording drift ("rest", "plunge") doesn't drop the whole step array. */
-function normalizeStepAction(a: string): BrewStepAction {
-  const t = a.toLowerCase().trim();
-  if ((STEP_ACTIONS as string[]).includes(t)) return t as BrewStepAction;
-  if (/plunge|press/.test(t)) return "press";
-  if (/flip/.test(t)) return "flip";
-  if (/invert/.test(t)) return "invert";
-  if (/bypass|dilute/.test(t)) return "bypass";
-  if (/drain|draw|release/.test(t)) return "drain";
-  if (/steep|wait|rest|brew/.test(t)) return "wait";
-  if (/melodrip/.test(t)) return "melodrip";
-  if (/agitate/.test(t)) return "agitate-bed";
-  if (/stir|mix/.test(t)) return "stir";
-  if (/swirl|shake/.test(t)) return "swirl";
-  if (/bloom/.test(t)) return "bloom";
-  if (/final|last/.test(t)) return "final";
-  return "pour";
-}
-
-const PourStepInputSchema = z.object({
-  label: z.string(),
-  action: z.string().transform(normalizeStepAction),
-  waterGramsAtEnd: z.number().optional(),
-  durationSec: z.number().optional(),
-  temperatureC: z.number().optional(),
-  notes: z.string().optional(),
-});
-
 /**
  * Validate + coerce the model's `pourSteps`. Lenient by design: a well-formed
  * array is kept (actions normalised); anything malformed is dropped so the
@@ -98,9 +63,9 @@ const PourStepInputSchema = z.object({
  */
 function sanitizeRecipe(recipe: Record<string, unknown>): BrewRecipe {
   const out = { ...recipe } as Record<string, unknown>;
-  const parsed = z.array(PourStepInputSchema).safeParse(out.pourSteps);
-  if (parsed.success && parsed.data.length >= 2) {
-    out.pourSteps = parsed.data as BrewPourStep[];
+  const clean = sanitizePourSteps(out.pourSteps);
+  if (clean) {
+    out.pourSteps = clean;
   } else {
     delete out.pourSteps;
   }
