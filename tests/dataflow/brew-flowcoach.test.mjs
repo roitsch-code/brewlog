@@ -120,9 +120,23 @@ test("detail shows grams-to-go and rate", () => {
   assert.match(c.detail, /90g to go · 4\.0 g\/s/);
 });
 
-test("immersion / no scale → no-data, no cue", () => {
+test("immersion: steep step (no grams target) → no-data, no cue", () => {
+  // At t=30 the active step is the 90s steep (no cumulative grams) → time-only.
   assert.equal(coachFlow(IMMERSION, 30, true, 100, ramp(4)).cue, "none");
   assert.equal(coachFlow(IMMERSION, 30, true, 100, ramp(4)).state, "no-data");
   assert.equal(coachFlow(PERC, 60, true, null, []).cue, "none"); // no weight yet
   assert.equal(coachFlow(PERC, 60, false, 90, ramp(4)).cue, "none"); // not started
+});
+
+test("immersion: the water-POUR step gets scale coaching (AeroPress fix)", () => {
+  // At t=8 the active step is "Add water → 200g" (start 0, 15s). The scale must
+  // coach the pour just like a pour-over, not stay silent.
+  const c = coachFlow(IMMERSION, 8, true, 100, ramp(4));
+  assert.notEqual(c.cue, "none");
+  assert.equal(c.liveGrams, 100);
+  assert.equal(c.currentStepTargetG, 200);
+  // Past the target on that pour → the "Overshot +Xg" cue from the screenshot.
+  const over = coachFlow(IMMERSION, 8, true, 215, ramp(4));
+  assert.equal(over.cue, "overshot");
+  assert.equal(over.detail, "+15g");
 });

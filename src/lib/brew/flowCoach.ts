@@ -114,8 +114,11 @@ function fmtDetail(remaining: number, rate: number | null): string {
 
 /**
  * Compare the live pour to the intended flow at this instant. Returns a single
- * cue + the numbers behind it. Degrades to "no-data" off the grams curve
- * (immersion) or before there's a weight reading.
+ * cue + the numbers behind it. Coaches the water-pour steps of BOTH percolation
+ * AND immersion/AeroPress brews — any step that carries a cumulative-grams
+ * target. Steps with no grams target (a steep/press/drain on an immersion brew)
+ * fall through to "no-data" below, so those stay purely time-driven. Degrades to
+ * "no-data" before there's a weight reading or the brew has started.
  */
 export function coachFlow(
   timeline: BrewTimeline | null,
@@ -124,7 +127,7 @@ export function coachFlow(
   liveGrams: number | null,
   samples: WeightSample[],
 ): FlowComparison {
-  if (!timeline || !started || liveGrams == null || !timeline.hasGramsCurve) {
+  if (!timeline || !started || liveGrams == null) {
     return { ...NO_DATA, liveGrams };
   }
 

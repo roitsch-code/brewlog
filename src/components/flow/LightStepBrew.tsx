@@ -295,7 +295,9 @@ export default function LightStepBrew() {
           />
         )}
 
-        {guideSteps && <StepGuide steps={guideSteps} elapsed={elapsed} started={started} />}
+        {guideSteps && (
+          <StepGuide steps={guideSteps} elapsed={elapsed} started={started} coach={coach} />
+        )}
 
         {proseSequence && <StepGuide sequence={proseSequence} elapsed={elapsed} started={started} />}
       </div>
@@ -745,11 +747,15 @@ function StepGuide({
   sequence,
   elapsed,
   started,
+  coach,
 }: {
   steps?: GuideStep[];
   sequence?: string;
   elapsed: number;
   started: boolean;
+  /** Live scale flow comparison — shown on this view's water-pour steps when the
+   * Acaia is connected (same cue the pour-over renderer uses). Null/"none" → nothing. */
+  coach?: FlowComparison | null;
 }) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const prevAutoIdxRef = useRef(-1);
@@ -880,6 +886,8 @@ function StepGuide({
             />
           )}
         </div>
+
+        {showsCoach(coach) && <CoachCue coach={coach} />}
 
         {nextStep && nextCountdown !== null && nextCountdown <= 15 && nextCountdown > 0 && (
           <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
