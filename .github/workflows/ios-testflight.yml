@@ -32,6 +32,15 @@ on:
     # 06:00 UTC on the 1st of every month. TestFlight builds expire after 90
     # days, so a monthly cadence keeps ~3 attempts of headroom before expiry.
     - cron: "0 6 1 * *"
+  # On-demand kick that works WITHOUT the Actions UI / actions:write. Some
+  # sessions (e.g. Claude Code on the web) can't `workflow_dispatch` — the API
+  # 403s — but they CAN push/merge a PR. Bumping `.github/ios-build-trigger` and
+  # merging fires this build. Path-scoped so normal deploys never trigger it
+  # (no return to the old native/** push spam).
+  push:
+    branches: [main]
+    paths:
+      - ".github/ios-build-trigger"
 
 concurrency:
   group: ios-testflight
