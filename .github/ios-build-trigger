@@ -1,0 +1,4 @@
+# Bump this file (change the line below) and merge to main to kick an iOS
+# TestFlight build — see the `push` trigger in .github/workflows/ios-testflight.yml.
+# Used when a session can't reach the Actions "Run workflow" UI / workflow_dispatch.
+build: 2026-06-20T01 — Acaia heartbeat keepalive (#408) + flow coach (#407)
