@@ -23,6 +23,14 @@ the 1 s heartbeat, the command encoders — is the reverse-engineered protocol.
   constant defaults (`HEARTBEAT_INTERVAL` 1000, `CONNECTION_MODE` 'V2' = the iOS
   fast path). `lodash.memoize` → a local memoize.
 - **Strict TS.** Nullable `msg`, `ArrayBufferLike` on the decoder, no `any`.
+- **Independent heartbeat + stall revival (`startHeartbeatMonitor`).** Upstream's
+  monitor only re-`ident()`s (a no-op on the iOS V2 path once subscribed) and
+  relies on incoming notifications to drive `heartbeat()` — so the keepalive is
+  self-sustaining ONLY while the scale streams, and a single stall freezes the
+  weight with no recovery. Our monitor instead drives a real heartbeat itself
+  every second (independent of the stream) and re-subscribes when weight has
+  stalled (`NOTIFICATION_STALL_MS`). Uses only the existing ported packets — do
+  NOT "restore upstream parity" here, it reintroduces the freeze.
 
 ## Files
 
