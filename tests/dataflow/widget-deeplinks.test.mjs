@@ -76,6 +76,11 @@ test("share link with no url → null url", () => {
   assert.deepEqual(parseWidgetUrl("btts://share"), { kind: "share", url: null });
 });
 
+test("voice link → voice action (Siri / Action Button)", () => {
+  assert.deepEqual(parseWidgetUrl("btts://voice"), { kind: "voice" });
+  assert.deepEqual(parseWidgetUrl("btts://VOICE"), { kind: "voice" });
+});
+
 test("non-btts schemes return null", () => {
   assert.equal(parseWidgetUrl("https://bettertastethansorry.com/brew?coffeeId=x"), null);
   assert.equal(parseWidgetUrl("http://evil.example/brew"), null);

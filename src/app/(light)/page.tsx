@@ -484,6 +484,19 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingChatImageData]);
 
+  // Siri "BTTS Voice" / Action Button (btts://voice): the native bridge set
+  // pendingVoiceChat and routed here. Bump a nonce that ChatInput watches to
+  // arm the mic (→ listening earcon), then clear the flag so a normal open
+  // never auto-listens.
+  const pendingVoiceChat = useFlowStore((s) => s.pendingVoiceChat);
+  const setPendingVoiceChat = useFlowStore((s) => s.setPendingVoiceChat);
+  const [autoListenNonce, setAutoListenNonce] = useState(0);
+  useEffect(() => {
+    if (!pendingVoiceChat) return;
+    setPendingVoiceChat(false);
+    setAutoListenNonce((n) => n + 1);
+  }, [pendingVoiceChat, setPendingVoiceChat]);
+
   return (
     <>
       <main className="flex h-dvh flex-col">
@@ -520,6 +533,7 @@ export default function HomePage() {
           assistantSpeaking={voice.speaking}
           onCancelSpeak={voice.cancel}
           onUnlockAudio={voice.unlock}
+          autoListenSignal={autoListenNonce}
         />
       </main>
 
