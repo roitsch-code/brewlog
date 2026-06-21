@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { playListeningCue } from "@/lib/audio/listeningCue";
 
 interface Options {
   onTranscript: (text: string) => void;
@@ -130,6 +131,9 @@ export function useVoiceCapture({ onTranscript, onError }: Options): VoiceCaptur
     recorderRef.current = recorder;
     recorder.start(250);
     setRecording(true);
+    // The mic is now hot — sound the "BTTS is listening" earcon so the user
+    // knows they can speak (bridges the Siri-launch handoff; also confirms a tap).
+    playListeningCue();
   }, [recording, busy, surfaceError, teardownStream]);
 
   const stop = useCallback(async () => {
