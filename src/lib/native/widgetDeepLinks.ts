@@ -7,6 +7,8 @@
  *     "Brew" button).
  *   - `btts://scan`               → a fresh scan: reset the flow and open
  *     `/brew/new` at Step "scan".
+ *   - `btts://voice`              → open the Home voice chat and start listening
+ *     (Siri "BTTS Voice" / Action Button). Sets a flag the Home page consumes.
  *
  * The scheme is registered in the shell's Info.plist (CFBundleURLTypes) and the
  * open event is delivered by `@capacitor/app`'s `appUrlOpen`, which we read
@@ -103,7 +105,8 @@ async function brewCoffeeById(coffeeId: string, nav: Nav): Promise<void> {
 export type WidgetAction =
   | { kind: "scan" }
   | { kind: "brew"; coffeeId: string | null }
-  | { kind: "share"; url: string | null };
+  | { kind: "share"; url: string | null }
+  | { kind: "voice" };
 
 /**
  * Pure parse of a `btts://…` URL into an action. Side-effect-free + store-free,
@@ -123,6 +126,7 @@ export function parseWidgetUrl(url: string): WidgetAction | null {
   if (action === "scan") return { kind: "scan" };
   if (action === "brew") return { kind: "brew", coffeeId: parsed.searchParams.get("coffeeId") };
   if (action === "share") return { kind: "share", url: parsed.searchParams.get("url") };
+  if (action === "voice") return { kind: "voice" };
   return null;
 }
 
@@ -147,6 +151,13 @@ export async function handleWidgetUrl(url: string, nav: Nav): Promise<void> {
   if (action.kind === "share") {
     if (action.url) routeToSharedUrl(action.url, nav);
     else nav("/brew/new");
+    return;
+  }
+  if (action.kind === "voice") {
+    // Siri ("BTTS Voice") / Action Button → open the Home voice chat and start
+    // listening. The Home page consumes the flag, arms the mic + earcon.
+    useFlowStore.getState().setPendingVoiceChat(true);
+    nav("/");
   }
 }
 

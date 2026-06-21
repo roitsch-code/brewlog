@@ -59,6 +59,14 @@ interface ChatInputProps {
    * required before any later programmatic playback succeeds.
    */
   onUnlockAudio?: () => void;
+  /**
+   * Auto-start the mic when this nonce changes to a new non-zero value —
+   * driven by the Siri "BTTS Voice" / Action-Button deep link (`btts://voice`)
+   * so the user lands in a listening chat. Starting the mic sounds the
+   * listening earcon. A gesture-less launch may have iOS withhold getUserMedia;
+   * the hook surfaces its own error in that case and the user taps the mic.
+   */
+  autoListenSignal?: number;
 }
 
 async function uploadPhoto(file: File): Promise<string> {
@@ -84,6 +92,7 @@ export default function ChatInput({
   assistantSpeaking = false,
   onCancelSpeak,
   onUnlockAudio,
+  autoListenSignal,
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -201,6 +210,18 @@ export default function ChatInput({
   useEffect(() => {
     onComposingChange?.(isCompositionActive);
   }, [isCompositionActive, onComposingChange]);
+
+  // Siri "BTTS Voice" / Action Button → arm the mic on arrival. Fires when the
+  // nonce changes to a new non-zero value (works for both a warm Home page and
+  // a cold launch where the initial signal is already set). Guarded so it can't
+  // double-fire mid-recording.
+  const autoListenSeenRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!autoListenSignal) return;
+    if (autoListenSeenRef.current === autoListenSignal) return;
+    autoListenSeenRef.current = autoListenSignal;
+    if (!voice.recording && !voice.busy) void voice.start();
+  }, [autoListenSignal, voice]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     setText(e.currentTarget.textContent ?? "");
