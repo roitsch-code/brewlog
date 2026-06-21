@@ -15,9 +15,15 @@ import type { CoffeeIdentity, SessionContext } from "@/lib/types/session";
  * `CraftingStatus` cycles this list and holds on the final entry.
  */
 
-/** A stored string we can actually show (not empty / placeholder). */
-function real(v?: string | null): v is string {
-  if (!v) return false;
+/** A stored string we can actually show (not empty / placeholder).
+ *
+ * `draft.coffee` is a Partial populated by AI bag extraction, so a field can
+ * arrive as a non-string at runtime even though the type says string. This used
+ * to call `.trim()` unconditionally — a non-string value threw DURING RENDER
+ * (buildCraftingPhases runs in a useMemo), which crashed the whole recipe step
+ * to a black "client-side exception" on a fresh scan. Guard the type at runtime. */
+function real(v?: unknown): v is string {
+  if (typeof v !== "string") return false;
   const s = v.trim().toLowerCase();
   return s !== "" && s !== "unknown" && s !== "other" && s !== "n/a" && s !== "none";
 }
