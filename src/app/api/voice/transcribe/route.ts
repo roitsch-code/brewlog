@@ -39,6 +39,9 @@ export async function POST(req: NextRequest) {
   const filename = file.name && file.name.includes(".") ? file.name : "voice.webm";
   upstream.append("file", file, filename);
   upstream.append("model_id", "scribe_v1");
+  // Don't transcribe non-speech sounds — otherwise Scribe tags the "I'm
+  // listening" earcon (and any kettle/clatter) as e.g. "(computer chirp)".
+  upstream.append("tag_audio_events", "false");
 
   const baseUrl = process.env.ELEVENLABS_BASE_URL || "https://api.elevenlabs.io";
 
@@ -64,6 +67,19 @@ export async function POST(req: NextRequest) {
   }
 
   const data = await res.json().catch(() => null) as { text?: string } | null;
-  const text = (data?.text ?? "").trim();
+  const text = stripAudioEventTags(data?.text ?? "");
   return NextResponse.json({ text });
+}
+
+/**
+ * Defensive backstop to `tag_audio_events=false`: Scribe annotates non-speech
+ * sounds in parentheses — "(computer chirp)", "(laughter)", "(footsteps)".
+ * Spoken speech is never parenthesised, so dropping short bracketed segments
+ * strips any stray sound tag without touching real words.
+ */
+function stripAudioEventTags(raw: string): string {
+  return raw
+    .replace(/\([^)]{0,40}\)/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
