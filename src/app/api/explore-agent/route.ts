@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
-import { loadRotationCoffees } from "@/lib/claude/coffeeLibrary";
+import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import {
@@ -87,7 +87,7 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 
 **Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (the bags the user has explicitly marked ★ in rotation — this is *not* the full library, just what's open and active on the counter right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
 
-When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the bags in the Coffee Library block below — that's the active rotation. Don't pull older bags out of memory; if none of the rotation fits, say so plainly. If the Coffee Library block is empty, nothing is marked in rotation — say so and suggest opening/marking a bag rather than naming one from memory.
+When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the **★ IN ROTATION** bags in the Coffee Library block below — that's what's open and active. Don't pull older bags out of memory; if none of the rotation fits, say so plainly. If nothing is marked ★ IN ROTATION, say so and suggest opening/marking a bag rather than naming one from memory. (When the user names a SPECIFIC bag to brew, you may use any bag in that block by its id, starred or not.)
 
 Mention capabilities only when relevant — don't pitch them unprompted.
 
@@ -96,7 +96,7 @@ Mention capabilities only when relevant — don't pitch them unprompted.
 | Situation | Destination |
 |-----------|-------------|
 | You mention a specific coffee **bag** from the user's library (but did NOT just write a full recipe for it — if you did, use **start_brew**, not a link) | coffee_detail (use the coffee's id from context) |
-| The user explicitly wants to **brew a specific bag again** — "brew the Jaime Sanchez again", "make me the cherry one", "I want the DAK Bourbon" | brew_again (use the coffee's id from context) — this lands the user in Step 3 (Context) of the brew flow with the bag already selected |
+| The user wants to **brew a specific bag but you did NOT write a recipe** — "brew the Jaime Sanchez again", "make me the cherry one", "I want the DAK Bourbon" | brew_again (use the coffee's id from context) — lands them in Step 3 (Context) to generate a fresh recipe. **If you DID write out a recipe, use start_brew instead — never brew_again.** |
 | You reference several of their coffee bags, or suggest browsing their bag collection | coffee_library |
 | You recommend visiting a specific **café, roastery, or physical place** | cafe_detail — opens the Explore Nearby map |
 | General "what's near me" or map exploration | cafe_map — opens the Explore Nearby map |
@@ -109,12 +109,18 @@ Do NOT call suggest_navigation for trivial mentions. Only when navigation would 
 
 ## When to call start_brew
 
-When you have just written out a COMPLETE, ready-to-brew recipe for a specific bag in the user's library (you have its id), **start_brew is the PRIMARY action** — emit it INSTEAD of a suggest_navigation coffee_detail/coffee_library link for that bag. A library link is never the call-to-action for a recipe you just wrote: don't offer "View X in library" as the button — offer "Brew X" and build the pourSteps from the sequence you wrote. start_brew drops them straight into the timer, without re-entering context (which would re-generate a possibly different recipe). This is the common "I've only got a few grams left, how would you brew it?" case. Do NOT use brew_again for this — brew_again throws your recipe away and re-asks context.
+**THE RULE, no exceptions: if your message lays out a recipe (dose / water / temp / grind / a pour sequence) for a specific bag in their Coffee Library, you MUST end the turn by calling start_brew with that exact recipe.** This is the single most common thing the user wants — "tell me how to brew the Lot01", "give me an AeroPress recipe for X", "how would you brew this" — and the button on that message must START THE BREW, not link somewhere.
 
-Non-negotiable rules:
+Hard prohibitions when you wrote a recipe for a library bag:
+- Do NOT offer a coffee_detail / coffee_library link ("View X in library") as the button — that's the wrong action and it frustrates the user.
+- Do NOT use brew_again — it throws your recipe away and re-asks context, re-generating a possibly different recipe.
+- Do NOT answer with just prose and no action. A written recipe with no start_brew button is a failure.
+
+Every bag in the Coffee Library block carries an [id:…]. Use that id — the bag does NOT need to be ★ IN ROTATION to brew it. If the user names a bag that isn't in the block at all, then you genuinely don't have its id: say so briefly and offer a coffee_library link, rather than guessing an id.
+
+Non-negotiable recipe rules:
 - The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
 - Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step. Brew at ONE constant temperature — never stage or ramp temperature across pours, so leave temperatureC off the steps. For iced, the final step drains onto the ice.
-- Only call it for a bag you can reference by id. For a generic or hypothetical recipe with no specific library bag, don't.
 - It's a terminal action like suggest_navigation — one call, no data round-trip.
 
 ## When to call remember_advice
@@ -305,7 +311,7 @@ const TOOLS: Anthropic.Tool[] = [
         destination: {
           type: "string",
           enum: ["coffee_library", "coffee_detail", "brew_again", "cafe_map", "cafe_detail", "taste_profile", "match", "home"],
-          description: "Which part of BTTS to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit. Use brew_again when the user explicitly wants to start a brew flow with a specific bag from their library — drops them into Step 3 (Context) with the bag pre-selected.",
+          description: "Which part of BTTS to open. IMPORTANT: coffee_library and coffee_detail are for the user's personal collection of coffee BAGS they have purchased — NOT for cafés or physical places. Use cafe_map or cafe_detail for any physical café, roastery, or place to visit. Use brew_again ONLY when the user wants to brew a specific bag and you did NOT write out a recipe — it drops them into Step 3 (Context) to generate a fresh recipe. If you wrote a recipe, DO NOT use brew_again (or any coffee_detail/coffee_library link) as the button — call the separate start_brew tool instead.",
         },
         label: {
           type: "string",
@@ -326,7 +332,7 @@ const TOOLS: Anthropic.Tool[] = [
   {
     name: "start_brew",
     description:
-      "Drop the user straight into the step-by-step brew TIMER with the EXACT recipe you just gave them — no context questions, no re-recommendation. Call this ONLY when you have just laid out a complete, ready-to-brew recipe for a SPECIFIC bag from their library (you have its id). Typical case: they have a few grams left and asked how you'd brew it. The recipe you pass here MUST be identical to the one in your message — same dose, water, temperature, grind, total time, and the same pour-by-pour sequence. Do not round or restate differently.",
+      "Drop the user straight into the step-by-step brew TIMER with the EXACT recipe you just gave them — no context questions, no re-recommendation. CALL THIS WHENEVER your message lays out a complete recipe (dose/water/temp/grind/pour sequence) for a SPECIFIC bag in their Coffee Library — it is the button for that message. The bag's id comes from the Coffee Library block; it does NOT need to be in rotation. This is the most common request ('how would you brew the Lot01', 'give me an AeroPress recipe for X'). Never answer such a request with only a library link or a brew_again button. The recipe you pass here MUST be identical to the one in your message — same dose, water, temperature, grind, total time, and the same pour-by-pour sequence. Do not round or restate differently.",
     input_schema: {
       type: "object",
       properties: {
@@ -691,7 +697,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const [userPrefs, library] = await Promise.all([
+    const [userPrefs, rotationCoffees, recentLibrary] = await Promise.all([
       loadUserProfile().catch(() => null),
       // The bags the user has explicitly marked ★ in rotation — the real
       // "what's on the counter right now" set, NOT a recency proxy. Using the
@@ -699,7 +705,21 @@ export async function POST(req: NextRequest) {
       // weeks ago with many brews) is never dropped just because newer bags
       // were added after it.
       loadRotationCoffees().catch(() => []),
+      // ALSO load the recent library so the model has an id for ANY bag the
+      // user names — not just rotation ones. start_brew / coffee_detail need an
+      // id; without this, asking to brew a bag that isn't starred in rotation
+      // left the model unable to link the recipe (it fell back to a generic
+      // library link or brew_again). The ★ flag still marks rotation for the
+      // "what should I brew?" discipline.
+      loadCoffeeLibraryCompact(50).catch(() => []),
     ]);
+
+    // Merge: rotation first (★, possibly older bags), then recent bags not
+    // already included — deduped by id. Every entry is brewable/linkable by id.
+    const library = (() => {
+      const seen = new Set(rotationCoffees.map((c) => c.id));
+      return [...rotationCoffees, ...recentLibrary.filter((c) => !seen.has(c.id))];
+    })();
 
     const profileBlock = formatProfileForPrompt(userPrefs);
     const recentSessions: Session[] = Array.isArray(body.recentSessions)
@@ -750,7 +770,10 @@ export async function POST(req: NextRequest) {
     const libraryBlock = formatLibraryForAgent(library);
     if (libraryBlock) {
       contextParts.push(
-        `\n## Your Coffee Library (use id: values when calling suggest_navigation for coffee_detail)\n` + libraryBlock
+        `\n## Your Coffee Library — your owned bags, each with its [id:…]\n` +
+          `Every bag here is brewable and linkable by its id: pass that id to start_brew (to brew a recipe you wrote), coffee_detail, or remember_advice. ` +
+          `★ IN ROTATION = open on the counter right now; use ONLY those for open-ended "what should I brew?". For a bag the user names explicitly, use its id from this list whether or not it's starred.\n` +
+          libraryBlock
       );
     }
 
