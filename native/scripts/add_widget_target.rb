@@ -93,6 +93,10 @@ end
 app_target.add_file_references([
   app_group.new_reference("WidgetBridge.swift"),
   app_group.new_reference("LiveActivityPlugin.swift"),
+  # Siri / Action-Button App Intent + AppShortcutsProvider ("BTTS Voice") —
+  # opens btts://voice → the Home voice chat. App-target source, so it compiles
+  # into the app (not the widget extension).
+  app_group.new_reference("VoiceChatIntent.swift"),
   attrs_ref,
 ])
 
