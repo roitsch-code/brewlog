@@ -6,7 +6,6 @@ import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
 import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
 import HaikuStarter from "@/components/ui/light/HaikuStarter";
-import HydrationCheckin from "@/components/hydration/HydrationCheckin";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import { useFlowStore } from "@/store/flowStore";
 import type { Session } from "@/lib/types/session";
@@ -524,10 +523,6 @@ export default function HomePage() {
         <section className="relative flex-1 min-h-0">
           {!showStarter && <ChatThread messages={messages} loading={loading} />}
           <HaikuStarter text={starter} show={showStarter} />
-          {/* Adaptive hydration check-in: a quiet bottom card that only
-              surfaces when there's a raised-target banner to ack or the
-              evening check-in is due (self-contained, fetches its own data). */}
-          <HydrationCheckin />
         </section>
 
         <ChatInput

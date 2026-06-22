@@ -3,14 +3,11 @@ import {
   text,
   timestamp,
   bigint,
-  bigserial,
   integer,
   jsonb,
   numeric,
   serial,
-  smallint,
   boolean,
-  date,
   doublePrecision,
   index,
   uuid,
@@ -54,39 +51,6 @@ export const sessions = pgTable(
     createdAtMsIdx: index("sessions_created_at_ms_idx").on(t.createdAtMs.desc()),
   })
 );
-
-// Adaptive hydration check-in (migration 0019). One row per calendar day
-// (Europe/Berlin). Stores the adaptive target + its composition + the context
-// it was computed from + the user's 1..5 ordinal answer. Single-user: no
-// user_id, `day` is the natural key. See src/lib/hydration/ for the logic.
-export const hydrationCheckin = pgTable("hydration_checkin", {
-  id: bigserial("id", { mode: "number" }).primaryKey(),
-  day: date("day").notNull().unique(),
-
-  // Target composition (all ml)
-  basisMl: integer("basis_ml").notNull(),
-  hitzeAufschlagMl: integer("hitze_aufschlag_ml").notNull().default(0),
-  bewegungsAufschlagMl: integer("bewegungs_aufschlag_ml").notNull().default(0),
-  zielMl: integer("ziel_ml").notNull(),
-
-  // Context (for later correlation)
-  apparentTempMaxC: numeric("apparent_temp_max_c"),
-  activeCalories: integer("active_calories"),
-  heatDataMissing: boolean("heat_data_missing").notNull().default(false),
-  activityDataMissing: boolean("activity_data_missing").notNull().default(false),
-
-  // Answer
-  selfAssessment: smallint("self_assessment"), // 1..5, null = unanswered
-  assessedAt: timestamp("assessed_at", { withTimezone: true }),
-  geschaetzteMengeMl: integer("geschaetzte_menge_ml"),
-  notiz: text("notiz"),
-
-  // Communication (anti-spam: last announced target)
-  anhebungGemeldetMl: integer("anhebung_gemeldet_ml"),
-
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
 
 export const coffees = pgTable("coffees", {
   id: text("id").primaryKey(),

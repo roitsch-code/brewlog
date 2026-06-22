@@ -74,15 +74,6 @@ jobs:
                 < src/lib/db/migrations/0017_add_insight_snooze.sql
             fi
 
-            # Migration 0019: adaptive hydration check-in table. Fully
-            # idempotent (CREATE TABLE IF NOT EXISTS), safe to run every deploy.
-            if [ -f src/lib/db/migrations/0019_add_hydration_checkin.sql ]; then
-              echo "Applying migration 0019_add_hydration_checkin..."
-              docker compose exec -T postgres \
-                psql -U brewlog -d brewlog -v ON_ERROR_STOP=1 \
-                < src/lib/db/migrations/0019_add_hydration_checkin.sql
-            fi
-
             docker compose build app
 
             if docker compose up -d --force-recreate --no-deps app; then
