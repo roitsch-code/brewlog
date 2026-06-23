@@ -59,6 +59,15 @@ export default function LightStepLog() {
     (selIdx != null ? rec?.candidates?.[selIdx]?.recipe : undefined) ??
     rec?.primaryRecipe;
 
+  // Suggested flavor chips (shown before you open a wheel category) = the
+  // flavors DOCUMENTED ON THE BAG for this coffee, not a generic list. Fall
+  // back to the generic QUICK_FLAVORS only when the bag has none (external
+  // brews, un-scanned coffees). The user taps these to confirm what they taste.
+  const bagFlavors = (draft.coffee?.tastingNotesFromBag ?? [])
+    .map((f) => f?.trim())
+    .filter((f): f is string => !!f);
+  const suggestedFlavors = bagFlavors.length > 0 ? bagFlavors : QUICK_FLAVORS;
+
   const [heroQuestion, setHeroQuestion] = useState("");
   useEffect(() => {
     setHeroQuestion(nextHeroQuestion("log", LOG_QUESTIONS));
@@ -361,14 +370,19 @@ export default function LightStepLog() {
             </div>
           ) : (
             <div className="space-y-2 mt-3">
+              {bagFlavors.length > 0 && <p className="label-eyebrow px-1">On the bag</p>}
               <div className="flex flex-wrap gap-2">
-                {QUICK_FLAVORS.map((f) => (
+                {suggestedFlavors.map((f) => (
                   <Chip key={f} size="sm" selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)}>
                     {f}
                   </Chip>
                 ))}
               </div>
-              <p className="text-[12px] text-light-muted-foreground px-1 mt-1">Tap the wheel to explore by category</p>
+              <p className="text-[12px] text-light-muted-foreground px-1 mt-1">
+                {bagFlavors.length > 0
+                  ? "From the bag — tap what you taste, or open the wheel to explore"
+                  : "Tap the wheel to explore by category"}
+              </p>
             </div>
           )}
 
