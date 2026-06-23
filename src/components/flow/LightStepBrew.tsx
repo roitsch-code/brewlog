@@ -8,6 +8,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import {
   getActiveIdx,
   isAgitationPourAction,
+  poursCompleteAtSec,
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
@@ -360,11 +361,11 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
-  // The last step is the final pour OR a trailing tap/swirl after it — either
-  // way, draining begins once we're a grace beyond it.
-  const lastStepStart = steps[steps.length - 1].startTimeSec;
-  const pourGraceSec = Math.min(20, Math.round((targetTimeSec - lastStepStart) * 0.35));
-  const allPoursDone = started && elapsed >= lastStepStart + pourGraceSec;
+  // Draining begins once we're a grace beyond the last step. The grace covers
+  // the time to physically pour the last step's water — a flat 20 s cap used to
+  // cut big final pours short (the "last pour disappears too fast" bug). See
+  // poursCompleteAtSec.
+  const allPoursDone = started && elapsed >= poursCompleteAtSec(steps, targetTimeSec);
 
   const [flashKey, setFlashKey] = useState(0);
   useEffect(() => {

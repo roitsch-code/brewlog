@@ -19,7 +19,8 @@ const ROOT = process.cwd();
 const entry = `
 export {
   getBloomDuration, parsePourSteps, pourStepsFromStructured, buildGuideSteps,
-  hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec, POUR_RATE_GPS,
+  hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec,
+  poursCompleteAtSec, POUR_RATE_GPS,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
@@ -41,6 +42,7 @@ const {
   getActiveIdx,
   isAgitationPourAction,
   pourDurationSec,
+  poursCompleteAtSec,
   POUR_RATE_GPS,
 } = await import(pathToFileURL(out).href);
 
@@ -477,4 +479,42 @@ test("brewedRecipeName: 'Own recipe' gives the bare title, no (based on …)", (
 test("brewedRecipeName: a real reference is appended", () => {
   const name = brewedRecipeName({ title: "My morning V60", basedOn: "Kasuya 4:6" });
   assert.equal(name, "My morning V60 (based on Kasuya 4:6)");
+});
+
+// ── poursCompleteAtSec (the "last pour disappears too fast" fix) ─────────────
+
+test("poursCompleteAtSec: a BIG final pour stays active long enough to pour it (not the old 20s cap)", () => {
+  // Asser-style 60–120–240 @ 220s: final pour adds 120g, which needs 30s at 4g/s.
+  const steps = parsePourSteps("60 – 120 – 240", 220, peakRoast, NOW);
+  const last = steps[steps.length - 1];
+  assert.equal(last.action, "final");
+  assert.equal(last.pourGrams, 120);
+  const doneAt = poursCompleteAtSec(steps, 220);
+  const grace = doneAt - last.startTimeSec;
+  assert.equal(doneAt, 177); // 147 (final start) + 30s pour time
+  assert.equal(grace, pourDurationSec(120)); // grace == physical pour time (30s)
+  assert.ok(grace > 20, "a big final pour must exceed the old flat 20s cap");
+});
+
+test("poursCompleteAtSec: a SMALL final pour keeps the ≤20s grace (unchanged behaviour)", () => {
+  const steps = parsePourSteps("50 – 100 – 150 – 200 – 250 – 300", 210, peakRoast, NOW);
+  const last = steps[steps.length - 1];
+  assert.equal(last.pourGrams, 50);
+  const grace = poursCompleteAtSec(steps, 210) - last.startTimeSec;
+  assert.equal(grace, 20); // 35%-of-drawdown grace, capped at 20 as before
+  assert.ok(grace >= pourDurationSec(50), "still long enough to pour 50g");
+});
+
+test("poursCompleteAtSec: a trailing swirl near target uses the short agitation grace", () => {
+  const steps = [
+    { index: 0, label: "Bloom", cumulativeGrams: 50, pourGrams: 50, startTimeSec: 0, action: "bloom" },
+    { index: 1, label: "Final pour", cumulativeGrams: 240, pourGrams: 190, startTimeSec: 120, action: "final" },
+    { index: 2, label: "Swirl", cumulativeGrams: 240, pourGrams: 0, startTimeSec: 185, action: "swirl" },
+  ];
+  assert.ok(isAgitationPourAction(steps[steps.length - 1].action));
+  assert.equal(poursCompleteAtSec(steps, 200), 195); // 185 + 10s agitation grace
+});
+
+test("poursCompleteAtSec: empty steps → 0 (no crash)", () => {
+  assert.equal(poursCompleteAtSec([], 200), 0);
 });
