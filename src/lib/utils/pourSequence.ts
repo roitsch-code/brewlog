@@ -71,6 +71,29 @@ export function isAgitationPourAction(a: PourStep["action"]): a is AgitationActi
   return a === "swirl" || a === "stir" || a === "tap";
 }
 
+/**
+ * Elapsed second at which all pours are complete and the brew enters drawdown —
+ * i.e. when the live pour card should stop showing the last step and switch to
+ * "draining". The grace after the last step MUST cover the time to physically
+ * pour its water (`grams ÷ POUR_RATE_GPS`): a flat 20 s cap used to cut big
+ * final pours short (a 120 g final pour needs ~30 s at 4 g/s but the card
+ * flipped to "draining" after 20 s while you were still pouring). A trailing
+ * swirl/stir/tap is quick (~10 s). Otherwise keep the prior ≤20 s /
+ * 35 %-of-drawdown grace. Pure so it's unit-tested alongside the pour math.
+ */
+export function poursCompleteAtSec(steps: PourStep[], targetTimeSec: number): number {
+  if (steps.length === 0) return 0;
+  const last = steps[steps.length - 1];
+  const lastWork = isAgitationPourAction(last.action)
+    ? 10
+    : pourDurationSec(last.pourGrams);
+  const grace = Math.max(
+    lastWork,
+    Math.min(20, Math.round((targetTimeSec - last.startTimeSec) * 0.35)),
+  );
+  return last.startTimeSec + grace;
+}
+
 /** A timed, action-aware step for non-percolation methods (immersion,
  * AeroPress, inverted, iced). Setup steps (invert / load / assemble) carry
  * `isSetup` and live outside the timeline. */
