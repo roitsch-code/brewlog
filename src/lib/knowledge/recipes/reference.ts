@@ -1357,6 +1357,104 @@ export const REFERENCE_RECIPES: Recipe[] = [
       "Corrected from Wallgren's own stage presentation: dose 15 g (was 22 g), water 250 g / 1:16.7 (was 330 g / 1:15), 96°C (was 94°C), bloom 30 s + one continuous circular pour to 1:45, total 2:35 (was bloom + 3 discrete pours, 3:35). Fines-sieving confirmed.",
   },
 
+  // ── Asser Christensen / The Coffee Chronicler ─────────────────────────────
+
+  {
+    id: "christensen-daily-pour-over",
+    name: "Asser Christensen — Daily Pour-Over",
+    shortName: "Asser Daily Pour-Over",
+    attribution: {
+      person: "Asser Christensen",
+      title: "The Coffee Chronicler (writer / educator)",
+    },
+    category: "reference",
+    brewer: "v60",
+    brewerNotes:
+      "Demonstrated on a Hario V60, but Asser says it works on most conical brewers. He brews it on fast-draining Cafec Abaca paper — the paper choice matters a lot here: a slower paper stretches the timings, so calibrate to your own filter. Tired-morning hack: drop a dispersion/distribution screen on top of the dripper and pour the final 50% through it ('big bloom, big pour, dispersion-screen percolation') to get the gentle finish without hand-pouring it.",
+    dose: { grams: 15 },
+    water: { grams: 240, ratio: "1:16" },
+    temperature: { celsius: 93 },
+    grind: {
+      referenceGrinder: "Comandante C40 / Kingrinder K-Ultra",
+      referenceSetting:
+        "medium — Comandante C40 23–28 clicks, K-Ultra 7–8 (a touch coarser than his Switch recipe). Asser stresses these vary by bean, grinder calibration and paper.",
+      nicheZeroDegrees: [380, 397],
+      description:
+        "Niche degrees DERIVED from Asser's published Comandante 23–28 clicks via the project's measured map (380° = 23 clicks, ~3.3°/click). Clicks kept verbatim; the Niche range is a translation — calibrate empirically against the drawdown, since Asser publishes no Niche number.",
+    },
+    pourSequence: [
+      // The bloom pour + Asser's 45 s rest are folded into ONE `pour` step on
+      // purpose — NOT split into a pour + a standalone `wait`. A `wait` ≥45 s
+      // followed by a later water-adding pour trips hasImmersionShape()
+      // (src/lib/utils/pourSequence.ts) and would route this V60 pour-over to
+      // the immersion step-guide, dropping the percolation live-flow coach. As a
+      // single `pour` step it stays percolation (grams curve + scale coaching);
+      // the 45 s rest is preserved in the label/notes and the step duration.
+      {
+        label: "Bloom (→60 g) + 45 s rest @ 0:00",
+        action: "pour",
+        waterGramsAtEnd: 60,
+        durationSec: 55,
+        notes:
+          "4× the dose = 25% of the total water. Gentle circular pour to saturate the bed, then let it bloom 45 s (Asser's stated bloom).",
+      },
+      {
+        label: "Pour 2 — forceful (→120 g)",
+        action: "pour",
+        waterGramsAtEnd: 120,
+        durationSec: 12,
+        notes:
+          "The agitating pour: raise the kettle for more height and pour with force. Start in the centre, circle out to the edges, then back to the centre. Goal — full saturation, no dry spots.",
+      },
+      {
+        label: "Drain fully (bed runs dry)",
+        action: "drain",
+        durationSec: 48,
+        notes:
+          "Let ALL the water drain before the final pour — this is where the agitation goal is complete. Fast Cafec Abaca paper keeps this short; slower paper lengthens it.",
+      },
+      {
+        label: "Pour 3 — super gentle (→240 g)",
+        action: "pour",
+        waterGramsAtEnd: 240,
+        durationSec: 80,
+        notes:
+          "The remaining 50%, poured very gently at ~1–2 ml/s. Start in the middle, slow circles out to the edge, back to the middle, then stay central. Keep the water column ≤1–1.5 cm above the bed — minimal agitation.",
+      },
+      {
+        label: "Drawdown",
+        action: "drain",
+        durationSec: 25,
+        notes:
+          "On fast Abaca paper much of the bed has already drained during the slow final pour.",
+      },
+    ],
+    totalTimeSec: 220,
+    techniques: ["bloom", "pulse-pouring", "central-pour", "continuous-pour"],
+    bestFor: {
+      roastLevels: ["light", "medium-light", "medium"],
+      processes: ["washed", "natural", "honey"],
+      goals: ["high-clarity", "aromatic", "balanced"],
+      occasions: ["morning ritual"],
+    },
+    teaches:
+      "Asser's 'show-horse' daily pour-over: a STAGED-AGITATION contrast on a 25/25/50 three-pour at 1:16. A forceful, bed-agitating second pour — drained completely — guarantees even saturation; an ultra-gentle 1–2 ml/s final pour then percolates slowly for clarity. The inverse of agitate-late recipes (e.g. Sweet & Balanced V60): it agitates in the MIDDLE, then deliberately settles.",
+    science:
+      "The first two pours are 25% each (bloom + a forceful pour to 50%). The forceful second pour, poured from height, drives turbulence through the whole bed to wet every ground and break up dry pockets; draining it fully resets the bed before the finish. The final 50% is then laid on very slowly (~1–2 ml/s, water column ≤1.5 cm) so it percolates with almost no agitation — fines aren't dragged into the slurry, so the cup stays focused and clean with bright, layered acidity rather than muddied body. Fast Cafec Abaca paper is integral: it keeps drawdown quick so the slow final pour doesn't stall the bed, which is why the timings depend on the filter.",
+    whenToUse:
+      "When you have a really nice, delicate bean and the time to appreciate it, and you want maximum clarity, acidity and a layered, evolving aftertaste. Asser pairs it with his post-brew correction routine — if the cup reads too strong/acidic, open it up with a few ml of water; tune the water minerals to the bean (more magnesium for fruit-forward, gentler for chocolate/nut). The tired-morning shortcut is the dispersion-screen variant in the brewer notes.",
+    sources: [
+      {
+        type: "transcript",
+        citation:
+          "Asser Christensen (The Coffee Chronicler) — 'Daily Pour Over' recipe video (owner-supplied transcript). 15 g : 240 g, 1:16, 93 °C / 200 °F, medium grind (Comandante 23–28 / K-Ultra 7–8), V60 + Cafec Abaca paper. Bloom 60 g (25%), wait 45 s; forceful pour to 120 g (50%) with agitation, then drain fully; super-gentle final pour to 240 g at ~1–2 ml/s, water column ≤1–1.5 cm. Optional dispersion screen for the final pour.",
+      },
+    ],
+    verified: true,
+    notes:
+      "Owner-supplied transcript of Asser's own video — headline parameters and pour mechanics are stated verbatim by him and kept as-is. Two values are NOT published by Asser and are reconstructed/derived (flagged here per the no-fabrication rule): (1) totalTimeSec — he gives no stopwatch total; the ~3:40 here is built from his stated cadence (45 s bloom, full drain between pours, ~1–2 ml/s final pour over fast Abaca paper) and should be calibrated empirically. (2) The Niche degree range is derived from his Comandante clicks via the project map (see grind.description). One constant temperature (93 °C); no staging.",
+  },
+
   // Turbo V60 (formerly attributed to Lance Hedrick) was removed: "turbo" is an
   // espresso technique (originating in Cameron, Hendon et al., *Matter*, 2020;
   // popularised by Hedrick ~2021), and no primary source documents a Hedrick
