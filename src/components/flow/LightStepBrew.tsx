@@ -351,6 +351,26 @@ function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
   return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
 }
 
+/** Persistent live total from the connected scale, pinned at the top of the
+ * step window so you read "147 / 240 g" without scrolling back up to ScalePanel
+ * mid-brew — the cue card alone only shows grams while a pour cue is firing.
+ * `target` is the active step's cumulative goal. Renders only while a weight is
+ * streaming (coach.liveGrams != null → scale connected); no scale → nothing. */
+function LiveScaleTotal({ grams, target }: { grams: number; target?: number | null }) {
+  return (
+    <div className="flex items-baseline justify-between rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-2.5">
+      <span className="label-eyebrow">On the scale</span>
+      <span className="font-mono-num font-semibold text-light-foreground">
+        <span className="text-[22px]">{Math.round(grams)}</span>
+        <span className="text-[13px] text-light-muted-foreground"> g</span>
+        {target != null && (
+          <span className="text-[13px] text-light-muted-foreground"> / {target} g</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
 /** Short SwirlButton label for an agitation step. */
 function agitationButtonLabel(action: PourStep["action"]): string {
   return action === "stir" ? "Stir" : action === "tap" ? "Tap" : "Swirl";
@@ -441,6 +461,9 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
 
   return (
     <div className="space-y-3">
+      {coach?.liveGrams != null && (
+        <LiveScaleTotal grams={coach.liveGrams} target={activeStep?.cumulativeGrams ?? null} />
+      )}
       {activeStep && !allPoursDone && isAgitationPourAction(activeStep.action) && (
         // Agitation step — its own prominent moment (the cue the 3-2-1 buzz lands on).
         <div
@@ -825,6 +848,9 @@ function StepGuide({
 
   return (
     <div className="space-y-3">
+      {coach?.liveGrams != null && (
+        <LiveScaleTotal grams={coach.liveGrams} target={current?.cumulativeGrams ?? null} />
+      )}
       {setupSteps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-3">
           <p className="label-eyebrow mb-1">Setup</p>
