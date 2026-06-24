@@ -1,0 +1,27 @@
+name: Verify recommend cache
+
+# Manual-dispatch, empirical proof that the /api/recommend system prompt is actually
+# prompt-cached: call 1 writes the cache (cache_creation_input_tokens > 0), call 2
+# reads it (cache_read_input_tokens > 0, cache_creation_input_tokens == 0). Reads the
+# ANTHROPIC_API_KEY repo secret and prints the token count + both usage objects +
+# PASS/FAIL to the run log (readable from the GitHub app). Skips cleanly (green) if
+# the secret is unset. The prefix SIZE is guarded offline on every PR by
+# tests/dataflow/recommend-cache-prefix.test.mjs — this is the on-demand live check.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify prompt caching
+        run: node scripts/verify-recommend-cache.mjs
