@@ -1,15 +1,26 @@
 name: Verify recommend cache
 
-# Manual-dispatch, empirical proof that the /api/recommend system prompt is actually
-# prompt-cached: call 1 writes the cache (cache_creation_input_tokens > 0), call 2
-# reads it (cache_read_input_tokens > 0, cache_creation_input_tokens == 0). Reads the
+# Empirical proof that the /api/recommend system prompt is actually prompt-cached:
+# call 1 writes the cache (cache_creation_input_tokens > 0), call 2 reads it
+# (cache_read_input_tokens > 0, cache_creation_input_tokens == 0). Reads the
 # ANTHROPIC_API_KEY repo secret and prints the token count + both usage objects +
 # PASS/FAIL to the run log (readable from the GitHub app). Skips cleanly (green) if
 # the secret is unset. The prefix SIZE is guarded offline on every PR by
 # tests/dataflow/recommend-cache-prefix.test.mjs — this is the on-demand live check.
+#
+# Triggers:
+#   - workflow_dispatch: manual "Run workflow" button (preferred when available).
+#   - push to .github/verify-cache-trigger on main: the route-around for Claude Code,
+#     whose GitHub integration token can't dispatch workflow_dispatch (403, no
+#     actions:write) — same pattern as .github/ios-build-trigger. Bump that file via
+#     a PR to fire a run.
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/verify-cache-trigger
 
 jobs:
   verify:

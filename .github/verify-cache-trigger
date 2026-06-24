@@ -1,0 +1,7 @@
+# Bump this file (via a PR to main) to fire the "Verify recommend cache" workflow.
+# Why this exists: Claude Code's GitHub integration token can't dispatch a
+# workflow_dispatch workflow (403 "Resource not accessible by integration" — no
+# actions:write), so a push-path trigger on this file is the route-around. Mirrors
+# .github/ios-build-trigger. Each run = one bump.
+
+run: 1 — 2026-06-24 — first live cache verification after extraction (PR #428)
