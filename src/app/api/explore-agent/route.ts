@@ -671,6 +671,9 @@ export async function POST(req: NextRequest) {
       messages: { role: "user" | "assistant"; content: string }[];
       recentSessions?: Session[];
       attachedImageUrl?: string;
+      /** The greeting haiku currently shown on the home screen (above this
+       * chat). Lets the user say "give me the recipe to the welcome haiku". */
+      welcomeHaiku?: string;
     };
 
     const messages = (body.messages ?? []).filter(
@@ -744,6 +747,20 @@ export async function POST(req: NextRequest) {
     contextParts.push(
       `\n## Current time\n${weekday} ${dateStr}, ${timeOfDay} (hour ${hour}, local time).`
     );
+
+    // The welcome haiku shown on the home screen, right above this chat. Inject
+    // it verbatim so the user can refer to it ("give me the recipe to the
+    // welcome haiku", "the bag you mentioned up top", "that idea in the
+    // greeting") and you know exactly what they mean.
+    const welcomeHaiku =
+      typeof body.welcomeHaiku === "string" ? body.welcomeHaiku.trim().slice(0, 600) : "";
+    if (welcomeHaiku) {
+      contextParts.push(
+        `\n## Today's Welcome Greeting (the haiku currently on the home screen, directly above this chat)\n` +
+          `"${welcomeHaiku}"\n` +
+          `When the user refers to "the welcome haiku" / "the greeting" / "your idea up there" / "the one you mentioned", THIS is what they mean. Read the coffee it names and the idea it floats (e.g. a ★ rotation bag, a tweak like "try it cooler today"), and answer from it. If it points at a library bag and the user wants to brew it, lay out a real recipe and hand it to the timer with start_brew per the rules above.`
+      );
+    }
 
     const recipesBlock = buildRecentRecipes(recentSessions, 5);
     if (recipesBlock) {

@@ -292,6 +292,7 @@ export default function HomePage() {
         body: JSON.stringify({
           messages: apiMessages,
           recentSessions,
+          ...(starter.trim() ? { welcomeHaiku: starter.trim() } : {}),
           ...(imageUrl ? { attachedImageUrl: imageUrl } : {}),
         }),
         signal: controller.signal,
