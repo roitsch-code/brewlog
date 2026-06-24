@@ -18,10 +18,16 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     // bag's printed notes even when the brew was started from a shortcut
     // (library list / Action Pill / Brew Again) whose synthesized identity
     // carried no notes. Cheap (single-user table); newest session wins.
+    // Find the most recent session for this coffee that actually has bag tasting notes.
+    // Brew-again / shortcut sessions never carry tastingNotesFromBag in their JSONB,
+    // so querying the LATEST session always returns [] for frequently-brewed rotation bags.
+    // The scan session that holds the notes may be older — filter to only sessions where
+    // the array is non-empty so we always surface the real bag notes.
     const noteRows = await db
       .select({ coffee: sessions.coffee })
       .from(sessions)
-      .where(sql`${sessions.coffee}->>'coffeeId' = ${params.id}`)
+      .where(sql`${sessions.coffee}->>'coffeeId' = ${params.id}
+        AND jsonb_array_length(COALESCE((${sessions.coffee}->'tastingNotesFromBag')::jsonb, '[]'::jsonb)) > 0`)
       .orderBy(desc(sessions.createdAtMs))
       .limit(1);
     const tastingNotesFromBag = noteRows[0]?.coffee?.tastingNotesFromBag ?? [];
