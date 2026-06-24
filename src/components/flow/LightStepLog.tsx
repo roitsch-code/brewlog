@@ -60,12 +60,39 @@ export default function LightStepLog() {
     rec?.primaryRecipe;
 
   // Suggested flavor chips (shown before you open a wheel category) = the
-  // flavors DOCUMENTED ON THE BAG for this coffee, not a generic list. Fall
-  // back to the generic QUICK_FLAVORS only when the bag has none (external
-  // brews, un-scanned coffees). The user taps these to confirm what they taste.
-  const bagFlavors = (draft.coffee?.tastingNotesFromBag ?? [])
+  // flavors DOCUMENTED ON THE BAG for this coffee, not a generic list. The
+  // fresh-scan + coffee-detail paths carry them on the draft identity; brews
+  // started from a shortcut (library list / Action Pill / "Brew Again" on an
+  // in-rotation bag) DON'T — so when the draft has none we fetch this coffee's
+  // bag notes by id (/api/coffees/[id] returns the latest session's notes).
+  // Generic QUICK_FLAVORS is the last resort (external / un-scanned coffees).
+  const draftBagFlavors = (draft.coffee?.tastingNotesFromBag ?? [])
     .map((f) => f?.trim())
     .filter((f): f is string => !!f);
+  const [fetchedBagFlavors, setFetchedBagFlavors] = useState<string[]>([]);
+  const coffeeId = draft.coffee?.coffeeId;
+  useEffect(() => {
+    if (draftBagFlavors.length > 0 || !coffeeId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/coffees/${coffeeId}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const notes = Array.isArray(data?.tastingNotesFromBag)
+          ? (data.tastingNotesFromBag as unknown[]).map((s) => String(s).trim()).filter(Boolean)
+          : [];
+        if (!cancelled && notes.length > 0) setFetchedBagFlavors(notes);
+      } catch {
+        /* keep the generic fallback */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [coffeeId, draftBagFlavors.length]);
+
+  const bagFlavors = draftBagFlavors.length > 0 ? draftBagFlavors : fetchedBagFlavors;
   const suggestedFlavors = bagFlavors.length > 0 ? bagFlavors : QUICK_FLAVORS;
 
   const [heroQuestion, setHeroQuestion] = useState("");
