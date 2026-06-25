@@ -1,24 +1,23 @@
 "use client";
 
 /**
- * ScalePanel — live Acaia weight on the brew screen.
+ * ScalePanel — the Acaia connect / tare control bar on the brew screen.
  *
  * Renders nothing off the native shell (the hook's `available` is false on the
- * Safari PWA / desktop), so this is invisible everywhere the scale can't exist.
- * In the shell it offers a Connect action, then shows live grams + Tare while
- * connected. v1: read-only weight + tare; pour auto-advance comes later.
+ * Safari PWA / desktop), so it's invisible everywhere the scale can't exist.
+ *
+ * It is a SLIM, fixed-height bar that's always present during the brew — Connect
+ * when disconnected, Tare + Disconnect when connected. The live weight does NOT
+ * live here anymore; it ticks inline in the active pour step's grams figure
+ * (LiveStepBrew → CumulativeTarget). Keeping this bar a constant height in every
+ * state is deliberate: the old card swapped between a big readout and a connect
+ * prompt, which shoved the whole brew screen up and down mid-pour.
  */
 import type { UseAcaiaScale } from "@/hooks/useAcaiaScale";
 
-/**
- * Presentational scale card — the brew screen owns the `useAcaiaScale` state
- * (so the live flow coach can read the same weight + sample stream) and passes
- * it in. Renders nothing off the native shell (`available` false).
- */
 export function ScalePanel({
   available,
   status,
-  weight,
   connect,
   disconnect,
   tare,
@@ -28,59 +27,47 @@ export function ScalePanel({
   const connected = status === "connected";
   const busy = status === "scanning" || status === "connecting";
 
+  const statusLabel = connected
+    ? "Scale connected"
+    : status === "scanning"
+      ? "Looking for your scale…"
+      : status === "connecting"
+        ? "Connecting…"
+        : status === "not-found"
+          ? "No scale found — wake it"
+          : status === "error"
+            ? "Couldn't reach the scale"
+            : "Connect your Acaia for live weight";
+
   return (
-    <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
+    <div className="flex h-12 items-center justify-between gap-3 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 pl-4 pr-1.5">
+      <span className="truncate text-[13px] text-light-muted-foreground">{statusLabel}</span>
       {connected ? (
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="label-eyebrow">Scale</p>
-            <p className="font-fraunces text-[32px] leading-none text-light-foreground tabular-nums mt-1">
-              {(weight ?? 0).toFixed(1)}
-              <span className="text-light-muted-foreground text-[18px] ml-1">g</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={tare}
-              className="h-10 rounded-full bg-light-foreground px-5 text-sm font-semibold text-light-text-on-dark active:scale-[0.98] transition-transform"
-            >
-              Tare
-            </button>
-            <button
-              type="button"
-              onClick={() => void disconnect()}
-              className="h-10 rounded-full border border-light-foreground/15 px-4 text-sm font-medium text-light-muted-foreground active:scale-[0.98] transition-transform"
-            >
-              Disconnect
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="label-eyebrow">Scale</p>
-            <p className="text-sm text-light-muted-foreground mt-1">
-              {status === "scanning"
-                ? "Looking for your scale…"
-                : status === "connecting"
-                  ? "Connecting…"
-                  : status === "not-found"
-                    ? "No scale found nearby. Wake it and try again."
-                    : status === "error"
-                      ? "Couldn't reach the scale. Try again."
-                      : "Connect your Acaia for live weight."}
-            </p>
-          </div>
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             type="button"
-            onClick={() => void connect()}
-            disabled={busy}
-            className="h-10 rounded-full bg-light-foreground px-5 text-sm font-semibold text-light-text-on-dark active:scale-[0.98] transition-transform disabled:opacity-50"
+            onClick={tare}
+            className="h-9 rounded-full bg-light-foreground px-4 text-[13px] font-semibold text-light-text-on-dark active:scale-95 transition-transform"
           >
-            {status === "not-found" || status === "error" ? "Retry" : "Connect"}
+            Tare
+          </button>
+          <button
+            type="button"
+            onClick={() => void disconnect()}
+            className="h-9 rounded-full px-3 text-[13px] font-medium text-light-muted-foreground active:scale-95 transition-transform"
+          >
+            Disconnect
           </button>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void connect()}
+          disabled={busy}
+          className="h-9 shrink-0 rounded-full bg-light-foreground px-5 text-[13px] font-semibold text-light-text-on-dark active:scale-95 transition-transform disabled:opacity-50"
+        >
+          {status === "not-found" || status === "error" ? "Retry" : "Connect"}
+        </button>
       )}
     </div>
   );

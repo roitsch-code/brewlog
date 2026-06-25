@@ -251,10 +251,11 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
-        {/* Connect / tare lives here ONLY before the brew starts. Once the timer
-            runs, the live weight folds inline into the active pour step's grams
-            line — no separate scale card to shove the layout around mid-brew. */}
-        {!started && <ScalePanel {...scale} />}
+        {/* Slim, fixed-height connect / tare bar — always reachable during the
+            brew (you tare right as you start pouring). The live weight itself
+            folds inline into the active pour step's grams line, so this bar
+            stays a constant height and never shoves the layout around. */}
+        <ScalePanel {...scale} />
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
