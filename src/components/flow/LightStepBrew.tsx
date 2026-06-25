@@ -292,6 +292,7 @@ export default function LightStepBrew() {
             elapsed={elapsed}
             targetTimeSec={recipe.targetTimeSec}
             started={started}
+            waterGrams={recipe.waterGrams}
             coach={coach}
           />
         )}
@@ -313,6 +314,8 @@ interface LivePourSequenceProps {
   elapsed: number;
   targetTimeSec: number;
   started: boolean;
+  /** Recipe grand-total water — shown as "total {waterGrams}g" on the pour card. */
+  waterGrams: number;
   /** Live pour-flow comparison (scale connected). Null/"none" → nothing renders. */
   coach?: FlowComparison | null;
 }
@@ -320,28 +323,43 @@ interface LivePourSequenceProps {
 /** Live "pour slower / faster / keep the flow" cue on the active pour card.
  * Renders only when the scale is connected and on a grams-curve (percolation). */
 function CoachCue({ coach }: { coach: FlowComparison }) {
-  const color =
-    coach.state === "on-track"
-      ? "text-light-success"
-      : coach.state === "ahead" || coach.state === "behind"
-        ? "text-light-accent-overtime"
-        : "text-light-foreground";
+  // Wireframe: a steady / on-track message is dark; off-track states warn amber.
+  // ease-off counts as a warning even though coachFlow keeps its state "on-track".
+  const warn = coach.state !== "on-track" || coach.cue === "ease-off";
+  const messageColor = warn ? "text-light-accent-overtime" : "text-light-foreground";
   return (
     <div
       key={coach.cue}
-      className="mt-3 rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-3 py-2 animate-step-activate"
+      className="mt-3 rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-4 py-3 animate-step-activate"
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className={`font-fraunces text-[20px] leading-none ${color}`}>{coach.message}</span>
+      <div className="flex items-baseline justify-between gap-3">
+        {/* Left: coach message + the live pour rate inline */}
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className={`font-fraunces text-[20px] leading-none ${messageColor}`}>
+            {coach.message}
+          </span>
+          {coach.liveRateGPS != null && (
+            <span className="font-mono-num text-[12px] font-semibold text-light-muted-foreground shrink-0">
+              {coach.liveRateGPS.toFixed(1)} g/s
+            </span>
+          )}
+        </div>
+        {/* Right: live grams on the scale + the step's cumulative target */}
         {coach.liveGrams != null && (
-          <span className="font-mono-num text-[15px] font-semibold text-light-foreground">
-            {Math.round(coach.liveGrams)}g
+          <span className="shrink-0 text-light-foreground">
+            <span className="font-fraunces text-[28px] leading-none tabular-nums">
+              {Math.round(coach.liveGrams)}
+            </span>
+            <span className="font-mono-num text-[13px] text-light-muted-foreground"> g</span>
+            {coach.currentStepTargetG != null && (
+              <span className="font-mono-num text-[13px] text-light-muted-foreground">
+                {" "}
+                / {coach.currentStepTargetG}g
+              </span>
+            )}
           </span>
         )}
       </div>
-      {coach.detail && (
-        <p className="font-mono-num text-[11px] text-light-muted-foreground mt-1">{coach.detail}</p>
-      )}
     </div>
   );
 }
@@ -351,21 +369,40 @@ function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
   return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
 }
 
-/** Persistent live total from the connected scale, pinned at the top of the
- * step window so you read "147 / 240 g" without scrolling back up to ScalePanel
- * mid-brew — the cue card alone only shows grams while a pour cue is firing.
- * `target` is the active step's cumulative goal. Renders only while a weight is
- * streaming (coach.liveGrams != null → scale connected); no scale → nothing. */
-function LiveScaleTotal({ grams, target }: { grams: number; target?: number | null }) {
+/** Always-on footer on the active step card: "{next} in" + a progress bar +
+ * the m:ss countdown to the next step. Shared by LivePourSequence (pour +
+ * agitation cards) and StepGuide. `progress` is 0..1 through the current step. */
+function StepProgressFooter({
+  nextLabel,
+  countdownSec,
+  progress,
+}: {
+  nextLabel: string;
+  countdownSec: number;
+  progress: number;
+}) {
+  const pct = Math.min(1, Math.max(0, progress)) * 100;
   return (
-    <div className="flex items-baseline justify-between rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-2.5">
-      <span className="label-eyebrow">On the scale</span>
-      <span className="font-mono-num font-semibold text-light-foreground">
-        <span className="text-[22px]">{Math.round(grams)}</span>
-        <span className="text-[13px] text-light-muted-foreground"> g</span>
-        {target != null && (
-          <span className="text-[13px] text-light-muted-foreground"> / {target} g</span>
-        )}
+    <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center gap-3">
+      <span className="text-[12px] text-light-muted-foreground shrink-0">{nextLabel} in</span>
+      <div className="flex-1 h-1 rounded-full bg-light-foreground/15 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-light-foreground transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span
+        // key={countdownSec} so React swaps the DOM node each tick — without it the
+        // infinite pulse can be mid-cycle when the digit changes (6 → 5), and iOS
+        // Safari leaves the previous glyph faintly visible behind the new one.
+        key={countdownSec}
+        className={`font-fraunces text-[14px] tabular-nums shrink-0 ${
+          countdownSec <= 5
+            ? "font-bold text-light-foreground animate-countdown-pulse"
+            : "text-light-muted-foreground"
+        }`}
+      >
+        {formatSeconds(countdownSec)}
       </span>
     </div>
   );
@@ -376,7 +413,7 @@ function agitationButtonLabel(action: PourStep["action"]): string {
   return action === "stir" ? "Stir" : action === "tap" ? "Tap" : "Swirl";
 }
 
-function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: LivePourSequenceProps) {
+function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, coach }: LivePourSequenceProps) {
   const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
@@ -392,26 +429,25 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
     if (activeIdx > 0) setFlashKey((k) => k + 1);
   }, [activeIdx]);
 
-  // Countdown footer ("Swirl in 0:05") — shared by the pour + agitation cards.
-  const countdownFooter =
-    nextStep && nextCountdown !== null && nextCountdown <= 20 && nextCountdown > 0 ? (
-      <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
-        <span className="text-[12px] text-light-muted-foreground">{nextStep.label}</span>
-        <span
-          // key={nextCountdown} so React replaces the DOM node on every tick.
-          // Otherwise the infinite opacity pulse can be mid-cycle when the digit
-          // changes (6 → 5), and iOS Safari leaves the previous glyph faintly
-          // visible behind the new one.
-          key={nextCountdown}
-          className={`font-mono-num text-[14px] ${
-            nextCountdown <= 5
-              ? "font-bold text-light-foreground animate-countdown-pulse"
-              : "font-medium text-light-muted-foreground"
-          }`}
-        >
-          in 0:{String(nextCountdown).padStart(2, "0")}
-        </span>
-      </div>
+  // Progress through the current step toward the next (0..1) — drives the footer bar.
+  const stepProgress =
+    activeStep && nextStep && nextStep.startTimeSec > activeStep.startTimeSec
+      ? Math.min(
+          1,
+          Math.max(
+            0,
+            (elapsed - activeStep.startTimeSec) / (nextStep.startTimeSec - activeStep.startTimeSec),
+          ),
+        )
+      : 0;
+  // Always-on footer ("Pour 2 in" + bar + 0:41) — shared by the pour + agitation cards.
+  const stepFooter =
+    nextStep && nextCountdown !== null ? (
+      <StepProgressFooter
+        nextLabel={nextStep.label}
+        countdownSec={nextCountdown}
+        progress={stepProgress}
+      />
     ) : null;
 
   if (!started) {
@@ -461,9 +497,6 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
 
   return (
     <div className="space-y-3">
-      {coach?.liveGrams != null && (
-        <LiveScaleTotal grams={coach.liveGrams} target={activeStep?.cumulativeGrams ?? null} />
-      )}
       {activeStep && !allPoursDone && isAgitationPourAction(activeStep.action) && (
         // Agitation step — its own prominent moment (the cue the 3-2-1 buzz lands on).
         <div
@@ -476,7 +509,7 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
               <p className="font-fraunces text-[24px] leading-tight text-light-foreground">
                 {activeStep.label}
               </p>
-              <p className="text-[12px] text-light-muted-foreground mt-2">
+              <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
                 {activeStep.notes ?? defaultPourNote(activeStep.action)}
               </p>
             </div>
@@ -486,40 +519,42 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
               cueActive
             />
           </div>
-          {countdownFooter}
+          {stepFooter}
         </div>
       )}
 
       {activeStep && !allPoursDone && !isAgitationPourAction(activeStep.action) && (
-        // Pour step — grams only; agitation is now a discrete step of its own.
+        // Pour step — the wireframe step widget: NOW / step name, +pour → cumulative
+        // paired with the recipe total, the instruction, the live-scale coach inset,
+        // then the always-on progress footer.
         <div
           key={`step-${flashKey}`}
           className="rounded-3xl bg-light-card-selected backdrop-blur-light-card backdrop-saturate-150 shadow-light-card-pressed p-4 animate-step-activate"
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="label-eyebrow mb-1">Now</p>
-              <p className="font-fraunces text-[24px] leading-tight text-light-foreground">
-                {activeStep.label}
-              </p>
-              <p className="font-mono-num text-[14px] mt-1">
-                <span className="font-semibold text-light-foreground">+{activeStep.pourGrams}g</span>
-                <span className="text-light-muted-foreground"> → </span>
-                <span className="text-light-foreground">{activeStep.cumulativeGrams}g total</span>
-                {activeStep.temperatureC != null && (
-                  <>
-                    <span className="text-light-muted-foreground"> · </span>
-                    <span className="text-light-foreground">{activeStep.temperatureC}°C water</span>
-                  </>
-                )}
-              </p>
-              <p className="text-[12px] text-light-muted-foreground mt-2">
-                {activeStep.notes ?? defaultPourNote(activeStep.action)}
-              </p>
-            </div>
+          <p className="label-eyebrow mb-1">Now</p>
+          <p className="font-fraunces text-[28px] leading-tight text-light-foreground">
+            {activeStep.label}
+          </p>
+          <div className="mt-1.5 flex items-baseline justify-between gap-3">
+            <span className="font-fraunces text-[18px] leading-none text-light-foreground tabular-nums">
+              +{activeStep.pourGrams}g <span className="text-light-muted-foreground">→</span>{" "}
+              {activeStep.cumulativeGrams}g
+            </span>
+            <span className="font-fraunces text-[18px] leading-none text-light-muted-foreground tabular-nums shrink-0">
+              total {waterGrams}g
+            </span>
           </div>
+          <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
+            {activeStep.notes ?? defaultPourNote(activeStep.action)}
+            {activeStep.temperatureC != null && (
+              <span className="font-mono-num text-light-foreground">
+                {" "}
+                · {activeStep.temperatureC}°C
+              </span>
+            )}
+          </p>
           {showsCoach(coach) && <CoachCue coach={coach} />}
-          {countdownFooter}
+          {stepFooter}
         </div>
       )}
 
@@ -845,12 +880,14 @@ function StepGuide({
 
   const nextStep = currentIdx < timed.length - 1 ? timed[currentIdx + 1] : null;
   const nextCountdown = nextStep && started ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
+  // Progress through the current step (0..1) — drives the footer bar.
+  const stepProgress =
+    current.durationSec > 0
+      ? Math.min(1, Math.max(0, (elapsed - current.startTimeSec) / current.durationSec))
+      : 0;
 
   return (
     <div className="space-y-3">
-      {coach?.liveGrams != null && (
-        <LiveScaleTotal grams={coach.liveGrams} target={current?.cumulativeGrams ?? null} />
-      )}
       {setupSteps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-3">
           <p className="label-eyebrow mb-1">Setup</p>
@@ -890,7 +927,7 @@ function StepGuide({
                 {current.temperatureC != null && <span>{current.temperatureC}°C water</span>}
               </p>
             )}
-            <p className="text-[12px] text-light-muted-foreground mt-2">
+            <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
               {current.notes ?? defaultGuideNote(current.action)}
             </p>
             {isSteep ? (
@@ -916,20 +953,12 @@ function StepGuide({
 
         {showsCoach(coach) && <CoachCue coach={coach} />}
 
-        {nextStep && nextCountdown !== null && nextCountdown <= 15 && nextCountdown > 0 && (
-          <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
-            <span className="text-[12px] text-light-muted-foreground">Next: {nextStep.label}</span>
-            <span
-              key={nextCountdown}
-              className={`font-mono-num text-[14px] ${
-                nextCountdown <= 5
-                  ? "font-bold text-light-foreground animate-countdown-pulse"
-                  : "font-medium text-light-muted-foreground"
-              }`}
-            >
-              {nextCountdown}s
-            </span>
-          </div>
+        {nextStep && nextCountdown !== null && (
+          <StepProgressFooter
+            nextLabel={nextStep.label}
+            countdownSec={nextCountdown}
+            progress={stepProgress}
+          />
         )}
 
         {!isLast && nextStep && (
