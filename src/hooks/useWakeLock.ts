@@ -32,13 +32,22 @@ export function useWakeLock() {
 
   // ── Internal acquire ────────────────────────────────────────────────────
   const acquire = useCallback(async () => {
+    // Native keep-awake (real OS idle-timer disable in the iOS shell). If the
+    // plugin isn't in the installed build / the call rejects, fall THROUGH to the
+    // Web Wake Lock API rather than giving up — that path kept the screen awake
+    // before the native plugin existed (regression: PR #424 returned early and
+    // skipped it, so the brew screen slept whenever native keep-awake was a no-op).
     if (isNative()) {
       const ka = await loadKeepAwake();
       if (ka) {
-        await ka.keepAwake().catch(() => {});
-        nativeActiveRef.current = true;
+        try {
+          await ka.keepAwake();
+          nativeActiveRef.current = true;
+          return; // native handled it — don't also take a web lock
+        } catch {
+          /* plugin not implemented in this build → fall back to web wake lock */
+        }
       }
-      return;
     }
     if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
     try {
