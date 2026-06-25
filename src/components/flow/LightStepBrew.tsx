@@ -251,7 +251,10 @@ export default function LightStepBrew() {
       nextLabel="Done Brewing"
     >
       <div className="flex flex-col gap-5">
-        <ScalePanel {...scale} />
+        {/* Connect / tare lives here ONLY before the brew starts. Once the timer
+            runs, the live weight folds inline into the active pour step's grams
+            line — no separate scale card to shove the layout around mid-brew. */}
+        {!started && <ScalePanel {...scale} />}
         {recipe && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
             <div className="mb-3">
@@ -317,57 +320,29 @@ interface LivePourSequenceProps {
   coach?: FlowComparison | null;
 }
 
-/** Live "pour slower / faster / keep the flow" cue on the active pour card.
- * Renders only when the scale is connected and on a grams-curve (percolation). */
-function CoachCue({ coach }: { coach: FlowComparison }) {
-  const color =
-    coach.state === "on-track"
-      ? "text-light-success"
-      : coach.state === "ahead" || coach.state === "behind"
-        ? "text-light-accent-overtime"
-        : "text-light-foreground";
+/** The active pour's cumulative-grams figure — and, with a connected scale, a
+ * live counter. It ticks "147 / 240g" up toward the step's target right where
+ * the recipe already shows the grams, so the scale needs no separate card. Tints
+ * amber when the pour drifts off the intended rate (state ahead/behind); calm
+ * foreground otherwise. The parent's `font-mono-num` fixes the digit width, so
+ * the ticking number never nudges the layout. No scale → the static target. */
+function CumulativeTarget({
+  target,
+  coach,
+}: {
+  target: number;
+  coach?: FlowComparison | null;
+}) {
+  const live = coach?.liveGrams;
+  if (live == null) return <span className="text-light-foreground">{target}g</span>;
+  const tint =
+    coach?.state === "ahead" || coach?.state === "behind"
+      ? "text-light-accent-overtime"
+      : "text-light-foreground";
   return (
-    <div
-      key={coach.cue}
-      className="mt-3 rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-3 py-2 animate-step-activate"
-    >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className={`font-fraunces text-[20px] leading-none ${color}`}>{coach.message}</span>
-        {coach.liveGrams != null && (
-          <span className="font-mono-num text-[15px] font-semibold text-light-foreground">
-            {Math.round(coach.liveGrams)}g
-          </span>
-        )}
-      </div>
-      {coach.detail && (
-        <p className="font-mono-num text-[11px] text-light-muted-foreground mt-1">{coach.detail}</p>
-      )}
-    </div>
-  );
-}
-
-/** Whether a coach result is worth surfacing on the pour card. */
-function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
-  return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
-}
-
-/** Persistent live total from the connected scale, pinned at the top of the
- * step window so you read "147 / 240 g" without scrolling back up to ScalePanel
- * mid-brew — the cue card alone only shows grams while a pour cue is firing.
- * `target` is the active step's cumulative goal. Renders only while a weight is
- * streaming (coach.liveGrams != null → scale connected); no scale → nothing. */
-function LiveScaleTotal({ grams, target }: { grams: number; target?: number | null }) {
-  return (
-    <div className="flex items-baseline justify-between rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-2.5">
-      <span className="label-eyebrow">On the scale</span>
-      <span className="font-mono-num font-semibold text-light-foreground">
-        <span className="text-[22px]">{Math.round(grams)}</span>
-        <span className="text-[13px] text-light-muted-foreground"> g</span>
-        {target != null && (
-          <span className="text-[13px] text-light-muted-foreground"> / {target} g</span>
-        )}
-      </span>
-    </div>
+    <span className={tint}>
+      {Math.round(live)} / {target}g
+    </span>
   );
 }
 
@@ -461,9 +436,6 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
 
   return (
     <div className="space-y-3">
-      {coach?.liveGrams != null && (
-        <LiveScaleTotal grams={coach.liveGrams} target={activeStep?.cumulativeGrams ?? null} />
-      )}
       {activeStep && !allPoursDone && isAgitationPourAction(activeStep.action) && (
         // Agitation step — its own prominent moment (the cue the 3-2-1 buzz lands on).
         <div
@@ -505,7 +477,8 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
               <p className="font-mono-num text-[14px] mt-1">
                 <span className="font-semibold text-light-foreground">+{activeStep.pourGrams}g</span>
                 <span className="text-light-muted-foreground"> → </span>
-                <span className="text-light-foreground">{activeStep.cumulativeGrams}g total</span>
+                <CumulativeTarget target={activeStep.cumulativeGrams} coach={coach} />
+                <span className="text-light-muted-foreground"> total</span>
                 {activeStep.temperatureC != null && (
                   <>
                     <span className="text-light-muted-foreground"> · </span>
@@ -518,7 +491,6 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, coach }: Liv
               </p>
             </div>
           </div>
-          {showsCoach(coach) && <CoachCue coach={coach} />}
           {countdownFooter}
         </div>
       )}
@@ -848,9 +820,6 @@ function StepGuide({
 
   return (
     <div className="space-y-3">
-      {coach?.liveGrams != null && (
-        <LiveScaleTotal grams={coach.liveGrams} target={current?.cumulativeGrams ?? null} />
-      )}
       {setupSteps.length > 0 && (
         <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-3">
           <p className="label-eyebrow mb-1">Setup</p>
@@ -883,7 +852,11 @@ function StepGuide({
             </p>
             {(current.cumulativeGrams != null || current.temperatureC != null) && (
               <p className="font-mono-num text-[14px] mt-1 text-light-foreground">
-                {current.cumulativeGrams != null && <span>→ {current.cumulativeGrams}g</span>}
+                {current.cumulativeGrams != null && (
+                  <span>
+                    → <CumulativeTarget target={current.cumulativeGrams} coach={coach} />
+                  </span>
+                )}
                 {current.cumulativeGrams != null && current.temperatureC != null && (
                   <span className="text-light-muted-foreground"> · </span>
                 )}
@@ -913,8 +886,6 @@ function StepGuide({
             />
           )}
         </div>
-
-        {showsCoach(coach) && <CoachCue coach={coach} />}
 
         {nextStep && nextCountdown !== null && nextCountdown <= 15 && nextCountdown > 0 && (
           <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center justify-between">
