@@ -4,4 +4,4 @@
 # actions:write), so a push-path trigger on this file is the route-around. Mirrors
 # .github/ios-build-trigger. Each run = one bump.
 
-run: 1 — 2026-06-24 — first live cache verification after extraction (PR #428)
+run: 2 — 2026-06-24 — live cache verification now that the ANTHROPIC_API_KEY secret is set
