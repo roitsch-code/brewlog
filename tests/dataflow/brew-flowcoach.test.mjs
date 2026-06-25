@@ -105,7 +105,7 @@ test("near the target → ease-off", () => {
 test("reached the target → hold", () => {
   const c = coachFlow(PERC, ELAPSED_MID, true, 180, ramp(0));
   assert.equal(c.cue, "hold");
-  assert.match(c.message, /draw/i);
+  assert.match(c.message, /hold/i);
 });
 
 test("past the target → overshot with +Xg", () => {

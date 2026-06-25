@@ -188,7 +188,7 @@ export function coachFlow(
     return {
       ...partial,
       cue: "hold",
-      message: isBloom ? "Bloom set — swirl & wait" : "Hold — let it draw down",
+      message: isBloom ? "Swirl" : "Hold",
       state: "on-track",
     };
   }
@@ -196,20 +196,20 @@ export function coachFlow(
   // Still pouring toward the target — coach the rate.
   const r = rate ?? 0;
   let cue: FlowCue = isBloom ? "bloom" : "steady";
-  let message = isBloom ? "Bloom — gentle" : "Steady";
+  let message = isBloom ? "Gentle" : "Steady";
   let state: FlowComparison["state"] = "on-track";
 
   if (r < STALL_RATE) {
     cue = "keep-flow";
-    message = "Keep the flow going";
+    message = "Keep going";
     state = "behind";
   } else if (r > Math.max(targetRate * FAST_MULT, FAST_ABS)) {
     cue = "pour-slower";
-    message = "Pour slower";
+    message = "Slower";
     state = "ahead";
   } else if (r < Math.min(targetRate * SLOW_MULT, SLOW_ABS) && remaining > EASE_OFF_G) {
     cue = "pour-faster";
-    message = "Pour faster";
+    message = "Faster";
     state = "behind";
   } else if (remaining <= EASE_OFF_G) {
     cue = "ease-off";

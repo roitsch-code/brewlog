@@ -335,7 +335,7 @@ function CoachCue({ coach }: { coach: FlowComparison }) {
       <div className="flex items-baseline justify-between gap-3">
         {/* Left: coach message + the live pour rate inline */}
         <div className="flex items-baseline gap-2 min-w-0">
-          <span className={`font-fraunces text-[20px] leading-none ${messageColor}`}>
+          <span className={`font-fraunces text-[20px] leading-none whitespace-nowrap ${messageColor}`}>
             {coach.message}
           </span>
           {coach.liveRateGPS != null && (
