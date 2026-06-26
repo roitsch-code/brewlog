@@ -173,7 +173,12 @@ export default function CoffeeDetailPage() {
   const process = latestCoffee?.process || coffee.process;
   const fermentationStyle = latestCoffee?.fermentationStyle;
   const cuppingScore = latestCoffee?.cuppingScore;
-  const tastingNotes = latestCoffee?.tastingNotesFromBag ?? [];
+  // Bag flavors live on the SCAN session's identity; brew-again/shortcut
+  // sessions carry none, so reading only sessions[0] hides them after a rebrew.
+  // Take the most recent session that actually has notes (newest-first sorted).
+  const tastingNotes =
+    sessions.find((s) => (s.coffee?.tastingNotesFromBag?.length ?? 0) > 0)?.coffee
+      ?.tastingNotesFromBag ?? [];
   const commonNotes = coffee.commonNotes ?? [];
   const origin = latestCoffee?.origin || coffee.origin;
 
