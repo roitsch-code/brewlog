@@ -10,7 +10,7 @@ import Chip from "@/components/ui/light/Chip";
 import LightStarRating from "@/components/ui/light/StarRating";
 import Card, { CardTitle } from "@/components/ui/light/Card";
 import FlavorWheel from "@/components/ui/FlavorWheel";
-import { SCA_WHEEL, QUICK_FLAVORS } from "@/lib/constants/scaFlavorWheel";
+import { SCA_WHEEL } from "@/lib/constants/scaFlavorWheel";
 import { BREW_METHODS } from "@/lib/constants/brewMethods";
 
 /**
@@ -60,12 +60,13 @@ export default function LightStepLog() {
     rec?.primaryRecipe;
 
   // Suggested flavor chips (shown before you open a wheel category) = the
-  // flavors DOCUMENTED ON THE BAG for this coffee, not a generic list. The
+  // flavors DOCUMENTED ON THE BAG for this coffee, and NOTHING else. The
   // fresh-scan + coffee-detail paths carry them on the draft identity; brews
   // started from a shortcut (library list / Action Pill / "Brew Again" on an
   // in-rotation bag) DON'T — so when the draft has none we fetch this coffee's
   // bag notes by id (/api/coffees/[id] returns the latest session's notes).
-  // Generic QUICK_FLAVORS is the last resort (external / un-scanned coffees).
+  // If there are still no bag notes (external / un-scanned coffees) we show NO
+  // chips — only the wheel prompt — never a generic flavor list.
   const draftBagFlavors = (draft.coffee?.tastingNotesFromBag ?? [])
     .map((f) => f?.trim())
     .filter((f): f is string => !!f);
@@ -93,7 +94,6 @@ export default function LightStepLog() {
   }, [coffeeId, draftBagFlavors.length]);
 
   const bagFlavors = draftBagFlavors.length > 0 ? draftBagFlavors : fetchedBagFlavors;
-  const suggestedFlavors = bagFlavors.length > 0 ? bagFlavors : QUICK_FLAVORS;
 
   const [heroQuestion, setHeroQuestion] = useState("");
   useEffect(() => {
@@ -397,19 +397,25 @@ export default function LightStepLog() {
             </div>
           ) : (
             <div className="space-y-2 mt-3">
-              {bagFlavors.length > 0 && <p className="label-eyebrow px-1">On the bag</p>}
-              <div className="flex flex-wrap gap-2">
-                {suggestedFlavors.map((f) => (
-                  <Chip key={f} size="sm" selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)}>
-                    {f}
-                  </Chip>
-                ))}
-              </div>
-              <p className="text-[12px] text-light-muted-foreground px-1 mt-1">
-                {bagFlavors.length > 0
-                  ? "From the bag — tap what you taste, or open the wheel to explore"
-                  : "Tap the wheel to explore by category"}
-              </p>
+              {bagFlavors.length > 0 ? (
+                <>
+                  <p className="label-eyebrow px-1">On the bag</p>
+                  <div className="flex flex-wrap gap-2">
+                    {bagFlavors.map((f) => (
+                      <Chip key={f} size="sm" selected={selectedFlavors.includes(f)} onClick={() => toggleFlavor(f)}>
+                        {f}
+                      </Chip>
+                    ))}
+                  </div>
+                  <p className="text-[12px] text-light-muted-foreground px-1 mt-1">
+                    From the bag — tap what you taste, or open the wheel to explore
+                  </p>
+                </>
+              ) : (
+                <p className="text-[12px] text-light-muted-foreground px-1 mt-1">
+                  Tap the wheel to explore by category
+                </p>
+              )}
             </div>
           )}
 
