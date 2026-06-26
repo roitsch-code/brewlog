@@ -173,12 +173,15 @@ export default function CoffeeDetailPage() {
   const process = latestCoffee?.process || coffee.process;
   const fermentationStyle = latestCoffee?.fermentationStyle;
   const cuppingScore = latestCoffee?.cuppingScore;
-  // Bag flavors live on the SCAN session's identity; brew-again/shortcut
-  // sessions carry none, so reading only sessions[0] hides them after a rebrew.
-  // Take the most recent session that actually has notes (newest-first sorted).
+  // Bag flavors: prefer the durable bag_flavors column (migration 0019). Fall
+  // back to the scan session's identity for coffees not yet backfilled/written
+  // — brew-again/shortcut sessions carry none, so take the most recent session
+  // that actually has notes (newest-first sorted), not just sessions[0].
   const tastingNotes =
-    sessions.find((s) => (s.coffee?.tastingNotesFromBag?.length ?? 0) > 0)?.coffee
-      ?.tastingNotesFromBag ?? [];
+    (coffee.bagFlavors && coffee.bagFlavors.length > 0
+      ? coffee.bagFlavors
+      : sessions.find((s) => (s.coffee?.tastingNotesFromBag?.length ?? 0) > 0)?.coffee
+          ?.tastingNotesFromBag) ?? [];
   const commonNotes = coffee.commonNotes ?? [];
   const origin = latestCoffee?.origin || coffee.origin;
 
