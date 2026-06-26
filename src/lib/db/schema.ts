@@ -72,6 +72,11 @@ export const coffees = pgTable("coffees", {
   writtenSummary: text("written_summary"),
   lastSummarizedAt: text("last_summarized_at"),
   commonNotes: jsonb("common_notes").$type<string[]>(),
+  // The flavors printed ON THE BAG, promoted from the scan session's JSONB to a
+  // first-class column (migration 0019) so they live on the coffee, survive
+  // session deletion, and are read straight off the row. DISTINCT from
+  // commonNotes (what the USER tastes, aggregated from logged sessions).
+  bagFlavors: jsonb("bag_flavors").$type<string[]>(),
   whatToExplore: text("what_to_explore"),
   personalNotes: text("personal_notes"),
   // Generative Field v1.1 — perceptual Field composition for this coffee

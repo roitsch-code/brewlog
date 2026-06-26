@@ -187,6 +187,14 @@ export async function POST(req: NextRequest) {
       const newRating = data.result?.rating;
       const hasRating = typeof newRating === "number";
 
+      // Bag flavors (what's printed on the bag) → first-class column on the
+      // coffee (migration 0019). Only write when this save actually carries
+      // them: a fresh scan does, a "Brew Again"/shortcut save doesn't — so an
+      // empty list never wipes the stored flavors on an existing coffee.
+      const bagFlavors = (data.coffee.tastingNotesFromBag ?? [])
+        .map((f) => f?.trim())
+        .filter((f): f is string => !!f);
+
       const existingRows = await db
         .select()
         .from(coffees)
@@ -216,6 +224,7 @@ export async function POST(req: NextRequest) {
           // render falls back to Default until a future re-scan with
           // notes succeeds.
           fieldZones: incomingFieldZones ?? undefined,
+          bagFlavors: bagFlavors.length > 0 ? bagFlavors : undefined,
         });
       } else {
         const sessionIds = [...(existing.sessionIds ?? []), sessionId];
@@ -241,6 +250,11 @@ export async function POST(req: NextRequest) {
         };
         if (existing.fieldZones == null && incomingFieldZones != null) {
           updates.fieldZones = incomingFieldZones;
+        }
+        // Refresh the stored bag flavors only when this save carries them
+        // (a scan / re-scan). A note-less Brew Again leaves them intact.
+        if (bagFlavors.length > 0) {
+          updates.bagFlavors = bagFlavors;
         }
 
         await db

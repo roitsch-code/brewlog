@@ -18,6 +18,10 @@ export interface Coffee {
   writtenSummary?: string;
   lastSummarizedAt?: string;
   commonNotes?: string[];
+  /** The flavors printed ON THE BAG (migration 0019). Distinct from
+   * commonNotes (what the user tastes). Source of truth for the brew-log
+   * "On the bag" chips and the coffee-detail flavors. */
+  bagFlavors?: string[];
   whatToExplore?: string;
   personalNotes?: string; // free-text notes written by the user
   /** Generative Field v1.1 composition for this coffee. `null` until

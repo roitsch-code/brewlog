@@ -12,35 +12,34 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const rows = await db.select().from(coffees).where(eq(coffees.id, params.id)).limit(1);
     if (rows.length === 0) return NextResponse.json(null, { status: 404 });
 
-    // The documented bag flavors live in the scanned identity on this coffee's
-    // SCAN session — the `coffees` row's `common_notes` is unpopulated in
-    // production, so the session JSONB is the only source. Surface them so the
-    // brew-log flavor suggestions + the detail page can show THIS bag's printed
-    // notes even when the brew was started from a shortcut (library list /
-    // Action Pill / Brew Again) whose synthesized identity carried no notes.
-    //
-    // IMPORTANT: the scan session is created BEFORE the coffee row exists, so
-    // its `coffee` JSONB has NO `coffeeId`. Matching notes on
-    // `coffee->>'coffeeId' = id` (what we used to do) therefore matched NOTHING
-    // for every bag — the only notes-bearing session is the scan, and it has no
-    // coffeeId. Match on the coffee row's own `sessionIds` instead (which always
-    // includes the scan session), then take the most recent of those sessions
-    // that actually carries notes (brew-again/shortcut sessions carry none).
-    const sessionIds = rows[0].sessionIds ?? [];
-    let tastingNotesFromBag: string[] = [];
-    if (sessionIds.length > 0) {
-      const noteRows = await db
-        .select({ coffee: sessions.coffee })
-        .from(sessions)
-        .where(
-          and(
-            inArray(sessions.id, sessionIds),
-            sql`jsonb_array_length(COALESCE((${sessions.coffee}->'tastingNotesFromBag')::jsonb, '[]'::jsonb)) > 0`,
-          ),
-        )
-        .orderBy(desc(sessions.createdAtMs))
-        .limit(1);
-      tastingNotesFromBag = noteRows[0]?.coffee?.tastingNotesFromBag ?? [];
+    // Bag flavors (what's printed on the bag) now live on a first-class column
+    // (`bag_flavors`, migration 0019), written on scan-save + backfilled. Prefer
+    // it. Fall back to the scan session's JSONB for any coffee not yet
+    // backfilled/written — IMPORTANT: that scan session is created BEFORE the
+    // coffee row exists, so it has NO `coffeeId`; matching notes on
+    // `coffee->>'coffeeId' = id` matched nothing, so we match on the coffee
+    // row's own `sessionIds` (which always includes the scan) and take the most
+    // recent of those sessions that carries notes (brew-again sessions carry none).
+    const stored = Array.isArray(rows[0].bagFlavors)
+      ? rows[0].bagFlavors.map((f) => String(f).trim()).filter(Boolean)
+      : [];
+    let tastingNotesFromBag: string[] = stored;
+    if (tastingNotesFromBag.length === 0) {
+      const sessionIds = rows[0].sessionIds ?? [];
+      if (sessionIds.length > 0) {
+        const noteRows = await db
+          .select({ coffee: sessions.coffee })
+          .from(sessions)
+          .where(
+            and(
+              inArray(sessions.id, sessionIds),
+              sql`jsonb_array_length(COALESCE((${sessions.coffee}->'tastingNotesFromBag')::jsonb, '[]'::jsonb)) > 0`,
+            ),
+          )
+          .orderBy(desc(sessions.createdAtMs))
+          .limit(1);
+        tastingNotesFromBag = noteRows[0]?.coffee?.tastingNotesFromBag ?? [];
+      }
     }
 
     return NextResponse.json({ ...rowToCoffee(rows[0]), tastingNotesFromBag });

@@ -22,6 +22,7 @@ export function rowToCoffee(r: typeof coffees.$inferSelect): Coffee {
     writtenSummary: r.writtenSummary ?? undefined,
     lastSummarizedAt: r.lastSummarizedAt ?? undefined,
     commonNotes: r.commonNotes ?? undefined,
+    bagFlavors: r.bagFlavors ?? undefined,
     whatToExplore: r.whatToExplore ?? undefined,
     personalNotes: r.personalNotes ?? undefined,
     // JSONB column is `unknown` at the Drizzle level; trust the write
