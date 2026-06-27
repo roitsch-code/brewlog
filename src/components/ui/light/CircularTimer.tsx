@@ -104,7 +104,10 @@ export default function LightCircularTimer({ targetSeconds, onComplete, onTick, 
   const withAlpha = (color: string, a: number) => color.replace(")", ` / ${a})`);
   const trackColor = withAlpha(ANTHRACITE, 0.12);
   const ringColor = overtime ? OVERTIME : ANTHRACITE;
-  const timeColor = overtime ? OVERTIME : ANTHRACITE;
+  // The big time stays anthracite ALWAYS — amber numerals on a warm/dark coffee
+  // Field are unreadable (the "Farb-Problem bei dunklen Pattern"). The overtime
+  // signal is carried by the amber ring + the "+over" label + the amber Done button.
+  const timeColor = ANTHRACITE;
 
   return (
     <div className={cn("flex flex-col items-center gap-5", className)}>
@@ -168,20 +171,15 @@ export default function LightCircularTimer({ targetSeconds, onComplete, onTick, 
           className={cn(
             "px-10 py-4 rounded-full font-semibold text-base transition-all active:scale-95",
             running && overtime
-              ? "border"
+              ? "text-light-text-on-dark"
               : running
                 ? "bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 text-light-foreground"
                 : "bg-light-foreground text-light-text-on-dark",
           )}
-          style={
-            running && overtime
-              ? {
-                  background: withAlpha(OVERTIME, 0.12),
-                  borderColor: withAlpha(OVERTIME, 0.5),
-                  color: OVERTIME,
-                }
-              : undefined
-          }
+          // Overtime "Done": SOLID amber fill + cream text — a high-contrast filled
+          // shape that stays readable/tappable on any warm Field (the old transparent
+          // amber-text/-border vanished into a rust-coloured Field).
+          style={running && overtime ? { background: OVERTIME } : undefined}
         >
           {running && overtime ? "Done" : running ? "Stop" : elapsed > 0 ? "Resume" : "Start Brew"}
         </button>
