@@ -1,0 +1,75 @@
+name: Server Diagnostics (read-only)
+
+# Read-only health/topology check of the Hetzner VPS, driven from the GitHub
+# Actions UI (Actions tab → "Server Diagnostics (read-only)" → "Run workflow")
+# so it works from the phone with no terminal.
+#
+# Reuses the existing deploy SSH key + DEPLOY_* secrets, exactly like
+# deploy.yml and migration.yml. There is NO command input: every command below
+# is fixed and read-only, so this workflow can neither change anything on the
+# server nor be coaxed into running an arbitrary command.
+#
+# SECRET SAFETY: this never prints secret VALUES into the run log. It does NOT
+# `cat` the .env, does NOT run `docker compose config` and does NOT
+# `docker inspect` containers (all of those would interpolate/expose env
+# values). It only reports the .env's permissions/owner via `ls -l`.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run read-only diagnostics on VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
+            set -uo pipefail
+            cd ${{ secrets.DEPLOY_PATH }} || true
+
+            section() { printf '\n========== %s ==========\n' "$1"; }
+
+            section "Identity (deploy user / groups)"
+            whoami; id; groups
+
+            section "OS"
+            uname -a
+            cat /etc/os-release 2>/dev/null | grep -E '^(PRETTY_NAME|VERSION)=' || true
+
+            section "CPU / RAM / Disk"
+            echo "nproc: $(nproc)"
+            free -h
+            df -h /
+
+            section "Docker / Compose versions"
+            docker --version || echo "docker not on PATH for this user"
+            docker compose version || echo "compose v2 not available"
+
+            section "Docker networks  (expect brewlog_default)"
+            docker network ls || echo "no docker access for this user"
+
+            section "Running containers"
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' || true
+
+            section "Docker volumes"
+            docker volume ls || true
+
+            section "Live resource usage (one-shot)"
+            docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' || true
+
+            section ".env permissions/owner  (NOT contents)"
+            ls -l "${{ secrets.DEPLOY_PATH }}/.env" 2>/dev/null || echo ".env not found at deploy path"
+
+            section "Caddyfile  (no secrets — domains only)"
+            cat "${{ secrets.DEPLOY_PATH }}/Caddyfile" 2>/dev/null || echo "Caddyfile not found"
+
+            section "Crontab of this user  (backup cron lives in host crontab)"
+            crontab -l 2>/dev/null || echo "no crontab for $(whoami) (it may live under root)"
+
+            section "Done"
+          REMOTE
