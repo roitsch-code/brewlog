@@ -20,7 +20,7 @@ const entry = `
 export {
   getBloomDuration, parsePourSteps, pourStepsFromStructured, buildGuideSteps,
   hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec,
-  poursCompleteAtSec, POUR_RATE_GPS, weightedActiveIdx, REACH_TOL_G, AGITATION_DWELL_SEC,
+  poursCompleteAtSec, POUR_RATE_GPS,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
@@ -44,9 +44,6 @@ const {
   pourDurationSec,
   poursCompleteAtSec,
   POUR_RATE_GPS,
-  weightedActiveIdx,
-  REACH_TOL_G,
-  AGITATION_DWELL_SEC,
 } = await import(pathToFileURL(out).href);
 
 // Fixed clock: Apr 17 2026. Lets roast-date branches be exercised deterministically.
@@ -96,10 +93,7 @@ test("parsePourSteps: classic 4-pour Kasuya-style schedule at peak roast", () =>
   assert.equal(steps.length, 4);
   assert.deepEqual(
     steps.map((s) => s.startTimeSec),
-    // bloom@0, then the 136s window (270 − 45 − 89) is split PROPORTIONALLY to each
-    // pour's grams: gap1 ∝ 130g, gap2 ∝ 140g → pour2@110, final@181 (still
-    // target − reserve). Pour 130g/140g get ~65/71s, not an equal ~68/68s.
-    [0, 45, 110, 181],
+    [0, 45, 113, 181], // bloom, interval of (270 − 45 − 89)/2 ≈ 68s between pours
   );
   assert.deepEqual(
     steps.map((s) => s.pourGrams),
@@ -306,10 +300,10 @@ test("getActiveIdx: returns bloom before first pour", () => {
 
 test("getActiveIdx: advances exactly at each step's startTime", () => {
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  // Steps at [0, 45, 110, 181] (proportional spacing — see the Kasuya test above)
+  // Steps at [0, 45, 113, 181]
   assert.equal(getActiveIdx(45, steps), 1);
-  assert.equal(getActiveIdx(109, steps), 1);
-  assert.equal(getActiveIdx(110, steps), 2);
+  assert.equal(getActiveIdx(112, steps), 1);
+  assert.equal(getActiveIdx(113, steps), 2);
   assert.equal(getActiveIdx(180, steps), 2);
   assert.equal(getActiveIdx(181, steps), 3);
   assert.equal(getActiveIdx(500, steps), 3); // stays on final after target time
@@ -523,110 +517,4 @@ test("poursCompleteAtSec: a trailing swirl near target uses the short agitation 
 
 test("poursCompleteAtSec: empty steps → 0 (no crash)", () => {
   assert.equal(poursCompleteAtSec([], 200), 0);
-});
-
-// ── proportional pour spacing (time follows water) ───────────────────────────
-
-test("proportional spacing: a big pour gets proportionally more time than a small one", () => {
-  // bloom 50, then +130 / +140 / +180. The 130g and 140g pours sit between bloom
-  // and the final pour; their gaps split the window proportionally (≈65 / ≈71s),
-  // not equally — so the bigger 140g gap is the longer one.
-  const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  const t = steps.map((s) => s.startTimeSec);
-  assert.deepEqual(t, [0, 45, 110, 181]);
-  const gap1 = t[2] - t[1]; // covers the 130g pour
-  const gap2 = t[3] - t[2]; // covers the 140g pour
-  assert.ok(gap2 > gap1, "the 140g pour's gap must exceed the 130g pour's gap");
-});
-
-test("proportional spacing: EQUAL pours reproduce the old uniform schedule exactly", () => {
-  // 40 → 140 → 240 → 340: three equal 100g pours. Equal weights ⇒ uniform interval,
-  // identical to the pre-change schedule.
-  const steps = parsePourSteps("40 – 140 – 240 – 340", 210, peakRoast, NOW);
-  assert.deepEqual(
-    steps.map((s) => s.startTimeSec),
-    [0, 45, 93, 141], // bloom45, reserve round(210*0.33)=69, interval (210-45-69)/2=48
-  );
-});
-
-test("proportional spacing: the final pour still lands at target − reserve", () => {
-  for (const [seq, target] of [
-    ["50 – 180 – 320 – 500", 270],
-    ["30 – 90 – 400 – 460 – 500", 300],
-    ["60 – 250 – 450", 240],
-  ]) {
-    const steps = parsePourSteps(seq, target, peakRoast, NOW);
-    const reserve = Math.round(target * 0.33);
-    assert.equal(steps.at(-1).startTimeSec, target - reserve, `${seq} final lands at target−reserve`);
-    assert.equal(steps[0].startTimeSec, 0, `${seq} bloom@0`);
-  }
-});
-
-// ── weightedActiveIdx (the "step won't advance off an unfinished pour" fix) ───
-
-const PEAK_STEPS = () => parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW); // [0,45,110,181]
-
-test("weightedActiveIdx: scale connected — holds the pour until its target is reached", () => {
-  const steps = PEAK_STEPS();
-  // At t=120, time alone would be on pour index 2 (110s ≤ 120 < 181). But only 180g
-  // is on the scale, so pour index 1 (target 180g) is NOT yet complete → hold on 1.
-  assert.equal(getActiveIdx(120, steps), 2); // pure time
-  assert.equal(weightedActiveIdx(steps, 120, 175), 1); // behind on weight → held on the pour
-});
-
-test("weightedActiveIdx: advances once the pour's target is reached (within tolerance)", () => {
-  const steps = PEAK_STEPS();
-  // 320g reached (pour index 2 target) → not held back by weight; time at 120 is on idx 2.
-  assert.equal(weightedActiveIdx(steps, 120, 320), 2);
-  // Within REACH_TOL_G of the 180g target counts as reached → free to follow time.
-  assert.equal(weightedActiveIdx(steps, 120, 180 - REACH_TOL_G), 2);
-});
-
-test("weightedActiveIdx: never races AHEAD of the time schedule", () => {
-  const steps = PEAK_STEPS();
-  // Even if the whole 500g is already poured, at t=50 the card stays where time is
-  // (idx 1), never jumping to a future step.
-  assert.equal(weightedActiveIdx(steps, 50, 500), 1);
-  assert.ok(weightedActiveIdx(steps, 50, 500) <= getActiveIdx(50, steps));
-});
-
-test("weightedActiveIdx: no scale — holds each pour for its physical pour duration", () => {
-  const steps = PEAK_STEPS();
-  // pour index 1 starts @45 and adds 130g → ~33s to pour (pourDurationSec(130)).
-  const dur = pourDurationSec(130);
-  // Just before that pour is physically done, even though time has reached pour 2's
-  // start (110s), the card holds on pour 1.
-  assert.equal(weightedActiveIdx(steps, 45 + dur - 1, null), 1);
-  // After its physical pour time, time (110s) governs again.
-  assert.equal(weightedActiveIdx(steps, 110, null), 2);
-});
-
-test("weightedActiveIdx: agitation step holds for its dwell, then time governs", () => {
-  const recipe = {
-    targetTimeSec: 240,
-    pourSteps: [
-      { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
-      { label: "Pour 2", action: "pour", waterGramsAtEnd: 200 },
-      { label: "Final", action: "final", waterGramsAtEnd: 300 },
-      { label: "Swirl", action: "swirl" },
-      { label: "Drawdown", action: "drain", durationSec: 40 },
-    ],
-  };
-  const steps = pourStepsFromStructured(recipe, peakRoast, NOW); // bloom0/pour45/final161/swirl186
-  const swirl = steps.findIndex((s) => s.action === "swirl");
-  const sStart = steps[swirl].startTimeSec;
-  // Weight reached for all pours; at swirl start the swirl is the active step and
-  // holds through its dwell window.
-  assert.equal(weightedActiveIdx(steps, sStart, 300), swirl);
-  assert.equal(weightedActiveIdx(steps, sStart + AGITATION_DWELL_SEC - 1, 300), swirl);
-});
-
-test("weightedActiveIdx: all steps complete → the last step (drain handoff)", () => {
-  const steps = PEAK_STEPS();
-  // Past target with the full pour on the scale → last index.
-  assert.equal(weightedActiveIdx(steps, 500, 500), steps.length - 1);
-});
-
-test("weightedActiveIdx: empty steps → -1", () => {
-  assert.equal(weightedActiveIdx([], 10, 100), -1);
 });

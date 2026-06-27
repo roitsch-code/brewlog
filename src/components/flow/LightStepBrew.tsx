@@ -6,10 +6,9 @@ import LightCircularTimer from "@/components/ui/light/CircularTimer";
 import { formatSeconds } from "@/lib/utils/formatTime";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
+  getActiveIdx,
   isAgitationPourAction,
   poursCompleteAtSec,
-  weightedActiveIdx,
-  REACH_TOL_G,
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
@@ -27,18 +26,21 @@ import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/fl
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
 
 /**
- * Light System fork of /components/flow/StepBrew.tsx (the Dark original is gone).
+ * Light System fork of /components/flow/StepBrew.tsx.
  *
- * This is the highest daily-use-risk screen (Markus' morning brew runs on this
- * timer), so treat it with care. The active pour-over step is WEIGHT-/POUR-AWARE
- * (`weightedActiveIdx`): a pour keeps its card until the pour is actually finished
- * — its grams target reached on the Acaia, or its physical pour time elapsed
- * off-scale — instead of flipping on a fixed time interval. The live coach
- * (`coachFlow`) picks the SAME step, so the in-card weight box never drifts from
- * the card. Wake lock is held for the WHOLE time this screen is open (mount →
- * unmount), not just once the timer starts.
+ * IMPORTANT: Logic is byte-for-byte identical to the Dark version —
+ * same parsePourSteps, same getActiveIdx, same wake-lock activation
+ * on first tick, same 2-tone Web Audio cue on step auto-advance, same
+ * 80 ms navigator.vibrate on Android, same bloom/final cue windows,
+ * same prose-method auto-advance. Only the visual layer changes.
  *
- * Mounted only by /app/(light)/brew/new when step === "brew".
+ * This is the highest daily-use risk step in the migration (Markus'
+ * morning brew runs on this timer), so the discipline is: copy the
+ * Dark file verbatim, swap surface classes, never touch hooks /
+ * useEffect deps / parsePourSteps inputs / step transition triggers.
+ *
+ * Mounted only by /app/(light)/brew/preview when step === "brew".
+ * Dark StepBrew keeps painting /brew/new until cut-over.
  */
 
 export default function LightStepBrew() {
@@ -223,16 +225,6 @@ export default function LightStepBrew() {
     !!recipe &&
     (draft.context?.occasion === "cold-brew" || (recipe.targetTimeSec ?? 0) >= 3600);
 
-  // Keep the screen awake for the WHOLE time the brew screen is open — not just
-  // once the timer starts (`e === 1`). The user reads the recipe + sets up the
-  // pour before tapping Start; the screen must not sleep in that window either.
-  // Cold steep is a multi-hour wait on its own screen → don't hold the lock there.
-  useEffect(() => {
-    if (isColdSteep) return;
-    enableWakeLock();
-    return () => disableWakeLock();
-  }, [isColdSteep, enableWakeLock, disableWakeLock]);
-
   if (isColdSteep && recipe) {
     const steepMinutes = Math.min(
       1440,
@@ -377,40 +369,6 @@ function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
   return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
 }
 
-/** The cream weight box for the steps that don't fire a pour cue — swirl/agitation
- * and drain. Same surface as CoachCue, but a plain "Hold" readout: live g/s + the
- * big current-grams / target-grams. Keeps the current+target weight visible on
- * EVERY step (the user's "Gewicht immer da"). Rendered only when a weight streams. */
-function WeightHold({
-  liveGrams,
-  targetG,
-  rateGPS,
-  label = "Hold",
-}: {
-  liveGrams: number;
-  targetG?: number | null;
-  rateGPS?: number | null;
-  label?: string;
-}) {
-  return (
-    <div className="mt-3 rounded-2xl bg-[hsl(36_55%_96%/0.5)] px-4 py-3 flex items-baseline justify-between gap-3">
-      <div className="flex items-baseline gap-2 min-w-0">
-        <span className="font-fraunces text-[20px] leading-none text-light-foreground">{label}</span>
-        <span className="font-mono-num text-[12px] font-semibold text-light-muted-foreground shrink-0">
-          {(rateGPS ?? 0).toFixed(1)} g/s
-        </span>
-      </div>
-      <span className="shrink-0 text-light-foreground">
-        <span className="font-fraunces text-[28px] leading-none tabular-nums">{Math.round(liveGrams)}</span>
-        <span className="font-mono-num text-[13px] text-light-muted-foreground"> g</span>
-        {targetG != null && (
-          <span className="font-mono-num text-[13px] text-light-muted-foreground"> / {targetG}g</span>
-        )}
-      </span>
-    </div>
-  );
-}
-
 /** Always-on footer on the active step card: "{next} in" + a progress bar +
  * the m:ss countdown to the next step. Shared by LivePourSequence (pour +
  * agitation cards) and StepGuide. `progress` is 0..1 through the current step. */
@@ -456,50 +414,41 @@ function agitationButtonLabel(action: PourStep["action"]): string {
 }
 
 function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, coach }: LivePourSequenceProps) {
-  const liveGrams = coach?.liveGrams ?? null;
-  // Weight-/pour-aware active step: a long pour KEEPS its card until the pour is
-  // actually finished (weight reached, or its physical pour time elapsed off-scale)
-  // instead of flipping after a fixed interval. Never races ahead of the schedule.
-  const activeIdx = started ? weightedActiveIdx(steps, elapsed, liveGrams) : -1;
+  const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
-  // Draining begins once we're a grace beyond the last step (poursCompleteAtSec
-  // covers the time to physically pour it) AND — when the scale is connected — the
-  // final target is actually reached, so the drain card never pre-empts a final pour
-  // you're still pouring. Off-scale (liveGrams null) it's purely the time grace.
-  const drainStartSec = poursCompleteAtSec(steps, targetTimeSec);
-  const finalTarget = steps.length > 0 ? steps[steps.length - 1].cumulativeGrams : 0;
-  const weightReached = liveGrams == null || liveGrams >= finalTarget - REACH_TOL_G;
-  const allPoursDone = started && elapsed >= drainStartSec && weightReached;
+  // Draining begins once we're a grace beyond the last step. The grace covers
+  // the time to physically pour the last step's water — a flat 20 s cap used to
+  // cut big final pours short (the "last pour disappears too fast" bug). See
+  // poursCompleteAtSec.
+  const allPoursDone = started && elapsed >= poursCompleteAtSec(steps, targetTimeSec);
 
   const [flashKey, setFlashKey] = useState(0);
   useEffect(() => {
     if (activeIdx > 0) setFlashKey((k) => k + 1);
   }, [activeIdx]);
 
-  // Always-on footer — shared by the pour + agitation cards. Counts down to the
-  // NEXT step; on the TRAILING step (a final swirl/pour with no next) it counts down
-  // to drawdown instead ("Drain in 0:08"), so every active card always carries a live
-  // timer and the end-swirl never looks inert / "lost".
-  const stepFooter = (() => {
-    if (!activeStep) return null;
-    if (nextStep && nextCountdown !== null) {
-      const span = nextStep.startTimeSec - activeStep.startTimeSec;
-      const progress = span > 0 ? Math.min(1, Math.max(0, (elapsed - activeStep.startTimeSec) / span)) : 0;
-      return (
-        <StepProgressFooter nextLabel={nextStep.label} countdownSec={nextCountdown} progress={progress} />
-      );
-    }
-    if (!allPoursDone) {
-      const span = drainStartSec - activeStep.startTimeSec;
-      const progress = span > 0 ? Math.min(1, Math.max(0, (elapsed - activeStep.startTimeSec) / span)) : 0;
-      return (
-        <StepProgressFooter nextLabel="Drain" countdownSec={Math.max(0, drainStartSec - elapsed)} progress={progress} />
-      );
-    }
-    return null;
-  })();
+  // Progress through the current step toward the next (0..1) — drives the footer bar.
+  const stepProgress =
+    activeStep && nextStep && nextStep.startTimeSec > activeStep.startTimeSec
+      ? Math.min(
+          1,
+          Math.max(
+            0,
+            (elapsed - activeStep.startTimeSec) / (nextStep.startTimeSec - activeStep.startTimeSec),
+          ),
+        )
+      : 0;
+  // Always-on footer ("Pour 2 in" + bar + 0:41) — shared by the pour + agitation cards.
+  const stepFooter =
+    nextStep && nextCountdown !== null ? (
+      <StepProgressFooter
+        nextLabel={nextStep.label}
+        countdownSec={nextCountdown}
+        progress={stepProgress}
+      />
+    ) : null;
 
   if (!started) {
     return (
@@ -570,13 +519,6 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
               cueActive
             />
           </div>
-          {coach?.liveGrams != null && (
-            <WeightHold
-              liveGrams={coach.liveGrams}
-              targetG={activeStep.cumulativeGrams}
-              rateGPS={coach.liveRateGPS}
-            />
-          )}
           {stepFooter}
         </div>
       )}
@@ -617,31 +559,18 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
       )}
 
       {allPoursDone && (
-        <div className="rounded-3xl bg-light-card-selected backdrop-blur-light-card backdrop-saturate-150 shadow-light-card-pressed p-4 animate-step-activate">
+        <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4 animate-step-activate">
           <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="label-eyebrow mb-1">Now</p>
-              <p className="font-fraunces text-[28px] leading-tight text-light-foreground">Drain</p>
+            <div>
+              <p className="label-eyebrow mb-1">Draining</p>
+              <p className="text-[14px] text-light-foreground">
+                All pours done — wait for drawdown
+              </p>
+              <p className="font-mono-num text-[12px] text-light-muted-foreground mt-1">
+                Target finish: {formatSeconds(targetTimeSec)}
+              </p>
             </div>
-            <span className="font-fraunces text-[18px] leading-none text-light-muted-foreground tabular-nums shrink-0">
-              total {waterGrams}g
-            </span>
           </div>
-          <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
-            No agitation now — it stalls the drain.
-          </p>
-          {coach?.liveGrams != null && (
-            <WeightHold liveGrams={coach.liveGrams} targetG={waterGrams} rateGPS={coach.liveRateGPS} />
-          )}
-          <StepProgressFooter
-            nextLabel="Finish"
-            countdownSec={Math.max(0, targetTimeSec - elapsed)}
-            progress={
-              targetTimeSec - drainStartSec > 0
-                ? Math.min(1, Math.max(0, (elapsed - drainStartSec) / (targetTimeSec - drainStartSec)))
-                : 1
-            }
-          />
         </div>
       )}
 

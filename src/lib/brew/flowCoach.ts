@@ -16,7 +16,7 @@
  * guidance, never presented as hard law.
  */
 import { activeStepAt, expectedGramsAt, type BrewTimeline } from "@/lib/brew/timeline";
-import { pourDurationSec, weightedActiveIdx } from "@/lib/utils/pourSequence";
+import { pourDurationSec } from "@/lib/utils/pourSequence";
 
 export interface WeightSample {
   /** Wall-clock ms when the sample was read. */
@@ -133,15 +133,7 @@ export function coachFlow(
 
   const targetGramsNow = expectedGramsAt(timeline, elapsed);
   const rate = flowRateGPS(samples);
-  // Pick the SAME active step the brew screen displays: on a grams curve
-  // (percolation) the step is weight-/pour-aware (held on an unfinished pour),
-  // so the cue + numbers never drift from the card. `timeline.steps` and
-  // `timeline.pourSteps` share indices for percolation. Immersion/prose keep the
-  // time-based pick. (liveGrams is non-null here — guarded by the early return.)
-  const idx =
-    timeline.hasGramsCurve && timeline.pourSteps
-      ? weightedActiveIdx(timeline.pourSteps, elapsed, liveGrams)
-      : activeStepAt(timeline, elapsed, started);
+  const idx = activeStepAt(timeline, elapsed, started);
   const step = idx >= 0 ? timeline.steps[idx] : null;
   if (!step) {
     return { ...NO_DATA, liveGrams, targetGramsNow, liveRateGPS: rate };
