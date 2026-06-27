@@ -92,6 +92,12 @@ export default function LightStepBrew() {
   const brewStartMsRef = useRef(0);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
+  // Monotonic peak weight for STEP SELECTION. The scale dips when you shift thumb
+  // / cup pressure; that must NEVER turn a finished pour back into an unfinished
+  // one and jump the active step backwards (#3 regression). Water on the brewer
+  // only rises as you pour, so we drive the active-step + coach selection off the
+  // PEAK weight seen this brew, not the jittery instantaneous value.
+  const peakGramsRef = useRef<number | null>(null);
   const pushSample = useCallback((grams: number, atMs: number) => {
     // Live-coach window: ~5 Hz, keep the last 6 s.
     if (atMs - lastSampleMsRef.current >= 200) {
@@ -121,8 +127,17 @@ export default function LightStepBrew() {
       fullCurveRef.current = [];
       brewStartMsRef.current = 0;
       lastCurveMsRef.current = 0;
+      peakGramsRef.current = null;
     }
   }, [elapsed]);
+
+  // Advance the monotonic peak as the brew runs (water only goes up).
+  if (started && elapsed > 0 && scale.weight != null) {
+    peakGramsRef.current = Math.max(peakGramsRef.current ?? 0, scale.weight);
+  }
+  // Grams that drive step selection: the monotonic peak during the brew (so a
+  // weight dip can't jump the step back), the raw weight before it starts.
+  const progressGrams = started && elapsed > 0 ? peakGramsRef.current : scale.weight;
 
   // The current timeline, in a ref, so handleDone can analyse without being
   // re-created every render (timeline is a fresh object each render).
@@ -194,7 +209,7 @@ export default function LightStepBrew() {
 
   // Live pour-flow comparison. Off the native shell / immersion / no weight yet
   // → cue "none", so the coach UI renders nothing (no-scale path unchanged).
-  const coach = coachFlow(timeline, elapsed, started, scale.weight, samplesRef.current);
+  const coach = coachFlow(timeline, elapsed, started, progressGrams, samplesRef.current);
   // Hand the whole step schedule to the paired Apple Watch at brew start; the
   // watch app runs the timeline and buzzes the wrist per step via a
   // physical-therapy extended-runtime session (fires screen-off / wrist-down,
