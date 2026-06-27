@@ -201,9 +201,38 @@ function buildPourOver(
   const bloomDur = getBloomDuration(roastDate, now);
   const drawdownReserve = Math.round(targetTimeSec * 0.33);
   const remaining = targetTimeSec - bloomDur - drawdownReserve;
-  const interval = n > 2 ? remaining / (n - 2) : 0;
 
-  const pourStartSec = (i: number) => (i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval));
+  // Each pour's water increment (milestone 0 = bloom). The time GAP after a pour
+  // (before the next) is sized PROPORTIONALLY to that pour's grams — time follows
+  // water, so a big pour gets the seconds it physically needs (≈ grams ÷ POUR_RATE)
+  // instead of an equal slice that flips the step before you've finished pouring
+  // (the "200 ml pour disappears after 15 s" bug). Post-bloom pours are indices
+  // 1..n-1; the (n-2) gaps cover pours 1..n-2 (the final pour is poured during the
+  // drawdown reserve). The gaps sum to `remaining`, so the final pour still lands
+  // exactly at target − reserve, and EQUAL-size pours reproduce the old uniform
+  // schedule byte-for-byte (uniformInterval is the fallback when total weight is 0).
+  const increments = milestones.map((m, i) =>
+    i === 0 ? m.grams : m.grams - milestones[i - 1].grams,
+  );
+  const uniformInterval = n > 2 ? remaining / (n - 2) : 0;
+  let gapWeightTotal = 0;
+  for (let i = 1; i <= n - 2; i++) gapWeightTotal += Math.max(0, increments[i]);
+
+  // Cumulative start time per pour index (0 = bloom@0), rounded per step but
+  // accumulated as a float so rounding never compounds and the final start is exact.
+  const starts: number[] = new Array(n);
+  starts[0] = 0;
+  let acc = bloomDur;
+  for (let i = 1; i < n; i++) {
+    starts[i] = Math.round(acc);
+    if (i < n - 1) {
+      acc +=
+        gapWeightTotal > 0
+          ? (remaining * Math.max(0, increments[i])) / gapWeightTotal
+          : uniformInterval;
+    }
+  }
+  const pourStartSec = (i: number) => starts[i];
 
   const out: PourStep[] = [];
   milestones.forEach((m, i) => {
@@ -322,6 +351,54 @@ export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[])
     if (elapsed >= steps[i].startTimeSec) idx = i;
   }
   return idx;
+}
+
+/** Live grams within this of a pour's cumulative target = "reached" (matches
+ * flowCoach's TOL_G). */
+export const REACH_TOL_G = 4;
+/** Seconds an agitation step stays active before the timeline may advance past it. */
+export const AGITATION_DWELL_SEC = 8;
+
+/**
+ * Weight-/pour-aware active step index — the fix for "the step vanishes after 15 s
+ * while I'm still pouring". Unlike `getActiveIdx` (pure elapsed time), this never
+ * advances OFF a pour until that pour is actually FINISHED. A step counts complete:
+ *   - pour step + a live weight (scale on) → `liveGrams ≥ cumulativeGrams − REACH_TOL_G`
+ *   - pour step, no weight (scale off)     → `elapsed ≥ startTimeSec + pourDurationSec(pourGrams)`
+ *   - agitation step                       → `elapsed ≥ startTimeSec + AGITATION_DWELL_SEC`
+ *
+ * Returns `min(timeIdx, firstIncompleteIdx)`: if elapsed ran ahead of an unfinished
+ * pour, hold on that pour (the bug fix); if you poured ahead of schedule, follow the
+ * schedule (never race the card ahead). Crucially `result ≤ getActiveIdx`, so a step
+ * is never SKIPPED — only held longer. Because total weight rises monotonically as
+ * you pour later steps, an under-poured earlier step self-completes once you pour on,
+ * so the card can't get permanently stuck. `liveGrams` null ⇒ the no-scale branch.
+ */
+export function weightedActiveIdx(
+  steps: PourStep[],
+  elapsed: number,
+  liveGrams: number | null,
+): number {
+  if (steps.length === 0) return -1;
+  const timeIdx = getActiveIdx(elapsed, steps);
+
+  let firstIncomplete = steps.length; // sentinel: all steps complete
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    let complete: boolean;
+    if (isAgitationPourAction(s.action)) {
+      complete = elapsed >= s.startTimeSec + AGITATION_DWELL_SEC;
+    } else if (liveGrams != null) {
+      complete = liveGrams >= s.cumulativeGrams - REACH_TOL_G;
+    } else {
+      complete = elapsed >= s.startTimeSec + pourDurationSec(s.pourGrams);
+    }
+    if (!complete) {
+      firstIncomplete = i;
+      break;
+    }
+  }
+  return Math.min(timeIdx, firstIncomplete);
 }
 
 // ── Immersion / AeroPress / staged guide ─────────────────────────────────────
