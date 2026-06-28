@@ -107,6 +107,30 @@ export function flowRateGPS(samples: WeightSample[], windowMs = 1500): number | 
   return (n * sxy - sx * sy) / denom;
 }
 
+/**
+ * Spike-/dip-robust "settled" weight = the MEDIAN of the samples in the trailing
+ * `windowMs`. This — not the raw instantaneous weight — is what the brew screen's
+ * running peak is built from.
+ *
+ * Why: a swirl/stir, and especially a TAP on the brewer, make the scale read a
+ * brief FORCE spike (the impact, not water). The raw running-max captured that
+ * spike and froze it forever, so the coach was permanently stuck on
+ * "Overshot +Xg" (the bug the owner hit). A spike lasts a fraction of the window,
+ * so the median outvotes it — only real, sustained water passes through — while a
+ * brief dip (shifting thumb/cup pressure) is outvoted the same way. Returns null
+ * until there's at least one sample inside the window.
+ */
+export function settledGrams(samples: WeightSample[], windowMs = 1500): number | null {
+  if (samples.length === 0) return null;
+  const latest = samples[samples.length - 1].atMs;
+  const win: number[] = [];
+  for (const s of samples) if (latest - s.atMs <= windowMs) win.push(s.grams);
+  if (win.length === 0) return null;
+  win.sort((a, b) => a - b);
+  const mid = win.length >> 1;
+  return win.length % 2 ? win[mid] : (win[mid - 1] + win[mid]) / 2;
+}
+
 function fmtDetail(remaining: number, rate: number | null): string {
   const left = `${Math.max(0, Math.round(remaining))}g to go`;
   return rate != null ? `${left} · ${rate.toFixed(1)} g/s` : left;

@@ -23,7 +23,7 @@ import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
-import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
+import { coachFlow, settledGrams, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
 
 /**
@@ -92,11 +92,14 @@ export default function LightStepBrew() {
   const brewStartMsRef = useRef(0);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
-  // Monotonic peak weight for STEP SELECTION. The scale dips when you shift thumb
-  // / cup pressure; that must NEVER turn a finished pour back into an unfinished
-  // one and jump the active step backwards (#3 regression). Water on the brewer
-  // only rises as you pour, so we drive the active-step + coach selection off the
-  // PEAK weight seen this brew, not the jittery instantaneous value.
+  // Monotonic peak weight for STEP SELECTION + the coach readout. Two transients
+  // must not corrupt it: a DIP (shifting thumb/cup pressure) must never un-complete
+  // a finished pour and jump the step backwards (#440); a brief force SPIKE from a
+  // swirl/stir/TAP on the brewer must never be mistaken for water (it froze the raw
+  // running-max forever → the coach stuck on "Overshot +Xg"). So the peak is the
+  // running max of the SETTLED (median-of-recent) weight: the median outvotes both
+  // transients, the max keeps it monotonic. Water only rises as you pour, so this
+  // tracks real cumulative water and the dip-immunity from #440 is preserved.
   const peakGramsRef = useRef<number | null>(null);
   const pushSample = useCallback((grams: number, atMs: number) => {
     // Live-coach window: ~5 Hz, keep the last 6 s.
@@ -131,12 +134,19 @@ export default function LightStepBrew() {
     }
   }, [elapsed]);
 
-  // Advance the monotonic peak as the brew runs (water only goes up).
+  // Advance the monotonic peak as the brew runs (water only goes up) — off the
+  // SETTLED (median) weight, not the raw value, so a swirl/stir/tap force-spike
+  // never enters the peak. Gated on a live reading so a mid-brew disconnect freezes
+  // the peak (as before) rather than ageing it off the sample buffer.
   if (started && elapsed > 0 && scale.weight != null) {
-    peakGramsRef.current = Math.max(peakGramsRef.current ?? 0, scale.weight);
+    const settled = settledGrams(samplesRef.current);
+    if (settled != null) {
+      peakGramsRef.current = Math.max(peakGramsRef.current ?? 0, settled);
+    }
   }
-  // Grams that drive step selection: the monotonic peak during the brew (so a
-  // weight dip can't jump the step back), the raw weight before it starts.
+  // Grams that drive step selection + the coach readout: the spike-free monotonic
+  // peak during the brew (so neither a dip nor a tap moves the step / freezes
+  // "Overshot"), the raw weight before it starts.
   const progressGrams = started && elapsed > 0 ? peakGramsRef.current : scale.weight;
 
   // The current timeline, in a ref, so handleDone can analyse without being
