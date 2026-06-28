@@ -19,7 +19,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const entry = `
-export { coachFlow, flowRateGPS } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/flowCoach.ts"))};
+export { coachFlow, flowRateGPS, settledGrams } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/flowCoach.ts"))};
 export { buildBrewTimeline } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/timeline.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "flowcoach-"));
@@ -32,7 +32,7 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { coachFlow, flowRateGPS, buildBrewTimeline } = await import(pathToFileURL(out).href);
+const { coachFlow, flowRateGPS, settledGrams, buildBrewTimeline } = await import(pathToFileURL(out).href);
 
 const ROAST = "2026-06-01";
 const NOW = new Date("2026-06-16T08:00:00Z").getTime();
@@ -67,6 +67,46 @@ test("flowRateGPS = least-squares slope of the sample window", () => {
   assert.ok(Math.abs(flowRateGPS(ramp(8)) - 8) < 0.01);
   assert.ok(Math.abs(flowRateGPS(ramp(4)) - 4) < 0.01);
   assert.equal(flowRateGPS([{ atMs: 1, grams: 5 }]), null); // need ≥2
+});
+
+// ── settledGrams — the spike-/dip-robust weight that feeds the brew peak ──────
+// 5 Hz samples (200 ms apart) holding `base` g, with `outlier` injected into the
+// final `nOut` samples (a tap/swirl force-spike, or a thumb-pressure dip).
+function held(base, outlier, nOut) {
+  const out = [];
+  for (let i = 0; i < 8; i++) out.push({ atMs: 200000 + i * 200, grams: base });
+  for (let k = 0; k < nOut; k++) out[out.length - 1 - k].grams = outlier;
+  return out;
+}
+
+test("settledGrams ignores a brief TAP spike (the Overshot-freeze bug)", () => {
+  // Sitting at 250 g, a tap spikes the scale to 340 g for 2 of 8 samples (~0.4 s).
+  assert.equal(settledGrams(held(250, 340, 2)), 250);
+});
+
+test("settledGrams ignores a brief pressure DIP", () => {
+  assert.equal(settledGrams(held(250, 210, 2)), 250);
+});
+
+test("settledGrams tracks real (sustained) water", () => {
+  // A genuine pour to 300 g held across the whole window passes straight through.
+  assert.equal(settledGrams(held(300, 300, 0)), 300);
+});
+
+test("running max of settled never captures a tap spike", () => {
+  // The brew screen does peak = max(peak, settledGrams(window)). Simulate the
+  // window during/after a tap and confirm the peak stays at the real water, so
+  // the coach can't get stuck on a frozen "Overshot".
+  let peak = 0;
+  for (const window of [held(250, 250, 0), held(250, 340, 2), held(250, 340, 1), held(250, 250, 0)]) {
+    const s = settledGrams(window);
+    if (s != null) peak = Math.max(peak, s);
+  }
+  assert.equal(peak, 250);
+});
+
+test("settledGrams is null with no samples", () => {
+  assert.equal(settledGrams([]), null);
 });
 
 // Mid-pour on step 1 (target 180g): elapsed in [45,93), plenty remaining.

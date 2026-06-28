@@ -50,6 +50,11 @@ export function useWakeLock() {
       }
     }
     if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
+    // Idempotent: never request a second sentinel while one is held — that would
+    // leak the first (it's never released) and is what made the periodic re-assert
+    // below unsafe. iOS auto-releases the sentinel on hide and the "release"
+    // listener nulls this, so a re-assert on regain correctly requests a fresh one.
+    if (lockRef.current) return;
     try {
       lockRef.current = await navigator.wakeLock.request("screen");
       lockRef.current.addEventListener("release", () => {
@@ -85,19 +90,33 @@ export function useWakeLock() {
   }, [releaseAll]);
 
   // ── Re-acquire on tab focus ─────────────────────────────────────────────
+  // Always re-assert when we come back visible and still want the lock —
+  // INCLUDING the native path. iOS clears `isIdleTimerDisabled` when the app
+  // backgrounds, so on foreground the screen would start sleeping again unless we
+  // call keepAwake() afresh (this was the "screen geht wieder aus" gap). acquire()
+  // is idempotent, so re-asserting is safe.
   useEffect(() => {
     const onVisibilityChange = () => {
-      if (
-        document.visibilityState === "visible" &&
-        wantLockRef.current &&
-        !lockRef.current &&
-        !nativeActiveRef.current
-      ) {
+      if (document.visibilityState === "visible" && wantLockRef.current) {
         void acquire();
       }
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [acquire]);
+
+  // ── Periodic keep-alive re-assert ────────────────────────────────────────
+  // Belt-and-suspenders: while a lock is wanted and the screen is visible,
+  // re-assert every 15 s. If the OS quietly drops the assertion (a known iOS
+  // quirk) the screen self-recovers within one tick instead of sleeping for the
+  // rest of the brew. No-op when nothing wants the lock; acquire() is idempotent.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (wantLockRef.current && document.visibilityState === "visible") {
+        void acquire();
+      }
+    }, 15_000);
+    return () => clearInterval(id);
   }, [acquire]);
 
   // ── Unmount cleanup ─────────────────────────────────────────────────────
