@@ -353,53 +353,6 @@ export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[])
   return idx;
 }
 
-/** Live grams within this of a pour's cumulative target = "reached" (matches
- * flowCoach's TOL_G). */
-export const REACH_TOL_G = 4;
-/** Seconds an agitation step stays active before the timeline may advance past it. */
-export const AGITATION_DWELL_SEC = 8;
-
-/**
- * Weight-/pour-aware active step index — the fix for "the step vanishes after 15 s
- * while I'm still pouring". Unlike `getActiveIdx` (pure elapsed time), this never
- * advances OFF a pour until that pour is actually FINISHED. A step counts complete:
- *   - pour step + a live weight (scale on) → `liveGrams ≥ cumulativeGrams − REACH_TOL_G`
- *   - pour step, no weight (scale off)     → `elapsed ≥ startTimeSec + pourDurationSec(pourGrams)`
- *   - agitation step                       → `elapsed ≥ startTimeSec + AGITATION_DWELL_SEC`
- *
- * Returns `min(timeIdx, firstIncompleteIdx)`: if elapsed ran ahead of an unfinished
- * pour, hold on that pour (the bug fix); if you poured ahead of schedule, follow the
- * schedule (never race the card ahead). Crucially `result ≤ getActiveIdx`, so a step
- * is never SKIPPED — only held longer. Because total weight rises monotonically as
- * you pour later steps, an under-poured earlier step self-completes once you pour on,
- * so the card can't get permanently stuck. `liveGrams` null ⇒ the no-scale branch.
- */
-export function weightedActiveIdx(
-  steps: PourStep[],
-  elapsed: number,
-  liveGrams: number | null,
-): number {
-  if (steps.length === 0) return -1;
-  const timeIdx = getActiveIdx(elapsed, steps);
-
-  let firstIncomplete = steps.length; // sentinel: all steps complete
-  for (let i = 0; i < steps.length; i++) {
-    const s = steps[i];
-    let complete: boolean;
-    if (isAgitationPourAction(s.action)) {
-      complete = elapsed >= s.startTimeSec + AGITATION_DWELL_SEC;
-    } else if (liveGrams != null) {
-      complete = liveGrams >= s.cumulativeGrams - REACH_TOL_G;
-    } else {
-      complete = elapsed >= s.startTimeSec + pourDurationSec(s.pourGrams);
-    }
-    if (!complete) {
-      firstIncomplete = i;
-      break;
-    }
-  }
-  return Math.min(timeIdx, firstIncomplete);
-}
 
 // ── Immersion / AeroPress / staged guide ─────────────────────────────────────
 

@@ -22,5 +22,6 @@ class MainViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(BrewWatchPlugin())
         bridge?.registerPluginInstance(WidgetBridgePlugin())
         bridge?.registerPluginInstance(LiveActivityPlugin())
+        bridge?.registerPluginInstance(ScreenAwakePlugin())
     }
 }

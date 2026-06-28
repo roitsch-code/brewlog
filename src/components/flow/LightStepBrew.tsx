@@ -8,8 +8,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import {
   isAgitationPourAction,
   poursCompleteAtSec,
-  weightedActiveIdx,
-  REACH_TOL_G,
+  getActiveIdx,
   type PourStep,
   type GuideStep,
 } from "@/lib/utils/pourSequence";
@@ -23,20 +22,21 @@ import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
 import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
-import { coachFlow, settledGrams, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
+import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx (the Dark original is gone).
  *
  * This is the highest daily-use-risk screen (Markus' morning brew runs on this
- * timer), so treat it with care. The active pour-over step is WEIGHT-/POUR-AWARE
- * (`weightedActiveIdx`): a pour keeps its card until the pour is actually finished
- * — its grams target reached on the Acaia, or its physical pour time elapsed
- * off-scale — instead of flipping on a fixed time interval. The live coach
- * (`coachFlow`) picks the SAME step, so the in-card weight box never drifts from
- * the card. Wake lock is held for the WHOLE time this screen is open (mount →
- * unmount), not just once the timer starts.
+ * timer), so treat it with care. The active pour-over step advances on the recipe's
+ * TIME schedule (`getActiveIdx`); every step shows a LIVE weight box vs its target,
+ * so the card needn't wait for the pour — if you pour slow you still see what you've
+ * poured against the goal. The displayed weight is the RAW live scale value (no
+ * peak, no smoothing); the live coach (`coachFlow`) reads the same value and picks
+ * the same time-based step, so the in-card numbers match the card. Wake lock is held
+ * for the WHOLE time this screen is open (mount → unmount), not just once the timer
+ * starts.
  *
  * Mounted only by /app/(light)/brew/new when step === "brew".
  */
@@ -92,15 +92,6 @@ export default function LightStepBrew() {
   const brewStartMsRef = useRef(0);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
-  // Monotonic peak weight for STEP SELECTION + the coach readout. Two transients
-  // must not corrupt it: a DIP (shifting thumb/cup pressure) must never un-complete
-  // a finished pour and jump the step backwards (#440); a brief force SPIKE from a
-  // swirl/stir/TAP on the brewer must never be mistaken for water (it froze the raw
-  // running-max forever → the coach stuck on "Overshot +Xg"). So the peak is the
-  // running max of the SETTLED (median-of-recent) weight: the median outvotes both
-  // transients, the max keeps it monotonic. Water only rises as you pour, so this
-  // tracks real cumulative water and the dip-immunity from #440 is preserved.
-  const peakGramsRef = useRef<number | null>(null);
   const pushSample = useCallback((grams: number, atMs: number) => {
     // Live-coach window: ~5 Hz, keep the last 6 s.
     if (atMs - lastSampleMsRef.current >= 200) {
@@ -130,24 +121,14 @@ export default function LightStepBrew() {
       fullCurveRef.current = [];
       brewStartMsRef.current = 0;
       lastCurveMsRef.current = 0;
-      peakGramsRef.current = null;
     }
   }, [elapsed]);
 
-  // Advance the monotonic peak as the brew runs (water only goes up) — off the
-  // SETTLED (median) weight, not the raw value, so a swirl/stir/tap force-spike
-  // never enters the peak. Gated on a live reading so a mid-brew disconnect freezes
-  // the peak (as before) rather than ageing it off the sample buffer.
-  if (started && elapsed > 0 && scale.weight != null) {
-    const settled = settledGrams(samplesRef.current);
-    if (settled != null) {
-      peakGramsRef.current = Math.max(peakGramsRef.current ?? 0, settled);
-    }
-  }
-  // Grams that drive step selection + the coach readout: the spike-free monotonic
-  // peak during the brew (so neither a dip nor a tap moves the step / freezes
-  // "Overshot"), the raw weight before it starts.
-  const progressGrams = started && elapsed > 0 ? peakGramsRef.current : scale.weight;
+  // The weight shown + fed to the coach is the RAW live scale value — it drops and
+  // spikes naturally (a tap/swirl flickers for a moment, then settles), exactly like
+  // the top ScalePanel. No peak, no median: the step advances on time, so there is
+  // nothing to "freeze".
+  const progressGrams = scale.weight;
 
   // The current timeline, in a ref, so handleDone can analyse without being
   // re-created every render (timeline is a fresh object each render).
@@ -481,22 +462,18 @@ function agitationButtonLabel(action: PourStep["action"]): string {
 }
 
 function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, coach }: LivePourSequenceProps) {
-  const liveGrams = coach?.liveGrams ?? null;
-  // Weight-/pour-aware active step: a long pour KEEPS its card until the pour is
-  // actually finished (weight reached, or its physical pour time elapsed off-scale)
-  // instead of flipping after a fixed interval. Never races ahead of the schedule.
-  const activeIdx = started ? weightedActiveIdx(steps, elapsed, liveGrams) : -1;
+  // Time-based active step: the card follows the recipe's pour schedule (which already
+  // gives big pours proportionally more time). The live weight box on every step shows
+  // what you've actually poured vs the target, so a slow pour still reads correctly even
+  // after the card advances. Never bounces, never freezes.
+  const activeIdx = started ? getActiveIdx(elapsed, steps) : -1;
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
-  // Draining begins once we're a grace beyond the last step (poursCompleteAtSec
-  // covers the time to physically pour it) AND — when the scale is connected — the
-  // final target is actually reached, so the drain card never pre-empts a final pour
-  // you're still pouring. Off-scale (liveGrams null) it's purely the time grace.
+  // Draining begins a grace beyond the last step (poursCompleteAtSec covers the time to
+  // physically pour it) — purely time-based, so it never waits on a weight reading.
   const drainStartSec = poursCompleteAtSec(steps, targetTimeSec);
-  const finalTarget = steps.length > 0 ? steps[steps.length - 1].cumulativeGrams : 0;
-  const weightReached = liveGrams == null || liveGrams >= finalTarget - REACH_TOL_G;
-  const allPoursDone = started && elapsed >= drainStartSec && weightReached;
+  const allPoursDone = started && elapsed >= drainStartSec;
 
   const [flashKey, setFlashKey] = useState(0);
   useEffect(() => {
