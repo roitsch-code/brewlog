@@ -35,7 +35,7 @@ end
 # app-local plugin is NOT auto-discovered by Capacitor (only npm plugins land
 # in packageClassList), so without this registration the JS side sees
 # window.Capacitor.Plugins.BrewWatch as undefined and never reaches the watch.
-APP_SWIFT_FILES = %w[BrewWatchPlugin.swift MainViewController.swift]
+APP_SWIFT_FILES = %w[BrewWatchPlugin.swift ScreenAwakePlugin.swift MainViewController.swift]
 app_group = project.main_group["App"] or abort("App group not found")
 APP_SWIFT_FILES.each do |name|
   if (old = app_group.files.find { |f| f.display_name == name })

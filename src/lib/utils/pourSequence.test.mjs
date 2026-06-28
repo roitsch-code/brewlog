@@ -20,7 +20,7 @@ const entry = `
 export {
   getBloomDuration, parsePourSteps, pourStepsFromStructured, buildGuideSteps,
   hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec,
-  poursCompleteAtSec, POUR_RATE_GPS, weightedActiveIdx, REACH_TOL_G, AGITATION_DWELL_SEC,
+  poursCompleteAtSec, POUR_RATE_GPS,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
@@ -44,9 +44,6 @@ const {
   pourDurationSec,
   poursCompleteAtSec,
   POUR_RATE_GPS,
-  weightedActiveIdx,
-  REACH_TOL_G,
-  AGITATION_DWELL_SEC,
 } = await import(pathToFileURL(out).href);
 
 // Fixed clock: Apr 17 2026. Lets roast-date branches be exercised deterministically.
@@ -562,71 +559,7 @@ test("proportional spacing: the final pour still lands at target − reserve", (
   }
 });
 
-// ── weightedActiveIdx (the "step won't advance off an unfinished pour" fix) ───
-
-const PEAK_STEPS = () => parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW); // [0,45,110,181]
-
-test("weightedActiveIdx: scale connected — holds the pour until its target is reached", () => {
-  const steps = PEAK_STEPS();
-  // At t=120, time alone would be on pour index 2 (110s ≤ 120 < 181). But only 180g
-  // is on the scale, so pour index 1 (target 180g) is NOT yet complete → hold on 1.
-  assert.equal(getActiveIdx(120, steps), 2); // pure time
-  assert.equal(weightedActiveIdx(steps, 120, 175), 1); // behind on weight → held on the pour
-});
-
-test("weightedActiveIdx: advances once the pour's target is reached (within tolerance)", () => {
-  const steps = PEAK_STEPS();
-  // 320g reached (pour index 2 target) → not held back by weight; time at 120 is on idx 2.
-  assert.equal(weightedActiveIdx(steps, 120, 320), 2);
-  // Within REACH_TOL_G of the 180g target counts as reached → free to follow time.
-  assert.equal(weightedActiveIdx(steps, 120, 180 - REACH_TOL_G), 2);
-});
-
-test("weightedActiveIdx: never races AHEAD of the time schedule", () => {
-  const steps = PEAK_STEPS();
-  // Even if the whole 500g is already poured, at t=50 the card stays where time is
-  // (idx 1), never jumping to a future step.
-  assert.equal(weightedActiveIdx(steps, 50, 500), 1);
-  assert.ok(weightedActiveIdx(steps, 50, 500) <= getActiveIdx(50, steps));
-});
-
-test("weightedActiveIdx: no scale — holds each pour for its physical pour duration", () => {
-  const steps = PEAK_STEPS();
-  // pour index 1 starts @45 and adds 130g → ~33s to pour (pourDurationSec(130)).
-  const dur = pourDurationSec(130);
-  // Just before that pour is physically done, even though time has reached pour 2's
-  // start (110s), the card holds on pour 1.
-  assert.equal(weightedActiveIdx(steps, 45 + dur - 1, null), 1);
-  // After its physical pour time, time (110s) governs again.
-  assert.equal(weightedActiveIdx(steps, 110, null), 2);
-});
-
-test("weightedActiveIdx: agitation step holds for its dwell, then time governs", () => {
-  const recipe = {
-    targetTimeSec: 240,
-    pourSteps: [
-      { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
-      { label: "Pour 2", action: "pour", waterGramsAtEnd: 200 },
-      { label: "Final", action: "final", waterGramsAtEnd: 300 },
-      { label: "Swirl", action: "swirl" },
-      { label: "Drawdown", action: "drain", durationSec: 40 },
-    ],
-  };
-  const steps = pourStepsFromStructured(recipe, peakRoast, NOW); // bloom0/pour45/final161/swirl186
-  const swirl = steps.findIndex((s) => s.action === "swirl");
-  const sStart = steps[swirl].startTimeSec;
-  // Weight reached for all pours; at swirl start the swirl is the active step and
-  // holds through its dwell window.
-  assert.equal(weightedActiveIdx(steps, sStart, 300), swirl);
-  assert.equal(weightedActiveIdx(steps, sStart + AGITATION_DWELL_SEC - 1, 300), swirl);
-});
-
-test("weightedActiveIdx: all steps complete → the last step (drain handoff)", () => {
-  const steps = PEAK_STEPS();
-  // Past target with the full pour on the scale → last index.
-  assert.equal(weightedActiveIdx(steps, 500, 500), steps.length - 1);
-});
-
-test("weightedActiveIdx: empty steps → -1", () => {
-  assert.equal(weightedActiveIdx([], 10, 100), -1);
-});
+// NOTE: the weight-gated `weightedActiveIdx` was removed — the active step now
+// advances purely on the recipe's TIME schedule (`getActiveIdx`, tested above),
+// with the live weight box on each step showing poured-vs-target. No peak, no
+// weight-hold, so there is nothing to "freeze".
