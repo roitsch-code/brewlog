@@ -8,23 +8,29 @@ import type { FieldZones } from "@/lib/field/types";
 // independent co-prime timers, which read as scattered blobs ("too crazy
 // bunt"). Now ALL masses ride one SHARED slow sweep (`field-flow`) so they move
 // together like a flock and the whole colour field slowly turns direction
-// (diagonal → vertical → other diagonal) over a long cycle. Each mass adds only
-// a small, slow individual drift (`murmur-*`) for gentle internal life — the
-// dominant motion stays coherent. Bigger + softer discs than before so they
-// dissolve into one continuous directional gradient, not dots.
+// (diagonal → vertical → other diagonal). Each mass adds only a small slow
+// individual drift (`murmur-*`) for gentle internal life — the dominant motion
+// stays coherent.
 //
-// Keyframes are co-located HERE (styled-jsx global), never globals.css — an
-// installed PWA serves a stale cached globals.css and the motion would silently
-// die (see docs/liquid-design.md). data-field-blob marks the animated nodes so
-// the reduced-motion block in globals.css can freeze them.
+// VISIBILITY: the masses are large + soft, so the travel has to be generous or
+// the motion is mathematically present but optically frozen (the first cut used
+// ±8vmax / 120 s and looked dead). Amplitudes below are tuned so the coordinated
+// flow actually reads while staying graceful. The base gradient underneath is
+// opaque + full-bleed, so even big blob travel never reveals an edge.
+//
+// Dials: `field-flow` amplitude/period (the shared sweep), `MURMUR` amplitude/
+// period (per-mass life), disc size/blur. Keyframes are co-located HERE
+// (styled-jsx global), never globals.css — an installed PWA serves a stale
+// cached globals.css and the motion would silently die (see docs/liquid-design.md).
+// data-field-blob marks the animated nodes so the reduced-motion block freezes them.
 
-// Small per-mass drifts: long, low-amplitude, varied so the flock shimmers
-// without breaking the shared sweep's coherence.
+// Per-mass drifts: varied periods so the flock shimmers without breaking the
+// shared sweep's coherence.
 const MURMUR = [
-  "murmur-1 41s ease-in-out -7s infinite",
-  "murmur-2 47s ease-in-out -19s infinite",
-  "murmur-3 43s ease-in-out -3s infinite",
-  "murmur-4 53s ease-in-out -28s infinite",
+  "murmur-1 27s ease-in-out -5s infinite",
+  "murmur-2 33s ease-in-out -14s infinite",
+  "murmur-3 30s ease-in-out -3s infinite",
+  "murmur-4 37s ease-in-out -21s infinite",
 ];
 
 export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
@@ -33,33 +39,34 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
   return (
     <>
       <style jsx global>{`
-        /* The shared murmuration sweep — slow, coordinated, turns direction. */
+        /* The shared murmuration sweep — slow, coordinated, turns direction.
+           Generous translate + rotate so the big soft masses visibly flow. */
         @keyframes field-flow {
-          0% { transform: translate3d(-8vmax, 5vmax, 0) rotate(-9deg) scale(1.05); }
-          25% { transform: translate3d(6vmax, -4vmax, 0) rotate(5deg) scale(1.12); }
-          50% { transform: translate3d(9vmax, 7vmax, 0) rotate(10deg) scale(1.06); }
-          75% { transform: translate3d(-5vmax, -6vmax, 0) rotate(-4deg) scale(1.13); }
-          100% { transform: translate3d(-8vmax, 5vmax, 0) rotate(-9deg) scale(1.05); }
+          0% { transform: translate3d(-18vmax, 11vmax, 0) rotate(-12deg) scale(1.04); }
+          25% { transform: translate3d(14vmax, -9vmax, 0) rotate(7deg) scale(1.14); }
+          50% { transform: translate3d(19vmax, 15vmax, 0) rotate(13deg) scale(1.06); }
+          75% { transform: translate3d(-11vmax, -13vmax, 0) rotate(-6deg) scale(1.15); }
+          100% { transform: translate3d(-18vmax, 11vmax, 0) rotate(-12deg) scale(1.04); }
         }
-        /* Per-mass internal life — small amplitude so the flock stays coherent. */
+        /* Per-mass internal life — smaller than the sweep so the flock coheres. */
         @keyframes murmur-1 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(7vmax, -6vmax, 0) scale(1.08); }
+          50% { transform: translate3d(13vmax, -11vmax, 0) scale(1.1); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes murmur-2 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(-8vmax, 6vmax, 0) scale(0.93); }
+          50% { transform: translate3d(-14vmax, 12vmax, 0) scale(0.9); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes murmur-3 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(6vmax, 7vmax, 0) scale(1.07); }
+          50% { transform: translate3d(12vmax, 13vmax, 0) scale(1.09); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
         @keyframes murmur-4 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(-7vmax, -7vmax, 0) scale(0.94); }
+          50% { transform: translate3d(-13vmax, -12vmax, 0) scale(0.91); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
       `}</style>
@@ -79,7 +86,7 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
           style={{
             transformOrigin: "50% 50%",
             willChange: "transform",
-            animation: "field-flow 120s ease-in-out infinite",
+            animation: "field-flow 70s ease-in-out infinite",
           }}
         >
           {blobs.map((b, i) => (
@@ -100,12 +107,12 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  width: "104vmax",
-                  height: "104vmax",
+                  width: "96vmax",
+                  height: "96vmax",
                   transform: "translate(-50%, -50%)",
                   borderRadius: "50%",
-                  background: `radial-gradient(circle, ${b.color} 0%, transparent 64%)`,
-                  filter: "blur(56px)",
+                  background: `radial-gradient(circle, ${b.color} 0%, transparent 66%)`,
+                  filter: "blur(50px)",
                 }}
               />
             </div>
