@@ -88,13 +88,15 @@ export const ZONES: Record<ZoneId, Zone> = {
     lightnessRange: [60, 80],
   },
   // The ONE cool zone — breaks the original "warm envelope" rule on purpose.
-  // Blueberry / blackcurrant / cassis / dark berries were rendering orange-red
-  // through fruity-bright; they belong here as blue-violet→indigo. The wide
-  // lightness span lets this zone be both an electric periwinkle highlight and a
-  // deep-indigo shadow — that magenta-↔-blue contrast is the Big-Sur "pop".
+  // Blueberry / blackberry / blackcurrant / cassis are BERRIES → real BLUE
+  // (owner: "blue for berries; purple is for grape/plum"). Hue ~210–244 is
+  // azure→cornflower→blue-violet (midpoint ~227 = a clean blue), NOT the purple
+  // 250–290 it used to be. Wide lightness span = electric cornflower highlight →
+  // deep indigo shadow; that blue-↔-magenta contrast is the Big-Sur "pop".
+  // Grape/plum stay warm-red in fruity-deep for now (no separate purple zone).
   "cool-berry": {
     id: "cool-berry",
-    hueRange: [250, 290],
+    hueRange: [210, 244],
     saturationRange: [72, 96],
     lightnessRange: [40, 80],
   },

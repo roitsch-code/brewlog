@@ -49,7 +49,11 @@ const config: Config = {
         // cream Glass.
         light: {
           foreground: "hsl(0 0% 14% / <alpha-value>)",
-          "muted-foreground": "hsl(0 0% 40% / <alpha-value>)",
+          // Owner ask (round 2): the light-grey secondary text was hard to read
+          // on the now-saturated Field — make it dark/near-black (was 40% grey).
+          // Pill text never uses this token (pills use `text-on-dark` cream), so
+          // darkening it globally is safe.
+          "muted-foreground": "hsl(0 0% 16% / <alpha-value>)",
           "card-default": "hsl(36 55% 96% / 0.55)",
           "card-selected": "hsl(28 22% 84% / 0.7)",
           // Cream label that sits on `bg-light-foreground` (anthracite)

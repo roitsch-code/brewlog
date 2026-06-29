@@ -75,7 +75,7 @@ test("fieldBlobColors: four blobs, valid hsl, explicit in-range alpha, pure", ()
   }
 });
 
-test("cool-berry renders a real blue-violet hue (not the warm-envelope orange-red)", () => {
+test("cool-berry renders a real BLUE hue (berries are blue, not purple)", () => {
   const blue = {
     version: 1,
     zones: [{ id: "cool-berry", weight: 1 }],
@@ -84,17 +84,17 @@ test("cool-berry renders a real blue-violet hue (not the warm-envelope orange-re
     computedAt: "1970-01-01T00:00:00.000Z",
   };
   const css = composeFieldGradient(blue, 0);
-  // Every colour stop should sit in the cool 250–290° band — proves the new
-  // zone escaped the warm envelope (the whole point of the blueberry fix).
+  // Every colour stop should sit in the blue 210–244° band (+ small hue offsets
+  // some layers/blobs add) — proves berries read blue, not the old purple 250+.
   const hues = [...css.matchAll(/hsl\((\d+)\s/g)].map((m) => Number(m[1]));
   assert.ok(hues.length > 0, "expected hsl() stops in the gradient");
   for (const h of hues) {
-    assert.ok(h >= 248 && h <= 292, `hue ${h}° should be blue-violet (cool-berry)`);
+    assert.ok(h >= 206 && h <= 246, `hue ${h}° should be blue (cool-berry)`);
   }
-  // And its blobs carry the same cool hue.
+  // And its blobs carry the same blue hue.
   for (const b of fieldBlobColors(blue)) {
     const h = Number(b.color.match(/hsl\((\d+)\s/)[1]);
-    assert.ok(h >= 248 && h <= 292, `blob hue ${h}° should be blue-violet`);
+    assert.ok(h >= 206 && h <= 246, `blob hue ${h}° should be blue`);
   }
 });
 

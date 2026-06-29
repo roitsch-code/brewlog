@@ -157,7 +157,7 @@ export default function SessionDetailPage() {
             session detail; coffee name + date sit as context underneath. */}
         <div className={`${sessionCoffee?.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
           {mode === "external" && place?.name && (
-            <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{place.name}</p>
+            <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{place.name}</p>
           )}
           <div className="flex items-center gap-2">
             <BrewMethodIcon method={method} className="w-6 h-6 opacity-90" />
@@ -172,7 +172,7 @@ export default function SessionDetailPage() {
               {sessionCoffee.roaster ? ` · ${sessionCoffee.roaster}` : ""}
             </p>
           )}
-          <p className="text-light-foreground/40 text-xs mt-0.5">{formatDate(createdAt)}</p>
+          <p className="text-light-foreground/70 text-xs mt-0.5">{formatDate(createdAt)}</p>
         </div>
       </div>
 

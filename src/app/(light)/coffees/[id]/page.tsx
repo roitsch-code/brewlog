@@ -238,12 +238,12 @@ export default function CoffeeDetailPage() {
           <BagPhoto url={coffee.bagPhotoUrl} alt={coffee.name}>
             <div className="absolute bottom-0 left-0 right-0 p-5">
               {coffee.process && (
-                <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+                <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
               )}
               <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
               <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
               {roastDate && (
-                <p className="text-light-foreground/40 text-xs mt-0.5">
+                <p className="text-light-foreground/70 text-xs mt-0.5">
                   Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
               )}
@@ -258,12 +258,12 @@ export default function CoffeeDetailPage() {
             </div>
             <div className="pt-4">
               {coffee.process && (
-                <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
+                <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
               )}
               <h1 className="font-fraunces text-3xl text-light-foreground">{coffee.name}</h1>
               <p className="text-light-foreground/60 text-sm mt-1">{coffee.roaster}{origin ? ` · ${origin}` : ""}</p>
               {roastDate && (
-                <p className="text-light-foreground/40 text-xs mt-0.5">
+                <p className="text-light-foreground/70 text-xs mt-0.5">
                   Roasted {new Date(roastDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                 </p>
               )}
@@ -401,7 +401,7 @@ export default function CoffeeDetailPage() {
               )}
               <p className="text-light-foreground/80 text-sm leading-relaxed">{roasterInfo.styleSummary}</p>
               {roasterInfo.notes && (
-                <p className="text-light-foreground/40 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
+                <p className="text-light-foreground/70 text-xs mt-2 leading-relaxed">{roasterInfo.notes}</p>
               )}
             </>
           ) : null}
@@ -576,7 +576,7 @@ function OfflineCoffeeDetail({
 
         <div className={`${identity.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
           {identity.process && (
-            <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">{identity.process}</p>
+            <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{identity.process}</p>
           )}
           <h1 className="font-fraunces text-3xl text-light-foreground">{identity.name}</h1>
           <p className="text-light-foreground/60 text-sm mt-1">
