@@ -17,10 +17,19 @@
 
 *Updated at the end of every advancing session. Read this first.*
 
-- **Shipped & live:** living Field background (static base gradient + 4 drifting colour blobs +
-  film grain + finger-following bloom) and the liquid welcome-haiku (shimmer → scattered
-  per-word spring entrance → soft dissolve → per-word touch lens). All motion is on the GPU
-  compositor; React is never in the per-frame loop. Reduced-motion gracefully static.
+- **Shipped & live:** living Field background (directional diagonal base + soft corner masses +
+  pale light-ribbon, with colour masses riding ONE shared slow "murmuration" sweep) and the
+  liquid welcome-haiku (shimmer → scattered per-word spring entrance → soft dissolve → per-word
+  touch lens). All motion is on the GPU compositor; React is never in the per-frame loop.
+  Reduced-motion gracefully static.
+- **Last tuned (2026-06-29, "Big-Sur + murmuration"):** Field cranked to full saturation; berries
+  recoloured blue (cool-berry hue 210–244); the composition rebuilt from 5 scattered radial
+  hotspots → a directional diagonal blend + 2 corner masses + a pale light-ribbon
+  (`composeGradient.ts`); the 4 independent blob drifts → all masses on one shared `field-flow`
+  sweep (120 s) + small per-mass `murmur-*` drift (`FieldBlobs.tsx`); general/home backgrounds
+  cycle through `CURATED_FIELDS` (2–3-flavour combos) per app-open (`curatedFields.ts` +
+  `FieldContext.tsx`). Dials: `field-flow` amplitude/period + disc size/blur in `FieldBlobs.tsx`;
+  the base angle + mass/ribbon positions in `composeGradient.ts`.
 - **Last tuned (2026-06-12):** extracted the haiku entrance into a reusable `LiquidHeadline` —
   the Hero questions ("What are you brewing today?", "What's the vibe?") now scatter in, and the
   recipe-crafting screen dropped the bean glow + "Did you know?" for a big rotating insight
