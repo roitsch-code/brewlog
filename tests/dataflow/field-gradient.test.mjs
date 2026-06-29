@@ -4,11 +4,12 @@
 //
 //   node --test tests/dataflow/field-gradient.test.mjs
 //
-// What's locked down: the "warm but richer" refactor must keep
-// composeFieldGradient PURE + deterministic (same coffee → same Field, the
-// invariant that makes a coffee's background stable across devices and
-// re-opens) and the new fieldBlobColors must hand the motion layer four
-// blobs whose alpha stays under the cream-preserving cap.
+// What's locked down: the Field refactor must keep composeFieldGradient PURE +
+// deterministic (same coffee → same Field, the invariant that makes a coffee's
+// background stable across devices and re-opens) and fieldBlobColors must hand
+// the motion layer four blobs that each carry an explicit, in-range alpha. The
+// alpha ceiling tracks the BLOB_ALPHA dial — the old "≤0.7 keep-cream" cap was
+// deliberately relaxed for the Big-Sur punch (owner-requested).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -58,7 +59,7 @@ test("composeFieldGradient: rotation changes the output (the per-step shift stil
   );
 });
 
-test("fieldBlobColors: four blobs, valid hsl, alpha under the cream-preserving cap, pure", () => {
+test("fieldBlobColors: four blobs, valid hsl, explicit in-range alpha, pure", () => {
   const blobs = fieldBlobColors(DEFAULT_FIELD_ZONES);
   assert.equal(blobs.length, 4);
   assert.deepEqual(blobs, fieldBlobColors(DEFAULT_FIELD_ZONES)); // deterministic
@@ -68,7 +69,32 @@ test("fieldBlobColors: four blobs, valid hsl, alpha under the cream-preserving c
     assert.equal(typeof b.cy, "number");
     const m = b.color.match(/\/\s*([0-9.]+)\s*\)/); // explicit alpha
     assert.ok(m, `blob colour should carry an alpha: ${b.color}`);
-    assert.ok(Number(m[1]) <= 0.7, `alpha ${m?.[1]} should stay ≤ 0.7`);
+    // Blobs stay translucent (< 1) so the base + grain still read through, but
+    // the old 0.7 cream-cap was relaxed for the Big-Sur punch.
+    assert.ok(Number(m[1]) > 0 && Number(m[1]) < 1, `alpha ${m?.[1]} should be in (0, 1)`);
+  }
+});
+
+test("cool-berry renders a real blue-violet hue (not the warm-envelope orange-red)", () => {
+  const blue = {
+    version: 1,
+    zones: [{ id: "cool-berry", weight: 1 }],
+    modifiers: { saturation: 0, lightness: 0 },
+    source: "tasting-notes",
+    computedAt: "1970-01-01T00:00:00.000Z",
+  };
+  const css = composeFieldGradient(blue, 0);
+  // Every colour stop should sit in the cool 250–290° band — proves the new
+  // zone escaped the warm envelope (the whole point of the blueberry fix).
+  const hues = [...css.matchAll(/hsl\((\d+)\s/g)].map((m) => Number(m[1]));
+  assert.ok(hues.length > 0, "expected hsl() stops in the gradient");
+  for (const h of hues) {
+    assert.ok(h >= 248 && h <= 292, `hue ${h}° should be blue-violet (cool-berry)`);
+  }
+  // And its blobs carry the same cool hue.
+  for (const b of fieldBlobColors(blue)) {
+    const h = Number(b.color.match(/hsl\((\d+)\s/)[1]);
+    assert.ok(h >= 248 && h <= 292, `blob hue ${h}° should be blue-violet`);
   }
 });
 

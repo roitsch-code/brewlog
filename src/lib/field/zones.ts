@@ -1,11 +1,14 @@
 /**
  * Generative Field v1.1 — Zone definitions.
  *
- * Six palette specifications within the warm envelope (hues 0–60° and
- * 320–360° per spec §2). Each Zone is a perceptual band defined by
- * hue/saturation/lightness ranges. The composition algorithm samples
- * from these ranges deterministically — given the same FieldZones
- * input, the same colours come out.
+ * Seven palette specifications. Six sit in the original warm envelope
+ * (hues 0–60° and 320–360° per spec §2); `cool-berry` (hues ~250–290°)
+ * is the deliberate exception added for the Big-Sur punch so blueberry /
+ * blackcurrant notes render as real blue-violet instead of orange-red.
+ * Each Zone is a perceptual band defined by hue/saturation/lightness
+ * ranges. The composition algorithm samples from these ranges
+ * deterministically — given the same FieldZones input, the same colours
+ * come out.
  *
  * Zone overlap on the hue axis is intentional (Nutty-Cocoa and Sweet-
  * Caramel both ~30–45°; Fruity-Bright and Fruity-Deep both ~0–30°).
@@ -27,7 +30,8 @@ export type ZoneId =
   | "floral"
   | "nutty-cocoa"
   | "spice-earth"
-  | "sweet-caramel";
+  | "sweet-caramel"
+  | "cool-berry";
 
 export interface Zone {
   id: ZoneId;
@@ -43,7 +47,8 @@ export const ZONES: Record<ZoneId, Zone> = {
   "fruity-bright": {
     id: "fruity-bright",
     hueRange: [0, 30],
-    saturationRange: [60, 90],
+    // Big-Sur lift: saturation floor pushed up so even the muted end reads vivid.
+    saturationRange: [80, 100],
     lightnessRange: [70, 90],
   },
   "fruity-deep": {
@@ -51,32 +56,47 @@ export const ZONES: Record<ZoneId, Zone> = {
     // sample time so hue arithmetic stays linear.
     id: "fruity-deep",
     hueRange: [350, 375],
-    saturationRange: [50, 75],
+    saturationRange: [68, 92],
     lightnessRange: [50, 70],
   },
   floral: {
     id: "floral",
     hueRange: [320, 355],
-    saturationRange: [40, 70],
+    saturationRange: [62, 90],
     lightnessRange: [70, 88],
   },
+  // nutty-cocoa + spice-earth stay comparatively restrained on purpose — the
+  // Big-Sur drama is the CONTRAST between vivid fruit zones and these deep warm
+  // ones, so a chocolatey Brazilian still reads warm-deep, not neon. Modest lift
+  // only.
   "nutty-cocoa": {
     id: "nutty-cocoa",
     hueRange: [20, 40],
-    saturationRange: [35, 55],
+    saturationRange: [42, 62],
     lightnessRange: [30, 55],
   },
   "spice-earth": {
     id: "spice-earth",
     hueRange: [25, 45],
-    saturationRange: [25, 45],
+    saturationRange: [32, 52],
     lightnessRange: [28, 48],
   },
   "sweet-caramel": {
     id: "sweet-caramel",
     hueRange: [30, 50],
-    saturationRange: [55, 85],
+    saturationRange: [70, 95],
     lightnessRange: [60, 80],
+  },
+  // The ONE cool zone — breaks the original "warm envelope" rule on purpose.
+  // Blueberry / blackcurrant / cassis / dark berries were rendering orange-red
+  // through fruity-bright; they belong here as blue-violet→indigo. The wide
+  // lightness span lets this zone be both an electric periwinkle highlight and a
+  // deep-indigo shadow — that magenta-↔-blue contrast is the Big-Sur "pop".
+  "cool-berry": {
+    id: "cool-berry",
+    hueRange: [250, 290],
+    saturationRange: [72, 96],
+    lightnessRange: [40, 80],
   },
 };
 

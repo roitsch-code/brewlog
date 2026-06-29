@@ -51,7 +51,9 @@ export default function Field() {
           className="absolute inset-[-12%]"
           style={{
             background: gradient,
-            filter: "blur(60px)",
+            // Big-Sur punch: a lighter blur lets the saturated colour read
+            // sharper instead of hazing it back toward cream (was 60px).
+            filter: "blur(46px)",
             transform: "scale(1.2)",
             transformOrigin: "center",
           }}
