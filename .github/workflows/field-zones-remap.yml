@@ -1,0 +1,64 @@
+name: Re-map field zones
+
+# One-shot re-map of coffees.field_zones (src/app/api/admin/remap-field-zones).
+# Run AFTER deploying the "cool-berry" blue zone so existing bags with blueberry/
+# blackcurrant notes pick up the new blue (the Big-Sur intensity pass already
+# applies to every coffee without a re-map). SSHes into the VPS with the SAME
+# deploy key the Deploy workflow uses and triggers the route from INSIDE the app
+# container, reading the container's own CRON_SECRET — exactly like the
+# loading-insights refresh. No new secrets. A missed run is harmless; re-running
+# is safe (it just recomputes the same compositions).
+#
+# Manual only — there's nothing to schedule. Run it once from the Actions tab
+# (or via `gh workflow run`) after the deploy lands.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: field-zones-remap
+  cancel-in-progress: false
+
+jobs:
+  remap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger re-map on the VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Trigger from inside the app container so $CRON_SECRET expands from the
+          # container's own env (single quotes keep the host/SSH shells off it).
+          # -fsS makes curl non-zero on an HTTP error. Capture the JSON body so we
+          # can print a readable per-coffee audit.
+          set +e
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE' > /tmp/resp.json 2>/tmp/resp.err
+          cd ${{ secrets.DEPLOY_PATH }}
+          docker compose exec -T app sh -c 'curl -fsS -X POST http://localhost:3000/api/admin/remap-field-zones -H "Authorization: Bearer $CRON_SECRET"'
+          REMOTE
+          rc=$?
+          set -e
+
+          echo "----- raw response -----"
+          cat /tmp/resp.json
+
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::re-map failed (ssh/curl exit $rc)"
+            cat /tmp/resp.err
+            exit 1
+          fi
+
+          echo
+          echo "----- audit -----"
+          jq -r '
+            "counts: \(.total) coffees · \(.remapped) remapped · \(.skipped) skipped · \(.failed) failed",
+            "",
+            "REMAPPED (\(.remapped)):",
+            (.results[] | select(.status == "remapped") | "  + \(.name): \(.zones)"),
+            "",
+            "SKIPPED / FAILED:",
+            (.results[] | select(.status != "remapped") | "  - [\(.status)] \(.name) (\(.reason))")
+          ' /tmp/resp.json || echo "(could not format JSON; see raw response above)"
