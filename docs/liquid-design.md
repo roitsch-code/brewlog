@@ -26,7 +26,8 @@
   recoloured blue (cool-berry hue 210–244); the composition rebuilt from 5 scattered radial
   hotspots → a directional diagonal blend + 2 corner masses + a pale light-ribbon
   (`composeGradient.ts`); the 4 independent blob drifts → all masses on one shared `field-flow`
-  sweep (120 s) + small per-mass `murmur-*` drift (`FieldBlobs.tsx`); general/home backgrounds
+  sweep (70 s, ±18vmax — opened up from a frozen-looking ±8/120s in #449) + small per-mass
+  `murmur-*` drift (`FieldBlobs.tsx`); general/home backgrounds
   cycle through `CURATED_FIELDS` (2–3-flavour combos) per app-open (`curatedFields.ts` +
   `FieldContext.tsx`). Dials: `field-flow` amplitude/period + disc size/blur in `FieldBlobs.tsx`;
   the base angle + mass/ribbon positions in `composeGradient.ts`.
@@ -99,20 +100,21 @@ discrete `rotation`. Motion is purely DOM/CSS-var, never through React context o
 ```
 <div ref={useFieldMotion()} fixed inset-0 -z-10 isolation:isolate>   ← motion root, writes the vars
   <div translate3d(0, var(--field-shift-y), 0)>                      ← scroll-parallax wrapper
-    1. base   — composeFieldGradient(zones, rotation), blur(60px), scale(1.2)   ← static floor
-    2. blobs  — <FieldBlobs/>  4 drifting radial-gradient discs (the visible flow)
+    1. base   — composeFieldGradient(zones, rotation), blur(46px), scale(1.2)   ← directional floor (diagonal base + corner masses + light-ribbon)
+    2. blobs  — <FieldBlobs/>  colour masses on ONE shared murmuration sweep (the visible flow)
     3. grain  — <FieldGrain/>  static feTurbulence noise, mix-blend soft-light
   </div>
   4. bloom    — <FieldBloom/>  warm glow that follows the finger (viewport coords, no scroll-shift)
 </div>
 ```
 
-Each blob is **three nested divs** (the "wrapper trick"): outer reads the interaction vars
-(`--field-drift-*`, `--field-tilt`, `--field-pulse`); middle runs the `blobflow-*` drift
-keyframe (transform-only, no filter → compositor); inner is the blurred colour disc, painted
-once and merely moved. A single element can't both run a keyframe transform *and* add a
-var-driven transform, so the layers split them. Keyframe translate uses **vmax** (not %) because
-the drift layer is zero-size — a `%` translate would resolve to 0.
+The masses nest (the "wrapper trick"): a lean wrapper reads the interaction vars
+(`--field-drift-*`, `--field-tilt`, `--field-pulse`); inside it the shared `field-flow` sweep
+wrapper runs the murmuration keyframe (all masses together); each mass then runs its small
+`murmur-*` drift; the innermost is the blurred colour disc, painted once and merely moved. A
+single element can't both run a keyframe transform *and* add a var-driven transform, so the layers
+split them. Keyframe translate uses **vmax** (not %) because the layers are zero-size — a `%`
+translate would resolve to 0.
 
 ### The haiku lifecycle (`HaikuStarter.tsx`)
 
@@ -138,7 +140,7 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 | File | Role | Dials it owns |
 |---|---|---|
 | `src/components/ui/light/Field.tsx` | Assembles the layer stack; attaches `useFieldMotion`. | base `blur(60px)`, `scale(1.2)`, `inset-[-12%]` (the oversize that gives parallax room) |
-| `src/components/ui/light/FieldBlobs.tsx` | The 4 drifting colour discs + their `blobflow-*` keyframes (co-located). **The main "background movement" surface.** | disc size (`vmax`), `blur`, `blobflow-*` travel (`vmax`), `DRIFT` durations |
+| `src/components/ui/light/FieldBlobs.tsx` | The colour masses + the **murmuration** motion: ONE shared `field-flow` sweep (co-located) carries all masses together + turns direction, plus small per-mass `murmur-*` drift. **The main "background movement" surface.** | disc size (`vmax`), `blur`, `field-flow` amplitude/duration, `MURMUR` amplitude/durations |
 | `src/components/ui/light/FieldGrain.tsx` | Static film grain (feTurbulence data-URI). | `opacity` (~0.09), `mixBlendMode` (`soft-light`), tile size |
 | `src/components/ui/light/FieldBloom.tsx` | Warm glow that follows the finger. | disc `vmax`, gradient colours/stops, `blur`, opacity = `var(--ptr-on)` |
 | `src/hooks/useFieldMotion.ts` | One rAF loop: pointer-lean / scroll-parallax / tap-swell / finger-bloom → CSS vars. | `MAX_DRIFT`, `MAX_TILT`, `SCROLL_PARALLAX`, `MAX_SHIFT`, the `*_GLIDE` easings, `IDLE_MS` |
@@ -160,8 +162,9 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 **Shared CSS** — `src/app/globals.css`: `haiku-shimmer`, `haiku-dissolve` (static, used), the
 `prefers-reduced-motion` disable block (`[data-field-blob]`, `.haiku-word`, `.haiku-exit`,
 `.haiku-shimmer`), and the `--field-*` var defaults under `[data-light-scope]`.
-**Dead, safe to delete in a cleanup pass:** `blob-drift-1..4` and `haiku-settle` keyframes —
-superseded by the co-located `blobflow-*` / `haiku-pop-*` and referenced by nothing.
+**Dead, safe to delete in a cleanup pass:** `blob-drift-1..4`, `blobflow-1..4` (superseded by the
+co-located `field-flow` + `murmur-*` in the murmuration rework) and `haiku-settle` keyframes —
+referenced by nothing.
 
 **Tests** — `tests/dataflow/field-gradient.test.mjs` (esbuild-bundles the real
 `composeGradient`; asserts determinism, layer count, 4 blobs, alpha cap). Motion itself isn't
@@ -178,16 +181,18 @@ unit-testable; the CI screenshot job only captures the *resting* frame.
 
 `src/components/ui/light/FieldBlobs.tsx`:
 
+Since the June-2026 **murmuration** rework the motion is ONE shared sweep (`@keyframes field-flow`)
+that carries every mass together + turns direction, plus small per-mass `murmur-*` drift. Tuning it:
+
 | Want | Dial | Now | Direction |
 |---|---|---|---|
-| **Bigger sweeps** (blobs travel further) | the `vmax` numbers inside `@keyframes blobflow-1..4` | ~24–32 vmax | ↑ for more, ↓ for calmer. Keep ≲ disc-size so a blob never fully clears the screen. |
-| **Where the strong colour sits** (top vs bottom) | the `cx/cy` anchors in `fieldBlobColors()` (`composeGradient.ts`) | deep blobs at `cy 24` (upper-left, behind the wordmark) + `cy 82` (lower-left) | drop a deep `cy` for more top colour; raise it to keep colour low. This is the "wander into the headers" dial. |
-| **Colour into the top, via motion** | the negative-Y peaks in `blobflow-2`/`-4` (the deep-blob keyframes) | `-32vmax` / `-26vmax` | ↑ (more negative) sweeps the deep blobs further up + off the top edge |
-| **Larger areas / patterns** | inner disc `width`/`height` | `78vmax` | ↑ for bigger soft fields, ↓ for tighter blobs |
-| **Softer / more mesh-like** | inner disc `filter: blur()` | `38px` | ↑ softer, ↓ crisper |
-| **Slower / faster flow** | the `s` durations in `DRIFT[]` | `23/29/26/33s` | ↑ slower (STARIS is slow), ↓ faster. Keep them co-prime-ish so the composite doesn't visibly re-sync. |
-| **More "breathing"** | the `scale(...)` in `blobflow-*` | ~0.82–1.26 | widen the spread |
-| **More / fewer blobs** | `fieldBlobColors()` in `composeGradient.ts` (returns 4) + the `DRIFT`/keyframe count | 4 | keep `DRIFT.length` ≥ blob count |
+| **More / less movement** (visibility) | the `vmax` translate numbers in `@keyframes field-flow` | ~±18 vmax | ↑ for more visible flow, ↓ for subtler. NB the first cut at ±8 looked frozen because the masses are big+soft — keep travel generous. |
+| **Slower / faster flow** | the `field-flow` animation duration | `70s` | ↑ slower/calmer, ↓ faster. One coherent sweep, so one number. |
+| **Turns direction harder** | the `rotate(...)` peaks in `field-flow` | ~±13deg | ↑ sweeps the masses around the centre more (the "kreuz und quer") |
+| **More internal life vs. calmer** | the `murmur-*` translate amplitude (+ `MURMUR` durations 27–37s) | ~±13 vmax | ↓ → more coherent/calm; ↑ → more flocking shimmer. Keep < the `field-flow` sweep so it stays coordinated. |
+| **Larger areas / softer** | inner disc `width`/`height` + `filter: blur()` | `96vmax` / `50px` | ↑ for bigger softer fields. Bigger+softer DILUTES motion — compensate with more `field-flow` travel. |
+| **Where the strong colour sits** | the `cx/cy` anchors in `fieldBlobColors()` + the mass/ribbon positions in `composeGradient.ts` | masses at `(16,86)` + `(88,24)`, ribbon `(58,20)`, base angle `118°` | move the corner masses / base angle to re-place the diagonal seam |
+| **More / fewer masses** | `fieldBlobColors()` in `composeGradient.ts` (returns 4) + the `MURMUR`/keyframe count | 4 | keep `MURMUR.length` ≥ mass count |
 
 **Do NOT change colour/intensity for a "make it more alive" ask** — the owner's standing
 instruction is *"bigger movements / larger areas, **not colorwise**."* Richness lives in
@@ -440,3 +445,20 @@ When adding any new motion, add its selector to that globals.css block in the sa
 - **Traps found:** — (`buildCraftingPhases` only ever shows stored values; placeholder guard prevents
   "the Other process" / "Unknown variety" leaking).
 - **PRs this session:** (number assigned on open)
+
+### 2026-06-29 — Big-Sur colour + murmuration motion (the Field redirect)
+- **Done:** full-saturation "Big-Sur" pass (composeGradient richness dials cranked, zone sat floors
+  lifted); cool `cool-berry` BLUE zone (210–244) for berries; **directional** composition — the 5
+  scattered radial hotspots became a diagonal linear base + 2 corner masses + a pale light-ribbon
+  (the "Mac wallpaper" look); **murmuration** motion — the 4 independent `blobflow-*` drifters became
+  ONE shared `field-flow` sweep (carries all masses together + turns direction) + small per-mass
+  `murmur-*` drift, co-located in `FieldBlobs.tsx`. New `curatedFields.ts` (`CURATED_FIELDS` +
+  `getGeneralField()`) cycles the general/home background through elegant 2–3-flavour combos per
+  app-open, wired via `FieldContext.tsx`. Dark fonts (muted token 40%→16%) for legibility on the
+  saturated Field. Updated the Tuning-dials table + file-map rows above.
+- **Trap (the big one):** huge soft masses + a tiny slow sweep (±8vmax / 120s) = motion present but
+  optically FROZEN ("keine Bewegungen mehr"). Fix: open the travel right up (`field-flow` 70s, ±18vmax
+  + ±13° rotate; `murmur` ±13vmax; discs 96vmax/blur 50px). Lesson: when masses are big+soft, the
+  travel must be generous or the flow is invisible — the amplitude scales with the disc size.
+- **Owner-confirmed:** "Love it." All dials are one-number tweaks (see the table).
+- **PRs this session:** #445, #446, #447, #448, #449.
