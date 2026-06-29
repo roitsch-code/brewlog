@@ -43,7 +43,8 @@ export const ZONES: Record<ZoneId, Zone> = {
   "fruity-bright": {
     id: "fruity-bright",
     hueRange: [0, 30],
-    saturationRange: [60, 90],
+    // Big-Sur lift: saturation floor pushed up so even the muted end reads vivid.
+    saturationRange: [80, 100],
     lightnessRange: [70, 90],
   },
   "fruity-deep": {
@@ -51,31 +52,35 @@ export const ZONES: Record<ZoneId, Zone> = {
     // sample time so hue arithmetic stays linear.
     id: "fruity-deep",
     hueRange: [350, 375],
-    saturationRange: [50, 75],
+    saturationRange: [68, 92],
     lightnessRange: [50, 70],
   },
   floral: {
     id: "floral",
     hueRange: [320, 355],
-    saturationRange: [40, 70],
+    saturationRange: [62, 90],
     lightnessRange: [70, 88],
   },
+  // nutty-cocoa + spice-earth stay comparatively restrained on purpose — the
+  // Big-Sur drama is the CONTRAST between vivid fruit zones and these deep warm
+  // ones, so a chocolatey Brazilian still reads warm-deep, not neon. Modest lift
+  // only.
   "nutty-cocoa": {
     id: "nutty-cocoa",
     hueRange: [20, 40],
-    saturationRange: [35, 55],
+    saturationRange: [42, 62],
     lightnessRange: [30, 55],
   },
   "spice-earth": {
     id: "spice-earth",
     hueRange: [25, 45],
-    saturationRange: [25, 45],
+    saturationRange: [32, 52],
     lightnessRange: [28, 48],
   },
   "sweet-caramel": {
     id: "sweet-caramel",
     hueRange: [30, 50],
-    saturationRange: [55, 85],
+    saturationRange: [70, 95],
     lightnessRange: [60, 80],
   },
 };

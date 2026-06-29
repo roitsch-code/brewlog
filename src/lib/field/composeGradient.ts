@@ -14,19 +14,23 @@
 import { ZONES, type ZoneId } from "./zones";
 import type { FieldModifiers, FieldZones, ZoneWeight } from "./types";
 
-// ── Field richness dials (warm-but-richer; NO neon, NO dark theme) ──────────
-// The Field used to wash itself out: the linear base dropped 15 saturation /
-// 10 lightness and the coloured hotspots capped low. "Warm but richer" eases
-// that back a notch so the (now drifting) colour reads, while the cream still
-// dominates at rest. These six numbers are the whole richness surface — safe
-// to nudge on-device. Guardrails: keep BASE_DIM ≥ 4 and BLOB_ALPHA ≤ 0.7 so
-// the cream never tips into a saturated wash.
-const BASE_DESAT = 8; // linear-base desaturation (was the hard-coded 15)
-const BASE_DIM = 6; // linear-base dimming (was the hard-coded 10)
-const RADIAL_ALPHA_BOOST = 0.12; // added to each hotspot's alpha …
-const RADIAL_ALPHA_CAP = 0.9; // … then clamped so no hotspot blows to a hard disc
-const BLOB_ALPHA = 0.62; // alpha of the drifting FieldBlobs (the living layer)
-const BLOB_SAT_BOOST = 12; // blobs clearly more saturated than the base so the drift reads
+// ── Field richness dials (full "Big-Sur" punch — owner-requested) ───────────
+// The Field used to hold itself back to stay cream-dominant (the linear base
+// dropped saturation/lightness, the hotspots capped low, the blobs sat at 0.62
+// alpha). The owner wants the opposite now: a vivid, saturated, magenta-→-blue
+// wallpaper feel that leans AWAY from cream. So the base is no longer washed
+// out, the hotspots ride higher, and the drifting blobs are near-opaque and
+// strongly saturated. These six numbers are the whole richness surface — every
+// one is a one-line on-device dial; lower them if a screen reads too hot.
+// (The old "BASE_DIM ≥ 4 / BLOB_ALPHA ≤ 0.7 keep-cream" guardrail is the exact
+// thing being relaxed here — the punch lands in open areas; anthracite text
+// still sits on the 55%-cream backdrop-blur cards, so legibility holds.)
+const BASE_DESAT = 0; // linear-base desaturation (was 8 → now base keeps its colour)
+const BASE_DIM = 3; // linear-base dimming (was 6 → brighter, more colourful base)
+const RADIAL_ALPHA_BOOST = 0.2; // added to each hotspot's alpha …
+const RADIAL_ALPHA_CAP = 0.97; // … then clamped so a hotspot can ride near-solid
+const BLOB_ALPHA = 0.85; // alpha of the drifting FieldBlobs (the living layer)
+const BLOB_SAT_BOOST = 24; // blobs ride near the top of their saturation so the drift pops
 
 interface Hsl {
   h: number; // 0–360 (allowed to go past during interpolation, wrap at render)
