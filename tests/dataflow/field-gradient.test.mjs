@@ -28,6 +28,9 @@ export { composeFieldGradient, fieldBlobColors } from ${JSON.stringify(
 export { DEFAULT_FIELD_ZONES } from ${JSON.stringify(
   path.join(ROOT, "src/lib/field/defaultZones.ts"),
 )};
+export { CURATED_FIELDS } from ${JSON.stringify(
+  path.join(ROOT, "src/lib/field/curatedFields.ts"),
+)};
 `;
 const dir = await mkdtemp(join(tmpdir(), "field-"));
 const out = join(dir, "f.mjs");
@@ -39,16 +42,18 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { composeFieldGradient, fieldBlobColors, DEFAULT_FIELD_ZONES } = await import(
+const { composeFieldGradient, fieldBlobColors, DEFAULT_FIELD_ZONES, CURATED_FIELDS } = await import(
   pathToFileURL(out).href
 );
 
-test("composeFieldGradient: 6-layer string, pure + deterministic", () => {
+test("composeFieldGradient: directional string (1 linear base + 3 radials), pure + deterministic", () => {
   const a = composeFieldGradient(DEFAULT_FIELD_ZONES, 0);
   const b = composeFieldGradient(DEFAULT_FIELD_ZONES, 0);
   assert.equal(typeof a, "string");
   assert.equal(a, b); // same input → identical output
-  assert.equal((a.match(/radial-gradient/g) || []).length, 5);
+  // Round-2 directional rework: a diagonal linear base + two corner masses + a
+  // pale light-ribbon (was 5 scattered radial hotspots).
+  assert.equal((a.match(/radial-gradient/g) || []).length, 3);
   assert.equal((a.match(/linear-gradient/g) || []).length, 1);
 });
 
@@ -95,6 +100,20 @@ test("cool-berry renders a real BLUE hue (berries are blue, not purple)", () => 
   for (const b of fieldBlobColors(blue)) {
     const h = Number(b.color.match(/hsl\((\d+)\s/)[1]);
     assert.ok(h >= 206 && h <= 246, `blob hue ${h}° should be blue`);
+  }
+});
+
+test("CURATED_FIELDS: each is a valid 2–3-zone combo that composes deterministically", () => {
+  assert.ok(CURATED_FIELDS.length >= 4, "expected several curated combos");
+  for (const f of CURATED_FIELDS) {
+    assert.ok(f.zones.length >= 2 && f.zones.length <= 3, "2–3 zones (elegant, not all-colours)");
+    const sum = f.zones.reduce((a, z) => a + z.weight, 0);
+    assert.ok(Math.abs(sum - 1) < 0.001, `weights sum to 1 (got ${sum})`);
+    const css = composeFieldGradient(f, 0);
+    assert.equal(typeof css, "string");
+    assert.equal(css, composeFieldGradient(f, 0)); // deterministic
+    assert.equal((css.match(/radial-gradient/g) || []).length, 3);
+    assert.equal((css.match(/linear-gradient/g) || []).length, 1);
   }
 });
 
