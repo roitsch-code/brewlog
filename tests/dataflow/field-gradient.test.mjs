@@ -75,6 +75,29 @@ test("fieldBlobColors: four blobs, valid hsl, explicit in-range alpha, pure", ()
   }
 });
 
+test("cool-berry renders a real blue-violet hue (not the warm-envelope orange-red)", () => {
+  const blue = {
+    version: 1,
+    zones: [{ id: "cool-berry", weight: 1 }],
+    modifiers: { saturation: 0, lightness: 0 },
+    source: "tasting-notes",
+    computedAt: "1970-01-01T00:00:00.000Z",
+  };
+  const css = composeFieldGradient(blue, 0);
+  // Every colour stop should sit in the cool 250–290° band — proves the new
+  // zone escaped the warm envelope (the whole point of the blueberry fix).
+  const hues = [...css.matchAll(/hsl\((\d+)\s/g)].map((m) => Number(m[1]));
+  assert.ok(hues.length > 0, "expected hsl() stops in the gradient");
+  for (const h of hues) {
+    assert.ok(h >= 248 && h <= 292, `hue ${h}° should be blue-violet (cool-berry)`);
+  }
+  // And its blobs carry the same cool hue.
+  for (const b of fieldBlobColors(blue)) {
+    const h = Number(b.color.match(/hsl\((\d+)\s/)[1]);
+    assert.ok(h >= 248 && h <= 292, `blob hue ${h}° should be blue-violet`);
+  }
+});
+
 test("fieldBlobColors: empty zones → no blobs (caller falls back to the default Field)", () => {
   const empty = { ...DEFAULT_FIELD_ZONES, zones: [] };
   assert.deepEqual(fieldBlobColors(empty), []);

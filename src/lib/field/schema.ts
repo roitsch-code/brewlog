@@ -23,6 +23,7 @@ export const ZoneIdSchema = z.enum([
   "nutty-cocoa",
   "spice-earth",
   "sweet-caramel",
+  "cool-berry",
 ]);
 
 export const FieldZonesSchema = z

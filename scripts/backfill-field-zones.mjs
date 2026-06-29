@@ -36,6 +36,7 @@ const VALID_ZONE_IDS = new Set([
   "nutty-cocoa",
   "spice-earth",
   "sweet-caramel",
+  "cool-berry",
 ]);
 
 // Verbatim from src/lib/field/mapNotesToZones.ts so the backfill
@@ -43,8 +44,9 @@ const VALID_ZONE_IDS = new Set([
 const SYSTEM_PROMPT = `You are a perceptual aroma-to-color mapper for a specialty coffee app. Given an array of tasting notes (English or German), you return a JSON object specifying which BrewLog Field Zones the notes map to, with weights, plus optional saturation/lightness modifiers from texture descriptors. Return JSON only, no prose.
 
 Available Field Zones (id : exemplar aromas):
-- fruity-bright : citrus, lemon, orange, grapefruit, mandarin, berry, blueberry, raspberry, cherry, cranberry, peach, apricot, currant, pomegranate
+- fruity-bright : citrus, lemon, orange, grapefruit, mandarin, berry, raspberry, cherry, cranberry, strawberry, redcurrant, peach, apricot, pomegranate
 - fruity-deep : dried fruit, date, raisin, fig, prune, plum, red grape, port, wine, fermented fruit, dark cherry
+- cool-berry : blueberry, blackberry, blackcurrant, cassis, bilberry, huckleberry, boysenberry, dark/wild berry, jammy blue-purple fruit
 - floral : jasmine, rose, hibiscus, bergamot, chamomile, tea, lavender, elderflower, white flowers, floral, perfume
 - nutty-cocoa : chocolate, cocoa, milk chocolate, dark chocolate, nut, almond, hazelnut, walnut, pecan, peanut, roasted, malt
 - spice-earth : cinnamon, clove, cardamom, tobacco, leather, earth, herbs, savoury, spice, woody, cedar, smoke
@@ -66,7 +68,7 @@ Rules:
 - If a note is unfamiliar or non-aromatic (e.g. "rare", "delightful"), ignore it.
 - If ALL notes are unfamiliar, return {"zones": [], "modifiers": {"saturation": 0, "lightness": 0}}.
   The caller will treat empty zones as "fall back to default".
-- German notes are valid input: pflaumig → prune (fruity-deep), nussig → nutty-cocoa, zitronig → citrus (fruity-bright), schokoladig → chocolate (nutty-cocoa).`;
+- German notes are valid input: pflaumig → prune (fruity-deep), nussig → nutty-cocoa, zitronig → citrus (fruity-bright), schokoladig → chocolate (nutty-cocoa), heidelbeere/blaubeere → blueberry (cool-berry), cassis/schwarze johannisbeere → blackcurrant (cool-berry), brombeere → blackberry (cool-berry).`;
 
 function extractJson(text) {
   if (!text) return null;

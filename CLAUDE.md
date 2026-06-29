@@ -226,7 +226,7 @@ lib/
 │   # The real places dataset (6,202 rows, verified 2026-05-09) lives only in Production; no seed file in Git.
 ├── field/                     # ★ Generative Field v1.1 — coffee-driven background gradient
 │   ├── types.ts               # FieldZone, FieldZoneId, FieldConfig types
-│   ├── zones.ts               # 6-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel)
+│   ├── zones.ts               # 7-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel + cool-berry — the one cool blue-violet zone for blueberry/cassis, added in the Big-Sur punch pass)
 │   ├── defaultZones.ts        # Fallback composition for coffees with no Field yet
 │   ├── composeGradient.ts     # zones + rotation → CSS radial/conic gradient sandwich
 │   ├── schema.ts              # Zod schema for persisted field_zones
@@ -463,7 +463,7 @@ All migrations applied manually on the VPS — see migration NOTE above.
 
 **Generative Field v1.1 (PRs #78 → #100)**
 - Each coffee gets its own background gradient composition derived from tasting notes.
-- 6-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel); composition stored as weighted JSON in `coffees.field_zones`.
+- 7-zone perceptual palette (fruity-bright, fruity-deep, floral, nutty-cocoa, spice-earth, sweet-caramel + `cool-berry` — blue-violet/indigo for blueberry/blackcurrant, the one cool zone, added in the "Big-Sur punch" pass); composition stored as weighted JSON in `coffees.field_zones`.
 - Haiku call (`src/lib/field/mapNotesToZones.ts`) maps tasting notes → zone weights on first scan.
 - `LightFlowShell` rotates Field 25° per brew step (scan 0°, mode 0°, context 25°, recommend 50°, brew 75°, log 100°, summary 125°) — visual progress signal.
 - Brew-Again paths (ActionPill on home, `/coffees` list, `/coffees/[id]`) lift `fieldZones` from `coffees.field_zones` so the cup-specific Field travels with the user into the flow.
