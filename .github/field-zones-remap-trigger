@@ -1,0 +1,5 @@
+# Bump this file (and merge to main) to fire the "Re-map field zones" workflow.
+# The GitHub integration token can't workflow_dispatch via the API, so a push to
+# this path is how the re-map is triggered hands-free. Safe to re-run anytime.
+
+run: 2026-06-29 — initial cool-berry blue re-map after the Big-Sur Field pass
