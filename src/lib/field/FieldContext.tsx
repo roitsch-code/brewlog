@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { DEFAULT_FIELD_ZONES } from "./defaultZones";
+import { getGeneralField } from "./curatedFields";
 import type { FieldZones } from "./types";
 
 /**
@@ -50,6 +51,16 @@ export function FieldProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<FieldConfig>(DEFAULT_CONFIG);
   const setFieldConfig = useCallback((next: FieldConfig) => setConfig(next), []);
 
+  // On the client, swap the static default for this app-open's curated combo —
+  // but only if no page has already set its own Field (child page effects run
+  // before this parent effect, so a coffee page that called useFieldConfig has
+  // already replaced the default and we leave it). SSR keeps the static default
+  // → no hydration mismatch.
+  useEffect(() => {
+    const general = getGeneralField();
+    setConfig((prev) => (prev === DEFAULT_CONFIG ? { fieldZones: general, rotation: 0 } : prev));
+  }, []);
+
   return (
     <FieldContext.Provider value={{ ...config, setFieldConfig }}>{children}</FieldContext.Provider>
   );
@@ -71,9 +82,11 @@ export function useFieldConfig(config: FieldConfig | null | undefined): void {
     if (stableZones) {
       setFieldConfig({ fieldZones: stableZones, rotation: stableRotation });
     } else {
-      setFieldConfig(DEFAULT_CONFIG);
+      setFieldConfig({ fieldZones: getGeneralField(), rotation: 0 });
     }
-    return () => setFieldConfig(DEFAULT_CONFIG);
+    // Reset to the general curated combo (not the static default) on unmount, so
+    // leaving a coffee page lands the general backgrounds on a nice combo.
+    return () => setFieldConfig({ fieldZones: getGeneralField(), rotation: 0 });
     // Re-run when the actual zones or rotation change. Object identity
     // is a fine equality proxy because callers either pass a stable
     // reference or a freshly-derived one only when the underlying

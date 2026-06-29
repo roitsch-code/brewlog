@@ -157,58 +157,42 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
   const z1: ZoneWeight = zones[1] ?? zones[0];
   const z2: ZoneWeight | null = zones[2] ?? null;
 
-  // ── Layer 1 — linear base (135° rotated by rotationDeg) ──────────
-  // Three-stop interpolation across the top-3 weighted zones, dim and
-  // desaturated. With <3 zones we pad by repeating the highest.
-  const baseAngle = (135 + rotationDeg) % 360;
-  const baseTops: ZoneWeight[] = [z0, z1, z2 ?? z0];
-  const baseStops = baseTops.map((zw, i) => {
-    const baseColour = sampleZone(zw.id, 0.5, 0.5, 0.5);
-    const dimmed: Hsl = {
-      h: baseColour.h,
-      s: clamp(baseColour.s - BASE_DESAT, 0, 100),
-      l: clamp(baseColour.l - BASE_DIM, 0, 100),
-    };
-    const final = applyMods(dimmed, mods);
-    const pos = baseTops.length === 1 ? 0 : (i * 100) / (baseTops.length - 1);
-    return `${hslToCss(final)} ${pos.toFixed(0)}%`;
-  });
-  const layer1 = `linear-gradient(${baseAngle.toFixed(0)}deg, ${baseStops.join(", ")})`;
+  // ── DIRECTIONAL composition (the "Mac wallpaper" structure) ───────
+  // Round-2 rework: the old version scattered FIVE small radial hotspots,
+  // which read as spotty "too crazy bunt" blobs. Replaced by a broad
+  // DIAGONAL blend of the 2–3 dominant zones meeting along ONE soft seam,
+  // edge-to-edge — plus two large corner masses that anchor that seam and a
+  // pale light-ribbon sweeping across (the lilac highlight in the reference).
+  // Up to 3 colours (coffee bags list ~3 flavours), but arranged as gradients,
+  // not dots. The living motion lives in FieldBlobs (coordinated murmuration).
 
-  // ── Layer 2 — bottom-left hotspot ─────────────────────────────────
-  const l2Colour = applyMods(sampleZone(z0.id, 0.5, 1.0, 0.5), mods);
-  const l2Pos = rotatePos(12, 92, rotationDeg);
-  const layer2 = `radial-gradient(circle at ${l2Pos.x.toFixed(0)}% ${l2Pos.y.toFixed(0)}%, ${hslToCss(l2Colour, boostAlpha(0.8))} 0%, transparent 60%)`;
+  // Base — diagonal sweep z0 → z1 → (faint z2). Full strength (BASE_* small).
+  const baseAngle = (118 + rotationDeg) % 360;
+  const baseDim = (h: Hsl): Hsl =>
+    applyMods({ h: h.h, s: clamp(h.s - BASE_DESAT, 0, 100), l: clamp(h.l - BASE_DIM, 0, 100) }, mods);
+  const cA = baseDim(sampleZone(z0.id, 0.5, 0.85, 0.52));
+  const cB = baseDim(sampleZone(z1.id, 0.5, 0.85, 0.6));
+  const cC = z2 ? baseDim(sampleZone(z2.id, 0.5, 0.7, 0.6)) : cB;
+  const layerBase = `linear-gradient(${baseAngle.toFixed(0)}deg, ${hslToCss(cA)} 0%, ${hslToCss(cB)} 58%, ${hslToCss(cC)} 100%)`;
 
-  // ── Layer 3 — mid-right warm ──────────────────────────────────────
-  const l3Colour = applyMods(sampleZone(z1.id, 0.5, 0.5, 1.0), mods);
-  const l3Pos = rotatePos(95, 45, rotationDeg);
-  const layer3 = `radial-gradient(circle at ${l3Pos.x.toFixed(0)}% ${l3Pos.y.toFixed(0)}%, ${hslToCss(l3Colour, boostAlpha(0.7))} 0%, transparent 50%)`;
+  // Corner mass A — deepen one end, set the diagonal seam (large + soft).
+  const massA = applyMods(sampleZone(z0.id, 0.5, 1.0, 0.5), mods);
+  const massAPos = rotatePos(16, 86, rotationDeg);
+  const layerMassA = `radial-gradient(circle at ${massAPos.x.toFixed(0)}% ${massAPos.y.toFixed(0)}%, ${hslToCss(massA, boostAlpha(0.78))} 0%, transparent 72%)`;
 
-  // ── Layer 4 — mid-left anchor ─────────────────────────────────────
-  // Third zone if present, else echo of highest with hue rotated +10°.
-  const l4Colour = z2
-    ? applyMods(sampleZone(z2.id, 0.5, 0.5, 1.0), mods)
-    : applyMods(sampleZone(z0.id, 0.5, 0.5, 1.0, /* hueOffset */ 10), mods);
-  const l4Pos = rotatePos(18, 50, rotationDeg);
-  const layer4 = `radial-gradient(circle at ${l4Pos.x.toFixed(0)}% ${l4Pos.y.toFixed(0)}%, ${hslToCss(l4Colour, boostAlpha(0.85))} 0%, transparent 55%)`;
+  // Corner mass B — the second dominant colour into the opposite corner.
+  const massB = applyMods(sampleZone(z1.id, 0.5, 0.95, 0.62), mods);
+  const massBPos = rotatePos(88, 24, rotationDeg);
+  const layerMassB = `radial-gradient(circle at ${massBPos.x.toFixed(0)}% ${massBPos.y.toFixed(0)}%, ${hslToCss(massB, boostAlpha(0.68))} 0%, transparent 66%)`;
 
-  // ── Layer 5 — upper-mid cool mauve ────────────────────────────────
-  const l5Colour = applyMods(sampleZone(z0.id, 0.5, 0.0, 1.0), mods);
-  const l5Pos = rotatePos(55, 25, rotationDeg);
-  const layer5 = `radial-gradient(circle at ${l5Pos.x.toFixed(0)}% ${l5Pos.y.toFixed(0)}%, ${hslToCss(l5Colour, boostAlpha(0.55))} 0%, transparent 50%)`;
+  // Pale light-ribbon — broad soft highlight sweeping diagonally (depth).
+  const ribbon = applyMods({ h: sampleZone(z0.id, 0.5, 0.5, 0.5).h, s: 38, l: 90 }, mods);
+  const ribbonPos = rotatePos(58, 20, rotationDeg);
+  const layerRibbon = `radial-gradient(ellipse 78% 50% at ${ribbonPos.x.toFixed(0)}% ${ribbonPos.y.toFixed(0)}%, ${hslToCss(ribbon, 0.55)} 0%, transparent 60%)`;
 
-  // ── Layer 6 — top-right highlight (the "lit ceiling") ─────────────
-  const l6Colour = applyMods(sampleZone(z0.id, 0.5, 1.0, 1.0), mods);
-  const l6Pos = rotatePos(92, 8, rotationDeg);
-  const layer6 = `radial-gradient(circle at ${l6Pos.x.toFixed(0)}% ${l6Pos.y.toFixed(0)}%, ${hslToCss(l6Colour)} 0%, transparent 60%)`;
-
-  // CSS stacks gradients top-to-bottom in source order. Spec §2.1 lists
-  // Layer 1 as the base (painted first, at the bottom), Layer 6 as the
-  // top highlight (painted last, on top). CSS background-image is
-  // *reverse* painter — the first item in the comma list paints last
-  // (on top). So we list Layer 6 FIRST and Layer 1 LAST.
-  return [layer6, layer5, layer4, layer3, layer2, layer1].join(", ");
+  // CSS background-image is reverse-painter (first item = on top): ribbon
+  // over the two masses over the diagonal base.
+  return [layerRibbon, layerMassB, layerMassA, layerBase].join(", ");
 }
 
 export interface FieldBlob {

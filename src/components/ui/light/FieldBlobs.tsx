@@ -4,94 +4,114 @@ import { useMemo } from "react";
 import { fieldBlobColors } from "@/lib/field/composeGradient";
 import type { FieldZones } from "@/lib/field/types";
 
-// Co-prime-ish durations + negative start-delays so the four drifts never sit
-// at 0% together and the composite doesn't visibly re-sync.
-const DRIFT = [
-  "blobflow-1 23s ease-in-out -6s infinite",
-  "blobflow-2 29s ease-in-out -15s infinite",
-  "blobflow-3 26s ease-in-out -4s infinite",
-  "blobflow-4 33s ease-in-out -21s infinite",
+// Round-2 rework — "murmuration". The old version drifted four discs on
+// independent co-prime timers, which read as scattered blobs ("too crazy
+// bunt"). Now ALL masses ride one SHARED slow sweep (`field-flow`) so they move
+// together like a flock and the whole colour field slowly turns direction
+// (diagonal → vertical → other diagonal) over a long cycle. Each mass adds only
+// a small, slow individual drift (`murmur-*`) for gentle internal life — the
+// dominant motion stays coherent. Bigger + softer discs than before so they
+// dissolve into one continuous directional gradient, not dots.
+//
+// Keyframes are co-located HERE (styled-jsx global), never globals.css — an
+// installed PWA serves a stale cached globals.css and the motion would silently
+// die (see docs/liquid-design.md). data-field-blob marks the animated nodes so
+// the reduced-motion block in globals.css can freeze them.
+
+// Small per-mass drifts: long, low-amplitude, varied so the flock shimmers
+// without breaking the shared sweep's coherence.
+const MURMUR = [
+  "murmur-1 41s ease-in-out -7s infinite",
+  "murmur-2 47s ease-in-out -19s infinite",
+  "murmur-3 43s ease-in-out -3s infinite",
+  "murmur-4 53s ease-in-out -28s infinite",
 ];
 
-/**
- * The drifting colour blobs of the living Field. The keyframes are co-located
- * HERE (styled-jsx global) — the same path as the haiku entrance, which renders
- * reliably — instead of globals.css, so an installed PWA can never animate the
- * blobs against a stale cached stylesheet (the cause of "haiku moves, blobs
- * dead"). Three nested layers: the outer leans from the --field-* vars, the
- * middle runs the transform-only drift keyframe (GPU compositor, no filter), the
- * inner is the blurred colour disc — painted once and merely moved. Tuned big
- * and slow (large discs, wide vmax travel, 23–33s cycles) for a STARIS-style
- * mesh that flows in large areas across the pale field. See docs/liquid-design.md
- * ("Tuning dials") to push the scale further — colours are NOT a dial here.
- */
 export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
   const blobs = useMemo(() => fieldBlobColors(fieldZones), [fieldZones]);
 
   return (
     <>
       <style jsx global>{`
-        @keyframes blobflow-1 {
+        /* The shared murmuration sweep — slow, coordinated, turns direction. */
+        @keyframes field-flow {
+          0% { transform: translate3d(-8vmax, 5vmax, 0) rotate(-9deg) scale(1.05); }
+          25% { transform: translate3d(6vmax, -4vmax, 0) rotate(5deg) scale(1.12); }
+          50% { transform: translate3d(9vmax, 7vmax, 0) rotate(10deg) scale(1.06); }
+          75% { transform: translate3d(-5vmax, -6vmax, 0) rotate(-4deg) scale(1.13); }
+          100% { transform: translate3d(-8vmax, 5vmax, 0) rotate(-9deg) scale(1.05); }
+        }
+        /* Per-mass internal life — small amplitude so the flock stays coherent. */
+        @keyframes murmur-1 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          33% { transform: translate3d(30vmax, -24vmax, 0) scale(1.24); }
-          66% { transform: translate3d(-24vmax, 30vmax, 0) scale(0.82); }
+          50% { transform: translate3d(7vmax, -6vmax, 0) scale(1.08); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
-        @keyframes blobflow-2 {
-          0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(-26vmax, -32vmax, 0) rotate(14deg) scale(1.22); }
-          100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-        }
-        @keyframes blobflow-3 {
+        @keyframes murmur-2 {
           0% { transform: translate3d(0, 0, 0) scale(1); }
-          40% { transform: translate3d(24vmax, 30vmax, 0) scale(1.16); }
-          75% { transform: translate3d(-28vmax, -24vmax, 0) scale(0.84); }
+          50% { transform: translate3d(-8vmax, 6vmax, 0) scale(0.93); }
           100% { transform: translate3d(0, 0, 0) scale(1); }
         }
-        @keyframes blobflow-4 {
-          0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-          50% { transform: translate3d(28vmax, -26vmax, 0) rotate(-12deg) scale(1.26); }
-          100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+        @keyframes murmur-3 {
+          0% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(6vmax, 7vmax, 0) scale(1.07); }
+          100% { transform: translate3d(0, 0, 0) scale(1); }
+        }
+        @keyframes murmur-4 {
+          0% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(-7vmax, -7vmax, 0) scale(0.94); }
+          100% { transform: translate3d(0, 0, 0) scale(1); }
         }
       `}</style>
-      {blobs.map((b, i) => (
+      {/* Lean wrapper — follows the finger via the --field-* vars (whole field
+          leans together, which reinforces the coordinated feel). */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transform:
+            "translate(var(--field-drift-x, 0px), var(--field-drift-y, 0px)) rotate(var(--field-tilt, 0deg)) scale(calc(1 + var(--field-pulse, 0) * 0.05))",
+        }}
+      >
+        {/* Shared sweep — carries every mass together (the murmuration). */}
         <div
-          key={i}
-          aria-hidden
-          className="absolute"
+          data-field-blob
+          className="absolute inset-0"
           style={{
-            left: `${b.cx}%`,
-            top: `${b.cy}%`,
-            transform:
-              "translate(var(--field-drift-x, 0px), var(--field-drift-y, 0px)) rotate(var(--field-tilt, 0deg)) scale(calc(1 + var(--field-pulse, 0) * 0.05))",
+            transformOrigin: "50% 50%",
+            willChange: "transform",
+            animation: "field-flow 120s ease-in-out infinite",
           }}
         >
-          <div
-            data-field-blob
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              willChange: "transform",
-              animation: DRIFT[i % DRIFT.length],
-            }}
-          >
+          {blobs.map((b, i) => (
             <div
+              key={i}
+              data-field-blob
+              aria-hidden
+              className="absolute"
               style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: "78vmax",
-                height: "78vmax",
-                transform: "translate(-50%, -50%)",
-                borderRadius: "50%",
-                background: `radial-gradient(circle, ${b.color} 0%, transparent 68%)`,
-                filter: "blur(38px)",
+                left: `${b.cx}%`,
+                top: `${b.cy}%`,
+                willChange: "transform",
+                animation: MURMUR[i % MURMUR.length],
               }}
-            />
-          </div>
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: "104vmax",
+                  height: "104vmax",
+                  transform: "translate(-50%, -50%)",
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle, ${b.color} 0%, transparent 64%)`,
+                  filter: "blur(56px)",
+                }}
+              />
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </>
   );
 }
