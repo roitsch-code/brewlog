@@ -9,11 +9,19 @@ name: Re-map field zones
 # loading-insights refresh. No new secrets. A missed run is harmless; re-running
 # is safe (it just recomputes the same compositions).
 #
-# Manual only — there's nothing to schedule. Run it once from the Actions tab
-# (or via `gh workflow run`) after the deploy lands.
+# Fires two ways: manually (Actions tab / `gh workflow run`), OR automatically
+# when `.github/field-zones-remap-trigger` changes on main. The trigger-file path
+# exists because the GitHub integration token can't `workflow_dispatch` via the
+# API (403 "Resource not accessible by integration") — bumping that file in a PR
+# and merging is the house-standard way to fire a one-shot job hands-free (same
+# pattern as `.github/ios-build-trigger`).
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/field-zones-remap-trigger"
 
 concurrency:
   group: field-zones-remap
