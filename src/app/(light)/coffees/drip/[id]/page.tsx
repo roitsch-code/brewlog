@@ -127,7 +127,7 @@ export default function DripBagDetailPage() {
 
         {/* Title overlay */}
         <div className={`${bag.bagPhotoUrl ? "absolute bottom-0 left-0 right-0" : ""} p-5`}>
-          <p className="text-light-foreground/50 text-xs tracking-widest uppercase mb-1">Drip bag</p>
+          <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">Drip bag</p>
           <h1 className="font-fraunces text-3xl text-light-foreground">{bag.name}</h1>
           <p className="text-light-foreground/60 text-sm mt-1">
             {bag.roaster}
