@@ -29,6 +29,8 @@ services:
       # /recommend runs on Mistral Large when MISTRAL_API_KEY is set (≈¼ the Opus
       # cost; see issue #453). Until then it stays on Opus. Set RECOMMEND_PROVIDER
       # to "anthropic" to force-rollback to Opus, or "mistral" to force Mistral.
+      # The key lives in a cost-separated "BrewLog" Mistral workspace; deploy.yml
+      # always-syncs it from the GitHub secret so a rotated key takes effect.
       MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
       RECOMMEND_PROVIDER: ${RECOMMEND_PROVIDER:-}
       S3_ENDPOINT: ${S3_ENDPOINT}
