@@ -74,6 +74,16 @@ jobs:
                 < src/lib/db/migrations/0017_add_insight_snooze.sql
             fi
 
+            # Make MISTRAL_API_KEY available to compose so /recommend runs on
+            # Mistral Large (≈¼ the Opus per-call cost; issue #453). APPEND-ONLY and
+            # guarded: only writes when a .env exists AND the key isn't already there,
+            # so it never rewrites/clobbers the production .env. Absent key → no-op →
+            # /recommend simply stays on Opus (the code auto-detects).
+            if [ -f .env ] && ! grep -q '^MISTRAL_API_KEY=' .env; then
+              printf 'MISTRAL_API_KEY=%s\n' '${{ secrets.MISTRAL_API_KEY }}' >> .env
+              echo "Added MISTRAL_API_KEY to .env"
+            fi
+
             docker compose build app
 
             if docker compose up -d --force-recreate --no-deps app; then
