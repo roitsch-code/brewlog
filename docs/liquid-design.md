@@ -295,6 +295,14 @@ When adding any new motion, add its selector to that globals.css block in the sa
 - **Animating a blurred full-viewport `background` div stutters on iOS** — never animate the base
   gradient's `background` or slide the whole base. Float transform-only blob layers over a static
   base instead (the core architecture). (Original plan.)
+- **A persistent `filter` on an inline-block word clips Fraunces' descenders (g/y/j)** — `LiquidHeadline`
+  words carry `animation-fill-mode: both`, so the 100% keyframe is held at rest. When that frame ended
+  on `filter: blur(0)`, the (zero-radius) filter region clipped painting to the inline-block's
+  line-height box — shorter than the deep descenders of the Fraunces display serif — so g/y/j were cut
+  off flat at the baseline in the rotating recipe insight + Hero questions. The haiku never showed it
+  because `HaikuStarter` drops the animation class after settling (no filter at rest). Fix: the
+  `lh-pop-*` 100% keyframes end on `filter: none`; the blur lives only mid-flight. Keep rest-state
+  filter: none. (PR #467.)
 
 ---
 
