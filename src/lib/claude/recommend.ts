@@ -1,4 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { callRecommendModel } from "../ai/recommendProvider";
+import { vesselOverflow } from "../utils/vesselCapacity";
 import type {
   CoffeeIdentity,
   SessionContext,
@@ -30,7 +31,6 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { parseClaudeJson, z } from "./parseJson";
-import { SYSTEM_PROMPT, RECOMMEND_MODEL } from "./recommendPrompt";
 
 const CandidateSchema = z.object({
   method: z.string(),
@@ -98,10 +98,23 @@ function guardRecipeFidelity(
   return fixed;
 }
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  timeout: 120_000,
-});
+/**
+ * Deterministic capacity backstop: drop any candidate whose brewer can't hold the
+ * water it pours (e.g. a Clever/Origami at >450ml). The prompt already forbids
+ * this, but the Mistral spike (issue #453) showed large-volume requests can still
+ * slip one through. Never returns empty — if every candidate overflows (shouldn't
+ * happen), keep them and log loudly rather than fail the recommendation.
+ */
+function guardVesselCapacity(
+  candidates: RecommendationCandidate[],
+): RecommendationCandidate[] {
+  const safe = candidates.filter((c) => {
+    const reason = vesselOverflow(c.method, c.recipe?.waterGrams as number | undefined);
+    if (reason) console.warn(`[recommend] capacity guard dropped "${c.title}" — ${reason}`);
+    return !reason;
+  });
+  return safe.length ? safe : candidates;
+}
 
 function buildDiversityNote(sessions: import("../types/session").Session[]): string {
   const recent = sessions.slice(0, 8);
@@ -510,22 +523,12 @@ CANDIDATE TITLES must be DISTINCT across the candidates in one response — the 
 
 Return valid JSON only.`;
 
-  const response = await client.messages.create({
-    model: RECOMMEND_MODEL,
-    max_tokens: 5000,
-    system: [
-      { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-    ],
-    messages: [{ role: "user", content: userMessage }],
-  });
-
-  const text =
-    response.content[0].type === "text" ? response.content[0].text : "{}";
+  const { text, usage } = await callRecommendModel(userMessage);
 
   const raw = parseClaudeJson(text, RecommendationResponseSchema);
   if (!raw) throw new Error("Failed to parse recommendation from Claude");
 
-  const candidates: RecommendationCandidate[] = raw.candidates.map((c) => ({
+  const mapped: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
     recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title),
     role: c.role as CandidateRole,
@@ -542,6 +545,8 @@ Return valid JSON only.`;
     ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
+  const candidates = guardVesselCapacity(mapped);
+
   return {
     recommendation: {
       candidates,
@@ -554,6 +559,6 @@ Return valid JSON only.`;
       ...(raw.coffeeAssessment ? { coffeeAssessment: raw.coffeeAssessment } : {}),
       generatedAt: new Date().toISOString(),
     },
-    usage: response.usage,
+    usage,
   };
 }
