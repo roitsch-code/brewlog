@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { parseClaudeJson } from "./parseJson";
 import type { Coffee } from "@/lib/types/coffee";
@@ -6,8 +5,7 @@ import type { Session } from "@/lib/types/session";
 import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import { getVarietyPriorsForBag } from "@/lib/knowledge/varieties";
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { callCoachModel } from "@/lib/ai/coachProvider";
 
 /**
  * Per-coffee coach insight.
@@ -162,20 +160,13 @@ export async function generateCoffeeInsight(
 ): Promise<GeneratedCoffeeInsight | null> {
   try {
     const userMessage = buildUserPrompt(coffee, sessionsForCoffee);
-    const response = await client.messages.create({
-      model: "claude-opus-4-7",
-      max_tokens: 1200,
-      system: [
-        { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
-      ],
-      messages: [{ role: "user", content: userMessage }],
+    // Routes through coachProvider (Mistral Large when the coach key is set,
+    // else Opus; auto-fallback to Opus on a Mistral error).
+    const { text } = await callCoachModel({
+      system: SYSTEM_PROMPT,
+      user: userMessage,
+      maxTokens: 1200,
     });
-    const text = response.content
-      .filter(
-        (b): b is Anthropic.Messages.TextBlock => b.type === "text",
-      )
-      .map((b) => b.text)
-      .join("\n");
     return parseClaudeJson(text, InsightSchema);
   } catch (err) {
     console.error("coffeeInsight generation failed:", err);
