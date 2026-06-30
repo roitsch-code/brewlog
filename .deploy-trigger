@@ -3,4 +3,4 @@
 # paths-ignore excludes docs/**, **/*.md, .github/** and native/**, so a
 # root-level marker like this is the deliberate "just deploy" lever: change the
 # value below and merge to main.
-redeploy: 2026-06-30.2  # re-sync MISTRAL_API_KEY (BrewLog-workspace key, 2nd attempt)
+redeploy: 2026-06-30.3  # sync MISTRAL_COACH_API_KEY onto VPS .env → coach flips to Mistral (PR #463)
