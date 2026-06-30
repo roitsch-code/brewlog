@@ -42,3 +42,6 @@ next-env.d.ts
 # backup credentials (stored on VPS only, never commit)
 .gmail-app-password
 
+# recommend model-spike output (generated, uploaded as a CI artifact)
+spike-output/
+
