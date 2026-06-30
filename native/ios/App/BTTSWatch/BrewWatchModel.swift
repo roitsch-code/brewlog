@@ -58,6 +58,10 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private let healthStore = HKHealthStore()
     private var workoutSession: HKWorkoutSession?
     private var currentBrewId: Double = 0
+    /// The last brewId we finished (auto-wind-down or explicit end). A stray late
+    /// re-send from the phone with this id must NOT spin the workout session back
+    /// up — that start/end churn is the battery drain we're guarding against.
+    private var lastCompletedBrewId: Double = 0
 
     // MARK: - Lifecycle
 
@@ -89,9 +93,24 @@ final class BrewWatchModel: NSObject, ObservableObject {
             wlog.log("duplicate start ignored brewId=\(brewId, privacy: .public)")
             return
         }
+        // Already-finished brew: a late re-send (the phone's 3-s loop) must not
+        // restart the workout session after our wind-down. Without this, the watch
+        // start/end-thrashes the HKWorkoutSession every 3 s and drains the battery.
+        if brewId != 0 && brewId == lastCompletedBrewId {
+            wlog.log("completed brew re-send ignored brewId=\(brewId, privacy: .public)")
+            return
+        }
         let now = Date()
-        currentBrewId = brewId
         let sorted = incoming.sorted { $0.at < $1.at }
+        // If EVERY step is already in the past (a late hand-over / a re-send after
+        // the brew is effectively over), don't open a workout session at all —
+        // there's nothing left to buzz. Matches the tick() 8 s wind-down threshold.
+        if let last = sorted.last?.at, now.timeIntervalSince(last) > 8 {
+            wlog.log("start ignored — all steps already past brewId=\(brewId, privacy: .public)")
+            lastCompletedBrewId = brewId
+            return
+        }
+        currentBrewId = brewId
         self.fires = sorted.map { var f = $0; if $0.at <= now { f.fired = true }; return f }
         self.recipeName = recipeName
         self.isBrewing = true
@@ -107,6 +126,8 @@ final class BrewWatchModel: NSObject, ObservableObject {
     }
 
     private func endBrew() {
+        // Remember the brew we just finished so a stray re-send can't restart it.
+        if currentBrewId != 0 { lastCompletedBrewId = currentBrewId }
         isBrewing = false
         currentLabel = ""
         nextLabel = nil
