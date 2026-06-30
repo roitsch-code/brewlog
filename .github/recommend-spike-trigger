@@ -1,3 +1,3 @@
 # Bump this file (any change) on main to fire .github/workflows/recommend-spike.yml.
 # Route-around for Claude Code, whose token can't dispatch workflow_dispatch.
-# Run 0
+# Run 1 — broadened: 6 beans, Mistral x2, full prose + cost summary

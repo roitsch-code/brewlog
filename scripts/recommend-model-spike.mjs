@@ -129,6 +129,36 @@ const BEANS = [
     },
     context: ctx({ occasion: "experiment", intent: "body-forward", waterSource: "tap" }),
   },
+  {
+    label: "Geisha, Panama, light, fresh — goal aromatic",
+    coffee: {
+      roaster: "Manhattan", name: "Esmeralda (test)", origin: "Panama", region: "Boquete",
+      variety: "Geisha", process: "Washed", roastLevel: "Light",
+      roastDate: daysAgo(11), tastingNotesFromBag: ["jasmine", "bergamot", "white peach", "lemon zest"],
+      aiExtracted: true,
+    },
+    context: ctx({ occasion: "morning-ritual", intent: "aromatic", waterSource: "championship" }),
+  },
+  {
+    label: "Washed Pink Bourbon, Colombia, light, fresh — goal high-clarity",
+    coffee: {
+      roaster: "Cloud Picker", name: "Huila (test)", origin: "Colombia", region: "Huila",
+      variety: "Pink Bourbon", process: "Washed", roastLevel: "Light",
+      roastDate: daysAgo(14), tastingNotesFromBag: ["jasmine", "peach", "lemon pith", "floral"],
+      aiExtracted: true,
+    },
+    context: ctx({ occasion: "focus", intent: "high-clarity", waterSource: "championship" }),
+  },
+  {
+    label: "Honey Catuai, Costa Rica, medium, fresh — goal sweetness-forward",
+    coffee: {
+      roaster: "April", name: "Tarrazú (test)", origin: "Costa Rica", region: "Tarrazú",
+      variety: "Catuai", process: "Honey", roastLevel: "Medium",
+      roastDate: daysAgo(16), tastingNotesFromBag: ["red apple", "brown sugar", "almond"],
+      aiExtracted: true,
+    },
+    context: ctx({ occasion: "social", intent: "sweetness-forward", waterSource: "tap" }),
+  },
 ];
 
 function ctx(over) {
@@ -276,14 +306,25 @@ async function callMistral(model, userMessage) {
   };
 }
 
+// price = [input $/M, output $/M] (list). reps: how many times to sample this model
+// per bean — Mistral gets 2 (it's the candidate under scrutiny for variance/drift);
+// the Claude baselines get 1 (run #1 already sampled them).
 const MODELS = [
-  { id: "claude-opus-4-7", label: "Opus 4-7 (status quo)", run: (m, u) => callClaude(m, u), need: "ANTHROPIC_API_KEY" },
-  { id: "mistral-large-latest", label: "Mistral Large 3 (sovereign)", run: (m, u) => callMistral(m, u), need: "MISTRAL_API_KEY" },
-  { id: "claude-sonnet-4-6", label: "Sonnet 4-6 (cheaper Claude)", run: (m, u) => callClaude(m, u), need: "ANTHROPIC_API_KEY" },
+  { id: "claude-opus-4-7", label: "Opus 4-7 (status quo)", run: (m, u) => callClaude(m, u), need: "ANTHROPIC_API_KEY", reps: 1, price: [5, 25] },
+  { id: "mistral-large-latest", label: "Mistral Large 3 (sovereign)", run: (m, u) => callMistral(m, u), need: "MISTRAL_API_KEY", reps: 2, price: [2, 6] },
+  { id: "claude-sonnet-4-6", label: "Sonnet 4-6 (cheaper Claude)", run: (m, u) => callClaude(m, u), need: "ANTHROPIC_API_KEY", reps: 1, price: [3, 15] },
 ];
 
 // ── Per-candidate quality probes ─────────────────────────────────────────────
 function num(x) { return typeof x === "number" && isFinite(x) ? x : null; }
+
+function fmtStep(s) {
+  const bits = [s?.action];
+  if (num(s?.waterGramsAtEnd) !== null) bits.push(`${s.waterGramsAtEnd}g`);
+  if (num(s?.durationSec) !== null) bits.push(`${s.durationSec}s`);
+  const head = `${s?.label ?? "?"} (${bits.filter(Boolean).join(", ")})`;
+  return s?.notes ? `${head} — ${s.notes}` : head;
+}
 
 function probeCandidate(c) {
   const r = c.recipe || {};
@@ -311,6 +352,10 @@ function probeCandidate(c) {
     dose, water, ratio, temp: baseTemp, grind: r.grindSize ?? "?",
     targetTimeSec: num(r.targetTimeSec), nSteps: steps.length,
     staged, drift,
+    // full prose for reading "what the model actually wrote"
+    whyChosen: c.whyChosen, hypothesis: c.hypothesis,
+    predictedCupProfile: c.predictedCupProfile, whatToObserve: c.whatToObserve,
+    pourSteps: steps.map(fmtStep),
   };
 }
 
@@ -318,12 +363,15 @@ function probeCandidate(c) {
 const lines = [];
 const log = (s = "") => { lines.push(s); console.log(s); };
 
-log(`# /recommend — Modellvergleich (Spike)`);
+const fmtTime = (sec) => sec ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : "?";
+const tally = {}; // model id → { calls, inTok, outTok, cost, drift, staged }
+
+log(`# /recommend — Modellvergleich (Spike, breit)`);
 log(`Generiert: ${new Date().toISOString()}`);
-log(`\nGleicher echter Prompt (SYSTEM_PROMPT + injizierter Korpus) an alle Modelle. \`drift\` = objektiver Fabrikations-Detektor (reconcileToReference): das Modell wich beim \`basedOn\`-Referenzrezept in Grind/Temp/Zeit ab. \`staged-temp\` = verbotene Mehrtemperatur.\n`);
+log(`\n${BEANS.length} Bohnen-Profile. Gleicher echter Prompt (SYSTEM_PROMPT + injizierter Korpus) an alle Modelle. Mistral läuft ${MODELS.find(m=>m.id.includes("mistral"))?.reps}× pro Bohne (Schwankung sichtbar machen), die Claude-Baselines 1×. \`drift\` = objektiver Fabrikations-Detektor (reconcileToReference): wich das Modell beim \`basedOn\`-Referenzrezept in Grind/Temp/Zeit ab. \`staged-temp\` = verbotene Mehrtemperatur. Jedes Rezept steht unten im Volltext.\n`);
 
 if (DRY_RUN) {
-  log(`\n> DRY RUN — kein API-Call. Beispiel-Prompt für Bohne 1:\n`);
+  log(`\n> DRY RUN — kein API-Call. ${BEANS.length} Bohnen × Modelle. Beispiel-Prompt für Bohne 1:\n`);
   log("```");
   log(`SYSTEM_PROMPT: ${SYSTEM_PROMPT.length} Zeichen (gebündelt aus recommendPrompt.ts)`);
   log("");
@@ -333,34 +381,82 @@ if (DRY_RUN) {
   for (const bean of BEANS) {
     log(`\n---\n\n## ${bean.label}`);
     const userMessage = buildUserMessage(bean.coffee, bean.context, PREFS);
+    const runs = []; // { tag, label, ms, inTok, outTok, parsed, cands }
+
     for (const M of MODELS) {
-      log(`\n### ${M.label} — \`${M.id}\``);
-      if (!process.env[M.need]) { log(`_übersprungen — ${M.need} nicht gesetzt._`); continue; }
-      try {
-        const { text, ms, inTok, outTok } = await M.run(M.id, userMessage);
-        const parsed = K.parseClaudeJson(text, ResponseSchema);
-        log(`Latenz ${(ms / 1000).toFixed(1)}s · Tokens in/out ${inTok}/${outTok} · Schema-valid: **${parsed ? "ja" : "NEIN"}**`);
-        if (!parsed) {
-          log("```");
-          log(text.slice(0, 600));
-          log("```");
-          continue;
+      if (!process.env[M.need]) { log(`\n_${M.label}: übersprungen — ${M.need} nicht gesetzt._`); continue; }
+      for (let rep = 1; rep <= M.reps; rep++) {
+        const tag = M.reps > 1 ? `${shortTag(M.id)}·r${rep}` : shortTag(M.id);
+        try {
+          const { text, ms, inTok, outTok } = await M.run(M.id, userMessage);
+          const t = (tally[M.id] ??= { calls: 0, inTok: 0, outTok: 0, cost: 0, drift: 0, staged: 0 });
+          t.calls++; t.inTok += inTok; t.outTok += outTok;
+          t.cost += (inTok * M.price[0] + outTok * M.price[1]) / 1e6;
+          const parsed = K.parseClaudeJson(text, ResponseSchema);
+          const cands = parsed ? parsed.candidates.map(probeCandidate) : null;
+          if (cands) for (const c of cands) { if (c.drift) t.drift++; if (c.staged) t.staged++; }
+          runs.push({ tag, label: M.label, ms, inTok, outTok, parsed, cands, raw: text });
+        } catch (e) {
+          runs.push({ tag, label: M.label, error: String(e.message || e) });
         }
-        const cands = parsed.candidates.map(probeCandidate);
-        log("");
-        log("| Kandidat | Methode | basedOn | Dose | Water | Ratio | Temp | Grind | Zeit | Steps | staged-temp | drift |");
-        log("|---|---|---|---|---|---|---|---|---|---|---|---|");
-        for (const c of cands) {
-          const t = c.targetTimeSec ? `${Math.floor(c.targetTimeSec / 60)}:${String(c.targetTimeSec % 60).padStart(2, "0")}` : "?";
-          const driftCell = c.drift ? `⚠️ vs ${c.drift.reference}: ${c.drift.reasons.join("; ")}` : "—";
-          log(`| ${c.title} | ${c.method} | ${c.basedOn} | ${c.dose ?? "?"}g | ${c.water ?? "?"}g | 1:${c.ratio} | ${c.temp ?? "?"}°C | ${c.grind} | ${t} | ${c.nSteps} | ${c.staged ? "⚠️ JA" : "nein"} | ${driftCell} |`);
-        }
-        if (parsed.reasoning) log(`\n_Reasoning:_ ${parsed.reasoning.slice(0, 400)}`);
-      } catch (e) {
-        log(`**FEHLER:** ${String(e.message || e).slice(0, 400)}`);
       }
     }
+
+    // Overview table — every (model, rep, candidate) row
+    log("");
+    log("| Modell | Kandidat | Methode | basedOn | Dose | Water | Ratio | Temp | Grind | Zeit | staged | drift |");
+    log("|---|---|---|---|---|---|---|---|---|---|---|---|");
+    for (const r of runs) {
+      if (r.error) { log(`| ${r.tag} | **FEHLER** | ${r.error.slice(0, 60)} | | | | | | | | | |`); continue; }
+      if (!r.cands) { log(`| ${r.tag} | **Schema NEIN** | (siehe Rohtext unten) | | | | | | | | | |`); continue; }
+      for (const c of r.cands) {
+        const driftCell = c.drift ? `⚠️ ${c.drift.reasons.join("; ")}` : "—";
+        log(`| ${r.tag} | ${c.title} | ${c.method} | ${c.basedOn} | ${c.dose ?? "?"}g | ${c.water ?? "?"}g | 1:${c.ratio} | ${c.temp ?? "?"}°C | ${c.grind} | ${fmtTime(c.targetTimeSec)} | ${c.staged ? "⚠️ JA" : "nein"} | ${driftCell} |`);
+      }
+    }
+
+    // Full text — read what each model actually wrote (rep 1 of each model)
+    log(`\n<details><summary><b>Volltext der Rezepte ${bean.label}</b></summary>\n`);
+    const seen = new Set();
+    for (const r of runs) {
+      if (seen.has(r.label)) continue; // rep 1 only in the prose dump
+      seen.add(r.label);
+      log(`\n#### ${r.label}`);
+      if (r.error) { log(`FEHLER: ${r.error}`); continue; }
+      if (!r.cands) { log("Kein schema-valides JSON. Rohtext:\n```\n" + (r.raw || "").slice(0, 900) + "\n```"); continue; }
+      if (r.parsed.reasoning) log(`> ${r.parsed.reasoning}\n`);
+      for (const c of r.cands) {
+        log(`**${c.title}** — ${c.method} · basedOn: ${c.basedOn}`);
+        log(`Rezept: ${c.dose ?? "?"}g : ${c.water ?? "?"}g (1:${c.ratio}) · ${c.temp ?? "?"}°C · Grind ${c.grind} · ${fmtTime(c.targetTimeSec)}${c.staged ? " · ⚠️ staged-temp" : ""}${c.drift ? ` · ⚠️ drift: ${c.drift.reasons.join("; ")}` : ""}`);
+        if (c.whyChosen) log(`- *Warum:* ${c.whyChosen}`);
+        if (c.hypothesis) log(`- *Hypothese:* ${c.hypothesis}`);
+        if (c.predictedCupProfile) log(`- *Erwartete Tasse:* ${c.predictedCupProfile}`);
+        if (c.whatToObserve) log(`- *Worauf achten:* ${c.whatToObserve}`);
+        if (c.pourSteps.length) log(`- *pourSteps:* ${c.pourSteps.map((s, i) => `${i + 1}) ${s}`).join("  ")}`);
+        log("");
+      }
+    }
+    log(`</details>`);
   }
+
+  // ── Cost summary (measured tokens × list price) ─────────────────────────────
+  log(`\n---\n\n## Kosten pro \`/recommend\`-Call (gemessen × Listenpreis)`);
+  log("");
+  log("| Modell | Calls | Ø Tokens in/out | Ø $/Call | drift gesamt | staged gesamt |");
+  log("|---|---|---|---|---|---|");
+  for (const M of MODELS) {
+    const t = tally[M.id];
+    if (!t) continue;
+    log(`| ${M.label} | ${t.calls} | ${Math.round(t.inTok / t.calls)}/${Math.round(t.outTok / t.calls)} | $${(t.cost / t.calls).toFixed(3)} | ${t.drift} | ${t.staged} |`);
+  }
+  log(`\n_Hinweis: Spike-Calls sind uncached. Produktiv senkt Prompt-Caching die Opus-Input-Kosten; Mistral-Caching ist nicht eingerechnet (konservativ). Ø $/Call × monatliche /recommend-Frequenz = der echte Hebel._`);
+}
+
+function shortTag(id) {
+  if (id.includes("opus")) return "Opus";
+  if (id.includes("mistral")) return "Mistral";
+  if (id.includes("sonnet")) return "Sonnet";
+  return id;
 }
 
 await mkdir(join(ROOT, "spike-output"), { recursive: true });
