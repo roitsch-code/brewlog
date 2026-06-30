@@ -1,0 +1,6 @@
+# Bump this file to trigger a Hetzner deploy when no app code changed — e.g. to
+# re-sync a rotated GitHub secret (MISTRAL_API_KEY) onto the VPS .env. deploy.yml
+# paths-ignore excludes docs/**, **/*.md, .github/** and native/**, so a
+# root-level marker like this is the deliberate "just deploy" lever: change the
+# value below and merge to main.
+redeploy: 2026-06-30.1  # re-sync MISTRAL_API_KEY (BrewLog-workspace key)
