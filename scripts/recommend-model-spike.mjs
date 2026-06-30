@@ -94,70 +94,72 @@ const ResponseSchema = z.object({
   coffeeAssessment: z.string().optional(),
 });
 
-// ── Test beans (representative archetypes, not real-product claims) ───────────
-// Three profiles that exercise different reasoning paths: a delicate washed
-// light (clarity), a soluble natural (don't over-sweeten), a structured Kenyan
-// (body). Roasters chosen to also exercise the roaster-prior injection.
+// ── Test scenarios (round 3: variation-stress) ───────────────────────────────
+// Deliberately exercises the harder routing/constraint paths, not just hot pour-
+// over: Summer Time (iced/flash → must set iceGrams, split hot/ice), Time =
+// "special" (fast shot ≤150s), and non-default volumes (210 / 450 / 520 ml) that
+// trip the HARD CAPACITY rules (AeroPress ≤230, Clever ≤450, Origami ≤450,
+// Moccamaster ≥500). The probe adds a capacity-violation + iced-sanity detector.
 const BEANS = [
   {
-    label: "Washed Ethiopian, light, very fresh — goal high-clarity",
+    label: "Summer Time · 210ml custom — washed Ethiopian, high-clarity (iced + small)",
     coffee: {
       roaster: "Friedhats", name: "Yirga (test)", origin: "Ethiopia", region: "Yirgacheffe",
       variety: "Heirloom", process: "Washed", roastLevel: "Light",
       roastDate: daysAgo(9), tastingNotesFromBag: ["jasmine", "bergamot", "lemon", "black tea"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "morning-ritual", intent: "high-clarity", waterSource: "championship" }),
+    context: ctx({ occasion: "summer-time", amount: "custom", customWaterMl: 210, intent: "high-clarity", waterSource: "championship" }),
   },
   {
-    label: "Natural Brazil, medium-light, mid-age — goal balanced",
+    label: "Summer Time · 520ml big — natural Brazil, balanced (iced + big)",
     coffee: {
       roaster: "April", name: "Daterra (test)", origin: "Brazil", region: "Cerrado",
       variety: "Yellow Bourbon", process: "Natural", roastLevel: "Medium-Light",
       roastDate: daysAgo(24), tastingNotesFromBag: ["milk chocolate", "peach", "hazelnut"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "focus", intent: "balanced", waterSource: "tap" }),
+    context: ctx({ occasion: "summer-time", amount: "big", intent: "balanced", waterSource: "tap" }),
   },
   {
-    label: "Washed Kenyan SL28, light, fresh — goal body-forward",
+    label: "Special/short · 350ml — washed Kenyan SL28, body-forward (fast shot)",
     coffee: {
       roaster: "Cloud Picker", name: "Kiriga (test)", origin: "Kenya", region: "Nyeri",
       variety: "SL28", process: "Washed", roastLevel: "Light",
       roastDate: daysAgo(12), tastingNotesFromBag: ["blackcurrant", "tomato", "red wine"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "experiment", intent: "body-forward", waterSource: "tap" }),
+    context: ctx({ occasion: "experiment", amount: "small", timeAvailable: "special", intent: "body-forward", waterSource: "tap" }),
   },
   {
-    label: "Geisha, Panama, light, fresh — goal aromatic",
+    label: "Special/short · 210ml custom — Geisha, aromatic (fast + small)",
     coffee: {
       roaster: "Manhattan", name: "Esmeralda (test)", origin: "Panama", region: "Boquete",
       variety: "Geisha", process: "Washed", roastLevel: "Light",
       roastDate: daysAgo(11), tastingNotesFromBag: ["jasmine", "bergamot", "white peach", "lemon zest"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "morning-ritual", intent: "aromatic", waterSource: "championship" }),
+    context: ctx({ occasion: "morning-ritual", amount: "custom", customWaterMl: 210, timeAvailable: "special", intent: "aromatic", waterSource: "championship" }),
   },
   {
-    label: "Washed Pink Bourbon, Colombia, light, fresh — goal high-clarity",
+    label: "Normal · 450ml custom — washed Pink Bourbon, high-clarity (Clever-at-max edge)",
     coffee: {
       roaster: "Cloud Picker", name: "Huila (test)", origin: "Colombia", region: "Huila",
       variety: "Pink Bourbon", process: "Washed", roastLevel: "Light",
       roastDate: daysAgo(14), tastingNotesFromBag: ["jasmine", "peach", "lemon pith", "floral"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "focus", intent: "high-clarity", waterSource: "championship" }),
+    context: ctx({ occasion: "focus", amount: "custom", customWaterMl: 450, intent: "high-clarity", waterSource: "championship" }),
   },
   {
-    label: "Honey Catuai, Costa Rica, medium, fresh — goal sweetness-forward",
+    label: "Normal · 520ml big — Honey Catuai, sweetness-forward (big-volume capacity)",
     coffee: {
       roaster: "April", name: "Tarrazú (test)", origin: "Costa Rica", region: "Tarrazú",
       variety: "Catuai", process: "Honey", roastLevel: "Medium",
       roastDate: daysAgo(16), tastingNotesFromBag: ["red apple", "brown sugar", "almond"],
       aiExtracted: true,
     },
-    context: ctx({ occasion: "social", intent: "sweetness-forward", waterSource: "tap" }),
+    context: ctx({ occasion: "social", amount: "big", intent: "sweetness-forward", waterSource: "tap" }),
   },
 ];
 
@@ -170,6 +172,57 @@ function ctx(over) {
 }
 function daysAgo(n) {
   return new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+// Target drink volume (ml) for the chosen amount — ported from recommend.ts.
+function targetMlOf(c) {
+  return c.amount === "custom" ? (c.customWaterMl ?? 350)
+    : c.amount === "big" ? 520
+    : c.amount === "small" ? 350
+    : c.amount === "batch" ? 750
+    : null;
+}
+
+// Amount guide text — ported from recommend.ts amountGuide, incl. the Summer-Time
+// iced custom split (60% hot brew / 40% ice + mandatory iceGrams).
+function buildGuide(c) {
+  const ml = c.customWaterMl ?? 350;
+  const guides = {
+    small: "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+    big: "target ~520g water / 34g dose (1:15.3). Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit ✗). NOT Clever Dripper (520ml > 450ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+    batch: "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
+    surprise: "SURPRISE MODE: full creative freedom on method and recipe — hard capacity limits still apply.",
+    open: "standard single-cup dose (23g:350ml)",
+  };
+  if (c.amount === "custom") {
+    return c.occasion === "summer-time"
+      ? `ICED + custom volume: the user typed ${ml}ml as the FINAL drink (hot brew + melted ice). Split it ~60% hot brew / ~40% ice — waterGrams (hot brew) ≈ ${Math.round(ml * 0.6)}g (±30g), and the recipe MUST set iceGrams ≈ ${Math.round(ml * 0.4)}g. Dose at 1:15 against the HOT portion (~${Math.round((ml * 0.6) / 15)}g). BOTH candidates respect this split AND both include iceGrams. Reference iced recipes (Hoffmann Immersion Iced, AeroPress Iced) supply the TECHNIQUE — scale dose+water+ice proportionally.`
+      : `target exactly ${ml}ml for BOTH candidates — tolerance ±30ml. Reference recipes supply technique/ratio, scale dose so waterGrams lands within 30ml of ${ml}. Default 1:15 (so ~${Math.round(ml / 15)}g dose). Capacity tensions handled in the HARD CAPACITY CONSTRAINT block.`;
+  }
+  return guides[c.amount] ?? "target ~350g water / 23g dose";
+}
+
+// HARD CAPACITY CONSTRAINT block — ported from recommend.ts (no method-lock path).
+function buildCapacity(c) {
+  const ml = targetMlOf(c);
+  if (!ml) return "";
+  const v = [];
+  if (ml > 230) v.push("AeroPress (max 230ml)");
+  if (ml > 450) v.push("Clever Dripper (max 450ml)");
+  if (ml > 450) v.push("Origami Air M (30g dose limit → max ~450ml)");
+  if (ml < 500) v.push("Moccamaster (batch only, min 500ml)");
+  return v.length ? `\nHARD CAPACITY CONSTRAINT — target ${ml}ml: FORBIDDEN methods: ${v.join(", ")}.` : "";
+}
+
+// Does a candidate's method violate the hard capacity rule for this volume?
+function capacityViolation(method, ml) {
+  if (!ml || !method) return null;
+  const m = method.toLowerCase();
+  if (/aeropress/.test(m) && ml > 230) return `AeroPress @${ml}ml (>230)`;
+  if (/clever/.test(m) && ml > 450) return `Clever @${ml}ml (>450)`;
+  if (/origami/.test(m) && ml > 450) return `Origami @${ml}ml (>450)`;
+  if (/moccamaster/.test(m) && ml < 500) return `Moccamaster @${ml}ml (<500)`;
+  return null;
 }
 
 const PREFS = {
@@ -191,7 +244,9 @@ function buildUserMessage(coffee, context, preferences) {
     daysOld < 35 ? "slightly past peak" :
     daysOld < 60 ? "past peak, flavors softening" : "likely stale";
 
-  const guide = "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever, Kalita, Chemex, Origami Air M. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).";
+  const targetMl = targetMlOf(context);
+  const guide = buildGuide(context);
+  const capacityConstraint = buildCapacity(context);
   const sessionGrinder = context.grinder || preferences.grinder || "Niche Zero";
   const grinderNote = `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value (e.g. "406°"). NO ranges. NEVER clicks.`;
   const waterNote =
@@ -214,7 +269,7 @@ function buildUserMessage(coffee, context, preferences) {
     variety: coffee.variety,
     goal: K.normaliseGoal(context.intent),
     occasion: context.occasion,
-    maxWaterMl: 350,
+    maxWaterMl: context.occasion === "cold-brew" ? undefined : (targetMl ?? undefined),
   }, 4);
   const recipesBlock = selectedRecipes.length ? `\n${K.formatRecipesForPrompt(selectedRecipes)}` : "";
 
@@ -238,7 +293,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${goalNote}
 
 Equipment available: ${preferences.equipment.join(", ")}
 ${grinderNote}
@@ -326,7 +381,7 @@ function fmtStep(s) {
   return s?.notes ? `${head} — ${s.notes}` : head;
 }
 
-function probeCandidate(c) {
+function probeCandidate(c, opts = {}) {
   const r = c.recipe || {};
   const dose = num(r.doseGrams), water = num(r.waterGrams);
   const ratio = dose && water ? (water / dose).toFixed(1) : "?";
@@ -347,11 +402,16 @@ function probeCandidate(c) {
     if (res?.changed) drift = { reference: res.reference, reasons: res.reasons };
   } catch { /* non-verified ref or unscalable — no signal */ }
 
+  // Capacity-rule violation (method vs the target volume) + iced sanity.
+  const cap = capacityViolation(c.method, opts.targetMl);
+  const iceGrams = num(r.iceGrams);
+  const iceMiss = opts.occasion === "summer-time" && iceGrams === null;
+
   return {
     title: c.title, method: c.method, basedOn: c.basedOn || "—",
     dose, water, ratio, temp: baseTemp, grind: r.grindSize ?? "?",
     targetTimeSec: num(r.targetTimeSec), nSteps: steps.length,
-    staged, drift,
+    staged, drift, cap, iceGrams, iceMiss,
     // full prose for reading "what the model actually wrote"
     whyChosen: c.whyChosen, hypothesis: c.hypothesis,
     predictedCupProfile: c.predictedCupProfile, whatToObserve: c.whatToObserve,
@@ -366,9 +426,9 @@ const log = (s = "") => { lines.push(s); console.log(s); };
 const fmtTime = (sec) => sec ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}` : "?";
 const tally = {}; // model id → { calls, inTok, outTok, cost, drift, staged }
 
-log(`# /recommend — Modellvergleich (Spike, breit)`);
+log(`# /recommend — Modellvergleich (Spike, Variation-Stress)`);
 log(`Generiert: ${new Date().toISOString()}`);
-log(`\n${BEANS.length} Bohnen-Profile. Gleicher echter Prompt (SYSTEM_PROMPT + injizierter Korpus) an alle Modelle. Mistral läuft ${MODELS.find(m=>m.id.includes("mistral"))?.reps}× pro Bohne (Schwankung sichtbar machen), die Claude-Baselines 1×. \`drift\` = objektiver Fabrikations-Detektor (reconcileToReference): wich das Modell beim \`basedOn\`-Referenzrezept in Grind/Temp/Zeit ab. \`staged-temp\` = verbotene Mehrtemperatur. Jedes Rezept steht unten im Volltext.\n`);
+log(`\n${BEANS.length} Szenarien mit harten Pfaden: **Summer Time** (iced → muss iceGrams setzen + hot/ice splitten), **Time=special** (fast shot ≤150s), und Volumen **210/450/520 ml** (triggern die Kapazitätsregeln). Gleicher echter Prompt (SYSTEM_PROMPT + injizierter Korpus) an alle Modelle. Mistral läuft ${MODELS.find(m=>m.id.includes("mistral"))?.reps}× pro Szenario, Claude-Baselines 1×.\n\nFlags (alle objektiv): \`drift\` = Fabrikation (reconcileToReference: Abweichung vom \`basedOn\`-Referenzrezept) · \`staged\` = verbotene Mehrtemperatur · \`cap\` = **Kapazitätsverletzung** (z.B. AeroPress >230ml, Clever >450ml, Moccamaster <500ml) · \`ice\` = bei Summer Time fehlt \`iceGrams\` (⚠️ FEHLT) oder der gesetzte Wert. Jedes Rezept steht unten im Volltext.\n`);
 
 if (DRY_RUN) {
   log(`\n> DRY RUN — kein API-Call. ${BEANS.length} Bohnen × Modelle. Beispiel-Prompt für Bohne 1:\n`);
@@ -381,6 +441,7 @@ if (DRY_RUN) {
   for (const bean of BEANS) {
     log(`\n---\n\n## ${bean.label}`);
     const userMessage = buildUserMessage(bean.coffee, bean.context, PREFS);
+    const probeOpts = { targetMl: targetMlOf(bean.context), occasion: bean.context.occasion };
     const runs = []; // { tag, label, ms, inTok, outTok, parsed, cands }
 
     for (const M of MODELS) {
@@ -389,12 +450,12 @@ if (DRY_RUN) {
         const tag = M.reps > 1 ? `${shortTag(M.id)}·r${rep}` : shortTag(M.id);
         try {
           const { text, ms, inTok, outTok } = await M.run(M.id, userMessage);
-          const t = (tally[M.id] ??= { calls: 0, inTok: 0, outTok: 0, cost: 0, drift: 0, staged: 0 });
+          const t = (tally[M.id] ??= { calls: 0, inTok: 0, outTok: 0, cost: 0, drift: 0, staged: 0, cap: 0, iceMiss: 0 });
           t.calls++; t.inTok += inTok; t.outTok += outTok;
           t.cost += (inTok * M.price[0] + outTok * M.price[1]) / 1e6;
           const parsed = K.parseClaudeJson(text, ResponseSchema);
-          const cands = parsed ? parsed.candidates.map(probeCandidate) : null;
-          if (cands) for (const c of cands) { if (c.drift) t.drift++; if (c.staged) t.staged++; }
+          const cands = parsed ? parsed.candidates.map((c) => probeCandidate(c, probeOpts)) : null;
+          if (cands) for (const c of cands) { if (c.drift) t.drift++; if (c.staged) t.staged++; if (c.cap) t.cap++; if (c.iceMiss) t.iceMiss++; }
           runs.push({ tag, label: M.label, ms, inTok, outTok, parsed, cands, raw: text });
         } catch (e) {
           runs.push({ tag, label: M.label, error: String(e.message || e) });
@@ -404,14 +465,16 @@ if (DRY_RUN) {
 
     // Overview table — every (model, rep, candidate) row
     log("");
-    log("| Modell | Kandidat | Methode | basedOn | Dose | Water | Ratio | Temp | Grind | Zeit | staged | drift |");
-    log("|---|---|---|---|---|---|---|---|---|---|---|---|");
+    log("| Modell | Kandidat | Methode | basedOn | Dose | Water | Ratio | Temp | Grind | Zeit | staged | drift | cap | ice |");
+    log("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
     for (const r of runs) {
-      if (r.error) { log(`| ${r.tag} | **FEHLER** | ${r.error.slice(0, 60)} | | | | | | | | | |`); continue; }
-      if (!r.cands) { log(`| ${r.tag} | **Schema NEIN** | (siehe Rohtext unten) | | | | | | | | | |`); continue; }
+      if (r.error) { log(`| ${r.tag} | **FEHLER** | ${r.error.slice(0, 60)} | | | | | | | | | | | |`); continue; }
+      if (!r.cands) { log(`| ${r.tag} | **Schema NEIN** | (siehe Rohtext unten) | | | | | | | | | | | |`); continue; }
       for (const c of r.cands) {
         const driftCell = c.drift ? `⚠️ ${c.drift.reasons.join("; ")}` : "—";
-        log(`| ${r.tag} | ${c.title} | ${c.method} | ${c.basedOn} | ${c.dose ?? "?"}g | ${c.water ?? "?"}g | 1:${c.ratio} | ${c.temp ?? "?"}°C | ${c.grind} | ${fmtTime(c.targetTimeSec)} | ${c.staged ? "⚠️ JA" : "nein"} | ${driftCell} |`);
+        const capCell = c.cap ? `⚠️ ${c.cap}` : "—";
+        const iceCell = c.iceMiss ? "⚠️ FEHLT" : (c.iceGrams != null ? `${c.iceGrams}g` : "—");
+        log(`| ${r.tag} | ${c.title} | ${c.method} | ${c.basedOn} | ${c.dose ?? "?"}g | ${c.water ?? "?"}g | 1:${c.ratio} | ${c.temp ?? "?"}°C | ${c.grind} | ${fmtTime(c.targetTimeSec)} | ${c.staged ? "⚠️ JA" : "nein"} | ${driftCell} | ${capCell} | ${iceCell} |`);
       }
     }
 
@@ -442,12 +505,12 @@ if (DRY_RUN) {
   // ── Cost summary (measured tokens × list price) ─────────────────────────────
   log(`\n---\n\n## Kosten pro \`/recommend\`-Call (gemessen × Listenpreis)`);
   log("");
-  log("| Modell | Calls | Ø Tokens in/out | Ø $/Call | drift gesamt | staged gesamt |");
-  log("|---|---|---|---|---|---|");
+  log("| Modell | Calls | Ø Tokens in/out | Ø $/Call | drift | staged | cap-Verstöße | ice-Fehler |");
+  log("|---|---|---|---|---|---|---|---|");
   for (const M of MODELS) {
     const t = tally[M.id];
     if (!t) continue;
-    log(`| ${M.label} | ${t.calls} | ${Math.round(t.inTok / t.calls)}/${Math.round(t.outTok / t.calls)} | $${(t.cost / t.calls).toFixed(3)} | ${t.drift} | ${t.staged} |`);
+    log(`| ${M.label} | ${t.calls} | ${Math.round(t.inTok / t.calls)}/${Math.round(t.outTok / t.calls)} | $${(t.cost / t.calls).toFixed(3)} | ${t.drift} | ${t.staged} | ${t.cap} | ${t.iceMiss} |`);
   }
   log(`\n_Hinweis: Spike-Calls sind uncached. Produktiv senkt Prompt-Caching die Opus-Input-Kosten; Mistral-Caching ist nicht eingerechnet (konservativ). Ø $/Call × monatliche /recommend-Frequenz = der echte Hebel._`);
 }
