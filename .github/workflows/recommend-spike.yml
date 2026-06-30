@@ -1,0 +1,55 @@
+name: Recommend model spike
+
+# Side-by-side /recommend comparison across three models so the owner can judge
+# recipe quality BEFORE deciding whether to move /recommend off Opus (the only
+# change that materially cuts the AI bill). Fires the REAL recommend prompt at:
+#   - claude-opus-4-7      (status quo)
+#   - mistral-large-latest (the sovereign / cheap candidate, EU-hosted)
+#   - claude-sonnet-4-6    (the "stay on Claude, pay less" fallback)
+# and uploads spike-output/recommend-comparison.md as an artifact the owner opens
+# on their phone. See scripts/recommend-model-spike.mjs.
+#
+# Owner setup (one-time): add a MISTRAL_API_KEY repo secret
+#   (console.mistral.ai → API Keys; La Plateforme, EU-hosted).
+#   ANTHROPIC_API_KEY already exists. A model whose key is missing is skipped
+#   cleanly (the run stays green).
+#
+# Triggers:
+#   - workflow_dispatch: the "Run workflow" button.
+#   - push to .github/recommend-spike-trigger on main: the route-around for Claude
+#     Code (its token can't dispatch workflow_dispatch — 403, no actions:write),
+#     same pattern as .github/ios-build-trigger / verify-cache-trigger. Bump that
+#     file via a PR to fire a run.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/recommend-spike-trigger
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run /recommend model comparison
+        run: node scripts/recommend-model-spike.mjs
+      - name: Print report to the run log
+        if: always()
+        run: cat spike-output/recommend-comparison.md || true
+      - name: Upload comparison artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recommend-comparison
+          path: spike-output/recommend-comparison.md
+          if-no-files-found: warn
