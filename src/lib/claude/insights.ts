@@ -24,7 +24,6 @@
  * compares it against the corpus's latest session and only re-runs Opus
  * when new brews have arrived since.
  */
-import Anthropic from "@anthropic-ai/sdk";
 import { randomUUID } from "crypto";
 import { desc, gte, inArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -37,8 +36,7 @@ import { buildSignatures } from "./brewSignature";
 import { extract, serialiseForEscher } from "./extractor";
 import { detectPatterns } from "./patterns";
 import type { PatternAnalysis } from "./patterns";
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { callCoachModel } from "@/lib/ai/coachProvider";
 
 const InsightItemSchema = z.object({
   observation: z.string().min(10).max(400),
@@ -339,12 +337,12 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
 
   const userMessage = promptSections.join("\n");
 
-  // 6. Opus call. Multivariate reasoning, not summarisation — Haiku
-  // flattens. Per CLAUDE.md, /recommend is the Opus-engineered surface;
-  // insights joins it.
-  const newItems = await callOpusForInsights(userMessage);
+  // 6. Coach model call. Multivariate reasoning, not summarisation — Haiku
+  // flattens. Routes through coachProvider (Mistral Large when the coach key
+  // is set, else Opus; auto-fallback to Opus on a Mistral error).
+  const newItems = await callCoachForInsights(userMessage);
   if (newItems == null) {
-    // Opus call failed — return what we have (cached rows are still
+    // Model call failed — return what we have (cached rows are still
     // useful, and the next page-mount will retry).
     return {
       insights: existing,
@@ -374,22 +372,17 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
   };
 }
 
-async function callOpusForInsights(userMessage: string): Promise<InsightItem[] | null> {
+async function callCoachForInsights(userMessage: string): Promise<InsightItem[] | null> {
   try {
-    const msg = await client.messages.create({
-      model: "claude-opus-4-7",
-      max_tokens: 3000,
+    const { text } = await callCoachModel({
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userMessage }],
+      user: userMessage,
+      maxTokens: 3000,
     });
-    const text = msg.content
-      .filter((b): b is Anthropic.Messages.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
     const parsed = parseClaudeJson(text, InsightsResponseSchema);
     return parsed?.insights ?? null;
   } catch (err) {
-    console.error("insights Opus call failed:", err);
+    console.error("insights coach call failed:", err);
     return null;
   }
 }

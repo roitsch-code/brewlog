@@ -74,25 +74,27 @@ jobs:
                 < src/lib/db/migrations/0017_add_insight_snooze.sql
             fi
 
-            # Sync MISTRAL_API_KEY into the VPS .env from the GitHub secret so
-            # /recommend runs on Mistral Large (≈¼ the Opus per-call cost; issue
-            # #453) AND a ROTATED key actually takes effect. The earlier append-only
-            # version only wrote when no key was present, so rotating the secret (e.g.
-            # moving it from the Default Mistral workspace to a cost-separated BrewLog
-            # workspace) left the stale key live on the VPS. This replaces ONLY the
-            # MISTRAL_API_KEY line — every other var is preserved — and commits the
-            # result only when those other vars survived (wc -l > 1), so it can never
-            # clobber the production .env. Absent .env → no-op → /recommend stays on
-            # Opus (the code auto-detects).
+            # Sync the Mistral keys into the VPS .env from the GitHub secrets so
+            # /recommend (MISTRAL_API_KEY) AND the coach (MISTRAL_COACH_API_KEY)
+            # run on Mistral Large (≈¼ the Opus per-call cost; issue #453) AND a
+            # ROTATED key actually takes effect. The earlier append-only version
+            # only wrote when no key was present, so rotating the secret (e.g.
+            # moving it to a cost-separated Mistral workspace) left the stale key
+            # live on the VPS. This replaces ONLY those two lines — every other var
+            # is preserved — and commits the result only when those other vars
+            # survived (wc -l > 2, the two lines we append), so it can never clobber
+            # the production .env. An empty secret writes an empty line → the code
+            # auto-detects no key → that surface stays on Opus. Absent .env → no-op.
             if [ -f .env ]; then
-              grep -v '^MISTRAL_API_KEY=' .env > .env.tmp 2>/dev/null || true
+              grep -v -e '^MISTRAL_API_KEY=' -e '^MISTRAL_COACH_API_KEY=' .env > .env.tmp 2>/dev/null || true
               printf 'MISTRAL_API_KEY=%s\n' '${{ secrets.MISTRAL_API_KEY }}' >> .env.tmp
-              if [ "$(wc -l < .env.tmp)" -gt 1 ]; then
+              printf 'MISTRAL_COACH_API_KEY=%s\n' '${{ secrets.MISTRAL_COACH_API_KEY }}' >> .env.tmp
+              if [ "$(wc -l < .env.tmp)" -gt 2 ]; then
                 mv .env.tmp .env
-                echo "Synced MISTRAL_API_KEY in .env"
+                echo "Synced MISTRAL_API_KEY + MISTRAL_COACH_API_KEY in .env"
               else
                 rm -f .env.tmp
-                echo "WARNING: MISTRAL_API_KEY sync skipped (would have dropped other vars)"
+                echo "WARNING: Mistral key sync skipped (would have dropped other vars)"
               fi
             fi
 
