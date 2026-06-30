@@ -1,5 +1,6 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow } from "../utils/vesselCapacity";
+import { stripProactiveDripAssist } from "../utils/dripAssist";
 import type {
   CoffeeIdentity,
   SessionContext,
@@ -545,7 +546,11 @@ Return valid JSON only.`;
     ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
-  const candidates = guardVesselCapacity(mapped);
+  // Two deterministic backstops over what the model returned: drop
+  // over-capacity vessels, then strip any proactively-suggested Drip Assist
+  // (the prompt forbids both, but a weaker model can still leak them — #453).
+  const capped = guardVesselCapacity(mapped);
+  const candidates = stripProactiveDripAssist(capped, Boolean(dripAssistLocked));
 
   return {
     recommendation: {
