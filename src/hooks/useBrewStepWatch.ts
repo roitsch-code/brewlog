@@ -34,6 +34,7 @@ export function useBrewStepWatch(
 
   const sentAnchorRef = useRef<number | null>(null);
   const lastSendMsRef = useRef(0);
+  const completedRef = useRef(false);
 
   useEffect(() => {
     if (!isNativeWatch()) return;
@@ -43,6 +44,7 @@ export function useBrewStepWatch(
       if (sentAnchorRef.current !== null) {
         sentAnchorRef.current = null;
         lastSendMsRef.current = 0;
+        completedRef.current = false;
         endBrewOnWatch();
       }
       return;
@@ -57,7 +59,27 @@ export function useBrewStepWatch(
 
     if (isNewBrew) {
       sentAnchorRef.current = impliedStartMs;
+      completedRef.current = false;
     }
+
+    // Once the brew is past its last scheduled step, STOP re-sending and end the
+    // watch brew ONCE. The watch auto-winds-down its HKWorkoutSession ~8 s after
+    // the last step; if the phone kept re-sending "start" every 3 s past that, the
+    // watch (now idle) would RE-START the workout session on the next re-send →
+    // start/end thrash every 3 s for as long as the user lingers on the
+    // wake-locked brew screen. That thrash is the battery drain. The 12 s grace is
+    // safely past the last buzz train + the watch's own 8 s wind-down.
+    const lastSec = boundaries.length
+      ? Math.max(...boundaries.map((b) => b.atSec))
+      : 0;
+    if (lastSec > 0 && elapsed > lastSec + 12) {
+      if (!completedRef.current) {
+        completedRef.current = true;
+        endBrewOnWatch();
+      }
+      return;
+    }
+
     // Send on a new brew, and re-send every ~3 s on the SAME stable anchor so a
     // missed reachability window recovers (the watch dedupes on the anchor).
     if (isNewBrew || now - lastSendMsRef.current > 3000) {
