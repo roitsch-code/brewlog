@@ -64,6 +64,15 @@ services:
       APNS_TEAM_ID: ${APNS_TEAM_ID:-}
       APNS_BUNDLE_ID: ${APNS_BUNDLE_ID:-com.roitsch.btts.watchkitapp}
       APNS_PRODUCTION: ${APNS_PRODUCTION:-true}
+      # One-way caffeine push to the co-hosted HealthSync app (same "brewlog"
+      # Docker network). BrewLog POSTs each logged coffee's volume to HealthSync's
+      # ingest endpoint. URL defaults to the internal container address (no Caddy/
+      # Authelia hop); override via .env with the public URL
+      # (https://health.markus-reuter.com/api/ingest/brewlog) if internal
+      # networking fails. SECRET must equal HealthSync's INGEST_SECRET; empty →
+      # the push no-ops. deploy.yml syncs the secret from the GitHub secret.
+      HEALTHSYNC_INGEST_URL: ${HEALTHSYNC_INGEST_URL:-http://healthsync-healthsync-web-1:3000/api/ingest/brewlog}
+      HEALTHSYNC_INGEST_SECRET: ${HEALTHSYNC_INGEST_SECRET:-}
     expose:
       - "3000"
 
