@@ -85,16 +85,27 @@ jobs:
             # survived (wc -l > 2, the two lines we append), so it can never clobber
             # the production .env. An empty secret writes an empty line → the code
             # auto-detects no key → that surface stays on Opus. Absent .env → no-op.
+            # Also sync HEALTHSYNC_INGEST_SECRET (one-way caffeine push to the
+            # co-hosted HealthSync app) the same way. An empty secret writes an
+            # empty line → the push code no-ops (surface stays off). Strip the
+            # three managed lines, re-append the current secrets, and commit only
+            # when the OTHER vars survived (wc -l > 3) so this can never clobber
+            # the production .env.
             if [ -f .env ]; then
-              grep -v -e '^MISTRAL_API_KEY=' -e '^MISTRAL_COACH_API_KEY=' .env > .env.tmp 2>/dev/null || true
+              grep -v \
+                -e '^MISTRAL_API_KEY=' \
+                -e '^MISTRAL_COACH_API_KEY=' \
+                -e '^HEALTHSYNC_INGEST_SECRET=' \
+                .env > .env.tmp 2>/dev/null || true
               printf 'MISTRAL_API_KEY=%s\n' '${{ secrets.MISTRAL_API_KEY }}' >> .env.tmp
               printf 'MISTRAL_COACH_API_KEY=%s\n' '${{ secrets.MISTRAL_COACH_API_KEY }}' >> .env.tmp
-              if [ "$(wc -l < .env.tmp)" -gt 2 ]; then
+              printf 'HEALTHSYNC_INGEST_SECRET=%s\n' '${{ secrets.HEALTHSYNC_INGEST_SECRET }}' >> .env.tmp
+              if [ "$(wc -l < .env.tmp)" -gt 3 ]; then
                 mv .env.tmp .env
-                echo "Synced MISTRAL_API_KEY + MISTRAL_COACH_API_KEY in .env"
+                echo "Synced MISTRAL_API_KEY + MISTRAL_COACH_API_KEY + HEALTHSYNC_INGEST_SECRET in .env"
               else
                 rm -f .env.tmp
-                echo "WARNING: Mistral key sync skipped (would have dropped other vars)"
+                echo "WARNING: key sync skipped (would have dropped other vars)"
               fi
             fi
 

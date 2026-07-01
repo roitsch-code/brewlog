@@ -7,6 +7,7 @@ import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
 import { FieldZonesSchema } from "@/lib/field/schema";
+import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -177,6 +178,16 @@ export async function POST(req: NextRequest) {
       recommendation: data.recommendation,
       brew: data.brew,
       result: data.result,
+    });
+
+    // One-way, fire-and-forget caffeine push to the co-hosted HealthSync app.
+    // Past the dedup early-return above, so an offline-queue retry can't
+    // double-count. Best-effort: never awaited, never throws — a HealthSync
+    // outage must not block or fail this save.
+    pushCaffeineToHealthSync({
+      type: data.type,
+      createdAt: data.createdAt,
+      brew: data.brew,
     });
 
     if (data.coffee?.name) {
