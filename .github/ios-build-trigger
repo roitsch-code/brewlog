@@ -1,4 +1,4 @@
 # Bump this file (change the line below) and merge to main to kick an iOS
 # TestFlight build — see the `push` trigger in .github/workflows/ios-testflight.yml.
 # Used when a session can't reach the Actions "Run workflow" UI / workflow_dispatch.
-build: 2026-06-30T00 — watch: refuse to restart a finished brew (kills HKWorkoutSession thrash / battery drain)
+build: 2026-07-02T00 — watch: Siri launcher (StartBrewWatchIntent) + carries the 2026-06-30 battery-drain fix
