@@ -45,7 +45,7 @@ end
 
 # --- Watch file references ----------------------------------------------------
 watch_group = project.main_group.new_group("BTTSWatch", "BTTSWatch")
-swift_refs = %w[BTTSWatchApp.swift BrewWatchModel.swift ContentView.swift].map { |f| watch_group.new_reference(f) }
+swift_refs = %w[BTTSWatchApp.swift BrewWatchModel.swift ContentView.swift BrewLaunchIntent.swift].map { |f| watch_group.new_reference(f) }
 assets_ref = watch_group.new_reference("Assets.xcassets")
 watch_group.new_reference("Info.plist") # referenced via INFOPLIST_FILE, not a build phase
 watch_group.new_reference("BTTSWatch.entitlements") # referenced via CODE_SIGN_ENTITLEMENTS
