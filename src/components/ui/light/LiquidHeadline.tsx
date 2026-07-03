@@ -111,17 +111,17 @@ export default function LiquidHeadline({
         @keyframes lh-pop-1 {
           0% { opacity: 0; filter: blur(10px); transform: translate(-7px, 12px) scale(0.84) rotate(-3deg); }
           60% { opacity: 1; filter: blur(0); transform: translate(0, -2px) scale(1.07) rotate(1deg); }
-          100% { opacity: 1; filter: none; transform: translate(0, 0) scale(1) rotate(0deg); }
+          100% { opacity: 1; filter: none; transform: none; }
         }
         @keyframes lh-pop-2 {
           0% { opacity: 0; filter: blur(12px); transform: translate(9px, -10px) scale(0.8) rotate(4deg); }
           58% { opacity: 1; filter: blur(0); transform: translate(-1px, 1px) scale(1.08) rotate(-1deg); }
-          100% { opacity: 1; filter: none; transform: translate(0, 0) scale(1) rotate(0deg); }
+          100% { opacity: 1; filter: none; transform: none; }
         }
         @keyframes lh-pop-3 {
           0% { opacity: 0; filter: blur(9px); transform: translateY(16px) scale(0.9); }
           62% { opacity: 1; filter: blur(0); transform: translateY(-3px) scale(1.05); }
-          100% { opacity: 1; filter: none; transform: translateY(0) scale(1); }
+          100% { opacity: 1; filter: none; transform: none; }
         }
         /* Exit = the entrance in reverse: settle → slight anticipation → scatter out. */
         @keyframes lh-out-1-down {
@@ -155,9 +155,13 @@ export default function LiquidHeadline({
           100% { opacity: 0; filter: blur(9px); transform: translateY(-24px) scale(1.05); }
         }
         /* fill-mode: both pins the 100% keyframe at rest. That state MUST end on
-           filter: none — a persistent filter (even blur(0)) clips painting to the
-           inline-block's line-height box, cutting Fraunces' deep descenders
-           (g/y/j). Keep rest-state filter: none; the blur lives only mid-flight. */
+           BOTH filter: none AND transform: none. A persistent filter OR a
+           persistent transform — even an identity one like translate(0,0)
+           scale(1) — promotes the inline-block word to a composited layer whose
+           backing store WebKit/iOS clips to the line-height box, cutting
+           Fraunces' deep descenders (g/y/j). #467 zeroed the filter but left the
+           identity transform, so the clip survived. Rest state carries neither;
+           the blur + move live only mid-flight. */
         .lh-word {
           animation-fill-mode: both;
           animation-duration: var(--lh-dur, ${LH_POP_MS}ms);
