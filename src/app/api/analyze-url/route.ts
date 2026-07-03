@@ -110,7 +110,7 @@ export async function POST(req: Request) {
   "clarifications": string[]
 }
 
-Inside "extracted": omit any field you cannot find with confidence (do not return null — just omit). fermentationStyle is the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol. cuppingScore is the SCA / Q-grade if printed (e.g. 87.5).
+Inside "extracted": omit any field you cannot find with confidence (do not return null — just omit). fermentationStyle is the specific sub-style or protocol, e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed", "Carbonic Maceration 72h" — only include when the page names a specific protocol. cuppingScore is the SCA / Q-grade if printed (e.g. 87.5). tastingNotesFromBag: ALWAYS return these in English — translate each flavour note to its standard English specialty-coffee descriptor if the page lists them in another language (e.g. "Groseille" → "Redcurrant", "Cassis" → "Blackcurrant", "Rhabarber" → "Rhubarb", "Agrumes" → "Citrus"). Keep them short; don't invent notes.
 
 "clarifications": list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) region if unclear. Examples:
 - "I couldn't spot a variety on the page — is it listed anywhere, or do you know it?"

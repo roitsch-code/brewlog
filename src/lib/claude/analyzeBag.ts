@@ -77,6 +77,7 @@ Return this exact JSON structure:
 
 fermentationStyle: for modern/experimental coffees the sub-style is the real differentiator. Examples: "Spontaneous Anaerobic", "Starter-culture Natural (Lalcafé Cima)", "Thermal-shock Washed", "Carbonic Maceration 72h", "Co-fermented with cascara". Only fill this if the bag names a specific sub-style or fermentation protocol — don't guess from the broad process category alone.
 cuppingScore: numeric SCA / Q-grade if printed on the bag (e.g. 87.5, 89). Null if not shown.
+tastingNotesFromBag: ALWAYS return these in English. If the bag prints the flavour notes in another language, translate each one to its standard English specialty-coffee descriptor — e.g. "Groseille" → "Redcurrant", "Cassis" → "Blackcurrant", "Rhabarbe"/"Rhabarber" → "Rhubarb", "Agrumes" → "Citrus", "Myrtille" → "Blueberry", "Pfirsich" → "Peach", "Honig" → "Honey", "Noisette" → "Hazelnut". Keep each note short; don't invent notes that aren't on the bag.
 
 Extract only — do NOT write any follow-up questions. The app builds its own field-targeted follow-ups from whatever you leave null, so just return your best extraction and set unknown fields to null.
 
