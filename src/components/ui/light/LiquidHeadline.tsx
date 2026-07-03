@@ -29,6 +29,20 @@ import { usePresence } from "@/hooks/usePresence";
 export const LH_POP_MS = 770; // default per-word entrance duration
 export const LH_STAGGER_MS = 64; // default gap between words
 
+// Transparent vertical room around every word so the descenders (g/y/j/p) + the
+// entrance blur halo are ALWAYS inside the element's box. While a word animates
+// (transform/filter) it's on a WebKit/iOS compositing layer whose backing store
+// is rasterized from this box — without the room the layer is the line-height
+// box and the descenders get sheared off DURING the whole build-up (not just at
+// rest). The equal negative margin cancels the layout + baseline effect, so this
+// is invisible except that the descenders now paint in full at every frame.
+const WORD_BOX = {
+  paddingTop: "0.5em",
+  paddingBottom: "0.5em",
+  marginTop: "-0.5em",
+  marginBottom: "-0.5em",
+} as const;
+
 /** Time from mount until the whole line has settled, for a given word count. */
 export function liquidEntranceMs(
   wordCount: number,
@@ -225,7 +239,7 @@ export default function LiquidHeadline({
             // class → no compositing layer → descenders never clipped.
             if (settled && !exiting) {
               return (
-                <span key={i} className="inline-block">
+                <span key={i} className="inline-block" style={WORD_BOX}>
                   {w}
                 </span>
               );
@@ -240,6 +254,7 @@ export default function LiquidHeadline({
                 className={`lh-word ${cls} inline-block`}
                 style={
                   {
+                    ...WORD_BOX,
                     "--lh-dur": `${dur}ms`,
                     animationDelay: `${delay ?? 0}ms`,
                   } as CSSProperties

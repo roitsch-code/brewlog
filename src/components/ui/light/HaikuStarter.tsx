@@ -12,6 +12,19 @@ const DISTURB_FALLOFF = 85; // px — radius of the blur "lens" around the finge
 const P_CLASS =
   "font-fraunces text-[40px] font-semibold leading-[1.05] tracking-[-0.01em] text-light-foreground";
 
+// Transparent vertical room so descenders (g/y/j/p) + the entrance blur halo are
+// inside each word's box — otherwise, while a word animates (transform/filter)
+// it's on a compositing layer clipped to the line-height box and the descenders
+// are sheared off DURING the whole per-word build-up. Equal negative margin
+// cancels the layout + baseline effect (getBoundingClientRect's centre is
+// unchanged, so the touch-lens is unaffected).
+const WORD_BOX = {
+  paddingTop: "0.5em",
+  paddingBottom: "0.5em",
+  marginTop: "-0.5em",
+  marginBottom: "-0.5em",
+} as const;
+
 // Deterministic scatter: a delay (ms) per word so they pop in a shuffled,
 // non-left-to-right order — spontaneous, not a typewriter. Same text → same
 // scatter (an LCG-shuffled permutation), so it's stable across re-renders.
@@ -175,8 +188,9 @@ export default function HaikuStarter({ text, show }: { text: string; show: boole
                 className="haiku-word inline-block"
                 style={
                   ready
-                    ? undefined
+                    ? WORD_BOX
                     : {
+                        ...WORD_BOX,
                         animation: `haiku-pop-${variant} ${POP_MS}ms ease-out both`,
                         animationDelay: `${delays[wi] ?? 0}ms`,
                       }
