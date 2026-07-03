@@ -1,0 +1,73 @@
+name: Translate flavour notes
+
+# One-shot retroactive translation of existing scanned flavour notes to English
+# (src/app/api/admin/translate-flavor-notes) — for bags scanned BEFORE PR #471
+# started translating at scan time. SSHes into the VPS with the SAME deploy key
+# the Deploy workflow uses and triggers the route from INSIDE the app container,
+# reading the container's own CRON_SECRET — exactly like the field-zones re-map.
+# No new secrets. Re-running is safe (English → English is a no-op).
+#
+# Fires manually (Actions tab / `gh workflow run`) OR when
+# `.github/translate-flavor-notes-trigger` changes on main. The trigger-file path
+# exists because the GitHub integration token can't `workflow_dispatch` via the
+# API (403) — bumping that file in a PR and merging is the house-standard way to
+# fire a one-shot job hands-free.
+#
+# The curl RETRIES for a few minutes: this same merge also runs Deploy, which
+# recreates the app container, so the route may 404 for the first minute or two.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/translate-flavor-notes-trigger"
+
+concurrency:
+  group: translate-flavor-notes
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger translation on the VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Retry: the same merge also deploys, which recreates the app container,
+          # so the route can 404 briefly. Try for ~5 min before giving up.
+          rc=1
+          for attempt in $(seq 1 15); do
+            set +e
+            ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE' > /tmp/resp.json 2>/tmp/resp.err
+          cd ${{ secrets.DEPLOY_PATH }}
+          docker compose exec -T app sh -c 'curl -fsS -X POST http://localhost:3000/api/admin/translate-flavor-notes -H "Authorization: Bearer $CRON_SECRET"'
+          REMOTE
+            rc=$?
+            set -e
+            if [ "$rc" -eq 0 ]; then break; fi
+            echo "attempt $attempt: route not ready (exit $rc) — waiting for deploy…"
+            sleep 20
+          done
+
+          echo "----- raw response -----"
+          cat /tmp/resp.json
+
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::translate failed (ssh/curl exit $rc)"
+            cat /tmp/resp.err
+            exit 1
+          fi
+
+          echo
+          echo "----- audit -----"
+          jq -r '
+            "counts: \(.total) rows · \(.translated) translated · \(.unchanged) unchanged · \(.empty) empty",
+            "",
+            "TRANSLATED (\(.translated)):",
+            (.results[] | select(.status == "translated") | "  + [\(.table)] \(.name): \(.from)  →  \(.to)")
+          ' /tmp/resp.json || echo "(could not format JSON; see raw response above)"
