@@ -86,13 +86,27 @@ function gradeFromTime(totalSec: number, targetSec: number): FlowAnalysis["deriv
  */
 export function analyzeFlow(
   timeline: BrewTimeline | null,
-  curve: FlowCurvePoint[],
+  rawCurve: FlowCurvePoint[],
   actualTimeSec: number,
 ): FlowAnalysis | null {
-  if (!timeline || !timeline.hasGramsCurve || curve.length < 3) return null;
+  if (!timeline || !timeline.hasGramsCurve || rawCurve.length < 3) return null;
 
   const pours = timeline.steps.filter((s) => !s.isAgitation && s.targetCumulativeGrams != null);
   if (pours.length === 0) return null;
+
+  // Tare-safe baseline: the curve should measure WATER POURED (starting at ~0),
+  // but an un-tared scale reports total mass — so the whole curve sits offset by
+  // the vessel/coffee weight. Subtract the minimum reading (the least mass ever
+  // on the scale = the empty-vessel baseline) so the analysis reads poured water,
+  // not the dripper's weight. On an already-tared/net curve the minimum is ~0, so
+  // this is a no-op. Without it, targets are "reached" at t≈0 → absurd flow rates
+  // (56 g/s) and a huge overshoot (+583g). The capture layer nets too; this is a
+  // second guard that also fixes any raw/legacy curve reaching here.
+  const baseline = rawCurve.reduce((m, p) => Math.min(m, p.grams), Infinity);
+  const curve =
+    Number.isFinite(baseline) && baseline > 0
+      ? rawCurve.map((p) => ({ tSec: p.tSec, grams: p.grams - baseline }))
+      : rawCurve;
 
   const finalGrams = curve.reduce((m, p) => Math.max(m, p.grams), 0);
 

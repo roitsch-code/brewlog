@@ -72,19 +72,14 @@ Return this exact JSON structure:
     "process": "bag" | "researched" | "unknown",
     "roastLevel": "bag" | "researched" | "unknown"
   },
-  "clarifications": string[],
   "isCoffeeBag": boolean
 }
 
 fermentationStyle: for modern/experimental coffees the sub-style is the real differentiator. Examples: "Spontaneous Anaerobic", "Starter-culture Natural (Lalcafé Cima)", "Thermal-shock Washed", "Carbonic Maceration 72h", "Co-fermented with cascara". Only fill this if the bag names a specific sub-style or fermentation protocol — don't guess from the broad process category alone.
 cuppingScore: numeric SCA / Q-grade if printed on the bag (e.g. 87.5, 89). Null if not shown.
+tastingNotesFromBag: ALWAYS return these in English. If the bag prints the flavour notes in another language, translate each one to its standard English specialty-coffee descriptor — e.g. "Groseille" → "Redcurrant", "Cassis" → "Blackcurrant", "Rhabarbe"/"Rhabarber" → "Rhubarb", "Agrumes" → "Citrus", "Myrtille" → "Blueberry", "Pfirsich" → "Peach", "Honig" → "Honey", "Noisette" → "Hazelnut". Keep each note short; don't invent notes that aren't on the bag.
 
-clarifications: list up to 2 natural-language questions about the most important remaining unknowns, prioritising in this order: (1) variety if unknown, (2) tasting notes if the array is empty, (3) region/process if unclear. Examples:
-- "I can see it's from Ethiopia but couldn't read the region — Yirgacheffe, Guji, or Sidama?"
-- "I didn't spot a variety — is it listed anywhere on the bag, or do you know it?"
-- "No tasting notes were visible — what flavour descriptors does the roaster use?"
-
-NEVER ask about roast date (the user can correct it via the UI's date picker if needed) or cupping/Q score (optional, often unavailable — leave null if not printed on the bag).
+Extract only — do NOT write any follow-up questions. The app builds its own field-targeted follow-ups from whatever you leave null, so just return your best extraction and set unknown fields to null.
 
 Return ONLY valid JSON with no markdown or explanation.`;
 }
