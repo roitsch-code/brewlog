@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, useEffect, type CSSProperties } from "react";
 import { usePresence } from "@/hooks/usePresence";
 
 /**
@@ -104,6 +104,34 @@ export default function LiquidHeadline({
   const { mounted, state } = usePresence(show, liquidExitMs(wordCount, resolvedExitMs, staggerMs));
   const exiting = state === "exit";
 
+  // Once the entrance has finished, DROP the animation class from every word so
+  // it renders in the normal (non-composited) paint path. This is THE fix for
+  // the clipped Fraunces descenders (g/y/j/p): a word that keeps an assigned
+  // `animation` (even with `fill-mode: both` ending on transform/filter: none)
+  // stays on a WebKit/iOS compositing layer whose backing store is clipped to
+  // the line-height box, cutting the descenders that overflow it. Zeroing the
+  // final keyframe (#467, #471) did NOT help because the animation is still
+  // assigned. HaikuStarter never clips precisely because it drops the class
+  // after settling — do the same here. At rest a word is a plain inline-block:
+  // no animation, no transform, no filter, no layer → descenders paint in full.
+  const [settled, setSettled] = useState(false);
+  // Reset synchronously when the headline text changes (React's "adjust state on
+  // prop change" pattern) so a new insight starts un-settled in the SAME render —
+  // no one-frame flash of the fully-formed word before its entrance replays.
+  const [settledFor, setSettledFor] = useState(text);
+  if (settledFor !== text) {
+    setSettledFor(text);
+    setSettled(false);
+  }
+  useEffect(() => {
+    if (exiting) return; // leaving → keep the exit animation, don't settle
+    const t = setTimeout(
+      () => setSettled(true),
+      liquidEntranceMs(wordCount, popMs, staggerMs) + 60,
+    );
+    return () => clearTimeout(t);
+  }, [text, exiting, wordCount, popMs, staggerMs]);
+
   let wi = -1;
   return (
     <>
@@ -193,6 +221,15 @@ export default function LiquidHeadline({
           {tokens.map((w, i) => {
             if (w.trim() === "") return <span key={i}>{w}</span>;
             wi += 1;
+            // Settled + not leaving → a plain inline-block word, NO animation
+            // class → no compositing layer → descenders never clipped.
+            if (settled && !exiting) {
+              return (
+                <span key={i} className="inline-block">
+                  {w}
+                </span>
+              );
+            }
             const variant = (wi % 3) + 1;
             const cls = exiting ? `lh-out-${variant}-${dissolveDir}` : `lh-pop-${variant}`;
             const dur = exiting ? resolvedExitMs : popMs;
