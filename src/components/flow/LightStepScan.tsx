@@ -10,6 +10,12 @@ import Hero from "@/components/ui/light/Hero";
 import { nextHeroQuestion, SCAN_QUESTIONS } from "@/lib/heroQuestions";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
+import {
+  buildClarifications,
+  applyClarificationAnswer,
+  isFieldEmpty,
+  type Clarification,
+} from "@/lib/scan/clarifications";
 import { Camera, PenLine, Link2, Coffee, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 
 /**
@@ -17,8 +23,9 @@ import { Camera, PenLine, Link2, Coffee, ShoppingBag, ArrowRight, Loader2 } from
  *
  * Surface-level swap of the 1396-line Dark file. Business logic is
  * byte-for-byte the same — same /api/analyze-bag call path, same
- * roaster prior pipeline (auto-generate + confirm-to-save), same
- * /api/analyze-bag/clarify Q&A loop, same /api/analyze-url scrape,
+ * roaster prior pipeline (auto-generate + confirm-to-save), the
+ * deterministic field-targeted clarification Q&A (lib/scan/clarifications —
+ * replaced the old Haiku round-trip), same /api/analyze-url scrape,
  * same manual-entry roaster Q&A, same library-match lookup, same
  * tasting-notes chip list, same RoastDateInput / EditableRow /
  * RoasterInput helpers.
@@ -69,9 +76,17 @@ export default function LightStepScan() {
   const [preview, setPreview] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState<InputMethod | null>(null);
   const [selectedMode, setSelectedMode] = useState<ModeChoice | null>(null);
-  const [clarificationIndex, setClarificationIndex] = useState(0);
+  // Deterministic, field-targeted clarification queue (see lib/scan/clarifications).
+  // Each entry maps to exactly one coffee field; we only ever queue fields the
+  // scan left empty, and re-check against the live form before showing the next.
+  const [clarQueue, setClarQueue] = useState<Clarification[]>([]);
+  const [clarPos, setClarPos] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<BagAnalysisResult | null>(null);
   const [freeText, setFreeText] = useState("");
+  // Local draft for the post-scan "Tasting Notes from Bag" tag input, so typing
+  // a note doesn't mutate the coffee array on every keystroke (which used to
+  // swap the <input> out for a chip after one letter — the "H" bug).
+  const [bagNoteDraft, setBagNoteDraft] = useState("");
   const [scanError, setScanError] = useState<string | null>(null);
 
   // Light-only — the Photo card triggers iOS's native picker directly
@@ -146,6 +161,8 @@ export default function LightStepScan() {
     setIsAnalyzing(true);
     setScanError(null);
     clearClarifications();
+    setClarQueue([]);
+    setClarPos(0);
     setShowManualForm(false);
     setShowRoasterForm(false);
 
@@ -190,10 +207,9 @@ export default function LightStepScan() {
         autoGenerateRoasterProfile(result.extracted.roaster, result);
       }
 
-      if (result.clarifications?.length > 0) {
-        addClarificationMessage({ role: "assistant", text: result.clarifications[0], chips: getClarificationChips(result.clarifications[0]) });
-        setClarificationIndex(0);
-      }
+      // Build the follow-up questions from what the scan actually left empty —
+      // never from free-form model text. Ask only relevant, field-mapped things.
+      startClarifications({ ...cleanExtracted, tastingNotesFromBag: result.extracted.tastingNotesFromBag ?? [] });
     } catch (err) {
       console.error(err);
       setScanError("Couldn't read this photo. Try again or enter the details manually.");
@@ -252,30 +268,63 @@ export default function LightStepScan() {
 
   const dismissPendingRoaster = () => setPendingRoasterSave(null);
 
-  const handleClarificationAnswer = async (answer: string) => {
-    if (!analysisResult) return;
+  // Kick off the field-targeted clarification chat. Only asks about fields the
+  // scan left empty; a field the user already sees filled in the form is never
+  // queued. Nothing shows when there's nothing genuinely missing.
+  const startClarifications = (coffee: Partial<import("@/lib/types/session").CoffeeIdentity>) => {
+    const queue = buildClarifications(coffee);
+    setClarQueue(queue);
+    setClarPos(0);
+    if (queue.length > 0) {
+      addClarificationMessage({ role: "assistant", text: queue[0].question, chips: queue[0].chips });
+    }
+  };
+
+  const handleClarificationAnswer = (answer: string) => {
+    const current = clarQueue[clarPos];
+    if (!current) return;
     setFreeText("");
     addClarificationMessage({ role: "user", text: answer });
 
-    const question = analysisResult.clarifications[clarificationIndex];
-    try {
-      const res = await fetch("/api/analyze-bag/clarify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentCoffeeData: draft.coffee, question, answer }),
-      });
-      const { updated } = await res.json();
-      const clean = Object.fromEntries(
-        Object.entries(updated ?? {}).filter(([, v]) => v !== null && v !== undefined)
-      ) as Parameters<typeof setCoffee>[0];
-      setCoffee(clean);
-    } catch {}
+    // Map the answer straight onto its target field — no model round-trip, so an
+    // answer can never silently vanish. "Not sure" writes nothing.
+    const patch = applyClarificationAnswer(current.field, answer, draft.coffee ?? {});
+    if (patch) setCoffee(patch);
 
-    const next = clarificationIndex + 1;
-    if (analysisResult.clarifications[next]) {
-      addClarificationMessage({ role: "assistant", text: analysisResult.clarifications[next], chips: getClarificationChips(analysisResult.clarifications[next]) });
-      setClarificationIndex(next);
+    // Advance to the next queued question whose field is STILL empty — skip any
+    // the user filled in the form (or that this answer just filled). Zustand's
+    // setCoffee is synchronous, so getState() reflects the patch immediately.
+    const coffee = useFlowStore.getState().draft.coffee ?? {};
+    let next = clarPos + 1;
+    while (next < clarQueue.length && !isFieldEmpty(coffee, clarQueue[next].field)) next++;
+    if (next < clarQueue.length) {
+      addClarificationMessage({ role: "assistant", text: clarQueue[next].question, chips: clarQueue[next].chips });
+      setClarPos(next);
     }
+  };
+
+  // ── Post-scan tasting-notes tag input ──────────────────────────────────────
+  // Commit whatever's in the draft (one note, or "a, b, c") into the array,
+  // deduped case-insensitively; the input stays mounted so you can keep adding.
+  const commitBagNotes = (raw: string) => {
+    const incoming = raw.split(",").map(s => s.trim()).filter(Boolean);
+    setBagNoteDraft("");
+    if (incoming.length === 0) return;
+    const existing = draft.coffee?.tastingNotesFromBag ?? [];
+    const seen = new Set(existing.map(n => n.toLowerCase()));
+    const merged = [...existing];
+    for (const n of incoming) {
+      if (!seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); merged.push(n); }
+    }
+    setCoffee({ tastingNotesFromBag: merged });
+  };
+
+  // Remove a chip by index; -1 removes the last (Backspace on an empty input).
+  const removeBagNote = (index: number) => {
+    const existing = draft.coffee?.tastingNotesFromBag ?? [];
+    if (existing.length === 0) return;
+    const i = index < 0 ? existing.length - 1 : index;
+    setCoffee({ tastingNotesFromBag: existing.filter((_, idx) => idx !== i) });
   };
 
   const startRoasterQA = (name: string) => {
@@ -320,6 +369,8 @@ export default function LightStepScan() {
     setIsAnalyzingUrl(true);
     setUrlError(null);
     clearClarifications();
+    setClarQueue([]);
+    setClarPos(0);
     try {
       const res = await fetch("/api/analyze-url", {
         method: "POST",
@@ -364,16 +415,9 @@ export default function LightStepScan() {
         startRoasterQA(extracted.roaster);
       }
 
-      // Surface the first clarification — chips for known categories
-      // (altitude/variety/notes), free-text fallback otherwise.
-      if (urlClarifications.length > 0) {
-        addClarificationMessage({
-          role: "assistant",
-          text: urlClarifications[0],
-          chips: getClarificationChips(urlClarifications[0]),
-        });
-        setClarificationIndex(0);
-      }
+      // Same deterministic follow-ups as the photo path, built from the fields
+      // the URL scrape left empty (the model's own clarifications are ignored).
+      startClarifications(clean as Partial<import("@/lib/types/session").CoffeeIdentity>);
     } catch {
       setUrlError("Network error — check your connection and try again.");
     } finally {
@@ -520,21 +564,48 @@ export default function LightStepScan() {
       {(draft.coffee?.tastingNotesFromBag !== undefined) && (
         <div>
           <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Tasting Notes from Bag</p>
-          {(draft.coffee.tastingNotesFromBag?.length ?? 0) > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {draft.coffee.tastingNotesFromBag!.map(n => (
-                <span key={n} className="px-2.5 py-1 rounded-full border text-xs capitalize" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>{n}</span>
-              ))}
-            </div>
-          ) : (
+          <div
+            className="flex flex-wrap items-center gap-2 rounded-2xl px-2.5 py-2"
+            style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
+          >
+            {(draft.coffee.tastingNotesFromBag ?? []).map((n, i) => (
+              <span
+                key={`${n}-${i}`}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs capitalize"
+                style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+              >
+                {n}
+                <button
+                  type="button"
+                  aria-label={`Remove ${n}`}
+                  onClick={() => removeBagNote(i)}
+                  className="text-base leading-none opacity-60 active:opacity-100"
+                  style={{ color: "var(--muted-foreground)" }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
             <input
               type="text"
-              placeholder="e.g. Toffee, Nectarine, Plum"
-              className="w-full rounded-2xl px-3 py-2 text-base focus:outline-none"
-              style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-              onChange={e => setCoffee({ tastingNotesFromBag: e.target.value ? e.target.value.split(",").map(s => s.trim()).filter(Boolean) : [] })}
+              value={bagNoteDraft}
+              placeholder={(draft.coffee.tastingNotesFromBag?.length ?? 0) > 0 ? "Add another…" : "e.g. Toffee, Nectarine, Plum"}
+              className="flex-1 min-w-[8rem] bg-transparent px-1 py-1 text-base focus:outline-none"
+              style={{ color: "var(--foreground)" }}
+              onChange={e => {
+                const v = e.target.value;
+                // Committing on a typed comma keeps "a, b, c" natural; otherwise
+                // just track the draft so the input never unmounts mid-word.
+                if (v.includes(",")) commitBagNotes(v);
+                else setBagNoteDraft(v);
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter") { e.preventDefault(); commitBagNotes(bagNoteDraft); }
+                else if (e.key === "Backspace" && bagNoteDraft === "") removeBagNote(-1);
+              }}
+              onBlur={() => commitBagNotes(bagNoteDraft)}
             />
-          )}
+          </div>
         </div>
       )}
 
@@ -1563,16 +1634,3 @@ function RoasterInput({
   );
 }
 
-function getClarificationChips(question: string): string[] {
-  const lower = question.toLowerCase();
-  if (lower.includes("yirgacheffe") || lower.includes("guji") || lower.includes("sidama")) {
-    return ["Yirgacheffe", "Guji", "Sidama", "Harrar"];
-  }
-  if (lower.includes("washed") || lower.includes("natural") || lower.includes("honey")) {
-    return ["Natural", "Washed", "Honey"];
-  }
-  if (lower.includes("week") || lower.includes("month") || lower.includes("bought")) {
-    return ["This week", "2–4 weeks ago", "1–2 months ago"];
-  }
-  return [];
-}
