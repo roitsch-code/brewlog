@@ -100,6 +100,22 @@ test("samples are capped at 80", () => {
   assert.equal(a.samples[a.samples.length - 1].grams, 499); // keeps last
 });
 
+test("un-tared scale: a constant vessel offset is normalized out", () => {
+  // Same brew as CURVE, but the scale was never tared — every reading carries a
+  // 583g vessel/coffee baseline. The analysis must read the SAME water-poured
+  // numbers as the tared curve, not treat the vessel weight as a +583g overshoot
+  // that reaches every target at t≈0 (the "56 g/s / +583.5g / 133s early" bug).
+  const OFFSET = 583;
+  const untared = CURVE.map((p) => ({ tSec: p.tSec, grams: p.grams + OFFSET }));
+  const a = analyzeFlow(PERC, untared, 210);
+  const tared = analyzeFlow(PERC, CURVE, 210);
+  assert.equal(a.finalGrams, tared.finalGrams); // 500, not ~1083
+  assert.equal(a.overshootG, tared.overshootG); // sane, not +583
+  assert.equal(a.avgFlowRateGPS, tared.avgFlowRateGPS); // ~5 g/s, not 56
+  assert.equal(a.perPour[0].actualSec, 10); // reaches 50g at 10s, not t≈0
+  assert.ok(a.overshootG < 100, `overshoot should be sane, got ${a.overshootG}`);
+});
+
 test("immersion / too-few-points → null", () => {
   assert.equal(analyzeFlow(IMMERSION, CURVE, 150), null);
   assert.equal(analyzeFlow(PERC, [{ tSec: 0, grams: 0 }], 210), null);
