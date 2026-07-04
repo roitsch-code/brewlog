@@ -25,7 +25,6 @@ import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
-import { createTareState, netWaterPoured, type TareState } from "@/lib/brew/tareTracker";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx (the Dark original is gone).
@@ -92,24 +91,24 @@ export default function LightStepBrew() {
   const samplesRef = useRef<WeightSample[]>([]); // ~6 s rolling window for the live coach
   const fullCurveRef = useRef<FlowCurvePoint[]>([]); // whole-brew curve for post-brew analysis
   const brewStartMsRef = useRef(0);
-  // Tare tracker: turns the raw reading (vessel + water) into "water poured so
-  // far". It's seeded at brew start (zero = whatever's on the scale then) and
-  // absorbs VESSEL HANDLING — putting the carafe on, lifting the dripper to
-  // swirl, taring — because those are step-changes far faster than any pour, not
-  // water. Only gradual pouring moves `net`. Every comparison (live coach +
-  // post-brew analysis) reads this, so setup/teardown and mid-brew fiddling
-  // never register as pours (the residual "+124g overshoot / 50s early" bug).
-  const tareStateRef = useRef<TareState>(createTareState());
+  // Tare baseline: the mass already on the scale when the brew starts (the
+  // dripper + carafe + coffee). If the user did NOT press Tare, that vessel
+  // weight would otherwise be read as poured water — the "+583.5g overshoot /
+  // 56 g/s / hit 450g 133s early" bug. Every comparison (live coach + post-brew
+  // analysis) is relative to this baseline, so an un-tared scale reads correct
+  // water-poured; if they DID tare, the baseline is ≈0 and nothing changes.
+  const tareBaselineRef = useRef<number | null>(null);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
   const pushSample = useCallback((grams: number, atMs: number) => {
-    // Measure ONLY between Start and Done. Before the timer starts, setup
-    // (placing the carafe, dropping the filter on, taring the scale) is dropped
-    // entirely, so none of it reaches the live coach or the post-brew analysis.
-    if (brewStartMsRef.current === 0) return;
-
-    // Raw reading → water poured, with vessel handling absorbed (see tareTracker).
-    const net = netWaterPoured(tareStateRef.current, grams, atMs);
+    // Capture the tare baseline from the first reading at/after brew start.
+    if (brewStartMsRef.current > 0 && tareBaselineRef.current == null) {
+      tareBaselineRef.current = grams;
+    }
+    // Water poured = scale reading minus the vessel baseline. Before the brew
+    // starts (baseline still null) this is the raw reading — the live coach only
+    // runs once started, so pre-start values are never compared to a target.
+    const net = grams - (tareBaselineRef.current ?? 0);
     // Live-coach window: ~5 Hz, keep the last 6 s.
     if (atMs - lastSampleMsRef.current >= 200) {
       lastSampleMsRef.current = atMs;
@@ -119,7 +118,7 @@ export default function LightStepBrew() {
       while (buf.length > 0 && buf[0].atMs < cutoff) buf.shift();
     }
     // Whole-brew curve: ~2 Hz, in brew-relative seconds, for the post-brew report.
-    if (atMs - lastCurveMsRef.current >= 500) {
+    if (brewStartMsRef.current > 0 && atMs - lastCurveMsRef.current >= 500) {
       lastCurveMsRef.current = atMs;
       const tSec = (atMs - brewStartMsRef.current) / 1000;
       if (tSec >= 0) {
@@ -137,19 +136,18 @@ export default function LightStepBrew() {
       samplesRef.current = [];
       fullCurveRef.current = [];
       brewStartMsRef.current = 0;
-      tareStateRef.current = createTareState();
-      lastSampleMsRef.current = 0;
+      tareBaselineRef.current = null;
       lastCurveMsRef.current = 0;
     }
   }, [elapsed]);
 
-  // The weight fed to the coach is water poured so far (raw minus the tare
-  // baseline, vessel handling absorbed) — what the pour targets mean. It still
-  // rises and settles naturally during a pour; the step advances on time. The
-  // top ScalePanel keeps the RAW reading so it mirrors the physical Acaia; the
-  // pour cards show net water.
+  // The weight fed to the coach is the live scale value minus the tare baseline —
+  // i.e. water poured so far, which is what the pour targets mean. It still drops
+  // and spikes naturally (a tap/swirl flickers, then settles); no peak, no median,
+  // nothing to "freeze" — the step advances on time. The top ScalePanel keeps the
+  // RAW reading so it mirrors the physical Acaia; the pour cards show net water.
   const progressGrams =
-    scale.weight == null ? null : scale.weight - (tareStateRef.current.baseline ?? 0);
+    scale.weight == null ? null : scale.weight - (tareBaselineRef.current ?? 0);
 
   // The current timeline, in a ref, so handleDone can analyse without being
   // re-created every render (timeline is a fresh object each render).

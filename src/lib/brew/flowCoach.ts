@@ -107,6 +107,21 @@ export function flowRateGPS(samples: WeightSample[], windowMs = 1500): number | 
   return (n * sxy - sx * sy) / denom;
 }
 
+/**
+ * Median grams over the trailing `windowMs` — an outlier-robust "where are you
+ * really" that a single spike/dip can't move. Used ONLY to decide whether an
+ * overshoot is real; the number shown on the card stays the live reading.
+ */
+function stableGrams(samples: WeightSample[], windowMs = 1200): number | null {
+  if (samples.length === 0) return null;
+  const latest = samples[samples.length - 1].atMs;
+  const w = samples
+    .filter((s) => latest - s.atMs <= windowMs)
+    .map((s) => s.grams)
+    .sort((a, b) => a - b);
+  return w.length ? w[Math.floor(w.length / 2)] : null;
+}
+
 function fmtDetail(remaining: number, rate: number | null): string {
   const left = `${Math.max(0, Math.round(remaining))}g to go`;
   return rate != null ? `${left} · ${rate.toFixed(1)} g/s` : left;
@@ -176,15 +191,23 @@ export function coachFlow(
     targetRateGPS: targetRate,
   };
 
-  // Past the target → overshot.
+  // Past the target → overshot, but ONLY when it's sustained. A single bump or
+  // spike momentarily reads past the target; the median of the recent window
+  // won't have moved, so we don't cry "Overshot" over an outlier. (The live
+  // number on the card is still the real instantaneous reading.)
   if (remaining < -TOL_G) {
-    return {
-      ...partial,
-      cue: "overshot",
-      message: "Overshot",
-      detail: `+${Math.round(-remaining)}g`,
-      state: "ahead",
-    };
+    const stable = stableGrams(samples);
+    if (stable == null || stepTarget - stable < -TOL_G) {
+      return {
+        ...partial,
+        cue: "overshot",
+        message: "Overshot",
+        detail: `+${Math.round(-remaining)}g`,
+        state: "ahead",
+      };
+    }
+    // Instantaneous spike only → treat as reached, not a false overflow.
+    return { ...partial, cue: "hold", message: isBloom ? "Swirl" : "Hold", state: "on-track" };
   }
   // Reached the target (within tolerance) → hold for the next pour.
   if (remaining <= TOL_G) {

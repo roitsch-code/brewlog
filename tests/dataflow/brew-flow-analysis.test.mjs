@@ -116,6 +116,42 @@ test("un-tared scale: a constant vessel offset is normalized out", () => {
   assert.ok(a.overshootG < 100, `overshoot should be sane, got ${a.overshootG}`);
 });
 
+test("a lone spike (bump / lift) is NOT judged as overshoot or an early reach", () => {
+  // A clean gradual pour…
+  const clean = [
+    { tSec: 0, grams: 0 },
+    { tSec: 30, grams: 50 },
+    { tSec: 60, grams: 90 },
+    { tSec: 95, grams: 180 },
+    { tSec: 120, grams: 260 },
+    { tSec: 150, grams: 320 },
+    { tSec: 175, grams: 420 },
+    { tSec: 200, grams: 500 },
+  ];
+  // …the same pour, but the scale was bumped once (a single sample spikes to
+  // 330g at t=65, then drops right back). It must not manufacture a phantom
+  // overshoot, and must not mark the 320g target as reached at t=65.
+  const spiked = [
+    { tSec: 0, grams: 0 },
+    { tSec: 30, grams: 50 },
+    { tSec: 60, grams: 90 },
+    { tSec: 65, grams: 330 }, // ← the bump
+    { tSec: 70, grams: 100 },
+    { tSec: 95, grams: 180 },
+    { tSec: 120, grams: 260 },
+    { tSec: 150, grams: 320 },
+    { tSec: 175, grams: 420 },
+    { tSec: 200, grams: 500 },
+  ];
+  const a = analyzeFlow(PERC, clean, 210);
+  const b = analyzeFlow(PERC, spiked, 210);
+  // The spike doesn't inflate overshoot (without the guard b would be ~+150 more).
+  assert.ok(Math.abs(b.overshootG - a.overshootG) < 5, `spike leaked into overshoot: ${a.overshootG} vs ${b.overshootG}`);
+  // The 320g pour is still reached at 150s, not at the 65s bump.
+  assert.equal(b.perPour[2].targetGrams, 320);
+  assert.equal(b.perPour[2].actualSec, 150);
+});
+
 test("immersion / too-few-points → null", () => {
   assert.equal(analyzeFlow(IMMERSION, CURVE, 150), null);
   assert.equal(analyzeFlow(PERC, [{ tSec: 0, grams: 0 }], 210), null);

@@ -54,10 +54,22 @@ export interface FlowAnalysis {
 const REACH_TOL_G = 1.5; // treat the target as "reached" within this many grams
 const MAX_STORED_POINTS = 80;
 
-/** First time the curve reaches `grams` (within tolerance), or null. */
+/** Whether `curve[i]` is at/above the target AND holds there (the next point is
+ * too, or it's the last point). A SINGLE-sample spike over the target — a bump,
+ * a lift, a BLE glitch — fails this, so it isn't mistaken for actually reaching
+ * the pour target. A real pour that arrives and stays passes. */
+function heldAt(curve: FlowCurvePoint[], i: number, grams: number): boolean {
+  if (curve[i].grams < grams - REACH_TOL_G) return false;
+  const next = curve[i + 1];
+  return next == null || next.grams >= grams - REACH_TOL_G;
+}
+
+/** First time the curve reaches `grams` and HOLDS there (within tolerance), or
+ * null. Ignoring a lone spike is the whole point — those single movements were
+ * what produced the phantom "hit 180g 50s early". */
 function timeToReach(curve: FlowCurvePoint[], grams: number): number | null {
-  for (const p of curve) {
-    if (p.grams >= grams - REACH_TOL_G) return p.tSec;
+  for (let i = 0; i < curve.length; i++) {
+    if (heldAt(curve, i, grams)) return curve[i].tSec;
   }
   return null;
 }
@@ -144,13 +156,22 @@ export function analyzeFlow(
     pourSteadiness = Math.sqrt(variance) / avgFlowRateGPS; // coefficient of variation
   }
 
-  // Max amount the actual curve ran ahead of the intended curve.
-  let overshootG: number | null = null;
-  for (const p of curve) {
+  // Max amount the actual curve ran ahead of the intended curve — but a point
+  // only counts if an adjacent sample corroborates it, so a lone spike (a bump,
+  // a BLE glitch) can't manufacture a phantom overshoot. `ahead[i]` is credited
+  // as min(ahead[i], best neighbour) → a one-sample outlier collapses to its
+  // (much lower) neighbour; a sustained run keeps its full height.
+  const ahead: (number | null)[] = curve.map((p) => {
     const expected = expectedGramsAt(timeline, p.tSec);
-    if (expected == null) continue;
-    const ahead = p.grams - expected;
-    if (overshootG == null || ahead > overshootG) overshootG = ahead;
+    return expected == null ? null : p.grams - expected;
+  });
+  let overshootG: number | null = null;
+  for (let i = 0; i < ahead.length; i++) {
+    const a = ahead[i];
+    if (a == null) continue;
+    const neighbour = Math.max(ahead[i - 1] ?? -Infinity, ahead[i + 1] ?? -Infinity);
+    const corroborated = Number.isFinite(neighbour) ? Math.min(a, neighbour) : a;
+    if (overshootG == null || corroborated > overshootG) overshootG = corroborated;
   }
   if (overshootG != null) overshootG = Math.round(overshootG * 10) / 10;
 
