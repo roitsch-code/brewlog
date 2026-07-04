@@ -63,6 +63,13 @@ function ramp(rateGPS) {
   return out;
 }
 
+// A steady window sitting at `g` — a SUSTAINED reading (median = g).
+function flat(g) {
+  const out = [];
+  for (let i = 0; i < 8; i++) out.push({ atMs: 100000 + i * 200, grams: g });
+  return out;
+}
+
 test("flowRateGPS = least-squares slope of the sample window", () => {
   assert.ok(Math.abs(flowRateGPS(ramp(8)) - 8) < 0.01);
   assert.ok(Math.abs(flowRateGPS(ramp(4)) - 4) < 0.01);
@@ -108,11 +115,18 @@ test("reached the target → hold", () => {
   assert.match(c.message, /hold/i);
 });
 
-test("past the target → overshot with +Xg", () => {
-  const c = coachFlow(PERC, ELAPSED_MID, true, 192, ramp(0));
+test("sustained past the target → overshot with +Xg", () => {
+  const c = coachFlow(PERC, ELAPSED_MID, true, 192, flat(192));
   assert.equal(c.cue, "overshot");
   assert.equal(c.detail, "+12g");
   assert.equal(c.state, "ahead");
+});
+
+test("a lone spike past the target is NOT overshot (outlier ignored)", () => {
+  // Live reads 192 for one sample, but the window sits at ~90 (still mid-pour).
+  const c = coachFlow(PERC, ELAPSED_MID, true, 192, flat(90));
+  assert.notEqual(c.cue, "overshot");
+  assert.equal(c.liveGrams, 192); // the displayed number is still the real reading
 });
 
 test("detail shows grams-to-go and rate", () => {
@@ -135,8 +149,8 @@ test("immersion: the water-POUR step gets scale coaching (AeroPress fix)", () =>
   assert.notEqual(c.cue, "none");
   assert.equal(c.liveGrams, 100);
   assert.equal(c.currentStepTargetG, 200);
-  // Past the target on that pour → the "Overshot +Xg" cue from the screenshot.
-  const over = coachFlow(IMMERSION, 8, true, 215, ramp(4));
+  // Sustained past the target on that pour → the "Overshot +Xg" cue.
+  const over = coachFlow(IMMERSION, 8, true, 215, flat(215));
   assert.equal(over.cue, "overshot");
   assert.equal(over.detail, "+15g");
 });
