@@ -66,12 +66,17 @@ services:
       APNS_PRODUCTION: ${APNS_PRODUCTION:-true}
       # One-way caffeine push to the co-hosted HealthSync app. BrewLog POSTs each
       # logged coffee's volume to HealthSync's ingest endpoint. URL defaults to the
-      # public, Authelia-free endpoint (works regardless of Docker networking); to
-      # skip the Caddy hop set HEALTHSYNC_INGEST_URL in .env to the internal address
-      # (http://healthsync-healthsync-web-1:3000/api/ingest/brewlog) once the app
-      # shares HealthSync's Docker network. SECRET must equal HealthSync's
-      # INGEST_SECRET; empty → the push no-ops. deploy.yml syncs it from the secret.
-      HEALTHSYNC_INGEST_URL: ${HEALTHSYNC_INGEST_URL:-https://health.markus-reuter.com/api/ingest/brewlog}
+      # INTERNAL Docker address: this app and healthsync-web both sit on the
+      # `brewlog_default` network (HealthSync's cohost compose joins it as external),
+      # so it reaches HealthSync directly — no Caddy, no Authelia forward-auth, no
+      # public-DNS hairpin. That direct path is why the public URL default was
+      # fragile: from inside this container the public host had to loop back through
+      # Caddy AND clear the Authelia gate, and a POST that hit the gate got a silent
+      # 303 to the login page instead of the endpoint. Override in .env only if the
+      # container name differs (verify with `docker ps`). SECRET must equal
+      # HealthSync's INGEST_SECRET; empty → the push no-ops (now logged, not silent).
+      # deploy.yml syncs the secret from the GitHub secret HEALTHSYNC_INGEST_SECRET.
+      HEALTHSYNC_INGEST_URL: ${HEALTHSYNC_INGEST_URL:-http://healthsync-healthsync-web-1:3000/api/ingest/brewlog}
       HEALTHSYNC_INGEST_SECRET: ${HEALTHSYNC_INGEST_SECRET:-}
     expose:
       - "3000"

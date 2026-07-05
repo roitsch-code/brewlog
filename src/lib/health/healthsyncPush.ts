@@ -62,14 +62,30 @@ export function buildCaffeinePayload(session: CaffeineSource): CaffeinePushPaylo
 export function pushCaffeineToHealthSync(session: CaffeineSource): void {
   const url = process.env.HEALTHSYNC_INGEST_URL;
   const secret = process.env.HEALTHSYNC_INGEST_SECRET;
-  if (!url || !secret) return; // not wired up → silently skip
+  if (!url || !secret) {
+    // Loud, NOT silent. This exact no-op is why the handover looked "never built"
+    // for months: a missing env var dropped every coffee without a trace on either
+    // side. Naming it turns an invisible black box into one grep in the app logs.
+    console.warn(
+      `[healthsync-push] skipped: ${!url ? "HEALTHSYNC_INGEST_URL" : "HEALTHSYNC_INGEST_SECRET"} not set — no coffee will reach HealthSync`
+    );
+    return;
+  }
 
   const payload = buildCaffeinePayload(session);
-  if (!payload) return;
+  if (!payload) return; // wine / non-coffee → nothing to forward (expected, no log)
+  if (payload.caffeine_ml == null) {
+    // HealthSync's endpoint requires a positive caffeine_ml, so a brew with no
+    // water figure (e.g. an external café log) has nothing to send. Note it so a
+    // "why didn't THIS coffee show up" is answerable, but don't treat it as a fault.
+    console.log("[healthsync-push] not sent: brew had no waterGrams → no ml to report");
+    return;
+  }
 
   try {
-    // Not awaited: the save response returns immediately regardless of
-    // HealthSync. AbortSignal keeps a wedged socket from lingering.
+    // Not awaited: the save response returns immediately regardless of HealthSync.
+    // AbortSignal keeps a wedged socket from lingering. The .then/.catch only LOG
+    // the outcome — they never rethrow, so a HealthSync problem can't fail the save.
     void fetch(url, {
       method: "POST",
       headers: {
@@ -78,7 +94,19 @@ export function pushCaffeineToHealthSync(session: CaffeineSource): void {
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(5000),
-    }).catch(() => {});
+    })
+      .then((r) => {
+        if (r.ok) {
+          console.log(`[healthsync-push] sent ${payload.caffeine_ml} ml @ ${payload.ts}`);
+        } else if (r.status === 401) {
+          console.warn("[healthsync-push] 401 from HealthSync — HEALTHSYNC_INGEST_SECRET does not match HealthSync's INGEST_SECRET");
+        } else {
+          console.warn(`[healthsync-push] HealthSync rejected: HTTP ${r.status} (URL ${url})`);
+        }
+      })
+      .catch((e) => {
+        console.warn(`[healthsync-push] could not reach HealthSync at ${url}: ${e?.message ?? e} (wrong container name / not on the shared docker network?)`);
+      });
   } catch {
     // AbortSignal.timeout / fetch construction can't realistically throw here,
     // but a caffeine push must never be able to break a brew save.
