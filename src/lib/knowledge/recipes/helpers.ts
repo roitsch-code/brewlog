@@ -5,6 +5,7 @@ import type {
   Process,
   Goal,
 } from "./types";
+import { vesselTooSmallForTarget } from "../../utils/vesselCapacity";
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
@@ -224,6 +225,13 @@ export interface RecipeSelectionInput {
   occasion?: string;
   maxWaterMl?: number;
   /**
+   * The exact drink volume the user asked for (ml). When set, recipes on a
+   * vessel that physically can't serve it are hard-excluded (e.g. AeroPress for
+   * 450ml). Set ONLY for plain hot brews — omitted for iced / cold brew (vessel
+   * holds less than the drink) and when a method is locked (USER OVERRIDE).
+   */
+  serveVolumeMl?: number;
+  /**
    * When the user locks a specific brew method in the flow (preferredMethod),
    * pass the resolved BrewerType(s) here. Selection is then HARD-FILTERED to
    * those brewers and the per-brewer diversity cap is lifted — the user wants
@@ -273,6 +281,17 @@ function scoreRecipe(
   // exceeds it by more than 20% (some recipes have published variants at
   // larger doses).
   if (input.maxWaterMl && recipe.water.grams > input.maxWaterMl * 1.2) {
+    return null;
+  }
+
+  // Hard filter: exclude vessels that physically can't SERVE the requested
+  // drink volume (e.g. an AeroPress for a 450ml brew) so the model is never
+  // handed a forbidden-vessel reference and tempted to clamp the water down to
+  // fit it (the "450ml request → 180ml AeroPress" bug). Mirrors the prompt's
+  // HARD CAPACITY CONSTRAINT. The caller only sets serveVolumeMl for plain hot
+  // brews (omitted for iced / cold brew, where the vessel holds less than the
+  // drink volume) and never when a method is locked (USER OVERRIDE).
+  if (input.serveVolumeMl && vesselTooSmallForTarget(recipe.brewer, input.serveVolumeMl)) {
     return null;
   }
 
