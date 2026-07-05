@@ -1,5 +1,5 @@
 import { callRecommendModel } from "../ai/recommendProvider";
-import { vesselOverflow } from "../utils/vesselCapacity";
+import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
 import type {
   CoffeeIdentity,
@@ -113,6 +113,45 @@ function guardVesselCapacity(
     const reason = vesselOverflow(c.method, c.recipe?.waterGrams as number | undefined);
     if (reason) console.warn(`[recommend] capacity guard dropped "${c.title}" — ${reason}`);
     return !reason;
+  });
+  return safe.length ? safe : candidates;
+}
+
+/**
+ * Deterministic volume-fidelity backstop: the user asked for a specific brew
+ * volume, so drop any candidate that can't honour it — a vessel too small to
+ * serve the target (the "450ml request → 180ml AeroPress" bug, where the model
+ * picked a small vessel and clamped the water down to fit it), or a recipe that
+ * grossly under-pours the target on an otherwise-capable vessel. The prompt's
+ * HARD CAPACITY CONSTRAINT already forbids the too-small vessel, but Mistral
+ * leaks buried negatives where Opus held (#453) — this enforces it in code.
+ *
+ * Skipped entirely for iced (waterGrams is only the hot portion, ~60% of the
+ * drink) and cold brew (concentrate + dilution), and when a method is locked
+ * (the capacityConstraint USER OVERRIDE deliberately honours the user's vessel
+ * AND volume together). Never returns empty — if every candidate fails, keep
+ * them and log loudly rather than fail the recommendation.
+ */
+function guardVolumeTarget(
+  candidates: RecommendationCandidate[],
+  targetMl: number | undefined,
+  skip: boolean,
+): RecommendationCandidate[] {
+  if (!targetMl || skip) return candidates;
+  const safe = candidates.filter((c) => {
+    const tooSmall = vesselTooSmallForTarget(c.method, targetMl);
+    if (tooSmall) {
+      console.warn(`[recommend] volume guard dropped "${c.title}" — ${tooSmall}`);
+      return false;
+    }
+    const water = c.recipe?.waterGrams as number | undefined;
+    if (typeof water === "number" && Number.isFinite(water) && water < targetMl * 0.7) {
+      console.warn(
+        `[recommend] volume guard dropped "${c.title}" — pours ${water}g but you asked for ${targetMl}ml`,
+      );
+      return false;
+    }
+    return true;
   });
   return safe.length ? safe : candidates;
 }
@@ -440,6 +479,16 @@ export async function generateRecommendation(
       // Cold brew batches in a jar — the small/big DRINK amount must not filter
       // out the 1L reference recipes; vessel capacity is enforced in the prompt.
       maxWaterMl: context.occasion === "cold-brew" ? undefined : targetWaterMl,
+      // Exclude vessels too small to serve the requested volume — but only for
+      // plain hot brews. Iced (vessel holds the hot portion only), cold brew
+      // (concentrate + dilution) and a locked method (USER OVERRIDE honours the
+      // vessel + volume together) all opt out.
+      serveVolumeMl:
+        context.occasion === "summer-time" ||
+        context.occasion === "cold-brew" ||
+        lockedBrewers.size > 0
+          ? undefined
+          : targetWaterMl,
     },
     4
   );
@@ -546,11 +595,23 @@ Return valid JSON only.`;
     ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
-  // Two deterministic backstops over what the model returned: drop
-  // over-capacity vessels, then strip any proactively-suggested Drip Assist
-  // (the prompt forbids both, but a weaker model can still leak them — #453).
+  // Three deterministic backstops over what the model returned (the prompt
+  // forbids all three, but a weaker model can still leak them — #453):
+  //   1. over-capacity vessels (too small for the water it pours);
+  //   2. vessels too small to SERVE the requested volume, or a recipe that
+  //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
+  //   3. any proactively-suggested Drip Assist.
   const capped = guardVesselCapacity(mapped);
-  const candidates = stripProactiveDripAssist(capped, Boolean(dripAssistLocked));
+  const volumeSafe = guardVolumeTarget(
+    capped,
+    targetWaterMl,
+    // Skip when the model's volume semantics differ from the plain target, or
+    // when the user locked a method (USER OVERRIDE honours vessel + volume).
+    context.occasion === "summer-time" ||
+      context.occasion === "cold-brew" ||
+      Boolean(lockedMethodBase),
+  );
+  const candidates = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
 
   return {
     recommendation: {
