@@ -188,6 +188,9 @@ export async function POST(req: NextRequest) {
       type: data.type,
       createdAt: data.createdAt,
       brew: data.brew,
+      // recommendation carries the followed recipe's waterGrams — needed because
+      // a followed-recipe brew omits water (see buildCaffeinePayload step 2).
+      recommendation: data.recommendation,
     });
 
     if (data.coffee?.name) {

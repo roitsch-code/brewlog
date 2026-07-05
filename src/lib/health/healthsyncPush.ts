@@ -11,6 +11,9 @@
 // long-lived Node server (docker-compose `app`), so an un-awaited fetch keeps
 // running after the save response returns.
 
+import type { Session } from "@/lib/types/session";
+import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
+
 /** The exact shape HealthSync's POST /api/ingest/brewlog accepts. */
 export interface CaffeinePushPayload {
   /** Drink volume in millilitres. Omitted when the brew carries no water figure
@@ -25,11 +28,14 @@ export interface CaffeinePushPayload {
   drink: "coffee";
 }
 
-/** Minimal view of a just-saved session that this bridge reads. */
+/** Minimal view of a just-saved session that this bridge reads. Carries `brew`
+ *  AND `recommendation` so the drink volume can be resolved from the FOLLOWED
+ *  recipe, not only from an explicitly-typed brew.waterGrams. */
 export interface CaffeineSource {
   type: string;
   createdAt: string;
-  brew?: { waterGrams?: number } | null;
+  brew?: Session["brew"];
+  recommendation?: Session["recommendation"];
 }
 
 /**
@@ -43,13 +49,28 @@ export function buildCaffeinePayload(session: CaffeineSource): CaffeinePushPaylo
   const ts = session.createdAt || new Date().toISOString();
   const payload: CaffeinePushPayload = { ts, drink: "coffee" };
 
-  // waterGrams ≈ the drink's ml (1 g water ≈ 1 ml). It's the best "ml of the
-  // coffee" BrewLog has; external coffee-shop logs may lack it → omit, don't
-  // invent one.
-  const ml = session.brew?.waterGrams;
-  if (typeof ml === "number" && Number.isFinite(ml) && ml > 0) {
-    payload.caffeine_ml = ml;
+  // Resolve the drink volume in ml (1 g water ≈ 1 ml), most-honest source first:
+  //   1) brew.waterGrams — set only when the user typed the water in themselves.
+  //   2) the FOLLOWED recipe's waterGrams. When followedRecipe=true the brew omits
+  //      water/dose because they equal the recommendation — so THIS is the real
+  //      number, not a guess. This was the actual bug: Markus follows the recipe,
+  //      so brew.waterGrams was always empty and every coffee got dropped.
+  //      resolveBrewedRecipe is the same helper the rest of the app reads with.
+  //   3) a method-aware estimate — last resort so a recipe-less quick log still
+  //      counts (timing is what H4 needs most): espresso ≈ 36 ml, else ≈ 250 ml.
+  const resolved = resolveBrewedRecipe(session as unknown as Session);
+  const brewWater = session.brew?.waterGrams;
+  const recipeWater = resolved.recipe?.waterGrams;
+
+  let ml: number;
+  if (typeof brewWater === "number" && Number.isFinite(brewWater) && brewWater > 0) {
+    ml = brewWater;
+  } else if (typeof recipeWater === "number" && Number.isFinite(recipeWater) && recipeWater > 0) {
+    ml = recipeWater;
+  } else {
+    ml = /espresso/i.test(resolved.method) ? 36 : 250;
   }
+  payload.caffeine_ml = Math.round(ml);
 
   return payload;
 }
