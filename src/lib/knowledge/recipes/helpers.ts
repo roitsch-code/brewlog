@@ -238,6 +238,16 @@ export interface RecipeSelectionInput {
    * the best recipes *for that method*, not a portfolio across their kit.
    */
   lockedBrewers?: Set<BrewerType>;
+  /**
+   * Rotation seed for tie-breaking. Recipes that score EQUALLY are genuinely
+   * interchangeable (equal best-match ranking — no pedigree bonus, PR #193), so
+   * rotating which equal-scoring recipe leads across brews stops the same menu
+   * (and the same per-brewer winner, e.g. Clever water-first) from being
+   * injected every single time. Pass a value that changes per brew (the session
+   * count works well). Deterministic per call; ties only — a higher score is
+   * NEVER demoted below a lower one.
+   */
+  rotationSeed?: number;
 }
 
 /**
@@ -345,9 +355,37 @@ function scoreRecipe(
 }
 
 /**
+ * Rotate the order WITHIN each equal-score group by `seed`, leaving the
+ * relative order of different score levels untouched. Equal-scoring recipes are
+ * interchangeable best-matches, so taking turns leading across brews varies the
+ * injected menu (and the per-brewer diversity winner) without ever demoting a
+ * higher-scoring recipe below a lower one. Deterministic for a given seed.
+ */
+function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
+  if (seed <= 0) return scored;
+  const out: ScoredRecipe[] = [];
+  let i = 0;
+  while (i < scored.length) {
+    let j = i + 1;
+    while (j < scored.length && scored[j].score === scored[i].score) j++;
+    const len = j - i;
+    if (len > 1) {
+      const off = ((seed % len) + len) % len;
+      for (let k = 0; k < len; k++) out.push(scored[i + ((k + off) % len)]);
+    } else {
+      out.push(scored[i]);
+    }
+    i = j;
+  }
+  return out;
+}
+
+/**
  * Select the most relevant recipes for a brew. Returns up to `limit` recipes
  * sorted by score (descending). Diversity rule: never return more than one
  * recipe per brewer — we want the AI to see a varied portfolio, not five V60s.
+ * Ties are rotated by `input.rotationSeed` so the injected menu varies between
+ * brews instead of surfacing the same recipes every time.
  */
 export function selectRecipes(
   input: RecipeSelectionInput,
@@ -357,12 +395,15 @@ export function selectRecipes(
     ? input.lockedBrewers
     : null;
 
-  const scored = ALL_RECIPES
-    // When a method is locked, hard-filter to recipes for that method only.
-    .filter((r) => (locked ? locked.has(r.brewer) : true))
-    .map((r) => scoreRecipe(r, input))
-    .filter((s): s is ScoredRecipe => s !== null)
-    .sort((a, b) => b.score - a.score);
+  const scored = rotateTies(
+    ALL_RECIPES
+      // When a method is locked, hard-filter to recipes for that method only.
+      .filter((r) => (locked ? locked.has(r.brewer) : true))
+      .map((r) => scoreRecipe(r, input))
+      .filter((s): s is ScoredRecipe => s !== null)
+      .sort((a, b) => b.score - a.score),
+    input.rotationSeed ?? 0,
+  );
 
   // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer
   // cap; the user chose the brewer, they want the strongest matches on it).

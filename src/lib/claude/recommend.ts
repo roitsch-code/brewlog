@@ -156,6 +156,29 @@ function guardVolumeTarget(
   return safe.length ? safe : candidates;
 }
 
+/**
+ * Anti-repetition signal: the reference recipes surfaced across the user's
+ * recent sessions. The recommend menu is otherwise near-deterministic for a
+ * given coffee, so without this the same `basedOn` recipes come back brew after
+ * brew (the "recommendations repeat across contexts" complaint). We tell the
+ * model what it recently leaned on and to vary unless the coffee demands it —
+ * NOT a hard ban (a genuinely best-fit recipe may legitimately repeat).
+ */
+function buildRecentRecipesNote(
+  sessions: import("../types/session").Session[],
+): string {
+  const recent = sessions.slice(0, 6);
+  const names = new Set<string>();
+  for (const s of recent) {
+    for (const c of s.recommendation?.candidates ?? []) {
+      const b = c.basedOn?.trim();
+      if (b && b.toLowerCase() !== "own recipe") names.add(b);
+    }
+  }
+  if (names.size === 0) return "";
+  return `\nRECENTLY RECOMMENDED — across your last ${recent.length} sessions you have leaned on these reference recipes: ${Array.from(names).join(", ")}. Unless this coffee genuinely calls for one of them again, base your two candidates on DIFFERENT reference recipes and/or brewers, so the portfolio doesn't repeat itself brew after brew. Varying the reference is not a licence to fabricate — pick a different documented recipe from the library above that fits, don't invent one.`;
+}
+
 function buildDiversityNote(sessions: import("../types/session").Session[]): string {
   const recent = sessions.slice(0, 8);
   const anchors: Record<string, number> = {};
@@ -489,6 +512,10 @@ export async function generateRecommendation(
         lockedBrewers.size > 0
           ? undefined
           : targetWaterMl,
+      // Rotate equal-scoring recipes per brew so the injected menu (and the
+      // per-brewer diversity winner — e.g. the Clever water-first) varies
+      // instead of repeating every session. Session count changes each brew.
+      rotationSeed: pastSessions.length,
     },
     4
   );
@@ -528,7 +555,7 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}
+${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +

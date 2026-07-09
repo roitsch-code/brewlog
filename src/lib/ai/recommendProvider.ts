@@ -65,6 +65,13 @@ async function callMistral(userMessage: string): Promise<{ text: string; usage: 
     body: JSON.stringify({
       model: MISTRAL_MODEL,
       max_tokens: MAX_TOKENS,
+      // Moderate sampling temperature: the recommend menu is near-deterministic
+      // per coffee, so on top of the rotating recipe menu + the "recently
+      // recommended, vary" note this loosens the model off its single most-
+      // likely phrasing/pick and widens the portfolio. Kept moderate (0.5) so
+      // the no-fabrication discipline holds; the deterministic guards
+      // (vessel/volume/drip/fidelity) are the safety net either way.
+      temperature: 0.5,
       // System block carries no cache_control (Mistral has its own caching model);
       // JSON mode keeps the structured output the parser expects.
       response_format: { type: "json_object" },
