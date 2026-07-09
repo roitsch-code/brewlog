@@ -49,28 +49,28 @@ export function buildCaffeinePayload(session: CaffeineSource): CaffeinePushPaylo
   const ts = session.createdAt || new Date().toISOString();
   const payload: CaffeinePushPayload = { ts, drink: "coffee" };
 
-  // Resolve the drink volume in ml (1 g water ≈ 1 ml), most-honest source first:
+  // Resolve the drink volume in ml (1 g water ≈ 1 ml) from a REAL figure only,
+  // most-honest source first — never fabricate a volume for a coffee we have no
+  // data on (Hard Rule: no invented parameters):
   //   1) brew.waterGrams — set only when the user typed the water in themselves.
   //   2) the FOLLOWED recipe's waterGrams. When followedRecipe=true the brew omits
   //      water/dose because they equal the recommendation — so THIS is the real
-  //      number, not a guess. This was the actual bug: Markus follows the recipe,
+  //      number, not a guess. This was the actual bug: the owner follows the recipe,
   //      so brew.waterGrams was always empty and every coffee got dropped.
   //      resolveBrewedRecipe is the same helper the rest of the app reads with.
-  //   3) a method-aware estimate — last resort so a recipe-less quick log still
-  //      counts (timing is what H4 needs most): espresso ≈ 36 ml, else ≈ 250 ml.
+  // When neither exists (a recipe-less café/quick log), caffeine_ml is OMITTED and
+  // pushCaffeineToHealthSync skips the send — better than reporting a made-up ml.
   const resolved = resolveBrewedRecipe(session as unknown as Session);
   const brewWater = session.brew?.waterGrams;
   const recipeWater = resolved.recipe?.waterGrams;
 
-  let ml: number;
-  if (typeof brewWater === "number" && Number.isFinite(brewWater) && brewWater > 0) {
-    ml = brewWater;
-  } else if (typeof recipeWater === "number" && Number.isFinite(recipeWater) && recipeWater > 0) {
-    ml = recipeWater;
-  } else {
-    ml = /espresso/i.test(resolved.method) ? 36 : 250;
-  }
-  payload.caffeine_ml = Math.round(ml);
+  const ml =
+    typeof brewWater === "number" && Number.isFinite(brewWater) && brewWater > 0
+      ? brewWater
+      : typeof recipeWater === "number" && Number.isFinite(recipeWater) && recipeWater > 0
+        ? recipeWater
+        : null;
+  if (ml != null) payload.caffeine_ml = Math.round(ml);
 
   return payload;
 }
