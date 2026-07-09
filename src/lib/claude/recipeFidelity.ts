@@ -270,7 +270,35 @@ export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undef
   const doseRatio = dose > 0 && refDose > 0 ? dose / refDose : k;
 
   const reasons = driftReasons(recipe, ref, k, doseRatio);
-  if (reasons.length === 0) return { recipe, changed: false, reasons: [] };
+  if (reasons.length === 0) {
+    // No full-signature drift — but a genuinely LARGER batch still needs a
+    // coarser grind: a deeper bed adds flow resistance (grind-settings.md,
+    // ~+20°/doubling of dose). The model often under-coarsens a scaled-up brew
+    // while grind/temp/time all stay within tolerance, so the bed clogs, the
+    // water sits, and it OVER-extracts. Coarsen ONLY the grind — never stretch
+    // the time (a longer clock = longer contact = bitter; grind is the flow
+    // lever). Verified refs with a published Niche range only.
+    const range = refGrindRange(ref);
+    const cg = parseGrindDegrees(recipe.grindSize);
+    if (k >= 1.3 && range && cg != null) {
+      // Batch-appropriate grind: the published mid shifted coarser by the
+      // dose-scaling adjustment — identical basis to refGrindString().
+      const target = Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
+      // Only correct a grind that is meaningfully too fine (>4° under target)
+      // so normal brew-to-brew variation passes untouched.
+      if (cg < target - 4) {
+        return {
+          recipe: { ...recipe, grindSize: `${target}°` },
+          changed: true,
+          reasons: [
+            `batch grind ${cg}° too fine for a ${Math.round(k * 100)}% batch — coarsened to ${target}° (grind-settings +20°/doubling); total time left at ${recipe.targetTimeSec}s (coarser grind carries the flow, not a longer clock)`,
+          ],
+          reference: ref.name,
+        };
+      }
+    }
+    return { recipe, changed: false, reasons: [] };
+  }
 
   const steps = scalePourSteps(ref, k);
   const fixed: BrewRecipe = {
