@@ -24,7 +24,7 @@ import { ScalePanel } from "@/components/flow/ScalePanel";
 import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
-import { analyzeFlow, isNonPourJump, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
+import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx (the Dark original is gone).
@@ -91,36 +91,30 @@ export default function LightStepBrew() {
   const samplesRef = useRef<WeightSample[]>([]); // ~6 s rolling window for the live coach
   const fullCurveRef = useRef<FlowCurvePoint[]>([]); // whole-brew curve for post-brew analysis
   const brewStartMsRef = useRef(0);
-  // Tare baseline: the mass already on the scale when the brew starts (the
-  // dripper + carafe + coffee). If the user did NOT press Tare, that vessel
-  // weight would otherwise be read as poured water — the "+583.5g overshoot /
-  // 56 g/s / hit 450g 133s early" bug. Every comparison (live coach + post-brew
-  // analysis) is relative to this baseline, so an un-tared scale reads correct
-  // water-poured; if they DID tare, the baseline is ≈0 and nothing changes.
+  // Tare baseline: the mass already on the scale the instant you press Start —
+  // the dripper + carafe you set down beforehand. That becomes the zero, so an
+  // un-tared scale still reads correct water-poured; if you DID tare, it's ≈0
+  // and nothing changes. Every comparison (live coach + stored curve) is net of
+  // this baseline.
   //
-  // The baseline is LIVE, not just captured once: a physically-impossible jump
-  // between two raw samples (see isNonPourJump — far faster than any kettle
-  // pours) is a MASS EVENT, not water — the carafe set onto the scale after the
-  // brew started, a vessel lifted off, a mid-brew Tare on the Acaia itself.
-  // Those jumps are folded into the baseline so the net "water poured" number
-  // (live coach + stored curve) never counts a vessel as poured water — the
-  // "+296.7g overshot" report.
+  // The baseline is captured ONCE at brew start and then stays FIXED. It
+  // deliberately does NOT chase later weight changes: moving the brewer for a
+  // swirl, a bump, or lifting the vessel is a transient the baseline must
+  // ignore — chasing those movements is exactly what injected the phantom
+  // "+296.7g overshoot" (a swirl read as a mass event, rebasing the zero). Any
+  // genuine mid-brew mass event is handled AFTER the brew by rejectNonPourJumps
+  // (in flowAnalysis), which — unlike a live stream — can see whether a jump
+  // returns (a swirl → ignore) or holds (a real vessel change → fold). So the
+  // live path never counts a movement as flow.
   const tareBaselineRef = useRef<number | null>(null);
-  const lastRawRef = useRef<{ grams: number; atMs: number } | null>(null);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
   const pushSample = useCallback((grams: number, atMs: number) => {
-    // Capture the tare baseline from the first reading at/after brew start.
+    // Capture the tare baseline from the first reading at/after brew start,
+    // then leave it fixed (see the note above — no live rebasing).
     if (brewStartMsRef.current > 0 && tareBaselineRef.current == null) {
       tareBaselineRef.current = grams;
     }
-    // Fold non-pour jumps (vessel on/off, mid-brew Tare) into the baseline.
-    if (tareBaselineRef.current != null && lastRawRef.current != null) {
-      const delta = grams - lastRawRef.current.grams;
-      const dtSec = (atMs - lastRawRef.current.atMs) / 1000;
-      if (isNonPourJump(delta, dtSec)) tareBaselineRef.current += delta;
-    }
-    lastRawRef.current = { grams, atMs };
     // Water poured = scale reading minus the vessel baseline. Before the brew
     // starts (baseline still null) this is the raw reading — the live coach only
     // runs once started, so pre-start values are never compared to a target.
@@ -153,7 +147,6 @@ export default function LightStepBrew() {
       fullCurveRef.current = [];
       brewStartMsRef.current = 0;
       tareBaselineRef.current = null;
-      lastRawRef.current = null;
       lastCurveMsRef.current = 0;
     }
   }, [elapsed]);
