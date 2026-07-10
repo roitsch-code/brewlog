@@ -474,9 +474,10 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
         {analysis.avgFlowRateGPS != null && (
           <AnalysisStat label="Avg pour" value={`${analysis.avgFlowRateGPS} g/s`} />
         )}
-        {analysis.overshootG != null && analysis.overshootG > 2 && (
-          <AnalysisStat label="Overshoot" value={`+${analysis.overshootG}g`} />
-        )}
+        {/* No Overshoot tile — it accused the user of over-pouring whenever a
+            vessel landed on the scale mid-brew (removed on owner request; the
+            underlying jump rejection now also keeps the metric itself sane,
+            but the tile stays out). overshootG is still computed + stored. */}
         {steady && <AnalysisStat label="Stream" value={steady} />}
       </div>
       {drifted && Math.abs(drifted.errorSec as number) >= 3 && (

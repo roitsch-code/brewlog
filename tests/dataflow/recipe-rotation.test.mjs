@@ -92,6 +92,42 @@ test("a tied top brewer no longer appears in EVERY brew (the Clever-water-first 
   assert.ok(someBrewerDropsOut, "no brewer should be pinned into all 12 brews");
 });
 
+test("huge timestamp seeds rotate too (the session-count cap froze the old seed)", () => {
+  // The client sends at most ~100 sessions, so a count-based seed saturated and
+  // the menu froze. The fix seeds with the latest session's epoch-ms timestamp —
+  // large, strictly increasing values must still vary the menu.
+  const leads = new Set();
+  let t = 1783600123457; // an epoch-ms-scale seed (real save timestamps, never round)
+  for (let i = 0; i < 12; i++) {
+    t += 3_600_000 + i * 12_347 + 991; // hours apart, ms-jittered like real brews
+    leads.add(ids(selectRecipes({ ...base, rotationSeed: t }, 4))[0]);
+  }
+  assert.ok(leads.size >= 2, "epoch-ms seeds must vary the lead recipe");
+});
+
+test("recently recommended references are demoted within their tie group", () => {
+  const first = selectRecipes({ ...base, rotationSeed: 5 }, 4);
+  const demoted = selectRecipes(
+    { ...base, rotationSeed: 5, recentReferenceNames: [first[0].recipe.name] },
+    4,
+  );
+  // Scores stay non-increasing — demotion never crosses a score level.
+  for (let i = 1; i < demoted.length; i++) {
+    assert.ok(demoted[i].score <= demoted[i - 1].score);
+  }
+  // When an equal-scored alternative exists, the just-seen recipe loses the lead.
+  if (first.length > 1 && first[1].score === first[0].score) {
+    assert.notEqual(demoted[0].recipe.id, first[0].recipe.id);
+  }
+  // A recipe that genuinely outscores the field keeps its slot: demoting a name
+  // that matches nothing changes nothing.
+  const unchanged = selectRecipes(
+    { ...base, rotationSeed: 5, recentReferenceNames: ["No Such Recipe"] },
+    4,
+  );
+  assert.deepEqual(ids(unchanged), ids(first));
+});
+
 test("locked-method selection also rotates its ties", () => {
   const locked = { ...base, lockedBrewers: new Set(["v60"]) };
   const firsts = new Set();

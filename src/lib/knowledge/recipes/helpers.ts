@@ -243,11 +243,21 @@ export interface RecipeSelectionInput {
    * interchangeable (equal best-match ranking — no pedigree bonus, PR #193), so
    * rotating which equal-scoring recipe leads across brews stops the same menu
    * (and the same per-brewer winner, e.g. Clever water-first) from being
-   * injected every single time. Pass a value that changes per brew (the session
-   * count works well). Deterministic per call; ties only — a higher score is
-   * NEVER demoted below a lower one.
+   * injected every single time. Pass a value that changes per brew — the latest
+   * session's timestamp is a good seed; the session COUNT is not (the client
+   * caps how many sessions it sends, so a count saturates and the rotation
+   * freezes). Deterministic per call; ties only — a higher score is NEVER
+   * demoted below a lower one.
    */
   rotationSeed?: number;
+  /**
+   * Reference-recipe names that surfaced in the user's recent sessions (the
+   * candidates' `basedOn` strings). Within each EQUAL-score group these are
+   * moved to the back, so an equally-good recipe the user has NOT just seen
+   * takes the slot (and the per-brewer diversity win). Ties only — a
+   * recently-used recipe that genuinely outscores the field still leads.
+   */
+  recentReferenceNames?: string[];
 }
 
 /**
@@ -361,6 +371,40 @@ function scoreRecipe(
  * injected menu (and the per-brewer diversity winner) without ever demoting a
  * higher-scoring recipe below a lower one. Deterministic for a given seed.
  */
+/** Lowercase-alnum normalisation for recipe-name matching (mirrors
+ * recipeFidelity's norm() so `basedOn` strings bind the same way). */
+function normName(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * Within each equal-score group, move recipes the user has RECENTLY been
+ * recommended (matched by name/shortName against the sessions' `basedOn`
+ * strings) to the back — an equal-scored fresh alternative gets the slot.
+ * Stable, ties only: nothing ever crosses a score boundary.
+ */
+function demoteRecentWithinTies(
+  scored: ScoredRecipe[],
+  recentNames: string[] | undefined,
+): ScoredRecipe[] {
+  if (!recentNames || recentNames.length === 0) return scored;
+  const recent = new Set(recentNames.map(normName).filter(Boolean));
+  if (recent.size === 0) return scored;
+  const isRecent = (r: Recipe) =>
+    recent.has(normName(r.name)) || recent.has(normName(r.shortName));
+
+  const out: ScoredRecipe[] = [];
+  let i = 0;
+  while (i < scored.length) {
+    let j = i + 1;
+    while (j < scored.length && scored[j].score === scored[i].score) j++;
+    const group = scored.slice(i, j);
+    out.push(...group.filter((s) => !isRecent(s.recipe)), ...group.filter((s) => isRecent(s.recipe)));
+    i = j;
+  }
+  return out;
+}
+
 function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
   if (seed <= 0) return scored;
   const out: ScoredRecipe[] = [];
@@ -395,14 +439,17 @@ export function selectRecipes(
     ? input.lockedBrewers
     : null;
 
-  const scored = rotateTies(
-    ALL_RECIPES
-      // When a method is locked, hard-filter to recipes for that method only.
-      .filter((r) => (locked ? locked.has(r.brewer) : true))
-      .map((r) => scoreRecipe(r, input))
-      .filter((s): s is ScoredRecipe => s !== null)
-      .sort((a, b) => b.score - a.score),
-    input.rotationSeed ?? 0,
+  const scored = demoteRecentWithinTies(
+    rotateTies(
+      ALL_RECIPES
+        // When a method is locked, hard-filter to recipes for that method only.
+        .filter((r) => (locked ? locked.has(r.brewer) : true))
+        .map((r) => scoreRecipe(r, input))
+        .filter((s): s is ScoredRecipe => s !== null)
+        .sort((a, b) => b.score - a.score),
+      input.rotationSeed ?? 0,
+    ),
+    input.recentReferenceNames,
   );
 
   // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer

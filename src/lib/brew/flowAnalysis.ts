@@ -54,6 +54,73 @@ export interface FlowAnalysis {
 const REACH_TOL_G = 1.5; // treat the target as "reached" within this many grams
 const MAX_STORED_POINTS = 80;
 
+/**
+ * Max plausible POURING rate between two samples. A kettle pours ≤~10 g/s (the
+ * app's own schedule plans 4 g/s — pourSequence.POUR_RATE_GPS); anything far
+ * above that between two adjacent samples is not water, it's a MASS EVENT: a
+ * carafe/dripper set onto the scale mid-brew, a vessel lifted off, a mid-brew
+ * Tare. Those must move the baseline, never count as poured water.
+ */
+export const MAX_POUR_GPS = 15;
+const JUMP_MARGIN_G = 4;
+
+/** True when `deltaGrams` over `dtSec` could plausibly be water being poured. */
+function plausiblePour(deltaGrams: number, dtSec: number): boolean {
+  const dt = Math.min(Math.max(dtSec, 0.05), 8);
+  return Math.abs(deltaGrams) <= MAX_POUR_GPS * dt + JUMP_MARGIN_G;
+}
+
+/** True when a grams delta over dtSec cannot be pouring (see MAX_POUR_GPS).
+ * Only judges CLOSELY-SPACED samples (dt ≤ 3s — the live stream is 10–20 Hz,
+ * the stored curve 2 Hz): across a sparse gap (BLE dropout, a downsampled
+ * legacy curve) pouring and a mass event are indistinguishable, so nothing is
+ * folded and the start-offset min-baseline remains the only correction.
+ * Shared with the live capture path so the coach and the stored curve agree. */
+export function isNonPourJump(deltaGrams: number, dtSec: number): boolean {
+  return dtSec <= 3 && !plausiblePour(deltaGrams, dtSec);
+}
+
+/**
+ * Fold physically-impossible jumps that HOLD into a running baseline so the
+ * curve reads WATER POURED even when a vessel lands on (or leaves) the scale
+ * mid-brew — the "+296.7g overshoot / 66 g/s / hit 300g 106s early" report
+ * that a carafe placed on the scale after brew start produced. The
+ * min-baseline in analyzeFlow can only remove an offset present from the
+ * START; a mid-capture step change needs this.
+ *
+ * A jump whose NEXT sample returns to the old trend (the pair nets to a
+ * plausible pour) is a transient force spike — a tap, a bump, a swirl — and is
+ * left alone: the reach/overshoot spike guards downstream already ignore lone
+ * outliers, and folding a spike would eat the real water poured around it.
+ */
+export function rejectNonPourJumps(curve: FlowCurvePoint[]): FlowCurvePoint[] {
+  if (curve.length < 2) return curve.slice();
+  const out: FlowCurvePoint[] = [curve[0]];
+  let offset = 0;
+  let skipNext = false; // second leg of a recognized transient spike
+  for (let i = 1; i < curve.length; i++) {
+    if (!skipNext) {
+      const delta = curve[i].grams - curve[i - 1].grams;
+      const dt = curve[i].tSec - curve[i - 1].tSec;
+      if (isNonPourJump(delta, dt)) {
+        const next = curve[i + 1];
+        const isTransient =
+          next != null &&
+          plausiblePour(next.grams - curve[i - 1].grams, next.tSec - curve[i - 1].tSec);
+        if (isTransient) {
+          skipNext = true; // the return leg belongs to the spike, don't fold it
+        } else {
+          offset += delta; // sustained level change = mass event, not water
+        }
+      }
+    } else {
+      skipNext = false;
+    }
+    out.push({ tSec: curve[i].tSec, grams: curve[i].grams - offset });
+  }
+  return out;
+}
+
 /** Whether `curve[i]` is at/above the target AND holds there (the next point is
  * too, or it's the last point). A SINGLE-sample spike over the target — a bump,
  * a lift, a BLE glitch — fails this, so it isn't mistaken for actually reaching
@@ -106,19 +173,22 @@ export function analyzeFlow(
   const pours = timeline.steps.filter((s) => !s.isAgitation && s.targetCumulativeGrams != null);
   if (pours.length === 0) return null;
 
-  // Tare-safe baseline: the curve should measure WATER POURED (starting at ~0),
-  // but an un-tared scale reports total mass — so the whole curve sits offset by
-  // the vessel/coffee weight. Subtract the minimum reading (the least mass ever
-  // on the scale = the empty-vessel baseline) so the analysis reads poured water,
-  // not the dripper's weight. On an already-tared/net curve the minimum is ~0, so
-  // this is a no-op. Without it, targets are "reached" at t≈0 → absurd flow rates
-  // (56 g/s) and a huge overshoot (+583g). The capture layer nets too; this is a
-  // second guard that also fixes any raw/legacy curve reaching here.
-  const baseline = rawCurve.reduce((m, p) => Math.min(m, p.grams), Infinity);
+  // Two-stage baseline correction so the curve measures WATER POURED:
+  //  1. rejectNonPourJumps folds MID-CAPTURE mass events (a carafe set on the
+  //     scale after brew start, a vessel lifted off, a mid-brew Tare) into a
+  //     running baseline — the min-subtraction below can't see those.
+  //  2. Subtract the minimum reading — the least mass ever on the scale — so a
+  //     curve that STARTED offset (un-tared vessel on from the first sample)
+  //     also reads poured water. On a clean tared curve both are no-ops.
+  // Without these, targets are "reached" at t≈0 → absurd flow rates (56–66 g/s)
+  // and a huge phantom overshoot (+296.7g / +583g). The capture layer nets too;
+  // this is a second guard that also fixes any raw/legacy curve reaching here.
+  const dejumped = rejectNonPourJumps(rawCurve);
+  const baseline = dejumped.reduce((m, p) => Math.min(m, p.grams), Infinity);
   const curve =
     Number.isFinite(baseline) && baseline > 0
-      ? rawCurve.map((p) => ({ tSec: p.tSec, grams: p.grams - baseline }))
-      : rawCurve;
+      ? dejumped.map((p) => ({ tSec: p.tSec, grams: p.grams - baseline }))
+      : dejumped;
 
   const finalGrams = curve.reduce((m, p) => Math.max(m, p.grams), 0);
 

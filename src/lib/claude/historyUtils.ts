@@ -31,6 +31,49 @@ export function buildTimingStats(
 }
 
 /**
+ * MEASURED timing calibration for one specific method + batch size: the median
+ * (actualTimeSec − targetTimeSec) across past sessions of the SAME method at a
+ * SIMILAR water volume (±20% or ±60g, whichever is wider). This is the app's
+ * own recorded data — no invented "X s per 100ml" scaling slope (Hard Rule).
+ *
+ * Why volume-bucketed: the per-method average in buildTimingStats mixes single
+ * cups with large batches, so a 450ml brew that reliably runs +40s over its
+ * reference clock averages out against on-time 250ml brews and the promised
+ * time stays mathematically impossible for the batch ("die Zeit ist off").
+ *
+ * Returns null under 2 matching samples — never extrapolates from one brew.
+ */
+export function measuredTimeDelta(
+  pastSessions: Session[],
+  method: string | undefined,
+  waterGrams: number | undefined,
+  isPercolation: (method?: string) => boolean,
+): { deltaSec: number; count: number } | null {
+  if (!method || !isPercolation(method)) return null;
+  if (typeof waterGrams !== "number" || !(waterGrams > 0)) return null;
+  const key = method.toLowerCase().trim();
+  const tol = Math.max(60, waterGrams * 0.2);
+
+  const deltas: number[] = [];
+  for (const s of pastSessions) {
+    const actual = s.brew?.actualTimeSec;
+    const recipe = resolveBrewedRecipe(s).recipe;
+    const target = recipe?.targetTimeSec;
+    const water = recipe?.waterGrams;
+    const m = (s.brew?.methodUsed || s.recommendation?.primaryMethod || "").toLowerCase().trim();
+    if (!actual || !target || m !== key) continue;
+    if (typeof water !== "number" || Math.abs(water - waterGrams) > tol) continue;
+    deltas.push(actual - target);
+  }
+  if (deltas.length < 2) return null;
+  deltas.sort((a, b) => a - b);
+  const mid = Math.floor(deltas.length / 2);
+  const deltaSec =
+    deltas.length % 2 === 1 ? deltas[mid] : Math.round((deltas[mid - 1] + deltas[mid]) / 2);
+  return { deltaSec, count: deltas.length };
+}
+
+/**
  * Builds a sensory preference signal string from extended TasteResult fields.
  * Only included when ≥3 sessions have at least one sensory field filled.
  */
