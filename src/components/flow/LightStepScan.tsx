@@ -1017,10 +1017,14 @@ export default function LightStepScan() {
                     <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ background: "var(--card)" }}>
                       <p className="text-sm" style={{ color: "var(--foreground)" }}>{msg.text}</p>
                     </div>
-                    {msg.chips && i === clarificationMessages.length - 1 && (
+                    {/* The answer UI (free-text + "Not sure") renders for EVERY
+                        active question — gating it on msg.chips left the
+                        chip-less questions (variety, notes, origin) visible but
+                        unanswerable: the question showed, the input didn't. */}
+                    {i === clarificationMessages.length - 1 && (
                       <div className="mt-2 space-y-2">
                         <div className="flex flex-wrap gap-2">
-                          {msg.chips.map(chip => (
+                          {(msg.chips ?? []).map(chip => (
                             <Chip key={chip} onClick={() => handleClarificationAnswer(chip)}>{chip}</Chip>
                           ))}
                           <Chip onClick={() => handleClarificationAnswer("Not sure")}>Not sure</Chip>
