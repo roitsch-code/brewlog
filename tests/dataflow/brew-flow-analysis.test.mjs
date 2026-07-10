@@ -152,6 +152,47 @@ test("a lone spike (bump / lift) is NOT judged as overshoot or an early reach", 
   assert.equal(b.perPour[2].actualSec, 150);
 });
 
+test("a carafe placed on the scale MID-BREW is a baseline shift, not poured water", () => {
+  // The owner's report: brew started (tare baseline captured), then the carafe
+  // was set onto the scale to brew into → every raw reading from then on
+  // carries +300g the start-baseline can't see. Analysis read "+296.7g
+  // overshoot / 66 g/s / Pour 3 hit 300g 106s early". The +300g step HOLDS
+  // (unlike a bump), so it must fold into the baseline.
+  const carafe = [
+    { tSec: 0, grams: 0 },
+    { tSec: 10, grams: 50 }, // bloom poured
+    { tSec: 30, grams: 50 },
+    { tSec: 42, grams: 50 },
+    { tSec: 44, grams: 350 }, // ← carafe lands (+300) and STAYS
+    { tSec: 46, grams: 350 },
+    { tSec: 70, grams: 480 }, // pour 2 → 180g real water
+    { tSec: 120, grams: 620 }, // pour 3 → 320g
+    { tSec: 180, grams: 800 }, // final → 500g
+  ];
+  const a = analyzeFlow(PERC, carafe, 210);
+  assert.equal(a.finalGrams, 500, "final water must be 500g, not 800g");
+  assert.equal(a.perPour[3].targetGrams, 500);
+  assert.equal(a.perPour[3].actualSec, 180, "final pour reached at 180s, not early");
+  assert.ok(a.overshootG == null || a.overshootG < 100, `phantom overshoot: +${a.overshootG}g`);
+  assert.ok(a.avgFlowRateGPS != null && a.avgFlowRateGPS < 15, `absurd flow rate: ${a.avgFlowRateGPS} g/s`);
+});
+
+test("a vessel lifted OFF the scale mid-brew (or a mid-brew Tare) also folds into the baseline", () => {
+  const lifted = [
+    { tSec: 0, grams: 0 },
+    { tSec: 10, grams: 50 },
+    { tSec: 70, grams: 180 },
+    { tSec: 90, grams: 180 },
+    { tSec: 92, grams: 0 }, // ← user hit Tare on the Acaia mid-brew; level HOLDS
+    { tSec: 94, grams: 0 },
+    { tSec: 120, grams: 140 }, // pour 3 continues → 320g cumulative real water
+    { tSec: 180, grams: 320 }, // final → 500g cumulative real water
+  ];
+  const a = analyzeFlow(PERC, lifted, 210);
+  assert.equal(a.finalGrams, 500, "cumulative water must survive a mid-brew tare");
+  assert.equal(a.perPour[3].actualSec, 180);
+});
+
 test("immersion / too-few-points → null", () => {
   assert.equal(analyzeFlow(IMMERSION, CURVE, 150), null);
   assert.equal(analyzeFlow(PERC, [{ tSec: 0, grams: 0 }], 210), null);
