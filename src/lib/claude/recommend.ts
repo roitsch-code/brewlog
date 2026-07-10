@@ -12,7 +12,7 @@ import type {
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
-import { buildTimingStats } from "./historyUtils";
+import { buildTimingStats, measuredTimeDelta } from "./historyUtils";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
 import {
   selectRecipes,
@@ -100,6 +100,42 @@ function guardRecipeFidelity(
 }
 
 /**
+ * Deterministic timing calibration from MEASURED history: when past brews of
+ * the same method at a similar volume reliably ran longer than their promised
+ * clock (median ≥ +20s over ≥2 sessions), raise the candidate's targetTimeSec
+ * by that measured median. The recipe-fidelity rule stays intact — the grind
+ * guard remains the extraction lever — but the clock the timer promises must be
+ * the one this batch size has actually been measuring, not the single-cup
+ * reference time it mathematically can't hit (the "450ml at 3:30" complaint).
+ * Raises only, capped +120s; never touches iced (different water basis),
+ * cold-brew steeps, or immersion (their time is the steep, not drawdown).
+ */
+function calibrateTargetTimes(
+  candidates: RecommendationCandidate[],
+  pastSessions: Session[],
+  isPercolation: (method?: string) => boolean,
+): RecommendationCandidate[] {
+  return candidates.map((c) => {
+    const t = c.recipe?.targetTimeSec;
+    if (typeof t !== "number" || !(t > 0) || t >= 3600) return c;
+    if (typeof c.recipe.iceGrams === "number" && c.recipe.iceGrams > 0) return c;
+    if (!isPercolation(c.method)) return c;
+    const cal = measuredTimeDelta(
+      pastSessions,
+      c.method,
+      c.recipe.waterGrams as number | undefined,
+      isPercolation,
+    );
+    if (!cal || cal.deltaSec < 20) return c;
+    const add = Math.min(Math.round(cal.deltaSec / 5) * 5, 120);
+    console.warn(
+      `[recommend] time calibration: "${c.title}" ${t}s → ${t + add}s (measured median +${cal.deltaSec}s over ${cal.count} past ${c.method} brews at ~${c.recipe.waterGrams}g)`,
+    );
+    return { ...c, recipe: { ...c.recipe, targetTimeSec: t + add } };
+  });
+}
+
+/**
  * Deterministic capacity backstop: drop any candidate whose brewer can't hold the
  * water it pours (e.g. a Clever/Origami at >450ml). The prompt already forbids
  * this, but the Mistral spike (issue #453) showed large-volume requests can still
@@ -164,19 +200,25 @@ function guardVolumeTarget(
  * model what it recently leaned on and to vary unless the coffee demands it —
  * NOT a hard ban (a genuinely best-fit recipe may legitimately repeat).
  */
-function buildRecentRecipesNote(
+function recentReferenceNames(
   sessions: import("../types/session").Session[],
-): string {
-  const recent = sessions.slice(0, 6);
+): string[] {
   const names = new Set<string>();
-  for (const s of recent) {
+  for (const s of sessions.slice(0, 6)) {
     for (const c of s.recommendation?.candidates ?? []) {
       const b = c.basedOn?.trim();
       if (b && b.toLowerCase() !== "own recipe") names.add(b);
     }
   }
-  if (names.size === 0) return "";
-  return `\nRECENTLY RECOMMENDED — across your last ${recent.length} sessions you have leaned on these reference recipes: ${Array.from(names).join(", ")}. Unless this coffee genuinely calls for one of them again, base your two candidates on DIFFERENT reference recipes and/or brewers, so the portfolio doesn't repeat itself brew after brew. Varying the reference is not a licence to fabricate — pick a different documented recipe from the library above that fits, don't invent one.`;
+  return Array.from(names);
+}
+
+function buildRecentRecipesNote(
+  sessions: import("../types/session").Session[],
+): string {
+  const names = recentReferenceNames(sessions);
+  if (names.length === 0) return "";
+  return `\nRECENTLY RECOMMENDED — across your last ${Math.min(sessions.length, 6)} sessions you have leaned on these reference recipes: ${names.join(", ")}. Unless this coffee genuinely calls for one of them again, base your two candidates on DIFFERENT reference recipes and/or brewers, so the portfolio doesn't repeat itself brew after brew. Varying the reference is not a licence to fabricate — pick a different documented recipe from the library above that fits, don't invent one.`;
 }
 
 function buildDiversityNote(sessions: import("../types/session").Session[]): string {
@@ -238,8 +280,14 @@ export async function generateRecommendation(
     "turbo v60", "peng", "4:6", "kasuya",
     "origami", "origami air", "origami air m",
   ]);
-  const isPercolation = (method?: string) =>
-    method ? PERCOLATION_METHODS.has(method.toLowerCase().trim()) : false;
+  // Variant suffixes must not defeat the lookup: "Origami (wave)" / "Kalita
+  // Wave 155" are percolation even though only the base name is in the set.
+  const isPercolation = (method?: string) => {
+    if (!method) return false;
+    const m = method.toLowerCase().replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
+    if (PERCOLATION_METHODS.has(m)) return true;
+    return Array.from(PERCOLATION_METHODS).some((k) => m.startsWith(k));
+  };
 
   const timingStats = buildTimingStats(pastSessions, isPercolation);
 
@@ -514,8 +562,19 @@ export async function generateRecommendation(
           : targetWaterMl,
       // Rotate equal-scoring recipes per brew so the injected menu (and the
       // per-brewer diversity winner — e.g. the Clever water-first) varies
-      // instead of repeating every session. Session count changes each brew.
-      rotationSeed: pastSessions.length,
+      // instead of repeating every session. Seeded by the LATEST session's
+      // timestamp, which strictly increases with every logged brew. The session
+      // COUNT does not work here: the client sends at most the last ~100
+      // sessions, so the count saturates at the cap and the rotation froze —
+      // the "same two recipes every Morning/Sweet brew" regression on #480.
+      rotationSeed:
+        pastSessions.reduce((m, s) => {
+          const t = Date.parse(s.createdAt ?? "");
+          return Number.isFinite(t) ? Math.max(m, t) : m;
+        }, 0) || pastSessions.length,
+      // And demote references the user has JUST seen to the back of their tie
+      // group, so an equal-scored fresh recipe takes the injected slot.
+      recentReferenceNames: recentReferenceNames(pastSessions),
     },
     4
   );
@@ -622,13 +681,16 @@ Return valid JSON only.`;
     ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
-  // Three deterministic backstops over what the model returned (the prompt
-  // forbids all three, but a weaker model can still leak them — #453):
+  // Deterministic backstops over what the model returned (the prompt forbids
+  // all of these, but a weaker model can still leak them — #453):
+  //   0. targetTimeSec calibrated to the MEASURED history for this method at
+  //      this batch size (raise-only — the promised clock must be achievable);
   //   1. over-capacity vessels (too small for the water it pours);
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
   //   3. any proactively-suggested Drip Assist.
-  const capped = guardVesselCapacity(mapped);
+  const timeCalibrated = calibrateTargetTimes(mapped, pastSessions, isPercolation);
+  const capped = guardVesselCapacity(timeCalibrated);
   const volumeSafe = guardVolumeTarget(
     capped,
     targetWaterMl,
