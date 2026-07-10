@@ -474,10 +474,13 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
         {analysis.avgFlowRateGPS != null && (
           <AnalysisStat label="Avg pour" value={`${analysis.avgFlowRateGPS} g/s`} />
         )}
-        {/* No Overshoot tile — it accused the user of over-pouring whenever a
-            vessel landed on the scale mid-brew (removed on owner request; the
-            underlying jump rejection now also keeps the metric itself sane,
-            but the tile stays out). overshootG is still computed + stored. */}
+        {analysis.overshootG != null && (
+          <AnalysisStat
+            label="Overshoot"
+            value={`+${Math.max(0, analysis.overshootG)}g`}
+            accent={analysis.overshootG > 20 ? "text-light-accent-overtime" : undefined}
+          />
+        )}
         {steady && <AnalysisStat label="Stream" value={steady} />}
       </div>
       {drifted && Math.abs(drifted.errorSec as number) >= 3 && (
