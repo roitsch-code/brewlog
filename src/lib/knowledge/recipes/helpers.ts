@@ -258,6 +258,14 @@ export interface RecipeSelectionInput {
    * recently-used recipe that genuinely outscores the field still leads.
    */
   recentReferenceNames?: string[];
+  /**
+   * Brewers to hard-exclude from selection (the method-rotation constraint:
+   * when a brewer family is rotation-banned for this brew, its recipes must
+   * not be injected either — a reference the model can't use is noise, and a
+   * present reference tempts the model to violate the ban). Ignored when a
+   * method is locked (the lock already hard-filters).
+   */
+  excludeBrewers?: Set<BrewerType>;
 }
 
 /**
@@ -388,10 +396,20 @@ function demoteRecentWithinTies(
   recentNames: string[] | undefined,
 ): ScoredRecipe[] {
   if (!recentNames || recentNames.length === 0) return scored;
-  const recent = new Set(recentNames.map(normName).filter(Boolean));
-  if (recent.size === 0) return scored;
-  const isRecent = (r: Recipe) =>
-    recent.has(normName(r.name)) || recent.has(normName(r.shortName));
+  const recent = Array.from(new Set(recentNames.map(normName).filter(Boolean)));
+  if (recent.length === 0) return scored;
+  // Exact-or-containment matching with a specificity floor, mirroring
+  // recipeFidelity's resolveReference(). Exact-only matching silently
+  // no-opped in production: the model writes short basedOn strings
+  // ("Kasuya 4:6") while corpus names are long ("Kasuya 4:6 Method —
+  // Standard"), so nothing ever matched and nothing was ever demoted.
+  const nameMatches = (name: string, q: string) =>
+    name === q ||
+    ((name.includes(q) || q.includes(name)) && Math.min(name.length, q.length) >= 6);
+  const isRecent = (r: Recipe) => {
+    const names = [normName(r.name), normName(r.shortName)].filter(Boolean);
+    return recent.some((q) => names.some((n) => nameMatches(n, q)));
+  };
 
   const out: ScoredRecipe[] = [];
   let i = 0;
@@ -444,6 +462,9 @@ export function selectRecipes(
       ALL_RECIPES
         // When a method is locked, hard-filter to recipes for that method only.
         .filter((r) => (locked ? locked.has(r.brewer) : true))
+        // Rotation-banned brewers are excluded from the menu (no lock only —
+        // a locked method is an absolute user instruction).
+        .filter((r) => (locked ? true : !input.excludeBrewers?.has(r.brewer)))
         .map((r) => scoreRecipe(r, input))
         .filter((s): s is ScoredRecipe => s !== null)
         .sort((a, b) => b.score - a.score),
