@@ -30,7 +30,7 @@ import {
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
-import { buildMethodRotation, stripRotationViolations } from "./methodRotation";
+import { buildMethodRecency } from "./methodRotation";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { parseClaudeJson, z } from "./parseJson";
 
@@ -528,18 +528,18 @@ export async function generateRecommendation(
             ? 750
             : undefined;
 
-  // METHOD ROTATION — the deterministic fix for "always V60 and Clever".
-  // Overused brewer families (≥3 of the last 6 recommendation sets) are
-  // hard-banned for this brew: named as FORBIDDEN in the prompt AND their
-  // recipes excluded from the injected menu, so the model has nothing to cite
-  // for them. Inactive when a method is locked or for cold brew; always
-  // leaves enough eligible brewers for the requested volume. A post-parse
-  // guard (stripRotationViolations) drops any candidate that violates the
-  // ban anyway. See methodRotation.ts for the full rationale.
-  const methodRotation = buildMethodRotation(pastSessions, {
+  // METHOD FIT & FRESHNESS — the fix for "always V60 and Clever water-first".
+  // NO bans (owner's design rule: best fit always decides). Brewer families
+  // that dominated the last 6 recommendation sets are named in the prompt
+  // (they must EARN their slot with a stated fit advantage; equal-fit ties go
+  // to the least-recently-recommended brewer) and their recipes are demoted
+  // WITHIN equal-score groups in the injected menu — ties only, never an
+  // exclusion. Inactive when a method is locked or for cold brew. The
+  // percolation+immersion funnel itself is fixed in the system prompt
+  // (contrast no longer requires an immersion vessel). See methodRotation.ts.
+  const methodRecency = buildMethodRecency(pastSessions, {
     lockedMethod: lockedMethodBase,
     occasion: context.occasion,
-    targetWaterMl,
   });
 
   // Union the stored onboarding equipment with the owner's canonical kit.
@@ -591,9 +591,9 @@ export async function generateRecommendation(
       // And demote references the user has JUST seen to the back of their tie
       // group, so an equal-scored fresh recipe takes the injected slot.
       recentReferenceNames: recentReferenceNames(pastSessions),
-      // Rotation-banned brewers don't get menu slots either — their slots go
-      // to recipes the model is actually allowed to adapt this brew.
-      excludeBrewers: methodRotation.excludeBrewers,
+      // Same tie-break for recently-dominant BREWERS: an equal-scored recipe
+      // on a fresher brewer takes the menu slot (never an exclusion).
+      demoteBrewers: methodRecency.recentBrewers,
     },
     4
   );
@@ -620,7 +620,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodRotation.note}${methodNote}${dripAssistNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${methodRecency.note}${methodNote}${dripAssistNote}${goalNote}
 
 Equipment available: ${equipment}
 ${grinderNote}
@@ -707,9 +707,7 @@ Return valid JSON only.`;
   //   1. over-capacity vessels (too small for the water it pours);
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
-  //   3. any proactively-suggested Drip Assist;
-  //   4. any candidate on a rotation-banned brewer (the "always V60 and
-  //      Clever" fix — the prompt forbids them this brew, this enforces it).
+  //   3. any proactively-suggested Drip Assist.
   const timeCalibrated = calibrateTargetTimes(mapped, pastSessions, isPercolation);
   const capped = guardVesselCapacity(timeCalibrated);
   const volumeSafe = guardVolumeTarget(
@@ -721,8 +719,7 @@ Return valid JSON only.`;
       context.occasion === "cold-brew" ||
       Boolean(lockedMethodBase),
   );
-  const dripSafe = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
-  const candidates = stripRotationViolations(dripSafe, methodRotation.bannedFamilies);
+  const candidates = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
 
   return {
     recommendation: {
