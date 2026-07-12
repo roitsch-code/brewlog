@@ -30,6 +30,7 @@ import {
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
+import { buildMethodRotation, stripRotationViolations } from "./methodRotation";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { parseClaudeJson, z } from "./parseJson";
 
@@ -446,6 +447,7 @@ export async function generateRecommendation(
   const goal = context.intent || "balanced";
   const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
 
+
   // Roaster prior injection — user-saved profile overrides built-in list
   const roasterPrior = userRoasterPrior ?? getRoasterPrior(coffee.roaster || "");
   const roasterBlock =
@@ -526,6 +528,20 @@ export async function generateRecommendation(
             ? 750
             : undefined;
 
+  // METHOD ROTATION — the deterministic fix for "always V60 and Clever".
+  // Overused brewer families (≥3 of the last 6 recommendation sets) are
+  // hard-banned for this brew: named as FORBIDDEN in the prompt AND their
+  // recipes excluded from the injected menu, so the model has nothing to cite
+  // for them. Inactive when a method is locked or for cold brew; always
+  // leaves enough eligible brewers for the requested volume. A post-parse
+  // guard (stripRotationViolations) drops any candidate that violates the
+  // ban anyway. See methodRotation.ts for the full rationale.
+  const methodRotation = buildMethodRotation(pastSessions, {
+    lockedMethod: lockedMethodBase,
+    occasion: context.occasion,
+    targetWaterMl,
+  });
+
   // Union the stored onboarding equipment with the owner's canonical kit.
   // The onboarding picker never offered Origami or Chemex, so keying off the
   // saved row alone silently filtered out every Origami/Chemex recipe before
@@ -575,6 +591,9 @@ export async function generateRecommendation(
       // And demote references the user has JUST seen to the back of their tie
       // group, so an equal-scored fresh recipe takes the injected slot.
       recentReferenceNames: recentReferenceNames(pastSessions),
+      // Rotation-banned brewers don't get menu slots either — their slots go
+      // to recipes the model is actually allowed to adapt this brew.
+      excludeBrewers: methodRotation.excludeBrewers,
     },
     4
   );
@@ -601,7 +620,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodNote}${dripAssistNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${methodRotation.note}${methodNote}${dripAssistNote}${goalNote}
 
 Equipment available: ${equipment}
 ${grinderNote}
@@ -688,7 +707,9 @@ Return valid JSON only.`;
   //   1. over-capacity vessels (too small for the water it pours);
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
-  //   3. any proactively-suggested Drip Assist.
+  //   3. any proactively-suggested Drip Assist;
+  //   4. any candidate on a rotation-banned brewer (the "always V60 and
+  //      Clever" fix — the prompt forbids them this brew, this enforces it).
   const timeCalibrated = calibrateTargetTimes(mapped, pastSessions, isPercolation);
   const capped = guardVesselCapacity(timeCalibrated);
   const volumeSafe = guardVolumeTarget(
@@ -700,7 +721,8 @@ Return valid JSON only.`;
       context.occasion === "cold-brew" ||
       Boolean(lockedMethodBase),
   );
-  const candidates = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+  const dripSafe = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+  const candidates = stripRotationViolations(dripSafe, methodRotation.bannedFamilies);
 
   return {
     recommendation: {
