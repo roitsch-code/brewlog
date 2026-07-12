@@ -259,13 +259,14 @@ export interface RecipeSelectionInput {
    */
   recentReferenceNames?: string[];
   /**
-   * Brewers to hard-exclude from selection (the method-rotation constraint:
-   * when a brewer family is rotation-banned for this brew, its recipes must
-   * not be injected either — a reference the model can't use is noise, and a
-   * present reference tempts the model to violate the ban). Ignored when a
-   * method is locked (the lock already hard-filters).
+   * Brewers that dominated the user's recent recommendation sets. Within each
+   * EQUAL-score group their recipes are moved to the back — an equally-good
+   * recipe on a fresher brewer takes the slot (and the per-brewer diversity
+   * win). Ties only, NEVER an exclusion: a recipe on a dominant brewer that
+   * genuinely outscores the field still leads (best fit always decides).
+   * Ignored when a method is locked.
    */
-  excludeBrewers?: Set<BrewerType>;
+  demoteBrewers?: Set<BrewerType>;
 }
 
 /**
@@ -386,10 +387,29 @@ function normName(s: string): string {
 }
 
 /**
- * Within each equal-score group, move recipes the user has RECENTLY been
- * recommended (matched by name/shortName against the sessions' `basedOn`
- * strings) to the back — an equal-scored fresh alternative gets the slot.
- * Stable, ties only: nothing ever crosses a score boundary.
+ * Within each equal-score group, move recipes matching `isDemoted` to the
+ * back — an equal-scored fresh alternative gets the slot. Stable, ties only:
+ * nothing ever crosses a score boundary.
+ */
+function demoteWithinTies(
+  scored: ScoredRecipe[],
+  isDemoted: (r: Recipe) => boolean,
+): ScoredRecipe[] {
+  const out: ScoredRecipe[] = [];
+  let i = 0;
+  while (i < scored.length) {
+    let j = i + 1;
+    while (j < scored.length && scored[j].score === scored[i].score) j++;
+    const group = scored.slice(i, j);
+    out.push(...group.filter((s) => !isDemoted(s.recipe)), ...group.filter((s) => isDemoted(s.recipe)));
+    i = j;
+  }
+  return out;
+}
+
+/**
+ * Tie-break demotion of recipes the user has RECENTLY been recommended
+ * (matched by name/shortName against the sessions' `basedOn` strings).
  */
 function demoteRecentWithinTies(
   scored: ScoredRecipe[],
@@ -410,17 +430,7 @@ function demoteRecentWithinTies(
     const names = [normName(r.name), normName(r.shortName)].filter(Boolean);
     return recent.some((q) => names.some((n) => nameMatches(n, q)));
   };
-
-  const out: ScoredRecipe[] = [];
-  let i = 0;
-  while (i < scored.length) {
-    let j = i + 1;
-    while (j < scored.length && scored[j].score === scored[i].score) j++;
-    const group = scored.slice(i, j);
-    out.push(...group.filter((s) => !isRecent(s.recipe)), ...group.filter((s) => isRecent(s.recipe)));
-    i = j;
-  }
-  return out;
+  return demoteWithinTies(scored, isRecent);
 }
 
 function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
@@ -457,20 +467,26 @@ export function selectRecipes(
     ? input.lockedBrewers
     : null;
 
-  const scored = demoteRecentWithinTies(
-    rotateTies(
-      ALL_RECIPES
-        // When a method is locked, hard-filter to recipes for that method only.
-        .filter((r) => (locked ? locked.has(r.brewer) : true))
-        // Rotation-banned brewers are excluded from the menu (no lock only —
-        // a locked method is an absolute user instruction).
-        .filter((r) => (locked ? true : !input.excludeBrewers?.has(r.brewer)))
-        .map((r) => scoreRecipe(r, input))
-        .filter((s): s is ScoredRecipe => s !== null)
-        .sort((a, b) => b.score - a.score),
-      input.rotationSeed ?? 0,
+  // Ordering passes, all tie-scoped (a higher score is NEVER demoted below a
+  // lower one — best fit always decides): rotate ties by seed, then demote
+  // recently-seen reference names, then demote recently-dominant brewers.
+  // The brewer pass runs LAST so brewer freshness dominates the final order
+  // within a tie group (it's the repetition the user actually perceives).
+  const demoteBrewers = !locked && input.demoteBrewers?.size ? input.demoteBrewers : null;
+  const scored = demoteWithinTies(
+    demoteRecentWithinTies(
+      rotateTies(
+        ALL_RECIPES
+          // When a method is locked, hard-filter to recipes for that method only.
+          .filter((r) => (locked ? locked.has(r.brewer) : true))
+          .map((r) => scoreRecipe(r, input))
+          .filter((s): s is ScoredRecipe => s !== null)
+          .sort((a, b) => b.score - a.score),
+        input.rotationSeed ?? 0,
+      ),
+      input.recentReferenceNames,
     ),
-    input.recentReferenceNames,
+    (r) => (demoteBrewers ? demoteBrewers.has(r.brewer) : false),
   );
 
   // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer

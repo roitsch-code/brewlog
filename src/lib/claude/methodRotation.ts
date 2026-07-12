@@ -1,28 +1,31 @@
-// Deterministic method-rotation constraint for /recommend.
+// Method fit-and-freshness signals for /recommend — NO bans.
 //
-// The owner-visible repetition ("always V60 and Clever, whatever the coffee")
-// was never a reference-recipe problem — it's a METHOD funnel:
-//   - the prompt pairs "different brewers, different extraction physics"
-//     (percolation + immersion), and at a typical 250–350ml volume the
-//     capacity rules forbid AeroPress (>230ml) and Moccamaster (<500ml), so
-//     Clever is the ONLY immersion brewer left → it takes the second slot
-//     every single brew;
-//   - V60 takes the percolation slot as the most documented default.
-// The prompt's three soft "vary your methods" notes don't move Mistral
-// (same lesson as the Drip Assist leak: soft negatives need deterministic
-// backstops). This module turns rotation into a HARD, computed constraint:
-// count which brewer families appeared across the last recommendation sets,
-// forbid the overused ones for this brew (both in the prompt AND by
-// filtering their recipes out of the injected menu), and always leave the
-// model enough eligible brewers for the requested volume.
+// The owner-visible repetition ("always V60 and Clever water-first, whatever
+// the context") had two structural causes, measured with a simulation of the
+// real selection code:
+//   - the system prompt's pairing rule read as "percolation + immersion", and
+//     at a typical 250–350ml the capacity rules forbid AeroPress (>230ml) and
+//     Moccamaster (<500ml) — so Clever was the ONLY immersion brewer left and
+//     won the second slot every brew (fixed in recommendPrompt.ts: contrast
+//     no longer requires an immersion vessel, and house-default pairings are
+//     called out);
+//   - for most everyday contexts several brewers genuinely fit EQUALLY well
+//     (the recipe scoring produces wide ties), and the model resolved those
+//     ties by habit — V60 as the most-documented default.
 //
-// Safety rails:
-//   - never applies when the user LOCKED a method (user override is absolute)
-//   - never applies for cold brew (vessel-by-volume routing owns that world)
-//   - never bans below a floor of eligible brewer families (3 normally,
-//     2 when the volume leaves only a small pool)
-//   - a family that's already capacity-forbidden at this volume never
-//     consumes a ban slot (banning Moccamaster at 350ml is moot)
+// The owner's design rule: nothing is ever banned; best fit always decides.
+// So this module only produces FRESHNESS signals for tie-breaking:
+//   1. a prompt block stating which brewers dominated the recent
+//      recommendation sets, requiring a dominant brewer to EARN its slot with
+//      an explicitly stated fit advantage — and directing equal-fit ties to
+//      the least-recently-recommended brewer;
+//   2. the same brewers as a Set for selectRecipes' `demoteBrewers`, which
+//      moves their recipes to the BACK of their equal-score group in the
+//      injected menu (ties only — a genuinely better-fitting recipe still
+//      leads, and nothing is excluded).
+//
+// Inactive when a method is locked (user override) or for cold brew (the
+// vessel-by-volume routing owns that world).
 
 import type { Session } from "../types/session";
 import type { BrewerType } from "../knowledge/recipes/types";
@@ -53,8 +56,8 @@ const FAMILY_BREWERS: Record<BrewerFamily, BrewerType[]> = {
 
 const FAMILY_LABEL: Record<BrewerFamily, string> = {
   v60: "V60",
-  orea: "Orea (Fast/Classic/Apex/Open)",
-  origami: "Origami (cone or wave)",
+  orea: "Orea",
+  origami: "Origami",
   kalita: "Kalita Wave",
   chemex: "Chemex",
   clever: "Clever Dripper",
@@ -82,79 +85,48 @@ export function familyFromMethod(method?: string): BrewerFamily | null {
   return null;
 }
 
-/** Families physically eligible at the requested volume — mirrors the
- * HARD CAPACITY CONSTRAINT rules in recommend.ts. Unknown volume → all. */
-function eligibleFamilies(
-  targetWaterMl: number | undefined,
-  iced: boolean,
-): BrewerFamily[] {
-  // Iced routes to the fixed hot-over-ice technique set (Japanese Iced
-  // V60/Kalita, AeroPress Iced, Hoffmann Immersion Iced on the Clever); the
-  // hot portion is well under the vessel caps, so no volume math here.
-  if (iced) return ["v60", "kalita", "aeropress", "clever"];
-  const all: BrewerFamily[] = [
-    "v60", "orea", "origami", "kalita", "chemex", "clever", "aeropress", "moccamaster",
-  ];
-  if (!targetWaterMl) return all;
-  return all.filter((f) => {
-    if (f === "aeropress") return targetWaterMl <= 230;
-    if (f === "clever") return targetWaterMl <= 450;
-    if (f === "origami") return targetWaterMl <= 450; // 30g dose limit
-    if (f === "moccamaster") return targetWaterMl >= 500;
-    if (f === "v60") return targetWaterMl <= 600;
-    return true;
-  });
-}
-
-export interface MethodRotationInput {
-  /** context.preferredMethod — a locked method disables rotation entirely. */
+export interface MethodRecencyInput {
+  /** context.preferredMethod — a locked method disables the signal entirely. */
   lockedMethod?: string;
-  /** context.occasion — cold-brew disables rotation; summer-time switches to the iced pool. */
+  /** context.occasion — cold-brew disables the signal. */
   occasion?: string;
-  /** Resolved target brew-water ml (same value the capacity constraint uses). */
-  targetWaterMl?: number;
 }
 
-export interface MethodRotationResult {
-  /** Hard-constraint block for the user message; empty string when inactive. */
+export interface MethodRecencyResult {
+  /** Fit-and-freshness block for the user message; empty string when inactive. */
   note: string;
-  /** Brewer types whose recipes should be excluded from the injected menu. */
-  excludeBrewers: Set<BrewerType>;
-  /** Banned families (for the post-parse guard). */
-  bannedFamilies: Set<BrewerFamily>;
+  /** Brewer types of the dominant families — for selectRecipes' demoteBrewers
+   * (tie-break demotion in the injected menu; never an exclusion). */
+  recentBrewers: Set<BrewerType>;
 }
 
-const INACTIVE: MethodRotationResult = {
-  note: "",
-  excludeBrewers: new Set(),
-  bannedFamilies: new Set(),
-};
+const INACTIVE: MethodRecencyResult = { note: "", recentBrewers: new Set() };
 
-/** How many of the recent sessions a family must appear in (as a shown
- * candidate's method) before it counts as overused. */
-const OVERUSE_THRESHOLD = 3;
+/** A family counts as "dominant" when it appeared (as a shown candidate's
+ * method) in at least this many of the recent sessions. */
+const DOMINANCE_THRESHOLD = 3;
 /** How many recent sessions the window looks at. */
 const WINDOW = 6;
 
 /**
- * Compute the method-rotation constraint for this brew from the methods that
- * appeared in the user's recent recommendation sets. Pure and deterministic.
+ * Compute the method fit-and-freshness signal for this brew from the methods
+ * that appeared in the user's recent recommendation sets. Pure, deterministic,
+ * and never a ban — see the module header.
  */
-export function buildMethodRotation(
+export function buildMethodRecency(
   pastSessions: Session[],
-  input: MethodRotationInput,
-): MethodRotationResult {
+  input: MethodRecencyInput,
+): MethodRecencyResult {
   if (input.lockedMethod && input.lockedMethod.trim()) return INACTIVE;
-  const occasion = input.occasion?.toLowerCase() ?? "";
-  if (occasion === "cold-brew") return INACTIVE;
+  if ((input.occasion?.toLowerCase() ?? "") === "cold-brew") return INACTIVE;
 
   const window = pastSessions.slice(0, WINDOW);
-  if (window.length < OVERUSE_THRESHOLD) return INACTIVE;
+  if (window.length < DOMINANCE_THRESHOLD) return INACTIVE;
 
   // Per-family: in how many of the recent sessions did it appear as a shown
-  // candidate's method, and how recently (0 = the latest session)?
-  const presence = new Map<BrewerFamily, { count: number; latest: number }>();
-  window.forEach((s, idx) => {
+  // candidate's method?
+  const presence = new Map<BrewerFamily, number>();
+  for (const s of window) {
     const methods =
       s.recommendation?.candidates?.map((c) => c.method) ??
       [s.recommendation?.primaryMethod, s.recommendation?.alternativeMethod];
@@ -164,74 +136,27 @@ export function buildMethodRotation(
       if (fam) fams.add(fam);
     }
     for (const fam of Array.from(fams)) {
-      const cur = presence.get(fam);
-      if (cur) cur.count += 1;
-      else presence.set(fam, { count: 1, latest: idx });
+      presence.set(fam, (presence.get(fam) ?? 0) + 1);
     }
-  });
-
-  const iced = occasion === "summer-time";
-  const pool = eligibleFamilies(input.targetWaterMl, iced);
-  const poolSet = new Set(pool);
-
-  // Overused families that are actually eligible at this volume (banning an
-  // already-forbidden brewer wastes a slot), most-frequent first, then most
-  // recently seen, then name for determinism.
-  const overused = Array.from(presence.entries())
-    .filter(([fam, p]) => p.count >= OVERUSE_THRESHOLD && poolSet.has(fam))
-    .sort((a, b) => b[1].count - a[1].count || a[1].latest - b[1].latest || a[0].localeCompare(b[0]));
-
-  if (overused.length === 0) return INACTIVE;
-
-  const floor = pool.length >= 5 ? 3 : 2;
-  const banned: [BrewerFamily, { count: number; latest: number }][] = [];
-  for (const entry of overused) {
-    if (pool.length - banned.length - 1 < floor) break;
-    banned.push(entry);
-  }
-  if (banned.length === 0) return INACTIVE;
-
-  const bannedFamilies = new Set<BrewerFamily>(banned.map(([f]) => f));
-  const excludeBrewers = new Set<BrewerType>();
-  for (const fam of Array.from(bannedFamilies)) {
-    for (const b of FAMILY_BREWERS[fam]) excludeBrewers.add(b);
   }
 
-  const bannedStr = banned
-    .map(([fam, p]) => `${FAMILY_LABEL[fam]} (in ${p.count} of your last ${window.length} recommendation sets)`)
-    .join(", ");
-  const allowedStr = pool
-    .filter((f) => !bannedFamilies.has(f))
-    .map((f) => FAMILY_LABEL[f])
+  const dominant = Array.from(presence.entries())
+    .filter(([, count]) => count >= DOMINANCE_THRESHOLD)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  if (dominant.length === 0) return INACTIVE;
+
+  const recentBrewers = new Set<BrewerType>();
+  for (const [fam] of dominant) {
+    for (const b of FAMILY_BREWERS[fam]) recentBrewers.add(b);
+  }
+
+  const dominantStr = dominant
+    .map(([fam, count]) => `${FAMILY_LABEL[fam]} (in ${count} of your last ${window.length} recommendation sets)`)
     .join(", ");
 
   const note =
-    `\nMETHOD ROTATION — HARD CONSTRAINT: the following brewers are FORBIDDEN for BOTH candidates this brew because they have dominated recent recommendations: ${bannedStr}. ` +
-    `Choose each candidate's method from: ${allowedStr}. The reference recipe library above already reflects this — adapt from it. ` +
-    `If this leaves no immersion brewer available, two contrasting PERCOLATION candidates testing genuinely different extraction physics (e.g. fast-flow high-agitation vs slow flat-bed minimal-agitation) are the correct portfolio — do NOT reach for a forbidden brewer to force a percolation+immersion pairing.`;
+    `\nMETHOD FIT & FRESHNESS: method choice must be re-derived from THIS coffee and THIS context — nothing is banned, best fit always decides. But these brewers have dominated your recent recommendation sets: ${dominantStr}. A dominant brewer must EARN its slot: include it only when it genuinely fits this coffee + context better than the alternatives, and state that specific, concrete advantage in whyChosen (if you cannot name one, it does not fit better). When several brewers fit equally well — which is common — choose the one LEAST recently recommended. The reference recipe library above is ordered best-fit-first with equal-fit ties broken toward brewers you have not seen lately; treat its order as meaningful.`;
 
-  return { note, excludeBrewers, bannedFamilies };
-}
-
-/**
- * Deterministic post-parse guard: drop any candidate whose method resolves to
- * a banned family — unless that would empty the list (never break /recommend).
- * Mirrors guardVesselCapacity's shape.
- */
-export function stripRotationViolations<C extends { method: string; title?: string }>(
-  candidates: C[],
-  bannedFamilies: Set<BrewerFamily>,
-): C[] {
-  if (bannedFamilies.size === 0) return candidates;
-  const safe = candidates.filter((c) => {
-    const fam = familyFromMethod(c.method);
-    if (fam && bannedFamilies.has(fam)) {
-      console.warn(
-        `[recommend] method-rotation guard: dropped "${c.title ?? c.method}" — ${c.method} is rotation-banned this brew`,
-      );
-      return false;
-    }
-    return true;
-  });
-  return safe.length ? safe : candidates;
+  return { note, recentBrewers };
 }
