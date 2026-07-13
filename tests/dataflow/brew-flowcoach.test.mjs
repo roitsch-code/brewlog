@@ -142,6 +142,51 @@ test("immersion: steep step (no grams target) → no-data, no cue", () => {
   assert.equal(coachFlow(PERC, 60, false, 90, ramp(4)).cue, "none"); // not started
 });
 
+// A structured recipe whose pours are authored at 6 g/s (60 g in 10 s), like
+// Kasuya 4:6. The coach must target the RECIPE's own rate, not the house 4 g/s.
+const KASUYA_LIKE = buildBrewTimeline(
+  {
+    doseGrams: 20, waterGrams: 160, waterTempC: 92, grindSize: "medium-coarse", targetTimeSec: 180,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 40, durationSec: 8 },
+      { label: "Rest", action: "wait", durationSec: 35 },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 100, durationSec: 10 }, // 60g / 10s = 6 g/s
+      { label: "Rest", action: "wait", durationSec: 35 },
+      { label: "Final", action: "final", waterGramsAtEnd: 160, durationSec: 10 }, // 60g / 10s = 6 g/s
+    ],
+  },
+  ROAST,
+  NOW,
+);
+// The elapsed at which "Pour 2" (target 100, +60g at 6 g/s) is the active step,
+// picked mid-pour with plenty remaining.
+const pour2 = KASUYA_LIKE.steps.find((s) => s.targetCumulativeGrams === 100);
+const P2_MID = pour2.startSec + 1;
+
+test("recipe-derived rate: a 6 g/s pour reads its own rate, not the house 4", () => {
+  const c = coachFlow(KASUYA_LIKE, P2_MID, true, 70, ramp(6));
+  assert.ok(Math.abs(c.targetRateGPS - 6) < 0.01, `target rate should be 6, got ${c.targetRateGPS}`);
+});
+
+test("recipe-derived rate: pouring AT the recipe's 6 g/s is steady, NOT 'Slower'", () => {
+  const c = coachFlow(KASUYA_LIKE, P2_MID, true, 70, ramp(6));
+  assert.notEqual(c.cue, "pour-slower", "6 g/s must not nag when the recipe pours at 6");
+  assert.equal(c.cue, "steady");
+});
+
+test("recipe-derived rate: still catches pouring well ABOVE the recipe's rate", () => {
+  const c = coachFlow(KASUYA_LIKE, P2_MID, true, 70, ramp(10)); // >1.5× the 6 g/s target
+  assert.equal(c.cue, "pour-slower");
+});
+
+test("fallback: a string recipe (no authored durations) still targets ~4 g/s", () => {
+  // PERC is built from a pourSequence STRING → no durations → house 4 g/s.
+  const c = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(4));
+  assert.ok(Math.abs(c.targetRateGPS - 4) < 0.6, `fallback target ~4, got ${c.targetRateGPS}`);
+  // And 6 g/s on that fallback recipe still nags (4×1.5=6 threshold).
+  assert.equal(coachFlow(PERC, ELAPSED_MID, true, 90, ramp(7)).cue, "pour-slower");
+});
+
 test("immersion: the water-POUR step gets scale coaching (AeroPress fix)", () => {
   // At t=8 the active step is "Add water → 200g" (start 0, 15s). The scale must
   // coach the pour just like a pour-over, not stay silent.

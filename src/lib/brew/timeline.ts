@@ -25,8 +25,8 @@ import {
   buildGuideSteps,
   hasImmersionShape,
   isAgitationPourAction,
+  intendedPourDurationSec,
   parsePourSteps,
-  pourDurationSec,
   pourStepsFromStructured,
   type AgitationAction,
   type GuideStep,
@@ -50,6 +50,11 @@ export interface TimelineStep {
   targetCumulativeGrams?: number;
   /** Water added by THIS step (percolation pours only). */
   pourGrams?: number;
+  /** The recipe's OWN intended pour time for this pour (seconds), when authored.
+   * `pourGrams / pourDurationSec` is the recipe's intended pour RATE, which the
+   * flow coach coaches against instead of a global house constant. Undefined →
+   * the coach falls back to the ~4 g/s house rate. */
+  pourDurationSec?: number;
   /** Pre-brew handling (immersion invert/load/assemble) — excluded from `steps`. */
   isSetup: boolean;
   /** Swirl / stir / tap / agitate-bed. */
@@ -78,6 +83,9 @@ export interface BrewTimeline {
 const isAgitationGuideAction = (a: BrewStepAction): boolean =>
   a === "stir" || a === "swirl" || a === "agitate-bed";
 
+const isWaterGuideAction = (a: BrewStepAction): boolean =>
+  a === "bloom" || a === "pour" || a === "final" || a === "melodrip";
+
 function fromGuideStep(g: GuideStep): TimelineStep {
   return {
     index: g.index,
@@ -86,6 +94,9 @@ function fromGuideStep(g: GuideStep): TimelineStep {
     startSec: g.startTimeSec,
     endSec: g.startTimeSec + g.durationSec,
     targetCumulativeGrams: g.cumulativeGrams,
+    // On an immersion/AeroPress water pour, the authored step duration IS the
+    // intended pour time — so the coach reads the recipe's own rate here too.
+    pourDurationSec: isWaterGuideAction(g.action) ? g.durationSec : undefined,
     isSetup: g.isSetup,
     isAgitation: isAgitationGuideAction(g.action),
     temperatureC: g.temperatureC,
@@ -103,6 +114,7 @@ function fromPourStep(p: PourStep, all: PourStep[], i: number, targetTimeSec: nu
     endSec,
     targetCumulativeGrams: p.cumulativeGrams,
     pourGrams: p.pourGrams,
+    pourDurationSec: p.pourDurationSec,
     isSetup: false,
     isAgitation: isAgitationPourAction(p.action),
     temperatureC: p.temperatureC,
@@ -187,7 +199,10 @@ export function expectedGramsAt(timeline: BrewTimeline, tSec: number): number | 
   for (const s of pours) {
     const c = s.targetCumulativeGrams as number;
     const pourGrams = s.pourGrams ?? c - prevC;
-    const dur = pourDurationSec(Math.max(1, pourGrams));
+    // Ramp over the recipe's OWN intended pour time when it authored a plausible
+    // one, else the ~4 g/s house estimate — so "where you should be" matches the
+    // recipe's intended pour speed (a 6 g/s Kasuya pour fills in 10 s, not 15 s).
+    const dur = intendedPourDurationSec(pourGrams, s.pourDurationSec);
     const pourEnd = s.startSec + dur;
     if (tSec < s.startSec) {
       return prevC; // resting between the previous pour's end and this pour

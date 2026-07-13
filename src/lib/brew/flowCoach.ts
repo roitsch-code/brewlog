@@ -16,7 +16,7 @@
  * guidance, never presented as hard law.
  */
 import { activeStepAt, expectedGramsAt, type BrewTimeline } from "@/lib/brew/timeline";
-import { pourDurationSec } from "@/lib/utils/pourSequence";
+import { intendedPourDurationSec } from "@/lib/utils/pourSequence";
 
 export interface WeightSample {
   /** Wall-clock ms when the sample was read. */
@@ -59,10 +59,17 @@ export interface FlowComparison {
 const TOL_G = 3; // within this of a pour's target = "reached"
 const EASE_OFF_G = 15; // start easing off this many grams before target
 const STALL_RATE = 0.4; // g/s — below this mid-pour = stalled
-const FAST_ABS = 6; // g/s — hard "too fast" cap
 const SLOW_ABS = 1.5; // g/s — hard "too slow" floor (while pouring)
-const FAST_MULT = 1.4; // or this × the intended rate
+const FAST_MULT = 1.5; // "too fast" = this × the RECIPE'S OWN intended rate
 const SLOW_MULT = 0.6;
+// Never cry "Slower" below this even at 1.5× a very gentle target — a genuinely
+// slow pour is never "too fast". Keeps the coach quiet on clarity brews.
+const FAST_FLOOR = 4; // g/s
+// The recipe's intended rate is clamped to this sane pour band before coaching,
+// so a mis-authored durationSec (a 1 s "pour 200 g" = 200 g/s) can't set an
+// absurd target. Wide by design — the corpus spans ~3–10 g/s on pour-overs.
+const TARGET_MIN = 2; // g/s
+const TARGET_MAX = 11; // g/s — a hard gooseneck can't gently exceed this
 
 const NO_DATA: FlowComparison = {
   cue: "none",
@@ -180,7 +187,16 @@ export function coachFlow(
   const remaining = stepTarget - liveGrams;
   const isBloom = step.action === "bloom";
   const pourGrams = step.pourGrams != null && step.pourGrams > 0 ? step.pourGrams : stepTarget;
-  const targetRate = pourGrams / pourDurationSec(Math.max(1, pourGrams)); // ≈ 4 g/s
+  // Coach against the RECIPE'S OWN intended pour rate — grams ÷ its intended
+  // pour time (Kasuya 60 g / 10 s = 6 g/s; a Hoffmann swing ~10; a clarity brew
+  // ~3–4). `intendedPourDurationSec` uses the recipe's authored time when it
+  // reads as a real pour (≥2 g/s) and falls back to the ~4 g/s house estimate
+  // otherwise (rest folded into the step, or no duration). Clamped to a sane
+  // pour band so a bad duration can't set an impossible target. This replaces
+  // the old global 4 g/s that flagged every legit fast pour as "too fast".
+  const dur = intendedPourDurationSec(pourGrams, step.pourDurationSec);
+  const rawTargetRate = pourGrams / dur;
+  const targetRate = Math.min(TARGET_MAX, Math.max(TARGET_MIN, rawTargetRate));
 
   const partial: Omit<FlowComparison, "cue" | "message" | "detail" | "state"> = {
     liveGrams,
@@ -229,7 +245,10 @@ export function coachFlow(
     cue = "keep-flow";
     message = "Keep going";
     state = "behind";
-  } else if (r > Math.max(targetRate * FAST_MULT, FAST_ABS)) {
+  } else if (r > targetRate * FAST_MULT && r > FAST_FLOOR) {
+    // Too fast RELATIVE TO THE RECIPE — >1.5× its own intended rate (and never
+    // below the gentle FAST_FLOOR). A 6 g/s Kasuya pour no longer nags; a
+    // clarity brew poured at double still does.
     cue = "pour-slower";
     message = "Slower";
     state = "ahead";

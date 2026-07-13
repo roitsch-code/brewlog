@@ -46,6 +46,26 @@ export function pourDurationSec(grams: number): number {
   return Math.max(1, Math.round(grams / POUR_RATE_GPS));
 }
 
+/** Slowest rate we'll believe is a real POUR time. A step whose authored
+ * `durationSec` implies less than this (e.g. a 45 g "bloom" tagged 45 s = 1 g/s)
+ * is a rest/steep window folded into the step, NOT the pour itself — so we don't
+ * coach to it. Above it, the authored time is treated as the intended pour time. */
+export const MIN_POUR_RATE_GPS = 2;
+
+/**
+ * The intended pour TIME (seconds) for a pour of `grams`: the recipe's authored
+ * value when it reads as a plausible pour time (≥ MIN_POUR_RATE_GPS), otherwise
+ * the ~POUR_RATE_GPS house estimate. This is the single source both the expected-
+ * grams curve and the live flow coach use to know how fast a pour is INTENDED to
+ * go — so a 6 g/s Kasuya pour is coached at 6, not the house 4, while a rest
+ * folded into a bloom step (or a missing duration) falls back to the estimate.
+ */
+export function intendedPourDurationSec(grams: number, authoredSec?: number): number {
+  const g = Math.max(1, grams);
+  if (authoredSec && authoredSec > 0 && g / authoredSec >= MIN_POUR_RATE_GPS) return authoredSec;
+  return pourDurationSec(g);
+}
+
 /** Discrete agitation actions that now get their OWN timed step in the
  * percolation timeline (instead of being folded onto a pour as an attribute). */
 export type AgitationAction = "swirl" | "stir" | "tap";
@@ -64,6 +84,12 @@ export interface PourStep {
   temperatureC?: number;
   /** Free-text hint shown alongside the active pour. */
   notes?: string;
+  /** The recipe's OWN intended pour time for this pour (seconds), when authored.
+   * `pourGrams / pourDurationSec` is the recipe's intended pour RATE — Kasuya
+   * pours 60 g in 10 s = 6 g/s, not the house 4 g/s. Used by the flow coach to
+   * coach against the recipe's own rate instead of a global constant. Undefined
+   * for string-parsed recipes → the coach falls back to the ~4 g/s house rate. */
+  pourDurationSec?: number;
 }
 
 /** True for the discrete agitation step actions (swirl/stir/tap). */
@@ -168,6 +194,9 @@ interface Milestone {
   agitationAfter?: AgitationAction;
   /** Optional note carried onto the agitation step. */
   agitationNote?: string;
+  /** The recipe's authored pour time for this pour (seconds), when known — the
+   * intended-rate source (grams ÷ this). Undefined for string-parsed recipes. */
+  pourDurationSec?: number;
 }
 
 const AGITATION_LABEL: Record<AgitationAction, string> = {
@@ -247,12 +276,14 @@ function buildPourOver(
       action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
       temperatureC: m.temperatureC,
       notes: m.notes,
+      pourDurationSec: m.pourDurationSec,
     });
 
     if (m.agitationAfter) {
-      // The pour finishes pouring `pourGrams` after `pourDurationSec` seconds.
-      // Clamp so the agitation always lands before the next pour starts (or,
-      // on the final pour, before the target finish) — never overlapping.
+      // The pour finishes pouring `pourGrams` after `pourDurationSec` seconds
+      // (the physical ~4 g/s estimate — robust to a mis-authored short duration).
+      // Clamp so the agitation always lands before the next pour starts (or, on
+      // the final pour, before the target finish) — never overlapping.
       const ceiling = (i < n - 1 ? pourStartSec(i + 1) : targetTimeSec) - 1;
       const agStart = Math.min(start + pourDurationSec(pourGrams), Math.max(start + 1, ceiling));
       out.push({
@@ -332,6 +363,7 @@ export function pourStepsFromStructured(
         grams: s.waterGramsAtEnd,
         temperatureC: s.temperatureC,
         notes: s.notes,
+        pourDurationSec: s.durationSec,
       });
       last = milestones.length - 1;
     } else if (isAgitationStep(s.action) && last >= 0) {
