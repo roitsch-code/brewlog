@@ -1,6 +1,7 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
+import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import type {
   CoffeeIdentity,
   SessionContext,
@@ -708,7 +709,10 @@ Return valid JSON only.`;
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
   //   3. any proactively-suggested Drip Assist.
-  const timeCalibrated = calibrateTargetTimes(mapped, pastSessions, isPercolation);
+  //   4. swirl/stir steps a minimal-agitation brewer (Origami/Chemex/Moccamaster)
+  //      never wanted — incl. one sequenced after the drawdown.
+  const deSwirled = stripMinimalAgitationSwirls(mapped);
+  const timeCalibrated = calibrateTargetTimes(deSwirled, pastSessions, isPercolation);
   const capped = guardVesselCapacity(timeCalibrated);
   const volumeSafe = guardVolumeTarget(
     capped,
