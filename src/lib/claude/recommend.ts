@@ -1,6 +1,7 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
+import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import type {
   CoffeeIdentity,
   SessionContext,
@@ -666,6 +667,7 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 - notes: one short, step-relevant hint (what to watch). Optional.
 - AGITATION IS AN EXPLICIT STEP, NOT A NOTE — and it must MIRROR the recipe you adapt. If the recipe you name in basedOn shows agitation in its pour sequence above — a bloom swirl, a between-pour stir, and ESPECIALLY a settle swirl/tap right before the drawdown — carry EACH of those into pourSteps as its own step ("action": "stir" | "swirl" | "agitate-bed") at the same point in the sequence. The end-of-brew settle swirl/tap (the one that flattens the bed just before drawdown) is part of the recipe — do NOT drop it; emit it as the last step before the "drain"/drawdown. The brew screen shows a stir/swirl prompt ONLY where such a step exists, so a dropped agitation step = a missing prompt mid-brew. EXCEPTION — explicitly minimal/reduced-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any recipe whose notes say "minimal/reduced agitation"): include NO agitation steps beyond what that recipe itself calls for — never add a trailing swirl such a recipe doesn't want.
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
+- PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are POUR steps only (bloom + the pours), plus any agitation the reference calls for. Do NOT emit a standalone "Bloom Rest" or "Drawdown" wait step — the timer derives the bloom rest and the drawdown from targetTimeSec; encoding them as steps makes the timer treat a pour-over as an immersion brew and mis-time it. A pour-over is a bloom + THREE-TO-FIVE pours, NEVER a bloom plus one giant final pour: split the water into pulses (e.g. 60 – 150 – 250 – 350), because a single pour of ~200 g+ cannot be poured gently in the time a percolation drawdown allows (a gentle gooseneck pour is ~4 g/s, so 200 g needs ~50 s of pouring). The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
 
 basedOn — name the documented recipe this candidate adapts, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"). If the candidate isn't based on any documented recipe, set "Own recipe". Always present.
 
@@ -708,7 +710,10 @@ Return valid JSON only.`;
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
   //   3. any proactively-suggested Drip Assist.
-  const timeCalibrated = calibrateTargetTimes(mapped, pastSessions, isPercolation);
+  //   4. swirl/stir steps a minimal-agitation brewer (Origami/Chemex/Moccamaster)
+  //      never wanted — incl. one sequenced after the drawdown.
+  const deSwirled = stripMinimalAgitationSwirls(mapped);
+  const timeCalibrated = calibrateTargetTimes(deSwirled, pastSessions, isPercolation);
   const capped = guardVesselCapacity(timeCalibrated);
   const volumeSafe = guardVolumeTarget(
     capped,

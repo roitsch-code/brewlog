@@ -97,6 +97,24 @@ const RECIPES = {
       { label: "Drawdown", action: "wait", durationSec: 120 },
     ],
   },
+  // Origami-wave (flat-bottom PERCOLATION) whose long bloom is encoded as an
+  // explicit "Bloom Rest" wait BEFORE the main pour, then a trailing drawdown +
+  // settle swirl. The leading bloom-rest wait must NOT misroute it to the
+  // immersion guide (which would trust the model's physically-impossible ~30s
+  // Final Pour of ~235g); it must stay percolation so buildPourOver re-derives a
+  // sane pour window. Regression guard for the "235ml in 30s at 4 g/s" report.
+  "percolation-origami-bloom-rest": {
+    ...base,
+    targetTimeSec: 180,
+    waterGrams: 350,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 115, durationSec: 10 },
+      { label: "Bloom Rest", action: "wait", durationSec: 90 },
+      { label: "Final Pour", action: "final", waterGramsAtEnd: 350, durationSec: 30 },
+      { label: "Drawdown", action: "wait", durationSec: 60 },
+      { label: "Settle Swirl", action: "swirl" },
+    ],
+  },
   "immersion-inverted-aeropress": {
     ...base,
     targetTimeSec: 150,
@@ -186,6 +204,27 @@ test("percolation: a trailing drawdown wait stays percolation (keeps the flow co
   assert.equal(tl.hasGramsCurve, true, "no grams curve → coachFlow returns none → no flow coach");
   assert.ok(tl.pourSteps && tl.pourSteps.length > 0, "must take the LivePourSequence path");
   assert.equal(tl.guideSteps, null, "must NOT build immersion guide steps");
+});
+
+test("percolation: a leading BLOOM REST wait stays percolation (Origami-wave bug)", () => {
+  const recipe = RECIPES["percolation-origami-bloom-rest"];
+  // The "Bloom Rest" wait is followed by MORE pouring (the Final Pour), so it's a
+  // pause between pulses, not a steep — must NOT trigger the immersion guide.
+  assert.equal(hasImmersionShape(recipe), false, "bloom-rest wait misrouted to immersion");
+  const tl = buildBrewTimeline(recipe, ROAST, NOW);
+  assert.equal(tl.shape, "percolation", "flat-bottom pour-over must render as percolation");
+  assert.equal(tl.hasGramsCurve, true, "must keep the live flow coach");
+  assert.ok(tl.pourSteps && tl.pourSteps.length > 0, "must take the LivePourSequence path");
+  assert.equal(tl.guideSteps, null, "must NOT build immersion guide steps");
+
+  // The single big Final Pour must now get a physically-pourable window: its
+  // grams / its window must sit near a gentle pour rate, not the impossible ~8 g/s.
+  const finalPour = tl.pourSteps.filter((p) => p.action === "final").at(-1);
+  assert.ok(finalPour, "final pour present");
+  const nextStep = tl.pourSteps.find((p) => p.startTimeSec > finalPour.startTimeSec);
+  const windowSec = (nextStep ? nextStep.startTimeSec : tl.targetTimeSec) - finalPour.startTimeSec;
+  const rate = finalPour.pourGrams / windowSec;
+  assert.ok(rate <= 6, `final pour rate ${rate.toFixed(1)} g/s still implies a hard/impossible pour`);
 });
 
 test("immersion: a MID-brew steep (wait before drain/press) still routes to the guide", () => {

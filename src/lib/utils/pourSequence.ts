@@ -433,22 +433,29 @@ export function buildGuideSteps(recipe: BrewRecipe): GuideStep[] | null {
 export function hasImmersionShape(recipe: BrewRecipe): boolean {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return false;
-  const isSteepFollowUp = (a: BrewStepAction, hasWater: boolean): boolean =>
-    hasWater ||
-    a === "drain" ||
-    a === "press" ||
-    a === "flip" ||
-    a === "invert" ||
-    a === "bypass";
+  const isExtractionEnd = (a: BrewStepAction): boolean =>
+    a === "drain" || a === "press" || a === "flip" || a === "invert" || a === "bypass";
+  const isWaterPour = (a: BrewStepAction): boolean =>
+    a === "bloom" || a === "pour" || a === "final" || a === "melodrip";
   return src.some((s, i) => {
     if (s.action === "invert" || s.action === "flip" || s.action === "press" || s.action === "bypass") {
       return true;
     }
     if (s.action === "wait" && (s.durationSec ?? 0) >= 45) {
-      // Mid-brew steep only — a later step must add water or drain/press/flip.
-      return src
-        .slice(i + 1)
-        .some((later) => isSteepFollowUp(later.action, later.waterGramsAtEnd != null));
+      // A real mid-brew STEEP ends in extraction (drain/press/flip/invert/bypass)
+      // with NO further pouring after it. A wait FOLLOWED BY MORE WATER is a
+      // BLOOM REST / pause between pulse pours — percolation, NOT a steep. That
+      // false positive is what misrouted an Origami-wave whose long bloom was
+      // encoded as an explicit "Bloom Rest" wait step to the immersion guide,
+      // which then trusted a physically-impossible authored pour duration
+      // (235 g in ~30 s → ~8 g/s, double a gentle pour). Order-robust: a genuine
+      // two-stage immersion still trips on its LAST steep — the wait that has
+      // only a drain/press after it and no more pouring.
+      const rest = src.slice(i + 1);
+      const morePouring = rest.some(
+        (l) => isWaterPour(l.action) && l.waterGramsAtEnd != null,
+      );
+      return !morePouring && rest.some((l) => isExtractionEnd(l.action));
     }
     return false;
   });
