@@ -8,17 +8,17 @@ native-shell PNG sizes plus a master SVG.
 
 Design history:
   - v1 was a single washed-out serif "B" on a pale gradient.
-  - v2 (the "BT / TS" all-caps seal) fixed the field but the two big capital
-    T's dominated and read awkwardly.
-  - v3 (this file, July 2026) — brighter, on-brand "Big-Sur" field to match the
-    live Field background, and a LOWERCASE "Bt / ts" monogram: one tall cap B
-    with lowercase t/t/s at natural x-height reads as a little word, killing the
-    twin-T problem. Letters are a touch smaller than v2.
+  - v2 was the "BT / TS" all-caps seal on a pale warm gradient — too pastel.
+  - v3 (this file, July 2026) — keeps the "BT / TS" caps seal (a touch smaller,
+    optically re-centred) but swaps the washed field for a SATURATED, on-brand
+    "Big-Sur" gradient (deep magenta -> vivid orange-red -> strong blue) that
+    matches the live Field background, with the cream glow pulled right back so
+    the colour stays strong (not pastel).
 
 Usage:
     python3 scripts/generate-app-icon.py <variant>
-where <variant> is one of: bigsur | berry | sunset | dark | cream | mauve
-(default: bigsur). The gradient variants match the app's Field palette.
+where <variant> is one of: bigsur | berry | grape | sunset | dark | cream |
+mauve (default: bigsur). The gradient variants match the app's Field palette.
 
 Requires: fonttools, cairosvg, and a Fraunces variable/SemiBold TTF at
 FONT_PATH (download once from Google Fonts). It reads the real Fraunces
@@ -46,17 +46,20 @@ ANTHRACITE = "#1F1B1A"
 CREAM      = "#F3E5DC"
 MAUVE      = "#D4B8C9"
 
-# Gradient fields — brighter, matching the live Field zones (fruity / floral /
-# cool-berry). "bigsur" carries the signature cool-blue corner.
+# Gradient fields — saturated (NOT pastel), matching the live Field zones
+# (fruity / floral / cool-berry). "bigsur" carries the signature cool-blue
+# corner. The glow overlay is deliberately faint so the colour stays strong.
 GRADIENTS = {
-    "bigsur": [("0", "#F05CA6"), ("0.52", "#FF8A6B"), ("1", "#6E8BE0")],
-    "berry":  [("0", "#FF7EB0"), ("0.5", "#FF8C72"), ("1", "#FFC163")],
-    "sunset": [("0", "#FFC27A"), ("0.5", "#FF8FA6"), ("1", "#F56A9A")],
+    "bigsur": [("0", "#D6008C"), ("0.5", "#FF4D1C"), ("1", "#2F44E0")],
+    "berry":  [("0", "#FF1E8A"), ("0.5", "#FF5A1F"), ("1", "#FFB000")],
+    "grape":  [("0", "#FF3D3D"), ("0.5", "#FF2D8B"), ("1", "#7A2BE0")],
+    "sunset": [("0", "#FF7A00"), ("0.5", "#FF2D6E"), ("1", "#D6008C")],
 }
 # name : (kind, bg-or-None, letter-colour)
 VARIANTS = {
     "bigsur": ("grad", "bigsur", ANTHRACITE),
     "berry":  ("grad", "berry",  ANTHRACITE),
+    "grape":  ("grad", "grape",  ANTHRACITE),
     "sunset": ("grad", "sunset", ANTHRACITE),
     "dark":   ("solid", ANTHRACITE, CREAM),
     "cream":  ("solid", CREAM, ANTHRACITE),
@@ -66,12 +69,12 @@ VARIANTS = {
 CANVAS = 1024
 CAP = 1400.0            # nominal cap height in font units (B top)
 
-# layout knobs — a 2x2 grid (stamp/seal). Lowercase-natural: cap B + x-height
-# t/t/s, then the whole ink block is optically re-centred in the canvas.
-TARGET_CAP = 286.0      # px cap height (the B); a touch smaller than v2's 300
+# layout knobs — a 2x2 grid (stamp/seal): caps "BT / TS", each glyph optically
+# centred in its cell, then the whole ink block re-centred in the canvas.
+TARGET_CAP = 282.0      # px cap height; a touch smaller than v2's 300
 COL_HALF   = 150.0      # half the gap between the two column centres
-ROW_GAP    = 44.0       # px gap between the two rows
-Y_BIAS     = -8.0       # tiny upward optical nudge
+ROW_GAP    = 64.0       # px gap between the two cap-height rows
+Y_BIAS     = -6.0       # tiny upward optical nudge
 
 font = TTFont(FONT_PATH)
 glyphset = font.getGlyphSet()
@@ -91,8 +94,8 @@ def glyph_bounds(ch):
 
 
 def build_letters(fg):
-    """Lowercase 'Bt / ts', natural proportions, optically centred as a block."""
-    grid = [["B", "t"], ["t", "s"]]
+    """Caps 'BT / TS' 2x2 seal, optically centred as a block."""
+    grid = [["B", "T"], ["T", "S"]]
     scale = TARGET_CAP / CAP
     cols = [CANVAS / 2 - COL_HALF, CANVAS / 2 + COL_HALF]
 
@@ -133,9 +136,9 @@ def background(kind, bg):
         return (
             f'<defs>'
             f'<linearGradient id="base" x1="0" y1="0" x2="1" y2="1">{stops}</linearGradient>'
-            f'<radialGradient id="glow" cx="0.30" cy="0.24" r="0.72">'
-            f'<stop offset="0" stop-color="#FFF4EA" stop-opacity="0.5"/>'
-            f'<stop offset="1" stop-color="#FFF4EA" stop-opacity="0"/>'
+            f'<radialGradient id="glow" cx="0.30" cy="0.22" r="0.72">'
+            f'<stop offset="0" stop-color="#FFF0E0" stop-opacity="0.18"/>'
+            f'<stop offset="1" stop-color="#FFF0E0" stop-opacity="0"/>'
             f'</radialGradient></defs>'
             f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#base)"/>'
             f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#glow)"/>'
