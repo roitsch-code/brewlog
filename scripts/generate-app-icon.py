@@ -11,9 +11,10 @@ Design history:
   - v2 was the "BT / TS" all-caps seal on a pale warm gradient — too pastel.
   - v3 (this file, July 2026) — keeps the "BT / TS" caps seal (a touch smaller,
     optically re-centred) but swaps the washed field for a SATURATED, on-brand
-    "Big-Sur" gradient (deep magenta -> vivid orange-red -> strong blue) that
-    matches the live Field background, with the cream glow pulled right back so
-    the colour stays strong (not pastel).
+    "murmuration" field: a soft diagonal base with large soft colour masses that
+    pool in the corners and flow into each other (deep magenta lower-left, vivid
+    orange-red upper-right, strong blue lower-right) — no striped linear
+    gradient. Mirrors the live Field's composeGradient.ts composition.
 
 Usage:
     python3 scripts/generate-app-icon.py <variant>
@@ -46,21 +47,36 @@ ANTHRACITE = "#1F1B1A"
 CREAM      = "#F3E5DC"
 MAUVE      = "#D4B8C9"
 
-# Gradient fields — saturated (NOT pastel), matching the live Field zones
-# (fruity / floral / cool-berry). "bigsur" carries the signature cool-blue
-# corner. The glow overlay is deliberately faint so the colour stays strong.
-GRADIENTS = {
-    "bigsur": [("0", "#D6008C"), ("0.5", "#FF4D1C"), ("1", "#2F44E0")],
-    "berry":  [("0", "#FF1E8A"), ("0.5", "#FF5A1F"), ("1", "#FFB000")],
-    "grape":  [("0", "#FF3D3D"), ("0.5", "#FF2D8B"), ("1", "#7A2BE0")],
-    "sunset": [("0", "#FF7A00"), ("0.5", "#FF2D6E"), ("1", "#D6008C")],
+# Murmuration fields — saturated (NOT pastel), matching the live Field's
+# composeGradient.ts: a soft diagonal base + large soft colour MASSES that pool
+# in the corners and flow into each other (NOT a striped linear gradient). Each
+# variant carries three zone colours (c0 dominant / c1 second / c2 third), a
+# deep accent, and a soft two-stop base. Mass POSITIONS are shared (the
+# "app-faithful" layout: c0 lower-left, c1 upper-right, c2 lower-right).
+# "bigsur" carries the signature cool-blue mass.
+MURMUR = {
+    #          c0 (dominant) c1 (second)  c2 (third)   base A     base B
+    "bigsur": ("#E00A8F",    "#FF4D1C",   "#3A46E6",   "#B4006E", "#2B34C8"),
+    "berry":  ("#FF1E8A",    "#FF5A1F",   "#FFB000",   "#D11673", "#C77A00"),
+    "grape":  ("#FF3D3D",    "#FF2D8B",   "#7A2BE0",   "#C42A2A", "#5A1FB0"),
+    "sunset": ("#FF7A00",    "#FF2D6E",   "#D6008C",   "#C25E00", "#A6006E"),
 }
+BASE_ANGLE = 125         # soft diagonal base sweep
+# masses: (cx%, cy%, which-colour, radius%, inner-alpha) — the app-faithful set
+MASSES = [
+    (18, 84, "c0", 80, 1.00),   # dominant pools lower-left
+    (86, 22, "c1", 74, 1.00),   # second pools upper-right
+    (84, 86, "c2", 66, 0.95),   # third pools lower-right
+    (30, 20, "deep", 50, 0.60), # deep accent upper-left
+]
+RIBBON = (58, 22, 52)    # pale light-ribbon (cx%, cy%, r%)
+
 # name : (kind, bg-or-None, letter-colour)
 VARIANTS = {
-    "bigsur": ("grad", "bigsur", ANTHRACITE),
-    "berry":  ("grad", "berry",  ANTHRACITE),
-    "grape":  ("grad", "grape",  ANTHRACITE),
-    "sunset": ("grad", "sunset", ANTHRACITE),
+    "bigsur": ("murmur", "bigsur", ANTHRACITE),
+    "berry":  ("murmur", "berry",  ANTHRACITE),
+    "grape":  ("murmur", "grape",  ANTHRACITE),
+    "sunset": ("murmur", "sunset", ANTHRACITE),
     "dark":   ("solid", ANTHRACITE, CREAM),
     "cream":  ("solid", CREAM, ANTHRACITE),
     "mauve":  ("solid", MAUVE, ANTHRACITE),
@@ -125,24 +141,44 @@ def build_letters(fg):
     return "\n".join(out)
 
 
+def _mass_gradient(idx, cx_pct, cy_pct, color, r_pct, inner):
+    """A large soft colour mass fading to transparent (a murmuration blob)."""
+    cx, cy, r = cx_pct / 100 * CANVAS, cy_pct / 100 * CANVAS, r_pct / 100 * CANVAS
+    return (
+        f'<radialGradient id="m{idx}" cx="{cx:.0f}" cy="{cy:.0f}" r="{r:.0f}" '
+        f'gradientUnits="userSpaceOnUse">'
+        f'<stop offset="0" stop-color="{color}" stop-opacity="{inner:.2f}"/>'
+        f'<stop offset="0.62" stop-color="{color}" stop-opacity="{inner * 0.55:.2f}"/>'
+        f'<stop offset="1" stop-color="{color}" stop-opacity="0"/></radialGradient>'
+    )
+
+
 def background(kind, bg):
     if kind == "solid":
         return f'<rect width="{CANVAS}" height="{CANVAS}" fill="{bg}"/>'
-    if kind == "grad":
-        stops = "".join(
-            f'<stop offset="{o}" stop-color="{c}"/>' for o, c in GRADIENTS[bg]
+    if kind == "murmur":
+        c0, c1, c2, baseA, baseB = MURMUR[bg]
+        pick = {"c0": c0, "c1": c1, "c2": c2, "deep": baseA}
+        defs = [
+            f'<linearGradient id="base" '
+            f'gradientTransform="rotate({BASE_ANGLE} 0.5 0.5)">'
+            f'<stop offset="0" stop-color="{baseA}"/>'
+            f'<stop offset="1" stop-color="{baseB}"/></linearGradient>'
+        ]
+        rects = [f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#base)"/>']
+        for i, (cx, cy, key, r, a) in enumerate(MASSES):
+            defs.append(_mass_gradient(i, cx, cy, pick[key], r, a))
+            rects.append(f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#m{i})"/>')
+        rcx, rcy, rr = RIBBON
+        defs.append(
+            f'<radialGradient id="rib" cx="{rcx/100*CANVAS:.0f}" '
+            f'cy="{rcy/100*CANVAS:.0f}" r="{rr/100*CANVAS:.0f}" '
+            f'gradientUnits="userSpaceOnUse">'
+            f'<stop offset="0" stop-color="#FFE9D8" stop-opacity="0.30"/>'
+            f'<stop offset="1" stop-color="#FFE9D8" stop-opacity="0"/></radialGradient>'
         )
-        # a soft cream glow in the upper-left keeps the anthracite letters legible
-        return (
-            f'<defs>'
-            f'<linearGradient id="base" x1="0" y1="0" x2="1" y2="1">{stops}</linearGradient>'
-            f'<radialGradient id="glow" cx="0.30" cy="0.22" r="0.72">'
-            f'<stop offset="0" stop-color="#FFF0E0" stop-opacity="0.18"/>'
-            f'<stop offset="1" stop-color="#FFF0E0" stop-opacity="0"/>'
-            f'</radialGradient></defs>'
-            f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#base)"/>'
-            f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#glow)"/>'
-        )
+        rects.append(f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#rib)"/>')
+        return f'<defs>{"".join(defs)}</defs>{"".join(rects)}'
     raise ValueError(kind)
 
 
