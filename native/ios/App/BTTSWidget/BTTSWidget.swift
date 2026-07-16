@@ -57,17 +57,58 @@ struct AdvanceCarouselIntent: AppIntent {
     }
 }
 
-// MARK: - Palette (fruity Field tones — deliberately no beige/brown)
+// MARK: - Palette & murmuration field
 
-private let ink = Color(red: 0.227, green: 0.133, blue: 0.188) // deep plum ink
-private let fieldGradient = LinearGradient(
-    colors: [
-        Color(red: 0.969, green: 0.773, blue: 0.827), // rose
-        Color(red: 0.961, green: 0.620, blue: 0.525), // peach
-        Color(red: 0.933, green: 0.494, blue: 0.400), // coral
-    ],
-    startPoint: .topLeading,
-    endPoint: .bottomTrailing
+// Anthracite — matches the app-icon letters. Reads on the saturated field.
+private let ink = Color(red: 0.122, green: 0.106, blue: 0.102)
+
+private func hx(_ r: Double, _ g: Double, _ b: Double) -> Color {
+    Color(red: r, green: g, blue: b)
+}
+
+/// One large soft colour mass (a murmuration blob) that fades to clear.
+private struct FieldMass {
+    let color: Color
+    let center: UnitPoint
+    let radius: CGFloat // fraction of the tile's longest side
+}
+
+/// A "murmuration" field — a soft diagonal base with large soft colour masses
+/// that pool in the corners and flow into each other. NO striped linear
+/// gradient. Mirrors the new app icon / the live Field's composeGradient.ts.
+private struct MurmurField: View {
+    let base: [Color]
+    let masses: [FieldMass]
+
+    var body: some View {
+        GeometryReader { geo in
+            let d = max(geo.size.width, geo.size.height)
+            ZStack {
+                LinearGradient(colors: base, startPoint: .topLeading, endPoint: .bottomTrailing)
+                ForEach(0..<masses.count, id: \.self) { i in
+                    let m = masses[i]
+                    RadialGradient(
+                        stops: [
+                            .init(color: m.color, location: 0),
+                            .init(color: m.color.opacity(0.55), location: 0.62),
+                            .init(color: m.color.opacity(0), location: 1),
+                        ],
+                        center: m.center, startRadius: 0, endRadius: d * m.radius
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Rotation widget — "bigsur" (magenta / orange-red / blue): ties to the app icon.
+private let rotationField = MurmurField(
+    base: [hx(0.706, 0, 0.431), hx(0.169, 0.204, 0.784)], // #B4006E -> #2B34C8
+    masses: [
+        FieldMass(color: hx(0.878, 0.039, 0.561), center: UnitPoint(x: 0.18, y: 0.84), radius: 0.90), // #E00A8F LL
+        FieldMass(color: hx(1.0, 0.302, 0.110),   center: UnitPoint(x: 0.86, y: 0.22), radius: 0.84), // #FF4D1C UR
+        FieldMass(color: hx(0.227, 0.275, 0.902), center: UnitPoint(x: 0.84, y: 0.86), radius: 0.74), // #3A46E6 LR
+    ]
 )
 
 // MARK: - Timeline
@@ -204,7 +245,7 @@ struct BTTSWidgetEntryView: View {
                 }
             }
         }
-        .containerBackground(for: .widget) { fieldGradient }
+        .containerBackground(for: .widget) { rotationField }
     }
 }
 
@@ -225,14 +266,15 @@ struct BTTSWidget: Widget {
 
 // MARK: - Scan widget (small, static — opens the bag scanner)
 
-private let raspberryPeachGradient = LinearGradient(
-    colors: [
-        Color(red: 0.886, green: 0.384, blue: 0.549), // raspberry
-        Color(red: 0.945, green: 0.553, blue: 0.514), // coral
-        Color(red: 0.969, green: 0.690, blue: 0.486), // peach
-    ],
-    startPoint: .top,
-    endPoint: .bottom
+// Scan widget — "berry" (hot pink / orange / gold): deliberately a DIFFERENT
+// combo from the rotation tile (the app's Field is always a different flavour).
+private let scanField = MurmurField(
+    base: [hx(0.820, 0.086, 0.451), hx(0.780, 0.478, 0)], // #D11673 -> #C77A00
+    masses: [
+        FieldMass(color: hx(1.0, 0.118, 0.541), center: UnitPoint(x: 0.22, y: 0.82), radius: 0.95), // #FF1E8A LL
+        FieldMass(color: hx(1.0, 0.353, 0.122), center: UnitPoint(x: 0.80, y: 0.24), radius: 0.85), // #FF5A1F UR
+        FieldMass(color: hx(1.0, 0.690, 0),     center: UnitPoint(x: 0.84, y: 0.86), radius: 0.72), // #FFB000 LR
+    ]
 )
 
 struct ScanEntry: TimelineEntry {
@@ -275,7 +317,7 @@ struct ScanWidgetEntryView: View {
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(for: .widget) { raspberryPeachGradient }
+        .containerBackground(for: .widget) { scanField }
         .widgetURL(URL(string: "btts://scan"))
     }
 }
