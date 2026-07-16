@@ -18,8 +18,9 @@ Design history:
 
 Usage:
     python3 scripts/generate-app-icon.py <variant>
-where <variant> is one of: bigsur | berry | grape | sunset | dark | cream |
-mauve (default: bigsur). The gradient variants match the app's Field palette.
+where <variant> is one of: orchid | bigsur | berry | grape | sunset | dark |
+cream | mauve (default: orchid — pink/magenta/lilac/blue, no orange). The
+gradient variants match the app's Field palette.
 
 Requires: fonttools, cairosvg, and a Fraunces variable/SemiBold TTF at
 FONT_PATH (download once from Google Fonts). It reads the real Fraunces
@@ -56,6 +57,9 @@ MAUVE      = "#D4B8C9"
 # "bigsur" carries the signature cool-blue mass.
 MURMUR = {
     #          c0 (dominant) c1 (second)  c2 (third)   base A     base B
+    # orchid — the SHIPPED icon: pink/magenta/lilac/blue, NO orange (the c1
+    # upper-right mass is lilac, not orange — owner found orange too harsh).
+    "orchid": ("#E60A93",    "#B14BFF",   "#3A46E6",   "#B4006E", "#2B34C8"),
     "bigsur": ("#E00A8F",    "#FF4D1C",   "#3A46E6",   "#B4006E", "#2B34C8"),
     "berry":  ("#FF1E8A",    "#FF5A1F",   "#FFB000",   "#D11673", "#C77A00"),
     "grape":  ("#FF3D3D",    "#FF2D8B",   "#7A2BE0",   "#C42A2A", "#5A1FB0"),
@@ -64,15 +68,18 @@ MURMUR = {
 BASE_ANGLE = 125         # soft diagonal base sweep
 # masses: (cx%, cy%, which-colour, radius%, inner-alpha) — the app-faithful set
 MASSES = [
-    (18, 84, "c0", 80, 1.00),   # dominant pools lower-left
-    (86, 22, "c1", 74, 1.00),   # second pools upper-right
-    (84, 86, "c2", 66, 0.95),   # third pools lower-right
-    (30, 20, "deep", 50, 0.60), # deep accent upper-left
+    (18, 84, "c0", 90, 1.00),   # dominant pools lower-left
+    (86, 22, "c1", 84, 1.00),   # second pools upper-right
+    (84, 86, "c2", 74, 0.95),   # third pools lower-right
+    (30, 20, "deep", 50, 0.55), # deep accent upper-left
 ]
 RIBBON = (58, 22, 52)    # pale light-ribbon (cx%, cy%, r%)
+RIBBON_HEX = "#F4D8FF"   # pale lilac (cool — no warm tint on the purple field)
+RIBBON_ALPHA = 0.22
 
 # name : (kind, bg-or-None, letter-colour)
 VARIANTS = {
+    "orchid": ("murmur", "orchid", ANTHRACITE),
     "bigsur": ("murmur", "bigsur", ANTHRACITE),
     "berry":  ("murmur", "berry",  ANTHRACITE),
     "grape":  ("murmur", "grape",  ANTHRACITE),
@@ -174,8 +181,8 @@ def background(kind, bg):
             f'<radialGradient id="rib" cx="{rcx/100*CANVAS:.0f}" '
             f'cy="{rcy/100*CANVAS:.0f}" r="{rr/100*CANVAS:.0f}" '
             f'gradientUnits="userSpaceOnUse">'
-            f'<stop offset="0" stop-color="#FFE9D8" stop-opacity="0.30"/>'
-            f'<stop offset="1" stop-color="#FFE9D8" stop-opacity="0"/></radialGradient>'
+            f'<stop offset="0" stop-color="{RIBBON_HEX}" stop-opacity="{RIBBON_ALPHA}"/>'
+            f'<stop offset="1" stop-color="{RIBBON_HEX}" stop-opacity="0"/></radialGradient>'
         )
         rects.append(f'<rect width="{CANVAS}" height="{CANVAS}" fill="url(#rib)"/>')
         return f'<defs>{"".join(defs)}</defs>{"".join(rects)}'
@@ -207,7 +214,7 @@ def png(svg, path, px):
 
 
 def main():
-    variant = sys.argv[1] if len(sys.argv) > 1 else "bigsur"
+    variant = sys.argv[1] if len(sys.argv) > 1 else "orchid"
     if variant not in VARIANTS:
         sys.exit(f"unknown variant {variant}; choose from {list(VARIANTS)}")
     svg = build_svg(variant)
