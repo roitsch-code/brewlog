@@ -1,4 +1,5 @@
 import type { Session } from "../types/session";
+import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 
 // ─── Output types ────────────────────────────────────────────────────────────
 
@@ -96,7 +97,9 @@ function detectOscillation(sessions: Session[]): OscillationPattern[] {
     // Check grind oscillation (Niche° values — extract number)
     const grindValues = group
       .map(s => {
-        const g = s.recommendation?.primaryRecipe?.grindSize as string | undefined;
+        // The grind the user ACTUALLY brewed (selected candidate), not the
+        // primary — matching resolveBrewedRecipe everywhere else.
+        const g = resolveBrewedRecipe(s).recipe?.grindSize as string | undefined;
         if (!g) return null;
         const match = g.match(/(\d+(?:\.\d+)?)/);
         return match ? parseFloat(match[1]) : null;
