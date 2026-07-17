@@ -178,7 +178,9 @@ ${brewedRecipe ? `- Recipe: ${brewedRecipe.doseGrams}g / ${brewedRecipe.waterGra
 ${brew?.grindSettingUsed ? `- Grind used: ${brew.grindSettingUsed}` : ""}
 ${brew?.followedAgitation ? `- Agitation: ${brew.followedAgitation}` : ""}
 
-Write 1–2 sentences of personal, specific insight about this session. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis). No numbers in your response.`;
+Write 1–2 sentences of personal, specific insight about this session. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis).
+
+Do NOT restate the recipe's temperature, dose, water, grind, or time back to the brewer — not as digits AND not as spelled-out words (never write "96", "ninety-six degrees", "15 grams", etc.). Give the DIRECTION to change instead (hotter/cooler, finer/coarser, longer/shorter, a richer/leaner ratio). The recipe line above is context for your reasoning only.`;
 
       try {
         const msg = await client.messages.create({
