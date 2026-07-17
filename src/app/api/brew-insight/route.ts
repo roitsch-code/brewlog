@@ -7,6 +7,8 @@ export const dynamic = "force-dynamic";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+type RecipeNumbers = { doseGrams?: number; waterGrams?: number; waterTempC?: number };
+
 // ─── Adaptive adjustment — computed from actual result, no pre-stated rules ──
 
 function computeAdjustment(draft: {
@@ -99,8 +101,13 @@ export async function POST(req: NextRequest) {
           grindSettingUsed?: string;
           actualTempC?: number;
           followedAgitation?: string;
+          selectedCandidateIdx?: number;
         };
-        recommendation?: { primaryMethod?: string; primaryRecipe?: { doseGrams?: number; waterGrams?: number; waterTempC?: number } };
+        recommendation?: {
+          primaryMethod?: string;
+          primaryRecipe?: RecipeNumbers;
+          candidates?: { method?: string; recipe?: RecipeNumbers }[];
+        };
       };
       recentSessions?: Session[];
     };
@@ -111,6 +118,17 @@ export async function POST(req: NextRequest) {
     const rec = draft?.recommendation;
     const place = draft?.place;
     const isExternal = draft?.mode === "external";
+
+    // Resolve the recipe the user ACTUALLY brewed — the selected candidate,
+    // NOT primaryRecipe. Feeding the primary's numbers when an alternative was
+    // brewed made the insight cite the wrong temp (96°C when 85°C was brewed).
+    // Mirrors resolveBrewedRecipe / LightStepSummary's own resolution.
+    const idx = brew?.selectedCandidateIdx;
+    const brewedCandidate =
+      (idx != null ? rec?.candidates?.[idx] : undefined) ??
+      (brew?.methodUsed ? rec?.candidates?.find((c) => c.method === brew.methodUsed) : undefined);
+    const brewedRecipe = brewedCandidate?.recipe ?? rec?.primaryRecipe;
+    const brewedMethod = brewedCandidate?.method || brew?.methodUsed || rec?.primaryMethod;
 
     if (!coffee?.name || result?.rating == null) {
       return NextResponse.json({ terrain: null, adjustment: null });
@@ -152,11 +170,11 @@ Write 1–2 sentences of personal, specific insight about this coffee — what m
 This session:
 - Coffee: ${coffee.name} by ${coffee.roaster || "?"}
 - Origin: ${[coffee.origin, coffee.region].filter(Boolean).join(", ") || "unknown"} | Process: ${coffee.process || "unknown"}
-- Method: ${brew?.methodUsed || rec?.primaryMethod || "unknown"}
+- Method: ${brewedMethod || "unknown"}
 - Rating: ${result.rating}/5
 - Flavor notes: ${result.flavorNotes?.join(", ") || "none"}
 - Free notes: ${result.freeNotes || "none"}
-${rec ? `- Recipe: ${rec.primaryRecipe?.doseGrams}g / ${rec.primaryRecipe?.waterGrams}g / ${rec.primaryRecipe?.waterTempC}°C` : ""}
+${brewedRecipe ? `- Recipe: ${brewedRecipe.doseGrams}g / ${brewedRecipe.waterGrams}g / ${brewedRecipe.waterTempC}°C` : ""}
 ${brew?.grindSettingUsed ? `- Grind used: ${brew.grindSettingUsed}` : ""}
 ${brew?.followedAgitation ? `- Agitation: ${brew.followedAgitation}` : ""}
 
