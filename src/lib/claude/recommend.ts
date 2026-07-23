@@ -33,6 +33,7 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { sanitizePourSteps } from "../utils/pourSteps";
+import { componentsOf } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -561,6 +562,17 @@ export async function generateRecommendation(
       lockedBrewers,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
+      // Blend: score the process match against EVERY component's process, so a
+      // "Natural + Washed" blend credits recipes suited to either — the single
+      // `process` above (a comma-joined summary) would otherwise collapse to the
+      // first keyword. Empty for a single-origin bag.
+      processes: Array.from(
+        new Set(
+          componentsOf(coffee)
+            .map((c) => normaliseProcess(c.process))
+            .filter((p): p is NonNullable<typeof p> => !!p),
+        ),
+      ),
       variety: coffee.variety,
       goal: normaliseGoal(context.intent),
       occasion: context.occasion,

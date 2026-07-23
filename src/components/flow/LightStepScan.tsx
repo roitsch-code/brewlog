@@ -10,6 +10,9 @@ import Hero from "@/components/ui/light/Hero";
 import { nextHeroQuestion, SCAN_QUESTIONS } from "@/lib/heroQuestions";
 import type { BagAnalysisResult, RoasterPriorSummary } from "@/lib/claude/analyzeBag";
 import type { Coffee as CoffeeLibEntry } from "@/lib/types/coffee";
+import type { BlendComponent } from "@/lib/types/session";
+import BlendComponentsEditor from "@/components/flow/BlendComponentsEditor";
+import { deriveIdentitySummary } from "@/lib/coffee/blend";
 import {
   buildClarifications,
   applyClarificationAnswer,
@@ -490,6 +493,43 @@ export default function LightStepScan() {
   const hasCoffeeInfo = !!(draft.coffee?.name || draft.coffee?.roaster || draft.coffee?.origin)
     || !!(showManualForm && (manualRoaster || manualName || manualOrigin));
 
+  // ── Blend editing ────────────────────────────────────────────────────────
+  // A blend carries a `components` array; the scalar origin/region/variety/
+  // process are kept as a comma-joined SUMMARY of it so every downstream
+  // consumer (recommend prompt, library display, matchers) reads the scalar
+  // unchanged. setComponents writes both in one patch so the draft never drifts.
+  const blendActive = (draft.coffee?.components?.length ?? 0) > 0;
+
+  const setComponents = (next: BlendComponent[]) => {
+    if (next.length === 0) {
+      setCoffee({ components: undefined });
+      return;
+    }
+    const s = deriveIdentitySummary(next);
+    setCoffee({
+      components: next,
+      origin: s.origin,
+      region: s.region || undefined,
+      variety: s.variety || undefined,
+      process: s.process || undefined,
+    });
+  };
+
+  const enableBlend = () =>
+    // Seed the first two components from whatever single-origin values already
+    // exist, so switching to a blend never loses what the scan found.
+    setComponents([
+      {
+        origin: draft.coffee?.origin || "",
+        region: draft.coffee?.region || undefined,
+        variety: draft.coffee?.variety || undefined,
+        process: draft.coffee?.process || undefined,
+      },
+      { origin: "" },
+    ]);
+
+  const disableBlend = () => setCoffee({ components: undefined });
+
   // Shared "Identified" editable panel — rendered by BOTH the photo and
   // URL flows so the user sees the full set of extracted/inferred fields
   // (and can correct any of them) regardless of which scan path they
@@ -507,23 +547,55 @@ export default function LightStepScan() {
           or add a missing roaster on a photo-extracted bag. */}
       <EditableRow label="Roaster" value={draft.coffee?.roaster || ""} onChange={v => setCoffee({ roaster: v })} suggestions={existingRoasters} />
       <EditableRow label="Coffee" value={draft.coffee?.name || ""} onChange={v => setCoffee({ name: v })} />
-      {draft.coffee?.origin !== undefined && (
-        <EditableRow
-          label="Origin"
-          value={[draft.coffee.origin, draft.coffee.region].filter(Boolean).join(" · ")}
-          onChange={v => {
-            const parts = v.split("·").map(s => s.trim());
-            setCoffee({ origin: parts[0] || "", region: parts[1] || undefined });
-          }}
-        />
-      )}
-      {draft.coffee?.process && (
-        <div>
-          <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Process</p>
-          <div className="flex flex-wrap gap-2">
-            {PROCESSES.map(p => <Chip key={p} selected={draft.coffee?.process === p} onClick={() => setCoffee({ process: p })} size="sm">{p}</Chip>)}
+      {/* Origin / process / variety — one single-origin set, OR a per-component
+          blend editor. A blend can mix origins AND processes; the scalar fields
+          above are kept as a comma-joined summary of the components. */}
+      {blendActive ? (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Blend — origins &amp; processes</p>
+            <button type="button" onClick={disableBlend} className="text-xs active:opacity-70" style={{ color: "var(--primary)" }}>
+              Single origin
+            </button>
           </div>
+          <BlendComponentsEditor
+            components={draft.coffee?.components ?? []}
+            processes={PROCESSES}
+            onChange={setComponents}
+          />
         </div>
+      ) : (
+        <>
+          {draft.coffee?.origin !== undefined && (
+            <EditableRow
+              label="Origin"
+              value={[draft.coffee.origin, draft.coffee.region].filter(Boolean).join(" · ")}
+              onChange={v => {
+                const parts = v.split("·").map(s => s.trim());
+                setCoffee({ origin: parts[0] || "", region: parts[1] || undefined });
+              }}
+            />
+          )}
+          {draft.coffee?.process && (
+            <div>
+              <p className="text-xs mb-2" style={{ color: "var(--muted-foreground)" }}>Process</p>
+              <div className="flex flex-wrap gap-2">
+                {PROCESSES.map(p => <Chip key={p} selected={draft.coffee?.process === p} onClick={() => setCoffee({ process: p })} size="sm">{p}</Chip>)}
+              </div>
+            </div>
+          )}
+          {draft.coffee?.variety !== undefined && (
+            <EditableRow label="Variety" value={draft.coffee.variety || ""} onChange={v => setCoffee({ variety: v })} />
+          )}
+          <button
+            type="button"
+            onClick={enableBlend}
+            className="flex items-center gap-1.5 text-xs active:opacity-70"
+            style={{ color: "var(--primary)" }}
+          >
+            <span className="text-sm leading-none">+</span> This is a blend (multiple origins)
+          </button>
+        </>
       )}
       {draft.coffee?.roastLevel && (
         <div>
@@ -532,9 +604,6 @@ export default function LightStepScan() {
             {ROAST_LEVELS.map(r => <Chip key={r} selected={draft.coffee?.roastLevel === r} onClick={() => setCoffee({ roastLevel: r })} size="sm">{r}</Chip>)}
           </div>
         </div>
-      )}
-      {draft.coffee?.variety !== undefined && (
-        <EditableRow label="Variety" value={draft.coffee.variety || ""} onChange={v => setCoffee({ variety: v })} />
       )}
       {draft.coffee?.fermentationStyle !== undefined && (
         <EditableRow label="Fermentation" value={draft.coffee.fermentationStyle || ""} onChange={v => setCoffee({ fermentationStyle: v || undefined })} />

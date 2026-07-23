@@ -32,7 +32,7 @@ OUTPUT FORMAT: Return valid JSON only. No markdown outside the JSON.
 
 export async function buildEscherTerrain(
   sessions: Session[],
-  currentCoffee?: Pick<CoffeeIdentity, "name" | "roaster" | "origin" | "process">
+  currentCoffee?: Pick<CoffeeIdentity, "name" | "roaster" | "origin" | "process" | "components">
 ): Promise<string> {
   const signatures = buildSignatures(sessions);
 
@@ -41,8 +41,13 @@ export async function buildEscherTerrain(
       (currentCoffee.roaster ? ")" : "")
     : undefined;
 
+  // A blend gets its own "blend-*" cluster (matches buildSignature) so it isn't
+  // filed with single-origins of its first-listed component.
+  const isBlendCoffee = (currentCoffee?.components?.length ?? 0) >= 2;
   const typeCluster = currentCoffee
-    ? buildTypeCluster(currentCoffee.origin ?? "", currentCoffee.process ?? "")
+    ? isBlendCoffee
+      ? `blend-${normalizeProcess(currentCoffee.process ?? "")}`
+      : buildTypeCluster(currentCoffee.origin ?? "", currentCoffee.process ?? "")
     : undefined;
 
   const output = extract(signatures, {

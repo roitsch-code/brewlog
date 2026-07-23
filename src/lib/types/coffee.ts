@@ -1,4 +1,5 @@
 import type { FieldZones } from "@/lib/field/types";
+import type { BlendComponent } from "@/lib/types/session";
 
 export interface Coffee {
   id: string;
@@ -6,6 +7,10 @@ export interface Coffee {
   name: string;
   origin: string;
   process: string;
+  /** Blend components (2+). Absent/empty ⇒ single-origin; read the scalar
+   * origin/process. When present, origin/process mirror a comma-joined
+   * summary of these. See src/lib/coffee/blend.ts. */
+  components?: BlendComponent[];
   firstSeenAt: string;
   sessionCount: number;
   sessionIds: string[];

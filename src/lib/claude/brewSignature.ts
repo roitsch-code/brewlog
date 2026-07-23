@@ -107,7 +107,12 @@ export function buildSignature(session: Session): BrewSignature | null {
   const process = session.coffee?.process ?? "";
   const origin = session.coffee?.origin ?? "";
 
-  const originRegion = classifyOriginRegion(origin);
+  // A blend has no single growing region — bucketing it by its first-listed
+  // origin keyword would mis-file it with single-origins (a Brazil/Ethiopia
+  // blend read as pure "east-africa"). Give blends their own region bucket so
+  // pattern detection keeps them distinct.
+  const isBlendCoffee = (session.coffee?.components?.length ?? 0) >= 2;
+  const originRegion = isBlendCoffee ? "blend" : classifyOriginRegion(origin);
   const normalizedProcess = normalizeProcess(process);
   const normalizedMethod = normalizeMethod(method);
 

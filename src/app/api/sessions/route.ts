@@ -8,6 +8,7 @@ import { rowToSession } from "@/lib/db/helpers";
 import type { Session } from "@/lib/types/session";
 import { FieldZonesSchema } from "@/lib/field/schema";
 import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
+import { deriveIdentitySummary } from "@/lib/coffee/blend";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -20,6 +21,21 @@ const SessionPostSchema = z.object({
     region: z.string().max(200).optional(),
     variety: z.string().max(200).optional(),
     process: z.string().max(100).optional().default(""),
+    // Blend components (migration 0021). 2+ ⇒ the bag is a blend; the scalar
+    // origin/region/variety/process above are then re-derived server-side as a
+    // comma-joined summary of these (deriveIdentitySummary). Absent ⇒ single-origin.
+    components: z
+      .array(
+        z.object({
+          origin: z.string().max(200),
+          region: z.string().max(200).optional(),
+          variety: z.string().max(200).optional(),
+          process: z.string().max(100).optional(),
+          ratio: z.number().min(0).max(100).optional(),
+        }),
+      )
+      .max(8)
+      .optional(),
     fermentationStyle: z.string().max(200).optional(),
     roastLevel: z.string().max(100).optional().default(""),
     roastDate: z.string().optional(),
@@ -148,6 +164,29 @@ export async function POST(req: NextRequest) {
     // the coffees table separately, not into sessions.coffee JSONB.
     const { fieldZones: incomingFieldZones, ...sessionData } = parsed.data;
     const data = sessionData as Omit<Session, "id">;
+
+    // Blend normalisation (migration 0021). When the identity carries 2+
+    // components it's a blend: re-derive the scalar origin/region/variety/
+    // process as a comma-joined summary of them, server-side, so the single
+    // source every free-text + keyword consumer reads can't drift from the
+    // components. Fewer than 2 ⇒ not a blend; drop any stray array so a
+    // single-origin bag never stores an empty/one-item components list.
+    if (data.coffee) {
+      const comps = data.coffee.components;
+      if (Array.isArray(comps) && comps.filter((c) => c?.origin?.trim()).length >= 2) {
+        const summary = deriveIdentitySummary(comps);
+        data.coffee = {
+          ...data.coffee,
+          origin: summary.origin || data.coffee.origin,
+          region: summary.region || data.coffee.region,
+          variety: summary.variety || data.coffee.variety,
+          process: summary.process || data.coffee.process,
+        };
+      } else if (comps !== undefined) {
+        data.coffee = { ...data.coffee, components: undefined };
+      }
+    }
+
     const sessionId = randomUUID();
     const createdAtMs = Date.now();
     const createdAt = new Date(data.createdAt);
@@ -223,6 +262,7 @@ export async function POST(req: NextRequest) {
           name: data.coffee.name,
           origin: data.coffee.origin || "",
           process: data.coffee.process || "",
+          components: data.coffee.components ?? undefined,
           fermentationStyle: data.coffee.fermentationStyle,
           cuppingScore: data.coffee.cuppingScore != null ? String(data.coffee.cuppingScore) : undefined,
           firstSeenAt: data.createdAt,
@@ -269,6 +309,17 @@ export async function POST(req: NextRequest) {
         // (a scan / re-scan). A note-less Brew Again leaves them intact.
         if (bagFlavors.length > 0) {
           updates.bagFlavors = bagFlavors;
+        }
+
+        // Blend: when this save identifies a blend (2+ components), refresh the
+        // stored components AND the derived scalar summary (origin/process). A
+        // note-less Brew Again omits components, leaving the stored blend intact
+        // — same "only when carried" policy as bagFlavors, so a shortcut save
+        // never wipes a blend a scan established.
+        if (data.coffee.components && data.coffee.components.length >= 2) {
+          updates.components = data.coffee.components;
+          if (data.coffee.origin) updates.origin = data.coffee.origin;
+          if (data.coffee.process) updates.process = data.coffee.process;
         }
 
         await db
