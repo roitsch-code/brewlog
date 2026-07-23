@@ -1,0 +1,71 @@
+name: Migrate on push
+
+# Push-triggered SQL migration runner. Same mechanism as migration.yml
+# (SSH into the VPS with the deploy key, pipe a checked-in migration file
+# into the production Postgres container) — but fired by a PUSH to the
+# `.github/migrate` marker instead of workflow_dispatch.
+#
+# Why: the GitHub App / integration token can PUSH but cannot
+# workflow_dispatch (403 "Resource not accessible by integration"), so a
+# migration triggered from an automated session had to be hand-clicked in
+# the Actions UI. This closes that gap: write the migration filename into
+# `.github/migrate`, commit it to main, and the push runs it — no button.
+#
+# The marker file's first line is the migration filename under
+# src/lib/db/migrations/. `.github/**` is paths-ignored by deploy.yml, so
+# touching the marker does NOT trigger a redundant app deploy. Migrations
+# are `IF NOT EXISTS`/idempotent by convention, so a re-run is safe.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/migrate"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve migration filename from marker
+        id: marker
+        run: |
+          file="$(head -n1 .github/migrate | tr -d '[:space:]')"
+          if ! [[ "$file" =~ ^[A-Za-z0-9._-]+\.sql$ ]]; then
+            echo "Invalid migration filename in .github/migrate: '$file'"
+            echo "Expected a plain .sql filename under src/lib/db/migrations/"
+            exit 1
+          fi
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          echo "Will apply: $file"
+
+      - name: Run migration on VPS
+        env:
+          MIGRATION_FILE: ${{ steps.marker.outputs.file }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+              "MIGRATION_FILE='$MIGRATION_FILE' bash -s" <<'REMOTE'
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            # Read the file straight from origin/main without disturbing the
+            # VPS working tree (mirrors migration.yml).
+            git fetch origin main
+            path="src/lib/db/migrations/$MIGRATION_FILE"
+            if ! git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
+              echo "Migration file not found at $path on origin/main"
+              exit 1
+            fi
+
+            echo "Applying $path against the brewlog database..."
+            git show "FETCH_HEAD:$path" \
+              | docker compose exec -T postgres \
+                  psql -U brewlog -d brewlog -v ON_ERROR_STOP=1
+            echo "Done."
+          REMOTE
