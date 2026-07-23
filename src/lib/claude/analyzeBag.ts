@@ -17,6 +17,18 @@ const BagAnalysisSchema = z.object({
       roastDate: z.string().nullable().optional(),
       cuppingScore: z.number().nullable().optional(),
       tastingNotesFromBag: z.array(z.string()).optional(),
+      // Blend components — present ONLY when the bag is a blend (2+ origins).
+      components: z
+        .array(
+          z.object({
+            origin: z.string(),
+            region: z.string().nullable().optional(),
+            variety: z.string().nullable().optional(),
+            process: z.string().nullable().optional(),
+            ratio: z.number().nullable().optional(),
+          }),
+        )
+        .optional(),
     })
     .passthrough(),
   confidence: z.record(z.string(), z.string()).optional(),
@@ -62,7 +74,8 @@ Return this exact JSON structure:
     "roastLevel": "Light" | "Medium-Light" | "Medium" | "Dark" | null,
     "roastDate": string | null,
     "cuppingScore": number | null,
-    "tastingNotesFromBag": string[]
+    "tastingNotesFromBag": string[],
+    "components": [ { "origin": string, "region": string | null, "variety": string | null, "process": "Natural" | "Washed" | "Honey" | "Anaerobic" | "Other" | null, "ratio": number | null } ] | null
   },
   "confidence": {
     "roaster": "bag" | "researched" | "unknown",
@@ -75,6 +88,7 @@ Return this exact JSON structure:
   "isCoffeeBag": boolean
 }
 
+components: ONLY for a BLEND — a bag that names 2+ origins (e.g. "Brazil + Ethiopia") and/or 2+ processes. Return one entry per origin, each with its own origin, region, variety, process, and ratio (percentage) if the bag prints one. Also fill the top-level "origin" and "process" with a comma-joined summary (e.g. origin "Brazil, Ethiopia", process "Natural, Washed"). For a SINGLE-ORIGIN coffee, set components to null and fill the scalar fields as usual — do NOT invent a blend.
 fermentationStyle: for modern/experimental coffees the sub-style is the real differentiator. Examples: "Spontaneous Anaerobic", "Starter-culture Natural (Lalcafé Cima)", "Thermal-shock Washed", "Carbonic Maceration 72h", "Co-fermented with cascara". Only fill this if the bag names a specific sub-style or fermentation protocol — don't guess from the broad process category alone.
 cuppingScore: numeric SCA / Q-grade if printed on the bag (e.g. 87.5, 89). Null if not shown.
 tastingNotesFromBag: ALWAYS return these in English. If the bag prints the flavour notes in another language, translate each one to its standard English specialty-coffee descriptor — e.g. "Groseille" → "Redcurrant", "Cassis" → "Blackcurrant", "Rhabarbe"/"Rhabarber" → "Rhubarb", "Agrumes" → "Citrus", "Myrtille" → "Blueberry", "Pfirsich" → "Peach", "Honig" → "Honey", "Noisette" → "Hazelnut". Keep each note short; don't invent notes that aren't on the bag.
@@ -111,6 +125,13 @@ export interface BagAnalysisResult {
     roastDate?: string;
     cuppingScore?: number;
     tastingNotesFromBag?: string[];
+    components?: {
+      origin: string;
+      region?: string;
+      variety?: string;
+      process?: string;
+      ratio?: number;
+    }[];
   };
   confidence: Record<string, "bag" | "researched" | "unknown">;
   clarifications: string[];
@@ -160,6 +181,39 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
     if (typeof rd === "string" && /^\d{4}-\d{2}-\d{2}/.test(rd)) {
       const cleaned = guardRoastYear(rd);
       if (cleaned !== rd) (cleanExtracted as { roastDate?: string }).roastDate = cleaned;
+    }
+
+    // Blend components: drop nested nulls (the schema allows them) → undefined,
+    // and drop entries with no origin, so the downstream write schema (which
+    // wants string | undefined, not null) accepts them. A blend needs 2+
+    // components; anything less collapses back to single-origin.
+    const rawComponents = (cleanExtracted as { components?: unknown }).components;
+    if (Array.isArray(rawComponents)) {
+      const cleaned = rawComponents
+        .map((c) => {
+          const comp = c as Record<string, unknown>;
+          const str = (k: string) =>
+            typeof comp[k] === "string" && (comp[k] as string).trim()
+              ? (comp[k] as string).trim()
+              : undefined;
+          const ratio =
+            typeof comp.ratio === "number" && Number.isFinite(comp.ratio)
+              ? (comp.ratio as number)
+              : undefined;
+          return {
+            origin: str("origin") ?? "",
+            region: str("region"),
+            variety: str("variety"),
+            process: str("process"),
+            ratio,
+          };
+        })
+        .filter((c) => c.origin);
+      if (cleaned.length >= 2) {
+        (cleanExtracted as { components?: unknown }).components = cleaned;
+      } else {
+        delete (cleanExtracted as { components?: unknown }).components;
+      }
     }
 
     return {

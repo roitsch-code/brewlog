@@ -10,6 +10,7 @@ export function rowToCoffee(r: typeof coffees.$inferSelect): Coffee {
     name: r.name,
     origin: r.origin,
     process: r.process,
+    components: r.components ?? undefined,
     firstSeenAt: r.firstSeenAt,
     sessionCount: r.sessionCount,
     sessionIds: r.sessionIds ?? [],

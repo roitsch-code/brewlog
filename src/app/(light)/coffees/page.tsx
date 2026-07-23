@@ -99,6 +99,7 @@ export default function CoffeesPage() {
       name: coffee.name,
       origin: coffee.origin,
       process: coffee.process,
+      components: coffee.components,
       roastLevel: "Light",
       roastDate: coffee.latestRoastDate,
       bagPhotoUrl: coffee.bagPhotoUrl,

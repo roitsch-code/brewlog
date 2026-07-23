@@ -36,6 +36,7 @@ interface CoffeeRow {
   name: string;
   origin: string;
   process: string;
+  components?: import("@/lib/types/session").BlendComponent[] | null;
   latestRoastDate?: string;
   bagPhotoUrl?: string;
   // Generative Field v1.1 — present on the /api/coffees/[id] response
@@ -142,6 +143,7 @@ export default function ActionPill({ action }: { action: NavAction }) {
               name: row.name,
               origin: row.origin,
               process: row.process,
+              components: row.components ?? undefined,
               roastLevel: "Light",
               roastDate: row.latestRoastDate,
               bagPhotoUrl: row.bagPhotoUrl,

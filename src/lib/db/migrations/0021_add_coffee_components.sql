@@ -1,0 +1,29 @@
+-- Migration 0021 — blend components on the coffee row.
+--
+-- Until now a coffee carried exactly one `origin` and one `process` (single
+-- text columns). Blends — multiple origins and/or processes in one bag
+-- (e.g. "Brazil Natural + Ethiopia Washed") — could only be stored by jamming
+-- everything into those single strings, which the keyword matchers
+-- (recipe process scoring, brew-signature region bucketing) then silently
+-- collapsed to ONE value, losing the rest.
+--
+-- This adds a first-class `components jsonb` array. Each element is a
+-- BlendComponent: { origin, region?, variety?, process?, ratio? }
+-- (src/lib/types/session.ts).
+--
+-- BACKWARDS COMPATIBLE BY CONSTRUCTION:
+--   * Every existing row keeps components = NULL ⇒ treated as single-origin.
+--   * The scalar origin/process columns STAY POPULATED and become a
+--     comma-joined SUMMARY of the components (written by the sessions POST
+--     route from deriveIdentitySummary). So all the free-text-into-prompt and
+--     display consumers keep reading the scalar unchanged; only the
+--     blend-aware consumers read `components`.
+-- No backfill: pre-existing single-origin rows are correctly represented by
+-- NULL components, so there is nothing to migrate.
+--
+-- Run on the VPS via the "Run SQL Migration" workflow (migration_file =
+-- 0021_add_coffee_components.sql), or the psql fallback:
+--   cat src/lib/db/migrations/0021_add_coffee_components.sql \
+--     | docker compose exec -T postgres psql -U brewlog -d brewlog
+
+ALTER TABLE coffees ADD COLUMN IF NOT EXISTS components jsonb;

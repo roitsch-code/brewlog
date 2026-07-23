@@ -30,6 +30,7 @@ import type {
   ExternalPlace,
   SessionMode,
   SessionType,
+  BlendComponent,
 } from "@/lib/types/session";
 
 export const sessions = pgTable(
@@ -58,6 +59,13 @@ export const coffees = pgTable("coffees", {
   name: text("name").notNull(),
   origin: text("origin").notNull(),
   process: text("process").notNull(),
+  // Blend components (migration 0021). NULL/empty ⇒ single-origin bag — read
+  // the scalar origin/process above. When set (2+ components), origin/process
+  // are kept as a comma-joined SUMMARY of these so every free-text and keyword
+  // consumer that predates blends keeps working off the scalar unchanged; the
+  // blend-aware consumers (recipe process scoring, variety priors, brew
+  // signature) read this array. Shape: BlendComponent[] (src/lib/types/session).
+  components: jsonb("components").$type<BlendComponent[] | null>(),
   fermentationStyle: text("fermentation_style"),
   cuppingScore: numeric("cupping_score"),
   firstSeenAt: text("first_seen_at").notNull(),

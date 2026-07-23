@@ -33,6 +33,7 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { sanitizePourSteps } from "../utils/pourSteps";
+import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 
 const CandidateSchema = z.object({
@@ -561,6 +562,17 @@ export async function generateRecommendation(
       lockedBrewers,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
+      // Blend: score the process match against EVERY component's process, so a
+      // "Natural + Washed" blend credits recipes suited to either — the single
+      // `process` above (a comma-joined summary) would otherwise collapse to the
+      // first keyword. Empty for a single-origin bag.
+      processes: Array.from(
+        new Set(
+          componentsOf(coffee)
+            .map((c) => normaliseProcess(c.process))
+            .filter((p): p is NonNullable<typeof p> => !!p),
+        ),
+      ),
       variety: coffee.variety,
       goal: normaliseGoal(context.intent),
       occasion: context.occasion,
@@ -610,9 +622,18 @@ export async function generateRecommendation(
     "\nAVAILABLE TECHNIQUES (atomic moves you can compose with — cite by id when adapting a recipe):\n" +
     TECHNIQUES.map((t) => `  - ${t.id}: ${t.description}`).join("\n");
 
+  // Blend note — appended to the user message ONLY when this bag is a real
+  // blend (2+ components). For every single-origin bag the message is
+  // byte-identical to before, so non-blend behaviour (and the prompt cache) is
+  // unchanged.
+  const blendDesc = describeBlend(coffee);
+  const blendNote = blendDesc
+    ? `\nBLEND — this bag is ${componentsOf(coffee).length} components: ${blendDesc}. There is no single origin or process. Reason about the composite cup: extract to serve the component that needs the MOST care (typically the lightest-roasted / washed / most delicate one) without under-serving the others, and name that trade-off in your reasoning. Do not treat it as a single-origin of just one component.`
+    : "";
+
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
-Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}
+Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}${blendNote}
 Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
 ${roasterBlock}${historyBlock}${insightsBlock}

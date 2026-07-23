@@ -220,6 +220,13 @@ export interface RecipeSelectionInput {
   brewersAvailable: Set<BrewerType>;
   roastLevel?: RoastLevel;
   process?: Process;
+  /**
+   * Blend processes — a coffee with 2+ components can span processes
+   * (e.g. Natural + Washed). When set, a recipe scores the process match if it
+   * suits ANY component's process, instead of the single `process` collapsing
+   * to the first one. Single-origin bags leave this empty and use `process`.
+   */
+  processes?: Process[];
   variety?: string;
   goal: Goal;
   occasion?: string;
@@ -332,9 +339,18 @@ function scoreRecipe(
     reasons.push(`roast match (${input.roastLevel})`);
   }
 
-  if (input.process && recipe.bestFor.processes?.includes(input.process)) {
+  // Process match — union over blend components when present, else the single
+  // process. A blend "Natural + Washed" credits a recipe suited to either.
+  const wantProcesses =
+    input.processes && input.processes.length
+      ? input.processes
+      : input.process
+        ? [input.process]
+        : [];
+  const processHit = wantProcesses.some((p) => recipe.bestFor.processes?.includes(p));
+  if (processHit) {
     score += 2;
-    reasons.push(`process match (${input.process})`);
+    reasons.push(`process match (${wantProcesses.filter((p) => recipe.bestFor.processes?.includes(p)).join("/")})`);
   } else if (recipe.bestFor.processes?.includes("any")) {
     score += 1;
   }

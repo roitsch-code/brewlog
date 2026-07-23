@@ -98,6 +98,7 @@ function synthesizeIdentity(coffee: Coffee): CoffeeIdentity {
     name: coffee.name,
     origin: coffee.origin,
     process: coffee.process,
+    components: coffee.components,
     roastLevel: "Light",
     roastDate: coffee.latestRoastDate,
     bagPhotoUrl: coffee.bagPhotoUrl,

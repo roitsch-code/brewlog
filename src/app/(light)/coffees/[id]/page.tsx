@@ -184,18 +184,25 @@ export default function CoffeeDetailPage() {
           ?.tastingNotesFromBag) ?? [];
   const commonNotes = coffee.commonNotes ?? [];
   const origin = latestCoffee?.origin || coffee.origin;
+  // Blend breakdown — prefer the richest source (a scanned session identity has
+  // per-component variety); fall back to the aggregate row's column.
+  const blendComponents = latestCoffee?.components?.length
+    ? latestCoffee.components
+    : coffee.components ?? undefined;
+  const isBlendCoffee = (blendComponents?.length ?? 0) >= 2;
 
   const brewThis = () => {
     // Prefer the most-recent scanned CoffeeIdentity (has variety, tasting notes,
     // roast level). Fall back to the aggregate if the coffee somehow has no
     // sessions yet — defaults match the user's profile (light roast).
     const identity: CoffeeIdentity = latestCoffee
-      ? { ...latestCoffee, coffeeId: coffee.id }
+      ? { ...latestCoffee, components: latestCoffee.components ?? coffee.components, coffeeId: coffee.id }
       : {
           roaster: coffee.roaster,
           name: coffee.name,
           origin: coffee.origin,
           process: coffee.process,
+          components: coffee.components,
           roastLevel: "Light",
           roastDate: coffee.latestRoastDate,
           bagPhotoUrl: coffee.bagPhotoUrl,
@@ -349,8 +356,32 @@ export default function CoffeeDetailPage() {
       {(roastDate || variety || roastLevel || region || process || fermentationStyle || cuppingScore || tastingNotes.length > 0 || commonNotes.length > 0) && (
         <div className="px-5 py-4 border-b border-light-foreground/15 space-y-2">
           <p className="text-light-muted-foreground text-xs uppercase tracking-widest mb-3">Coffee Details</p>
-          {variety && <DetailRow label="Variety" value={variety} />}
-          {process && <DetailRow label="Process" value={process} />}
+          {isBlendCoffee ? (
+            <div className="flex items-baseline gap-3 pt-0.5">
+              <span className="text-light-muted-foreground text-sm shrink-0 w-24">Blend</span>
+              <div className="flex-1 space-y-1.5">
+                {blendComponents!.map((c, i) => (
+                  <div key={i} className="text-light-foreground text-sm">
+                    {c.ratio != null && (
+                      <span className="text-light-muted-foreground">{c.ratio}% </span>
+                    )}
+                    {c.origin || "Unknown"}
+                    {[c.region, c.variety, c.process].filter(Boolean).length > 0 && (
+                      <span className="text-light-muted-foreground">
+                        {" — "}
+                        {[c.region, c.variety, c.process].filter(Boolean).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {variety && <DetailRow label="Variety" value={variety} />}
+              {process && <DetailRow label="Process" value={process} />}
+            </>
+          )}
           {fermentationStyle && <DetailRow label="Fermentation" value={fermentationStyle} />}
           {roastLevel && <DetailRow label="Roast" value={roastLevel} />}
           {region && <DetailRow label="Region" value={region} />}

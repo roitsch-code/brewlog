@@ -3,6 +3,28 @@ import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
 export type SessionMode = "home" | "external";
 export type SessionType = "coffee" | "wine";
 
+/**
+ * One origin component of a coffee. A single-origin bag is one component; a
+ * blend is several. Each component pairs its own origin with its own region /
+ * variety / process (a blend can mix processes — "Brazil Natural + Ethiopia
+ * Washed") plus an optional percentage of the blend.
+ *
+ * The scalar `origin` / `region` / `variety` / `process` fields on
+ * `CoffeeIdentity` remain the SINGLE SOURCE for display + all the free-text and
+ * keyword-matching consumers; when `components` is present they are kept in sync
+ * as a comma-joined SUMMARY (see src/lib/coffee/blend.ts `deriveIdentitySummary`).
+ * So a single-origin bag never carries `components`, and every consumer that
+ * predates blends keeps working off the scalar unchanged.
+ */
+export interface BlendComponent {
+  origin: string;
+  region?: string;
+  variety?: string;
+  process?: string;
+  /** Share of the blend, 0–100. Optional — many bags don't print ratios. */
+  ratio?: number;
+}
+
 export interface CoffeeIdentity {
   roaster: string;
   name: string;
@@ -10,6 +32,12 @@ export interface CoffeeIdentity {
   region?: string;
   variety?: string;
   process: string; // Natural | Washed | Honey | Anaerobic | Other
+  /**
+   * Blend components (2+). Absent/empty ⇒ single-origin: read the scalar
+   * origin/region/variety/process instead. When present, the scalars mirror a
+   * comma-joined summary of these. See src/lib/coffee/blend.ts.
+   */
+  components?: BlendComponent[];
   fermentationStyle?: string; // e.g. "Spontaneous Anaerobic", "Starter-culture Natural", "Thermal-shock Washed"
   roastLevel: string; // Light | Medium-Light | Medium | Dark
   roastDate?: string; // ISO date string

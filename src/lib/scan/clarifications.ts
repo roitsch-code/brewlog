@@ -52,6 +52,15 @@ export function isFieldEmpty(coffee: CoffeeLike, field: ClarificationField): boo
   if (field === "tastingNotesFromBag") {
     return (coffee.tastingNotesFromBag?.length ?? 0) === 0;
   }
+  // A blend (2+ components) carries origin/region/variety/process per component
+  // and derives the scalar summary from them — the per-component editor already
+  // collected these, so never ask a follow-up about them for a blend.
+  if (
+    (coffee.components?.length ?? 0) >= 2 &&
+    (field === "origin" || field === "region" || field === "variety" || field === "process")
+  ) {
+    return false;
+  }
   const v = (coffee[field] as string | undefined)?.trim();
   if (!v) return true;
   // "Other" / "Unknown" are non-answers the scan falls back to — worth asking.
