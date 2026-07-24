@@ -3,7 +3,7 @@ import { parseClaudeJson, z } from "./parseJson";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const BagAnalysisSchema = z.object({
+export const BagAnalysisSchema = z.object({
   extracted: z
     .object({
       roaster: z.string().nullable().optional(),
@@ -18,6 +18,10 @@ const BagAnalysisSchema = z.object({
       cuppingScore: z.number().nullable().optional(),
       tastingNotesFromBag: z.array(z.string()).optional(),
       // Blend components — present ONLY when the bag is a blend (2+ origins).
+      // MUST be `.nullable()` too: the prompt tells the model to return
+      // `"components": null` for a single-origin bag, and a plain `.optional()`
+      // rejects null → the whole parse fails → every single-origin scan returns
+      // empty. (This is the scan-data-export bug from PR #498.)
       components: z
         .array(
           z.object({
@@ -28,6 +32,7 @@ const BagAnalysisSchema = z.object({
             ratio: z.number().nullable().optional(),
           }),
         )
+        .nullable()
         .optional(),
     })
     .passthrough(),
