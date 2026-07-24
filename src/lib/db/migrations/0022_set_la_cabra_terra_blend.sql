@@ -11,9 +11,13 @@
 -- bag's batch differs, correct via a follow-up — nothing here is fabricated
 -- beyond what the roaster lists.
 --
--- SAFETY: targets exactly one coffee row and RAISEs (aborting the whole
--- statement under ON_ERROR_STOP) unless the roaster+name match is unique, so it
--- can never touch the wrong bag. Idempotent — re-running sets the same values.
+-- SAFETY: aborts (under ON_ERROR_STOP) only when the roaster+name match is
+-- AMBIGUOUS (>1 row), so it can never touch the wrong bag. A ZERO-row match is a
+-- no-op, not an error — there's nothing to touch, and the migration must stay
+-- safe to apply against ANY database state, including the empty throwaway
+-- Postgres the CI screenshots job spins up (which applies every migration to a
+-- fresh DB with no seed data — the hard "exactly 1" guard used to abort that run
+-- and red the whole job). Idempotent — re-running sets the same values.
 --
 -- Applied via the push-triggered runner (.github/migrate) or the manual
 -- "Run SQL Migration" workflow.
@@ -27,8 +31,13 @@ BEGIN
   FROM coffees
   WHERE roaster ILIKE '%la cabra%' AND name ILIKE '%terra%';
 
-  IF n <> 1 THEN
-    RAISE EXCEPTION 'Expected exactly 1 La Cabra Terra coffee row, found % — aborting so no wrong row is touched', n;
+  IF n = 0 THEN
+    RAISE NOTICE 'No La Cabra Terra coffee row found — nothing to update (skipping)';
+    RETURN;
+  END IF;
+
+  IF n > 1 THEN
+    RAISE EXCEPTION 'Expected at most 1 La Cabra Terra coffee row, found % — aborting so no wrong row is touched', n;
   END IF;
 
   SELECT id INTO target_id
