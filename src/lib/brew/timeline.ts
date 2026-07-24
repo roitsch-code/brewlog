@@ -137,6 +137,19 @@ export function buildBrewTimeline(
   const guideSteps = hasImmersionShape(recipe) ? buildGuideSteps(recipe) : null;
   if (guideSteps) {
     const normalized = guideSteps.map(fromGuideStep);
+    // Fill each immersion WATER step's `pourGrams` with the cumulative delta — the
+    // size of THIS pour, not the running total — so the live flow coach (and the
+    // brew screen's pace line) target the actual pour. Single-pour immersion (the
+    // common AeroPress/Clever "add all water", delta == total) is unchanged; a
+    // rare second pour now coaches against its own increment instead of the total.
+    let prevCumulative = 0;
+    for (const s of normalized) {
+      if (s.targetCumulativeGrams == null) continue;
+      if (s.action === "bloom" || s.action === "pour" || s.action === "final" || s.action === "melodrip") {
+        s.pourGrams = Math.max(0, s.targetCumulativeGrams - prevCumulative);
+      }
+      prevCumulative = s.targetCumulativeGrams;
+    }
     return {
       shape: "immersion",
       pourSteps: null,

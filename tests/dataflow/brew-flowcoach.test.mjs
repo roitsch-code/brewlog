@@ -199,3 +199,32 @@ test("immersion: the water-POUR step gets scale coaching (AeroPress fix)", () =>
   assert.equal(over.cue, "overshot");
   assert.equal(over.detail, "+15g");
 });
+
+// A two-pour immersion (bloom 60g, then a top-up to 250g). The second pour's own
+// size is 190g — the coach must target THAT delta, not the 250g running total.
+const IMMERSION_2POUR = buildBrewTimeline(
+  {
+    doseGrams: 18, waterGrams: 250, waterTempC: 90, grindSize: "medium", targetTimeSec: 180,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 15 },
+      { label: "Steep", action: "wait", durationSec: 30 },
+      { label: "Top up", action: "pour", waterGramsAtEnd: 250, durationSec: 30 },
+      { label: "Steep", action: "wait", durationSec: 60 },
+      { label: "Press", action: "press", durationSec: 25 },
+    ],
+  },
+  ROAST,
+  NOW,
+);
+
+test("immersion multi-pour: pourGrams is the cumulative DELTA, not the total", () => {
+  const topUp = IMMERSION_2POUR.steps.find((s) => s.targetCumulativeGrams === 250);
+  assert.equal(topUp.pourGrams, 190, "top-up pour is 250 − 60 = 190g");
+});
+
+test("immersion multi-pour: coach targets the pour delta's rate, not the total's", () => {
+  const topUp = IMMERSION_2POUR.steps.find((s) => s.targetCumulativeGrams === 250);
+  const c = coachFlow(IMMERSION_2POUR, topUp.startSec + 1, true, 120, ramp(6));
+  // 190g over its authored 30s = ~6.3 g/s — NOT the 250/30 = ~8.3 the total gives.
+  assert.ok(Math.abs(c.targetRateGPS - 190 / 30) < 0.05, `expected ~6.3, got ${c.targetRateGPS}`);
+});

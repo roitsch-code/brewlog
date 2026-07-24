@@ -16,7 +16,7 @@
  * guidance, never presented as hard law.
  */
 import { activeStepAt, expectedGramsAt, type BrewTimeline } from "@/lib/brew/timeline";
-import { intendedPourDurationSec } from "@/lib/utils/pourSequence";
+import { pourTargetRateGPS } from "@/lib/utils/pourSequence";
 
 export interface WeightSample {
   /** Wall-clock ms when the sample was read. */
@@ -65,11 +65,9 @@ const SLOW_MULT = 0.6;
 // Never cry "Slower" below this even at 1.5× a very gentle target — a genuinely
 // slow pour is never "too fast". Keeps the coach quiet on clarity brews.
 const FAST_FLOOR = 4; // g/s
-// The recipe's intended rate is clamped to this sane pour band before coaching,
-// so a mis-authored durationSec (a 1 s "pour 200 g" = 200 g/s) can't set an
-// absurd target. Wide by design — the corpus spans ~3–10 g/s on pour-overs.
-const TARGET_MIN = 2; // g/s
-const TARGET_MAX = 11; // g/s — a hard gooseneck can't gently exceed this
+// The recipe's intended rate is clamped to a sane pour band (2–11 g/s) before
+// coaching — see pourTargetRateGPS, the shared source of truth the brew screen
+// also displays, so the coached target and the shown target can never drift.
 
 const NO_DATA: FlowComparison = {
   cue: "none",
@@ -189,14 +187,11 @@ export function coachFlow(
   const pourGrams = step.pourGrams != null && step.pourGrams > 0 ? step.pourGrams : stepTarget;
   // Coach against the RECIPE'S OWN intended pour rate — grams ÷ its intended
   // pour time (Kasuya 60 g / 10 s = 6 g/s; a Hoffmann swing ~10; a clarity brew
-  // ~3–4). `intendedPourDurationSec` uses the recipe's authored time when it
-  // reads as a real pour (≥2 g/s) and falls back to the ~4 g/s house estimate
-  // otherwise (rest folded into the step, or no duration). Clamped to a sane
-  // pour band so a bad duration can't set an impossible target. This replaces
-  // the old global 4 g/s that flagged every legit fast pour as "too fast".
-  const dur = intendedPourDurationSec(pourGrams, step.pourDurationSec);
-  const rawTargetRate = pourGrams / dur;
-  const targetRate = Math.min(TARGET_MAX, Math.max(TARGET_MIN, rawTargetRate));
+  // ~3–4), clamped to a sane band. `pourTargetRateGPS` is the shared source of
+  // truth the brew screen also displays, so the target you're coached to and the
+  // target shown on the card are the same number. Replaces the old global 4 g/s
+  // that flagged every legit fast pour as "too fast".
+  const targetRate = pourTargetRateGPS(pourGrams, step.pourDurationSec);
 
   const partial: Omit<FlowComparison, "cue" | "message" | "detail" | "state"> = {
     liveGrams,

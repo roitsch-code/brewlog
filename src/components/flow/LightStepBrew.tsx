@@ -9,8 +9,10 @@ import {
   isAgitationPourAction,
   poursCompleteAtSec,
   getActiveIdx,
+  pourPace,
   type PourStep,
   type GuideStep,
+  type PourPace,
 } from "@/lib/utils/pourSequence";
 import { buildBrewTimeline, type BrewTimeline } from "@/lib/brew/timeline";
 import type { BrewStepAction } from "@/lib/types/session";
@@ -416,6 +418,24 @@ function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
   return !!coach && coach.cue !== "none" && coach.cue !== "agitate";
 }
 
+/** Concrete pour-pace line for the active pour step — sits right under the
+ * "+180g → 270g" grams row and turns the recipe's vague "slow pouring" into a
+ * number the user can hold against the live g/s the scale shows: e.g.
+ * "Slow pour · ~4.0 g/s over ~45s". Derived from the recipe's OWN timing (the
+ * same intended-rate model the flow coach grades against), so it's the recipe's
+ * "slow", not a generic one — and it renders whether or not a scale is connected. */
+function PourPaceLine({ pace }: { pace: PourPace }) {
+  const label = pace.descriptor.charAt(0).toUpperCase() + pace.descriptor.slice(1) + " pour";
+  const rate = pace.rateGPS >= 10 ? String(Math.round(pace.rateGPS)) : pace.rateGPS.toFixed(1);
+  return (
+    <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <span className="font-fraunces text-[15px] leading-none text-light-foreground">{label}</span>
+      <span className="font-mono-num text-[13px] font-semibold text-light-foreground">~{rate} g/s</span>
+      <span className="font-mono-num text-[12px] text-light-muted-foreground">over ~{pace.seconds}s</span>
+    </div>
+  );
+}
+
 /** The cream weight box for the steps that don't fire a pour cue — swirl/agitation
  * and drain. Same surface as CoachCue, but a plain "Hold" readout: live g/s + the
  * big current-grams / target-grams. Keeps the current+target weight visible on
@@ -503,6 +523,14 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
   const activeStep = activeIdx >= 0 ? steps[activeIdx] : null;
   const nextStep = activeIdx >= 0 && activeIdx < steps.length - 1 ? steps[activeIdx + 1] : null;
   const nextCountdown = nextStep ? Math.max(0, nextStep.startTimeSec - elapsed) : null;
+  // Concrete pour pace for the active MAIN pour (pour/final), shown under the
+  // grams row so "slow" becomes a rate the live g/s can be read against. The
+  // bloom is excluded — its job is even saturation, not a rate (and recipes
+  // author its duration inconsistently), so the coach's "Gentle" carries it.
+  const activePace =
+    activeStep && (activeStep.action === "pour" || activeStep.action === "final")
+      ? pourPace(activeStep.pourGrams, activeStep.pourDurationSec)
+      : null;
   // Draining begins a grace beyond the last step (poursCompleteAtSec covers the time to
   // physically pour it) — purely time-based, so it never waits on a weight reading.
   const drainStartSec = poursCompleteAtSec(steps, targetTimeSec);
@@ -637,6 +665,7 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
               total {waterGrams}g
             </span>
           </div>
+          {activePace && <PourPaceLine pace={activePace} />}
           <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
             {activeStep.notes ?? defaultPourNote(activeStep.action)}
             {activeStep.temperatureC != null && (
@@ -978,6 +1007,27 @@ function StepGuide({
   const tag = actionTag(current.action);
   const isSteep = current.action === "wait";
 
+  // Concrete pour pace for an immersion WATER step (AeroPress/Clever "add water"):
+  // this pour's size = cumulative delta from the previous water step, paced by the
+  // recipe's own timing — the same intended-rate model the coach uses, so the
+  // shown target and any coach cue agree.
+  const isWaterPourStep =
+    current.action === "pour" ||
+    current.action === "final" ||
+    current.action === "melodrip";
+  let currentPace: PourPace | null = null;
+  if (isWaterPourStep && current.cumulativeGrams != null) {
+    let prevCumulative = 0;
+    for (let i = currentIdx - 1; i >= 0; i--) {
+      const c = timed[i].cumulativeGrams;
+      if (c != null) {
+        prevCumulative = c;
+        break;
+      }
+    }
+    currentPace = pourPace(current.cumulativeGrams - prevCumulative, current.durationSec);
+  }
+
   const stepCueActive =
     started && elapsed >= current.startTimeSec && elapsed < current.startTimeSec + 10;
   const stepRemaining = started
@@ -1033,6 +1083,7 @@ function StepGuide({
                 {current.temperatureC != null && <span>{current.temperatureC}°C water</span>}
               </p>
             )}
+            {currentPace && <PourPaceLine pace={currentPace} />}
             <p className="font-chivo text-[13px] text-light-muted-foreground mt-2">
               {current.notes ?? defaultGuideNote(current.action)}
             </p>
