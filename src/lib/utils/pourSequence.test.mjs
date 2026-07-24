@@ -20,7 +20,8 @@ const entry = `
 export {
   getBloomDuration, parsePourSteps, pourStepsFromStructured, buildGuideSteps,
   hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec,
-  poursCompleteAtSec, POUR_RATE_GPS,
+  poursCompleteAtSec, POUR_RATE_GPS, pourPace, pourTargetRateGPS,
+  PACE_RATE_MIN_GPS, PACE_RATE_MAX_GPS,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
@@ -44,6 +45,10 @@ const {
   pourDurationSec,
   poursCompleteAtSec,
   POUR_RATE_GPS,
+  pourPace,
+  pourTargetRateGPS,
+  PACE_RATE_MIN_GPS,
+  PACE_RATE_MAX_GPS,
 } = await import(pathToFileURL(out).href);
 
 // Fixed clock: Apr 17 2026. Lets roast-date branches be exercised deterministically.
@@ -563,3 +568,54 @@ test("proportional spacing: the final pour still lands at target − reserve", (
 // advances purely on the recipe's TIME schedule (`getActiveIdx`, tested above),
 // with the live weight box on each step showing poured-vs-target. No peak, no
 // weight-hold, so there is nothing to "freeze".
+
+// ── pourPace / pourTargetRateGPS ──────────────────────────────────────────────
+// The concrete pour-pace the brew screen shows under the grams row, and the
+// single target-rate source the flow coach ALSO grades against.
+
+test("pourTargetRateGPS: authored pour time drives the rate (Kasuya 60g/10s = 6 g/s)", () => {
+  assert.ok(Math.abs(pourTargetRateGPS(60, 10) - 6) < 1e-9);
+});
+
+test("pourTargetRateGPS: no authored time → the ~4 g/s house fallback", () => {
+  // 180g / pourDurationSec(180)=round(180/4)=45s → 4.0 g/s.
+  assert.ok(Math.abs(pourTargetRateGPS(180) - 4) < 1e-9);
+});
+
+test("pourTargetRateGPS: an absurd authored time is clamped to the ceiling", () => {
+  // "pour 200g in 1s" = 200 g/s → clamped to the 11 g/s ceiling.
+  assert.equal(pourTargetRateGPS(200, 1), PACE_RATE_MAX_GPS);
+});
+
+test("pourTargetRateGPS: an implausibly SLOW authored time is ignored (falls to ~4 g/s)", () => {
+  // 10g authored at 60s = 0.17 g/s < MIN_POUR_RATE_GPS → not a real pour time, so
+  // intendedPourDurationSec drops back to the house estimate (~4 g/s), never a
+  // near-zero rate.
+  const r = pourTargetRateGPS(10, 60);
+  assert.ok(r > PACE_RATE_MIN_GPS && r <= 4.5, `expected ~4 g/s house fallback, got ${r}`);
+});
+
+test("pourPace: descriptor bands (house 4 g/s reads 'slow', Kasuya 6 'brisk')", () => {
+  assert.equal(pourPace(180).descriptor, "slow"); // 4.0 g/s house fallback
+  assert.equal(pourPace(20, 10).descriptor, "very slow"); // 2.0 g/s
+  assert.equal(pourPace(40, 10).descriptor, "slow"); // 4.0 g/s
+  assert.equal(pourPace(50, 10).descriptor, "steady"); // 5.0 g/s
+  assert.equal(pourPace(60, 10).descriptor, "brisk"); // 6.0 g/s (band boundary: <6 = steady)
+  assert.equal(pourPace(70, 10).descriptor, "brisk"); // 7.0 g/s
+  assert.equal(pourPace(90, 10).descriptor, "fast"); // 9.0 g/s
+});
+
+test("pourPace: seconds stay consistent with a clamped rate", () => {
+  // 200g authored at 1s → rate clamps to 11 g/s; the shown seconds must re-derive
+  // from the clamp (≈18s), never the impossible 1s.
+  const p = pourPace(200, 1);
+  assert.equal(p.rateGPS, PACE_RATE_MAX_GPS);
+  assert.equal(p.seconds, Math.round(200 / PACE_RATE_MAX_GPS)); // 18
+  // And an un-clamped pace keeps its authored seconds exactly.
+  assert.equal(pourPace(60, 10).seconds, 10);
+});
+
+test("pourPace: zero-gram step (agitation / steep) has no pace", () => {
+  assert.equal(pourPace(0), null);
+  assert.equal(pourPace(undefined), null);
+});

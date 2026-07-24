@@ -66,6 +66,71 @@ export function intendedPourDurationSec(grams: number, authoredSec?: number): nu
   return pourDurationSec(g);
 }
 
+/** The intended pour rate is clamped to this sane pour band for BOTH display and
+ * coaching, so a mis-authored `durationSec` (a 1 s "pour 200 g" = 200 g/s) can't
+ * set an absurd target. Wide by design — the corpus spans ~3–10 g/s on pour-overs
+ * (median 5.2). Shared with the live flow coach so the shown and coached targets
+ * never drift. */
+export const PACE_RATE_MIN_GPS = 2;
+export const PACE_RATE_MAX_GPS = 11;
+
+/**
+ * The recipe's intended pour RATE (g/s) for a pour of `grams`, clamped to the
+ * sane pour band. This is the SINGLE source of truth for "how fast this pour
+ * should go" — used by the live flow coach (what it grades your pour against)
+ * AND by the brew screen (what it displays), so the target you're shown and the
+ * target you're coached to are always the same number.
+ */
+export function pourTargetRateGPS(grams: number, authoredSec?: number): number {
+  const g = Math.max(1, grams);
+  const raw = g / intendedPourDurationSec(g, authoredSec);
+  return Math.min(PACE_RATE_MAX_GPS, Math.max(PACE_RATE_MIN_GPS, raw));
+}
+
+export interface PourPace {
+  /** Grams added by this pour. */
+  grams: number;
+  /** Seconds to pour it at the intended rate (kept consistent with `rateGPS`). */
+  seconds: number;
+  /** Intended pour rate (g/s), clamped to the sane pour band. */
+  rateGPS: number;
+  /** Plain pace word mapped from the rate. Owner-calibrated to the house pour:
+   * the ~4 g/s gentle gooseneck reads "slow", Kasuya's ~6 "steady", a Hoffmann
+   * swing "fast". Turns a recipe's vague "slow"/"gentle" into a word AND a number
+   * the user can hold against the live g/s the scale shows. */
+  descriptor: "very slow" | "slow" | "steady" | "brisk" | "fast";
+}
+
+/**
+ * Concrete pour-pace for a single pour — how fast (g/s), how long (s), and a
+ * plain descriptor — derived from the recipe's OWN timing (the same intended-rate
+ * model the flow coach uses). Lets the brew screen replace a vague "slow pouring"
+ * with "Slow pour · ~4 g/s over ~45s". Returns null for a zero-gram step
+ * (agitation / steep / press), which has no pour to pace.
+ */
+export function pourPace(grams: number, authoredSec?: number): PourPace | null {
+  if (!grams || grams <= 0) return null;
+  const rateGPS = pourTargetRateGPS(grams, authoredSec);
+  const rawSeconds = intendedPourDurationSec(grams, authoredSec);
+  // If the raw rate got clamped, re-derive seconds from the clamped rate so the
+  // displayed pair "~18s · ~11 g/s" is never internally impossible.
+  const seconds =
+    Math.abs(grams / rawSeconds - rateGPS) < 1e-6
+      ? rawSeconds
+      : Math.max(1, Math.round(grams / rateGPS));
+  const descriptor: PourPace["descriptor"] =
+    rateGPS < 3
+      ? "very slow"
+      : rateGPS < 4.5
+        ? "slow"
+        : rateGPS < 6
+          ? "steady"
+          : rateGPS < 8
+            ? "brisk"
+            : "fast";
+  return { grams, seconds, rateGPS, descriptor };
+}
+
 /** Discrete agitation actions that now get their OWN timed step in the
  * percolation timeline (instead of being folded onto a pour as an attribute). */
 export type AgitationAction = "swirl" | "stir" | "tap";
