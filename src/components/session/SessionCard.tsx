@@ -5,6 +5,7 @@ import type { Session } from "@/lib/types/session";
 import StarRating from "@/components/ui/light/StarRating";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { formatSeconds } from "@/lib/utils/formatTime";
+import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
 
 interface SessionCardProps {
   session: Session;
@@ -15,13 +16,24 @@ const DELETE_THRESHOLD = 80;
 
 export default function SessionCard({ session, onDeleted }: SessionCardProps) {
   const router = useRouter();
-  const { brew, result, recommendation, createdAt } = session;
+  const { brew, result, createdAt } = session;
 
-  const method = brew?.methodUsed || recommendation?.primaryMethod || "Brew";
-  const dose = brew?.doseGrams ?? recommendation?.primaryRecipe.doseGrams;
-  const water = brew?.waterGrams ?? recommendation?.primaryRecipe.waterGrams;
-  const timeSec = brew?.actualTimeSec ?? recommendation?.primaryRecipe.targetTimeSec;
-  const grind = brew?.grindSettingUsed ?? recommendation?.primaryRecipe.grindSize;
+  // The recipe the user ACTUALLY brewed (selected candidate), via the shared
+  // resolver — not `recommendation.primaryRecipe`. Two reasons:
+  //   1. Crash safety. `recommendation?.primaryRecipe.doseGrams` only guarded
+  //      `recommendation`, so a stored session whose recommendation carries
+  //      `candidates` but no `primaryRecipe` threw "Cannot read properties of
+  //      undefined" and took the whole coffee-detail page to the error boundary.
+  //      The field is typed required but comes back from JSONB, where an older /
+  //      differently-written row may simply not have it.
+  //   2. Correctness. Reading the primary showed the FIRST candidate's numbers
+  //      even when a different candidate was brewed — the same bug class PRs
+  //      #193/#198 fixed everywhere else by routing through this resolver.
+  const { recipe: brewedRecipe, method } = resolveBrewedRecipe(session);
+  const dose = brew?.doseGrams ?? brewedRecipe?.doseGrams;
+  const water = brew?.waterGrams ?? brewedRecipe?.waterGrams;
+  const timeSec = brew?.actualTimeSec ?? brewedRecipe?.targetTimeSec;
+  const grind = brew?.grindSettingUsed ?? brewedRecipe?.grindSize;
   const rating = result?.rating;
   const tags = result?.flavorNotes?.slice(0, 4) ?? [];
 

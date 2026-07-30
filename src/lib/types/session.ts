@@ -155,8 +155,14 @@ export interface RecommendationCandidate {
 
 export interface Recommendation {
   candidates: RecommendationCandidate[]; // 2–4 entries
-  primaryMethod: string;                 // = candidates[0].method (backward compat)
-  primaryRecipe: BrewRecipe;             // = candidates[0].recipe (backward compat)
+  // OPTIONAL ON PURPOSE — these two are read back from a `jsonb` column, not
+  // constructed fresh, so the type must describe what a stored row can actually
+  // hold. Typing them required let `recommendation?.primaryRecipe.doseGrams`
+  // type-check while throwing at runtime on a row that only carried
+  // `candidates` — it crashed the coffee-detail page into the error boundary.
+  // Read the brewed recipe via resolveBrewedRecipe(session) instead of these.
+  primaryMethod?: string;                // = candidates[0].method (backward compat)
+  primaryRecipe?: BrewRecipe;            // = candidates[0].recipe (backward compat)
   alternativeMethod?: string;            // = candidates[1]?.method (backward compat)
   alternativeRecipe?: BrewRecipe;        // = candidates[1]?.recipe (backward compat)
   reasoning: string;
