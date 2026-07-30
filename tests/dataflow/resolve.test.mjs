@@ -80,3 +80,45 @@ test("basedOnReference sentinel handling", () => {
   assert.equal(basedOnReference("  "), undefined);
   assert.equal(basedOnReference("April 1-2-3", "Reduced agitation"), "April 1-2-3");
 });
+
+// ── Degenerate stored shapes (the coffee-detail crash, July 2026) ───────────
+// `recommendation` is a jsonb column, so a stored row can carry `candidates`
+// without the "backward compat" `primaryMethod`/`primaryRecipe` mirrors. The
+// session card used to read `recommendation?.primaryRecipe.doseGrams` — the
+// optional chain guarded the recommendation but NOT primaryRecipe, so such a
+// row threw "Cannot read properties of undefined" and took the whole
+// /coffees/[id] page to the error boundary. Every reader must degrade to
+// undefined instead. (Types made primaryMethod/primaryRecipe optional so tsc
+// catches a new unguarded deref.)
+
+test("candidates-only recommendation resolves without throwing", () => {
+  const r = resolveBrewedRecipe({
+    id: "s2", type: "brew", mode: "home",
+    recommendation: { candidates: [{ method: "V60", title: "T", recipe: { _tag: "CAND0", doseGrams: 15 } }] },
+    brew: { methodUsed: "V60" },
+  });
+  assert.equal(r.recipe._tag, "CAND0");
+  assert.equal(r.method, "V60");
+});
+
+test("candidates-only with no brew block still resolves (no primaryRecipe to fall back on)", () => {
+  const r = resolveBrewedRecipe({
+    id: "s3", type: "brew", mode: "home",
+    recommendation: { candidates: [{ method: "Clever", recipe: { _tag: "C" } }] },
+  });
+  // No index and no methodUsed → nothing matches; must be undefined, not a throw.
+  assert.equal(r.recipe, undefined);
+  assert.equal(r.method, "Brew");
+});
+
+test("empty recommendation object degrades to undefined", () => {
+  const r = resolveBrewedRecipe({ id: "s4", type: "brew", mode: "home", recommendation: {}, brew: { methodUsed: "V60" } });
+  assert.equal(r.recipe, undefined);
+  assert.equal(r.method, "V60");
+});
+
+test("missing recommendation entirely (café visit) degrades to undefined", () => {
+  const r = resolveBrewedRecipe({ id: "s5", type: "brew", mode: "cafe" });
+  assert.equal(r.recipe, undefined);
+  assert.equal(r.method, "Brew");
+});
