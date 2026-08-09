@@ -14,12 +14,23 @@
  * Positioned ABSOLUTE inside a `relative` CTA wrapper (not page-level).
  * The wrapper's relative + this layer's absolute keep the warmth glued
  * to the CTA when the CTA scrolls (§8 hybrid gradient scroll).
+ *
+ * HORIZONTAL BLEED IS EXACTLY THE PAGE GUTTER (`-inset-x-5` cancels the
+ * container's `px-5`), i.e. edge to edge and not one pixel further. It used to
+ * be `inset-x-[-20%]`, which pushed ~50px BEYOND the viewport on a phone. Those
+ * pixels were never visible — the viewport clipped them — but they made the
+ * root scroll container 440px wide against a 390px screen, and a scroll
+ * container with hidden overflow is still draggable in WebKit. That is what let
+ * the brew/recommend screens be dragged sideways and snap back ("the page moves
+ * by itself"). Keep this flush with the gutter: the warmth must reach the screen
+ * edges, never extend past them. The container is capped at max-w-[430px], so
+ * on a wide screen this spans the container, not the window.
  */
 export default function CTAWarmth() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-[-20%] -bottom-10 -top-16 -z-10"
+      className="pointer-events-none absolute -inset-x-5 -bottom-10 -top-16 -z-10"
       style={{
         background:
           "radial-gradient(ellipse at 50% 100%, hsl(12 88% 66% / 0.85) 0%, hsl(18 82% 74% / 0.5) 35%, transparent 70%)",

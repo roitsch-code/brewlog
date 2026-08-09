@@ -84,7 +84,9 @@ export default function PastConversationsPage() {
           </button>
         </header>
 
-        <section className="flex-1 min-h-0 overflow-y-auto px-5 py-5">
+        {/* scroll-y-only: `overflow-y-auto` alone promotes the x-axis from
+            `visible` to `auto`, which made this list draggable sideways. */}
+        <section className="scroll-y-only flex-1 min-h-0 overflow-y-auto px-5 py-5">
           {loading ? (
             <p className="font-chivo text-[15px] text-light-muted-foreground">Loading…</p>
           ) : rows.length === 0 ? (
