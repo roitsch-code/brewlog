@@ -216,7 +216,13 @@ export async function POST(req: NextRequest) {
     // must never be fatal: render falls back to the default Field.
     const fieldZones = bagFlavors.length > 0 ? await mapNotesToZones(bagFlavors).catch(() => null) : null;
 
-    await db.insert(coffees).values({
+    // onConflictDoNothing: the pill locks itself while saving, but a slow
+    // request plus a reload (which resets that local state) can put two creates
+    // in flight for the same bag. The id is deterministic, so the loser would
+    // hit a primary-key violation and surface as a 500 on a tap that actually
+    // succeeded. An empty `returning` means the other write won — that's the
+    // merge case, not an error.
+    const inserted = await db.insert(coffees).values({
       id,
       roaster: input.roaster.trim(),
       name: input.name.trim(),
@@ -240,9 +246,9 @@ export async function POST(req: NextRequest) {
       fieldZones: fieldZones ?? undefined,
       bagFlavors: bagFlavors.length > 0 ? bagFlavors : undefined,
       inRotation: input.inRotation,
-    });
+    }).onConflictDoNothing().returning({ id: coffees.id });
 
-    return NextResponse.json({ id, created: true });
+    return NextResponse.json({ id, created: inserted.length > 0 });
   } catch (err) {
     console.error("coffees POST error:", err);
     return NextResponse.json({ error: "Failed to add coffee" }, { status: 500 });
