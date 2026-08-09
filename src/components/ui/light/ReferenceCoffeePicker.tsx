@@ -86,7 +86,7 @@ export default function ReferenceCoffeePicker({
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="scroll-y-only flex-1 overflow-y-auto px-5 py-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {filtered.length === 0 ? (
             <p className="py-6 text-center font-chivo text-[13px] text-light-muted-foreground">
               No matching coffees

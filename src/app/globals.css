@@ -94,6 +94,30 @@
     overscroll-behavior: none;
   }
 
+  /* Vertical scrollers that must never pan sideways.
+   *
+   * A box with `overflow-y: auto` and nothing said about x does NOT keep
+   * `overflow-x: visible` — CSS promotes the visible axis to `auto` whenever
+   * the other one scrolls. So every `overflow-y-auto` box in the app was
+   * silently a HORIZONTAL scroll container too, and on iOS a finger could drag
+   * it and it snapped back on release. That was the Past Conversations list
+   * sliding under its own header.
+   *
+   * `overflow-x: hidden` is the fix here and can't be improved by `clip`:
+   * per spec `clip` computes back to `hidden` when the other axis scrolls
+   * (measured — the computed value really does come back `hidden`), so it
+   * would be a no-op dressed up as a fix.
+   *
+   * This only removes an axis that was never meant to scroll; nothing about
+   * painting or vertical scrolling changes. Anything that genuinely needs
+   * horizontal scrolling (the chip carousels) is a separate element and is
+   * untouched.
+   */
+  .scroll-y-only {
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+  }
+
   /* Light System v1.0 hybrid-repo override.
    *
    * The root layout sets body bg = #0E0B0A so every Dark route renders on

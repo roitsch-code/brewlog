@@ -36,7 +36,15 @@ export default function ScrollContainer({ children }: { children: React.ReactNod
       style={{
         height: "100dvh",
         overflowY: "auto",
+        // Hides the axis, but note this box is STILL a horizontal scroll
+        // container — WebKit will let a finger drag it if anything inside
+        // exceeds the width. So the real defence is upstream: nothing may
+        // extend past the viewport (see CTAWarmth, which used to bleed ~50px
+        // beyond it and made the brew screens draggable).
         overflowX: "hidden",
+        // Stops a horizontal drag from rubber-banding here or chaining to the
+        // page behind it.
+        overscrollBehaviorX: "none",
       }}
       className="[&::-webkit-scrollbar]:hidden"
     >

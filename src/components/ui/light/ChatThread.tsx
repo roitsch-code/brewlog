@@ -115,7 +115,7 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="h-full overflow-y-auto [-webkit-mask-image:linear-gradient(to_bottom,transparent_0,black_80px)] [mask-image:linear-gradient(to_bottom,transparent_0,black_80px)]"
+      className="scroll-y-only h-full overflow-y-auto [-webkit-mask-image:linear-gradient(to_bottom,transparent_0,black_80px)] [mask-image:linear-gradient(to_bottom,transparent_0,black_80px)]"
     >
       <div className="flex min-h-full flex-col justify-end">
         <div className="flex w-full flex-col gap-3 px-5 py-5">
