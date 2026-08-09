@@ -152,7 +152,7 @@ Hard rules:
 - The bag has **no id until it is added**. So in the same turn, do NOT call remember_advice, coffee_detail, or start_brew for it — you have no id to pass and the button would do nothing. If you have durable brewing guidance for it, put it in this call's observation + suggestion instead: the same tap saves it as that coffee's coach note, and the recipe builder reads it from then on.
 - Once the bag is added it behaves like any other library bag — the user can ask for a recipe next turn and you'll have its id.
 
-Do NOT call it for: a coffee they're merely curious about or considering buying, a café's coffee they drank out, or anything already in the Coffee Library block (link to it with coffee_detail instead).
+Do NOT call it for: a coffee they're merely curious about or considering buying, or a café's coffee they drank out. For a bag that IS already in the library, link to it with coffee_detail — with ONE exception: if the user is supplying something that bag is missing (its photo, a roast date, the variety), call add_coffee again with what you now know. Adding an existing bag only ever FILLS BLANKS — it never overwrites anything already recorded — so it is the safe way to complete a half-filled entry.
 
 ## When to call remember_advice
 

@@ -10,6 +10,7 @@ import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import { useFlowStore } from "@/store/flowStore";
 import type { Session } from "@/lib/types/session";
 import type { NavAction } from "@/app/api/explore-agent/route";
+import { lastAttachedPhoto } from "@/lib/chat/addCoffee";
 
 // Extract the first complete sentence from the front of `buf`. "Complete" =
 // terminating punctuation (`.!?` or newline) followed by whitespace. We deny
@@ -257,6 +258,16 @@ export default function HomePage() {
     setMessages(next);
     setLoading(true);
 
+    // The bag photo almost never arrives on the same turn as the add — the
+    // chat asks for the roast date first — so the server has no
+    // `attachedImageUrl` to hand over and bags landed with no picture.
+    // See lastAttachedPhoto().
+    const lastPhotoUrl = lastAttachedPhoto(next);
+    const withBagPhoto = (a: NavAction): NavAction =>
+      a.destination === "add_coffee" && a.coffee && !a.coffee.bagPhotoUrl && lastPhotoUrl
+        ? { ...a, coffee: { ...a.coffee, bagPhotoUrl: lastPhotoUrl } }
+        : a;
+
     // Persist the user message in parallel with the agent request.
     void persistMessage("user", text, {
       ...(imageUrl ? { imageUrl } : {}),
@@ -378,13 +389,14 @@ export default function HomePage() {
             try {
               const payload = JSON.parse(data) as { actions?: NavAction[] };
               if (payload.actions && payload.actions.length > 0) {
-                assistantActions = payload.actions;
+                const actions = payload.actions.map(withBagPhoto);
+                assistantActions = actions;
                 setMessages((prev) => {
                   const copy = prev.slice();
                   const lastIdx = copy.length - 1;
                   const last = copy[lastIdx];
                   if (last?.role === "assistant") {
-                    copy[lastIdx] = { ...last, actions: payload.actions };
+                    copy[lastIdx] = { ...last, actions };
                   }
                   return copy;
                 });
