@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw, Bookmark, Check } from "lucide-react";
+import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw, Bookmark, Check, Plus } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
 import { startBrewAgain, startBrewFromChat } from "@/lib/flow/brewAgain";
 import type { CoffeeIdentity } from "@/lib/types/session";
@@ -56,7 +56,8 @@ function destinationToPath(action: NavAction): string {
       // store first. Fallback path on failure.
       return "/brew/new";
     case "remember_advice":
-      // Handled entirely client-side (tap-to-save); never navigates.
+    case "add_coffee":
+      // Handled entirely client-side (tap-to-save / tap-to-add); never navigates.
       return "/";
     case "cafe_map":
       return "/cafes";
@@ -86,6 +87,8 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
       return <RotateCcw className={cls} strokeWidth={1.75} />;
     case "remember_advice":
       return <Bookmark className={cls} strokeWidth={1.75} />;
+    case "add_coffee":
+      return <Plus className={cls} strokeWidth={1.75} />;
     case "cafe_map":
     case "cafe_detail":
       return <MapPin className={cls} strokeWidth={1.75} />;
@@ -100,11 +103,64 @@ function ActionPillIcon({ destination }: { destination: NavAction["destination"]
 
 export default function ActionPill({ action }: { action: NavAction }) {
   const router = useRouter();
-  // remember_advice is tap-to-save: it writes a coach note instead of
-  // navigating, and reflects progress on the pill itself.
+  // remember_advice and add_coffee are tap-to-write: they persist instead of
+  // navigating, and reflect progress on the pill itself.
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // add_coffee only: the coffee landed but its coach note didn't. Reported
+  // separately so the pill never implies the bag failed to be added.
+  const [noteFailed, setNoteFailed] = useState(false);
 
   const handleClick = async () => {
+    // Put a brand-new bag in the Coffee Library. Before this existed the chat
+    // could read a bag off a photo but had to send the user to type it into
+    // the scan form by hand.
+    if (action.destination === "add_coffee") {
+      if (saveState === "saving" || saveState === "saved") return;
+      const coffee = action.coffee;
+      if (!coffee?.roaster?.trim() || !coffee?.name?.trim()) {
+        setSaveState("error");
+        return;
+      }
+      setSaveState("saving");
+      setNoteFailed(false);
+      try {
+        const res = await fetch("/api/coffees", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(coffee),
+        });
+        if (!res.ok) {
+          setSaveState("error");
+          return;
+        }
+        // The coffee exists now, so it finally has an id the coach note can
+        // target — that ordering is the whole reason the note rides along here
+        // instead of on a separate remember_advice pill.
+        const { id } = (await res.json()) as { id?: string };
+        if (id && action.observation && action.suggestion) {
+          try {
+            const noteRes = await fetch("/api/insights", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                observation: action.observation,
+                suggestion: action.suggestion,
+                citationFields: action.citationFields ?? [],
+                coffeeId: id,
+              }),
+            });
+            if (!noteRes.ok) setNoteFailed(true);
+          } catch {
+            setNoteFailed(true);
+          }
+        }
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+      return;
+    }
+
     if (action.destination === "remember_advice") {
       if (saveState === "saving" || saveState === "saved") return;
       if (!action.observation || !action.suggestion) {
@@ -185,19 +241,31 @@ export default function ActionPill({ action }: { action: NavAction }) {
     router.push(destinationToPath(action));
   };
 
-  // For remember_advice the pill doubles as its own status: label + icon
-  // reflect the save progress, and it locks once saved.
+  // For the tap-to-write pills the button doubles as its own status: label +
+  // icon reflect progress, and it locks once written.
   const isRemember = action.destination === "remember_advice";
-  const label = isRemember
-    ? saveState === "saving"
-      ? "Saving…"
-      : saveState === "saved"
-        ? "Saved to coach"
-        : saveState === "error"
-          ? "Couldn't save — tap to retry"
-          : action.label
-    : action.label;
-  const locked = isRemember && (saveState === "saving" || saveState === "saved");
+  const isAdd = action.destination === "add_coffee";
+  const hasNote = Boolean(action.observation && action.suggestion);
+
+  let label = action.label;
+  if (isRemember) {
+    if (saveState === "saving") label = "Saving…";
+    else if (saveState === "saved") label = "Saved to coach";
+    else if (saveState === "error") label = "Couldn't save — tap to retry";
+  } else if (isAdd) {
+    if (saveState === "saving") label = "Adding…";
+    else if (saveState === "saved") {
+      // The bag is in either way — say what actually happened to the note.
+      label = noteFailed
+        ? "Added — coach note didn't save"
+        : hasNote
+          ? "Added with coach note"
+          : "Added to library";
+    } else if (saveState === "error") label = "Couldn't add — tap to retry";
+  }
+
+  const isTapToWrite = isRemember || isAdd;
+  const locked = isTapToWrite && (saveState === "saving" || saveState === "saved");
 
   // Filled-anthracite treatment so Action Pills don't visually echo the
   // cream Glass user bubbles — they read as "do this" CTAs rather than
@@ -211,7 +279,7 @@ export default function ActionPill({ action }: { action: NavAction }) {
       title={action.reason}
       className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-light-foreground px-4 font-chivo text-[13px] font-medium text-light-text-on-dark shadow-light-float active:opacity-90 disabled:opacity-80"
     >
-      {isRemember && saveState === "saved" ? (
+      {isTapToWrite && saveState === "saved" ? (
         <Check className="h-4 w-4 text-light-text-on-dark" strokeWidth={1.75} />
       ) : (
         <ActionPillIcon destination={action.destination} />

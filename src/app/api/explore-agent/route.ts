@@ -19,6 +19,9 @@ import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import type { Session, BrewRecipe } from "@/lib/types/session";
+import type { NewCoffeePayload } from "@/lib/types/chatActions";
+import { buildNewCoffeePayload, coachNoteFrom } from "@/lib/chat/addCoffee";
+import type { AddCoffeeToolInput } from "@/lib/chat/addCoffee";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +38,7 @@ export interface NavAction {
     | "brew_again"
     | "start_brew"
     | "remember_advice"
+    | "add_coffee"
     | "cafe_map"
     | "cafe_detail"
     | "taste_profile"
@@ -64,6 +68,14 @@ export interface NavAction {
   suggestion?: string;
   /** Field names the advice keys off (variety/process/roast/origin/method) — drives /recommend ranking. */
   citationFields?: string[];
+  // ── add_coffee payload ──────────────────────────────────────────────
+  // A bag the chat read that isn't in the library yet. Tap-to-add: nothing
+  // is written until the user taps, at which point ActionPill POSTs this to
+  // /api/coffees. When observation + suggestion are also present they are
+  // saved as that coffee's coach note by the SAME tap (the new bag has no id
+  // until it exists, so remember_advice cannot target it separately).
+  // Present only when destination === "add_coffee".
+  coffee?: NewCoffeePayload;
 }
 
 // ── System prompt ────────────────────────────────────────────────────────────
@@ -84,6 +96,7 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 - **analyze_image**: download an image URL and read it visually — extract origin, varietal, process, roaster name, tasting notes from bag photos.
 - **suggest_navigation**: propose navigating to a BTTS feature. Call this *during your response* whenever the conversation makes one of the in-app features genuinely useful. Be selective — only when it adds clear value, not as a reflex. You can call it multiple times in one turn (e.g. map + coffee detail).
 - **start_brew**: drop the user STRAIGHT into the step-by-step brew timer with the exact recipe you just gave — no context questions, no re-recommendation. For when you've just laid out a complete recipe for a specific library bag (often a one-off for the last few grams that isn't worth saving).
+- **add_coffee**: put a NEW bag into their Coffee Library yourself. You can read a bag off a photo or a shop page, so you add it — the user never has to retype it into the scan form. Optionally carries a coach note for that bag in the same tap.
 
 **Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (the bags the user has explicitly marked ★ in rotation — this is *not* the full library, just what's open and active on the counter right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
 
@@ -122,6 +135,24 @@ Non-negotiable recipe rules:
 - The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
 - Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step. Brew at ONE constant temperature — never stage or ramp temperature across pours, so leave temperatureC off the steps. For iced, the final step drains onto the ice.
 - It's a terminal action like suggest_navigation — one call, no data round-trip.
+
+## When to call add_coffee
+
+**You can put a bag into the Coffee Library yourself. Never tell the user to go log a coffee by hand and come back — that is exactly the dead end this tool removes.**
+
+Call it when the user shows you a bag — a photo, a roaster URL, or just describes one — that is **not already in the Coffee Library block**, and the conversation implies they own it or are adding it (they bought it, it arrived, they ask you to add/save/remember it, or they ask what you think of a bag they clearly have in hand).
+
+**Ask for what's missing first — once, briefly.** The single field that matters and that a bag photo usually doesn't give you is the **roast date**. Ask for it in one short sentence in the same message as your read of the bag. Accept "not sure" and add the bag without it. Don't interrogate: everything the bag itself shows you already know, so never ask about it. If they've already told you the roast date, don't ask again — just add.
+
+Hard rules:
+- **Never invent a field.** Omit anything you don't actually know — a guessed variety or roast level ends up in the library as fact and poisons every recipe built from it. An omitted field is always better than a plausible one.
+- Use the roaster and coffee name **exactly as printed on the bag**. Those two form the coffee's identity, so a paraphrase creates a second entry for the same bag.
+- Tasting notes are the ones **printed on the bag**, in English. Never your own guesses about how it tastes.
+- **One call per bag.** Two bags in one photo means two calls — one button each, named so the user can tell them apart.
+- The bag has **no id until it is added**. So in the same turn, do NOT call remember_advice, coffee_detail, or start_brew for it — you have no id to pass and the button would do nothing. If you have durable brewing guidance for it, put it in this call's observation + suggestion instead: the same tap saves it as that coffee's coach note, and the recipe builder reads it from then on.
+- Once the bag is added it behaves like any other library bag — the user can ask for a recipe next turn and you'll have its id.
+
+Do NOT call it for: a coffee they're merely curious about or considering buying, a café's coffee they drank out, or anything already in the Coffee Library block (link to it with coffee_detail instead).
 
 ## When to call remember_advice
 
@@ -403,6 +434,48 @@ const TOOLS: Anthropic.Tool[] = [
       required: ["label", "id", "observation", "suggestion"],
     },
   },
+  {
+    name: "add_coffee",
+    description:
+      "Offer a tap-to-add button that puts a coffee bag INTO the user's Coffee Library. Call this when the user has shown you a bag — a photo, a shop URL, or a description — that is NOT already in the Coffee Library block, and they want it in BTTS. This replaces telling them to go log it by hand: you have already read the bag, so hand over what you read. Ask, ONCE and briefly, for anything important the bag itself doesn't show (roast date above all) before calling; if they don't know, add it without. NEVER invent a value — omit a field you don't actually know. Use the roaster and coffee name exactly as printed. One call per bag. The bag has no id until it is added, so if you also have durable brewing guidance for it, pass observation + suggestion here and it is saved as that coffee's coach note by the same tap.",
+    input_schema: {
+      type: "object",
+      properties: {
+        label: { type: "string", description: "Button text, e.g. 'Add Berry Swirl to library'." },
+        roaster: { type: "string", description: "Roaster name exactly as printed, e.g. 'DAK Coffee Roasters'." },
+        name: { type: "string", description: "Coffee name exactly as printed, e.g. 'Berry Swirl'." },
+        origin: { type: "string", description: "Country of origin, e.g. 'Bolivia'." },
+        region: { type: "string", description: "Growing region, e.g. 'Caranavi' or 'Nyeri'." },
+        variety: { type: "string", description: "Variety/cultivar as printed, e.g. 'SL28, SL34'. Omit if the bag doesn't name one." },
+        process: { type: "string", description: "Washed | Natural | Honey | Anaerobic, or as printed." },
+        roastLevel: { type: "string", description: "Light | Medium-Light | Medium | Dark. Omit unless you actually know it." },
+        roastDate: { type: "string", description: "ISO date YYYY-MM-DD. Omit if the user doesn't know it — never guess." },
+        fermentationStyle: { type: "string", description: "e.g. 'Spontaneous Anaerobic'. Only if the bag states it." },
+        cuppingScore: { type: "number", description: "SCA score, only if printed." },
+        tastingNotes: {
+          type: "array",
+          description: "The flavour notes printed ON THE BAG, in English, e.g. ['Forest Fruits','Berry','Jam']. Never invent notes.",
+          items: { type: "string" },
+        },
+        observation: {
+          type: "string",
+          description:
+            "OPTIONAL coach note, part 1: one sentence stating the situation, naming this bag (e.g. 'Currant Mood is a Kenyan natural from Nyeri, so it carries SL28 blackcurrant on top of natural fruit depth.'). Only include when you have concrete parameter-level guidance.",
+        },
+        suggestion: {
+          type: "string",
+          description:
+            "OPTIONAL coach note, part 2: one sentence with the concrete move ('Brew at 92–93°C with gentle agitation on the Orea Classic or Clever rather than the V60, using the BWT filtered water.'). Required if observation is set.",
+        },
+        citationFields: {
+          type: "array",
+          description: "Field names the coach note keys off, from: variety, process, roast, origin, method, freshness.",
+          items: { type: "string" },
+        },
+      },
+      required: ["label", "roaster", "name"],
+    },
+  },
 ];
 
 /**
@@ -427,11 +500,31 @@ function cleanChatRecipe(recipe: BrewRecipe | undefined): BrewRecipe | undefined
   return reconcileWaterToPourPlan(out);
 }
 
-// suggest_navigation and start_brew are terminal "action" tools — collected
-// into the response's actions, not round-tripped. The destination comes from
-// the TOOL NAME for start_brew (its input has no destination field), and from
-// the input for suggest_navigation.
-function toNavAction(toolName: string, input: NavAction): NavAction {
+// suggest_navigation, start_brew, remember_advice and add_coffee are terminal
+// "action" tools — collected into the response's actions, not round-tripped.
+// The destination comes from the TOOL NAME for those three (their inputs have
+// no destination field), and from the input for suggest_navigation.
+//
+// `attachedImageUrl` is the photo the user attached THIS turn. add_coffee uses
+// it as the new bag's photo, so the model never has to echo a URL back (it
+// can't be trusted to reproduce one exactly, and a wrong URL would put someone
+// else's picture on the coffee).
+function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: string | null): NavAction {
+  if (toolName === "add_coffee") {
+    const a = input as NavAction & AddCoffeeToolInput;
+    // Saved as this coffee's coach note by the same tap — but only when the
+    // model supplied BOTH halves (see coachNoteFrom).
+    const note = coachNoteFrom(a.observation, a.suggestion, a.citationFields);
+    return {
+      destination: "add_coffee",
+      label: input.label,
+      reason: input.reason,
+      coffee: buildNewCoffeePayload(a, attachedImageUrl),
+      observation: note?.observation,
+      suggestion: note?.suggestion,
+      citationFields: note?.citationFields,
+    };
+  }
   if (toolName === "start_brew") {
     return {
       destination: "start_brew",
@@ -464,7 +557,10 @@ function toNavAction(toolName: string, input: NavAction): NavAction {
 }
 
 const isActionTool = (name: string) =>
-  name === "suggest_navigation" || name === "start_brew" || name === "remember_advice";
+  name === "suggest_navigation" ||
+  name === "start_brew" ||
+  name === "remember_advice" ||
+  name === "add_coffee";
 
 // ── Tool implementations ─────────────────────────────────────────────────────
 
@@ -655,7 +751,10 @@ function formatLibraryForAgent(library: CompactCoffee[]): string {
           ? `${c.avgRating.toFixed(1)}★ · ${c.sessionCount} sessions`
           : `${c.sessionCount} sessions`;
       const rotationMark = c.inRotation ? "★ IN ROTATION | " : "";
-      return `- [id:${c.id}] ${rotationMark}${c.roaster} — ${c.name} | ${c.origin} ${c.process} | ${usage}`;
+      // Variety comes off the coffee row (migration 0023), so it shows even for
+      // a bag with no brews yet — e.g. one just added from this chat.
+      const variety = c.variety ? ` ${c.variety}` : "";
+      return `- [id:${c.id}] ${rotationMark}${c.roaster} — ${c.name} | ${c.origin}${variety} ${c.process} | ${usage}`;
     })
     .join("\n");
 }
@@ -946,7 +1045,7 @@ export async function POST(req: NextRequest) {
                 // The streamed text was the real response — keep it.
                 // Just collect the action(s) and finish without another Claude round trip.
                 for (const block of toolBlocks) {
-                  navSuggestions.push(toNavAction(block.name, block.input as NavAction));
+                  navSuggestions.push(toNavAction(block.name, block.input as NavAction, attachedImageUrl));
                 }
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,
@@ -1029,7 +1128,7 @@ export async function POST(req: NextRequest) {
                     });
                   }
                 } else if (isActionTool(block.name)) {
-                  navSuggestions.push(toNavAction(block.name, block.input as NavAction));
+                  navSuggestions.push(toNavAction(block.name, block.input as NavAction, attachedImageUrl));
                   toolResults.push({
                     type: "tool_result",
                     tool_use_id: block.id,

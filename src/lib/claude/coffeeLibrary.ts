@@ -8,6 +8,9 @@ export interface CompactCoffee {
   name: string;
   origin: string;
   process: string;
+  /** Variety off the coffee row (migration 0023). Lets the chat and the
+   * greeting reason about the cultivar without a brew session existing. */
+  variety?: string;
   latestRoastDate?: string;
   firstSeenAt: string;
   sessionCount: number;
@@ -30,6 +33,7 @@ function rowToCompact(r: CoffeeRow): CompactCoffee {
     name: r.name,
     origin: r.origin,
     process: r.process,
+    variety: r.variety ?? undefined,
     latestRoastDate: r.latestRoastDate ?? undefined,
     firstSeenAt: r.firstSeenAt,
     sessionCount: r.sessionCount,

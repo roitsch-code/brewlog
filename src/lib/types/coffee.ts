@@ -11,6 +11,13 @@ export interface Coffee {
    * origin/process. When present, origin/process mirror a comma-joined
    * summary of these. See src/lib/coffee/blend.ts. */
   components?: BlendComponent[];
+  /** Variety / region / roast level (migration 0023). A scanned session
+   * identity remains the richer source where one exists; these carry the bag's
+   * own values so a coffee with no brews yet — or one brewed straight from the
+   * library — still reaches the variety priors and the right roast level. */
+  variety?: string;
+  region?: string;
+  roastLevel?: string;
   firstSeenAt: string;
   sessionCount: number;
   sessionIds: string[];

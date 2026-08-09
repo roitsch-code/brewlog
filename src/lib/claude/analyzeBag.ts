@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { parseClaudeJson, z } from "./parseJson";
+import { guardRoastYear } from "@/lib/coffee/roastDate";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -237,25 +238,3 @@ export async function analyzeBagImage(imageBase64: string, mimeType: string): Pr
   };
 }
 
-/**
- * Defensive year adjustment for ambiguous month+day-only roast dates.
- * If the parsed date is >11 months in the past AND shifting it forward
- * by one year lands within the "fresh bag" window (i.e. not in the
- * future), use that. Otherwise return the original.
- */
-function guardRoastYear(iso: string): string {
-  const parsed = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
-  if (isNaN(parsed.getTime())) return iso;
-  const now = new Date();
-  const elevenMonthsMs = 11 * 30 * 24 * 60 * 60 * 1000;
-  const ageMs = now.getTime() - parsed.getTime();
-  if (ageMs < elevenMonthsMs) return iso;
-
-  const bumped = new Date(parsed);
-  bumped.setUTCFullYear(bumped.getUTCFullYear() + 1);
-  // Bumped must not be in the future and must be more reasonable.
-  if (bumped.getTime() > now.getTime()) return iso;
-  const newAgeMs = now.getTime() - bumped.getTime();
-  if (newAgeMs >= elevenMonthsMs) return iso;
-  return bumped.toISOString().slice(0, 10);
-}
