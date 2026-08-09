@@ -164,12 +164,16 @@ export default function CoffeeDetailPage() {
     );
   }
 
-  // Derive scan details from most recent session — works for all existing data
+  // Derive scan details from most recent session — works for all existing data.
+  // Variety / roast level / region fall back to the coffee's own columns
+  // (migration 0023): a bag added straight to the library from the chat has no
+  // session at all, and a bag whose only sessions are note-less Brew Agains
+  // still knows its own variety.
   const latestCoffee = sessions[0]?.coffee;
   const roastDate = coffee.latestRoastDate ?? latestCoffee?.roastDate;
-  const variety = latestCoffee?.variety;
-  const roastLevel = latestCoffee?.roastLevel;
-  const region = latestCoffee?.region;
+  const variety = latestCoffee?.variety || coffee.variety;
+  const roastLevel = latestCoffee?.roastLevel || coffee.roastLevel;
+  const region = latestCoffee?.region || coffee.region;
   const process = latestCoffee?.process || coffee.process;
   const fermentationStyle = latestCoffee?.fermentationStyle;
   const cuppingScore = latestCoffee?.cuppingScore;
@@ -192,10 +196,10 @@ export default function CoffeeDetailPage() {
   const isBlendCoffee = (blendComponents?.length ?? 0) >= 2;
 
   const brewThis = () => {
-    // Prefer the most-recent scanned CoffeeIdentity (has variety, tasting notes,
-    // roast level). Fall back to the aggregate if the coffee somehow has no
-    // sessions yet — defaults match the user's profile (light roast).
-    const identity: CoffeeIdentity = latestCoffee
+    // Prefer the most-recent scanned CoffeeIdentity (it also carries tasting
+    // notes), falling back to the aggregate when the coffee has no sessions —
+    // which is now a real case: a bag added from the chat has never been brewed.
+    const base: CoffeeIdentity = latestCoffee
       ? { ...latestCoffee, components: latestCoffee.components ?? coffee.components, coffeeId: coffee.id }
       : {
           roaster: coffee.roaster,
@@ -209,6 +213,16 @@ export default function CoffeeDetailPage() {
           aiExtracted: false,
           coffeeId: coffee.id,
         };
+    // Fill from the coffee's own columns wherever the session left a gap. The
+    // latest session is often a note-less "Brew Again" that carries no variety
+    // or region, so spreading it alone would drop what the row knows — and
+    // variety is what reaches getVarietyPriorsForBag() in /recommend.
+    const identity: CoffeeIdentity = {
+      ...base,
+      variety: base.variety || variety,
+      region: base.region || region,
+      roastLevel: base.roastLevel || roastLevel || "Light",
+    };
     startBrewAgain(identity, coffee.fieldZones ?? null);
     router.push("/brew/new");
   };

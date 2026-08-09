@@ -9,6 +9,7 @@ import type { Session } from "@/lib/types/session";
 import { FieldZonesSchema } from "@/lib/field/schema";
 import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
 import { deriveIdentitySummary } from "@/lib/coffee/blend";
+import { coffeeKeyFor } from "@/lib/coffee/coffeeKey";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -233,9 +234,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (data.coffee?.name) {
-      const coffeeKey = `${data.coffee.roaster}__${data.coffee.name}`
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "_");
+      // Shared with POST /api/coffees — a drifted copy of this derivation
+      // would fork a second row for the same bag. See lib/coffee/coffeeKey.ts.
+      const coffeeKey = coffeeKeyFor(data.coffee.roaster, data.coffee.name);
 
       const newRating = data.result?.rating;
       const hasRating = typeof newRating === "number";
@@ -247,6 +248,18 @@ export async function POST(req: NextRequest) {
       const bagFlavors = (data.coffee.tastingNotesFromBag ?? [])
         .map((f) => f?.trim())
         .filter((f): f is string => !!f);
+
+      // Variety / region / roast level (migration 0023) follow the SAME
+      // only-when-carried policy as bagFlavors: a scan carries them, a
+      // "Brew Again" save doesn't, so an absent value must never overwrite
+      // what a scan established.
+      const carried = (v: string | undefined) => {
+        const t = v?.trim();
+        return t ? t : undefined;
+      };
+      const carriedVariety = carried(data.coffee.variety);
+      const carriedRegion = carried(data.coffee.region);
+      const carriedRoastLevel = carried(data.coffee.roastLevel);
 
       const existingRows = await db
         .select()
@@ -263,6 +276,9 @@ export async function POST(req: NextRequest) {
           origin: data.coffee.origin || "",
           process: data.coffee.process || "",
           components: data.coffee.components ?? undefined,
+          variety: carriedVariety,
+          region: carriedRegion,
+          roastLevel: carriedRoastLevel,
           fermentationStyle: data.coffee.fermentationStyle,
           cuppingScore: data.coffee.cuppingScore != null ? String(data.coffee.cuppingScore) : undefined,
           firstSeenAt: data.createdAt,
@@ -310,6 +326,11 @@ export async function POST(req: NextRequest) {
         if (bagFlavors.length > 0) {
           updates.bagFlavors = bagFlavors;
         }
+        // Same only-when-carried rule (migration 0023): refresh from a scan,
+        // leave intact on a note-less Brew Again.
+        if (carriedVariety) updates.variety = carriedVariety;
+        if (carriedRegion) updates.region = carriedRegion;
+        if (carriedRoastLevel) updates.roastLevel = carriedRoastLevel;
 
         // Blend: when this save identifies a blend (2+ components), refresh the
         // stored components AND the derived scalar summary (origin/process). A

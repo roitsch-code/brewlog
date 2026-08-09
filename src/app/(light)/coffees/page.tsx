@@ -88,19 +88,26 @@ export default function CoffeesPage() {
   const router = useRouter();
   const online = useOnline();
 
-  // Online "Brew" shortcut — synthesize a CoffeeIdentity from the aggregate
-  // (roastLevel isn't on the Coffee row, default "Light" per the user's
-  // profile) and start the AI flow at Step "context". Offline this button
-  // doesn't render (inRotation is false); you pick a recipe on the detail
-  // page instead.
+  // Online "Brew" shortcut — synthesize a CoffeeIdentity from the aggregate and
+  // start the AI flow at Step "context". Offline this button doesn't render
+  // (inRotation is false); you pick a recipe on the detail page instead.
+  //
+  // variety/region/roastLevel come off the row since migration 0023. Before
+  // that they weren't stored on a coffee at all, so this had to hardcode
+  // roastLevel "Light" and pass no variety — which meant every brew started
+  // from the library reached /recommend with no variety prior. "Light" stays
+  // as the fallback only for a row the backfill couldn't fill (it matches the
+  // user's profile).
   const brewThis = (coffee: Coffee) => {
     const identity: CoffeeIdentity = {
       roaster: coffee.roaster,
       name: coffee.name,
       origin: coffee.origin,
+      region: coffee.region,
+      variety: coffee.variety,
       process: coffee.process,
       components: coffee.components,
-      roastLevel: "Light",
+      roastLevel: coffee.roastLevel || "Light",
       roastDate: coffee.latestRoastDate,
       bagPhotoUrl: coffee.bagPhotoUrl,
       aiExtracted: false,

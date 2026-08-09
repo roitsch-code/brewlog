@@ -15,6 +15,12 @@ import {
 // NavAction shape is mirrored here as a structural type so this schema
 // module stays free of API-route imports. Keep in sync with
 // src/app/api/explore-agent/route.ts.
+//
+// Deliberately only the fields EVERY action has. The per-destination payloads
+// (start_brew's recipe, remember_advice's observation/suggestion, add_coffee's
+// coffee) ride along in the JSONB untyped and are re-typed by the client,
+// which imports the real NavAction from the route — so a new action type does
+// not need a change here to survive the round trip.
 interface NavAction {
   destination: string;
   label: string;
@@ -67,6 +73,16 @@ export const coffees = pgTable("coffees", {
   // signature) read this array. Shape: BlendComponent[] (src/lib/types/session).
   components: jsonb("components").$type<BlendComponent[] | null>(),
   fermentationStyle: text("fermentation_style"),
+  // Variety / region / roast level (migration 0023). Before that these lived
+  // ONLY inside a session's `coffee` JSONB, so a coffee could not describe
+  // itself without a brew attached — which meant the library's "Brew this"
+  // had to guess the roast level and variety priors never reached /recommend.
+  // Nullable: a session identity stays the PREFERRED source where one exists,
+  // these are the fallback (and the only home for a coffee added without a
+  // brew, e.g. from the chat).
+  variety: text("variety"),
+  region: text("region"),
+  roastLevel: text("roast_level"),
   cuppingScore: numeric("cupping_score"),
   firstSeenAt: text("first_seen_at").notNull(),
   sessionCount: integer("session_count").notNull().default(0),
