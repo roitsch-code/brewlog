@@ -59,6 +59,33 @@ export function buildNewCoffeePayload(
   };
 }
 
+/** Minimal shape of a chat message for photo lookup. */
+interface MessageLike {
+  role: string;
+  imageUrl?: string;
+}
+
+/**
+ * The bag photo for an `add_coffee` action, taken from the conversation rather
+ * than the current turn.
+ *
+ * The server can only attach the photo sent on the SAME turn as the tool call,
+ * and that is almost never the turn that adds: the chat is instructed to ask
+ * for the roast date first, so the add pill is offered a turn or two after the
+ * photo. The result was bags landing in the library with no picture. The most
+ * recent photo in the thread is the bag being discussed.
+ *
+ * Only ever FILLS a missing photo — a bagPhotoUrl the server already set (the
+ * same-turn case) wins.
+ */
+export function lastAttachedPhoto(messages: MessageLike[]): string | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === "user" && m.imageUrl) return m.imageUrl;
+  }
+  return undefined;
+}
+
 /**
  * A coach note only exists when the model supplied BOTH halves — an
  * observation with no suggestion is a statement, not advice, and would write a

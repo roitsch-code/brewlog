@@ -31,7 +31,7 @@ const ROOT = process.cwd();
 const entry = `
 export { coffeeKeyFor } from ${JSON.stringify(path.join(ROOT, "src/lib/coffee/coffeeKey.ts"))};
 export { guardRoastYear } from ${JSON.stringify(path.join(ROOT, "src/lib/coffee/roastDate.ts"))};
-export { buildNewCoffeePayload, coachNoteFrom } from ${JSON.stringify(
+export { buildNewCoffeePayload, coachNoteFrom, lastAttachedPhoto } from ${JSON.stringify(
   path.join(ROOT, "src/lib/chat/addCoffee.ts"),
 )};
 `;
@@ -45,9 +45,8 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { coffeeKeyFor, guardRoastYear, buildNewCoffeePayload, coachNoteFrom } = await import(
-  pathToFileURL(out).href
-);
+const { coffeeKeyFor, guardRoastYear, buildNewCoffeePayload, coachNoteFrom, lastAttachedPhoto } =
+  await import(pathToFileURL(out).href);
 
 // The expression POST /api/sessions used inline before it was extracted. If
 // coffeeKeyFor ever stops matching this, chat-added bags fork duplicate rows.
@@ -176,6 +175,38 @@ test("coachNoteFrom requires both halves", () => {
   assert.equal(note.observation, "Currant Mood is a Kenyan natural.");
   assert.equal(note.suggestion, "Brew at 92–93°C.");
   assert.deepEqual(note.citationFields, ["origin", "process"]);
+});
+
+// The bag photo is attached a turn or two BEFORE the add, because the chat is
+// told to ask for the roast date first. The first shipped version only used the
+// current turn's attachment, so a real add landed in the library with no photo.
+test("lastAttachedPhoto finds the bag photo from an earlier turn", () => {
+  const thread = [
+    { role: "user", content: "What do you think of this DAK?", imageUrl: "https://cdn/bag.jpg" },
+    { role: "assistant", content: "DAK Coffee Roasters — Currant Mood…" },
+    { role: "user", content: "Roasted 30 July. Add it." },
+    { role: "assistant", content: "Ready to add." },
+  ];
+  assert.equal(lastAttachedPhoto(thread), "https://cdn/bag.jpg");
+});
+
+test("lastAttachedPhoto takes the MOST RECENT photo, not the first", () => {
+  const thread = [
+    { role: "user", content: "this one?", imageUrl: "https://cdn/old.jpg" },
+    { role: "assistant", content: "…" },
+    { role: "user", content: "and this one", imageUrl: "https://cdn/new.jpg" },
+  ];
+  assert.equal(lastAttachedPhoto(thread), "https://cdn/new.jpg");
+});
+
+test("lastAttachedPhoto ignores assistant messages and empty threads", () => {
+  assert.equal(lastAttachedPhoto([]), undefined);
+  assert.equal(lastAttachedPhoto([{ role: "user", content: "no photo here" }]), undefined);
+  // An assistant message carrying an image must never become the bag photo.
+  assert.equal(
+    lastAttachedPhoto([{ role: "assistant", content: "x", imageUrl: "https://cdn/nope.jpg" }]),
+    undefined,
+  );
 });
 
 test("guardRoastYear pulls an ambiguous month/day stamp into the current year", () => {
