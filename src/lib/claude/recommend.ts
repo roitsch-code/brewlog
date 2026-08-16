@@ -14,6 +14,8 @@ import type {
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
 import { buildTimingStats, measuredTimeDelta } from "./historyUtils";
+import { brewMethodKey } from "../utils/brewMethodKey";
+import { buildOwnReferences, formatOwnReferencesForPrompt } from "./ownReferenceRecipes";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
 import {
   selectRecipes,
@@ -614,6 +616,19 @@ export async function generateRecommendation(
     ? `\n${formatRecipesForPrompt(selectedRecipes)}`
     : "";
 
+  // The user's own well-rated brews, offered as references beside the corpus.
+  // Scoped to the brewers this session may actually use — a locked method
+  // narrows it — so a great Chemex brew isn't dangled at a locked-V60 turn.
+  const ownReferenceBlock = formatOwnReferencesForPrompt(
+    buildOwnReferences(
+      pastSessions,
+      coffee,
+      lockedBrewers.size > 0
+        ? new Set(Array.from(lockedBrewers).map((b) => brewMethodKey(b)))
+        : undefined,
+    ),
+  );
+
   // Compact technique vocabulary — id + one-line description per technique.
   // The full mechanism for each is reachable via the recipe's `science`
   // field; this block exists so the brain has a vocabulary to compose with
@@ -674,7 +689,7 @@ ${
     : ""
 }
 
-${varietyBlock}${recipesBlock}${techniquesBlock}
+${varietyBlock}${recipesBlock}${ownReferenceBlock}${techniquesBlock}
 
 Pour sequence format: CUMULATIVE weight milestones separated by " – " for percolation (e.g. "50 – 180 – 320 – 500").
 For immersion methods (AeroPress, Clever, Moccamaster), use prose description instead.
@@ -690,7 +705,7 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
 - PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are POUR steps only (bloom + the pours), plus any agitation the reference calls for. Do NOT emit a standalone "Bloom Rest" or "Drawdown" wait step — the timer derives the bloom rest and the drawdown from targetTimeSec; encoding them as steps makes the timer treat a pour-over as an immersion brew and mis-time it. A pour-over is a bloom + THREE-TO-FIVE pours, NEVER a bloom plus one giant final pour: split the water into pulses (e.g. 60 – 150 – 250 – 350), because a single pour of ~200 g+ cannot be poured gently in the time a percolation drawdown allows (a gentle gooseneck pour is ~4 g/s, so 200 g needs ~50 s of pouring). The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
 
-basedOn — name the documented recipe this candidate adapts, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"). If the candidate isn't based on any documented recipe, set "Own recipe". Always present.
+basedOn — name the reference this candidate adapts. Either a documented recipe, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"), OR — when you built on one of the user's own well-rated brews — that entry's name exactly as written there (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). Only set "Own recipe" when the candidate genuinely adapts neither.
 
 RECIPE FIELD CONSISTENCY — the recipe's structured fields ARE the brew the user makes; the app shows them as the headline and feeds pourSteps to the timer. They must all describe ONE recipe:
 - doseGrams / waterGrams / waterTempC / grindSize / targetTimeSec are the recipe you are actually instructing. When you adapt a reference recipe, put the ADAPTED numbers here — NEVER leave the reference recipe's published dose/water/temp in these fields while the pourSteps and prose describe a different brew. (The failure to avoid: header reads 18g:225g:93°C copied from the reference, while the pour plan pours to 230g and the rationale says "1:15.3 at 90°C" — three different recipes in one candidate.)
