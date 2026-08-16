@@ -146,6 +146,16 @@ export function coachFlow(
   started: boolean,
   liveGrams: number | null,
   samples: WeightSample[],
+  /**
+   * True when the Hario Drip Assist is on the brewer. The disc is a reservoir:
+   * you pour INTO it and it meters the water onto the bed at its own rate. So
+   * the speed of your hand and the speed water reaches the coffee are
+   * deliberately decoupled — which is the entire point of the disc, and which
+   * makes "Slower" / "Faster" a judgement about the wrong quantity. The
+   * cumulative grams still mean exactly what they always did (water in the disc
+   * is water on the scale), so those keep coaching; only the RATE verdicts go.
+   */
+  rateCoachingOff = false,
 ): FlowComparison {
   if (!timeline || !started || liveGrams == null) {
     return { ...NO_DATA, liveGrams };
@@ -240,6 +250,8 @@ export function coachFlow(
     cue = "keep-flow";
     message = "Keep going";
     state = "behind";
+  } else if (rateCoachingOff) {
+    // Disc on: leave the cue as-is (grams-based state above still applies).
   } else if (r > targetRate * FAST_MULT && r > FAST_FLOOR) {
     // Too fast RELATIVE TO THE RECIPE — >1.5× its own intended rate (and never
     // below the gentle FAST_FLOOR). A 6 g/s Kasuya pour no longer nags; a
@@ -247,7 +259,7 @@ export function coachFlow(
     cue = "pour-slower";
     message = "Slower";
     state = "ahead";
-  } else if (r < Math.min(targetRate * SLOW_MULT, SLOW_ABS) && remaining > EASE_OFF_G) {
+  } else if (!rateCoachingOff && r < Math.min(targetRate * SLOW_MULT, SLOW_ABS) && remaining > EASE_OFF_G) {
     cue = "pour-faster";
     message = "Faster";
     state = "behind";

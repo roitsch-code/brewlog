@@ -27,6 +27,7 @@ import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
+import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 
 /**
  * Light System fork of /components/flow/StepBrew.tsx (the Dark original is gone).
@@ -235,7 +236,17 @@ export default function LightStepBrew() {
 
   // Live pour-flow comparison. Off the native shell / immersion / no weight yet
   // → cue "none", so the coach UI renders nothing (no-scale path unchanged).
-  const coach = coachFlow(timeline, elapsed, started, progressGrams, samplesRef.current);
+  // With the Drip Assist on, you pour into the disc and IT meters the bed — so
+  // your hand's rate and the bed's rate are decoupled by design and a rate
+  // verdict judges the wrong quantity. Grams keep coaching; the rate cues stop.
+  const coach = coachFlow(
+    timeline,
+    elapsed,
+    started,
+    progressGrams,
+    samplesRef.current,
+    isDripAssistMethod(method),
+  );
   // Hand the whole step schedule to the paired Apple Watch at brew start; the
   // watch app runs the timeline and buzzes the wrist per step via a
   // physical-therapy extended-runtime session (fires screen-off / wrist-down,

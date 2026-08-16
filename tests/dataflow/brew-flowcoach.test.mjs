@@ -228,3 +228,24 @@ test("immersion multi-pour: coach targets the pour delta's rate, not the total's
   // 190g over its authored 30s = ~6.3 g/s — NOT the 250/30 = ~8.3 the total gives.
   assert.ok(Math.abs(c.targetRateGPS - 190 / 30) < 0.05, `expected ~6.3, got ${c.targetRateGPS}`);
 });
+
+test("with the Drip Assist on, the rate verdicts stop but the grams keep coaching", () => {
+  // You pour INTO the disc and it meters the bed, so your hand's rate and the
+  // bed's rate are decoupled by design — "Slower" judges the wrong quantity.
+  // The cumulative grams are unaffected (water in the disc sits on the scale),
+  // so those must keep working.
+  const judged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8));
+  const unjudged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8), true);
+
+  assert.equal(judged.cue, "pour-slower", "control: this pour reads as too fast");
+  assert.notEqual(unjudged.cue, "pour-slower", "the disc must silence the rate verdict");
+
+  // …and the too-SLOW verdict is silenced the same way.
+  const slowJudged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(1));
+  const slowUnjudged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(1), true);
+  assert.equal(slowJudged.cue, "pour-faster", "control: this pour reads as too slow");
+  assert.notEqual(slowUnjudged.cue, "pour-faster");
+
+  // The measurements are untouched — only the verdict changed.
+  assert.equal(unjudged.liveGrams, judged.liveGrams);
+});
