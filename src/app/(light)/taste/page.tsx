@@ -429,14 +429,14 @@ export default function TastePage() {
             <Section title="What works for you">
               {context.insights.map((i) => (
                 <div key={i.segment} className="space-y-1">
-                  <p className="text-light-foreground text-[15px] leading-relaxed">{i.sentence}</p>
-                  <p className="text-light-muted-foreground/70 text-[11px]">
+                  <p className="text-light-foreground text-sm leading-relaxed">{i.sentence}</p>
+                  <p className="text-light-muted-foreground/60 text-xs">
                     {i.brews} brews · comparing your {i.hits} best against the {i.misses} you rated lowest
                   </p>
                 </div>
               ))}
               {context.inconclusiveSegments.length > 0 && (
-                <p className="text-light-muted-foreground text-[13px] leading-relaxed">
+                <p className="text-light-muted-foreground text-sm leading-relaxed">
                   On {context.inconclusiveSegments.join(", ")} nothing yet separates your best
                   brews from your lowest-rated ones — you brew them too consistently for the
                   numbers to disagree. Not a problem, just not a finding.

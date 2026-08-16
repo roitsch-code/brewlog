@@ -42,6 +42,16 @@ const MIN_DELTA = {
   clicks: 1.5, // Comandante clicks
 } as const;
 
+/** One dial that separated the liked brews from the disliked ones. */
+export interface SeparatingDial {
+  dial: "temp" | "ratio" | "niche" | "clicks";
+  /** Mean among the clear hits / the clear misses, in that dial's own unit. */
+  hitValue: number;
+  missValue: number;
+  /** Printable unit suffix, e.g. "°C", "clicks", "" for a ratio. */
+  unit: string;
+}
+
 export interface ContextInsight {
   /** e.g. "African naturals". */
   segment: string;
@@ -50,6 +60,8 @@ export interface ContextInsight {
   misses: number;
   /** Ready-to-render sentence, no further formatting needed. */
   sentence: string;
+  /** The same finding as raw figures — for surfaces that need exact numbers. */
+  dials: SeparatingDial[];
 }
 
 export interface ContextInsightsResult {
@@ -96,12 +108,24 @@ function processLabel(process: string | undefined): string | null {
   return null;
 }
 
-function segmentOf(s: Session): string | null {
-  const family = originFamily(s.coffee?.origin);
-  const process = processLabel(s.coffee?.process);
-  if (!family || !process) return null;
+/**
+ * The segment a coffee belongs to, from its origin + process alone. Exported
+ * so the greeting can ask the same question of a bag sitting in rotation —
+ * one implementation, so a finding can never be matched to the wrong bag.
+ */
+export function segmentLabel(
+  origin: string | undefined,
+  process: string | undefined,
+): string | null {
+  const family = originFamily(origin);
+  const proc = processLabel(process);
+  if (!family || !proc) return null;
   // "African naturals", "Latin American washed" — reads as a sentence subject.
-  return `${family} ${process}`;
+  return `${family} ${proc}`;
+}
+
+function segmentOf(s: Session): string | null {
+  return segmentLabel(s.coffee?.origin, s.coffee?.process);
 }
 
 interface Dials {
@@ -147,6 +171,13 @@ function dialsOf(s: Session): Dials | null {
 
   return Object.keys(out).length > 0 ? out : null;
 }
+
+const UNIT: Record<keyof Dials, string> = {
+  temp: "°C",
+  ratio: "", // rendered as a ratio, e.g. "1:15.4"
+  niche: "° on the Niche",
+  clicks: " Comandante clicks",
+};
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -213,7 +244,8 @@ export function buildContextInsights(sessions: Session[]): ContextInsightsResult
 
     separating.sort((a, b) => b.strength - a.strength);
     // Two at most. A third clause turns the finding back into a list of knobs.
-    const parts = separating.slice(0, 2).map((s) => phrase(s.dial, s.hit, s.miss));
+    const top = separating.slice(0, 2);
+    const parts = top.map((s) => phrase(s.dial, s.hit, s.miss));
     const joined = parts.length === 2 ? `${parts[0]} and ${parts[1]}` : parts[0];
 
     insights.push({
@@ -222,9 +254,61 @@ export function buildContextInsights(sessions: Session[]): ContextInsightsResult
       hits: hits.length,
       misses: misses.length,
       sentence: `Your best ${segment} took ${joined}.`,
+      dials: top.map((s) => ({
+        dial: s.dial,
+        hitValue: s.dial === "ratio" ? round1(s.hit) : Math.round(s.hit * 10) / 10,
+        missValue: s.dial === "ratio" ? round1(s.miss) : Math.round(s.miss * 10) / 10,
+        unit: UNIT[s.dial],
+      })),
     });
   }
 
   insights.sort((a, b) => b.brews - a.brews);
   return { insights, inconclusiveSegments: inconclusiveSegments.sort() };
+}
+
+/**
+ * The findings, as EXACT figures, for the daily greeting — but only for
+ * segments the user can actually act on right now.
+ *
+ * The greeting names a bag from the rotation, so a finding about African
+ * naturals is only worth a word when an African natural is actually open on
+ * the counter. Matching happens through segmentLabel(), the same function the
+ * insights themselves were built with, so a finding can never be attached to
+ * the wrong kind of coffee.
+ *
+ * The block prints the numbers rather than a paraphrase because a greeting
+ * that says "a bit cooler" is worthless — the whole value is "92°C, not 97°C".
+ * The prompt rule that goes with it forbids altering them.
+ */
+export function formatContextFindingsForGreeting(
+  insights: ContextInsight[],
+  rotation: Array<{ origin?: string; process?: string; roaster?: string; name?: string }>,
+): string {
+  const bySegment = new Map<string, string[]>();
+  for (const bag of rotation) {
+    const seg = segmentLabel(bag.origin, bag.process);
+    if (!seg) continue;
+    const label = [bag.roaster, bag.name].filter(Boolean).join(" ").trim();
+    const list = bySegment.get(seg) ?? [];
+    if (label) list.push(label);
+    bySegment.set(seg, list);
+  }
+
+  const lines = insights
+    .filter((i) => bySegment.has(i.segment))
+    .map((i) => {
+      const figures = i.dials
+        .map((d) =>
+          d.dial === "ratio"
+            ? `1:${d.hitValue} vs 1:${d.missValue}`
+            : `${d.hitValue}${d.unit} vs ${d.missValue}${d.unit}`,
+        )
+        .join(", ");
+      const bags = bySegment.get(i.segment) ?? [];
+      return `- ${i.segment}: your ${HIT_RATING}★+ brews ran ${figures} against your ${MISS_RATING}★-and-below ones (${i.hits} vs ${i.misses} brews). In rotation now: ${bags.join(", ") || "—"}.`;
+    });
+
+  if (lines.length === 0) return "";
+  return `MEASURED CONTRAST (this user's own logged brews, for bags open right now)\n${lines.join("\n")}`;
 }
