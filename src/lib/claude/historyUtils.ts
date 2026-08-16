@@ -239,6 +239,12 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
     const body = s.result?.body || "";
     const acidity = s.result?.acidity || "";
     const freeNote = s.result?.freeNotes ? ` · "${s.result.freeNotes}"` : "";
+    // The post-rating clarification, when one was asked. It resolves exactly
+    // the ambiguity this summary would otherwise leave open ("thin" — sour, or
+    // just weak?), which is why it was collected in the first place.
+    const asked = s.result?.coachAnswer
+      ? ` · asked "${s.result.coachAnswer.question}" → "${s.result.coachAnswer.answer}"`
+      : "";
     // Support both new field name (wouldBrewAgain) and legacy stored name (wouldUseMethodAgain)
     type ResultCompat = typeof s.result & { wouldUseMethodAgain?: boolean };
     const wouldBrewAgainVal =
@@ -273,7 +279,7 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
       bagNotes?.length && actualNotes?.length
         ? ` · bag promised: [${bagNotes.join(", ")}] → actually tasted: [${actualNotes.join(", ")}]`
         : "";
-    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldBrewAgain}${freeNote}${attribution}${craft}${fit}${occasion}${drift}`;
+    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldBrewAgain}${freeNote}${attribution}${craft}${fit}${occasion}${drift}${asked}`;
   });
 
   return rankingBlock + sensoryBlock + roasterBlock + lines.join("\n");

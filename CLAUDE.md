@@ -123,11 +123,7 @@ Removed routes: legacy Dark `page.tsx` (replaced by `(light)/page.tsx`), `match/
 | `loading-insights` | GET — live rows of the **auto-refreshed loading-screen insight pool** shown during the recipe-crafting wait (`LightStepRecommend`). Defensive: returns `[]` on any failure (incl. pre-migration) so the static `COFFEE_HINTS` seed always covers it. requireAuth-gated. |
 | `loading-insights/refresh` | ★ POST (CRON_SECRET) — the **insight agent**. Generates short headline lines grounded in the verified corpus (recipes/varieties/techniques) + brew aggregates + live `web_search` (each web line must carry a verbatim quote), runs every candidate through a deterministic gate (`src/lib/insights/loadingInsightLint.ts`) **and** a model claim-check, inserts survivors, retires oldest over a 150 cap. Full-auto, **NO human review** — the machine gate replaces it so nothing ungrounded reaches the screen (the "never fabricate" rule). Table self-bootstraps (`CREATE TABLE IF NOT EXISTS`). Monthly via `.github/workflows/loading-insights-refresh.yml` (SSH → `docker compose exec app curl`, reuses deploy key). **Full reference: `docs/loading-insights.md`.** |
 | `coach-question` | POST — post-rating micro-dialogue (Sonnet). Called by `LightStepLog` only when a client-side ambiguity heuristic fires (`shouldAskCoach`); returns one short question + 3 answer chips, stored as `tasteResult.coachAnswer` and read downstream by /recommend + /insights. |
-| `hints` | GET contextual brewing hints |
-| `news` | GET coffee news feed |
-| `questions` | GET suggestion questions for explore mode |
-| `alerts` | GET / POST coffee availability alert subscriptions |
-| `webhooks/coffee-alert` | Incoming webhook for coffee availability notifications |
+| `webhooks/coffee-alert` | Incoming webhook for coffee availability notifications. Writes `coffee_alerts`; **nothing reads it back** — the `alerts` GET route was removed Aug 2026 as it had no consumer. |
 | `drip-bags` | GET list / POST — single-serve drip-bag documentation records (migration 0016). Isolated from sessions/coffees/the AI corpus (mirrors the `cafe-visits` precedent) so they never skew `/recommend`, `/insights`, `/taste`, or the Café Library |
 | `drip-bags/[id]` | GET / DELETE individual drip-bag record |
 | `cafe-visits` | GET / POST — visit-only café logs with binary thumbs rating (independent of brew sessions) |
