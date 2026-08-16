@@ -2,6 +2,7 @@ import { and, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { generateRecommendation, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
+import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { coffees, preferences as preferencesTable, roasters, insights as insightsTable } from "@/lib/db/schema";
 import { canonicalRoasterSlug } from "@/lib/roasters/priors";
 import type { UserPreferences } from "@/lib/types/preferences";
@@ -98,7 +99,16 @@ export async function runRecommendation(body: {
     onboardingComplete: true,
   };
 
-  const sessions = pastSessions || [];
+  // Read the corpus here rather than trusting the client's array. The client
+  // used to POST its last 100 sessions with every request, which both capped
+  // what the recommender could learn from (184 brews logged, 84 invisible) and
+  // put the whole payload on the wire — raising the client cap would have
+  // tripled a request that already carries every recipe of every session.
+  // Timing calibration and method rotation scan this list, so the window
+  // matters most for the brewers used least often: their handful of samples is
+  // exactly what falls off the end of a short window.
+  const loaded = await loadRecentSessions(400);
+  const sessions = loaded.length > 0 ? loaded : pastSessions || [];
 
   // Run DB roaster lookup, Escher terrain, coffee-history lookup, and
   // multivariate coach insights in parallel — saves 3–5s vs sequential.

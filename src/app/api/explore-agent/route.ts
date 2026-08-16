@@ -5,6 +5,7 @@ import { buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
+import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import {
@@ -816,7 +817,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const [userPrefs, rotationCoffees, recentLibrary] = await Promise.all([
+    const [userPrefs, rotationCoffees, recentLibrary, corpusSessions] = await Promise.all([
       loadUserProfile().catch(() => null),
       // The bags the user has explicitly marked ★ in rotation — the real
       // "what's on the counter right now" set, NOT a recency proxy. Using the
@@ -830,7 +831,15 @@ export async function POST(req: NextRequest) {
       // left the model unable to link the recipe (it fell back to a generic
       // library link or brew_again). The ★ flag still marks rotation for the
       // "what should I brew?" discipline.
-      loadCoffeeLibraryCompact(50).catch(() => []),
+      // 200, not 50: the cap has to clear the whole library or older unstarred
+      // bags carry no id and the model falls back to a "view in library" link
+      // instead of opening the recipe — the exact regression #413 fixed, which
+      // came back silently the moment the library passed 50 bags. One compact
+      // line per bag is ~30 tokens, so covering the lot costs ~2k tokens a turn.
+      loadCoffeeLibraryCompact(200).catch(() => []),
+      // Recent brews, read here rather than trusted from the request body — see
+      // loadRecentSessions for why the client's array can't just be enlarged.
+      loadRecentSessions(20).catch(() => []),
     ]);
 
     // Merge: rotation first (★, possibly older bags), then recent bags not
@@ -841,9 +850,16 @@ export async function POST(req: NextRequest) {
     })();
 
     const profileBlock = formatProfileForPrompt(userPrefs);
-    const recentSessions: Session[] = Array.isArray(body.recentSessions)
-      ? body.recentSessions.slice(0, 5)
-      : [];
+    // Server read wins; the client's array is the fallback for a failed query.
+    // The recipes block below still shows only the last 5 in full — the wider
+    // window is what the roaster / variety priors and "what have I learned"
+    // questions read from, and those were starved at 5.
+    const recentSessions: Session[] =
+      corpusSessions.length > 0
+        ? corpusSessions
+        : Array.isArray(body.recentSessions)
+          ? body.recentSessions.slice(0, 5)
+          : [];
 
     const contextParts: string[] = [];
 
@@ -917,7 +933,9 @@ export async function POST(req: NextRequest) {
           .map((s) => s.coffee?.roaster?.trim())
           .filter((r): r is string => !!r && r.length > 0)
       )
-    ).slice(0, 5);
+      // 8, up from 5: the recent-session window is wider now, and with 29
+      // roasters in the corpus a 5-cap dropped priors the model could have used.
+    ).slice(0, 8);
     if (recentRoasters.length > 0) {
       const priorBlocks = recentRoasters.map((name) =>
         formatRoasterPriorForPrompt(getRoasterPrior(name))
@@ -941,7 +959,7 @@ export async function POST(req: NextRequest) {
       .filter((p): p is NonNullable<typeof p> => !!p);
     const dedupedVarietyPriors = Array.from(
       new Map(matchedVarietyPriors.map((p) => [p.name, p])).values()
-    ).slice(0, 6);
+    ).slice(0, 8);
     if (dedupedVarietyPriors.length > 0) {
       contextParts.push(
         `\n## Variety Priors (WCR-grounded genetics for varieties in your recent sessions)\n` +
