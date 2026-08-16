@@ -1280,21 +1280,34 @@ function SwirlButton({ label, isStir = false, cueActive = false }: SwirlButtonPr
 
 // ── MiniStat + grind prefix stripper (identical to Dark) ───────────────────
 
+// Drops the grinder NAME so the stat cell shows the setting itself. The unit
+// survives: "24 clicks" without "clicks" is ambiguous next to a "388°" cell, so
+// only a name-and-unit string like "Comandante 24 clicks" collapses to "24".
+// The leftover-punctuation sweep matters because the chat writes forms like
+// "24 clicks (Comandante C40)" — stripping the name from the middle used to
+// leave "24 clicks ()", which then overflowed the cell.
 function stripGrindPrefix(raw: string): string {
   return (
     raw
       .replace(/niche(\s*(zero)?)?[\s°]*/i, "")
-      .replace(/comandante(\s*(c40\s*(mk\d)?)?)?[\s]*/i, "")
+      .replace(/comandante(\s*(c40)?(\s*mk\s*\d)?)?[\s]*/i, "")
+      .replace(/\(\s*\)/g, "")
       .replace(/\s*clicks?\s*$/i, "")
+      .replace(/[\s,·/–-]+$/, "")
       .trim() || raw
   );
 }
 
+// No `truncate`: the grind cell carries the one number the user is about to
+// dial in, and a Comandante value ("24 clicks") is longer than a Niche one
+// ("388°") — clipping it to "24 clic…" hides the unit. Wrap instead.
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="label-eyebrow mb-0.5">{label}</p>
-      <p className="font-mono-num text-light-foreground text-[14px] font-medium truncate">{value}</p>
+      <p className="font-mono-num text-light-foreground text-[14px] font-medium leading-tight [overflow-wrap:anywhere]">
+        {value}
+      </p>
     </div>
   );
 }

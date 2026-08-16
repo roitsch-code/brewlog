@@ -4,12 +4,12 @@ interface BrewMethodIconProps {
 }
 
 export function brewIconSrc(method?: string): string {
-  const m = (method ?? "").toLowerCase();
-  // Legacy: sessions logged before Drip Assist was removed from the
-  // current set still carry "drip assist" in their methodUsed string.
-  // Fall through to plain V60 (the same brewer underneath) so they
-  // render without a missing-icon hole.
-  if (m.includes("drip assist") || m.includes("drip-assist")) return "/brew-icons/v60.png";
+  // The Drip Assist is an ACCESSORY, not a brewer — it fits every one of the
+  // user's cones, so "Orea V4 Classic + Drip Assist" must still draw an Orea.
+  // Drop the disc token before matching and let the brewer decide; a method
+  // that is only the disc ("V60 + Drip Assist") still lands on the V60 default
+  // below, which is what legacy sessions carrying it have always rendered.
+  const m = (method ?? "").toLowerCase().replace(/\bdrip[\s-]?assist\b/g, "");
   if (m.includes("aeropress"))                                  return "/brew-icons/aeropress.png";
   if (m.includes("kalita"))                                     return "/brew-icons/kalita.png";
   if (m.includes("chemex"))                                     return "/brew-icons/chemex.svg";
