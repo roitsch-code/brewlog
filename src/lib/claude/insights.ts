@@ -181,6 +181,14 @@ function serialiseSessionForCoach(s: Session): string {
     quality.join(" "),
     flavors ? `[${flavors}]` : "",
     r?.freeNotes ? `note="${r.freeNotes.slice(0, 120)}"` : "",
+    // The post-rating micro-dialogue. When a rating was ambiguous the app asked
+    // ONE targeted question and the user answered it — the single most direct
+    // statement of what they actually tasted that the corpus contains. It was
+    // stored and then read by nobody, so the app was spending the user's
+    // attention mid-log and discarding the reply.
+    r?.coachAnswer?.answer
+      ? `asked="${r.coachAnswer.question.slice(0, 90)}" answered="${r.coachAnswer.answer.slice(0, 90)}"`
+      : "",
   ].filter(Boolean);
 
   return `- ${parts.join(" · ")}`;

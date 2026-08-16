@@ -212,11 +212,18 @@ export default function LightStepLog() {
     const muddyAndHighRating = (clarity === "muddy" || clarity === "cloudy") && rating >= 4;
     const coolingChangedTaste = improvedWhileCooling === true;
 
+    // "Improved while cooling" is NOT an ambiguity — it is a Yes/No the user
+    // just answered in this very form. Treating it as a reason to ask meant the
+    // coach fired on nearly every brew (a light roast opening up as it cools is
+    // the normal case, not the odd one) and then, holding that as its only
+    // signal, asked about cooling every single time. The app was making the
+    // user explain something they had just told it. It stays available as
+    // CONTEXT for a question raised by a real ambiguity, but it can no longer
+    // be the reason one is asked.
     const fireCount =
       (overrunPct != null && Math.abs(overrunPct) >= 20 ? 1 : 0) +
       (bitterAndLowRating ? 1 : 0) +
-      (muddyAndHighRating ? 1 : 0) +
-      (coolingChangedTaste ? 1 : 0);
+      (muddyAndHighRating ? 1 : 0);
 
     return {
       shouldAsk: fireCount > 0,
