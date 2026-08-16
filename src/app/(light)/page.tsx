@@ -181,7 +181,10 @@ export default function HomePage() {
     // cached "Late night" greetings generated at 06:00 CEST (because
     // the server read UTC 04:00) need to be discarded so the morning
     // bucket regenerates from scratch.
-    const key = `brewlog.starter.v9.${todayKey()}.${timeBucket()}`;
+    // v10: the greeting can now carry a MEASURED CONTRAST figure from the
+    // user's own log ("92°C, not 97°C"). Without the bump the previous
+    // day's cached line would sit there until the next time bucket.
+    const key = `brewlog.starter.v10.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {

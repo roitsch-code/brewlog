@@ -21,7 +21,7 @@ const dir = await mkdtemp(join(tmpdir(), "bci-"));
 const out = join(dir, "c.mjs");
 await build({
   stdin: {
-    contents: `export { buildContextInsights, MIN_SEGMENT_BREWS, MIN_GROUP_BREWS, HIT_RATING, MISS_RATING } from ${JSON.stringify(path.join(ROOT, "src/lib/taste/brewContextInsights.ts"))};`,
+    contents: `export { buildContextInsights, formatContextFindingsForGreeting, MIN_SEGMENT_BREWS, MIN_GROUP_BREWS, HIT_RATING, MISS_RATING } from ${JSON.stringify(path.join(ROOT, "src/lib/taste/brewContextInsights.ts"))};`,
     resolveDir: ROOT,
     loader: "ts",
   },
@@ -31,7 +31,7 @@ await build({
   platform: "neutral",
   logLevel: "silent",
 });
-const { buildContextInsights, MIN_SEGMENT_BREWS, MIN_GROUP_BREWS, HIT_RATING, MISS_RATING } =
+const { buildContextInsights, formatContextFindingsForGreeting, MIN_SEGMENT_BREWS, MIN_GROUP_BREWS, HIT_RATING, MISS_RATING } =
   await import(pathToFileURL(out).href);
 
 let seq = 0;
@@ -144,4 +144,48 @@ test("no coffee type, no claim", () => {
   const unknown = many(MIN_SEGMENT_BREWS * 2, { rating: 5, origin: "Unknown", process: "" });
   assert.deepEqual(buildContextInsights(unknown).insights, []);
   assert.deepEqual(buildContextInsights([]).insights, []);
+});
+
+test("the greeting block carries exact figures, only for bags in rotation", () => {
+  const sessions = [
+    ...many(MIN_GROUP_BREWS, { rating: 5, temp: 92 }),
+    ...many(MIN_GROUP_BREWS, { rating: 3, temp: 97 }),
+    ...many(MIN_GROUP_BREWS, { rating: 5, process: "Washed", origin: "Colombia", temp: 97 }),
+    ...many(MIN_GROUP_BREWS, { rating: 3, process: "Washed", origin: "Colombia", temp: 92 }),
+  ];
+  const { insights } = buildContextInsights(sessions);
+  assert.equal(insights.length, 2);
+
+  // Only the Ethiopian natural is open on the counter, so only that finding
+  // may reach the greeting — a line about Colombian washed would point at a
+  // coffee the user can't brew this morning.
+  const block = formatContextFindingsForGreeting(insights, [
+    { roaster: "Friedhats", name: "Quiquira", origin: "Ethiopia", process: "Natural" },
+  ]);
+  assert.match(block, /African naturals/);
+  assert.doesNotMatch(block, /Latin American/);
+  // The figures must be present verbatim — "a bit cooler" is worthless here.
+  assert.match(block, /92°C vs 97°C/);
+  assert.match(block, /Friedhats Quiquira/);
+
+  // Nothing in rotation matches → no block at all, so the greeting can't
+  // reach for a finding that has no bag behind it.
+  assert.equal(
+    formatContextFindingsForGreeting(insights, [
+      { roaster: "X", name: "Y", origin: "Indonesia", process: "Washed" },
+    ]),
+    "",
+  );
+  assert.equal(formatContextFindingsForGreeting(insights, []), "");
+});
+
+test("a ratio finding reads as a ratio, not a bare number", () => {
+  const { insights } = buildContextInsights([
+    ...many(MIN_GROUP_BREWS, { rating: 5, water: 210 }),
+    ...many(MIN_GROUP_BREWS, { rating: 3, water: 270 }),
+  ]);
+  const block = formatContextFindingsForGreeting(insights, [
+    { roaster: "R", name: "N", origin: "Ethiopia", process: "Natural" },
+  ]);
+  assert.match(block, /1:14 vs 1:18/);
 });

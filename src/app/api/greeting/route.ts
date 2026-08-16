@@ -7,6 +7,11 @@ import { db } from "@/lib/db/client";
 import { sessions, insights as insightsTable } from "@/lib/db/schema";
 import { and, desc, isNull, lte, ne, or } from "drizzle-orm";
 import { rowToSession } from "@/lib/db/helpers";
+import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
+import {
+  buildContextInsights,
+  formatContextFindingsForGreeting,
+} from "@/lib/taste/brewContextInsights";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -120,6 +125,13 @@ COACH INSIGHTS (multivariate signals across the user's whole log)
 - If no signal is relevant, ignore the block. Don't force it in.
 - Never quote the signal text verbatim — rephrase it as the friend's voice. ("immersion is your move for stale washed" → "give it the Clever — past-peak washed always lands quieter there for you.")
 
+MEASURED CONTRAST (the strongest material you get — use it when it fits)
+- The context may include a MEASURED CONTRAST block: for one KIND of coffee, the figure the user's best-rated brews ran at versus their worst-rated ones, plus which rotation bag that applies to. It is computed from their own log, not a model's opinion.
+- When the bag you name is covered by a line in that block, build the sentence around it and NAME THE FIGURE. "A bit cooler" is worthless; "92°C, not 97°C" is the entire point. Prefer this over a generic origin/process pairing — it is the one thing the app knows that a book doesn't.
+- Use the figures EXACTLY as printed. Never round them differently, never invent one, never swap which side is which, never present the worse figure as the target. If you can't fit a figure in naturally, drop the whole finding and write an ordinary line instead.
+- Still ONE sentence, still within the word limit. At most one finding — never two.
+- Example of the shape (style only, never copy): "Your African naturals land at 92°C, not 97°C — the Quiquira's open, brew it cool."
+
 Return the sentence only.`;
 
 interface RequestBody {
@@ -137,7 +149,7 @@ export async function POST(req: NextRequest) {
     // payloads, so a malformed body doesn't 400 here.
     await req.json().catch(() => ({} as RequestBody));
 
-    const [library, recentRows, profile, weather, activeInsights] = await Promise.all([
+    const [library, recentRows, profile, weather, activeInsights, corpus] = await Promise.all([
       // The bags the user has explicitly marked ★ in rotation — what they're
       // actually brewing right now, by the rotation flag rather than a
       // recency proxy. An older-but-still-open bag is no longer dropped just
@@ -171,6 +183,10 @@ export async function POST(req: NextRequest) {
         .orderBy(desc(insightsTable.latestSessionMs))
         .limit(8)
         .catch(() => []),
+      // The full rated corpus, for the measured-contrast finding. Same window
+      // the coach reads — a contrast is only worth stating if it held up over
+      // the whole log, not over the last handful of brews.
+      loadRecentSessions(400).catch(() => []),
     ]);
     const recentSessions = (recentRows as unknown[]).map((row) =>
       rowToSession(row as Parameters<typeof rowToSession>[0])
@@ -233,6 +249,15 @@ export async function POST(req: NextRequest) {
           .join("\n")
       : "";
 
+    // Measured contrast — the user's own hits vs misses for ONE kind of coffee,
+    // narrowed to the kinds actually sitting in rotation, because the greeting
+    // has to name a bag they can reach. Empty string when nothing qualifies,
+    // which is the common case and correct: no finding, no claim.
+    const contrastBlock = formatContextFindingsForGreeting(
+      buildContextInsights(corpus).insights,
+      library,
+    );
+
     const userBlock = [
       `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
       weather
@@ -248,6 +273,7 @@ export async function POST(req: NextRequest) {
       insightsBlock.length > 0
         ? `COACH SIGNAL (multivariate observations from the user's full log — weave ONE in only if it's directly relevant to the bag/method you'd pair, else ignore):\n${insightsBlock}`
         : "",
+      contrastBlock,
     ].filter(Boolean).join("\n\n");
 
     const completion = await client.messages.create({
