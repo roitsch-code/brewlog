@@ -11,6 +11,7 @@ import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import Chip from "@/components/ui/light/Chip";
 import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
+import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 
 /**
  * Light System fork of /components/flow/StepSummary.tsx.
@@ -283,7 +284,12 @@ export default function LightStepSummary() {
           </div>
         ) : null}
 
-        {brew?.flowAnalysis && <PourAnalysisCard analysis={brew.flowAnalysis} />}
+        {brew?.flowAnalysis && (
+          <PourAnalysisCard
+            analysis={brew.flowAnalysis}
+            discMetered={isDripAssistMethod(brew?.methodUsed)}
+          />
+        )}
 
         {(insightLoading || terrain || adjustment) && (
           <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4 space-y-3">
@@ -441,15 +447,33 @@ function AnalysisStat({ label, value, accent }: { label: string; value: string; 
   );
 }
 
-function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
+/**
+ * `discMetered` = the Hario Drip Assist was on the brewer. You pour INTO the
+ * disc and it meters the water onto the bed at its own rate, so your hand's
+ * rate and the bed's rate are decoupled by design. Every measurement stays on
+ * the card — the numbers are real — but the JUDGEMENTS come off: no verdict
+ * colour, no Steady/Uneven, no "hit 150g 8s late" teaching line. Grading a pour
+ * against a plan that assumes you pour straight onto the coffee is grading the
+ * wrong thing.
+ */
+function PourAnalysisCard({
+  analysis,
+  discMetered = false,
+}: {
+  analysis: FlowAnalysis;
+  discMetered?: boolean;
+}) {
   const gradeLabel =
     analysis.derivedFlow === "perfect"
       ? "On target"
       : analysis.derivedFlow === "too-fast"
         ? "Ran fast"
         : "Ran slow";
-  const gradeColor =
-    analysis.derivedFlow === "perfect" ? "text-light-success" : "text-light-accent-overtime";
+  const gradeColor = discMetered
+    ? undefined
+    : analysis.derivedFlow === "perfect"
+      ? "text-light-success"
+      : "text-light-accent-overtime";
 
   // The pour that drifted furthest from its schedule — but only worth saying
   // when the drift is large RELATIVE TO THAT POUR. The old flat 3s threshold
@@ -464,13 +488,19 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
     })
     .sort((a, b) => Math.abs(b.errorSec as number) - Math.abs(a.errorSec as number))[0];
   const steady =
-    analysis.pourSteadiness == null ? null : analysis.pourSteadiness < 0.3 ? "Steady" : "Uneven";
+    discMetered || analysis.pourSteadiness == null
+      ? null
+      : analysis.pourSteadiness < 0.3
+        ? "Steady"
+        : "Uneven";
 
   return (
     <div className="rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="label-eyebrow">Pour analysis</p>
-        <span className="text-[10px] uppercase tracking-wide text-light-muted-foreground">measured</span>
+        <span className="text-[10px] uppercase tracking-wide text-light-muted-foreground">
+          {discMetered ? "measured · disc-metered" : "measured"}
+        </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <AnalysisStat
@@ -478,7 +508,7 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
           value={`${mmss(analysis.totalTimeSec)} / ${mmss(analysis.targetTimeSec)}`}
           accent={gradeColor}
         />
-        <AnalysisStat label="Flow" value={gradeLabel} accent={gradeColor} />
+        {!discMetered && <AnalysisStat label="Flow" value={gradeLabel} accent={gradeColor} />}
         {analysis.avgFlowRateGPS != null && (
           <AnalysisStat label="Avg pour" value={`${analysis.avgFlowRateGPS} g/s`} />
         )}
@@ -486,12 +516,16 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
           <AnalysisStat
             label="Overshoot"
             value={`+${Math.max(0, analysis.overshootG)}g`}
-            accent={analysis.overshootG > 20 ? "text-light-accent-overtime" : undefined}
+            accent={
+              !discMetered && analysis.overshootG > 20
+                ? "text-light-accent-overtime"
+                : undefined
+            }
           />
         )}
         {steady && <AnalysisStat label="Stream" value={steady} />}
       </div>
-      {drifted && (
+      {!discMetered && drifted && (
         <p className="text-[12px] text-light-muted-foreground mt-3">
           {drifted.label} hit {drifted.targetGrams}g{" "}
           {(drifted.errorSec as number) > 0
