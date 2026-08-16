@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { parseClaudeJson } from "@/lib/claude/parseJson";
+import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
+import { isRepeatQuestion } from "@/lib/coach/questionRepeat";
 
 /**
  * Coach micro-dialogue. Called by LightStepLog AFTER the user has rated
@@ -11,9 +13,16 @@ import { parseClaudeJson } from "@/lib/claude/parseJson";
  *
  * Sonnet (lightweight, fast). Returns one short question + 3 prefab
  * answer chips. The user picks a chip or types in "Other…", and the
- * answer is stored as tasteResult.coachAnswer on the session — read
- * downstream by /recommend and /api/insights to ground next-step
- * suggestions in the user's own words.
+ * answer is stored as tasteResult.coachAnswer on the session and is read by
+ * /recommend and /api/insights to ground next-step suggestions in the user's
+ * own words.
+ *
+ * The endpoint refuses to repeat itself. A signal like "bitter at a low rating"
+ * recurs across brews, and without memory the same question came back every
+ * time it did — which is how a coach turns into a form field. Questions the
+ * user has already answered are sent along and are off limits, and when
+ * nothing genuinely new is left to ask the endpoint returns no question at all
+ * (the client then saves silently, which it already handled).
  *
  * Latency budget: ≤ 3s. The user is at the save screen waiting.
  */
@@ -51,6 +60,21 @@ const ResponseSchema = z.object({
   chips: z.array(z.string().min(1).max(40)).min(2).max(4),
 });
 
+/** Questions this user has already answered — off limits, newest first. */
+async function alreadyAsked(limit = 25): Promise<string[]> {
+  try {
+    const sessions = await loadRecentSessions(limit);
+    const seen = new Set<string>();
+    for (const s of sessions) {
+      const q = s.result?.coachAnswer?.question?.trim();
+      if (q) seen.add(q);
+    }
+    return Array.from(seen);
+  } catch {
+    return [];
+  }
+}
+
 const SYSTEM_PROMPT = `You are the BrewLog Coach. The user has just rated a brew that carries a SPECIFIC ambiguity (timing drift, conflicting taste markers, first brew of a bag). Ask ONE short clarifying question that, when answered, will sharpen the next recommendation.
 
 Rules
@@ -60,7 +84,11 @@ Rules
 - No emoji. No labels ("Q:"). No followups.
 - Reasonable questions: bed state at end of drawdown, where in the cup the off-note sat (front / mid / finish), whether the dose felt low/high, whether agitation was different than expected.
 
-Output ONLY JSON: { "question": "...", "chips": ["...", "...", "..."] }`;
+NEVER REPEAT YOURSELF
+- You are given the questions this user has already answered. Do not ask any of them again, and do not ask a rephrasing of one — a question they have answered before teaches nothing and reads as a form field.
+- If the only question worth asking is one they have already answered, or the signal is too weak for a sharp question, return {} and nothing will be asked. Asking nothing is a valid, common, and preferred outcome.
+
+Output ONLY JSON: { "question": "...", "chips": ["...", "...", "..."] } — or {} to ask nothing.`;
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -96,6 +124,7 @@ export async function POST(req: NextRequest) {
       signalLines.push(`Marked "improved while cooling".`);
     }
 
+    const asked = await alreadyAsked();
     const userMessage = [
       `Coffee: ${context.coffeeName ?? "unknown"}`,
       context.methodUsed ? `Method: ${context.methodUsed}` : "",
@@ -107,7 +136,11 @@ export async function POST(req: NextRequest) {
       context.flavorNotes?.length ? `Flavors logged: ${context.flavorNotes.join(", ")}` : "",
       context.freeNotes ? `Notes: "${context.freeNotes.slice(0, 200)}"` : "",
       "",
-      "Write the question now via JSON.",
+      asked.length
+        ? `ALREADY ANSWERED — do not ask any of these again, or a rephrasing:\n${asked.map((q) => `- ${q}`).join("\n")}`
+        : "",
+      "",
+      "Write the question now via JSON, or return {} to ask nothing.",
     ].filter(Boolean).join("\n");
 
     const msg = await client.messages.create({
@@ -123,6 +156,16 @@ export async function POST(req: NextRequest) {
       .join("\n");
     const result = parseClaudeJson(text, ResponseSchema);
     if (!result) {
+      return NextResponse.json({ error: "Coach declined to ask" }, { status: 204 });
+    }
+
+    // Deterministic backstop for the same rule the prompt states. A buried
+    // negative is exactly the kind of instruction a model leaks (the
+    // Drip-Assist guard exists for the same reason), and the cost of a leak
+    // here is the user being asked a question they have already answered —
+    // which is the whole complaint.
+    if (isRepeatQuestion(result.question, asked)) {
+      console.warn(`[coach-question] suppressed a repeat: "${result.question}"`);
       return NextResponse.json({ error: "Coach declined to ask" }, { status: 204 });
     }
 
