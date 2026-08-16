@@ -1,5 +1,6 @@
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
+import { brewMethodKey } from "../utils/brewMethodKey";
 
 // ─── Output type ─────────────────────────────────────────────────────────────
 
@@ -55,18 +56,12 @@ function normalizeProcess(process: string): string {
   return "other";
 }
 
-function normalizeMethod(method: string): string {
-  const m = (method || "").toLowerCase();
-  if (m.includes("drip assist")) return "v60-drip-assist";
-  if (m.includes("v60")) return "v60";
-  if (m.includes("orea")) return "orea";
-  if (m.includes("clever")) return "clever";
-  if (m.includes("kalita")) return "kalita";
-  if (m.includes("aeropress")) return "aeropress";
-  if (m.includes("chemex")) return "chemex";
-  if (m.includes("moccamaster")) return "moccamaster";
-  return "other";
-}
+// Shared with the timing calibration so one brewer is one bucket everywhere.
+// The old local version returned "v60-drip-assist" for ANY method containing
+// "drip assist", which filed an Orea-with-disc brew under the V60 — wrong now
+// that the disc rides on every cone. Signatures are computed on read, so this
+// re-buckets historical sessions correctly with no migration.
+const normalizeMethod = brewMethodKey;
 
 function classifyFreshnessZone(roastDate?: string): string {
   if (!roastDate) return "unknown";

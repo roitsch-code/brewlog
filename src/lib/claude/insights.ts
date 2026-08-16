@@ -239,7 +239,10 @@ function formatPatternAnalysis(p: PatternAnalysis): string {
 
 function formatCoffeeAggregates(aggregates: CoffeeAggregate[]): string {
   const lines = ["Coffees brewed (most-brewed first):"];
-  aggregates.slice(0, 30).forEach((c) => {
+  // 80, not 30: with 63 coffees in the library a 30-cap dropped half of them
+  // from the aggregate the coach reasons over — and the dropped half is the
+  // long tail, exactly where a cross-coffee pattern would show up.
+  aggregates.slice(0, 80).forEach((c) => {
     lines.push(
       `  - ${c.roaster} ${c.name} | var=${c.variety || "?"} proc=${c.process || "?"} roast=${c.roastLevel || "?"} origin=${c.origin || "?"} n=${c.count} avg=${c.avgRating}★`,
     );
@@ -273,16 +276,17 @@ export interface GenerateInsightsResult {
  * insights exist yet).
  */
 export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
-  // 1. Load the rated session corpus (last ~120 brews is more than enough
-  // signal density; older sessions are still in the DB if a future model
-  // wants them).
+  // 1. Load the rated session corpus. The window has to sit ABOVE the actual
+  // brew count or the coach silently reasons about a subset — at 184 logged
+  // brews the old 150 cap hid the earliest ~34, which is where the long-run
+  // patterns it exists to find actually live.
   const sinceMs = Date.now() - 1000 * 60 * 60 * 24 * 365 * 2; // 2-year window
   const rows = await db
     .select()
     .from(sessions)
     .where(gte(sessions.createdAtMs, sinceMs))
     .orderBy(desc(sessions.createdAtMs))
-    .limit(150);
+    .limit(400);
   const sessionList = rows.map(rowToSession).filter((s) => s.result?.rating != null);
 
   const corpusLatest = latestSessionMs(sessionList);

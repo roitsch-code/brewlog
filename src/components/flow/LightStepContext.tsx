@@ -286,9 +286,12 @@ export default function LightStepContext() {
     // fills in the recipe when it lands (or surfaces an error). We await only
     // the fast `/start` handshake here.
     try {
+      // The server now reads the corpus itself (see run.ts). This small array
+      // stays only as the fallback for a failed DB read, so it is deliberately
+      // NOT enlarged — it would just re-upload the same brews on every request.
       let pastSessions: Awaited<ReturnType<typeof getRecentSessions>> = [];
       try {
-        pastSessions = await getRecentSessions(100);
+        pastSessions = await getRecentSessions(20);
       } catch {}
       const res = await fetch("/api/recommend/start", {
         method: "POST",
