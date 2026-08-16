@@ -2,6 +2,12 @@
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import type { Session } from "@/lib/types/session";
+import {
+  buildBrewParameterStats,
+  MIN_SAMPLES,
+  type ParameterBucket,
+  type ParameterGroup,
+} from "@/lib/taste/brewParameterStats";
 import { SCA_CATEGORIES, flavorCategory } from "@/lib/constants/scaFlavorWheel";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
@@ -160,6 +166,7 @@ export default function TastePage() {
   // 'new' and 'trying' rows: 'trying' (saved-to-try) is pinned to the
   // top in the highlighted card surface so the user remembers what
   // they committed to; 'new' cards fill in below.
+  const [paramGroups, setParamGroups] = useState<ParameterGroup[]>([]);
   const [insights, setInsights] = useState<InsightItem[]>([]);
   const [insightsLoading, setInsightsLoading] = useState(true);
   const [insightsError, setInsightsError] = useState<string | null>(null);
@@ -171,7 +178,9 @@ export default function TastePage() {
     fetch("/api/sessions?limit=300", { cache: "no-store", signal: controller.signal })
       .then(r => r.json())
       .then((sessions: Session[]) => {
-        setStats(computeStats(Array.isArray(sessions) ? sessions : []));
+        const list = Array.isArray(sessions) ? sessions : [];
+        setStats(computeStats(list));
+        setParamGroups(buildBrewParameterStats(list));
       })
       .catch(() => setStats(computeStats([])))
       .finally(() => { clearTimeout(timer); setLoading(false); });
@@ -414,6 +423,26 @@ export default function TastePage() {
               <RankedList items={stats.topMethods} />
             </Section>
           )}
+
+          {paramGroups.length > 0 && (
+            <div className="space-y-5">
+              <Section title="What works for you">
+                <p className="text-light-muted-foreground text-[13px] leading-relaxed">
+                  Your own dials, scored by the ratings you gave. Each band needs at
+                  least {MIN_SAMPLES} brews to show up — and a high average can just
+                  mean the good coffees landed there.
+                </p>
+              </Section>
+              {paramGroups.map((group) => (
+                <Section key={group.title} title={group.title}>
+                  <BucketList buckets={group.buckets} />
+                  <p className="text-light-muted-foreground/70 text-[11px] leading-relaxed">
+                    {group.note}
+                  </p>
+                </Section>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -461,6 +490,34 @@ function DistBar({ data, total }: { data: Record<string, number>; total: number 
           <div className="h-1 bg-light-foreground/10 rounded-full overflow-hidden">
             <div className="h-full bg-light-foreground rounded-full" style={{ width: `${(v / total) * 100}%` }} />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Same row rhythm as RankedList, minus the rank number: these bands are in
+// natural order (cool → hot, fine → coarse), so numbering them 1..n would read
+// as a leaderboard and hide the shape of the curve.
+function BucketList({ buckets }: { buckets: ParameterBucket[] }) {
+  const best = Math.max(...buckets.map((b) => b.avgRating));
+  return (
+    <div className="space-y-2">
+      {buckets.map((b) => (
+        <div key={b.label} className="flex items-center gap-3">
+          <span
+            className={`text-sm flex-1 truncate ${
+              b.avgRating === best
+                ? "text-light-foreground font-medium"
+                : "text-light-foreground"
+            }`}
+          >
+            {b.label}
+          </span>
+          <span className="font-mono-num text-light-foreground text-sm font-medium">
+            {b.avgRating}
+          </span>
+          <span className="text-light-muted-foreground/60 text-xs">×{b.count}</span>
         </div>
       ))}
     </div>
