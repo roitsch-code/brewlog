@@ -99,22 +99,17 @@ export async function runRecommendation(body: {
     onboardingComplete: true,
   };
 
-  // Read the corpus here rather than trusting the client's array. The client
-  // used to POST its last 100 sessions with every request, which both capped
-  // what the recommender could learn from (184 brews logged, 84 invisible) and
-  // put the whole payload on the wire — raising the client cap would have
-  // tripled a request that already carries every recipe of every session.
-  // Timing calibration and method rotation scan this list, so the window
-  // matters most for the brewers used least often: their handful of samples is
-  // exactly what falls off the end of a short window.
-  const loaded = await loadRecentSessions(400);
-  const sessions = loaded.length > 0 ? loaded : pastSessions || [];
-
-  // Run DB roaster lookup, Escher terrain, coffee-history lookup, and
+  // Run DB roaster lookup, corpus + Escher terrain, coffee-history lookup, and
   // multivariate coach insights in parallel — saves 3–5s vs sequential.
+  //
+  // The corpus read belongs INSIDE this block, not in front of it: it is a
+  // 400-row query, and putting it on the critical path adds its full latency
+  // to every recipe the user waits for. Escher is the only consumer that needs
+  // the sessions, so it chains off the same branch instead of blocking the
+  // other three lookups.
   const [
     userRoasterPriorResult,
-    terrain,
+    corpus,
     coffeeHistory,
     coachInsights,
   ] = await Promise.all([
@@ -133,9 +128,22 @@ export async function runRecommendation(body: {
       } catch {}
       return null;
     })(),
-    sessions.length >= 3
-      ? buildEscherTerrain(sessions, coffee).catch(() => "")
-      : Promise.resolve(""),
+    // Corpus + the terrain derived from it. Read here rather than trusting the
+    // client's array: the client used to POST its last 100 sessions with every
+    // request, which capped what the recommender could learn from (184 brews
+    // logged, 84 invisible) AND put the whole payload on the wire. Timing
+    // calibration and method rotation scan this list, so the window matters
+    // most for the brewers used least often — their handful of samples is
+    // exactly what falls off the end of a short window.
+    (async () => {
+      const loaded = await loadRecentSessions(400);
+      const sessions = loaded.length > 0 ? loaded : pastSessions || [];
+      const terrain =
+        sessions.length >= 3
+          ? await buildEscherTerrain(sessions, coffee).catch(() => "")
+          : "";
+      return { sessions, terrain };
+    })(),
     loadCoffeeHistory(coffee?.coffeeId, coffee?.roaster, coffee?.name),
     // Coach insights — exclude doesnt-apply AND actively-snoozed at the query
     // layer. new / trying / confirmed / expired-snoozes all feed the prompt,
@@ -157,6 +165,7 @@ export async function runRecommendation(body: {
       .catch(() => []),
   ]);
   const userRoasterPrior = userRoasterPriorResult;
+  const { sessions, terrain } = corpus;
 
   const allInsights: RecommendInsight[] = Array.isArray(coachInsights)
     ? coachInsights.map((row) => ({
