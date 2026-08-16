@@ -198,3 +198,78 @@ test("immersion / too-few-points → null", () => {
   assert.equal(analyzeFlow(PERC, [{ tSec: 0, grams: 0 }], 210), null);
   assert.equal(analyzeFlow(null, CURVE, 210), null);
 });
+
+test("a swirl lasting SECONDS is a transient, not a mass event", () => {
+  // The owner's report: "when I touch the scale, e.g. for a swirl, it still
+  // reacts violently". Every guard here was built around a spike that lasts ONE
+  // sample — but lifting and rotating a brewer takes 1-3s, so at the stored
+  // curve's ~2Hz a real swirl spans several samples. The old rule (transient
+  // only if the very NEXT sample returns) therefore classified it as a
+  // sustained mass event and folded it into the baseline, dragging the whole
+  // rest of the curve with it.
+  const clean = [
+    { tSec: 0, grams: 0 },
+    { tSec: 30, grams: 50 },
+    { tSec: 60, grams: 90 },
+    { tSec: 62, grams: 95 },
+    { tSec: 64, grams: 100 },
+    { tSec: 66, grams: 105 },
+    { tSec: 95, grams: 180 },
+    { tSec: 120, grams: 260 },
+    { tSec: 150, grams: 320 },
+    { tSec: 175, grams: 420 },
+    { tSec: 200, grams: 500 },
+  ];
+  // Same brew, but the brewer was picked up and swirled from t=60 to t=66:
+  // the reading lurches up, wanders, and settles back on the trend.
+  const swirled = [
+    { tSec: 0, grams: 0 },
+    { tSec: 30, grams: 50 },
+    { tSec: 60, grams: 90 },
+    { tSec: 62, grams: 390 }, // ← lifted / pressed
+    { tSec: 64, grams: 355 },
+    { tSec: 66, grams: 105 }, // ← back on the trend
+    { tSec: 95, grams: 180 },
+    { tSec: 120, grams: 260 },
+    { tSec: 150, grams: 320 },
+    { tSec: 175, grams: 420 },
+    { tSec: 200, grams: 500 },
+  ];
+  const a = analyzeFlow(PERC, clean, 210);
+  const b = analyzeFlow(PERC, swirled, 210);
+
+  // The brew is the same brew: the swirl must not change what was poured.
+  assert.equal(b.finalGrams, a.finalGrams, "the swirl shifted the baseline");
+  // …nor invent an overshoot…
+  assert.ok(
+    Math.abs(b.overshootG - a.overshootG) < 5,
+    `swirl leaked into overshoot: ${a.overshootG} vs ${b.overshootG}`,
+  );
+  // …nor make a later pour look like it was hit during the swirl.
+  assert.deepEqual(
+    b.perPour.map((p) => p.actualSec),
+    a.perPour.map((p) => p.actualSec),
+  );
+});
+
+test("a swirl that never settles back is still treated as a real change", () => {
+  // The distinction has to stay physical: a disturbance that does NOT return
+  // within the window is a vessel actually arriving or leaving, and must still
+  // move the baseline — otherwise the carafe bug comes back.
+  const held = [
+    { tSec: 0, grams: 0 },
+    { tSec: 30, grams: 50 },
+    { tSec: 60, grams: 90 },
+    { tSec: 62, grams: 390 }, // +300 and it stays
+    { tSec: 64, grams: 395 },
+    { tSec: 70, grams: 400 },
+    { tSec: 95, grams: 480 },
+    { tSec: 120, grams: 560 },
+    { tSec: 150, grams: 620 },
+    { tSec: 175, grams: 720 },
+    { tSec: 200, grams: 800 },
+  ];
+  const r = analyzeFlow(PERC, held, 210);
+  // 800 raw − 300 folded = 500g of actual water, same as the clean brew.
+  assert.ok(Math.abs(r.finalGrams - 500) <= 5, `expected ~500g of water, got ${r.finalGrams}`);
+});

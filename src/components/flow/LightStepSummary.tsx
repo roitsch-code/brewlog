@@ -451,9 +451,17 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
   const gradeColor =
     analysis.derivedFlow === "perfect" ? "text-light-success" : "text-light-accent-overtime";
 
-  // The pour that drifted furthest from its scheduled time (worth a teaching line).
+  // The pour that drifted furthest from its schedule — but only worth saying
+  // when the drift is large RELATIVE TO THAT POUR. The old flat 3s threshold
+  // fired on almost every brew, because hand-pouring a cumulative target within
+  // a few seconds is normal, not a mistake; printing it every time is nagging,
+  // not teaching. Half the pour's own intended duration, never under 5s.
   const drifted = analysis.perPour
-    .filter((p) => p.errorSec != null)
+    .filter((p) => {
+      if (p.errorSec == null) return false;
+      const floor = Math.max(5, (p.intendedPourSec ?? 0) * 0.5);
+      return Math.abs(p.errorSec) >= floor;
+    })
     .sort((a, b) => Math.abs(b.errorSec as number) - Math.abs(a.errorSec as number))[0];
   const steady =
     analysis.pourSteadiness == null ? null : analysis.pourSteadiness < 0.3 ? "Steady" : "Uneven";
@@ -483,7 +491,7 @@ function PourAnalysisCard({ analysis }: { analysis: FlowAnalysis }) {
         )}
         {steady && <AnalysisStat label="Stream" value={steady} />}
       </div>
-      {drifted && Math.abs(drifted.errorSec as number) >= 3 && (
+      {drifted && (
         <p className="text-[12px] text-light-muted-foreground mt-3">
           {drifted.label} hit {drifted.targetGrams}g{" "}
           {(drifted.errorSec as number) > 0

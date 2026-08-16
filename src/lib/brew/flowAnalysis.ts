@@ -27,6 +27,9 @@ export interface PourTiming {
   targetGrams: number;
   /** When the pour SHOULD have finished (start + pour duration at the intended rate). */
   targetSec: number;
+  /** How long this pour was meant to take. Drift is only meaningful relative to
+   *  it: 4s off a 10s bloom is a different thing from 4s off a 40s final pour. */
+  intendedPourSec: number;
   /** When the curve actually reached the target, or null if never. */
   actualSec: number | null;
   /** actualSec − targetSec; positive = late. Null if never reached. */
@@ -81,43 +84,95 @@ export function isNonPourJump(deltaGrams: number, dtSec: number): boolean {
 }
 
 /**
- * Fold physically-impossible jumps that HOLD into a running baseline so the
- * curve reads WATER POURED even when a vessel lands on (or leaves) the scale
- * mid-brew — the "+296.7g overshoot / 66 g/s / hit 300g 106s early" report
- * that a carafe placed on the scale after brew start produced. The
- * min-baseline in analyzeFlow can only remove an offset present from the
- * START; a mid-capture step change needs this.
+ * How long a disturbance may last and still count as a transient rather than a
+ * real change in what is sitting on the scale. A swirl, a tap, a hand steadying
+ * the brewer: the reading leaves the trend and comes BACK. Setting a carafe
+ * down does not come back.
  *
- * A jump whose NEXT sample returns to the old trend (the pair nets to a
- * plausible pour) is a transient force spike — a tap, a bump, a swirl — and is
- * left alone: the reach/overshoot spike guards downstream already ignore lone
- * outliers, and folding a spike would eat the real water poured around it.
+ * This has to be a WINDOW, not a single sample. The stored curve is ~2 Hz and
+ * the earlier version only forgave a spike whose very next sample returned to
+ * trend — so anything lasting longer than half a second (which is every real
+ * swirl) defeated it, got folded into the baseline as a "mass event", and
+ * dragged the rest of the curve with it. That is the "touching the scale still
+ * reacts violently" report.
+ */
+const TRANSIENT_RETURN_SEC = 8;
+
+/**
+ * How much of the disturbance must be gone before it counts as "returned".
+ * Plausibility alone is too weak a test over a long window: an 8s window
+ * tolerates ~124g of pouring, so a mid-size PERMANENT change (a +60g something
+ * set down) would qualify as a return and get smoothed away instead of folded
+ * into the baseline. Requiring the level to come most of the way back keeps the
+ * two cases apart no matter how wide the window is.
+ */
+const TRANSIENT_DECAY = 0.5;
+
+/**
+ * Remove disturbances that RETURN, fold the ones that HOLD.
+ *
+ * Two physically different things produce an impossible jump:
+ *   - a transient (swirl, tap, bump, hand on the brewer): the reading spikes
+ *     and comes back to where the trend left off. It is not data — the samples
+ *     inside it say nothing about poured water — so they are replaced by a
+ *     straight line across the gap. Interpolating rather than merely "not
+ *     folding" is what keeps the spike out of the reach times and the overshoot
+ *     as well, instead of each of those needing its own spike guard.
+ *   - a mass event (carafe set on the scale mid-brew, vessel lifted off, a
+ *     mid-brew tare): the level changes and STAYS changed. That shifts the
+ *     baseline for everything after it, which is the "+296.7g overshoot"
+ *     report.
+ *
+ * The only reliable way to tell them apart is to look ahead and see whether the
+ * reading comes back — which is why this runs post-brew and never live (a live
+ * stream cannot see the return yet; see the live-tare note in LightStepBrew).
  */
 export function rejectNonPourJumps(curve: FlowCurvePoint[]): FlowCurvePoint[] {
   if (curve.length < 2) return curve.slice();
-  const out: FlowCurvePoint[] = [curve[0]];
+  const out: FlowCurvePoint[] = curve.map((p) => ({ ...p }));
   let offset = 0;
-  let skipNext = false; // second leg of a recognized transient spike
-  for (let i = 1; i < curve.length; i++) {
-    if (!skipNext) {
-      const delta = curve[i].grams - curve[i - 1].grams;
-      const dt = curve[i].tSec - curve[i - 1].tSec;
-      if (isNonPourJump(delta, dt)) {
-        const next = curve[i + 1];
-        const isTransient =
-          next != null &&
-          plausiblePour(next.grams - curve[i - 1].grams, next.tSec - curve[i - 1].tSec);
-        if (isTransient) {
-          skipNext = true; // the return leg belongs to the spike, don't fold it
-        } else {
-          offset += delta; // sustained level change = mass event, not water
-        }
-      }
-    } else {
-      skipNext = false;
+
+  for (let i = 1; i < out.length; i++) {
+    const prev = out[i - 1];
+    const delta = curve[i].grams - offset - prev.grams;
+    const dt = curve[i].tSec - prev.tSec;
+    if (!isNonPourJump(delta, dt)) {
+      out[i] = { tSec: curve[i].tSec, grams: curve[i].grams - offset };
+      continue;
     }
-    out.push({ tSec: curve[i].tSec, grams: curve[i].grams - offset });
+
+    // Look ahead for a return to the pre-disturbance trend.
+    let returnIdx = -1;
+    for (let j = i + 1; j < curve.length; j++) {
+      const ahead = curve[j].tSec - prev.tSec;
+      if (ahead > TRANSIENT_RETURN_SEC) break;
+      const residual = curve[j].grams - offset - prev.grams;
+      if (plausiblePour(residual, ahead) && Math.abs(residual) < Math.abs(delta) * TRANSIENT_DECAY) {
+        returnIdx = j;
+        break;
+      }
+    }
+
+    if (returnIdx === -1) {
+      // Never came back inside the window → the level really changed.
+      offset += delta;
+      out[i] = { tSec: curve[i].tSec, grams: curve[i].grams - offset };
+      continue;
+    }
+
+    // Came back: straight-line across the disturbance so it contributes nothing.
+    const endGrams = curve[returnIdx].grams - offset;
+    const span = curve[returnIdx].tSec - prev.tSec;
+    for (let k = i; k <= returnIdx; k++) {
+      const frac = span > 0 ? (curve[k].tSec - prev.tSec) / span : 1;
+      out[k] = {
+        tSec: curve[k].tSec,
+        grams: prev.grams + (endGrams - prev.grams) * frac,
+      };
+    }
+    i = returnIdx;
   }
+
   return out;
 }
 
@@ -200,13 +255,15 @@ export function analyzeFlow(
   for (const step of pours) {
     const target = step.targetCumulativeGrams as number;
     const pourGrams = step.pourGrams != null && step.pourGrams > 0 ? step.pourGrams : target - prevTarget;
-    const targetSec = step.startSec + pourDurationSec(Math.max(1, pourGrams));
+    const intendedPourSec = pourDurationSec(Math.max(1, pourGrams));
+    const targetSec = step.startSec + intendedPourSec;
     const actualSec = timeToReach(curve, target);
     perPour.push({
       index: step.index,
       label: step.label,
       targetGrams: target,
       targetSec,
+      intendedPourSec: Math.round(intendedPourSec * 10) / 10,
       actualSec,
       errorSec: actualSec != null ? Math.round((actualSec - targetSec) * 10) / 10 : null,
     });
