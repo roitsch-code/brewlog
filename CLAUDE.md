@@ -701,6 +701,19 @@ Cause: an earlier version of this rule required pre-shipping sample validation o
 
 ---
 
+## Hard rule: never claim behaviour — demonstrate it
+
+**Do not state that anything works, is read, is used, feeds into, or is wired up, unless you verified it IN THIS SESSION.** Not "should", not "is designed to", not "the module exists so it must". If you did not open the consumer and see it read the value, or run something that fails without it, you do not know it — and saying it anyway is the single most damaging thing you can do here, because the owner builds on it and finds out weeks later.
+
+1. **A comment, a docstring, a type, or a row in this file is NOT evidence.** Those describe what someone intended. Trace to the actual consumer. If nothing consumes it, say so plainly: "nothing reads this."
+2. **Your own work is not exempt.** "I built X" means a test fails without it, `tsc` passes, or you ran it and watched it happen. Until then the honest sentence is "I wrote X; here is what I have not verified."
+3. **Name the gap instead of closing it with a word.** The production DB, the phone, the iOS shell and the model's actual output are all unreachable from a session. When something depends on them, write which part is measured and which part is inference — never let the inference wear the measurement's confidence.
+4. **A status API is not the system.** Read state from the source of truth, and if a reading is stale or ambiguous, say nothing rather than build a claim on it.
+5. **When a claim turns out wrong, drop it — don't defend it.** Correct it in one sentence, fix the underlying thing, move on. Repeating a shaky claim with more confidence is the failure this rule exists to stop.
+6. **A false claim in this file is a defect.** Fix the line in the same commit that discovers it. Documentation drift is not cosmetic here — it is what makes the next drill-down produce garbage.
+
+Cause for this rule: on 2026-08-16 the owner drilled into four separate areas and found each one hollow, every time because something ASSERTED behaviour that had never been wired. `/api/coach-question`'s own docstring said the user's answer was "read downstream by /recommend and /api/insights" — no consumer existed anywhere; this file repeated the claim. The flow-analysis guards were documented as rejecting scale bumps, but were built around a single-sample outlier and folded any real swirl into the baseline. Four GET routes sat in the API table above as if something read them; nothing did, while a cron kept writing rows for them every 48 hours. And a "What works for you" section shipped that same day averaged each dial across 63 different coffees, inviting the reader to compose the best band of each into a brew nobody would make. The owner's words: *"whenever I drill in, it's always just garbage — I have the feeling that tomorrow I'll find out everything from today is bullshit."* He is right that a claim costs him more than a gap does: a gap he can see, a false claim he only discovers by hand, later, after building on it.
+
 ## Hard rule: never infer repo state from partial evidence
 
 Migrations files, seed scripts, `.env.example` and code comments only show what lives in Git. They do NOT show what's actually in the production DB, what was seeded manually on the VPS, or what happened outside the repo. Do not extrapolate.
