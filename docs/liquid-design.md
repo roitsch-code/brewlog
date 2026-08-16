@@ -29,8 +29,12 @@
   sweep (70 s, ±18vmax — opened up from a frozen-looking ±8/120s in #449) + small per-mass
   `murmur-*` drift (`FieldBlobs.tsx`); general/home backgrounds
   cycle through `CURATED_FIELDS` (2–3-flavour combos) per app-open (`curatedFields.ts` +
-  `FieldContext.tsx`). Dials: `field-flow` amplitude/period + disc size/blur in `FieldBlobs.tsx`;
+  `FieldContext.tsx`). Dials: `field-flow` amplitude/period + disc size in `FieldBlobs.tsx`;
   the base angle + mass/ribbon positions in `composeGradient.ts`.
+- **Last tuned (2026-08-16, performance):** the discs' `filter: blur(50px)` is GONE — measured at
+  ~85% of the app's whole raster cost for a rendered difference of mean 3.4/255 (the gradient's own
+  falloff was already doing the work). The Field looks the same; the phone stops burning battery on
+  it. Softness now lives in the gradient's `transparent` stop, never a filter — see the Stolperstein.
 - **Last tuned (2026-06-12):** extracted the haiku entrance into a reusable `LiquidHeadline` —
   the Hero questions ("What are you brewing today?", "What's the vibe?") now scatter in, and the
   recipe-crafting screen dropped the bean glow + "Did you know?" for a big rotating insight
@@ -111,7 +115,8 @@ discrete `rotation`. Motion is purely DOM/CSS-var, never through React context o
 The masses nest (the "wrapper trick"): a lean wrapper reads the interaction vars
 (`--field-drift-*`, `--field-tilt`, `--field-pulse`); inside it the shared `field-flow` sweep
 wrapper runs the murmuration keyframe (all masses together); each mass then runs its small
-`murmur-*` drift; the innermost is the blurred colour disc, painted once and merely moved. A
+`murmur-*` drift; the innermost is the colour disc — a plain soft-edged radial gradient, no filter
+(see the Stolperstein: a blur there cost 85% of the app's raster budget for nothing visible). A
 single element can't both run a keyframe transform *and* add a var-driven transform, so the layers
 split them. Keyframe translate uses **vmax** (not %) because the layers are zero-size — a `%`
 translate would resolve to 0.
@@ -140,7 +145,7 @@ dissolve). Swapping to a single text node mid-life re-wraps the line and hyphena
 | File | Role | Dials it owns |
 |---|---|---|
 | `src/components/ui/light/Field.tsx` | Assembles the layer stack; attaches `useFieldMotion`. | base `blur(60px)`, `scale(1.2)`, `inset-[-12%]` (the oversize that gives parallax room) |
-| `src/components/ui/light/FieldBlobs.tsx` | The colour masses + the **murmuration** motion: ONE shared `field-flow` sweep (co-located) carries all masses together + turns direction, plus small per-mass `murmur-*` drift. **The main "background movement" surface.** | disc size (`vmax`), `blur`, `field-flow` amplitude/duration, `MURMUR` amplitude/durations |
+| `src/components/ui/light/FieldBlobs.tsx` | The colour masses + the **murmuration** motion: ONE shared `field-flow` sweep (co-located) carries all masses together + turns direction, plus small per-mass `murmur-*` drift. **The main "background movement" surface.** | disc size (`vmax`), the gradient's `transparent` stop (softness — NOT a blur filter), `field-flow` amplitude/duration, `MURMUR` amplitude/durations |
 | `src/components/ui/light/FieldGrain.tsx` | Static film grain (feTurbulence data-URI). | `opacity` (~0.09), `mixBlendMode` (`soft-light`), tile size |
 | `src/components/ui/light/FieldBloom.tsx` | Warm glow that follows the finger. | disc `vmax`, gradient colours/stops, `blur`, opacity = `var(--ptr-on)` |
 | `src/hooks/useFieldMotion.ts` | One rAF loop: pointer-lean / scroll-parallax / tap-swell / finger-bloom → CSS vars. | `MAX_DRIFT`, `MAX_TILT`, `SCROLL_PARALLAX`, `MAX_SHIFT`, the `*_GLIDE` easings, `IDLE_MS` |
@@ -190,7 +195,7 @@ that carries every mass together + turns direction, plus small per-mass `murmur-
 | **Slower / faster flow** | the `field-flow` animation duration | `70s` | ↑ slower/calmer, ↓ faster. One coherent sweep, so one number. |
 | **Turns direction harder** | the `rotate(...)` peaks in `field-flow` | ~±13deg | ↑ sweeps the masses around the centre more (the "kreuz und quer") |
 | **More internal life vs. calmer** | the `murmur-*` translate amplitude (+ `MURMUR` durations 27–37s) | ~±13 vmax | ↓ → more coherent/calm; ↑ → more flocking shimmer. Keep < the `field-flow` sweep so it stays coordinated. |
-| **Larger areas / softer** | inner disc `width`/`height` + `filter: blur()` | `96vmax` / `50px` | ↑ for bigger softer fields. Bigger+softer DILUTES motion — compensate with more `field-flow` travel. |
+| **Larger areas / softer** | inner disc `width`/`height` + the gradient's `transparent` stop | `96vmax` / `transparent 66%` | ↑ size for bigger fields; move the transparent stop OUT for a softer edge. **Never add `filter: blur()` back** — it was 85% of the app's raster cost for an invisible gain (see Stolperstein). Bigger+softer DILUTES motion — compensate with more `field-flow` travel. |
 | **Where the strong colour sits** | the `cx/cy` anchors in `fieldBlobColors()` + the mass/ribbon positions in `composeGradient.ts` | masses at `(16,86)` + `(88,24)`, ribbon `(58,20)`, base angle `118°` | move the corner masses / base angle to re-place the diagonal seam |
 | **More / fewer masses** | `fieldBlobColors()` in `composeGradient.ts` (returns 4) + the `MURMUR`/keyframe count | 4 | keep `MURMUR.length` ≥ mass count |
 
@@ -295,6 +300,7 @@ When adding any new motion, add its selector to that globals.css block in the sa
 - **Animating a blurred full-viewport `background` div stutters on iOS** — never animate the base
   gradient's `background` or slide the whole base. Float transform-only blob layers over a static
   base instead (the core architecture). (Original plan.)
+- **`filter: blur()` on the drifting discs was ~85% of the app's entire raster cost — and optically free** (Aug 2026, the "typing lags" report). Four 96vmax discs (≈2400 px square at DPR 3) each carrying `blur(50px)` meant the compositor re-rasterised four large filtered surfaces continuously. Measured in a 390×844 @3x Chromium under CDP tracing, raster+paint over a 5 s window: **3.9 s with the blur, 0.6 s without** (medians of 3 interleaved runs). Rendered difference with the animation frozen at a fixed phase: **mean 3.4/255, max 15/255** — indistinguishable side by side, because blurring a radial gradient that already fades to `transparent 66%` adds nothing; the falloff IS the softness. Two things that did NOT help, both measured, both tempting: **removing `scale()` from the keyframes** (104% of the animated cost — the raster is not scale-driven) and **pausing the animation while the user types** (104% — the filter costs the same standing still, so "freeze the background during input" buys nothing). Lesson: on a full-bleed background stack, a blur filter is the thing to suspect, not the motion — and measure the *rendered pixels* before assuming a filter is load-bearing. Two harness traps met on the way: an opaque `body` background hides a `z-index:-10` fixed Field, so every variant screenshots identically (compare a variant against a *paused* one to prove the harness sees the Field at all), and variants must be compared at a **frozen animation phase** or the diff measures the animation, not the change.
 - **A persistent `filter` on an inline-block word clips Fraunces' descenders (g/y/j)** — `LiquidHeadline`
   words carry `animation-fill-mode: both`, so the 100% keyframe is held at rest. When that frame ended
   on `filter: blur(0)`, the (zero-radius) filter region clipped painting to the inline-block's
@@ -470,3 +476,24 @@ When adding any new motion, add its selector to that globals.css block in the sa
   travel must be generous or the flow is invisible — the amplitude scales with the disc size.
 - **Owner-confirmed:** "Love it." All dials are one-number tweaks (see the table).
 - **PRs this session:** #445, #446, #447, #448, #449.
+
+### 2026-08-16 — the Field was starving the phone: disc blur removed (typing latency)
+- **Report:** "wenn ich tippe, hört er irgendwann auf zu schreiben, obwohl ich die Tasten drücke" —
+  keystrokes stop landing mid-word, then catch up. The battery indicator across the owner's four
+  screenshots drops 46% → 44% in ~90 seconds, which is the tell: this is a GPU/raster problem, not
+  a React one. (Verified the React side is clean first: a keystroke re-renders only `ChatInput`;
+  `onComposingChange` fires on change, not per key; `useFieldMotion`'s rAF loop settles and stops.)
+- **Measured, not guessed** (CDP tracing, 390×844 @3x Chromium, raster+paint over a 5 s window,
+  medians of 3 interleaved runs): shipped **3904 ms**, without the disc blur **413 ms** (−89%).
+  `scale()` out of the keyframes: 4077 ms (no change). Animations paused: 4264 ms (no change).
+  So the cost is the `filter: blur(50px)` on the four 96vmax discs — not the motion, not the scale.
+- **Shipped:** dropped that filter. The discs are `radial-gradient(circle, color 0%, transparent 66%)`
+  — already a smooth falloff, so the blur was doing almost nothing: with the animation frozen at a
+  fixed phase the rendered difference is **mean 3.4/255, max 15/255**, indistinguishable in a
+  side-by-side. Nothing else about the Field changed — same masses, same murmuration, same colours.
+- **Rejected on the evidence:** pausing the Field while the user types (bought nothing), and
+  compensating the removed blur with softer gradient stops (made it *worse*: mean 15/255 and a
+  visible disc rim). Both are in the Stolperstein log so they don't get re-proposed.
+- **Honest limit:** the raster saving is measured in Chromium; the *typing* improvement on iOS
+  WebKit is inference from it (less continuous raster ⇒ input isn't starved). Owner verifies on the
+  PWA — force-quit and reopen first to drop the cached shell.

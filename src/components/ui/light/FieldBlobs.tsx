@@ -18,6 +18,18 @@ import type { FieldZones } from "@/lib/field/types";
 // flow actually reads while staying graceful. The base gradient underneath is
 // opaque + full-bleed, so even big blob travel never reveals an edge.
 //
+// NO `filter: blur()` ON THE DISCS — that was ~85% of the app's entire raster
+// cost (measured: 3.9 s of raster work per 5 s wall-clock in a 390×844 @3x
+// Chromium, down to 0.6 s with the filter gone) for a change of mean 3.4/255,
+// max 15/255 in the rendered pixels — invisible side by side. A blur of a
+// radial gradient that already fades to transparent at 66% is redundant: the
+// falloff IS the softness. Four 96vmax discs blurred at 50px meant the
+// compositor re-rasterised ~2400px-square filtered surfaces continuously, which
+// starved touch/keyboard input on the phone (the "typing lags" report) and
+// burned battery. Pausing the animation does NOT help (measured: 104% of the
+// animated cost) — the filter is the cost, not the motion. If a softer mass is
+// ever wanted, widen the gradient's transparent stop; never reach for blur().
+//
 // Dials: `field-flow` amplitude/period (the shared sweep), `MURMUR` amplitude/
 // period (per-mass life), disc size/blur. Keyframes are co-located HERE
 // (styled-jsx global), never globals.css — an installed PWA serves a stale
@@ -112,7 +124,6 @@ export default function FieldBlobs({ fieldZones }: { fieldZones: FieldZones }) {
                   transform: "translate(-50%, -50%)",
                   borderRadius: "50%",
                   background: `radial-gradient(circle, ${b.color} 0%, transparent 66%)`,
-                  filter: "blur(50px)",
                 }}
               />
             </div>
