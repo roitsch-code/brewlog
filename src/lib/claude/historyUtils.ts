@@ -1,5 +1,6 @@
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe, brewedRecipeName } from "../utils/resolveRecipe";
+import { brewMethodKey } from "../utils/brewMethodKey";
 
 /**
  * Computes per-method average timing delta (actualTimeSec - targetTimeSec) across past sessions.
@@ -17,7 +18,9 @@ export function buildTimingStats(
     const target = resolveBrewedRecipe(s).recipe?.targetTimeSec;
     const method = s.brew?.methodUsed || s.recommendation?.primaryMethod;
     if (!actual || !target || !isPercolation(method)) continue;
-    const key = (method ?? "unknown").toLowerCase().trim();
+    // Canonical brewer key, not the raw label — "Orea Classic" and "Orea V4
+    // Classic" are one brewer and must average together (see brewMethodKey).
+    const key = brewMethodKey(method);
     if (!acc[key]) acc[key] = { sum: 0, count: 0 };
     acc[key].sum += actual - target;
     acc[key].count += 1;
@@ -51,7 +54,12 @@ export function measuredTimeDelta(
 ): { deltaSec: number; count: number } | null {
   if (!method || !isPercolation(method)) return null;
   if (typeof waterGrams !== "number" || !(waterGrams > 0)) return null;
-  const key = method.toLowerCase().trim();
+  // Pool by canonical brewer, not the raw label: the same brewer arrives as
+  // "Orea Classic" from the flow and "Orea V4 Classic" from the chat, and an
+  // exact string compare put those in separate buckets — each then sat under
+  // the 2-sample floor and the calibration never fired. The disc stays part of
+  // the key (it changes the flow), so only genuinely identical setups pool.
+  const key = brewMethodKey(method);
   const tol = Math.max(60, waterGrams * 0.2);
 
   const deltas: number[] = [];
@@ -60,7 +68,7 @@ export function measuredTimeDelta(
     const recipe = resolveBrewedRecipe(s).recipe;
     const target = recipe?.targetTimeSec;
     const water = recipe?.waterGrams;
-    const m = (s.brew?.methodUsed || s.recommendation?.primaryMethod || "").toLowerCase().trim();
+    const m = brewMethodKey(s.brew?.methodUsed || s.recommendation?.primaryMethod);
     if (!actual || !target || m !== key) continue;
     if (typeof water !== "number" || Math.abs(water - waterGrams) > tol) continue;
     deltas.push(actual - target);
