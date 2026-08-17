@@ -1,6 +1,7 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
+import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import type {
   CoffeeIdentity,
@@ -765,7 +766,23 @@ Return valid JSON only.`;
       context.occasion === "cold-brew" ||
       Boolean(lockedMethodBase),
   );
-  const candidates = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+  const discGuarded = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+
+  // Grinder UNIT. The user picks the grinder in the flow and the prompt says
+  // "NEVER Niche°" / "NEVER clicks" for the one they didn't pick, but a hard
+  // instruction stated only in prose is one this model leaks — the same failure
+  // as the banned brewer and the disc offset. A wrong unit is worse than a
+  // wrong number: "406" on a Comandante isn't approximately right, it is a
+  // setting the grinder does not have. Converted, not flagged, using the
+  // owner's own measured anchors (grindSettings.ts).
+  const candidates = discGuarded.map((c) => {
+    const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
+    if (fixed === c.recipe.grindSize) return c;
+    console.warn(
+      `[recommend] grind-unit: "${c.recipe.grindSize}" → "${fixed}" for ${sessionGrinder}`,
+    );
+    return { ...c, recipe: { ...c.recipe, grindSize: fixed } };
+  });
 
   return {
     recommendation: {
