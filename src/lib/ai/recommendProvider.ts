@@ -10,15 +10,17 @@
 // how each provider is called. The recommend prompt itself (SYSTEM_PROMPT) is
 // unchanged — both providers receive byte-identical input.
 //
+// STATUS (Aug 2026): back on OPUS by default. See selectProvider() for why and
+// for what that decision does NOT rest on. Mistral is opt-in now.
+//
 // Selection + safety:
-//   - RECOMMEND_PROVIDER=mistral|anthropic forces a provider (instant rollback to
-//     Opus via env, no code change).
-//   - With no override, Mistral is used when MISTRAL_API_KEY is present, else Opus
-//     — so deploying this code can NEVER break /recommend: until the VPS has a
-//     MISTRAL_API_KEY it stays on Opus, and it flips to Mistral the moment the key
-//     is added.
-//   - A Mistral failure falls back to Opus for THAT request, so /recommend never
-//     goes down even if Mistral is unreachable.
+//   - RECOMMEND_PROVIDER=mistral|anthropic forces a provider, either direction,
+//     via env — no code change, no deploy.
+//   - With no override the default is Opus. The MISTRAL_API_KEY no longer
+//     selects anything on its own; it stays in the environment so flipping back
+//     is a single env var rather than a re-key.
+//   - A Mistral failure still falls back to Opus for THAT request, so the opt-in
+//     path can't take /recommend down either.
 
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT, RECOMMEND_MODEL } from "../claude/recommendPrompt";
@@ -30,10 +32,30 @@ const MAX_TOKENS = 5000;
 export type RecommendUsage = { input_tokens: number; output_tokens: number };
 export type RecommendResult = { text: string; usage: RecommendUsage; provider: string };
 
-function selectProvider(): "mistral" | "anthropic" {
+/** Exported for the selection test — mirrors coachProvider's selectCoachProvider. */
+export function selectProvider(): "mistral" | "anthropic" {
   const forced = process.env.RECOMMEND_PROVIDER?.toLowerCase().trim();
   if (forced === "mistral" || forced === "anthropic") return forced;
-  return process.env.MISTRAL_API_KEY ? "mistral" : "anthropic";
+  // Default is OPUS as of Aug 2026 — Mistral is now opt-in, the reverse of the
+  // PR #455 arrangement. Owner's call after three prompt instructions leaked in
+  // two days on recipes he was actually brewing: the banned brewer (guarded in
+  // #458), the Drip Assist grind offset (#517), and the grinder UNIT — a
+  // Comandante recipe coming back in Niche degrees (#518). Each is now enforced
+  // deterministically, but the pattern is what decided it: recipes are the core
+  // of this app, every leak costs a real brew, and the guards can only catch the
+  // rules someone already thought to write.
+  //
+  // Honest scope: the #453 spike that justified Mistral measured FABRICATION
+  // (0 drift over 24 samples) — it never measured instruction-following or
+  // repetition, so this reverses a decision whose evidence never covered the
+  // failures being reversed for. It is a judgement, not a measurement.
+  //
+  // Repetition is NOT expected to improve: the injected menu ties on a coarse
+  // integer score and the tie-break is input-side (PRs #480/#483/#486),
+  // i.e. model-independent.
+  //
+  // Flip back with RECOMMEND_PROVIDER=mistral — no code change, no deploy.
+  return "anthropic";
 }
 
 let anthropicClient: Anthropic | null = null;
