@@ -317,18 +317,13 @@ export default function LightStepRecommend() {
         </div>
       )}
 
-      {active && (
-        <div className="mt-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4 space-y-3">
+      {/* One row, one sentence. Hypothesis / Predicted cup / Observe were three
+          more sentences the model had to finish writing before ANY of this
+          could render — /recommend is a single blocking call. Stored sessions
+          still carry them; nothing shows them. */}
+      {active?.whyChosen && (
+        <div className="mt-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
           <InfoRow label="Why" value={active.whyChosen} />
-          <div className="border-t border-light-foreground/10 pt-3">
-            <InfoRow label="Hypothesis" value={active.hypothesis} />
-          </div>
-          <div className="border-t border-light-foreground/10 pt-3">
-            <InfoRow label="Predicted cup" value={active.predictedCupProfile} />
-          </div>
-          <div className="border-t border-light-foreground/10 pt-3">
-            <InfoRow label="Observe" value={active.whatToObserve} />
-          </div>
         </div>
       )}
 

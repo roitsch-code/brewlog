@@ -39,6 +39,18 @@ import { sanitizePourSteps } from "../utils/pourSteps";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 
+// Prose the model has to WRITE is prose the user has to WAIT for: /recommend is
+// a single blocking call, so nothing renders until the last token lands. This
+// schema was nine prose fields per candidate plus three at the top; six of them
+// were displayed by nothing at all (primaryVariable, confidenceReason,
+// learningValue, brewingLesson — 3–4 sentences each — sessionObjective,
+// coffeeAssessment). They cost a wait on every single brew and were read by
+// nobody, ever.
+//
+// Of the four that WERE rendered, the owner asked to keep one: "Why". So a
+// candidate now carries one sentence of justification, and the fields stay
+// `.optional()` so a model that still emits the old set doesn't fail the parse
+// — the extra keys are simply dropped.
 const CandidateSchema = z.object({
   method: z.string(),
   role: z.string(),
@@ -46,21 +58,14 @@ const CandidateSchema = z.object({
   basedOn: z.string().optional(),
   recipe: z.record(z.string(), z.unknown()),
   whyChosen: z.string(),
-  hypothesis: z.string(),
-  predictedCupProfile: z.string(),
-  primaryVariable: z.string(),
-  whatToObserve: z.string(),
   confidence: z.string(),
-  confidenceReason: z.string(),
-  learningValue: z.string(),
-  brewingLesson: z.string().optional(),
 });
 
 const RecommendationResponseSchema = z.object({
   candidates: z.array(CandidateSchema).min(1),
+  // Kept: the only prose with consumers beyond the recipe screen — the brew
+  // detail page, /api/brew-insight, the chat context and the coach all read it.
   reasoning: z.string().optional(),
-  sessionObjective: z.string().optional(),
-  coffeeAssessment: z.string().optional(),
 });
 
 /**
@@ -734,14 +739,7 @@ Return valid JSON only.`;
     title: c.title,
     ...(c.basedOn ? { basedOn: c.basedOn } : {}),
     whyChosen: c.whyChosen,
-    hypothesis: c.hypothesis,
-    predictedCupProfile: c.predictedCupProfile,
-    primaryVariable: c.primaryVariable,
-    whatToObserve: c.whatToObserve,
     confidence: c.confidence as CandidateConfidence,
-    confidenceReason: c.confidenceReason,
-    learningValue: c.learningValue,
-    ...(c.brewingLesson ? { brewingLesson: c.brewingLesson } : {}),
   }));
 
   // Deterministic backstops over what the model returned (the prompt forbids
@@ -792,8 +790,6 @@ Return valid JSON only.`;
       alternativeMethod: candidates[1]?.method,
       alternativeRecipe: candidates[1]?.recipe,
       reasoning: raw.reasoning ?? "",
-      ...(raw.sessionObjective ? { sessionObjective: raw.sessionObjective } : {}),
-      ...(raw.coffeeAssessment ? { coffeeAssessment: raw.coffeeAssessment } : {}),
       generatedAt: new Date().toISOString(),
     },
     usage,
