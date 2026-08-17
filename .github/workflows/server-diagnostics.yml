@@ -13,6 +13,18 @@ name: Server Diagnostics (read-only)
 # `cat` the .env, does NOT run `docker compose config` and does NOT
 # `docker inspect` containers (all of those would interpolate/expose env
 # values). It only reports the .env's permissions/owner via `ls -l`.
+#
+# ONE narrow exception, added Aug 2026: the two PROVIDER SWITCHES
+# (RECOMMEND_PROVIDER, COACH_PROVIDER) are printed with their values. They are
+# not credentials — they hold "mistral", "anthropic" or nothing, and which model
+# answers a recipe is a fact about the app, not a secret. Every API key is
+# reported as present/absent ONLY, value never read. The greps are anchored to
+# those exact variable names, so no other line of the .env can be emitted.
+#
+# Why this is worth a workflow: after rolling /recommend back to Opus in code,
+# the one thing unverifiable from a Claude Code session was whether the VPS .env
+# carries an explicit RECOMMEND_PROVIDER=mistral, which would override the code
+# default and make the rollback a silent no-op. Guessing was not acceptable.
 
 on:
   workflow_dispatch:
@@ -64,6 +76,44 @@ jobs:
 
             section ".env permissions/owner  (NOT contents)"
             ls -l "${{ secrets.DEPLOY_PATH }}/.env" 2>/dev/null || echo ".env not found at deploy path"
+
+            section "AI provider switches  (values shown — NOT credentials)"
+            # Anchored to these exact names: no other .env line can be printed.
+            # Reports three states, because they are three different situations:
+            # a value set (it WINS over the code default), the key present but
+            # empty (the code default decides), or the line absent entirely
+            # (same effect as empty, but says nobody ever set it).
+            for v in RECOMMEND_PROVIDER COACH_PROVIDER; do
+              line=$(grep -E "^${v}=" "${{ secrets.DEPLOY_PATH }}/.env" 2>/dev/null | tail -1)
+              if [ -z "$line" ]; then
+                echo "  .env  $v: not present  → code default decides"
+              elif [ "$line" = "${v}=" ]; then
+                echo "  .env  $v: present but EMPTY  → code default decides"
+              else
+                echo "  .env  ${line}   ← explicit, OVERRIDES the code default"
+              fi
+            done
+
+            # The .env is what the container was STARTED with, which can drift
+            # from the file if nobody recreated it since the last edit. This is
+            # the value the running app actually reads.
+            for v in RECOMMEND_PROVIDER COACH_PROVIDER; do
+              val=$(docker compose exec -T app printenv "$v" 2>/dev/null | tr -d '\r')
+              if [ -z "$val" ]; then
+                echo "  live  $v: empty in the running container  → code default decides"
+              else
+                echo "  live  $v=$val   ← the running app uses this"
+              fi
+            done
+
+            section "AI keys  (presence only — values never read)"
+            for v in ANTHROPIC_API_KEY MISTRAL_API_KEY MISTRAL_COACH_API_KEY; do
+              if docker compose exec -T app sh -c "[ -n \"\$$v\" ]" 2>/dev/null; then
+                echo "  $v: set"
+              else
+                echo "  $v: NOT set"
+              fi
+            done
 
             section "Caddyfile  (no secrets — domains only)"
             cat "${{ secrets.DEPLOY_PATH }}/Caddyfile" 2>/dev/null || echo "Caddyfile not found"
