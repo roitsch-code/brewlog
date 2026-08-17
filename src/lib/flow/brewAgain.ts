@@ -62,13 +62,7 @@ export function startBrewFromChat(
     title: title ?? `${method} — from chat`,
     ...(basedOn ? { basedOn } : {}),
     whyChosen: "Worked out in the chat for this brew.",
-    hypothesis: "",
-    predictedCupProfile: "",
-    primaryVariable: "",
-    whatToObserve: "",
     confidence: "moderate",
-    confidenceReason: "",
-    learningValue: "",
   };
   const s = useFlowStore.getState();
   s.reset();

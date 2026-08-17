@@ -138,14 +138,20 @@ export interface RecommendationCandidate {
    * "Own recipe" when it isn't based on a documented one. Populated by the
    * recommend model; shown on the brew screen and known to the chat. */
   basedOn?: string;
+  /** One sentence: why this candidate. The only per-candidate prose left. */
   whyChosen: string;
-  hypothesis: string;
-  predictedCupProfile: string;
-  primaryVariable: string;
-  whatToObserve: string;
   confidence: CandidateConfidence;
-  confidenceReason: string;
-  learningValue: string;
+  // OPTIONAL ON PURPOSE — no longer requested from the model (Aug 2026: each
+  // one cost a wait on every brew, and six of the nine prose fields were
+  // rendered by nothing at all). They stay declared because ~180 stored
+  // sessions carry them in their `recommendation` jsonb, and a session read
+  // back from the DB is the same type as one just generated.
+  hypothesis?: string;
+  predictedCupProfile?: string;
+  primaryVariable?: string;
+  whatToObserve?: string;
+  confidenceReason?: string;
+  learningValue?: string;
   brewingLesson?: string;
   // Deprecated — moved to post-brew adaptive feedback in brew-insight
   nextIfWeak?: string;
