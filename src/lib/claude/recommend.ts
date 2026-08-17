@@ -94,8 +94,13 @@ function guardRecipeFidelity(
   recipe: BrewRecipe,
   basedOn: string | undefined,
   title: string,
+  method?: string,
 ): BrewRecipe {
-  const { recipe: fixed, changed, reasons, reference } = reconcileToReference(recipe, basedOn);
+  const { recipe: fixed, changed, reasons, reference } = reconcileToReference(
+    recipe,
+    basedOn,
+    method,
+  );
   if (changed) {
     console.warn(
       `[recommend] recipe-fidelity: snapped "${title}" back to "${reference}" — ${reasons.join("; ")}`,
@@ -723,7 +728,7 @@ Return valid JSON only.`;
 
   const mapped: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
-    recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title),
+    recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title, c.method),
     role: c.role as CandidateRole,
     title: c.title,
     ...(c.basedOn ? { basedOn: c.basedOn } : {}),

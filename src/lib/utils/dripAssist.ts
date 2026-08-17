@@ -15,6 +15,21 @@ export function isDripAssistMethod(method?: string): boolean {
 }
 
 /**
+ * Niche degrees the disc adds on top of the SAME recipe brewed bare: the disc
+ * smooths distribution but cuts free flow area, so the bed has to run coarser
+ * to finish on the same clock.
+ *
+ * +5° is the delta both in-repo tables agree on — docs/grind-settings.md
+ * ("V60 + Drip Assist ... ~+5° coarser than the standard V60") and the
+ * NICHE° GRIND REFERENCE block in recommendPrompt.ts (V60 396–406 vs
+ * V60 + Drip Assist 401–411). Their absolute baselines differ; the OFFSET is
+ * what's consistent, so the offset is what's enforced here. Direction is
+ * owner-confirmed; the exact magnitude is an estimate, which is why this only
+ * ever nudges a grind that clearly isn't carrying the disc at all.
+ */
+export const DRIP_ASSIST_GRIND_OFFSET_DEG = 5;
+
+/**
  * Drop any candidate that proactively uses Drip Assist when the user did NOT
  * lock it. If that would empty the list (every candidate was Drip Assist —
  * shouldn't happen), relabel them to plain "V60" instead so a recipe still
