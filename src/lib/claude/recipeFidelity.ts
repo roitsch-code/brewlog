@@ -35,6 +35,7 @@
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session";
 import type { Recipe } from "../knowledge/recipes";
 import { ALL_RECIPES } from "../knowledge/recipes";
+import { isDripAssistMethod, DRIP_ASSIST_GRIND_OFFSET_DEG } from "../utils/dripAssist";
 
 export interface FidelityResult {
   recipe: BrewRecipe;
@@ -183,12 +184,15 @@ function cumulativeGramsString(steps: BrewPourStep[]): string {
 
 /** The published grind, scaling-adjusted to the candidate's dose (a bigger
  * bed legitimately runs a touch coarser — ~+20°/doubling per grind-settings). */
-function refGrindString(ref: Recipe, doseRatio: number): string {
+function refGrindString(ref: Recipe, doseRatio: number, discOffset = 0): string {
   const range = refGrindRange(ref);
   if (!range) return ref.grind?.referenceSetting ?? ref.grind?.description ?? "";
-  const adj = Math.round(20 * (doseRatio - 1));
-  const mid = Math.round((range[0] + range[1]) / 2) + adj;
-  return `${mid}°`;
+  return `${scaledRefGrind(range, doseRatio) + discOffset}°`;
+}
+
+/** The published mid, shifted coarser for a bigger bed (~+20°/doubling). */
+function scaledRefGrind(range: [number, number], doseRatio: number): number {
+  return Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
 }
 
 /**
@@ -241,9 +245,23 @@ function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: num
  * to the candidate's batch, snap its mechanical signature back to the faithful
  * scaled reference. Otherwise return the recipe untouched.
  */
-export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undefined): FidelityResult {
+export function reconcileToReference(
+  recipe: BrewRecipe,
+  basedOn: string | undefined,
+  method?: string,
+): FidelityResult {
   const ref = resolveReference(basedOn);
   if (!ref || !ref.verified) return { recipe, changed: false, reasons: [] };
+
+  // How much coarser this candidate must run than the bare published recipe.
+  // Zero for every normal brew; the disc is the only thing that moves it.
+  // Threading it through matters twice over: it stops a snap-back from
+  // REPLACING a correctly-offset grind with the bare reference number (the
+  // snap rewrites grind whenever time OR temp drifted, so a wrong clock could
+  // silently undo a right grind), and it enforces the offset the prompt only
+  // asks for — a soft positive instruction leaks the same way the soft
+  // negative did, which is why stripProactiveDripAssist exists.
+  const discOffset = isDripAssistMethod(method) ? DRIP_ASSIST_GRIND_OFFSET_DEG : 0;
 
   // Iced / bypass references mix water bases (hot vs hot+ice / concentrate) —
   // naive milestone scaling would mis-map. Leave those to the prompt rule.
@@ -278,12 +296,17 @@ export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undef
     // water sits, and it OVER-extracts. Coarsen ONLY the grind — never stretch
     // the time (a longer clock = longer contact = bitter; grind is the flow
     // lever). Verified refs with a published Niche range only.
+    //
+    // The disc case rides the same branch and for the same physical reason: a
+    // "V60 + Drip Assist" brew that kept the bare-V60 grind is a disc recipe in
+    // name only — the label changed and not one number did, which is exactly
+    // the "Drip Assist war drin aber Rezept nicht angepasst" report. Unlike the
+    // batch case this applies at ANY volume, because the disc changes the flow
+    // whatever the batch size.
     const range = refGrindRange(ref);
     const cg = parseGrindDegrees(recipe.grindSize);
-    if (k >= 1.3 && range && cg != null) {
-      // Batch-appropriate grind: the published mid shifted coarser by the
-      // dose-scaling adjustment — identical basis to refGrindString().
-      const target = Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
+    if ((k >= 1.3 || discOffset > 0) && range && cg != null) {
+      const target = scaledRefGrind(range, doseRatio) + discOffset;
       // Only correct a grind that is meaningfully too fine (>4° under target)
       // so normal brew-to-brew variation passes untouched.
       if (cg < target - 4) {
@@ -291,7 +314,9 @@ export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undef
           recipe: { ...recipe, grindSize: `${target}°` },
           changed: true,
           reasons: [
-            `batch grind ${cg}° too fine for a ${Math.round(k * 100)}% batch — coarsened to ${target}° (grind-settings +20°/doubling); total time left at ${recipe.targetTimeSec}s (coarser grind carries the flow, not a longer clock)`,
+            discOffset > 0
+              ? `Drip Assist grind ${cg}° is the bare-V60 setting — coarsened to ${target}° (+${discOffset}° for the disc, docs/grind-settings.md); total time left at ${recipe.targetTimeSec}s`
+              : `batch grind ${cg}° too fine for a ${Math.round(k * 100)}% batch — coarsened to ${target}° (grind-settings +20°/doubling); total time left at ${recipe.targetTimeSec}s (coarser grind carries the flow, not a longer clock)`,
           ],
           reference: ref.name,
         };
@@ -304,7 +329,7 @@ export function reconcileToReference(recipe: BrewRecipe, basedOn: string | undef
   const fixed: BrewRecipe = {
     ...recipe,
     waterTempC: refTemp(ref) ?? recipe.waterTempC,
-    grindSize: refGrindString(ref, doseRatio),
+    grindSize: refGrindString(ref, doseRatio, discOffset),
     targetTimeSec: ref.totalTimeSec,
     pourSteps: steps,
     pourSequence: cumulativeGramsString(steps) || recipe.pourSequence,
