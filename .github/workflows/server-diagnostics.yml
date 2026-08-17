@@ -9,6 +9,12 @@ name: Server Diagnostics (read-only)
 # is fixed and read-only, so this workflow can neither change anything on the
 # server nor be coaxed into running an arbitrary command.
 #
+# STDIN TRAP (hit on the first run, 2026-08-17): this whole script is fed to
+# the remote bash over stdin, and `docker compose exec -T` READS stdin — so the
+# first exec swallowed the rest of the script and every section after it was
+# silently skipped. The run still went green, which is the nasty part. Every
+# `docker compose exec` here must therefore carry `</dev/null`.
+#
 # SECRET SAFETY: this never prints secret VALUES into the run log. It does NOT
 # `cat` the .env, does NOT run `docker compose config` and does NOT
 # `docker inspect` containers (all of those would interpolate/expose env
@@ -98,7 +104,7 @@ jobs:
             # from the file if nobody recreated it since the last edit. This is
             # the value the running app actually reads.
             for v in RECOMMEND_PROVIDER COACH_PROVIDER; do
-              val=$(docker compose exec -T app printenv "$v" 2>/dev/null | tr -d '\r')
+              val=$(docker compose exec -T app printenv "$v" 2>/dev/null </dev/null | tr -d '\r')
               if [ -z "$val" ]; then
                 echo "  live  $v: empty in the running container  → code default decides"
               else
@@ -108,7 +114,7 @@ jobs:
 
             section "AI keys  (presence only — values never read)"
             for v in ANTHROPIC_API_KEY MISTRAL_API_KEY MISTRAL_COACH_API_KEY; do
-              if docker compose exec -T app sh -c "[ -n \"\$$v\" ]" 2>/dev/null; then
+              if docker compose exec -T app sh -c "[ -n \"\$$v\" ]" 2>/dev/null </dev/null; then
                 echo "  $v: set"
               else
                 echo "  $v: NOT set"
