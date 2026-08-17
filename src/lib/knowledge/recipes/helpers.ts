@@ -449,8 +449,26 @@ function demoteRecentWithinTies(
   return demoteWithinTies(scored, isRecent);
 }
 
+/**
+ * Mix a seed before it is used modulo a small group size.
+ *
+ * The caller's seed is a millisecond timestamp, and `ms % len` is degenerate
+ * for exactly the group sizes that occur here: 86,400,000 (one day) is
+ * divisible by 2, 3, 4, 5, 6, 8, 9, 10 …, so brews a day apart landed on the
+ * SAME offset and the rotation stood still. Measured before this fix: one
+ * single menu across 20 consecutive brews. Hashing decorrelates the low bits
+ * from the calendar, which is what the modulo actually needs.
+ */
+function mixSeed(seed: number): number {
+  let x = Math.abs(Math.trunc(seed)) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
+  return (x ^ (x >>> 16)) >>> 0;
+}
+
 function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
   if (seed <= 0) return scored;
+  seed = mixSeed(seed);
   const out: ScoredRecipe[] = [];
   let i = 0;
   while (i < scored.length) {
@@ -511,15 +529,67 @@ export function selectRecipes(
 
   // No lock → diversity portfolio: only one recipe per brewer, so the AI sees
   // a varied set across the user's kit rather than five V60s.
+  //
+  // WHICH recipe represents a brewer is rotated per brew, and that is the fix
+  // for the repetition the owner reported over and over. Rotating ties alone
+  // could not touch it: reordering equal-scoring recipes changes their order,
+  // but this loop then takes each brewer's BEST one — which is the same recipe
+  // regardless of order, so the injected set never moved. Measured on the real
+  // selector: 1 distinct menu across 20 consecutive brews, both for a
+  // washed-SL28 morning and a natural-clarity brew.
+  //
+  // Fit still decides. A brewer is only ever represented by a recipe within
+  // REP_SCORE_TOLERANCE of that brewer's own best score, so this picks between
+  // genuinely interchangeable options for that vessel (Hedrick vs Wendelboe vs
+  // Kasuya on the V60) and never promotes a poor match. Which brewers appear,
+  // and in what order, is unchanged — that stays score + the freshness
+  // tie-breaks above.
+  const byBrewer = new Map<BrewerType, ScoredRecipe[]>();
+  for (const s of scored) {
+    const list = byBrewer.get(s.recipe.brewer);
+    if (list) list.push(s);
+    else byBrewer.set(s.recipe.brewer, [s]);
+  }
+
   const seenBrewers = new Set<BrewerType>();
   const result: ScoredRecipe[] = [];
   for (const s of scored) {
     if (seenBrewers.has(s.recipe.brewer)) continue;
     seenBrewers.add(s.recipe.brewer);
-    result.push(s);
+    result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
     if (result.length >= limit) break;
   }
-  return result;
+  // Substituting a representative can swap in a recipe scoring up to
+  // REP_SCORE_TOLERANCE apart, which would leave the menu no longer in
+  // best-fit order — and the prompt tells the model that the library order IS
+  // meaningful. Re-sort so that promise stays true. The sort is stable, so the
+  // freshness demotions already applied within each tie group survive it.
+  return result.sort((a, b) => b.score - a.score);
+}
+
+/** How far below a brewer's best score a recipe may sit and still stand in for
+ * it. One point: the scale is coarse integers, so this is "as good as", not
+ * "nearly as good as". */
+const REP_SCORE_TOLERANCE = 1;
+
+/**
+ * Choose which of a brewer's recipes represents it this brew. `candidates` is
+ * already in the selector's final order, so index 0 is the best fit and the
+ * freshness demotions have already been applied within tie groups.
+ *
+ * Rotation is offset by the brewer's own name as well as the seed, so two
+ * brewers in the same menu don't move in lockstep — otherwise every vessel
+ * would jump to "its second recipe" on the same brew.
+ */
+function pickRepresentative(candidates: ScoredRecipe[], seed: number): ScoredRecipe {
+  if (candidates.length <= 1 || seed <= 0) return candidates[0];
+  const best = candidates[0].score;
+  const eligible = candidates.filter((c) => c.score >= best - REP_SCORE_TOLERANCE);
+  if (eligible.length <= 1) return candidates[0];
+  const brewerOffset = mixSeed(
+    Array.from(candidates[0].recipe.brewer).reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7),
+  );
+  return eligible[(mixSeed(seed) + brewerOffset) % eligible.length];
 }
 
 /** Look up a recipe by id. */

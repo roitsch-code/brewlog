@@ -30,6 +30,58 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
+/**
+ * The reference recipe corpus, grouped by brewer, with its own imbalance
+ * stated up front.
+ *
+ * Reported as "der Chat kennt nur V60". He was reading a real signal: the
+ * corpus is 45/136 V60 (33%, the largest group by a factor of two) while his
+ * Orea V4 — one of his main brewers — has exactly ONE recipe, because that is
+ * what the coffee world publishes, not what suits his beans. Dumped as a flat
+ * list, recipe COUNT reads as endorsement, and the model reaches for the
+ * brewer it saw thirty times.
+ *
+ * Grouping makes the shape visible instead of implicit, and the header says
+ * outright that frequency is an artefact of publishing. Nothing is removed —
+ * every recipe is still here, and a V60 is still the right answer whenever the
+ * bean says so.
+ *
+ * Built once per process: the corpus is a compile-time constant, and this is a
+ * ~39k-token string that used to be re-joined on every single chat turn.
+ */
+let recipeLibraryCache: string | null = null;
+function recipeLibraryBlock(): string {
+  if (recipeLibraryCache) return recipeLibraryCache;
+
+  const byBrewer = new Map<string, typeof ALL_RECIPES>();
+  for (const r of ALL_RECIPES) {
+    const list = byBrewer.get(r.brewer);
+    if (list) list.push(r);
+    else byBrewer.set(r.brewer, [r]);
+  }
+  const groups = Array.from(byBrewer.entries()).sort((a, b) => b[1].length - a[1].length);
+
+  const header =
+    `\n## Reference Recipe Library (championship + named-expert recipes documented in the app; cite by name when you draw from one)\n\n` +
+    `HOW MANY RECIPES A BREWER HAS IS NOT A RECOMMENDATION. It reflects what the coffee world has published, ` +
+    `nothing else. ${ALL_RECIPES.length} recipes across ${groups.length} brewers: ` +
+    groups.map(([b, rs]) => `${b} ${rs.length}`).join(", ") + `. ` +
+    `The V60 is over-represented because it is the most written-about brewer on earth; the Orea has one entry ` +
+    `and is still one of the user's primary cones. Choose the brewer for the BEAN and the goal, then adapt the ` +
+    `nearest recipe to it — a recipe published on a V60 usually transfers to another cone with the same geometry. ` +
+    `Never pick a brewer because this library happens to hold more recipes for it.\n`;
+
+  recipeLibraryCache =
+    header +
+    groups
+      .map(
+        ([brewer, rs]) =>
+          `\n### ${brewer} (${rs.length})\n\n` + rs.map(formatRecipeForPrompt).join("\n\n"),
+      )
+      .join("\n");
+  return recipeLibraryCache;
+}
+
 // ── Types ───────────────────────────────────────────────────────────────────
 
 export interface NavAction {
@@ -975,21 +1027,15 @@ export async function POST(req: NextRequest) {
         ).join("\n")
     );
 
-    // Reference recipe corpus — the same 20 championship + reference
-    // recipes /api/recommend uses, in full. Injected as-is so the chat
-    // can speak with authority about Kasuya 4:6, Wölfl 2024 Orea Fast,
-    // Hoffmann Better 1 Cup, etc. — no more "let me check online" when
-    // the user asks about a recipe that's already baked into the app.
-    contextParts.push(
-      `\n## Reference Recipe Library (full corpus — championship + named-expert recipes documented in the app; cite by name when you draw from one)\n\n` +
-        ALL_RECIPES.map(formatRecipeForPrompt).join("\n\n")
-    );
-
     const dynamicContext = contextParts.join("");
 
     const systemBlocks: Anthropic.TextBlockParam[] = [
       { type: "text", text: AGENT_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       { type: "text", text: profileBlock, cache_control: { type: "ephemeral" } },
+      // The corpus is STATIC — same ~39k tokens on every turn of every
+      // conversation. It was riding inside dynamicContext, which changes each
+      // turn and so could never be cached; its own block can be.
+      { type: "text", text: recipeLibraryBlock(), cache_control: { type: "ephemeral" } },
       ...(dynamicContext ? [{ type: "text" as const, text: dynamicContext }] : []),
     ];
 
