@@ -176,7 +176,7 @@ for (const r of ALL_RECIPES) {
   }
 
   // Cross-refs + enums
-  for (const tech of r.techniques || []) if (!techniqueIds.has(tech)) W(id, `technique "${tech}" not in techniques corpus`);
+  for (const tech of r.techniques || []) if (!techniqueIds.has(tech)) E(id, `technique "${tech}" not in techniques corpus`);
   for (const x of r.bestFor?.roastLevels || []) if (!ROASTS.has(x)) E(id, `bad roastLevel "${x}"`);
   for (const x of r.bestFor?.processes || []) if (!PROCESSES.has(x)) E(id, `bad process "${x}"`);
   for (const x of r.bestFor?.goals || []) if (!GOALS.has(x)) E(id, `bad goal "${x}"`);

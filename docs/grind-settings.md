@@ -1,6 +1,6 @@
 # Grind Settings — Niche Zero (°) + Comandante (clicks)
 
-> **Code source of truth:** `src/lib/constants/grindSettings.ts`. The constants file is canonical for the per-method default table; this doc mirrors it for humans. NOTE: `/recommend` and `/explore-agent` do NOT import the constants file — each carries its own hardcoded NICHE° GRIND REFERENCE in the system prompt. To re-calibrate a number, update all three (constants + this doc + the prompt block).
+> **Code source of truth:** `src/lib/constants/grindSettings.ts`. The constants file is canonical for the per-method default table; this doc mirrors it for humans. Wiring (corrected 2026-08-18): `/explore-agent` reads the constants LIVE (`formatGrindSettingsForPrompt()` via `userProfile.ts` — no hardcoded copy there); only `/recommend` carries a hardcoded NICHE° GRIND REFERENCE block (`recommendPrompt.ts`, kept literal for prompt-cache stability) — and that block is pinned to the constants by `tests/dataflow/grind-reference-consistency.test.mjs`, which fails CI on any disagreement. To re-calibrate: update the constants + this doc, then the `/recommend` block (the test forces the third).
 
 ## Empirical calibration (user-measured, May 2026)
 
