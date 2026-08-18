@@ -629,8 +629,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
     whenToUse: "Travel pour-over substitute. Excellent on Yirgacheffes and other clarity-forward washed coffees when you can't pack a V60.",
     sources: [
       { type: "video", citation: "Tim Wendelboe Instagram + YouTube AeroPress notes", year: 2018 },
+      { type: "report", citation: "Owner-verified against Wendelboe's own published material, 2026-08-18 (review follow-up to #528 — the composite championship variant was removed; this reference entry was checked and confirmed by the owner)", year: 2026 },
     ],
-    verified: false,
+    verified: true,
   },
 
   {
