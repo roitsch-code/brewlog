@@ -2416,46 +2416,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
     verified: false,
   },
 
-  {
-    id: "wac-2019-wendelboe",
-    name: "Wendelboe AeroPress (WAC 2019 routine)",
-    shortName: "Wendelboe AP 2019",
-    attribution: {
-      person: "Tim Wendelboe — adapted by competitors",
-      country: "Norway",
-      year: 2019,
-    },
-    category: "championship",
-    brewer: "aeropress",
-    dose: { grams: 15 },
-    water: { grams: 200, ratio: "1:13.3" },
-    temperature: { celsius: 88 },
-    grind: {
-      nicheZeroDegrees: [347, 357],
-    },
-    pourSequence: [
-      { label: "Setup inverted, add coffee", action: "invert", durationSec: 0 },
-      { label: "Pour water to 200g", action: "pour", waterGramsAtEnd: 200, durationSec: 10 },
-      { label: "Stir gently 3x", action: "stir", durationSec: 8 },
-      { label: "Steep", action: "wait", durationSec: 90 },
-      { label: "Flip + slow press", action: "press", durationSec: 30 },
-    ],
-    totalTimeSec: 138,
-    techniques: ["aeropress-inversion", "low-temp-long-steep"],
-    bestFor: {
-      roastLevels: ["light", "medium-light"],
-      processes: ["washed"],
-      goals: ["high-clarity"],
-    },
-    teaches: "Nordic-style AeroPress: low temp, inverted, ~90s steep. Multiple WAC competitors built on Wendelboe's clarity-first AeroPress template.",
-    science: "88°C + 90s steep on a small slurry extracts sweet and aromatic compounds without dragging bitterness. Inverted setup eliminates drip-through during steep.",
-    whenToUse: "Travel V60 substitute, Nordic-roasted light single origins.",
-    sources: [
-      { type: "official-competition", citation: "WAC 2019-2020 finalist routine compilations", year: 2019 },
-    ],
-    verified: false,
-  },
-
   // ── Misc additional ─────────────────────────────────────────────────────
 
   {
