@@ -1,7 +1,10 @@
 // The Acaia pour curve (pourSteadiness = channeling signal, overshoot) was
 // captured, stored, and read by NO prompt — only the coarse three-way
-// derivedFlow reached the model. This pins that the measured pour now reaches
-// the /recommend history summary, and only when a curve exists.
+// derivedFlow reached the model. This pins formatMeasuredPour +
+// buildHistorySummary carrying it. NOTE (corrected 2026-08-18): this covers
+// the FUNCTION only — buildHistorySummary's production consumer is
+// loading-insights/refresh, not /recommend. The /recommend route-level wiring
+// is pinned separately by measured-feedback-in-recommend.test.mjs.
 //
 //   node --test tests/dataflow/measured-pour-in-prompts.test.mjs
 

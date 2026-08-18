@@ -194,6 +194,56 @@ function buildRoasterHistory(sessions: Session[]): string {
  * Builds a concise brew history summary string for injection into Claude prompts.
  * Used by both the recommendation engine and the explore chat.
  */
+/**
+ * MEASURED BREW FEEDBACK block for /recommend — the two signals the rest of
+ * its prompt can't provide: the post-rating clarification answer (the user's
+ * own disambiguation of an ambiguous rating) and the objective Acaia pour
+ * measurement (steadiness = channeling signal, overshoot). Only sessions
+ * carrying at least one of the two appear; sessions of the CURRENT coffee
+ * (matched by name + roaster, same as sessionCountForThisCoffee) come first,
+ * then the rest in the given (newest-first) order, capped at `limit`.
+ * Returns "" when nothing qualifies, so scale-less / question-less logs leave
+ * the prompt byte-identical to before.
+ */
+export function buildMeasuredFeedback(
+  pastSessions: Session[],
+  currentCoffee?: { name?: string; roaster?: string },
+  limit = 8,
+): string {
+  const lineFor = (s: Session): string | null => {
+    const asked = s.result?.coachAnswer
+      ? `asked "${s.result.coachAnswer.question}" → "${s.result.coachAnswer.answer}"`
+      : "";
+    const measuredCore = formatMeasuredPour(s.brew?.flowAnalysis);
+    const measured = measuredCore ? `measured pour: ${measuredCore}` : "";
+    if (!asked && !measured) return null;
+    const method = s.brew?.methodUsed || s.recommendation?.primaryMethod || "unknown";
+    const coffeeName = s.coffee?.name || "unknown coffee";
+    const rating = s.result?.rating != null ? `${s.result.rating}★` : "unrated";
+    return `- ${method} with ${coffeeName}: ${rating} · ${[measured, asked].filter(Boolean).join(" · ")}`;
+  };
+
+  const isCurrent = (s: Session) =>
+    !!currentCoffee?.name &&
+    s.coffee?.name === currentCoffee.name &&
+    s.coffee?.roaster === currentCoffee.roaster;
+
+  const qualifying = pastSessions
+    .map((s) => ({ s, text: lineFor(s) }))
+    .filter((x): x is { s: Session; text: string } => x.text !== null);
+  if (!qualifying.length) return "";
+
+  const ordered = [
+    ...qualifying.filter((x) => isCurrent(x.s)),
+    ...qualifying.filter((x) => !isCurrent(x.s)),
+  ].slice(0, limit);
+
+  return (
+    `\nMEASURED BREW FEEDBACK — recent sessions carrying a post-rating clarification (the user's own words resolving an ambiguous rating — "thin" answered as sour needs the OPPOSITE correction from "thin" answered as weak) and/or an objective Acaia pour measurement (steadiness = channeling signal, overshoot). Sessions of THIS coffee are listed first. Observations, not instructions — use them to disambiguate the CAUSE before choosing the fix:\n` +
+    ordered.map((x) => x.text).join("\n")
+  );
+}
+
 export function buildHistorySummary(pastSessions: Session[], limit = 8): string {
   if (!pastSessions.length) return "No previous sessions yet — this is the user's first brew.";
 

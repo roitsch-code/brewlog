@@ -14,7 +14,7 @@ import type {
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
-import { buildTimingStats, measuredTimeDelta } from "./historyUtils";
+import { buildTimingStats, measuredTimeDelta, buildMeasuredFeedback } from "./historyUtils";
 import { brewMethodKey } from "../utils/brewMethodKey";
 import { buildOwnReferences, formatOwnReferencesForPrompt } from "./ownReferenceRecipes";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
@@ -518,6 +518,13 @@ export async function generateRecommendation(
     );
   })();
 
+  // MEASURED BREW FEEDBACK — the post-rating clarification answers + the
+  // objective Acaia pour measurements, injected DIRECTLY (2026-08-18, owner
+  // Go). Until now both signals reached /recommend only via the lagged
+  // coach-insight rows; buildHistorySummary carries them too but feeds only
+  // loading-insights/refresh. "" when no session carries either signal.
+  const measuredFeedbackBlock = buildMeasuredFeedback(pastSessions, coffee);
+
   // ── Knowledge layer injection ──────────────────────────────────────────
   // Three structured blocks selected per turn:
   //   1. Variety priors — what genetics tell us (WCR-grounded)
@@ -681,7 +688,7 @@ Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}${blendNote}
 Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
-${roasterBlock}${historyBlock}${insightsBlock}
+${roasterBlock}${historyBlock}${insightsBlock}${measuredFeedbackBlock}
 Context:
 - Occasion: ${context.occasion}
 - Amount: ${context.amount} (${guide})
