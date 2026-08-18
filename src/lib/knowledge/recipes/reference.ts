@@ -1192,7 +1192,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       country: "Japan",
     },
     category: "reference",
-    brewer: "origami-air-m",
+    brewer: "origami-cone",
     brewerNotes:
       "Origami Air M (the owner's dripper) with Cafec Abaca paper. Hatakeyama brewed it on an Origami Air S; his recipe notes it 'should be' the Cafec Flower Dripper. Single 85 °C water — notably cool — and a coarse grind.",
     dose: { grams: 15 },

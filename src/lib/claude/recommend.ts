@@ -569,8 +569,14 @@ export async function generateRecommendation(
   // If the user locked a method in the flow, hard-filter recipe selection to
   // that method so the prompt only carries recipes for the brewer they chose.
   const lockedBrewers = brewersFromMethod(context.preferredMethod);
-  const selectedRecipes = selectRecipes(
-    {
+  // serveVolumeMl: vessel-capacity filter for plain hot brews only. Iced/cold
+  // opt out (the vessel holds the hot portion / a concentrate). A locked method
+  // also opts out — the user chose the vessel, so honour it with the volume.
+  const serveVolumeForOccasion =
+    context.occasion === "summer-time" || context.occasion === "cold-brew"
+      ? undefined
+      : targetWaterMl;
+  const selectionInput = {
       brewersAvailable,
       lockedBrewers,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
@@ -596,12 +602,7 @@ export async function generateRecommendation(
       // plain hot brews. Iced (vessel holds the hot portion only), cold brew
       // (concentrate + dilution) and a locked method (USER OVERRIDE honours the
       // vessel + volume together) all opt out.
-      serveVolumeMl:
-        context.occasion === "summer-time" ||
-        context.occasion === "cold-brew" ||
-        lockedBrewers.size > 0
-          ? undefined
-          : targetWaterMl,
+      serveVolumeMl: lockedBrewers.size > 0 ? undefined : serveVolumeForOccasion,
       // Rotate equal-scoring recipes per brew so the injected menu (and the
       // per-brewer diversity winner — e.g. the Clever water-first) varies
       // instead of repeating every session. Seeded by the LATEST session's
@@ -620,11 +621,29 @@ export async function generateRecommendation(
       // Same tie-break for recently-dominant BREWERS: an equal-scored recipe
       // on a fresher brewer takes the menu slot (never an exclusion).
       demoteBrewers: methodRecency.recentBrewers,
-    },
-    4
-  );
-  const recipesBlock = selectedRecipes.length
-    ? `\n${formatRecipesForPrompt(selectedRecipes)}`
+  };
+  const selectedRecipes = selectRecipes(selectionInput, 4);
+
+  // A locked method the corpus has NO documented recipe for (e.g. the Orea
+  // Apex/Classic/Open bottoms — the corpus holds recipes for none of them) used
+  // to inject an EMPTY recipe block, leaving the model to invent a recipe with
+  // nothing to anchor on. Instead, fall back to the general best-fit portfolio
+  // across the owner's kit and tell the model to transfer the nearest to the
+  // locked brewer (same filter geometry), rather than fabricate one.
+  let recipesForPrompt = selectedRecipes;
+  const lockedMethodHasNoRecipe = lockedBrewers.size > 0 && selectedRecipes.length === 0;
+  if (lockedMethodHasNoRecipe) {
+    recipesForPrompt = selectRecipes(
+      { ...selectionInput, lockedBrewers: new Set(), serveVolumeMl: serveVolumeForOccasion },
+      4,
+    );
+  }
+  const recipesBlock = recipesForPrompt.length
+    ? `\n${
+        lockedMethodHasNoRecipe
+          ? `(No documented recipe exists specifically for ${context.preferredMethod}. The recipes below are the closest matches on your other cones — adapt the nearest to the ${context.preferredMethod}, keeping its filter geometry. Do NOT invent parameters.)\n`
+          : ""
+      }${formatRecipesForPrompt(recipesForPrompt)}`
     : "";
 
   // The user's own well-rated brews, offered as references beside the corpus.
