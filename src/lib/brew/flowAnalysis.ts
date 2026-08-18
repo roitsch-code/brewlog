@@ -315,3 +315,40 @@ export function analyzeFlow(
     samples: downsample(curve),
   };
 }
+
+// Display heuristics for reading the pour-steadiness CV — NOT brewing
+// parameters. pourSteadiness is the coefficient of variation of the per-pour
+// rates (lower = steadier). A CV at/below EVEN_CV reads as an even pour, at/above
+// UNEVEN_CV as an uneven one (a direct channeling signal); in between is left
+// unlabelled so a borderline pour isn't over-claimed. Overshoot is only worth
+// naming above OVERSHOOT_REPORT_G — below that it's within normal pour variance.
+export const EVEN_POUR_CV = 0.15;
+export const UNEVEN_POUR_CV = 0.35;
+export const OVERSHOOT_REPORT_G = 15;
+
+/**
+ * Compact core summary of the MEASURED pour from a connected Acaia scale, for
+ * the coach + recommend prompts. Until now this objective curve — steadiness
+ * (channeling signal) and overshoot — was captured, stored, and read by NO
+ * prompt: only the coarse three-way `derivedFlow` reached the model. This turns
+ * the real measurement into a phrase the model can reason on ("was that
+ * thinness channeling, or the bean?"). Returns "" when no curve was captured;
+ * the caller adds its own label/wrapping.
+ */
+export function formatMeasuredPour(fa: FlowAnalysis | undefined | null): string {
+  if (!fa) return "";
+  const bits: string[] = [];
+  if (fa.pourSteadiness != null) {
+    const word =
+      fa.pourSteadiness <= EVEN_POUR_CV
+        ? " (even)"
+        : fa.pourSteadiness >= UNEVEN_POUR_CV
+          ? " (uneven — channeling risk)"
+          : "";
+    bits.push(`steadiness CV ${fa.pourSteadiness}${word}`);
+  }
+  if (fa.overshootG != null && fa.overshootG > OVERSHOOT_REPORT_G) {
+    bits.push(`ran ${fa.overshootG}g ahead of plan`);
+  }
+  return bits.join(", ");
+}

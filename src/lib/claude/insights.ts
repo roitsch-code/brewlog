@@ -33,6 +33,7 @@ import type { InsightRow } from "@/lib/db/schema";
 import type { Session } from "@/lib/types/session";
 import { parseClaudeJson, z } from "./parseJson";
 import { buildSignatures } from "./brewSignature";
+import { formatMeasuredPour } from "@/lib/brew/flowAnalysis";
 import { extract, serialiseForEscher } from "./extractor";
 import { detectPatterns } from "./patterns";
 import type { PatternAnalysis } from "./patterns";
@@ -155,6 +156,10 @@ function serialiseSessionForCoach(s: Session): string {
   if (b?.actualTempC ?? brewedRecipe?.waterTempC) recipe.push(`${b?.actualTempC ?? brewedRecipe?.waterTempC}°C`);
   if (b?.actualTimeSec) recipe.push(`t=${b.actualTimeSec}s`);
   if (b?.flow && b.flow !== "na") recipe.push(`flow=${b.flow}`);
+  // Objective pour measurement from a connected scale, when captured — the
+  // channeling/overshoot signal the coach needs to tell "your technique" from
+  // "the bean". Was stored and read by no prompt until now.
+  { const mp = formatMeasuredPour(b?.flowAnalysis); if (mp) recipe.push(`pour[${mp}]`); }
   if (s.context?.waterSource) recipe.push(`water=${s.context.waterSource}`);
   if (s.context?.occasion) recipe.push(`occ=${s.context.occasion}`);
 
