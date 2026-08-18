@@ -309,26 +309,51 @@ export class AcaiaScale {
     }
   }
 
-  // DELIBERATE DEVIATION FROM BEANCONQUEROR — do NOT "restore upstream parity".
-  // Upstream's monitor only re-calls ident() (a no-op on the iOS V2 path once
-  // subscribed) and relies on incoming notifications to drive heartbeat(). That
-  // makes the keepalive self-sustaining ONLY while the scale streams: a single
-  // stall (BLE congestion / brief out-of-range / auto-dim) breaks the loop and
-  // the weight freezes with no recovery. Here the monitor instead (1) drives a
-  // real heartbeat itself every second — independent of the notification stream —
-  // and (2) re-subscribes when weight has genuinely stalled, so the stream
-  // revives on its own. Both use only the existing ported packets.
+  // The monitor does THREE things every tick. The first is load-bearing for
+  // PAIRING and must never be dropped again (regression PR #408 → this fix):
+  //
+  //  (1) DRIVE THE HANDSHAKE TO COMPLETION. ident() is a two-step handshake on
+  //      the iOS V2 path: while recievesNotifications is still false it (re)sends
+  //      encodeId, and the instant the first notification flips that true it sends
+  //      the encodeNotificationRequest that makes the scale actually STREAM weight.
+  //      That second step only happens on a *subsequent* ident() call — so the
+  //      monitor must keep calling ident() until BOTH flags are set, or the scale
+  //      connects but never streams. The working June-2026 build did exactly this
+  //      (its monitor re-ran initScales() every tick). #408 replaced that with a
+  //      heartbeat-only tick that re-idents ONLY on a 3 s stall — which itself is
+  //      gated on recievesNotifications, a chicken-and-egg that left the request
+  //      unsent and the pairing dead. Once both flags are set ident() is a genuine
+  //      no-op ("no-op once subscribed"), so running it until then is free.
+  //  (2) INDEPENDENT KEEPALIVE. heartbeat() flushes the command queue and sends a
+  //      real encodeHeartbeat, self-throttled to ≤1/s — driving it here (not only
+  //      from handleNotification) keeps the scale awake even when no notifications
+  //      arrive. This was #408's genuine improvement; keep it.
+  //  (3) STALL REVIVAL. If the stream WAS running and then went silent for a few
+  //      seconds (BLE congestion / brief out-of-range / auto-dim), re-request it.
+  //      Also #408's; keep it.
+  //
+  // DO NOT collapse (1) back into (3) to "match upstream parity" — that is the
+  // exact change that broke pairing.
   private startHeartbeatMonitor(): void {
     this.heartbeat_monitor_interval = setInterval(() => {
       if (!this.connected) return;
-      // Independent keepalive: heartbeat() flushes the command queue and sends a
-      // real encodeHeartbeat, self-throttled to ≤1/s via last_heartbeat — so
-      // driving it here too (not only from handleNotification) keeps the scale
-      // awake even when no notifications are arriving.
+
+      // (1) Handshake: re-ident until the scale is subscribed AND the weight
+      //     stream has been requested.
+      if (!this.recievesNotifications || !this.encodeNotificationRequestSend) {
+        if (this.isV1Path()) {
+          void this.ident();
+        } else {
+          this.ident();
+        }
+      }
+
+      // (2) Independent keepalive.
       this.heartbeat();
-      // Stream genuinely stalled (no weight for a few seconds) → re-request it.
-      // Gated on recievesNotifications so it never fires before first subscribe,
-      // and on the multi-second gap so normal ~10 Hz pouring never trips it.
+
+      // (3) Stall revival — gated on recievesNotifications so it never fires
+      //     before the first subscribe, and on the multi-second gap so normal
+      //     ~10 Hz pouring never trips it.
       if (
         this.recievesNotifications &&
         Date.now() - this.last_notification_ms > NOTIFICATION_STALL_MS
