@@ -1,6 +1,7 @@
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe, brewedRecipeName } from "../utils/resolveRecipe";
 import { brewMethodKey } from "../utils/brewMethodKey";
+import { formatMeasuredPour } from "../brew/flowAnalysis";
 
 /**
  * Computes per-method average timing delta (actualTimeSec - targetTimeSec) across past sessions.
@@ -255,6 +256,12 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
       wouldBrewAgainVal === true  ? " · would brew this setup again" : "";
     const occasion = s.context?.occasion ? ` · occasion: ${s.context.occasion}` : "";
     const flow = s.brew?.flow ? ` · flow: ${s.brew.flow}` : "";
+    // Objective pour measurement from a connected scale, when one was captured.
+    // Steadiness (channeling signal) + overshoot — resolves the same ambiguity
+    // the self-reported `flow` leaves open, from the real curve rather than a
+    // three-way self-grade.
+    const measuredCore = formatMeasuredPour(s.brew?.flowAnalysis);
+    const measuredPour = measuredCore ? ` · measured pour: ${measuredCore}` : "";
     const mods = s.brew?.modifications
       ? ` · modified: ${s.brew.modifications}`
       : "";
@@ -279,7 +286,7 @@ export function buildHistorySummary(pastSessions: Session[], limit = 8): string 
       bagNotes?.length && actualNotes?.length
         ? ` · bag promised: [${bagNotes.join(", ")}] → actually tasted: [${actualNotes.join(", ")}]`
         : "";
-    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${mods}${wouldBrewAgain}${freeNote}${attribution}${craft}${fit}${occasion}${drift}${asked}`;
+    return `${method} with ${coffee}: ${rating}${notes ? ` [${notes}]` : ""}${body ? ` body:${body}` : ""}${acidity ? ` acidity:${acidity}` : ""}${clarity}${sweetness}${bitterness}${finish}${flow}${measuredPour}${mods}${wouldBrewAgain}${freeNote}${attribution}${craft}${fit}${occasion}${drift}${asked}`;
   });
 
   return rankingBlock + sensoryBlock + roasterBlock + lines.join("\n");
