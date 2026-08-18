@@ -98,6 +98,13 @@ jobs:
 
             docker compose build app
 
+            # Ofelia reads its bind-mounted deploy/ofelia.ini only at startup —
+            # restart it so cron-config changes take effect (a plain restart,
+            # never a recreate/rm; see the #218 lesson). Non-fatal on failure,
+            # but loud in the log.
+            docker compose restart ofelia \
+              || echo "WARNING: ofelia restart failed — cron config may be stale"
+
             if docker compose up -d --force-recreate --no-deps app; then
               exit 0
             fi
