@@ -55,6 +55,17 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
     notes: "Emergency / travel only. Disc adds resistance → grind ~5° coarser than the standard V60 (one Comandante click). The disc smooths pour distribution at the cost of free flow; coarsen to compensate so timing matches the standard V60. Refine after first travel brew.",
   },
   { method: "Orea V4", niche: { min: 380, max: 390 }, comandante: { min: 23, max: 26 }, confidence: "estimate" },
+  // The individual Orea V4 bottoms. These lived ONLY inside the hardcoded
+  // NICHE° block in recommendPrompt.ts on the pre-May-2026 baseline that the
+  // rest of the app moved off (that block read Apex 403–407° etc. while the
+  // measured V60 anchor is 380°). Re-based onto the measured anchor by the same
+  // −21° the audit applied elsewhere, and pulled into the source table so the
+  // prompt block is generated-equivalent and can no longer drift from it
+  // (pinned by tests/dataflow/grind-reference-consistency.test.mjs). Estimates
+  // off the V60 anchor + relative bottom order, not directly measured.
+  { method: "Orea Apex", niche: { min: 382, max: 386 }, comandante: { min: 24, max: 25 }, confidence: "estimate", notes: "Clarity bottom — slowest of the four, finer end of the Orea range." },
+  { method: "Orea Classic", niche: { min: 385, max: 390 }, comandante: { min: 24, max: 26 }, confidence: "estimate", notes: "Sweetness bottom — middle of the Orea range." },
+  { method: "Orea Open", niche: { min: 381, max: 388 }, comandante: { min: 23, max: 25 }, confidence: "estimate", notes: "Open bed, max flow — tolerates the finer end because the bottom never restricts drawdown." },
   { method: "Origami Dripper", process: "Washed", niche: { min: 380, max: 386 }, comandante: { min: 23, max: 25 }, confidence: "estimate" },
   { method: "Origami Dripper", process: "Honey", niche: { min: 382, max: 387 }, comandante: { min: 24, max: 25 }, confidence: "estimate" },
   { method: "Origami Dripper", process: "Natural", niche: { min: 383, max: 388 }, comandante: { min: 24, max: 25 }, confidence: "estimate" },

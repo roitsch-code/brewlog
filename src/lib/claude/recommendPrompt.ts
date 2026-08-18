@@ -338,13 +338,13 @@ OREA V4 — dedicated rules:
 3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
 
 NICHE° GRIND REFERENCE:
-(On the Niche Zero dial, HIGHER degree = COARSER grind. The numbers below are starting points; calibrate to drawdown.)
-V60: 396–406° | V60 + Drip Assist: 401–411° (emergency/travel only — disc adds resistance, ~+5° coarser than the V60 range)
-Orea: 401–411° | Origami Air M: 401–408°
-Origami (cone): 398–408° | Origami (wave): 398–406°
-Kalita: 396–406° | Chemex: 396–410° | Clever Dripper: 416–436° | AeroPress: 377–387° | Moccamaster: 431–441°
-Orea Apex (clarity): 403–407° | Orea Classic (sweetness): 406–411° | Orea Open: 402–409°
-Kasuya 4:6: 411–421° | Wölfl: 401–411°
+(On the Niche Zero dial, HIGHER degree = COARSER grind. Starting points — calibrate to drawdown. Measured anchor: a 15 g / 250 ml V60 is 380° = 23 Comandante clicks; larger batches coarsen. These are the general per-method defaults; a recipe you are ADAPTING carries its own grind in the library entry and that value wins.)
+V60: 375–385° | V60 + Drip Assist: 380–390° (emergency/travel only — disc adds resistance, ~+5° coarser than the V60 range)
+Orea: 380–390° | Origami Air M: 380–388°
+Origami (cone): 378–388° | Origami (wave): 378–386°
+Kalita: 384–394° | Chemex: 398–410° | Clever Dripper: 395–415° | AeroPress: 356–366° | Moccamaster: 410–420°
+Orea Apex (clarity): 382–386° | Orea Classic (sweetness): 385–390° | Orea Open: 381–388°
+Kasuya 4:6: 390–400° | Wölfl: 380–390°
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.

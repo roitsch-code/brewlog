@@ -22,6 +22,9 @@ Two relationships fall out of those points:
 |--------|---------|--------|------------|------------|
 | V60 | any | 375–385° | 22–25 | **measured** (380°/23 = single cup) |
 | V60 + Drip Assist | any | 380–390° | 24–27 | estimate (emergency/travel only — disc adds resistance → ~+5° coarser than the standard V60) |
+| Orea V4 (Apex) | any | 382–386° | 24–25 | estimate |
+| Orea V4 (Classic) | any | 385–390° | 24–26 | estimate |
+| Orea V4 (Open) | any | 381–388° | 23–25 | estimate |
 | Orea V4 | any | 380–390° | 23–26 | estimate |
 | Origami Dripper | Washed | 380–386° | 23–25 | estimate |
 | Origami Dripper | Honey | 382–387° | 24–25 | estimate |
@@ -36,3 +39,5 @@ Two relationships fall out of those points:
 **Confidence:** only **V60** is directly measured. The other methods carry their previous *relative* offset onto the new V60 baseline (re-based by the same delta) — an **estimate**, not a measurement. Kasuya is anchored to its published recipe grind. Measure per method to firm these up.
 
 > Grind coarser/finer to adjust timing. Temperature controls extraction chemistry — never use it to fix flow speed.
+
+> **The `/recommend` prompt no longer keeps its own copy of these numbers out of sync.** Its NICHE° GRIND REFERENCE block is corrected to this measured baseline and pinned to `grindSettings.ts` by `tests/dataflow/grind-reference-consistency.test.mjs`, so the ~+21° drift that put V60 at 396–406° (≈6 Comandante clicks coarser than the owner grinds) cannot recur silently.
