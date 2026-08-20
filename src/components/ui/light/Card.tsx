@@ -7,7 +7,14 @@ import type { ReactNode } from "react";
  *
  * Two states: Default and Selected (pressed).
  *   - Default: cream glass at 55% with backdrop-blur + backdrop-saturate.
- *   - Selected: warm taupe at 70%, scale-[0.98], warm inset shadow.
+ *   - Selected: anthracite FILL + cream text + float lift, scale-[0.98] —
+ *     the same language as the primary CTA / Action Pill, so the chosen
+ *     card reads as a figure-vs-ground flip against the Field instead of
+ *     the too-subtle warm-taupe glass it used to be. The root carries the
+ *     `group` marker so CardTitle / CardSubText / CardIcon flip their own
+ *     colour to cream via `group-aria-pressed:` when the card is selected.
+ *     Custom (non-primitive) children rendered inside a Card must add the
+ *     same `group-aria-pressed:text-light-text-on-dark` themselves.
  *
  * The Card is `flex flex-col items-center justify-center text-center`.
  * Children own their internal layout (Title above, Detail below). Fixed
@@ -28,10 +35,10 @@ interface CardProps {
 
 export default function Card({ selected, onClick, ariaLabel, className, children }: CardProps) {
   const base =
-    "w-full h-full flex flex-col items-center justify-center text-center gap-1.5 " +
+    "group w-full h-full flex flex-col items-center justify-center text-center gap-1.5 " +
     "rounded-3xl px-3 py-4 transition-all backdrop-blur-light-card backdrop-saturate-150";
   const tone = selected
-    ? "bg-light-card-selected scale-[0.98] shadow-light-card-pressed"
+    ? "bg-light-foreground scale-[0.98] shadow-light-float"
     : "bg-light-card-default";
 
   return (
@@ -55,7 +62,9 @@ export default function Card({ selected, onClick, ariaLabel, className, children
  */
 export function CardTitle({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[15px] font-medium leading-tight text-light-foreground">{children}</p>
+    <p className="text-[15px] font-medium leading-tight text-light-foreground group-aria-pressed:text-light-text-on-dark">
+      {children}
+    </p>
   );
 }
 
@@ -64,7 +73,7 @@ export function CardTitle({ children }: { children: ReactNode }) {
  */
 export function CardSubText({ children }: { children: ReactNode }) {
   return (
-    <p className="text-[12px] leading-tight text-light-muted-foreground line-clamp-2">
+    <p className="text-[12px] leading-tight text-light-muted-foreground group-aria-pressed:text-light-text-on-dark/75 line-clamp-2">
       {children}
     </p>
   );
@@ -77,7 +86,7 @@ export function CardSubText({ children }: { children: ReactNode }) {
  */
 export function CardIcon({ children }: { children: ReactNode }) {
   return (
-    <div className="h-6 w-6 flex items-center justify-center text-light-foreground/80">
+    <div className="h-6 w-6 flex items-center justify-center text-light-foreground/80 group-aria-pressed:text-light-text-on-dark/85">
       {children}
     </div>
   );
