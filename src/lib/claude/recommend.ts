@@ -627,6 +627,11 @@ export async function generateRecommendation(
   const selectionInput = {
       brewersAvailable,
       lockedBrewers,
+      // Drip Assist locked → don't offer steep-/rest-heavy recipes: the disc
+      // drains almost as fast as it's poured, so a designed long wait is
+      // pointless on it (owner-flagged). Selection-level exclusion, recipes
+      // unaltered. Only the disc lock sets this (a plain V60 lock does not).
+      excludeLongWaits: Boolean(dripAssistLocked),
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
       // Blend: score the process match against EVERY component's process, so a

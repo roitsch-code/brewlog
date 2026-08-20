@@ -32,6 +32,14 @@ export {
 export { calibrateDripAssistFinish } from ${JSON.stringify(
   path.join(ROOT, "src/lib/claude/recommend.ts"),
 )};
+export {
+  selectRecipes,
+  brewersFromMethod,
+  hasLongDesignedWait,
+  longestDesignedWaitSec,
+  LONG_DESIGNED_WAIT_SEC,
+  ALL_RECIPES,
+} from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "dripdd-"));
 const out = join(dir, "dd.mjs");
@@ -49,6 +57,12 @@ const {
   DRAWDOWN_RESERVE_FRAC,
   DRIP_ASSIST_DRAWDOWN_FRAC,
   calibrateDripAssistFinish,
+  selectRecipes,
+  brewersFromMethod,
+  hasLongDesignedWait,
+  longestDesignedWaitSec,
+  LONG_DESIGNED_WAIT_SEC,
+  ALL_RECIPES,
 } = await import(pathToFileURL(out).href);
 
 const DISC = "V60 + Drip Assist";
@@ -155,4 +169,47 @@ test("recommend-side guards: only a locked, percolation, hot disc candidate is s
   );
   // the real case → shrunk
   assert.ok(calibrateDripAssistFinish([mk()], true, isPercolation)[0].recipe.targetTimeSec < 200);
+});
+
+// ── Long-designed-wait exclusion for the disc ────────────────────────────────
+// The owner's rule: don't rewrite recipes, just don't OFFER steep-/rest-heavy
+// ones for the Drip Assist (the disc drains as fast as it's poured). Researched
+// from the corpus: the genuine long-wait V60 designs are Kasuya Mugen (105s draw),
+// Hedrick bypass (100s gap) and Rao's Rule-of-Thirds (80s rest); normal pulse
+// recipes top out ~55s.
+const byId = (id) => ALL_RECIPES.find((r) => r.id === id);
+
+test("longestDesignedWaitSec reads the recipe's own authored waits", () => {
+  assert.equal(longestDesignedWaitSec(byId("kasuya-mugen-flat")), 105);
+  assert.equal(longestDesignedWaitSec(byId("hoffmann-v60-better-one-cup")), 45);
+  assert.ok(LONG_DESIGNED_WAIT_SEC > 60 && LONG_DESIGNED_WAIT_SEC < 80, "threshold sits in the corpus gap");
+});
+
+test("hasLongDesignedWait flags the steep-heavy designs, not normal pulse recipes", () => {
+  for (const id of ["kasuya-mugen-flat", "hedrick-bypass-v60", "rao-rule-of-thirds"]) {
+    assert.ok(hasLongDesignedWait(byId(id)), `${id} should be flagged long-wait`);
+  }
+  for (const id of ["kasuya-4-6-standard", "hoffmann-v60-better-one-cup", "rolf-april-v60"]) {
+    assert.ok(!hasLongDesignedWait(byId(id)), `${id} should NOT be flagged`);
+  }
+});
+
+test("disc selection excludes long-wait recipes; a normal lock keeps them", () => {
+  const v60 = brewersFromMethod("V60 + Drip Assist");
+  assert.ok(v60.has("v60"), "the disc method resolves to the v60 brewer");
+  const base = { brewersAvailable: v60, lockedBrewers: v60, goal: "balanced", rotationSeed: 0 };
+
+  const withWaits = selectRecipes({ ...base, excludeLongWaits: false }, 50).map((s) => s.recipe.id);
+  const noWaits = selectRecipes({ ...base, excludeLongWaits: true }, 50).map((s) => s.recipe.id);
+
+  // Present when NOT excluding (proves the flag is what removes them)...
+  assert.ok(withWaits.includes("kasuya-mugen-flat"));
+  // ...and gone when the disc is locked.
+  for (const id of ["kasuya-mugen-flat", "hedrick-bypass-v60", "rao-rule-of-thirds"]) {
+    assert.ok(!noWaits.includes(id), `${id} must not be offered for the disc`);
+  }
+  // Plenty of ordinary V60 recipes remain, and a normal one survives.
+  assert.ok(noWaits.length >= 20, `only ${noWaits.length} left — over-pruned`);
+  assert.ok(noWaits.includes("kasuya-4-6-standard"));
+  assert.equal(withWaits.length - noWaits.length, 3, "exactly the 3 long-wait designs are removed");
 });
