@@ -313,6 +313,16 @@
   [data-light-scope] [data-brew-method-icon] {
     filter: brightness(0);
   }
+
+  /* Light System — Selected (anthracite-FILL) rows/cards flip the
+   * BrewMethodIcon back to its original white art so it stays legible on
+   * the dark fill. The `[aria-pressed="true"]` ancestor makes this more
+   * specific than the anthracite shim above (same layer), so no
+   * !important is needed. Covers the /brew Context method list (the only
+   * selected surface that carries a method icon today). */
+  [data-light-scope] [aria-pressed="true"] [data-brew-method-icon] {
+    filter: none;
+  }
 }
 
 /*

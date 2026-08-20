@@ -12,8 +12,12 @@ import type { ReactNode } from "react";
  * Card's Default → Selected tonal logic so they coexist cleanly.
  *
  * Default: cream glass at 55% with backdrop-blur + backdrop-saturate.
- * Selected: warm taupe at 70% + warm inset shadow. No scale-down
- * (chips are too small for the press effect to read).
+ * Selected: anthracite FILL + cream text + float lift — the same
+ * language as the primary CTA / Action Pill. A figure-vs-ground flip
+ * (dark pill on the colourful Field) so the chosen chip is unmistakable;
+ * the old warm-taupe glass read too close to the default over the
+ * saturated Field. Uses existing tokens only (`light-foreground` +
+ * `light-text-on-dark`), so no new colour enters the system.
  *
  * Size variants — pick by the chip's ROLE, and never mix sizes on one row:
  *   - default (px-4 py-2, 13px): the chip IS the primary control answering a
@@ -42,7 +46,7 @@ export default function Chip({ selected, onClick, size = "default", children }: 
       ? "px-3 py-1.5 text-[12px]"
       : "px-4 py-2 text-[13px]";
   const tone = selected
-    ? "bg-light-card-selected text-light-foreground shadow-light-card-pressed"
+    ? "bg-light-foreground text-light-text-on-dark shadow-light-float"
     : "bg-light-card-default text-light-foreground";
 
   return (

@@ -411,9 +411,9 @@ export default function LightStepContext() {
                           onChange={(e) => setCustomMl(e.target.value)}
                           placeholder="350"
                           autoFocus
-                          className="w-14 bg-transparent text-center text-[15px] font-medium leading-tight text-light-foreground outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-14 bg-transparent text-center text-[15px] font-medium leading-tight text-light-foreground group-aria-pressed:text-light-text-on-dark outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
-                        <span className="text-[12px] text-light-muted-foreground">ml</span>
+                        <span className="text-[12px] text-light-muted-foreground group-aria-pressed:text-light-text-on-dark/75">ml</span>
                       </div>
                     ) : (
                       <CardSubText>{a.sub}</CardSubText>
@@ -557,17 +557,17 @@ export default function LightStepContext() {
                       updateCtx({ preferredMethod: newMethod });
                     }}
                     aria-pressed={selected}
-                    className={`flex items-center justify-between rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all ${
+                    className={`group flex items-center justify-between rounded-3xl px-4 py-3 backdrop-blur-light-card backdrop-saturate-150 transition-all ${
                       selected
-                        ? "bg-light-card-selected scale-[0.99] shadow-light-card-pressed"
+                        ? "bg-light-foreground scale-[0.99] shadow-light-float"
                         : "bg-light-card-default"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <BrewMethodIcon method={m.id} className="w-8 h-8 shrink-0 text-light-foreground" />
-                      <span className="text-[15px] font-medium text-light-foreground">{m.label}</span>
+                      <span className="text-[15px] font-medium text-light-foreground group-aria-pressed:text-light-text-on-dark">{m.label}</span>
                     </div>
-                    <span className="text-[12px] text-light-muted-foreground">{m.sub}</span>
+                    <span className="text-[12px] text-light-muted-foreground group-aria-pressed:text-light-text-on-dark/75">{m.sub}</span>
                   </button>
                 );
               })}

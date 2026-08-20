@@ -521,7 +521,7 @@ export default function LightStepLog() {
                       onClick={() => setExternalMethod((prev) => (prev === m.label ? "" : m.label))}
                       className={`shrink-0 inline-flex items-center rounded-full px-4 py-2 text-[13px] font-medium leading-tight transition-all backdrop-blur-light-card backdrop-saturate-150 ${
                         externalMethod === m.label
-                          ? "bg-light-card-selected text-light-foreground shadow-light-card-pressed"
+                          ? "bg-light-foreground text-light-text-on-dark shadow-light-float"
                           : "bg-light-card-default text-light-foreground"
                       }`}
                     >
