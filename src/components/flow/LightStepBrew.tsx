@@ -217,7 +217,7 @@ export default function LightStepBrew() {
   // flow coach compares the actual pour against). It also exposes the SAME
   // renderer-ready arrays the two renderers always consumed, so the brew guide is
   // unchanged. See src/lib/brew/timeline.ts.
-  const timeline = recipe ? buildBrewTimeline(recipe, roastDate) : null;
+  const timeline = recipe ? buildBrewTimeline(recipe, roastDate, undefined, method) : null;
 
   // Percolation → cumulative-grams pour-over renderer; immersion → action-aware
   // step guide; prose → legacy "·"-separated string. All derived once above.

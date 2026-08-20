@@ -131,6 +131,7 @@ export function buildBrewTimeline(
   recipe: BrewRecipe,
   roastDate?: string,
   now: number = Date.now(),
+  method?: string,
 ): BrewTimeline {
   const targetTimeSec = recipe.targetTimeSec;
 
@@ -163,9 +164,9 @@ export function buildBrewTimeline(
   }
 
   const pourSteps =
-    pourStepsFromStructured(recipe, roastDate, now) ??
+    pourStepsFromStructured(recipe, roastDate, now, method) ??
     (recipe.pourSequence && recipe.targetTimeSec
-      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate, now)
+      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate, now, method)
       : null);
   if (pourSteps) {
     return {

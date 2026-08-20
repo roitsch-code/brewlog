@@ -1,6 +1,10 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
-import { stripProactiveDripAssist } from "../utils/dripAssist";
+import { stripProactiveDripAssist, isDripAssistMethod } from "../utils/dripAssist";
+import {
+  DRAWDOWN_RESERVE_FRAC,
+  DRIP_ASSIST_DRAWDOWN_FRAC,
+} from "../utils/pourSequence";
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import type {
@@ -148,6 +152,43 @@ function calibrateTargetTimes(
       `[recommend] time calibration: "${c.title}" ${t}s → ${t + add}s (measured median +${cal.deltaSec}s over ${cal.count} past ${c.method} brews at ~${c.recipe.waterGrams}g)`,
     );
     return { ...c, recipe: { ...c.recipe, targetTimeSec: t + add } };
+  });
+}
+
+/**
+ * Drip-Assist finish calibration. The disc distributes water across the whole bed,
+ * so it drains almost as fast as it's poured — the long drawdown a bare V60 needs
+ * doesn't happen (owner-observed; the "recipe finishes a minute early" report).
+ * For a disc-LOCKED percolation candidate, shrink targetTimeSec so the promised
+ * clock ends when the cup is actually through: KEEP the pour phase (which sets the
+ * cadence, = t·(1−DRAWDOWN_RESERVE_FRAC)) and swap the ~33% drawdown tail for the
+ * disc's thin drainage margin. The render-side reserve (drawdownReserveFrac in
+ * pourSequence) uses the SAME disc fraction, so the shrunk clock reproduces the
+ * bare brew's pour schedule exactly — only the dead tail is removed, not the
+ * cadence. Estimate: direction owner-confirmed, magnitude to be firmed up by one
+ * measured disc brew. No-op unless the disc is the locked method; iced / cold-brew
+ * / immersion are skipped (their time is the steep, not a drawdown).
+ */
+export function calibrateDripAssistFinish(
+  candidates: RecommendationCandidate[],
+  discLocked: boolean,
+  isPercolation: (method?: string) => boolean,
+): RecommendationCandidate[] {
+  if (!discLocked) return candidates;
+  return candidates.map((c) => {
+    if (!isDripAssistMethod(c.method)) return c;
+    const t = c.recipe?.targetTimeSec;
+    if (typeof t !== "number" || !(t > 0) || t >= 3600) return c;
+    if (typeof c.recipe.iceGrams === "number" && c.recipe.iceGrams > 0) return c;
+    if (!isPercolation(c.method)) return c;
+    const shrunk = Math.round(
+      (t * (1 - DRAWDOWN_RESERVE_FRAC)) / (1 - DRIP_ASSIST_DRAWDOWN_FRAC),
+    );
+    if (!(shrunk > 0) || shrunk >= t) return c;
+    console.warn(
+      `[recommend] drip-assist finish: "${c.title}" ${t}s → ${shrunk}s (disc drains as poured — no long drawdown)`,
+    );
+    return { ...c, recipe: { ...c.recipe, targetTimeSec: shrunk } };
   });
 }
 
@@ -586,6 +627,11 @@ export async function generateRecommendation(
   const selectionInput = {
       brewersAvailable,
       lockedBrewers,
+      // Drip Assist locked → don't offer steep-/rest-heavy recipes: the disc
+      // drains almost as fast as it's poured, so a designed long wait is
+      // pointless on it (owner-flagged). Selection-level exclusion, recipes
+      // unaltered. Only the disc lock sets this (a plain V60 lock does not).
+      excludeLongWaits: Boolean(dripAssistLocked),
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
       // Blend: score the process match against EVERY component's process, so a
@@ -791,6 +837,14 @@ Return valid JSON only.`;
       Boolean(lockedMethodBase),
   );
   const discGuarded = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+  //   5. disc-locked finish: the Drip Assist drains as fast as it's poured, so the
+  //      promised clock drops its fictional ~33% drawdown tail (the "finishes a
+  //      minute early" report). Pairs with drawdownReserveFrac on the render side.
+  const discTimed = calibrateDripAssistFinish(
+    discGuarded,
+    Boolean(dripAssistLocked),
+    isPercolation,
+  );
 
   // Grinder UNIT. The user picks the grinder in the flow and the prompt says
   // "NEVER Niche°" / "NEVER clicks" for the one they didn't pick, but a hard
@@ -799,7 +853,7 @@ Return valid JSON only.`;
   // wrong number: "406" on a Comandante isn't approximately right, it is a
   // setting the grinder does not have. Converted, not flagged, using the
   // owner's own measured anchors (grindSettings.ts).
-  const candidates = discGuarded.map((c) => {
+  const candidates = discTimed.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
     if (fixed === c.recipe.grindSize) return c;
     console.warn(

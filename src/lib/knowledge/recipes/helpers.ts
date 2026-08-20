@@ -274,6 +274,16 @@ export interface RecipeSelectionInput {
    * Ignored when a method is locked.
    */
   demoteBrewers?: Set<BrewerType>;
+  /**
+   * Exclude recipes whose DESIGN builds in a long wait — a steep or a long rest
+   * between pours (see hasLongDesignedWait). Set when the user locked the Hario
+   * Drip Assist disc: the disc distributes water across the whole bed so it
+   * drains almost as fast as it's poured, which makes a designed steep / minutes-
+   * long pause pointless (owner: "das macht mit der Disc keinen Sinn"). The
+   * recipes are NOT rewritten — they're just not offered for the disc. Falls back
+   * to the unfiltered set if excluding would leave nothing.
+   */
+  excludeLongWaits?: boolean;
 }
 
 /**
@@ -487,6 +497,50 @@ function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
 }
 
 /**
+ * A designed wait longer than this (seconds) marks a recipe as steep-/rest-heavy
+ * — not suited to the Drip Assist disc, which drains almost as fast as it's
+ * poured. Chosen from the corpus: a normal V60 bloom + pulse pour tops out at a
+ * ~55–60s bloom rest / inter-pour gap, and the next tier up is 80s+ (the Kasuya
+ * Mugen 105s draw, the Hedrick bypass 100s gap, Rao's Rule-of-Thirds 80s rest).
+ * 75 sits cleanly in that gap, so it excludes the genuine long-steep designs
+ * without touching ordinary pulse recipes. See tests/dataflow/drip-assist-drawdown.
+ */
+export const LONG_DESIGNED_WAIT_SEC = 75;
+
+/**
+ * The longest DESIGNED wait in a recipe's authored pour sequence: the max of
+ * (a) any standalone `wait`-action step's duration, and (b) the gap between two
+ * consecutive water-adding pours (the pouring step's own duration plus any
+ * rests authored before the next pour). This reads the RECIPE's own numbers —
+ * it does not depend on how the app later spaces the pours.
+ */
+export function longestDesignedWaitSec(recipe: Recipe): number {
+  const seq = recipe.pourSequence ?? [];
+  let maxWait = 0;
+  let prevWater = -1;
+  let sinceLastPour = 0;
+  for (const s of seq) {
+    if (s.action === "wait") maxWait = Math.max(maxWait, s.durationSec ?? 0);
+    const w = s.waterGramsAtEnd;
+    if (w != null && w > prevWater) {
+      if (prevWater >= 0) maxWait = Math.max(maxWait, sinceLastPour);
+      sinceLastPour = s.durationSec ?? 0;
+      prevWater = w;
+    } else {
+      sinceLastPour += s.durationSec ?? 0;
+    }
+  }
+  return maxWait;
+}
+
+/** True when a recipe's design builds in a long wait (steep / long rest) that
+ * makes no sense with the Drip Assist disc. Used to exclude such recipes from
+ * disc-locked selection — the recipe itself is never altered. */
+export function hasLongDesignedWait(recipe: Recipe): boolean {
+  return longestDesignedWaitSec(recipe) >= LONG_DESIGNED_WAIT_SEC;
+}
+
+/**
  * Select the most relevant recipes for a brew. Returns up to `limit` recipes
  * sorted by score (descending). Diversity rule: never return more than one
  * recipe per brewer — we want the AI to see a varied portfolio, not five V60s.
@@ -507,7 +561,7 @@ export function selectRecipes(
   // The brewer pass runs LAST so brewer freshness dominates the final order
   // within a tie group (it's the repetition the user actually perceives).
   const demoteBrewers = !locked && input.demoteBrewers?.size ? input.demoteBrewers : null;
-  const scored = demoteWithinTies(
+  const ordered = demoteWithinTies(
     demoteRecentWithinTies(
       rotateTies(
         ALL_RECIPES
@@ -522,6 +576,16 @@ export function selectRecipes(
     ),
     (r) => (demoteBrewers ? demoteBrewers.has(r.brewer) : false),
   );
+
+  // Drip Assist: drop steep-/rest-heavy recipes so the disc is never handed a
+  // recipe designed around a long wait it can't honour (owner-flagged). The
+  // recipe is never rewritten — just not offered. Fall back to the full set if
+  // excluding would leave nothing.
+  let scored = ordered;
+  if (input.excludeLongWaits) {
+    const kept = ordered.filter((s) => !hasLongDesignedWait(s.recipe));
+    if (kept.length) scored = kept;
+  }
 
   // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer
   // cap; the user chose the brewer, they want the strongest matches on it).

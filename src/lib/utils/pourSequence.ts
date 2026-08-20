@@ -16,17 +16,20 @@
  *    per-step durations and explicit actions (`buildGuideSteps`), so steep,
  *    flip and press become discrete, timed cues.
  *
- * NOTE — the 33% multiplier was originally sized for the Drip Assist
- * disc bottleneck. The disc has since been retired from daily use; a
- * standard V60 drawdown sits closer to 15–20% of total time, so the
- * reserve is currently larger than the physics demand and total
- * recipe times come out conservatively padded. Re-calibrating the
- * multiplier is a behavioral change touching every brew and needs an
- * empirical drawdown measurement on the current setup — leave the
- * 0.33 in place until that's done. See the BTTS audit plan file.
+ * NOTE — the 33% reserve is the DEFAULT for a bare percolation brew. A standard
+ * V60 drawdown probably sits closer to 15–20% of total time, so the default is
+ * still conservatively padded pending an empirical measurement — leave it until
+ * that's done. The one calibrated case is the Drip Assist disc: it distributes
+ * water evenly across the whole bed, so the bed drains almost as fast as it's
+ * poured and the long drawdown tail simply doesn't happen (owner-observed, Aug
+ * 2026 — the "recipe finishes a minute early" report). For a disc brew the
+ * reserve collapses to a thin drainage margin (see drawdownReserveFrac), so the
+ * timer's finish lands when the cup is actually through instead of ~a minute
+ * later. The disc case is method-driven; every other brewer keeps the 33%.
  */
 
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "@/lib/types/session";
+import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 
 /**
  * Pour rate (grams/second) at which the user pours from the kettle — the rate
@@ -270,12 +273,31 @@ const AGITATION_LABEL: Record<AgitationAction, string> = {
   tap: "Tap to level",
 };
 
+/** Fraction of total brew time reserved for the final drawdown — the dead air
+ * AFTER the last pour, before the cup is through. The bare-percolation default. */
+export const DRAWDOWN_RESERVE_FRAC = 0.33;
+
+/** The Drip Assist disc distributes water across the whole bed, so it drains
+ * almost as fast as it's poured — the long drawdown a bare V60 needs doesn't
+ * happen (owner-observed). A thin drainage margin instead of the full reserve, so
+ * the timer's finish matches when the cup is actually through. Estimate: direction
+ * owner-confirmed, magnitude to be firmed up by one measured disc brew. */
+export const DRIP_ASSIST_DRAWDOWN_FRAC = 0.07;
+
+/** The drawdown reserve fraction for a brew method: thin for the Drip Assist disc,
+ * the standard reserve for everything else. Method omitted (the golden corpus, any
+ * non-disc caller) → the standard reserve, so those schedules stay byte-identical. */
+export function drawdownReserveFrac(method?: string): number {
+  return isDripAssistMethod(method) ? DRIP_ASSIST_DRAWDOWN_FRAC : DRAWDOWN_RESERVE_FRAC;
+}
+
 /**
  * Time a set of cumulative-grams milestones with the drawdown-reserve formula:
- * reserve 33% of total for drawdown, subtract the bloom, evenly space the
- * (n − 2) intervals so the final pour lands at (target − reserve). Shared by the
- * string parser and the structured-percolation builder so both produce an
- * identical schedule.
+ * reserve a method-dependent fraction of total for drawdown (33% bare, a thin
+ * margin with the Drip Assist disc — see drawdownReserveFrac), subtract the
+ * bloom, evenly space the (n − 2) intervals so the final pour lands at
+ * (target − reserve). Shared by the string parser and the structured-percolation
+ * builder so both produce an identical schedule.
  *
  * Agitation is now a DISCRETE step: when a milestone carries `agitationAfter`,
  * a swirl/stir/tap step is inserted at `pourStart + pourDurationSec(pourGrams)`
@@ -288,12 +310,13 @@ function buildPourOver(
   targetTimeSec: number,
   roastDate?: string,
   now: number = Date.now(),
+  method?: string,
 ): PourStep[] | null {
   const n = milestones.length;
   if (n < 2) return null;
 
   const bloomDur = getBloomDuration(roastDate, now);
-  const drawdownReserve = Math.round(targetTimeSec * 0.33);
+  const drawdownReserve = Math.round(targetTimeSec * drawdownReserveFrac(method));
   const remaining = targetTimeSec - bloomDur - drawdownReserve;
 
   // Each pour's water increment (milestone 0 = bloom). The time GAP after a pour
@@ -383,6 +406,7 @@ export function parsePourSteps(
   targetTimeSec: number,
   roastDate?: string,
   now: number = Date.now(),
+  method?: string,
 ): PourStep[] | null {
   const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
   const grams = parts.map(leadingGrams);
@@ -393,7 +417,7 @@ export function parsePourSteps(
     temperatureC: tokenTemperature(part),
     notes: tokenNote(part),
   }));
-  return buildPourOver(milestones, targetTimeSec, roastDate, now);
+  return buildPourOver(milestones, targetTimeSec, roastDate, now, method);
 }
 
 const isAgitationStep = (a: BrewStepAction) =>
@@ -417,6 +441,7 @@ export function pourStepsFromStructured(
   recipe: BrewRecipe,
   roastDate?: string,
   now: number = Date.now(),
+  method?: string,
 ): PourStep[] | null {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return null;
@@ -439,7 +464,7 @@ export function pourStepsFromStructured(
       milestones[last].agitationNote = s.notes;
     }
   }
-  return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now);
+  return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now, method);
 }
 
 export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[]): number {
