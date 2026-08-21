@@ -21,6 +21,8 @@ import { and, or, ne, isNull, lte } from "drizzle-orm";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
+import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
+import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import type { Session, BrewRecipe } from "@/lib/types/session";
 import type { NewCoffeePayload } from "@/lib/types/chatActions";
 import { buildNewCoffeePayload, coachNoteFrom } from "@/lib/chat/addCoffee";
@@ -158,6 +160,8 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the **★ IN ROTATION** bags in the Coffee Library block below — that's what's open and active. Don't pull older bags out of memory; if none of the rotation fits, say so plainly. If nothing is marked ★ IN ROTATION, say so and suggest opening/marking a bag rather than naming one from memory. (When the user names a SPECIFIC bag to brew, you may use any bag in that block by its id, starred or not.)
 
 **A constraint the user states in the conversation OVERRIDES the profile block below, and stays overridden for the rest of the conversation.** The profile describes a normal day at home. "I'm travelling", "no gooseneck kettle", "I only have the AeroPress with me", "the Niche is at home — I've got the Comandante" are live facts that beat it. Carry them forward: drifting back to the home setup two turns later, after they told you otherwise, is a hard failure.
+
+**This outranks every other section of this prompt, not just the profile.** If a later rule here says to mention some option and the user has already ruled it out, the user wins — silently, without you explaining the rule to them. That includes narrowing: "V60, Orea, Origami, Clever" and then "no, just the Orea" means the Orea is the only brewer that exists for the rest of the conversation. Re-offering something they just excluded reads as not listening, because it is.
 
 Mention capabilities only when relevant — don't pitch them unprompted.
 
@@ -297,7 +301,8 @@ At home the kettle is the Fellow Stagg EKG gooseneck, so pour control is a non-i
 - **The disc is not a brewer choice.** He has confirmed it fits all of his cones — V60, Orea V4 (any bottom), Origami. So pick the brewer that fits THE BEAN and the goal exactly as you always would (his brew history for that bag, roast, process, what he rated well), and put the disc on that one. Never demote him to the V60 just because "V60 + Drip Assist" is the familiar phrase — if the Orea Classic is the right cone for that coffee, the answer is the Orea Classic with the Drip Assist.
 - **Name it in the method string, every time, as \`<brewer> + Drip Assist\`** — "Orea V4 Classic + Drip Assist", "Origami Air M + Drip Assist", "V60 + Drip Assist". That string is what the brew timer displays, so a recipe whose prose mentions the disc but whose method doesn't is a failure: he taps the button and the disc has vanished off the screen he actually brews from.
 - **Grind ~5° coarser on the Niche (~1–2 Comandante clicks) than the same brewer's baseline.** The disc smooths distribution at the cost of free flow area, so coarsen to keep drawdown in the same window. Direction is confirmed by the user; the magnitude is an estimate, not a measured constant — say so if he's dialling in.
-- Immersion (Clever, AeroPress) needs no pour control at all, so it's a legitimate alternative worth one clause — but it is the alternative, not the default answer. He packed the disc so he could keep doing pour-over.
+- **The disc replaces the STREAM, not the HAND.** It breaks a fat stream into an even shower — that is all it does. It cannot pour slowly for him, cannot hold a tight centre pour, cannot agitate the bed on purpose, and cannot hit a cadence to the second. So a recipe whose *technique* is the point — "patient pours", a deliberately aggressive circular pour, a precise Kasuya-style cadence, "slowly in the centre, no water on the edges" — is OFF THE TABLE in this state, however well it fits the bean. Pick a recipe that survives an even shower and a steady hand, and say why. Handing him a technique he physically cannot execute and then naming the expert who published it is worse than giving him nothing.
+- Immersion (Clever, AeroPress) needs no pour control at all, so it is worth one clause as an alternative — **unless he has told you what he has with him, in which case only those brewers exist.** He packed the disc so he could keep doing pour-over.
 
 If he says he's travelling but hasn't said what's in the bag, ask once, in one short sentence, which brewers he has with him — then recommend from those only.
 
@@ -345,6 +350,8 @@ The rule is about ARITHMETIC, not about imagination. Read the difference careful
 - **If you state any pour breakdown, the pours MUST sum to the total water.** Add them up before you present it. If they don't add up, do NOT guess to patch it — fall back to the canonical sequence, or give only the headline numbers (dose : water, ratio, temp, Niche°, total time) with no fabricated pour split.
 - **PARAMETER-LEVEL EXPLORATION IS ALWAYS OPEN.** Temperature, grind, agitation, ratio, bloom length, pour count within a recipe's own cadence — vary any of them, deliberately, whenever the coffee or the user's history gives you a reason. That is not improvising the maths; it is the actual craft. Say what you changed and what it should do to the cup.
 - **A recipe of your own is allowed when nothing documented fits**, on three conditions: label it plainly as your own experiment ("this one's mine, not a published recipe"), never attach a named person to it, and use round cumulative milestones you state as a running total (60 → 150 → 250 → 350) so the sum is visible and checkable rather than done in your head. The server re-checks the pour plan and snaps the headline water to it, so a stated derivation is safe — an unstated one is not.
+- **A pour has to be physically pourable.** A gentle pour is ~4 g/s, and nobody exceeds ~11 g/s, so 200 g takes about 50 seconds of actual pouring. Before you commit to a sequence, check every pour against the time it has before the next one: a 225 g pour with 15 seconds in front of it is not a recipe, it is arithmetic that never imagined a kettle. The server checks this and will hand the recipe back to you.
+- **Percolation shape: a bloom of 2–3× the dose, then 3–5 pours.** Never one giant final pour. Bigger batches need MORE pours, not bigger ones — 450 g is four or five pours, not two. And no dead air: if more than about a minute passes with nothing happening while the bed drains, you have written a stall, not a rest. Spread the water across the clock.
 - Never introduce staged temperature — one constant brew temperature.
 
 Be confident through the mechanism, not apologetic. Never tell the user "don't trust my maths" as a substitute for getting it right.
@@ -361,11 +368,13 @@ This app exists for two things: MATCHING (which recipe, which brewer, for this c
 ## Response Style
 
 - **Brevity first — about 20% tighter than your instinct.** Lead with the answer; cut opening pleasantries ("Great choice", "Let me think this through") and closing remarks. For conversation: 3–5 sentences. For a recipe or shopping pick: the structured recipe block plus at most one tight sentence each for agitation / water / any comparison. Trim words, never the reasoning or the numbers.
-- **No markdown headers** (no #, ##). Use **bold** for key terms.
+- **No markdown headers** (no #, ##). Use **bold** for key terms. Short bullet lists and small tables render fine; keep tables to two or three columns, because this is a phone.
 - Direct, confident. Reference real people, origins, varietals by name.
+- **Make the call. Do not interview.** Which bottom, which brewer, which recipe, which temperature — those are brewing questions, and answering them is the entire job. Decide, then give the one-line reason. "Apex or Classic?" handed back to the user is a failure: you have the flow ranking, the bean and their history, and they came here precisely so they would not have to weigh it themselves. Ask only about things you genuinely cannot know — what is in the bag on a trip, whether they have already eaten, what they are in the mood for. If you are torn, pick the one you would brew and name the trade-off in a clause.
+- **No emoji. No exclamation marks. No opening interjections** — "Ha,", "Ah,", "Right,", "Great question". No apologising, and no "sorry" or "please". When you get something wrong, correct it in one sentence and move on; a paragraph of contrition wastes their time and reads as noise. Never call a coffee "stunning", "beautiful" or "delicious" as filler — if a cup really is one of those, name what makes it so.
 - **Show your reasoning when you compare or pick.** When the user asks you to choose between things they already have (their bags, past sessions, kit), don't just declare the winner. Briefly name each candidate and what it brings to the criterion — one short sentence each — then the pick and a one-line *why*. "Direct" means every sentence does work, not "skip the reasoning".
 - Niche DEGREES for grind by default — but when they're on the travel grinder (they said so, or they're away from home), give Comandante CLICKS instead. Quoting degrees to someone holding a Comandante is useless. Metric units (g, °C, ml).
-- No emojis. No closing remarks.
+- No closing remarks.
 
 ## Coffee Recommendation Format (for shopping picks)
 
@@ -638,6 +647,26 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
     reason: input.reason,
     id: input.id,
   };
+}
+
+/**
+ * Which grinder is in the user's hand, read off the conversation.
+ *
+ * There is no structured context here the way the brew flow has one — the only
+ * statement of fact is the user typing "I've got the Comandante". That is the
+ * same signal the model itself works from, and without it the unit check has
+ * nothing to compare against, so it simply doesn't run (a wrong unit is worth
+ * catching; a guessed one is not). Most recent mention wins, because the
+ * grinder can change mid-conversation when they get home.
+ */
+function grinderFromConversation(messages: { role: string; content?: unknown }[]): string | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role !== "user" || typeof m.content !== "string") continue;
+    if (/comandante|\bc40\b/i.test(m.content)) return "Comandante C40";
+    if (/niche/i.test(m.content)) return "Niche Zero";
+  }
+  return undefined;
 }
 
 const isActionTool = (name: string) =>
@@ -1157,6 +1186,11 @@ export async function POST(req: NextRequest) {
           // a follow-up question that needs another fetch. Bumped to 8.
           const MAX_ITERATIONS = 8;
 
+          // One repair round per turn. A model that can't produce a brewable
+          // recipe in two attempts won't get there on the third, and each
+          // attempt is a full round trip the user waits through.
+          let brewRepairSpent = false;
+
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             const stream = client.messages.stream({
               model: "claude-sonnet-4-6",
@@ -1174,15 +1208,21 @@ export async function POST(req: NextRequest) {
             // We track what was streamed; if stop_reason turns out to be tool_use
             // (Claude spoke before calling a tool), we retract it from the bubble.
             let streamedText = "";
+            // The prompt forbids emoji and one still reached the user. Every
+            // other AI surface here is checked in code; this one never was.
+            const emoji = createEmojiStripper();
             for await (const event of stream) {
               if (
                 event.type === "content_block_delta" &&
                 event.delta.type === "text_delta"
               ) {
-                streamedText += event.delta.text;
-                send("delta", { text: event.delta.text });
+                const text = emoji.push(event.delta.text);
+                if (!text) continue;
+                streamedText += text;
+                send("delta", { text });
               }
             }
+            emoji.flush();
 
             const response = await stream.finalMessage();
 
@@ -1200,10 +1240,71 @@ export async function POST(req: NextRequest) {
               const onlyActionTools = toolBlocks.every((b: Anthropic.ToolUseBlock) => isActionTool(b.name));
 
               if (onlyActionTools) {
-                // The streamed text was the real response — keep it.
-                // Just collect the action(s) and finish without another Claude round trip.
+                // The streamed text was the real response — keep it, UNLESS a
+                // start_brew recipe turns out to be unbrewable, in which case
+                // the model has to rewrite both the recipe and the message.
+                //
+                // This is the one place the chat gets the scrutiny /recommend
+                // has always had. /recommend corrects a bad recipe in place and
+                // the user never sees the draft; here the recipe was already
+                // spelled out in prose, so a silent correction would leave the
+                // message and the timer disagreeing. Bouncing it back fixes both.
+                const okResults: Anthropic.ToolResultBlockParam[] = [];
+                const rejections: Anthropic.ToolResultBlockParam[] = [];
+                const acceptedActions: NavAction[] = [];
+                let droppedBrew = false;
+
                 for (const block of toolBlocks) {
-                  navSuggestions.push(toNavAction(block.name, block.input as NavAction, attachedImageUrl));
+                  const action = toNavAction(block.name, block.input as NavAction, attachedImageUrl);
+
+                  if (block.name === "start_brew" && action.recipe) {
+                    const problems = validateRecipe(action.recipe, {
+                      method: action.method,
+                      basedOn: action.basedOn,
+                      grinder: grinderFromConversation(messages),
+                    });
+                    if (problems.length > 0) {
+                      console.warn(
+                        `[explore-agent] start_brew rejected (${brewRepairSpent ? "final" : "first"}): ` +
+                          problems.map((pr) => pr.code).join(", "),
+                      );
+                      if (!brewRepairSpent) {
+                        rejections.push({
+                          type: "tool_result",
+                          tool_use_id: block.id,
+                          content: formatProblemsForModel(problems),
+                          is_error: true,
+                        });
+                        continue;
+                      }
+                      // Second attempt still not brewable — the pill is dropped
+                      // rather than handing the timer a recipe that can't be poured.
+                      droppedBrew = true;
+                      okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                      continue;
+                    }
+                  }
+
+                  acceptedActions.push(action);
+                  okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                }
+
+                if (rejections.length > 0) {
+                  brewRepairSpent = true;
+                  // The model is about to restate the recipe, so the bubble it
+                  // already streamed is stale — pull it before it double-prints.
+                  if (streamedText) send("retract", {});
+                  navSuggestions.push(...acceptedActions);
+                  agentMessages.push({ role: "assistant", content: response.content });
+                  agentMessages.push({ role: "user", content: [...okResults, ...rejections] });
+                  continue;
+                }
+
+                navSuggestions.push(...acceptedActions);
+                if (droppedBrew) {
+                  send("delta", {
+                    text: "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.",
+                  });
                 }
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,

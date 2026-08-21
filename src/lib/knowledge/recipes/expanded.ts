@@ -1029,8 +1029,15 @@ export const EXPANDED_RECIPES: Recipe[] = [
     whenToUse: "When you want a clean, reproducible cup with the absolute minimum technique investment. Excellent default for cafés.",
     sources: [
       { type: "blog", citation: "April Coffee blog — 1-2-3 method publication", year: 2022 },
+      {
+        type: "blog",
+        citation:
+          "CONTRADICTED by April's own recipe page (checked 2026-08-21): it publishes no '1-2-3' method at all. What April publishes is the April Brewer at 12g:200g / 92°C in TWO pours of 100g (40g circle + 60g centre) at 0:00 and 0:30; the Hybrid Brewer at 14g:240g / 92°C; and the Sustainable/Organic profile at 13g:200g / 94°C. Not one figure in this entry matches, and 'minimal-agitation' contradicts April's circle-and-centre pours outright — their own V60 guide calls for pouring 'aggressively so that you agitate the grounds'. Downgraded to unverified rather than deleted: the recipe may still brew well, but nothing supports attributing it to April. Its numbers must not be snapped onto anyone else's recipe.",
+        url: "https://www.aprilcoffeeroasters.com/pages/coffee-inf-recipes",
+        year: 2026,
+      },
     ],
-    verified: true,
+    verified: false,
   },
 
   {
