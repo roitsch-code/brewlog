@@ -22,6 +22,7 @@ import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
+import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import type { Session, BrewRecipe } from "@/lib/types/session";
 import type { NewCoffeePayload } from "@/lib/types/chatActions";
 import { buildNewCoffeePayload, coachNoteFrom } from "@/lib/chat/addCoffee";
@@ -1207,15 +1208,21 @@ export async function POST(req: NextRequest) {
             // We track what was streamed; if stop_reason turns out to be tool_use
             // (Claude spoke before calling a tool), we retract it from the bubble.
             let streamedText = "";
+            // The prompt forbids emoji and one still reached the user. Every
+            // other AI surface here is checked in code; this one never was.
+            const emoji = createEmojiStripper();
             for await (const event of stream) {
               if (
                 event.type === "content_block_delta" &&
                 event.delta.type === "text_delta"
               ) {
-                streamedText += event.delta.text;
-                send("delta", { text: event.delta.text });
+                const text = emoji.push(event.delta.text);
+                if (!text) continue;
+                streamedText += text;
+                send("delta", { text });
               }
             }
+            emoji.flush();
 
             const response = await stream.finalMessage();
 
