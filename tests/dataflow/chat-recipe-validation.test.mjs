@@ -71,3 +71,41 @@ test("accepted actions still reach the user when a sibling action is rejected", 
   // A rejected start_brew must not swallow an add_coffee emitted in the same turn.
   assert.match(ROUTE, /navSuggestions\.push\(\.\.\.acceptedActions\)/);
 });
+
+// ── The prompt rules that keep the validator from firing constantly ──────────
+// The validator is a net, not a teacher. If the prompt doesn't carry these, the
+// model writes an unbrewable recipe, gets it bounced, and the user waits through
+// a repair round on every single request. Each of these was absent while the
+// equivalent rule sat in /recommend's prompt the whole time.
+
+test("the chat prompt carries the pourability rule", () => {
+  assert.match(ROUTE, /4 g\/s/, "the gentle-pour rate must be stated");
+  assert.match(ROUTE, /11 g\/s/, "the physical ceiling must be stated");
+});
+
+test("the chat prompt carries the percolation shape rule", () => {
+  assert.match(ROUTE, /3–5 pours|3-5 pours/, "bloom + 3-5 pours");
+  assert.match(ROUTE, /Never one giant final pour/i);
+});
+
+test("the disc is described as replacing the stream, not the hand", () => {
+  assert.match(
+    ROUTE,
+    /replaces the STREAM, not the HAND/,
+    "without this the model proposes patient-pour recipes to someone with no gooseneck",
+  );
+});
+
+test("a user-stated constraint outranks the rest of the prompt, including narrowing", () => {
+  assert.match(ROUTE, /outranks every other section of this prompt/i);
+  assert.match(ROUTE, /narrowing/i, "narrowing a set they own must be covered, not just the profile");
+});
+
+test("the chat is told to decide rather than interview", () => {
+  assert.match(ROUTE, /Make the call\. Do not interview\./);
+});
+
+test("the voice ban covers more than emoji", () => {
+  assert.match(ROUTE, /No emoji\. No exclamation marks\./);
+  assert.match(ROUTE, /No opening interjections/);
+});
