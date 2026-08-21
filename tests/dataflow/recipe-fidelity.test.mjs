@@ -378,3 +378,62 @@ test("unverified references are not snapped (we don't trust reconstructed steps)
   const { changed } = reconcileToReference(wild, "Perger High-Extraction V60");
   assert.equal(changed, false, "unverified reference → no snap");
 });
+
+// ── Comandante clicks are not degrees ───────────────────────────────────────
+// The corpus states grinds in Niche degrees; a travel recipe states clicks, and
+// both prompts ask for clicks when the Comandante is the grinder in hand.
+// Reading "26 clicks" as 26 degrees made every Comandante recipe look ~350
+// degrees too fine, so the grind window tripped on all of them and the guard
+// overwrote a correct setting with the published degree value. Found while
+// validating a real chat recipe (26 clicks on an Orea + Drip Assist).
+
+test("a clicks grind is compared as degrees, not as a tiny degree value", () => {
+  // Kasuya 4:6 publishes 390-400 Niche. 26 clicks == 390 degrees on the owner's
+  // measured map, so this is IN the window and must not read as drift.
+  const res = reconcileToReference(
+    {
+      doseGrams: 20,
+      waterGrams: 300,
+      waterTempC: 93,
+      grindSize: "26 clicks",
+      targetTimeSec: 210,
+      pourSteps: [
+        { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 45 },
+        { label: "Pour 2", action: "pour", waterGramsAtEnd: 120, durationSec: 30 },
+        { label: "Pour 3", action: "pour", waterGramsAtEnd: 180, durationSec: 30 },
+        { label: "Pour 4", action: "pour", waterGramsAtEnd: 240, durationSec: 30 },
+        { label: "Pour 5", action: "final", waterGramsAtEnd: 300, durationSec: 30 },
+      ],
+    },
+    "Kasuya 4:6",
+  );
+  assert.ok(
+    !res.reasons.some((r) => r.includes("grind")),
+    `clicks must not read as a grind drift, got: ${res.reasons.join("; ")}`,
+  );
+});
+
+test("a genuinely too-fine clicks grind is still caught", () => {
+  // 16 clicks == ~357 degrees: a real AeroPress-fine setting on a Kasuya V60.
+  const res = reconcileToReference(
+    {
+      doseGrams: 20,
+      waterGrams: 300,
+      waterTempC: 93,
+      grindSize: "16 clicks",
+      targetTimeSec: 210,
+      pourSteps: [
+        { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 45 },
+        { label: "Pour 2", action: "pour", waterGramsAtEnd: 120, durationSec: 30 },
+        { label: "Pour 3", action: "pour", waterGramsAtEnd: 180, durationSec: 30 },
+        { label: "Pour 4", action: "pour", waterGramsAtEnd: 240, durationSec: 30 },
+        { label: "Pour 5", action: "final", waterGramsAtEnd: 300, durationSec: 30 },
+      ],
+    },
+    "Kasuya 4:6",
+  );
+  assert.ok(
+    res.reasons.some((r) => r.includes("grind")),
+    "a clicks value that really is too fine must still trip the window",
+  );
+});

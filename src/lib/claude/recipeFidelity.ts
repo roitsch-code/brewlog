@@ -36,6 +36,7 @@ import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session"
 import type { Recipe } from "../knowledge/recipes";
 import { ALL_RECIPES } from "../knowledge/recipes";
 import { isDripAssistMethod, DRIP_ASSIST_GRIND_OFFSET_DEG } from "../utils/dripAssist";
+import { LOOKS_LIKE_CLICKS, clicksToNiche } from "../utils/grindUnit";
 import { hasImmersionShape } from "../utils/pourSequence";
 
 export interface FidelityResult {
@@ -145,11 +146,25 @@ function refTemp(r: Recipe): number | null {
   return null;
 }
 
-/** Pull the leading Niche-degree number out of a free-text grind string. */
+/** Pull the grind out of a free-text string AS NICHE DEGREES, converting a
+ * Comandante clicks value first.
+ *
+ * The corpus states every grind in Niche degrees, but a recipe written for a
+ * travel brew states CLICKS — both prompts ask for exactly that when the
+ * Comandante is the grinder in hand. Reading "26 clicks" as 26 degrees made the
+ * comparison nonsense: every Comandante recipe looked ~350 degrees too fine,
+ * tripped the grind window, and had its grind (and on a second drifted field,
+ * its whole signature) overwritten with the published degree value. The two
+ * scales cannot overlap by magnitude — Niche degrees live in the mid-300s to
+ * mid-400s, clicks in the teens to forties — so a bare number is unambiguous,
+ * which is the same property `grindUnit.ts` already relies on. */
 function parseGrindDegrees(grindSize: string | undefined): number | null {
   if (!grindSize) return null;
-  const m = /(\d{2,3}(?:\.\d+)?)/.exec(grindSize);
-  return m ? Number(m[1]) : null;
+  const m = /(\d{1,3}(?:\.\d+)?)/.exec(grindSize);
+  if (!m) return null;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n)) return null;
+  return n <= LOOKS_LIKE_CLICKS ? clicksToNiche(n) : n;
 }
 
 /** A recipe that brews onto ice / uses bypass dilution — different water basis. */

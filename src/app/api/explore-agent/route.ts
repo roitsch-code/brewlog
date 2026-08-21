@@ -21,6 +21,7 @@ import { and, or, ne, isNull, lte } from "drizzle-orm";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
+import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
 import type { Session, BrewRecipe } from "@/lib/types/session";
 import type { NewCoffeePayload } from "@/lib/types/chatActions";
 import { buildNewCoffeePayload, coachNoteFrom } from "@/lib/chat/addCoffee";
@@ -640,6 +641,26 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
   };
 }
 
+/**
+ * Which grinder is in the user's hand, read off the conversation.
+ *
+ * There is no structured context here the way the brew flow has one — the only
+ * statement of fact is the user typing "I've got the Comandante". That is the
+ * same signal the model itself works from, and without it the unit check has
+ * nothing to compare against, so it simply doesn't run (a wrong unit is worth
+ * catching; a guessed one is not). Most recent mention wins, because the
+ * grinder can change mid-conversation when they get home.
+ */
+function grinderFromConversation(messages: { role: string; content?: unknown }[]): string | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role !== "user" || typeof m.content !== "string") continue;
+    if (/comandante|\bc40\b/i.test(m.content)) return "Comandante C40";
+    if (/niche/i.test(m.content)) return "Niche Zero";
+  }
+  return undefined;
+}
+
 const isActionTool = (name: string) =>
   name === "suggest_navigation" ||
   name === "start_brew" ||
@@ -1157,6 +1178,11 @@ export async function POST(req: NextRequest) {
           // a follow-up question that needs another fetch. Bumped to 8.
           const MAX_ITERATIONS = 8;
 
+          // One repair round per turn. A model that can't produce a brewable
+          // recipe in two attempts won't get there on the third, and each
+          // attempt is a full round trip the user waits through.
+          let brewRepairSpent = false;
+
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             const stream = client.messages.stream({
               model: "claude-sonnet-4-6",
@@ -1200,10 +1226,71 @@ export async function POST(req: NextRequest) {
               const onlyActionTools = toolBlocks.every((b: Anthropic.ToolUseBlock) => isActionTool(b.name));
 
               if (onlyActionTools) {
-                // The streamed text was the real response — keep it.
-                // Just collect the action(s) and finish without another Claude round trip.
+                // The streamed text was the real response — keep it, UNLESS a
+                // start_brew recipe turns out to be unbrewable, in which case
+                // the model has to rewrite both the recipe and the message.
+                //
+                // This is the one place the chat gets the scrutiny /recommend
+                // has always had. /recommend corrects a bad recipe in place and
+                // the user never sees the draft; here the recipe was already
+                // spelled out in prose, so a silent correction would leave the
+                // message and the timer disagreeing. Bouncing it back fixes both.
+                const okResults: Anthropic.ToolResultBlockParam[] = [];
+                const rejections: Anthropic.ToolResultBlockParam[] = [];
+                const acceptedActions: NavAction[] = [];
+                let droppedBrew = false;
+
                 for (const block of toolBlocks) {
-                  navSuggestions.push(toNavAction(block.name, block.input as NavAction, attachedImageUrl));
+                  const action = toNavAction(block.name, block.input as NavAction, attachedImageUrl);
+
+                  if (block.name === "start_brew" && action.recipe) {
+                    const problems = validateRecipe(action.recipe, {
+                      method: action.method,
+                      basedOn: action.basedOn,
+                      grinder: grinderFromConversation(messages),
+                    });
+                    if (problems.length > 0) {
+                      console.warn(
+                        `[explore-agent] start_brew rejected (${brewRepairSpent ? "final" : "first"}): ` +
+                          problems.map((pr) => pr.code).join(", "),
+                      );
+                      if (!brewRepairSpent) {
+                        rejections.push({
+                          type: "tool_result",
+                          tool_use_id: block.id,
+                          content: formatProblemsForModel(problems),
+                          is_error: true,
+                        });
+                        continue;
+                      }
+                      // Second attempt still not brewable — the pill is dropped
+                      // rather than handing the timer a recipe that can't be poured.
+                      droppedBrew = true;
+                      okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                      continue;
+                    }
+                  }
+
+                  acceptedActions.push(action);
+                  okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                }
+
+                if (rejections.length > 0) {
+                  brewRepairSpent = true;
+                  // The model is about to restate the recipe, so the bubble it
+                  // already streamed is stale — pull it before it double-prints.
+                  if (streamedText) send("retract", {});
+                  navSuggestions.push(...acceptedActions);
+                  agentMessages.push({ role: "assistant", content: response.content });
+                  agentMessages.push({ role: "user", content: [...okResults, ...rejections] });
+                  continue;
+                }
+
+                navSuggestions.push(...acceptedActions);
+                if (droppedBrew) {
+                  send("delta", {
+                    text: "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.",
+                  });
                 }
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,

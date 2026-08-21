@@ -42,7 +42,7 @@ export function clicksToNiche(clicks: number): number {
 // this far outside the selected grinder's own scale is the other unit, whatever
 // (or whether) the string says it is.
 const LOOKS_LIKE_DEGREES = 200;
-const LOOKS_LIKE_CLICKS = 80;
+export const LOOKS_LIKE_CLICKS = 80;
 
 /**
  * Return `grindSize` expressed in the unit the SELECTED grinder actually uses.
