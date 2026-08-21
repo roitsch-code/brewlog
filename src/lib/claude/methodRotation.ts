@@ -29,7 +29,7 @@
 
 import type { Session } from "../types/session";
 import type { BrewerType } from "../knowledge/recipes/types";
-import { brewersFromMethod } from "../knowledge/recipes/helpers";
+import { brewersFromMethod, mixSeed } from "../knowledge/recipes/helpers";
 
 /** Brewer families as the user perceives them (an Orea Fast and an Orea
  * Classic are "the Orea again"; a cone or wave Origami is "the Origami"). */
@@ -90,6 +90,9 @@ export interface MethodRecencyInput {
   lockedMethod?: string;
   /** context.occasion — cold-brew disables the signal. */
   occasion?: string;
+  /** The same seed selectRecipes rotates on. Decides WHICH dominant family is
+   * mechanically demoted this brew (at most one — see buildMethodRecency). */
+  rotationSeed?: number;
 }
 
 export interface MethodRecencyResult {
@@ -146,10 +149,26 @@ export function buildMethodRecency(
 
   if (dominant.length === 0) return INACTIVE;
 
+  // MECHANICAL demotion is capped at ONE family per brew, and which one rotates
+  // with the seed.
+  //
+  // Demoting every dominant family sounded fair and did the opposite. The
+  // dominant families are V60 and Clever precisely because they are the deepest
+  // recipe pools (45 and 13 entries) — and a deep pool is the only place
+  // pickRepresentative has anything to rotate BETWEEN. Pushing all of them to
+  // the back of every tie group handed the menu's leading slots to brewers with
+  // one or three recipes (orea-v4-fast has exactly one), where the representative
+  // is the same recipe every single brew. So the freshness lever was reducing
+  // the very variety it existed to create, and doing it identically every time
+  // because the demotion set was seed-independent.
+  //
+  // The PROMPT note still names every dominant family — "earn your slot" is
+  // information, and information costs nothing. Only the mechanical reordering
+  // is capped. Still tie-scoped, still never an exclusion.
+  const demotedIdx = mixSeed(input.rotationSeed ?? 0) % dominant.length;
+  const [demotedFamily] = dominant[demotedIdx];
   const recentBrewers = new Set<BrewerType>();
-  for (const [fam] of dominant) {
-    for (const b of FAMILY_BREWERS[fam]) recentBrewers.add(b);
-  }
+  for (const b of FAMILY_BREWERS[demotedFamily]) recentBrewers.add(b);
 
   const dominantStr = dominant
     .map(([fam, count]) => `${FAMILY_LABEL[fam]} (in ${count} of your last ${window.length} recommendation sets)`)

@@ -83,10 +83,52 @@ test("V60 + Clever dominating recent sets → named in the note, no ban language
   // Earn-your-slot + equal-fit tie-break direction present.
   assert.match(r.note, /EARN its slot/);
   assert.match(r.note, /LEAST recently recommended/);
-  // Menu tie-break input carries the dominant families' brewers.
-  assert.ok(r.recentBrewers.has("v60"));
-  assert.ok(r.recentBrewers.has("clever"));
+  // Menu tie-break input carries ONE dominant family's brewers — see the
+  // capped-demotion test below for why it is not both.
+  assert.ok(r.recentBrewers.has("v60") || r.recentBrewers.has("clever"));
   assert.ok(!r.recentBrewers.has("kalita-wave"));
+});
+
+// ── Mechanical demotion is capped at one family, and rotates ───────────────
+// Demoting EVERY dominant family sounded fair and did the opposite: the
+// dominant families are V60 and Clever precisely because they hold the deepest
+// recipe pools (45 and 13 entries), and a deep pool is the only place
+// pickRepresentative has anything to rotate between. Pushing all of them to the
+// back of every tie group handed the leading menu slots to brewers with one or
+// three recipes, where the representative is the same recipe every brew — the
+// freshness lever reducing the variety it exists to create, identically every
+// time because the demotion set was seed-independent.
+
+test("at most ONE dominant family is mechanically demoted per brew", () => {
+  const r = buildMethodRecency(V60_CLEVER_HISTORY, { rotationSeed: 12345 });
+  // Both families dominate, but only one is demoted; a family contributes all
+  // of its brewer types, so count families rather than brewers.
+  const demotedV60 = r.recentBrewers.has("v60");
+  const demotedClever = r.recentBrewers.has("clever");
+  assert.ok(demotedV60 !== demotedClever, "exactly one of the two dominant families may be demoted");
+});
+
+test("which family gets demoted rotates with the seed", () => {
+  const demoted = new Set();
+  for (let i = 0; i < 40; i++) {
+    const r = buildMethodRecency(V60_CLEVER_HISTORY, { rotationSeed: 1_700_000_000_000 + i * 86_400_000 });
+    demoted.add(r.recentBrewers.has("v60") ? "v60" : "clever");
+  }
+  assert.equal(demoted.size, 2, "over many brews both dominant families should take a turn");
+});
+
+test("the PROMPT note still names every dominant family", () => {
+  // Capping the mechanical demotion must not cost the model information:
+  // "earn your slot" applies to all of them, and saying so is free.
+  const r = buildMethodRecency(V60_CLEVER_HISTORY, { rotationSeed: 7 });
+  assert.match(r.note, /V60 \(in 6 of your last 6/);
+  assert.match(r.note, /Clever Dripper \(in 6 of your last 6/);
+});
+
+test("demotion stays deterministic for a given seed", () => {
+  const a = buildMethodRecency(V60_CLEVER_HISTORY, { rotationSeed: 999 });
+  const b = buildMethodRecency(V60_CLEVER_HISTORY, { rotationSeed: 999 });
+  assert.deepEqual(Array.from(a.recentBrewers).sort(), Array.from(b.recentBrewers).sort());
 });
 
 test("locked method disables the signal entirely", () => {

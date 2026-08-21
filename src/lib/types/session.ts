@@ -140,6 +140,10 @@ export interface RecommendationCandidate {
   basedOn?: string;
   /** One sentence: why this candidate. The only per-candidate prose left. */
   whyChosen: string;
+  /** One clause: the variable this candidate tests and what the cup shows if it
+   * works. The two candidates must name DIFFERENT variables — that requirement
+   * is what forces a real portfolio instead of one recipe written twice. */
+  experiment?: string;
   confidence: CandidateConfidence;
   // OPTIONAL ON PURPOSE — no longer requested from the model (Aug 2026: each
   // one cost a wait on every brew, and six of the nine prose fields were

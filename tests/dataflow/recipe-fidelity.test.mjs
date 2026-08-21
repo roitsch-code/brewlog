@@ -130,20 +130,122 @@ test("'Own recipe' candidates are never reconciled", () => {
 
 test("a small, legitimate adaptation passes (no over-triggering)", () => {
   // Same recipe, brewed slightly slower (3:45 vs 3:30) and one notch finer —
-  // within tolerance, should NOT be snapped.
+  // within tolerance, should NOT be snapped. The pour plan keeps the recipe's
+  // 10-pulse structure, because that IS the recipe (a 2-pour "Kasuya 10-Pour"
+  // is a different recipe wearing the name, and is caught below).
   const tweaked = {
     doseGrams: 20,
     waterGrams: 300,
     waterTempC: 96,
     grindSize: "440°",
     targetTimeSec: 225, // +15s
-    pourSteps: [
-      { label: "Bloom", action: "bloom", waterGramsAtEnd: 30, durationSec: 5 },
-      { label: "Pour", action: "pour", waterGramsAtEnd: 300, durationSec: 5 },
-    ],
+    pourSteps: Array.from({ length: 10 }, (_, i) => ({
+      label: i === 0 ? "Bloom" : `Pour ${i + 1}`,
+      action: i === 0 ? "bloom" : "pour",
+      waterGramsAtEnd: 30 * (i + 1),
+      durationSec: 22,
+    })),
   };
   const { changed } = reconcileToReference(tweaked, "Kasuya Super Coarse 10-Pour");
   assert.equal(changed, false, "a small in-tolerance tweak must pass");
+});
+
+// ── Per-field reconciliation ───────────────────────────────────────────────
+// The guard used to be all-or-nothing: one drifted field replaced grind AND
+// temp AND total time AND the whole pour plan with the published recipe. A
+// candidate that was a deliberate adaptation everywhere except 7°C came back as
+// the literal published recipe — and two candidates that both tripped it came
+// back as the SAME recipe. That is the guard erasing the variety it was never
+// meant to touch. One drifted field is now corrected on its own; a genuinely
+// mangled candidate is still snapped whole.
+
+/** The reference's own numbers, so a fixture can drift exactly one field. */
+function faithfulKasuya(over = {}) {
+  return {
+    doseGrams: 20,
+    waterGrams: 300,
+    waterTempC: 96,
+    grindSize: "445°",
+    targetTimeSec: 210,
+    pourSteps: Array.from({ length: 10 }, (_, i) => ({
+      label: i === 0 ? "Bloom" : `Pour ${i + 1}`,
+      action: i === 0 ? "bloom" : "pour",
+      waterGramsAtEnd: 30 * (i + 1),
+      durationSec: 21,
+    })),
+    ...over,
+  };
+}
+
+test("temperature-only drift snaps the temperature and nothing else", () => {
+  const base = faithfulKasuya();
+  const { recipe, changed, reasons } = reconcileToReference(
+    faithfulKasuya({ waterTempC: 80 }),
+    "Kasuya Super Coarse 10-Pour",
+  );
+  assert.equal(changed, true);
+  assert.ok(reasons.some((r) => r.includes("temp")), `expected a temp reason, got ${reasons}`);
+  assert.notEqual(recipe.waterTempC, 80, "temperature must be corrected");
+  assert.equal(recipe.grindSize, base.grindSize, "grind must survive a temp-only drift");
+  assert.equal(recipe.targetTimeSec, base.targetTimeSec, "time must survive a temp-only drift");
+  assert.equal(recipe.pourSteps.length, base.pourSteps.length, "pour plan must survive");
+});
+
+test("grind-only drift snaps the grind and nothing else", () => {
+  const base = faithfulKasuya();
+  const { recipe, changed } = reconcileToReference(
+    faithfulKasuya({ grindSize: "380°" }), // a normal V60 grind on a super-coarse recipe
+    "Kasuya Super Coarse 10-Pour",
+  );
+  assert.equal(changed, true);
+  assert.notEqual(recipe.grindSize, "380°", "grind must be corrected");
+  assert.equal(recipe.waterTempC, base.waterTempC, "temp must survive a grind-only drift");
+  assert.equal(recipe.targetTimeSec, base.targetTimeSec, "time must survive a grind-only drift");
+});
+
+test("percolation time-only drift snaps the clock but keeps the authored pours", () => {
+  const drifted = faithfulKasuya({ targetTimeSec: 400 });
+  const { recipe, changed } = reconcileToReference(drifted, "Kasuya Super Coarse 10-Pour");
+  assert.equal(changed, true);
+  assert.notEqual(recipe.targetTimeSec, 400, "clock must be corrected");
+  assert.equal(recipe.grindSize, drifted.grindSize, "grind must survive a time-only drift");
+  assert.equal(recipe.waterTempC, drifted.waterTempC, "temp must survive a time-only drift");
+  // The timer derives pour timings from targetTimeSec, so the authored plan
+  // stays valid for percolation — no need to overwrite it.
+  assert.equal(recipe.pourSteps.length, drifted.pourSteps.length, "pour plan must survive");
+  assert.equal(recipe.pourSteps[3].waterGramsAtEnd, drifted.pourSteps[3].waterGramsAtEnd);
+});
+
+test("two drifted fields still snap the whole mechanical signature", () => {
+  const { recipe, changed, reasons } = reconcileToReference(
+    faithfulKasuya({ grindSize: "380°", targetTimeSec: 400 }),
+    "Kasuya Super Coarse 10-Pour",
+  );
+  assert.equal(changed, true);
+  assert.ok(reasons.length >= 2, `expected ≥2 drift reasons, got ${reasons}`);
+  assert.notEqual(recipe.grindSize, "380°");
+  assert.notEqual(recipe.targetTimeSec, 400);
+});
+
+test("a collapsed pour plan is a mangle — full snap even when only one dial drifted", () => {
+  // The documented failure: a 10-pulse recipe returned as 3 pours. The pour
+  // COUNT is the method there, so this is not the recipe adapted, it's a
+  // different recipe wearing the name.
+  const collapsed = faithfulKasuya({
+    targetTimeSec: 400,
+    pourSteps: [
+      { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 45 },
+      { label: "Pour 2", action: "pour", waterGramsAtEnd: 180, durationSec: 40 },
+      { label: "Final", action: "final", waterGramsAtEnd: 300, durationSec: 40 },
+    ],
+  });
+  const { recipe, changed, reasons } = reconcileToReference(collapsed, "Kasuya Super Coarse 10-Pour");
+  assert.equal(changed, true);
+  assert.ok(
+    reasons.some((r) => r.includes("pour plan")),
+    `expected a pour-plan reason, got ${reasons}`,
+  );
+  assert.ok(recipe.pourSteps.length > 5, "the published multi-pulse plan must be restored");
 });
 
 // ── reconcileWaterToPourPlan — headline-vs-pour-plan consistency guard ──────

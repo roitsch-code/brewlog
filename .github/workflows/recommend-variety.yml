@@ -1,0 +1,62 @@
+name: Recommend variety sim
+
+# Measures the repetition the owner reports — at CANDIDATE level, not menu level.
+#
+# Three rounds of fixes (#480 / #483 / #486 / #523) targeted which recipes get
+# INJECTED, and #523 measurably fixed that. The complaint did not move, which
+# means the repetition lives downstream of the menu — and nothing in the repo
+# measured downstream. scripts/recommend-variety-sim.mjs runs 20 consecutive
+# brews per scenario WITH the production feedback loop (each brew becomes the
+# next brew's logged session, so recentReferenceNames / demoteBrewers /
+# own-references evolve as they do in production) and reports, for the
+# candidates the model actually returns: distinct (method ← basedOn) pairs,
+# distinct headline number tuples, fidelity-guard snap rate, and how often
+# basedOn named a recipe that was NOT in the injected menu.
+#
+# Offline (no key) measures the selector's ceiling; --live fires the REAL prompt
+# at Opus (~40 calls) and measures what comes back. Run before and after each
+# variety change so "better" is a number, not a feeling.
+#
+# Triggers:
+#   - workflow_dispatch: the "Run workflow" button.
+#   - push to .github/recommend-variety-trigger on main: the route-around for
+#     Claude Code (its token can't dispatch workflow_dispatch — 403, no
+#     actions:write). Bump that file via a PR to fire a run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Call Opus for real (~40 calls) instead of selection-only"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - .github/recommend-variety-trigger
+
+jobs:
+  variety:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run variety simulation
+        # A push-trigger run goes live too — that's the measurement worth having.
+        run: node scripts/recommend-variety-sim.mjs ${{ (github.event_name != 'workflow_dispatch' || inputs.live) && '--live' || '' }}
+      - name: Print report to the run log
+        if: always()
+        run: cat spike-output/recommend-variety.md || true
+      - name: Upload variety report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recommend-variety
+          path: spike-output/recommend-variety.md
+          if-no-files-found: warn

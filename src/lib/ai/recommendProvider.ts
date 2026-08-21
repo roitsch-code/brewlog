@@ -70,6 +70,18 @@ async function callAnthropic(userMessage: string): Promise<{ text: string; usage
   const res = await anthropic().messages.create({
     model: RECOMMEND_MODEL,
     max_tokens: MAX_TOKENS,
+    // Sampling temperature, stated rather than inherited. The Mistral path
+    // below sets 0.5 with a written rationale; the Anthropic path set nothing,
+    // so it silently ran at the SDK default (1.0) and the reasoning behind the
+    // number was lost in the #519 rollback to Opus.
+    //
+    // 0.8 is deliberate: below the default, because this call emits recipe
+    // NUMBERS and numeric discipline is the thing worth protecting; well above
+    // Mistral's 0.5, because Opus follows instructions faithfully enough that
+    // low temperature makes it converge on the single most-likely pick — which
+    // is the repetition being fixed. The deterministic guards (capacity,
+    // volume, fidelity, grind-unit, drip-assist) are the net underneath.
+    temperature: 0.8,
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMessage }],
   });

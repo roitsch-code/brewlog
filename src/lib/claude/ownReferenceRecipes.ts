@@ -166,8 +166,29 @@ export function buildOwnReferences(
     .slice(0, MAX_REFERENCES);
 }
 
-export function formatOwnReferencesForPrompt(refs: OwnReference[]): string {
+/**
+ * Format the own-reference block.
+ *
+ * `recentlyRecommended` — reference names that already appeared in the last few
+ * sessions' candidates. An entry that matches gets an explicit "you have just
+ * been served this, vary from it" marker. Without that, this block and the
+ * RECENTLY RECOMMENDED note in the same user message pull in opposite
+ * directions: one said "repeating a result they already loved is usually the
+ * right answer" while the other asked for different references — and the
+ * instruction carrying concrete numbers wins that argument every time.
+ */
+export function formatOwnReferencesForPrompt(
+  refs: OwnReference[],
+  recentlyRecommended: string[] = [],
+): string {
   if (refs.length === 0) return "";
+  const seenRecently = (name: string): boolean =>
+    recentlyRecommended.some((r) => {
+      const a = r.toLowerCase().trim();
+      const b = name.toLowerCase().trim();
+      if (!a || !b) return false;
+      return a === b || (a.length >= 6 && b.includes(a)) || (b.length >= 6 && a.includes(b));
+    });
   const lines = refs.map((r, i) => {
     const timing = [
       r.targetTimeSec ? `target ${mmss(r.targetTimeSec)}` : "",
@@ -181,8 +202,11 @@ export function formatOwnReferencesForPrompt(refs: OwnReference[]): string {
         : r.relevance === 2
           ? "same origin + process"
           : "same brewer, different coffee";
+    const staleness = seenRecently(r.name)
+      ? " — ALREADY RECOMMENDED RECENTLY: build on it, don't re-serve it"
+      : "";
     return [
-      `${i + 1}. ${r.name} — ${r.rating}★ (${scope})`,
+      `${i + 1}. ${r.name} — ${r.rating}★ (${scope})${staleness}`,
       `   ${r.doseGrams}g : ${r.waterGrams}g${r.waterTempC ? ` at ${r.waterTempC}°C` : ""}${r.grindSize ? ` · grind ${r.grindSize}` : ""}${timing ? ` · ${timing}` : ""}`,
       `   Pours: ${r.pourPlan}`,
       r.notes ? `   You wrote: "${r.notes.slice(0, 160)}"` : "",
@@ -191,5 +215,9 @@ export function formatOwnReferencesForPrompt(refs: OwnReference[]): string {
       .join("\n");
   });
 
-  return `\nYOUR OWN BREWS THAT SCORED WELL (${refs.length}) — these are the user's real logged brews on their own kit, water and palate, rated ${MIN_RATING}★ or better. They rank alongside the documented recipes above, not below them: a documented recipe is evidence about coffee in general, one of these is evidence about THIS user. Prefer one when it is marked THIS BAG and the context is similar — repeating a result they already loved is usually the right answer, and you may name it in basedOn exactly as written. Adapt it as you would any reference (scale grams for the batch, adjust for freshness), and say what you changed and why. Do NOT copy one whose rating merely tied with a better-matching documented recipe, and never present it as authoritative on technique — it is one brew, not a published method.\n\n${lines.join("\n\n")}`;
+  return `\nYOUR OWN BREWS THAT SCORED WELL (${refs.length}) — the user's real logged brews on their own kit, water and palate, rated ${MIN_RATING}★ or better. They rank alongside the documented recipes above, not below them: a documented recipe is evidence about coffee in general, one of these is evidence about THIS user.
+
+Treat one as a BASELINE TO BUILD ON, not a recipe to re-serve. A 4.5★ brew is the most informative thing in this prompt precisely because it already worked — so the useful question is "what is still missing from a 5★?", and the answer is a deliberate, named change to ONE variable, with the rest held steady so the comparison means something. Say what you changed and why.
+Re-serve one essentially unchanged only when the user asked to repeat it, or when this is the same bag in the same context AND the entry is not marked as recently recommended. You may name it in basedOn exactly as written.
+Do NOT copy one whose rating merely tied with a better-matching documented recipe, and never present it as authoritative on technique — it is one brew, not a published method.\n\n${lines.join("\n\n")}`;
 }

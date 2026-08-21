@@ -422,3 +422,31 @@ export function buildRecentRecipes(pastSessions: Session[], limit = 5): string {
   });
   return lines.join("\n");
 }
+
+/**
+ * Anti-repetition signal: the reference recipes surfaced across the user's
+ * recent sessions.
+ *
+ * A recipe menu is near-deterministic for a given coffee, so without this the
+ * same `basedOn` recipes come back brew after brew (the "recommendations
+ * repeat across contexts" complaint). Both surfaces need it: /recommend uses it
+ * to demote just-seen references within score ties and to build the RECENTLY
+ * RECOMMENDED note, and the home chat — which had no anti-repetition signal of
+ * ANY kind — uses it to steer away from what the user has just been served.
+ *
+ * NOT a ban: a genuinely best-fit recipe may legitimately repeat. Self-authored
+ * sentinels are skipped, since "Own experiment" names no recipe to vary from.
+ */
+export function recentReferenceNames(sessions: Session[], windowSize = 6): string[] {
+  const names = new Set<string>();
+  for (const s of sessions.slice(0, windowSize)) {
+    for (const c of s.recommendation?.candidates ?? []) {
+      const b = c.basedOn?.trim();
+      if (!b) continue;
+      const low = b.toLowerCase();
+      if (low === "own recipe" || low === "own experiment") continue;
+      names.add(b);
+    }
+  }
+  return Array.from(names);
+}
