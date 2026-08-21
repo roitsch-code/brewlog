@@ -19,6 +19,11 @@ export interface CompactCoffee {
   commonNotes?: string[];
   /** 2–4 sentence AI brew memory generated weekly by /api/coffees/compact. */
   writtenSummary?: string;
+  /** "What to explore next" for this bag — written weekly by the same cron,
+   * from this coffee's own brew history. It existed on the row and in the brew
+   * flow for months while the chat, the surface most likely to be ASKED "what
+   * should I try with this one?", never received it. */
+  whatToExplore?: string;
   /** User-marked "currently in rotation". /api/greeting prioritises
    * rotation bags in the library snapshot. */
   inRotation?: boolean;
@@ -43,6 +48,7 @@ function rowToCompact(r: CoffeeRow): CompactCoffee {
         ? r.commonNotes
         : undefined,
     writtenSummary: r.writtenSummary ?? undefined,
+    whatToExplore: r.whatToExplore ?? undefined,
     inRotation: r.inRotation ?? false,
   };
 }

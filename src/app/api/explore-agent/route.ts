@@ -5,6 +5,7 @@ import { buildRecentRecipes } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
+import { buildTodaysAngles, daySeedFor } from "@/lib/chat/todaysAngles";
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
@@ -15,7 +16,8 @@ import {
 import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
-import { places } from "@/lib/db/schema";
+import { places, insights as insightsTable } from "@/lib/db/schema";
+import { and, or, ne, isNull, lte } from "drizzle-orm";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
@@ -151,7 +153,7 @@ You're a chat agent inside BTTS. When the user asks "what can you do?" or "can I
 - **start_brew**: drop the user STRAIGHT into the step-by-step brew timer with the exact recipe you just gave — no context questions, no re-recommendation. For when you've just laid out a complete recipe for a specific library bag (often a one-off for the last few grams that isn't worth saving).
 - **add_coffee**: put a NEW bag into their Coffee Library yourself. You can read a bag off a photo or a shop page, so you add it — the user never has to retype it into the scan form. Optionally carries a coach note for that bag in the same tap.
 
-**Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (the bags the user has explicitly marked ★ in rotation — this is *not* the full library, just what's open and active on the counter right now), their equipment & grind settings, roaster style priors for roasters they're brewing, and recent research insights.
+**Personalized context injected each turn (you don't need a tool — it's already below):** current local time + weekday, the user's recent recipes (dose/water/grind/temp/timing), the bags **currently in rotation** (the bags the user has explicitly marked ★ in rotation — this is *not* the full library, just what's open and active on the counter right now), their equipment & grind settings, roaster style priors for roasters they're brewing, the coach's cross-session insights, and a small rotating set of "today's angles" for the bags on the counter.
 
 When the user asks "what should I brew?" / "what should I drink today?" / similar open-ended brew commands, restrict your candidates to the **★ IN ROTATION** bags in the Coffee Library block below — that's what's open and active. Don't pull older bags out of memory; if none of the rotation fits, say so plainly. If nothing is marked ★ IN ROTATION, say so and suggest opening/marking a bag rather than naming one from memory. (When the user names a SPECIFIC bag to brew, you may use any bag in that block by its id, starred or not.)
 
@@ -824,7 +826,11 @@ function formatLibraryForAgent(library: CompactCoffee[]): string {
       // Variety comes off the coffee row (migration 0023), so it shows even for
       // a bag with no brews yet — e.g. one just added from this chat.
       const variety = c.variety ? ` ${c.variety}` : "";
-      return `- [id:${c.id}] ${rotationMark}${c.roaster} — ${c.name} | ${c.origin}${variety} ${c.process} | ${usage}`;
+      // Written weekly by /api/coffees/compact from this bag's own brew
+      // history. It sat unused by the one surface most likely to be asked
+      // "what should I try with this one?".
+      const explore = c.whatToExplore ? `\n    Explore next: ${c.whatToExplore}` : "";
+      return `- [id:${c.id}] ${rotationMark}${c.roaster} — ${c.name} | ${c.origin}${variety} ${c.process} | ${usage}${explore}`;
     })
     .join("\n");
 }
@@ -869,7 +875,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const [userPrefs, rotationCoffees, recentLibrary, corpusSessions] = await Promise.all([
+    const [userPrefs, rotationCoffees, recentLibrary, corpusSessions, coachInsights] = await Promise.all([
       loadUserProfile().catch(() => null),
       // The bags the user has explicitly marked ★ in rotation — the real
       // "what's on the counter right now" set, NOT a recency proxy. Using the
@@ -892,6 +898,27 @@ export async function POST(req: NextRequest) {
       // Recent brews, read here rather than trusted from the request body — see
       // loadRecentSessions for why the client's array can't just be enlarged.
       loadRecentSessions(20).catch(() => []),
+      // Coach observations over the whole session corpus — the same rows
+      // /recommend reads (see src/lib/recommend/run.ts). The chat's own prompt
+      // has claimed for months that "recent research insights" are injected
+      // each turn; nothing ever was. These are the app's actual cross-session
+      // findings, so the chat can build on what the coach already worked out
+      // instead of re-deriving it or contradicting it.
+      db
+        .select()
+        .from(insightsTable)
+        .where(
+          and(
+            ne(insightsTable.status, "doesnt-apply"),
+            or(
+              ne(insightsTable.status, "snoozed"),
+              isNull(insightsTable.snoozedUntil),
+              lte(insightsTable.snoozedUntil, new Date()),
+            ),
+          ),
+        )
+        .limit(5)
+        .catch(() => []),
     ]);
 
     // Merge: rotation first (★, possibly older bags), then recent bags not
@@ -978,6 +1005,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // The corpus block above is cached and byte-identical on every turn of
+    // every conversation — 135 recipes with no scoring, rotation or cap, since
+    // the whole selection machinery is wired to /recommend only. Handed that
+    // wall, the model reaches for the same salient entries every day. This is
+    // the small piece that MOVES: the same scorer, seeded per day and per bag.
+    const anglesBlock = buildTodaysAngles(rotationCoffees, daySeedFor(Date.now()));
+    if (anglesBlock) contextParts.push(anglesBlock);
+
+    // What the coach has already worked out across the whole corpus. Without
+    // it the chat re-derives — or contradicts — findings the app has made and
+    // the user has already acted on.
+    if (Array.isArray(coachInsights) && coachInsights.length > 0) {
+      contextParts.push(
+        `\n## Coach insights — cross-session patterns the app has found in your brews\n` +
+          `Treat these as established for this user: build on them, don't re-derive them, and never contradict one without saying why.\n` +
+          coachInsights
+            .map((r) => `- ${r.observation}${r.suggestion ? ` → ${r.suggestion}` : ""}`)
+            .join("\n"),
+      );
+    }
 
     const recentRoasters = Array.from(
       new Set(
