@@ -616,6 +616,21 @@ export async function generateRecommendation(
             ? 750
             : undefined;
 
+  // ONE rotation seed for the whole turn: the recipe menu and the brewer-
+  // freshness demotion must rotate together, or the two levers fight each other.
+  //
+  // Base is the newest logged session's timestamp (it strictly increases with
+  // every brew; the session COUNT saturates at the client's cap and froze the
+  // rotation — the #480 regression), mixed with a per-REQUEST component so
+  // asking again gives a fresh menu instead of a byte-identical one. Fit still
+  // decides: every use of this seed is tie-scoped.
+  const rotationSeed =
+    (pastSessions.reduce((m, s) => {
+      const t = Date.parse(s.createdAt ?? "");
+      return Number.isFinite(t) ? Math.max(m, t) : m;
+    }, 0) ||
+      pastSessions.length) ^ mixSeed(Date.now());
+
   // METHOD FIT & FRESHNESS — the fix for "always V60 and Clever water-first".
   // NO bans (owner's design rule: best fit always decides). Brewer families
   // that dominated the last 6 recommendation sets are named in the prompt
@@ -628,6 +643,7 @@ export async function generateRecommendation(
   const methodRecency = buildMethodRecency(pastSessions, {
     lockedMethod: lockedMethodBase,
     occasion: context.occasion,
+    rotationSeed,
   });
 
   // Union the stored onboarding equipment with the owner's canonical kit.
@@ -688,20 +704,7 @@ export async function generateRecommendation(
       // COUNT does not work here: the client sends at most the last ~100
       // sessions, so the count saturates at the cap and the rotation froze —
       // the "same two recipes every Morning/Sweet brew" regression on #480.
-      // …plus a per-REQUEST component, so asking again gives a fresh menu.
-      // Keyed to the latest logged session alone, the seed FROZE between brews:
-      // discarding a recommendation and requesting another returned a
-      // byte-identical menu, and so did brewing twice off one logged session.
-      // That is what "immer der gleiche Scheiss" feels like precisely when the
-      // user is trying to explore. Fit still decides (rotation is tie-scoped),
-      // and selectRecipes stays deterministic for a given seed — only the seed
-      // now moves per request instead of per logged brew.
-      rotationSeed:
-        (pastSessions.reduce((m, s) => {
-          const t = Date.parse(s.createdAt ?? "");
-          return Number.isFinite(t) ? Math.max(m, t) : m;
-        }, 0) ||
-          pastSessions.length) ^ mixSeed(Date.now()),
+      rotationSeed,
       // And demote references the user has JUST seen to the back of their tie
       // group, so an equal-scored fresh recipe takes the injected slot.
       recentReferenceNames: recentReferenceNames(pastSessions),
