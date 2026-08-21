@@ -36,6 +36,7 @@ import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session"
 import type { Recipe } from "../knowledge/recipes";
 import { ALL_RECIPES } from "../knowledge/recipes";
 import { isDripAssistMethod, DRIP_ASSIST_GRIND_OFFSET_DEG } from "../utils/dripAssist";
+import { hasImmersionShape } from "../utils/pourSequence";
 
 export interface FidelityResult {
   recipe: BrewRecipe;
@@ -195,12 +196,33 @@ function scaledRefGrind(range: [number, number], doseRatio: number): number {
   return Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
 }
 
+/** Which of the recipe's defining fields drifted, not just how many. */
+interface Drift {
+  time: boolean;
+  grind: boolean;
+  temp: boolean;
+  /** The pour PLAN itself was restructured (a 10-pulse recipe collapsed to 4).
+   * Not one of the three tolerance checks — a structural signal that the
+   * candidate is a different recipe wearing the reference's name. */
+  pourCount: boolean;
+  reasons: string[];
+}
+
+/** How many water-adding steps a pour plan has. */
+function pourCountOf(steps: readonly { action?: string; waterGramsAtEnd?: number }[]): number {
+  return steps.filter(
+    (s) => typeof s.waterGramsAtEnd === "number" || ["bloom", "pour", "final"].includes(s.action ?? ""),
+  ).length;
+}
+
 /**
  * Core check: has the candidate drifted from the (scaled) published recipe on
- * total time, grind, or temperature beyond a generous tolerance?
+ * total time, grind, or temperature beyond a generous tolerance — and has its
+ * pour plan been restructured?
  */
-function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: number): string[] {
+function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: number): Drift {
   const reasons: string[] = [];
+  const drift: Drift = { time: false, grind: false, temp: false, pourCount: false, reasons };
 
   // Total time — published time barely moves for a small batch change. Allow a
   // floor of ±45s or ±20%, plus extra slack proportional to how much bigger
@@ -209,6 +231,7 @@ function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: num
   if (refTime > 0 && typeof recipe.targetTimeSec === "number") {
     const tol = Math.max(45, 0.2 * refTime) + (k > 1 ? (k - 1) * refTime * 0.3 : 0);
     if (Math.abs(recipe.targetTimeSec - refTime) > tol) {
+      drift.time = true;
       reasons.push(
         `total time ${recipe.targetTimeSec}s vs published ${refTime}s (±${Math.round(tol)}s allowed)`,
       );
@@ -224,6 +247,7 @@ function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: num
     const lo = range[0] + adj - 15;
     const hi = range[1] + adj + 15;
     if (cg < lo || cg > hi) {
+      drift.grind = true;
       reasons.push(
         `grind ${cg}° vs published ${range[0]}–${range[1]}° (window ${Math.round(lo)}–${Math.round(hi)}°)`,
       );
@@ -233,10 +257,23 @@ function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: num
   // Temperature — chemistry knob, shouldn't move much from the published value.
   const rt = refTemp(ref);
   if (rt != null && typeof recipe.waterTempC === "number" && Math.abs(recipe.waterTempC - rt) > 6) {
+    drift.temp = true;
     reasons.push(`temp ${recipe.waterTempC}° vs published ${rt}°`);
   }
 
-  return reasons;
+  // Pour PLAN structure. The documented mangle was Kasuya's 10-pulse recipe
+  // coming back as 4 pours — the pour count IS the method there, so a plan that
+  // far off is not the same recipe adapted, it's a different recipe wearing the
+  // name. Tolerance of 2 so an extra pour on a bigger batch passes untouched
+  // (the prompt explicitly allows one extra pour when scaling up).
+  const refPours = pourCountOf(ref.pourSequence ?? []);
+  const gotPours = pourCountOf(recipe.pourSteps ?? []);
+  if (refPours >= 3 && gotPours > 0 && Math.abs(gotPours - refPours) > 2) {
+    drift.pourCount = true;
+    reasons.push(`pour plan ${gotPours} pours vs published ${refPours}`);
+  }
+
+  return drift;
 }
 
 /**
@@ -287,7 +324,8 @@ export function reconcileToReference(
   if (k < 0.5 || k > 2.5) return { recipe, changed: false, reasons: [] };
   const doseRatio = dose > 0 && refDose > 0 ? dose / refDose : k;
 
-  const reasons = driftReasons(recipe, ref, k, doseRatio);
+  const drift = driftReasons(recipe, ref, k, doseRatio);
+  const reasons = drift.reasons;
   if (reasons.length === 0) {
     // No full-signature drift — but a genuinely LARGER batch still needs a
     // coarser grind: a deeper bed adds flow resistance (grind-settings.md,
@@ -323,6 +361,54 @@ export function reconcileToReference(
       }
     }
     return { recipe, changed: false, reasons: [] };
+  }
+
+  // ── Per-field vs full snap ────────────────────────────────────────────────
+  // This guard used to be all-or-nothing: ONE drifted field replaced grind AND
+  // temp AND total time AND the entire pour plan with the published recipe. So
+  // a candidate that was a deliberate, well-reasoned adaptation everywhere but
+  // 7°C on temperature came back as the literal published recipe, scaled — and
+  // two candidates that both tripped it came back as the SAME recipe. That is a
+  // direct contributor to "the recipes are always identical": the guard meant
+  // to stop fabrication was also erasing legitimate variation.
+  //
+  // Now: one drifted field is corrected on its own; a candidate that drifted on
+  // several fields, or restructured the pour plan, is still snapped whole —
+  // that one really has stopped being the recipe it claims to be.
+  const driftedFields = [drift.time, drift.grind, drift.temp].filter(Boolean).length;
+  const mangled = drift.pourCount || driftedFields >= 2;
+
+  if (!mangled && driftedFields === 1) {
+    if (drift.grind) {
+      return {
+        recipe: { ...recipe, grindSize: refGrindString(ref, doseRatio, discOffset) },
+        changed: true,
+        reasons,
+        reference: ref.name,
+      };
+    }
+    if (drift.temp) {
+      return {
+        recipe: { ...recipe, waterTempC: refTemp(ref) ?? recipe.waterTempC },
+        changed: true,
+        reasons,
+        reference: ref.name,
+      };
+    }
+    // Time-only. For percolation the clock can be corrected on its own: the
+    // timer derives pour timings from targetTimeSec, so the authored pour plan
+    // stays valid. For an immersion-shaped plan it cannot — there the step
+    // durations must SUM to the total, so moving the total without rebuilding
+    // the steps leaves the timer inconsistent. Those fall through to the full
+    // snap, which replaces both together.
+    if (drift.time && !hasImmersionShape(recipe)) {
+      return {
+        recipe: { ...recipe, targetTimeSec: ref.totalTimeSec },
+        changed: true,
+        reasons,
+        reference: ref.name,
+      };
+    }
   }
 
   const steps = scalePourSteps(ref, k);
