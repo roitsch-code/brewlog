@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
-import { buildRecentRecipes } from "@/lib/claude/historyUtils";
+import { buildRecentRecipes, recentReferenceNames } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
@@ -339,12 +339,24 @@ Say it plainly to the user: "If the cup feels quiet or thin, add input; if it's 
 
 You are bad at arithmetic and you must not rely on it. Do NOT construct a pour-by-pour sequence by adding numbers in your head — that is exactly how you ship a recipe whose pours don't sum to the stated water (e.g. "15g : 250g" then four 50g pours = 200g, not 250g).
 
-Instead:
-- **Draw pour sequences from the injected "Reference Recipe Library" below.** Those are documented, pre-verified recipes whose pours already sum correctly. Cite the recipe by name and reproduce its sequence — don't invent your own breakdown.
-- **If you state any pour breakdown, the pours MUST sum to the total water.** Before you present it, add them up and check. If they don't add up, do NOT guess to patch it — fall back to the canonical recipe's sequence, or give only the headline numbers (dose : water, ratio, temp, Niche°, total time) with no fabricated pour split.
-- When you adapt a recipe (e.g. a gentler agitation profile on a Gesha), keep the pour structure of a real corpus recipe and only change what you can change without re-doing arithmetic. Don't free-hand a new milestone list. Never introduce staged temperature — keep one constant brew temperature.
+The rule is about ARITHMETIC, not about imagination. Read the difference carefully — read too broadly, it turns you into a recipe jukebox that reads the same four entries back forever, which is the opposite of your job.
 
-Be confident through the documented recipe, not apologetic. Never tell the user "don't trust my maths" as a substitute for getting it right — lean on the verified recipe so the maths is already done.
+- **Draw pour sequences from the injected "Reference Recipe Library" below.** Those are documented, pre-verified recipes whose pours already sum correctly. Cite the recipe by name and reproduce its sequence.
+- **If you state any pour breakdown, the pours MUST sum to the total water.** Add them up before you present it. If they don't add up, do NOT guess to patch it — fall back to the canonical sequence, or give only the headline numbers (dose : water, ratio, temp, Niche°, total time) with no fabricated pour split.
+- **PARAMETER-LEVEL EXPLORATION IS ALWAYS OPEN.** Temperature, grind, agitation, ratio, bloom length, pour count within a recipe's own cadence — vary any of them, deliberately, whenever the coffee or the user's history gives you a reason. That is not improvising the maths; it is the actual craft. Say what you changed and what it should do to the cup.
+- **A recipe of your own is allowed when nothing documented fits**, on three conditions: label it plainly as your own experiment ("this one's mine, not a published recipe"), never attach a named person to it, and use round cumulative milestones you state as a running total (60 → 150 → 250 → 350) so the sum is visible and checkable rather than done in your head. The server re-checks the pour plan and snaps the headline water to it, so a stated derivation is safe — an unstated one is not.
+- Never introduce staged temperature — one constant brew temperature.
+
+Be confident through the mechanism, not apologetic. Never tell the user "don't trust my maths" as a substitute for getting it right.
+
+## Exploration posture — "what if" is half the job
+
+This app exists for two things: MATCHING (which recipe, which brewer, for this coffee in this context) and EXPLORING (what would happen if, what else could this bean give). You are the exploring half. A correct answer the user has already heard four times has failed at the job.
+
+- **When you write a recipe, you may add ONE variation line** — "Wenn du Lust hast zu experimentieren: …" — changing exactly ONE variable from the recipe you just gave, grounded in a mechanism (cite a technique id from the AVAILABLE TECHNIQUES block, or the coffee's own properties), with a short clause on what the cup should show if it works. One variable, so the result is readable. Keep the base recipe conservative and put the novelty in the variation, so a failed experiment never costs them the brew. This line is exempt from the brevity budget.
+- **Answer "what if" questions concretely.** "What if I went cooler?" gets a mechanism and a number, not a hedge.
+- **Vary your reference recipes.** Do not lean on the same handful across turns and across days. Never re-suggest a recipe you already suggested in THIS conversation unless the user asks to repeat it. "Today's angles" and "Recently used references" below tell you what is fresh and what is worn.
+- Their taste is settled and not the thing to explore: silky, balanced, floral/fruity, light-roast single origin, no anaerobic/infused/dark. Explore METHOD and PARAMETERS within that, never by pushing a profile they have told you they dislike.
 
 ## Response Style
 
@@ -1013,6 +1025,20 @@ export async function POST(req: NextRequest) {
     const anglesBlock = buildTodaysAngles(rotationCoffees, daySeedFor(Date.now()));
     if (anglesBlock) contextParts.push(anglesBlock);
 
+    // What the user has just been served. The chat had no anti-repetition
+    // signal of any kind: the recent-brews block exists so it can QUOTE the
+    // last recipe accurately ("quote THOSE values"), which if anything
+    // increases anchoring on it. This is the counterweight — the same signal
+    // /recommend has had all along.
+    const recentRefs = recentReferenceNames(corpusSessions);
+    if (recentRefs.length > 0) {
+      contextParts.push(
+        `\n## Recently used references — steer away unless asked to repeat\n` +
+          `These reference recipes have already come up in the user's recent brews: ${recentRefs.join(", ")}. ` +
+          `Reach for a different one unless this coffee genuinely calls for the same recipe again — and if it does, say why it is still the right answer.`,
+      );
+    }
+
     // What the coach has already worked out across the whole corpus. Without
     // it the chat re-derives — or contradicts — findings the app has made and
     // the user has already acted on.
@@ -1134,7 +1160,11 @@ export async function POST(req: NextRequest) {
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             const stream = client.messages.stream({
               model: "claude-sonnet-4-6",
-              max_tokens: 2000,
+              // 2500, up from 2000: the exploration posture asks for one
+              // variation line beside a recipe, and an own experiment has to
+              // show its running total rather than hide the arithmetic. Both
+              // are worth a few hundred tokens; a truncated recipe is not.
+              max_tokens: 2500,
               system: systemBlocks,
               tools: TOOLS,
               messages: agentMessages,

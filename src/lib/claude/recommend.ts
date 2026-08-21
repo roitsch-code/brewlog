@@ -18,7 +18,12 @@ import type {
 } from "../types/session";
 import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
-import { buildTimingStats, measuredTimeDelta, buildMeasuredFeedback } from "./historyUtils";
+import {
+  buildTimingStats,
+  measuredTimeDelta,
+  buildMeasuredFeedback,
+  recentReferenceNames,
+} from "./historyUtils";
 import { brewMethodKey } from "../utils/brewMethodKey";
 import { buildOwnReferences, formatOwnReferencesForPrompt } from "./ownReferenceRecipes";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
@@ -257,27 +262,6 @@ function guardVolumeTarget(
     return true;
   });
   return safe.length ? safe : candidates;
-}
-
-/**
- * Anti-repetition signal: the reference recipes surfaced across the user's
- * recent sessions. The recommend menu is otherwise near-deterministic for a
- * given coffee, so without this the same `basedOn` recipes come back brew after
- * brew (the "recommendations repeat across contexts" complaint). We tell the
- * model what it recently leaned on and to vary unless the coffee demands it —
- * NOT a hard ban (a genuinely best-fit recipe may legitimately repeat).
- */
-function recentReferenceNames(
-  sessions: import("../types/session").Session[],
-): string[] {
-  const names = new Set<string>();
-  for (const s of sessions.slice(0, 6)) {
-    for (const c of s.recommendation?.candidates ?? []) {
-      const b = c.basedOn?.trim();
-      if (b && b.toLowerCase() !== "own recipe") names.add(b);
-    }
-  }
-  return Array.from(names);
 }
 
 function buildRecentRecipesNote(
