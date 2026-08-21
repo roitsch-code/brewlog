@@ -1,3 +1,6 @@
 # Bump this file (any change) on main to fire .github/workflows/recommend-variety.yml.
 # Route-around for Claude Code, whose token can't dispatch workflow_dispatch.
-# Run 1 — BASELINE, before the recipe-variety overhaul (2026-08-21).
+# Run 1 — first LIVE measurement, right after the variety overhaul (PR #541, 2026-08-21).
+# Reads: distinct (method←basedOn) pairs and distinct headline number tuples across
+# 20 fed-back brews per scenario. Those are the numbers that match the complaint —
+# the menu count never did.
