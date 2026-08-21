@@ -62,6 +62,14 @@ const CandidateSchema = z.object({
   basedOn: z.string().optional(),
   recipe: z.record(z.string(), z.unknown()),
   whyChosen: z.string(),
+  // One clause naming the variable this candidate tests. Its job is generative,
+  // not decorative: #520 stripped the nine per-candidate prose fields, and with
+  // them the only thing forcing the model to justify two DIFFERENT experiments
+  // — after that both candidates could collapse onto the same safe recipe with
+  // nothing in the output revealing it. The prompt requires the two clauses to
+  // name different variables, which makes a duplicated portfolio visible in the
+  // model's own words. Optional so a response without it still parses.
+  experiment: z.string().optional(),
   confidence: z.string(),
 });
 
@@ -811,6 +819,7 @@ Return valid JSON only.`;
     title: c.title,
     ...(c.basedOn ? { basedOn: c.basedOn } : {}),
     whyChosen: c.whyChosen,
+    ...(c.experiment ? { experiment: c.experiment } : {}),
     confidence: c.confidence as CandidateConfidence,
   }));
 
