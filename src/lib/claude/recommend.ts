@@ -31,6 +31,7 @@ import {
   normaliseRoastLevel,
   normaliseProcess,
   normaliseGoal,
+  mixSeed,
 } from "../knowledge/recipes";
 import {
   getVarietyPriorsForBag,
@@ -39,6 +40,7 @@ import {
 import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
+import { isInMenu, menuNamesOf } from "./menuBinding";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
@@ -361,24 +363,39 @@ export async function generateRecommendation(
     s => s.coffee?.name === coffee.name && s.coffee?.roaster === coffee.roaster
   ).length;
 
+  // From the third brew of a bag onward, the SECOND candidate carries the
+  // exploration. The two-candidate portfolio is deliberately kept (owner's
+  // call — a third candidate is more waiting on every brew), so exploration has
+  // to live inside it rather than beside it. Without naming a slot, "push the
+  // boundary" was advice both candidates could quietly ignore in favour of the
+  // safe pairing.
+  const EXPLORATION_SLOT =
+    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
+
   const sessionArcNote =
     sessionCountForThisCoffee === 0
       ? "\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative."
       : sessionCountForThisCoffee <= 2
       ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.`
       : sessionCountForThisCoffee <= 5
-      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. The character is understood. This portfolio should test something genuinely new — an unexplored method, an untested variable. Don't recycle what worked; push the boundary.`
-      : `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Expert territory. Find the ceiling: what does this coffee do that no other has? What technique reveals its most distinctive character? What would a championship barista choose to showcase it?`;
+      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. The character is understood. This portfolio should test something genuinely new — an unexplored method, an untested variable. Don't recycle what worked; push the boundary.${EXPLORATION_SLOT}`
+      : `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Expert territory. Find the ceiling: what does this coffee do that no other has? What technique reveals its most distinctive character? What would a championship barista choose to showcase it?${EXPLORATION_SLOT}`;
   const totalPercolationSamples = Object.values(timingStats).reduce(
     (n, v) => n + v.count,
     0
   );
 
   const amountGuide: Record<string, string> = {
+    // WATER is the user's choice (they picked the drink size) — DOSE is not.
+    // Naming a fixed dose here pinned the two headline numbers to the same pair
+    // on every small brew: 23g:350g, forever, whatever the coffee or the
+    // reference recipe said. The ratio belongs to the recipe being adapted
+    // (Wölfl is 1:15.9, Medina 1:16.1, Kasuya 1:15), so the dose has to follow
+    // from it. Capacity rules key off WATER, so nothing below changes.
     small:
-      "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M (23g < 30g dose limit ✓). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+      "target ~350g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~21–25g) — state the ratio; do NOT default to a fixed 23g. Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M (dose limit 30g). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water / 34g dose (1:15.3). Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (34g exceeds 30g dose limit — bed too deep ✗). NOT Clever Dripper (520ml > 450ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~520g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~31–37g) — state the ratio; do NOT default to a fixed 34g. Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (a dose above 30g makes the bed too deep ✗). NOT Clever Dripper (520ml > 450ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -710,14 +727,20 @@ export async function generateRecommendation(
   // The user's own well-rated brews, offered as references beside the corpus.
   // Scoped to the brewers this session may actually use — a locked method
   // narrows it — so a great Chemex brew isn't dangled at a locked-V60 turn.
+  const ownReferencesForTurn = buildOwnReferences(
+    pastSessions,
+    coffee,
+    lockedBrewers.size > 0
+      ? new Set(Array.from(lockedBrewers).map((b) => brewMethodKey(b)))
+      : undefined,
+  );
+  const ownReferenceNamesForTurn = ownReferencesForTurn.map((r) => r.name);
   const ownReferenceBlock = formatOwnReferencesForPrompt(
-    buildOwnReferences(
-      pastSessions,
-      coffee,
-      lockedBrewers.size > 0
-        ? new Set(Array.from(lockedBrewers).map((b) => brewMethodKey(b)))
-        : undefined,
-    ),
+    ownReferencesForTurn,
+    // So this block and the RECENTLY RECOMMENDED note stop contradicting each
+    // other: an own reference the user was just served is marked "build on it,
+    // don't re-serve it" rather than offered as the safe repeat.
+    selectionInput.recentReferenceNames,
   );
 
   // Compact technique vocabulary — id + one-line description per technique.
@@ -796,7 +819,7 @@ pourSteps — ALSO emit this structured array on every recipe. It is what the in
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
 - PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are POUR steps only (bloom + the pours), plus any agitation the reference calls for. Do NOT emit a standalone "Bloom Rest" or "Drawdown" wait step — the timer derives the bloom rest and the drawdown from targetTimeSec; encoding them as steps makes the timer treat a pour-over as an immersion brew and mis-time it. A pour-over is a bloom + THREE-TO-FIVE pours, NEVER a bloom plus one giant final pour: split the water into pulses (e.g. 60 – 150 – 250 – 350), because a single pour of ~200 g+ cannot be poured gently in the time a percolation drawdown allows (a gentle gooseneck pour is ~4 g/s, so 200 g needs ~50 s of pouring). The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
 
-basedOn — name the reference this candidate adapts. Either a documented recipe, using its name from the Reference Recipe Library above (e.g. "Kasuya 4:6", "Hoffmann AeroPress", "April House V60"), OR — when you built on one of the user's own well-rated brews — that entry's name exactly as written there (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). Only set "Own recipe" when the candidate genuinely adapts neither.
+basedOn — name the reference this candidate adapts. Take it from what THIS TURN gave you: a recipe in the Reference Recipe Library above (named exactly as written there), or one of the user's own well-rated brews (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). That library was scored and rotated for this exact coffee, volume and goal — it is not a sample of what exists, it is the shortlist. If you reach outside it because nothing there fits, say so in whyChosen. If you designed the recipe yourself, set "Own experiment" — a legitimate answer with its own rules (see BASED-ON in the system prompt), not a fallback, and always better than reconstructing a published recipe from memory.
 
 RECIPE FIELD CONSISTENCY — the recipe's structured fields ARE the brew the user makes; the app shows them as the headline and feeds pourSteps to the timer. They must all describe ONE recipe:
 - doseGrams / waterGrams / waterTempC / grindSize / targetTimeSec are the recipe you are actually instructing. When you adapt a reference recipe, put the ADAPTED numbers here — NEVER leave the reference recipe's published dose/water/temp in these fields while the pourSteps and prose describe a different brew. (The failure to avoid: header reads 18g:225g:93°C copied from the reference, while the pour plan pours to 230g and the rationale says "1:15.3 at 90°C" — three different recipes in one candidate.)
@@ -811,6 +834,20 @@ Return valid JSON only.`;
 
   const raw = parseClaudeJson(text, RecommendationResponseSchema);
   if (!raw) throw new Error("Failed to parse recommendation from Claude");
+
+  // Did the model actually use the menu it was given? Nothing checked this
+  // before, which is why the menu could measurably rotate while the candidates
+  // stayed the same — the model was free to reach past it for whatever was most
+  // salient. Never an exclusion (best fit decides, nothing is banned); this is
+  // the signal that tells us whether rotating the menu can help at all.
+  const menuNames = menuNamesOf(recipesForPrompt, ownReferenceNamesForTurn);
+  for (const c of raw.candidates) {
+    if (!isInMenu(c.basedOn, menuNames)) {
+      console.warn(
+        `[recommend] basedOn "${c.basedOn}" is not in this turn's menu (${menuNames.length} names offered)`,
+      );
+    }
+  }
 
   const mapped: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,

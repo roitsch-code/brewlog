@@ -148,6 +148,44 @@ test("names are quotable and the block states what these are", () => {
   assert.equal(formatOwnReferencesForPrompt([]), "");
 });
 
+// ── Baseline to build on, not a recipe to re-serve ─────────────────────────
+// This block used to tell the model "repeating a result they already loved is
+// usually the right answer" — with the user's exact numbers attached, on every
+// brew, never rotating. In the same user message, RECENTLY RECOMMENDED asked
+// for DIFFERENT references. Two contradictory instructions, and the concrete
+// one with numbers wins: today's 4★ brew became tomorrow's guaranteed repeat.
+
+test("the block frames a well-rated brew as a baseline, not a repeat", () => {
+  const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
+  const block = formatOwnReferencesForPrompt(refs);
+  assert.match(block, /BASELINE TO BUILD ON/);
+  assert.ok(
+    !/repeating a result they already loved is usually the right answer/i.test(block),
+    "the old repeat-by-default instruction must be gone",
+  );
+  // Repeating verbatim stays possible — it just needs a reason now.
+  assert.match(block, /asked to repeat it/);
+});
+
+test("an own reference just recommended is marked as one to vary from", () => {
+  const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
+  const fresh = formatOwnReferencesForPrompt(refs, []);
+  const stale = formatOwnReferencesForPrompt(refs, [refs[0].name]);
+  assert.ok(!/ALREADY RECOMMENDED RECENTLY/.test(fresh));
+  assert.match(stale, /ALREADY RECOMMENDED RECENTLY/);
+  // The entry itself survives — nothing is ever excluded (owner's rule).
+  assert.ok(stale.includes(refs[0].name));
+});
+
+test("the recently-recommended match tolerates the short form the model writes", () => {
+  const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
+  // The model echoes a shortened basedOn; an exact-only compare would miss it
+  // and the marker would silently never appear.
+  const shortForm = refs[0].name.slice(0, 20);
+  const marked = formatOwnReferencesForPrompt(refs, [shortForm]);
+  assert.match(marked, /ALREADY RECOMMENDED RECENTLY/);
+});
+
 test("an own-reference name never binds to a published recipe", () => {
   // The fidelity guard snaps a candidate's mechanics back to whatever
   // resolveReference() matches on basedOn. These entries have no published

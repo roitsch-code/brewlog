@@ -484,7 +484,7 @@ function demoteRecentWithinTies(
  * single menu across 20 consecutive brews. Hashing decorrelates the low bits
  * from the calendar, which is what the modulo actually needs.
  */
-function mixSeed(seed: number): number {
+export function mixSeed(seed: number): number {
   let x = Math.abs(Math.trunc(seed)) >>> 0;
   x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;
   x = Math.imul(x ^ (x >>> 16), 0x45d9f3b) >>> 0;

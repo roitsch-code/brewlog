@@ -42,6 +42,7 @@ export {
   findRecipesByPerson,
   formatRecipeForPrompt,
   formatRecipesForPrompt,
+  mixSeed,
 } from "./helpers";
 
 export type { RecipeSelectionInput, ScoredRecipe } from "./helpers";
