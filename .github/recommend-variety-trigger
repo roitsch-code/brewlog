@@ -1,0 +1,3 @@
+# Bump this file (any change) on main to fire .github/workflows/recommend-variety.yml.
+# Route-around for Claude Code, whose token can't dispatch workflow_dispatch.
+# Run 1 — BASELINE, before the recipe-variety overhaul (2026-08-21).
