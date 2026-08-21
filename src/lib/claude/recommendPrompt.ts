@@ -1,3 +1,5 @@
+import { NICHE_GRIND_SETTINGS } from "../constants/grindSettings";
+
 // Static recommendation prompt + model id for /api/recommend.
 //
 // Extracted verbatim from recommend.ts so the cached system-prefix can be imported
@@ -6,11 +8,32 @@
 // WITHOUT pulling recommend.ts's full import graph (db client, knowledge corpus,
 // Anthropic client).
 //
-// SYSTEM_PROMPT must stay BYTE-IDENTICAL to the original const: it IS the cached
-// prefix, so any change to its bytes changes the prompt-cache key (and the prompt
-// wording). The only interpolation is ${USER_LOCATION}, which is process-static.
+// SYSTEM_PROMPT must stay BYTE-IDENTICAL across calls: it IS the cached prefix,
+// so any change to its bytes changes the prompt-cache key (and the prompt
+// wording). Both interpolations are process-static — ${USER_LOCATION} and the
+// generated ${COMANDANTE_BLOCK} — so the prefix is constant for a given deploy.
 
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";
+
+// Comandante starting clicks, GENERATED from the measured grind table rather
+// than hand-copied. The hand-written version drifted exactly the way the NICHE°
+// table did before #527 pinned it — it read "Chemex Washed 24" and "AeroPress 19"
+// while grindSettings.ts (the measured source, 380° = 23 clicks) puts Chemex at
+// 28–32 and AeroPress at 16–18. A recipe written off those numbers is several
+// clicks wrong on the owner's actual grinder. Generating it means the two can
+// never disagree again; tests/dataflow/grind-reference-consistency.test.mjs
+// checks the rendered result against the same table.
+const COMANDANTE_BLOCK = NICHE_GRIND_SETTINGS.map((s) => {
+  const head = s.process ? `${s.method} (${s.process})` : s.method;
+  // ONE value, not a range (the prompt demands a single click number), derived
+  // from the NICHE midpoint through the documented map — clicks ≈ 23 + (° − 380)
+  // × 0.3 — rather than by rounding the click range. Both give the same answer
+  // everywhere except the V60, where the map returns the MEASURED anchor of 23
+  // and rounding the range would say 24.
+  const midDeg = (s.niche.min + s.niche.max) / 2;
+  const clicks = Math.round(23 + (midDeg - 380) * 0.3);
+  return `${head} ${clicks}`;
+}).join(" | ");
 
 export const RECOMMEND_MODEL = "claude-opus-4-7";
 
@@ -262,7 +285,7 @@ EQUIPMENT RULES — these must be followed exactly
 
 RECIPE FIDELITY — when a candidate is basedOn a documented reference recipe (basedOn ≠ "Own recipe"):
 Preserve that recipe's DEFINING mechanics exactly. Only the gram amounts (dose, water, per-pour grams) scale to the user's batch — everything else stays as published. KEEP:
-- Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour — Comandante 40–45 clicks ≈ Niche 435–455°) STAYS super-coarse; never substitute a normal V60 grind (~410°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
+- Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour — Comandante 40–45 clicks ≈ Niche 435–455°) STAYS super-coarse; never substitute a normal V60 grind (~380°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
 - Its pour COUNT and cadence. A 10-pulse recipe stays 10 pulses on its published spacing (Kasuya Super Coarse = bloom for 30s, then ~30g every 15s, finishing ~3:30). Do NOT collapse it to 4 pours and do NOT stretch the spacing (15s → ~28s) — that doubles the brew and abandons the method.
 - Its temperature and its TOTAL brew time.
 Scaling water for a small batch change (e.g. 300 → 350ml, +17% grams) moves the gram milestones proportionally but does NOT lengthen total time or coarsen the grind: Kasuya Super Coarse is ~3:30 at both 300ml and 350ml. Adding 50ml must never add 1:15. The POUR COUNT ADAPTATION defaults below apply ONLY to "Own recipe" candidates — never to override a documented recipe's published structure.
@@ -304,10 +327,8 @@ CHEMEX — dedicated rules:
 3. Temperature: Washed light 93–96°C | Natural/Honey light 91–94°C | Medium-light 91–94°C
    (Slightly lower than V60 — thick filter slows flow, adding contact time)
 4. Ratio: 1:15–1:16 standard | 1:16–1:17 for lean/clarity focus
-5. Niche° for Chemex: Light washed 396–408° | Natural/Honey 398–410° (slightly coarser than Kalita — thick filter adds resistance)
-6. Small (350ml): 23g:350ml | Bloom 46g → 150g → 250g → 350g | ~4:30 (targetTimeSec: 270)
-   Big (520ml): 34g:520ml | Bloom 68g → 220g → 370g → 520g | ~5:00 (targetTimeSec: 300)
-7. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
+5. Niche°: see the NICHE° GRIND REFERENCE block (Chemex sits coarser than Kalita — the thick filter adds resistance).
+6. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
 
 ORIGAMI DRIPPER — dedicated rules:
 1. Japanese ceramic dripper with 20 vertical ribs. Two filter shapes — pick based on goal:
@@ -317,15 +338,11 @@ ORIGAMI DRIPPER — dedicated rules:
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
 2. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
-3. Niche° — Conical: 398–408° | Wave: 398–406°
+3. Niche°: see the NICHE° GRIND REFERENCE block (it carries the cone and wave rows separately).
 4. Agitation:
    - Conical: same as V60 — Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
    - Wave: SWIRL ONLY at bloom (same as Kalita — ribs + flat bed channel if stirred)
-5. Reference recipes (1:15 ratio, 4 milestones):
-   - Small (17g:255g): Bloom 35g → 105g → 180g → 255g | ~3:00 (targetTimeSec: 180)
-   - Standard (20g:300g): Bloom 40g → 125g → 215g → 300g | ~3:10 (targetTimeSec: 190)
-   - Big (22g:330g): Bloom 45g → 135g → 235g → 330g | ~3:20 (targetTimeSec: 200)
-6. Max practical volume: 500 ml. Minimum: 200 ml.
+5. Max practical volume: 500 ml. Minimum: 200 ml.
 
 OREA V4 — dedicated rules:
 1. One brewer body, four interchangeable bottom plates that change flow rate dramatically.
@@ -348,25 +365,16 @@ Kasuya 4:6: 390–400° | Wölfl: 380–390°
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
-Start 2–3 clicks coarser than expected. ONE specific click value, never a range.
-Starting clicks: V60+Assist Washed 25 | Natural/Honey 27 | V60 no Assist 23
-Orea Fast/Apex 26 | Orea Classic 27 | Chemex Washed 24 | Chemex Natural/Honey 26 | AeroPress 19 | Clever 31
-Origami cone Washed 24 | Origami cone Natural/Honey 26 | Origami wave 24
+ONE specific click value, never a range. Starting clicks (measured map: 380° Niche = 23 clicks, ~3.3° per click):
+${COMANDANTE_BLOCK}
 
 ICED COFFEE RECIPES — use when occasion is "summer-time":
 Ratio rule: brew at ~1:10–1:12 hot-water concentration; ice (40% of final drink weight) dilutes to effective 1:15–1:16.
 pourSequence = cumulative hot-water grams only (exclude ice weight). Ice goes in the server, not the brewer.
 ALWAYS populate the recipe's iceGrams field on iced brews — the grams of ice the hot brew drains onto (the "+ Xg ice" figure in each recipe below). waterGrams stays the hot-brew amount; iceGrams is the ice; the user needs BOTH numbers to brew. Never omit iceGrams on an iced recipe.
-Grind finer than hot equivalent (shorter brew time, higher concentration).
-- Japanese Iced V60 (small ~350g): 22g : 210g hot + 140g ice | Washed 97°C / Natural 95°C | 393–398° | Bloom 30g → 110g → 210g | ~2:20 (targetTimeSec: 140)
-- Japanese Iced V60 (big ~520g): 33g : 310g hot + 210g ice | Washed 97°C / Natural 95°C | 393–398° | Bloom 45g → 160g → 310g | ~3:00 (targetTimeSec: 180)
-- Japanese Iced Chemex (small ~350g): 22g : 210g hot + 140g ice | 94°C | 396–404° | Bloom 40g → 110g → 210g | gentle swirl at bloom only | ~3:00 (targetTimeSec: 180)
-- Japanese Iced Chemex (big ~520g): 33g : 310g hot + 210g ice | 94°C | 396–404° | Bloom 60g → 155g → 310g | gentle swirl at bloom only | ~3:30 (targetTimeSec: 210)
-- Japanese Iced Kalita (small): 22g : 210g hot + 140g ice | 95°C | 393–398° | Bloom 30g → 110g → 210g | ~2:30 (targetTimeSec: 150)
-- AeroPress Iced: 14g : 120g hot concentrate onto 180–200g ice | 88°C | 372–377° | inverted · add 120g water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press onto ice 30s | ~2:30 (targetTimeSec: 150); waterGrams = 120 (concentrate only)
-- Hoffmann Immersion Iced (Clever Dripper): 20g : 250g hot + 150g ice | 95°C | 421–431° | pour water 15s · swirl 5s · steep 3:40 · swirl 5s · drain onto ice 55s | ~5:00 (targetTimeSec: 300); waterGrams = 250, iceGrams = 150
-Agitation for iced percolation (Japanese style): swirl or stir same as hot equivalent (washed → stir, others → swirl) at bloom.
-Grind: Japanese Iced V60/Kalita 393–398° | AeroPress Iced 372–377° | Clever Iced 421–431°
+Grind finer than the hot equivalent (shorter brew time, higher concentration) — start from the NICHE° GRIND REFERENCE row for that brewer and go finer.
+The iced RECIPES themselves come from the per-turn REFERENCE RECIPE LIBRARY: on a summer-time brew that library holds the corpus's iced entries (Japanese Iced V60, Iced Kalita, Kasuya 4:6 Iced, Hedrick Flash Brew, Hoffmann Immersion Iced, AeroPress Iced). Take technique and numbers from the entries you were given and scale dose / water / ice proportionally.
+Agitation for iced percolation (Japanese style): swirl or stir same as the hot equivalent (washed → stir, others → swirl) at bloom.
 
 COLD BREW RECIPES — use ONLY when occasion is "cold-brew". These are LONG COLD IMMERSION STEEPS, not iced/flash brews. Hard rules:
 - Water is room-temperature or cold (NOT hot). The cup is built by hours of cold contact, so there is NO live pour timer and NO pour sequence in the hot sense.
@@ -377,28 +385,13 @@ COLD BREW RECIPES — use ONLY when occasion is "cold-brew". These are LONG COLD
 - VESSEL BY VOLUME (hard capacity — never exceed): a **jar / large immersion vessel** ("cold-brew-jar") is the default and holds any volume — use it for every batch >450ml and for all the 1:8/1:5 concentrates. A **Clever Dripper holds MAX 450ml total** — only for a small single cold brew (e.g. 40g:400g), NEVER 600ml/900ml/1L. An **AeroPress** is a small concentrate only (≤~200ml brew water). Recommending a 600ml+ Clever or AeroPress is a hard error.
 - Optional finish (any cold brew): "Tastes harsh? Add 1–2 drops of 20:80 saline (5g salt in 20g water) per cup — sodium suppresses bitterness." (James Hoffmann.) Mention it in notes, never as a required step.
 - Coffee fit (Hoffmann's tasting finding): light washed coffees give LESS to cold water — they read thin. Cold brew shines on medium/natural/chocolatey coffees. If the bag is a light washed and the user still wants cold, say so honestly in reasoning and lean to the Hoffmann fine+finings recipe (it extracts most) or suggest the Hot-Bloom variant to lift acidity.
-Recipes (scale grams to "amount"; keep grind + ratio + steep as published):
-- Hoffmann Fine + Finings (ready-to-drink): 75g : 1000g (1:13.3) | room-temp water | FINE ~250µm (mokapot / fine AeroPress; Niche ~345–360°, calibrate) | combine · stir · 10 drops/L vegan liquid finings (Mangrove Jack's) · stir · 12h fridge · decant off the sediment (no filter) | targetTimeSec 43200 | ~20.5–22.8% extraction; finings optional (silkier, higher yield).
-- Specialty RTD 1:10 (European Coffee Trip): 90g : 900g (1:10) | room-temp or cold water | coarse (Comandante ~35 clicks ≈ Niche ~420–435°) | combine · stir · 12–16h fridge · filter through a rinsed paper (V60/Chemex/Kalita) | targetTimeSec 50400 (14h) | ready-to-drink, clean.
-- Counter Culture Concentrate 1:8: 125g : 1000g (1:8) | fridge water | medium-coarse (~415–425°) | combine · stir · 14h fridge · paper filter for clarity (cheesecloth for body) | targetTimeSec 50400 | CONCENTRATE — dilute 1:1 to 2:1 with water or milk.
-- Stumptown Concentrate 1:5.3: scale ~1:5.3 (e.g. 95g : 500g) | room-temp water OK | coarse (French-press, ~425–440°) | combine · stir · 16h (14–18) · paper-polish filter, then chill | targetTimeSec 57600 | CONCENTRATE — dilute 1:1; keeps 7–10 days refrigerated.
-- AeroPress Overnight (concentrate): 30g : 130g (1:4.3) | cold water | coarse (~420°) | steep in the AeroPress chamber 8–12h in the fridge · press over ice | targetTimeSec 36000 (10h) | CONCENTRATE — dilute to taste with cold water or milk.
-- Clever Cold Brew (ready-to-drink): ~1:10 (e.g. 60g : 600g) | room-temp/cold water | coarse (~420–430°) | combine in the Clever (valve closed) · stir · 12–14h fridge · set on a cup to drain through its own paper | targetTimeSec 46800 (13h) | clean RTD; the built-in paper is the filter.
-- Toddy-Style Concentrate 1:8: 100g : 800g (1:8) | room-temp water | VERY coarse (~422–437°) | combine · stir · 12–16h room temp · filter (paper or cloth) | targetTimeSec 50400 | CONCENTRATE — dilute ~1:1 (Toddy: 1:2–1:3); keeps 1–2 weeks.
-- Hot-Bloom variant (lifts fruit/acidity; parameters approximate, mark as a variant): ~1:10 (e.g. 60g : 600g) | bloom ~20% of the water (~120g) at ~95°C for ~45s to pull aromatic acids cold water can't, THEN top up with cold water to full | coarse (~420°) | bloom · stir · top with cold · 12–16h fridge · filter | targetTimeSec 50400 | good when the bag is a brighter/lighter coffee.
+The cold-brew RECIPES come from the per-turn REFERENCE RECIPE LIBRARY: on a cold-brew occasion the selector hard-partitions the corpus so that library holds ONLY the documented cold steeps (Hoffmann Fine + Finings, Specialty RTD 1:10, Counter Culture 1:8, Stumptown, AeroPress Overnight, Clever Cold Brew, Toddy-style). Pick TWO contrasting entries from what you were given and scale grams to the requested amount; keep each one's grind, ratio and steep as published.
+- Hot-Bloom variant (the ONE cold-brew exception to the single-temperature rule, and the only cold recipe not in the library because two temperatures cannot be a corpus entry): bloom ~20% of the water at ~95°C for ~45s to pull aromatic acids cold water can't reach, then top up with cold water to full and steep as normal. Parameters are approximate — label it a variant. Good when the bag is a brighter / lighter coffee.
 
-CHAMPIONSHIP / REFERENCE RECIPES — available for any goal when the coffee and capacity fit. Selection is driven by whether the recipe's extraction profile matches what THIS coffee needs, not by the goal label:
-- Origami Air M standard: 28g:420ml | Washed 95°C / Natural 93°C | 401–407° | bloom → light stir 1–2× at 0:10 → 3 even pours → ~2:45 (targetTimeSec: 165)
-- Origami Air M clarity: 28g:420ml | Washed 96°C | 401–405° | bloom → light stir 1× at 0:10 → 3 even pours, minimal agitation → ~2:30 (targetTimeSec: 150)
-- Origami Air M sweet: 30g:450ml | Natural/Honey 93°C | 403–408° | bloom → light stir 1–2× at 0:10 → 3 pours → ~3:00 (targetTimeSec: 180)
-- Wölfl 2024 Orea FAST: 17g:270ml | soft low-mineral water (he used an Apax concentrate; no public TDS — do NOT state a ppm) | 401–411° | bloom → stir 1–2× at 0:10 → 4 rapid pours → ~2:20 (targetTimeSec: 140)
-- Kasuya 4:6 (V60, no Assist): 20g:300ml | soft water (Kasuya: light 93°C / medium 88 / dark 83) | 411–421° | bloom → gentle stir at 0:15 → 40% acid/sweet phase → 60% strength phase → ~3:30
-- Hoffmann Ultimate AeroPress (UPRIGHT — NOT inverted): 11g:200g | light = boiling / medium 90–95°C / dark ~85°C | fine, finer than V60 ~356–366° | add 200g 10s · steep to 2:00 (no stir) · gentle SWIRL not stir · wait 30s · gentle press ~30s → ~3:00 (targetTimeSec: 180)
-- AeroPress Bypass: 14g:90g concentrate | 88°C | 372–377° | inverted · add 90g water 10s · stir 2–3× 10s · press 20s · swirl cup after adding 140g bypass water (targetTimeSec: 90)
-- Clever Extended: 20g:300ml | 92°C | 421–431° | pour water 15s · swirl 5s · steep 4:20 · swirl 5s · swirl 5s · drain 40s (targetTimeSec: 330)
-- Orea Apex clarity: 17g:270ml | 95–98°C | 403–407° | bloom → light stir 1–2× at 0:10 → 3 even pours, no further agitation → ~3:30
-- Orea Classic sweetness: 17g:270ml | 94–96°C | 406–411° | bloom → gentle swirl → 3 pours → gentle swirl after final pour → ~3:00 (targetTimeSec: 180)
-- Orea Open: 17g:270ml | 95–97°C | 402–409° | bloom → gentle swirl → 3 pours, no agitation, fast open-bed drawdown → ~2:45 (targetTimeSec: 165)
+WHERE CONCRETE RECIPES COME FROM — read this before you write a single number:
+This system prompt carries NO recipe numbers, on purpose. Every concrete recipe you may draw on arrives in the USER MESSAGE: the "REFERENCE RECIPE LIBRARY" block (scored and rotated for THIS coffee, THIS volume and THIS goal) plus the user's own well-rated brews. Those two are your sources.
+It used to carry a fixed list of a dozen fully-numbered recipes. Because that list was byte-identical on every call while the per-turn library rotated, the same handful of recipes came back brew after brew — the owner's "always the same recipes" report. The mechanism guidance above (technique rationale, agitation, per-brewer geometry, grind reference) is what this prompt is FOR; the recipes are what the turn is for.
+If the per-turn library does not hold something that fits, you have two honest options: adapt the nearest entry it does hold and say what you changed, or design an explicit own experiment (see BASED-ON below). Never reconstruct a named expert's recipe from memory.
 
 WATER NOTES (this user's actual setup):
 - "championship" = clarity blend (1:2 BWT-filtered + distilled, ~73ppm TDS, KH ~1.3°dH) = ultra-soft, near-zero buffering, highlights delicate florals — prefer for washed light roasts & competition-style brews
@@ -458,7 +451,7 @@ appears until the last token is written. Do the thinking; ship only the verdict.
       "method": "exact brewer name",
       "role": "anchor | adjacent | contrast | clarity-probe | sweetness-probe | body-probe | wildcard",
       "title": "3–5 word title for this candidate",
-      "basedOn": "name of the reference recipe this adapts (e.g. \"Kasuya 4:6\"), or \"Own recipe\"",
+      "basedOn": "name of the reference recipe this adapts, taken from the per-turn library or the user's own brews — or \"Own experiment\" (see BASED-ON below)",
       "recipe": {
         "doseGrams": 34,
         "waterGrams": 520,
@@ -475,14 +468,23 @@ appears until the last token is written. Do the thinking; ship only the verdict.
           { "label": "Drawdown", "action": "drain", "durationSec": 60 }
         ]
       },
-      "whyChosen": "ONE short sentence: why this candidate for THIS coffee. The only per-candidate prose there is — make it the mechanism, not a restatement of the numbers above it.",
+      "whyChosen": "ONE short sentence: why this candidate for THIS coffee. Make it the mechanism, not a restatement of the numbers above it.",
+      "experiment": "ONE clause, ≤20 words: the variable this candidate tests and what the cup shows if it works. e.g. \"coarser grind + longer contact — sweeter body without losing the jasmine top\"",
       "confidence": "high | moderate | low | exploratory"
     }
   ],
   "reasoning": "ONE substantive sentence, 40–60 words. The coach's opening: state this coffee's defining tension or demand today, ground it in a named coffee-science principle or expert (Hoffmann, Kasuya, Rao, Perger, Wölfl, Gagné, …), and name the single thing to watch across both candidates. Direct address. NOT a headline fragment; NOT 4–6 sentences. One sentence WITH content."
 }
 
-BREVITY: recipe values stay exact numbers. whyChosen: 1 short sentence, hard cap. reasoning: one substantive 40–60 word sentence (expertise required, see above). Those are the ONLY two prose fields. Do not add hypothesis, predictedCupProfile, whatToObserve, primaryVariable, confidenceReason, learningValue, brewingLesson, sessionObjective, coffeeAssessment, intent, coffeeLayer or roasterPriorUsed — they were removed in Aug 2026 because nothing displayed most of them and every one of them made the user wait longer. Anything not listed in the schema above is discarded on parse, so writing it costs time and buys nothing.
+THE TWO experiment LINES MUST NAME DIFFERENT VARIABLES. This is the test for whether you actually designed two candidates or wrote one candidate twice: if both experiment clauses point at the same variable (both "finer grind", both "lower temp"), you have not built a portfolio — go back and change one of them so the pair answers two different questions. A user who brews both should learn something a single brew could not tell them.
+
+BASED-ON — three legitimate kinds, in order of preference:
+1. A recipe from the per-turn REFERENCE RECIPE LIBRARY. Name it exactly as written there.
+2. One of the user's OWN well-rated brews, when that block is present. Name it exactly as written there.
+3. "Own experiment" — a recipe you designed yourself. This is a REAL option, not a last resort: use it when the library holds nothing that fits, or when the honest answer is a deliberate variation the corpus does not document. Rules that make it honest: never attribute it to a named person, never call it a championship or published recipe, ground every deviation in a mechanism you can name (a technique id from the AVAILABLE TECHNIQUES block, the coffee's own properties, or the user's measured history), and keep the pour arithmetic exact. An experiment you can justify beats a documented recipe that does not fit this coffee.
+Do NOT invent a name for a recipe that does not exist and present it as documented — that is the one forbidden move, and "Own experiment" exists so you never need it.
+
+BREVITY: recipe values stay exact numbers. whyChosen: 1 short sentence, hard cap. experiment: one clause, ≤20 words. reasoning: one substantive 40–60 word sentence (expertise required, see above). Those are the ONLY three prose fields. Do not add hypothesis, predictedCupProfile, whatToObserve, primaryVariable, confidenceReason, learningValue, brewingLesson, sessionObjective, coffeeAssessment, intent, coffeeLayer or roasterPriorUsed — they were removed in Aug 2026 because nothing displayed most of them and every one of them made the user wait longer. Anything not listed in the schema above is discarded on parse, so writing it costs time and buys nothing.
 
 LANGUAGE: Always respond in English. All text fields must be in English only.
 GRIND SIZE: Must be a single Niche° value (e.g. "406°") or single Comandante click count (e.g. "26"). Never a range.`;

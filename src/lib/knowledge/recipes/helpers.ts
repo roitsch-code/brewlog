@@ -323,6 +323,21 @@ function scoreRecipe(
   const wantColdBrew = input.occasion?.toLowerCase() === "cold-brew";
   if (isColdBrewRecipe !== wantColdBrew) return null;
 
+  // Hard filter: same mutual exclusion for ICED. A flash/Japanese-iced recipe
+  // brews a concentrated hot portion onto ice — its dose, ratio, grind and
+  // timing only make sense as an iced brew, and a hot pour-over recipe is not
+  // an iced recipe with less water. Until now "summer-time" was only a soft
+  // +2 score, so a summer-time menu could be mostly hot recipes and the prompt
+  // had to carry its own numbered iced list to compensate. That literal list
+  // was byte-identical on every call — one of the reasons the same iced recipes
+  // came back every time. With this filter the per-turn library IS the iced
+  // menu (8 documented entries), so the prompt keeps only the iced RULES.
+  const isIcedRecipe = !!recipe.bestFor.occasions?.some(
+    (o) => o.toLowerCase() === "summer-time" || o.toLowerCase() === "iced",
+  );
+  const wantIced = input.occasion?.toLowerCase() === "summer-time";
+  if (isIcedRecipe !== wantIced) return null;
+
   // Hard filter: if a water cap is set, exclude recipes whose total water
   // exceeds it by more than 20% (some recipes have published variants at
   // larger doses).
