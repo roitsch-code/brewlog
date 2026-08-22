@@ -7,24 +7,43 @@
  * with no output-side check at all. `loadingInsightLint.ts` has enforced the
  * same rule in code, with a CI test behind it, since the insight agent shipped.
  *
- * This is deliberately narrow. Emoji are mechanically detectable and a regex
- * removing them cannot damage a sentence. The rest of the voice rules
- * (exclamation marks, interjections, apologies) stay prompt-side, because a
- * regex for those would mangle real writing — "3:30!" is not an exclamation and
- * "Ah" is a word.
+ * This is deliberately narrow, and NARROWER since 2026-08-22 than when it
+ * shipped. The first version also matched the Arrows and Dingbats blocks, which
+ * ate the arrows out of pour instructions: "Bloom → 60 g" reached the user as
+ * "Bloom  60 g", and "= 600g ✓" lost its tick. Caught by the live harness, whose
+ * sample replies still had the arrows in them because it reads the model's raw
+ * text — the damage only happened downstream, in the stream the user sees.
+ *
+ * So the rule is now: strip what is unambiguously an emoji, and nothing that
+ * could be typography. Every modern emoji lives in the astral planes and
+ * therefore arrives as a surrogate PAIR; the variation selector and zero-width
+ * joiner glue sequences together. Arrows (→), checkmarks (✓) and mathematical
+ * symbols are punctuation in a recipe and carry meaning, so they stay.
+ *
+ * The trade-off is stated rather than hidden: a legacy BMP emoji such as ☕ now
+ * survives. That is a cosmetic brand miss. A recipe missing the arrow between a
+ * pour and its target is a damaged instruction, which is worse — over-stripping
+ * costs more than under-stripping here.
+ *
+ * The rest of the voice rules (exclamation marks, interjections, apologies) stay
+ * prompt-side for the same reason: a regex for those would mangle real writing —
+ * "3:30!" is not an exclamation and "Ah" is a word.
  */
 
 /**
- * A whole astral pair, or a BMP emoji / dingbat / arrow, or the variation
- * selector and zero-width joiner that glue sequences together.
+ * A whole astral pair (where every modern emoji lives), or the variation
+ * selector / zero-width joiner that glue emoji sequences together.
  *
  * Matching the PAIR rather than the high surrogate alone matters: removing half
  * a pair leaves a lone low surrogate, which renders as a replacement character —
- * visibly worse than the emoji. Ranges mirror `loadingInsightLint.ts`; both
- * avoid the `u` flag because the project's TS target predates it.
+ * visibly worse than the emoji.
+ *
+ * NOTE the deliberate divergence from `loadingInsightLint.ts`, which also spans
+ * the Arrows and Dingbats blocks. That is right for a one-line insight headline
+ * and wrong here: this text carries pour instructions, and "→" is how a pour
+ * points at its target. No `u` flag — the project's TS target predates it.
  */
-const EMOJI_GLOBAL_RE =
-  /[\uD800-\uDBFF][\uDC00-\uDFFF]|[←-⇿⌀-➿⬀-⯿️‍]/g;
+const EMOJI_GLOBAL_RE = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uFE0F\u200D]/g;
 
 /** Remove emoji from a complete string. */
 export function stripEmoji(text: string): string {

@@ -32,6 +32,7 @@ export { recipeLibraryBlock, formatLibraryForAgent, cleanChatRecipe, grinderFrom
   from ${q("src/lib/chat/agentContext.ts")};
 export { formatProfileForPrompt } from ${q("src/lib/claude/userProfile.ts")};
 export { validateRecipe, formatProblemsForModel } from ${q("src/lib/recipe/validateRecipe.ts")};
+export { stripEmoji } from ${q("src/lib/chat/stripEmoji.ts")};
 `;
 const dir = await mkdtemp(join(tmpdir(), "chat-sim-"));
 const bundle = join(dir, "b.mjs");
@@ -65,6 +66,7 @@ must("recipeLibraryBlock", typeof K.recipeLibraryBlock === "function" && K.recip
 must("validateRecipe", typeof K.validateRecipe === "function");
 must("cleanChatRecipe", typeof K.cleanChatRecipe === "function");
 must("formatLibraryForAgent", typeof K.formatLibraryForAgent === "function");
+must("stripEmoji", typeof K.stripEmoji === "function");
 
 const LIBRARY = [
   { id: "dak__lush_lemons", roaster: "DAK", name: "Lush Lemons", origin: "Colombia",
@@ -106,12 +108,16 @@ function contextBlock() {
     `Every bag here is brewable and linkable by its id.\n` + K.formatLibraryForAgent(LIBRARY);
 }
 
-const EMOJI = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[←-⇿⌀-➿⬀-⯿]/;
+// Two different questions, and run 1 conflated them: what the MODEL writes
+// (does the prompt rule land?) versus what the USER sees (does the stripper
+// hold?). Only the second can ever be a defect.
+const EMOJI_RAW = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uFE0F\u200D]/;
 
 async function oneTurn(scenario) {
   const messages = [{ role: "user", content: scenario.ask + "\n" + contextBlock() }];
   let repaired = false;
   let text = "";
+  const firstRoundProblems = [];
 
   for (let round = 0; round < 2; round++) {
     const res = await anthropic.messages.create({
@@ -128,8 +134,9 @@ async function oneTurn(scenario) {
       grinder: K.grinderFromConversation([{ role: "user", content: scenario.ask }]),
     });
     if (problems.length === 0 || repaired) {
-      return { scenario, text, brew: { ...call.input, recipe }, problems, repaired, tokens: res.usage };
+      return { scenario, text, brew: { ...call.input, recipe }, problems, firstRoundProblems, repaired, tokens: res.usage };
     }
+    firstRoundProblems.push(...problems);
     // Exactly the route's repair round.
     repaired = true;
     messages.push({ role: "assistant", content: res.content });
@@ -137,7 +144,7 @@ async function oneTurn(scenario) {
       { type: "tool_result", tool_use_id: call.id, content: K.formatProblemsForModel(problems), is_error: true },
     ] });
   }
-  return { scenario, text, brew: null, repaired, tokens: null };
+  return { scenario, text, brew: null, repaired, firstRoundProblems, tokens: null };
 }
 
 const lines = ["# Chat recipe quality — live", "",
@@ -149,32 +156,35 @@ for (const sc of SCENARIOS) {
   const res = [];
   for (let i = 0; i < RUNS; i++) {
     try { res.push(await oneTurn(sc)); }
-    catch (e) { console.error(`  ${sc.key} run ${i}: ${e.message}`); res.push({ scenario: sc, error: e.message, text: "" }); }
+    catch (e) { console.error(`  ${sc.key} run ${i}: ${e.message}`); res.push({ scenario: sc, error: e.message, text: "", firstRoundProblems: [] }); }
   }
   const ok = res.filter((r) => r.brew && !r.repaired).length;
   const repaired = res.filter((r) => r.brew && r.repaired).length;
   const none = res.filter((r) => !r.brew).length;
-  const emoji = res.filter((r) => EMOJI.test(r.text || "")).length;
+  const emojiRaw = res.filter((r) => EMOJI_RAW.test(r.text || "")).length;
+  const emojiSeen = res.filter((r) => EMOJI_RAW.test(K.stripEmoji(r.text || ""))).length;
   const leaked = res.filter((r) => sc.excluded.some((b) => new RegExp(b, "i").test(r.text || ""))).length;
   const disc = res.filter((r) => /drip assist/i.test(r.brew?.method || "")).length;
   const asked = res.filter((r) => !r.brew && /\?/.test(r.text || "")).length;
   const pairs = new Set(res.filter((r) => r.brew).map((r) => `${r.brew.method}<-${r.brew.basedOn}`));
-  const codes = res.flatMap((r) => (r.problems || []).map((p) => p.code));
+  // What the validator caught on the FIRST attempt — the actual answer to
+  // "which rules are not landing". Run 1 recorded only the final round.
+  const codes = res.flatMap((r) => (r.firstRoundProblems || []).map((p) => p.code));
 
-  rows.push({ key: sc.key, ok, repaired, none, emoji, leaked, disc, asked, distinct: pairs.size, codes });
-  console.log(`${sc.key}: first-try ${ok}/${RUNS}, repaired ${repaired}, none ${none}, emoji ${emoji}, excluded-leak ${leaked}`);
+  rows.push({ key: sc.key, ok, repaired, none, emojiRaw, emojiSeen, leaked, disc, asked, distinct: pairs.size, codes });
+  console.log(`${sc.key}: first-try ${ok}/${RUNS}, repaired ${repaired}, none ${none}, emoji written ${emojiRaw} / reaching user ${emojiSeen}, excluded-leak ${leaked}, first-round findings [${codes.join(", ") || "none"}]`);
   for (const r of res.slice(0, 1)) lines.push(`<details><summary>${sc.key} — sample reply</summary>\n\n${(r.text || "").slice(0, 1200)}\n\n</details>\n`);
 }
 
-lines.push("| scenario | first-try OK | needed repair | no recipe | emoji | excluded brewer re-offered | disc used | distinct method←basedOn |", "|---|---|---|---|---|---|---|---|");
+lines.push("| scenario | first-try OK | needed repair | no recipe | emoji written | emoji REACHING USER | excluded brewer re-offered | disc used | distinct method←basedOn |", "|---|---|---|---|---|---|---|---|---|");
 for (const r of rows) {
-  lines.push(`| ${r.key} | **${r.ok}/${RUNS}** | ${r.repaired} | ${r.none} | ${r.emoji} | ${r.leaked} | ${r.disc}/${RUNS} | ${r.distinct} |`);
+  lines.push(`| ${r.key} | **${r.ok}/${RUNS}** | ${r.repaired} | ${r.none} | ${r.emojiRaw} | **${r.emojiSeen}** | ${r.leaked} | ${r.disc}/${RUNS} | ${r.distinct} |`);
 }
 const allCodes = rows.flatMap((r) => r.codes);
 const tally = {};
 for (const c of allCodes) tally[c] = (tally[c] || 0) + 1;
-lines.push("", `Validator findings across all runs: ${Object.keys(tally).length === 0 ? "none" : JSON.stringify(tally)}`);
-lines.push("", "Emoji and excluded-brewer counts must be 0. A high repair count is a wait, not a bad brew — but it means the prompt rules are not landing.");
+lines.push("", `First-attempt validator findings across all runs: ${Object.keys(tally).length === 0 ? "none" : JSON.stringify(tally)}`);
+lines.push("", "**emoji REACHING USER** and excluded-brewer must be 0 — those are defects. *emoji written* is the prompt rule leaking, which the stripper then catches; worth watching, not a defect. A high repair count is a wait, not a bad brew, but it means the prompt rules are not landing on the first attempt.");
 
 const report = lines.join("\n");
 console.log("\n" + report);
