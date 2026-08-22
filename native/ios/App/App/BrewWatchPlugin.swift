@@ -76,6 +76,19 @@ public class BrewWatchPlugin: CAPPlugin, CAPBridgedPlugin {
             }
         }
         // Durable queue — delivers even when the watch app is backgrounded.
+        // transferUserInfo is a PERSISTENT FIFO and the web layer calls send()
+        // every ~3 s: without pruning, one brew queues dozens of identical
+        // payloads, and every one the watch didn't consume live is replayed the
+        // next time the watch app runs (the "rx 46" backlog the build-18
+        // diagnostic showed) — battery + a sluggish watch-app launch. Cancel the
+        // not-yet-started transfers first so the queue only ever holds the
+        // LATEST payload plus at most one in flight. An in-flight transfer is
+        // left alone (cancelling it every 3 s could starve a slow link so no
+        // payload ever completes). Same delivery guarantee, none of the flood —
+        // this also clears queued "start"s of a finished brew when "end" sends.
+        for transfer in s.outstandingUserInfoTransfers where !transfer.isTransferring {
+            transfer.cancel()
+        }
         s.transferUserInfo(payload)
         try? s.updateApplicationContext(payload)
     }
