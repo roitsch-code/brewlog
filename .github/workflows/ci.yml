@@ -100,3 +100,62 @@ jobs:
       - name: Dump server log on failure
         if: failure()
         run: cat /tmp/next.log || true
+
+  # End-to-end proof that the chat's recipe guards actually RUN, with a scripted
+  # model behind the real route (the SDK resolves ANTHROPIC_BASE_URL, so no key
+  # and no cost). Unit tests prove the pieces; this proves the chain. Without it
+  # someone can quietly unwire the validator and every other test stays green —
+  # which is precisely how #530 and #535 shipped.
+  chat-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: brewlog
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: brewlog
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brewlog"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://brewlog:test@localhost:5432/brewlog
+      AUTH_SECRET: ci-test-secret-not-a-real-secret-000000000000
+      AUTH_PIN: "1234"
+      PGPASSWORD: test
+      # Points the real route at the scripted model the test script serves.
+      ANTHROPIC_BASE_URL: http://127.0.0.1:9911
+      ANTHROPIC_API_KEY: sk-ant-mock-key-for-ci-e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Apply migrations
+        run: |
+          for f in $(ls src/lib/db/migrations/*.sql | sort); do
+            psql -v ON_ERROR_STOP=1 -h localhost -U brewlog -d brewlog -f "$f"
+          done
+      - name: Seed a brewable coffee
+        run: |
+          psql -h localhost -U brewlog -d brewlog -c "INSERT INTO coffees (id, roaster, name, origin, process, first_seen_at, in_rotation, roast_level) VALUES ('dak__lush_lemons','DAK','Lush Lemons','Colombia','Washed', to_char(now(),'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"'), true, 'Light') ON CONFLICT (id) DO NOTHING;"
+      - name: Start app (dev mode so the session cookie works over http)
+        run: |
+          npm run dev -- -p 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:3000/login >/dev/null && { echo "up"; break; }
+            sleep 2
+          done
+      - name: Chat guard end-to-end
+        run: node scripts/chat-e2e-mock.mjs
+        env:
+          BASE_URL: http://localhost:3000
+          AUTH_PIN: "1234"
+      - name: Dump server log on failure
+        if: failure()
+        run: cat /tmp/next.log || true

@@ -1,0 +1,52 @@
+# Live measurement of the home chat's recipe quality.
+#
+# Answers the question PR #544 left open: how often does the model write a
+# BREWABLE recipe on the first try? The validator guarantees a broken one can't
+# reach the timer — this measures whether the prompt rules stop it being written
+# at all. A high repair rate is a wait, not a bad brew, but it is worth knowing.
+#
+# Fire it by bumping .github/chat-agent-trigger and merging to main (this
+# session's token can't workflow_dispatch — 403 without actions:write).
+name: Chat agent sim
+
+on:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: "Call Sonnet for real (~20 turns) instead of exiting"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - .github/chat-agent-trigger
+
+concurrency:
+  group: chat-agent
+  cancel-in-progress: false
+
+jobs:
+  sim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run chat simulation
+        run: node scripts/chat-agent-sim.mjs ${{ (github.event_name != 'workflow_dispatch' || inputs.live) && '--live' || '' }}
+      - name: Print report to the run log
+        if: always()
+        run: cat spike-output/chat-agent.md || true
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-agent
+          path: spike-output/chat-agent.md
+          if-no-files-found: warn

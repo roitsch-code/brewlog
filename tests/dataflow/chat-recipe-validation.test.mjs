@@ -13,6 +13,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const ROUTE = readFileSync("src/app/api/explore-agent/route.ts", "utf8");
+// The prompt lives in its own Next-free module so the live harness can import
+// it (scripts/chat-agent-sim.mjs). Content assertions read it there; wiring
+// assertions stay on the route.
+const PROMPT = readFileSync("src/lib/chat/agentPrompt.ts", "utf8");
 
 test("the route imports the shared validator", () => {
   assert.match(
@@ -79,33 +83,44 @@ test("accepted actions still reach the user when a sibling action is rejected", 
 // equivalent rule sat in /recommend's prompt the whole time.
 
 test("the chat prompt carries the pourability rule", () => {
-  assert.match(ROUTE, /4 g\/s/, "the gentle-pour rate must be stated");
-  assert.match(ROUTE, /11 g\/s/, "the physical ceiling must be stated");
+  assert.match(PROMPT, /4 g\/s/, "the gentle-pour rate must be stated");
+  assert.match(PROMPT, /11 g\/s/, "the physical ceiling must be stated");
 });
 
 test("the chat prompt carries the percolation shape rule", () => {
-  assert.match(ROUTE, /3–5 pours|3-5 pours/, "bloom + 3-5 pours");
-  assert.match(ROUTE, /Never one giant final pour/i);
+  assert.match(PROMPT, /3–5 pours|3-5 pours/, "bloom + 3-5 pours");
+  assert.match(PROMPT, /Never one giant final pour/i);
 });
 
 test("the disc is described as replacing the stream, not the hand", () => {
   assert.match(
-    ROUTE,
+    PROMPT,
     /replaces the STREAM, not the HAND/,
     "without this the model proposes patient-pour recipes to someone with no gooseneck",
   );
 });
 
 test("a user-stated constraint outranks the rest of the prompt, including narrowing", () => {
-  assert.match(ROUTE, /outranks every other section of this prompt/i);
-  assert.match(ROUTE, /narrowing/i, "narrowing a set they own must be covered, not just the profile");
+  assert.match(PROMPT, /outranks every other section of this prompt/i);
+  assert.match(PROMPT, /narrowing/i, "narrowing a set they own must be covered, not just the profile");
 });
 
 test("the chat is told to decide rather than interview", () => {
-  assert.match(ROUTE, /Make the call\. Do not interview\./);
+  assert.match(PROMPT, /Make the call\. Do not interview\./);
 });
 
 test("the voice ban covers more than emoji", () => {
-  assert.match(ROUTE, /No emoji\. No exclamation marks\./);
-  assert.match(ROUTE, /No opening interjections/);
+  assert.match(PROMPT, /No emoji\. No exclamation marks\./);
+  assert.match(PROMPT, /No opening interjections/);
+});
+
+test("the route actually uses that prompt module", () => {
+  // Splitting the prompt out is only safe if the route still imports it —
+  // otherwise these content assertions would pass against a dead file.
+  assert.match(
+    ROUTE,
+    /import\s*\{[^}]*AGENT_SYSTEM_PROMPT[^}]*\}\s*from\s*"@\/lib\/chat\/agentPrompt"/,
+    "explore-agent must import the prompt it is tested on",
+  );
+  assert.match(ROUTE, /system:\s*systemBlocks/, "and pass it to the model");
 });
