@@ -27,7 +27,8 @@ private let wlog = Logger(subsystem: "com.roitsch.btts.watchkitapp", category: "
  DELIVERY (kept from build 18): the iPhone re-sends the whole schedule every ~3 s
  over sendMessage + transferUserInfo + updateApplicationContext, with a stable
  `brewId` the watch dedupes on — so a missed reachability window can't drop the
- brew. The on-screen diagnostic line + os.Logger stay until this is signed off.
+ brew. (Signed off build 19; the on-screen diagnostics + test-buzz button were
+ removed afterwards — os.Logger lines stay, they're invisible and useful.)
  */
 final class BrewWatchModel: NSObject, ObservableObject {
     static let shared = BrewWatchModel()
@@ -44,14 +45,6 @@ final class BrewWatchModel: NSObject, ObservableObject {
     @Published var currentLabel = ""
     @Published var nextLabel: String?
     @Published var nextFireAt: Date?
-
-    // Visible diagnostics (read off the watch face when idle).
-    @Published var wcState = "—"
-    @Published var reachable = false
-    @Published var msgCount = 0
-    @Published var lastFires = 0
-    @Published var lastEvent = "none"
-    @Published var workout = "none"
 
     private var fires: [Fire] = []
     private var ticker: Timer?
@@ -117,7 +110,6 @@ final class BrewWatchModel: NSObject, ObservableObject {
         // If steps have already started when the schedule arrives (mid-brew
         // hand-over), show the most recent one — not a stale "Brewing".
         self.currentLabel = self.fires.last(where: { $0.fired })?.label ?? "Brewing"
-        self.lastEvent = "start \(self.fires.count)"
         wlog.log("startBrew name=\(recipeName, privacy: .public) fires=\(self.fires.count) brewId=\(brewId, privacy: .public)")
         startWorkoutSession()
         startTicker()
@@ -134,7 +126,6 @@ final class BrewWatchModel: NSObject, ObservableObject {
         nextFireAt = nil
         fires = []
         currentBrewId = 0
-        lastEvent = "end"
         ticker?.invalidate()
         ticker = nil
         endWorkoutSession()
@@ -180,14 +171,6 @@ final class BrewWatchModel: NSObject, ObservableObject {
         wlog.log("BUZZ")
     }
 
-    /// Manual isolation test (a button on the idle screen): play one device
-    /// haptic right now. If THIS doesn't buzz, watch haptics are off/silenced.
-    func testBuzz() {
-        WKInterfaceDevice.current().play(.notification)
-        lastEvent = "test-buzz"
-        wlog.log("test buzz")
-    }
-
     private func refreshLabels(now: Date) {
         if let next = fires.first(where: { !$0.fired }) {
             nextLabel = next.label
@@ -201,8 +184,12 @@ final class BrewWatchModel: NSObject, ObservableObject {
     // MARK: - Workout session (keeps haptics alive with the screen off / wrist down)
 
     private func startWorkoutSession() {
-        guard workoutSession == nil, HKHealthStore.isHealthDataAvailable() else {
-            workout = "unavailable"; wlog.error("workout unavailable / already running"); return
+        // A session may still be running when a NEW brew replaces a winding-down
+        // one — that's fine, keep using it (not an error).
+        guard workoutSession == nil else { return }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            wlog.error("workout unavailable — health data")
+            return
         }
         let config = HKWorkoutConfiguration()
         config.activityType = .other
@@ -212,11 +199,9 @@ final class BrewWatchModel: NSObject, ObservableObject {
             session.delegate = self
             session.startActivity(with: Date())
             workoutSession = session
-            workout = "running"
             wlog.log("workout session started")
         } catch {
             workoutSession = nil
-            workout = "failed"
             wlog.error("workout session start failed: \(error.localizedDescription, privacy: .public)")
         }
     }
@@ -224,15 +209,12 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private func endWorkoutSession() {
         workoutSession?.end()
         workoutSession = nil
-        workout = "none"
     }
 
     // MARK: - Payload parsing
 
     fileprivate func handle(_ payload: [String: Any], via source: String) {
         DispatchQueue.main.async {
-            self.msgCount += 1
-            self.lastEvent = "rx:\(source)"
             let type = payload["type"] as? String ?? ""
             wlog.log("rx \(source, privacy: .public) type=\(type, privacy: .public)")
             switch type {
@@ -246,7 +228,6 @@ final class BrewWatchModel: NSObject, ObservableObject {
                     let label = dict["label"] as? String ?? "Next step"
                     return Fire(at: Date(timeIntervalSince1970: atMs / 1000.0), label: label)
                 }
-                self.lastFires = parsed.count
                 guard !parsed.isEmpty else { wlog.error("start with 0 fires"); return }
                 self.startBrew(brewId: brewId, recipeName: name, fires: parsed)
             case "end":
@@ -263,15 +244,10 @@ final class BrewWatchModel: NSObject, ObservableObject {
 extension BrewWatchModel: WCSessionDelegate {
     func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
         DispatchQueue.main.async {
-            self.wcState = state == .activated ? "active" : "inactive(\(state.rawValue))"
-            self.reachable = session.isReachable
             wlog.log("activationDidComplete state=\(state.rawValue) reachable=\(session.isReachable)")
             let ctx = session.receivedApplicationContext
             if !ctx.isEmpty { self.handle(ctx, via: "ctx@launch") }
         }
-    }
-    func sessionReachabilityDidChange(_ session: WCSession) {
-        DispatchQueue.main.async { self.reachable = session.isReachable }
     }
     func session(_ session: WCSession, didReceiveMessage message: [String: Any]) { handle(message, via: "msg") }
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) { handle(applicationContext, via: "ctx") }
@@ -292,7 +268,6 @@ extension BrewWatchModel: HKWorkoutSessionDelegate {
 
     func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
         DispatchQueue.main.async { [weak self] in
-            self?.workout = "failed"
             if self?.workoutSession === workoutSession { self?.workoutSession = nil }
         }
         wlog.error("workout failed: \(error.localizedDescription, privacy: .public)")
