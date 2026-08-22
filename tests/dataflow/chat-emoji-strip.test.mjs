@@ -37,11 +37,21 @@ test("the reply that prompted this is cleaned", () => {
   assert.equal(stripEmoji("Ha, völlig berechtigt! \u{1F604}").trimEnd(), "Ha, völlig berechtigt!");
 });
 
-test("astral emoji, BMP emoji and joined sequences all go", () => {
+test("astral emoji and joined sequences go", () => {
   assert.equal(stripEmoji("nice \u{1F60A} cup"), "nice  cup");
-  assert.equal(stripEmoji("coffee ☕ time"), "coffee  time");
-  assert.equal(stripEmoji("❤️"), "");
-  assert.equal(stripEmoji("\u{1F468}‍\u{1F373}"), "");
+  assert.equal(stripEmoji("\u{1F468}\u200D\u{1F373}"), "");
+  assert.equal(stripEmoji("\u{1F44D}\u{1F3FB}"), "", "skin-tone modifiers are astral too");
+});
+
+// The first version of this stripper spanned the Arrows and Dingbats blocks and
+// ate the arrows out of pour instructions — "Bloom → 60 g" reached the user as
+// "Bloom  60 g". Over-stripping costs more here than under-stripping: a missing
+// emoji is a cosmetic brand miss, a missing arrow is a damaged instruction.
+test("typography that carries meaning in a recipe SURVIVES", () => {
+  const pour = "Bloom → 60 g · Pour 2 → 160 g · Summe = 600 g ✓";
+  assert.equal(stripEmoji(pour), pour, "arrows and checkmarks must not be touched");
+  assert.equal(stripEmoji("CO₂ · 93 °C · ~1:15,2"), "CO₂ · 93 °C · ~1:15,2");
+  assert.equal(stripEmoji("250 → 350 g in einem Zug"), "250 → 350 g in einem Zug");
 });
 
 test("ordinary text is untouched, accents and umlauts included", () => {
