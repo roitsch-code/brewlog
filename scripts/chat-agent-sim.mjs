@@ -111,10 +111,28 @@ function contextBlock() {
 // not landing" when nothing is wrong.
 const EMOJI = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[⌀-✒✔-➿⬀-⯿]/;
 
+/** What the model actually wrote, in the terms a prompt rule is stated in. */
+function recipeShape(recipe, method) {
+  const steps = recipe?.pourSteps ?? [];
+  const water = steps.filter((s) => typeof s.waterGramsAtEnd === "number");
+  const cums = water.map((s) => s.waterGramsAtEnd);
+  const each = cums.map((c, i) => c - (i === 0 ? 0 : cums[i - 1]));
+  return {
+    method,
+    waterGrams: recipe?.waterGrams ?? null,
+    targetTimeSec: recipe?.targetTimeSec ?? null,
+    waterStepCount: water.length,
+    cumulative: cums,
+    perPourGrams: each,
+    authoredPourSec: water.map((s) => s.durationSec ?? null),
+  };
+}
+
 async function oneTurn(scenario) {
   const messages = [{ role: "user", content: scenario.ask + "\n" + contextBlock() }];
   let repaired = false;
   let text = "";
+  let firstTry = null;
 
   for (let round = 0; round < 2; round++) {
     const res = await anthropic.messages.create({
@@ -123,15 +141,25 @@ async function oneTurn(scenario) {
     });
     text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     const call = res.content.find((b) => b.type === "tool_use" && b.name === "start_brew");
-    if (!call) return { scenario, text, brew: null, repaired, tokens: res.usage };
+    if (!call) return { scenario, text, brew: null, repaired, firstTry, tokens: res.usage };
 
     const recipe = K.cleanChatRecipe(call.input.recipe);
     const problems = K.validateRecipe(recipe, {
       method: call.input.method, basedOn: call.input.basedOn,
       grinder: K.grinderFromConversation([{ role: "user", content: scenario.ask }]),
     });
+    // Diagnostics for the FIRST attempt. A tally of codes says a recipe failed;
+    // it does not say what shape the model wrote, which is what a prompt fix
+    // has to target. Record the shape + the validator's own message once.
+    if (round === 0 && problems.length > 0) {
+      firstTry = {
+        codes: problems.map((x) => x.code),
+        messages: problems.map((x) => x.message),
+        shape: recipeShape(recipe, call.input.method),
+      };
+    }
     if (problems.length === 0 || repaired) {
-      return { scenario, text, brew: { ...call.input, recipe }, problems, repaired, tokens: res.usage };
+      return { scenario, text, brew: { ...call.input, recipe }, problems, repaired, firstTry, tokens: res.usage };
     }
     // Exactly the route's repair round.
     repaired = true;
@@ -140,7 +168,7 @@ async function oneTurn(scenario) {
       { type: "tool_result", tool_use_id: call.id, content: K.formatProblemsForModel(problems), is_error: true },
     ] });
   }
-  return { scenario, text, brew: null, repaired, tokens: null };
+  return { scenario, text, brew: null, repaired, firstTry, tokens: null };
 }
 
 const lines = ["# Chat recipe quality — live", "",
@@ -162,9 +190,14 @@ for (const sc of SCENARIOS) {
   const disc = res.filter((r) => /drip assist/i.test(r.brew?.method || "")).length;
   const asked = res.filter((r) => !r.brew && /\?/.test(r.text || "")).length;
   const pairs = new Set(res.filter((r) => r.brew).map((r) => `${r.brew.method}<-${r.brew.basedOn}`));
+  // NB: r.problems is the FINAL round's verdict — for a repaired run that is
+  // what survived the repair, not what the model wrote first. The first-try
+  // codes (what a prompt fix must target) live in r.firstTry.
   const codes = res.flatMap((r) => (r.problems || []).map((p) => p.code));
+  const firstCodes = res.flatMap((r) => r.firstTry?.codes ?? []);
+  const firstFails = res.filter((r) => r.firstTry).map((r) => r.firstTry);
 
-  rows.push({ key: sc.key, ok, repaired, none, emoji, leaked, disc, asked, distinct: pairs.size, codes });
+  rows.push({ key: sc.key, ok, repaired, none, emoji, leaked, disc, asked, distinct: pairs.size, codes, firstCodes, firstFails });
   console.log(`${sc.key}: first-try ${ok}/${RUNS}, repaired ${repaired}, none ${none}, emoji ${emoji}, excluded-leak ${leaked}`);
   for (const r of res.slice(0, 1)) lines.push(`<details><summary>${sc.key} — sample reply</summary>\n\n${(r.text || "").slice(0, 1200)}\n\n</details>\n`);
 }
@@ -173,11 +206,26 @@ lines.push("| scenario | first-try OK | needed repair | no recipe | emoji | excl
 for (const r of rows) {
   lines.push(`| ${r.key} | **${r.ok}/${RUNS}** | ${r.repaired} | ${r.none} | ${r.emoji} | ${r.leaked} | ${r.disc}/${RUNS} | ${r.distinct} |`);
 }
-const allCodes = rows.flatMap((r) => r.codes);
-const tally = {};
-for (const c of allCodes) tally[c] = (tally[c] || 0) + 1;
-lines.push("", `Validator findings across all runs: ${Object.keys(tally).length === 0 ? "none" : JSON.stringify(tally)}`);
+function tallyOf(list) {
+  const t = {};
+  for (const c of list) t[c] = (t[c] || 0) + 1;
+  return Object.keys(t).length === 0 ? "none" : JSON.stringify(t);
+}
+lines.push("", `**First-try failures** (what the prompt must prevent): ${tallyOf(rows.flatMap((r) => r.firstCodes))}`);
+lines.push(`**Still failing after the repair round** (production drops the Brew button): ${tallyOf(rows.flatMap((r) => r.codes))}`);
 lines.push("", "Emoji and excluded-brewer counts must be 0. A high repair count is a wait, not a bad brew — but it means the prompt rules are not landing.");
+
+// The shape of every first-try failure, so a prompt fix targets what the model
+// actually wrote instead of what we assume it wrote.
+lines.push("", "<details><summary>First-try failures in full (shape + validator message)</summary>", "");
+for (const r of rows) {
+  for (const f of r.firstFails) {
+    lines.push(`**${r.key}** — \`${f.codes.join(", ")}\``, "",
+      "```json", JSON.stringify(f.shape), "```", "",
+      ...f.messages.map((m) => `> ${m}`), "");
+  }
+}
+lines.push("</details>");
 
 const report = lines.join("\n");
 console.log("\n" + report);

@@ -98,8 +98,18 @@ test("the chat prompt carries the pourability rule", () => {
 });
 
 test("the chat prompt carries the percolation shape rule", () => {
-  assert.match(PROMPT, /3–5 pours|3-5 pours/, "bloom + 3-5 pours");
   assert.match(PROMPT, /Never one giant final pour/i);
+  // The rule is stated as pour-count floors against the clock, because that is
+  // the lever the model actually controls: the timer DERIVES the gaps from
+  // targetTimeSec and the pour count, so "no dead air" alone asks the model to
+  // reason about an output it never writes. Measured 2026-08-22: dead-gap was
+  // the only failure mode that survived a repair round.
+  assert.match(PROMPT, /minimum water steps/i, "the floors table must be present");
+  assert.match(PROMPT, /up to 3:30/, "floor row: short brews");
+  assert.match(PROMPT, /3:30–5:00|3:30-5:00/, "floor row: mid brews");
+  assert.match(PROMPT, /over 5:00/, "floor row: long brews");
+  assert.match(PROMPT, /FLOORS, not targets/i, "one more pour must read as safe");
+  assert.match(PROMPT, /Do not pad the clock/i, "stretching the clock is the other half of the failure");
 });
 
 test("the disc is described as replacing the stream, not the hand", () => {
