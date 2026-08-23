@@ -117,7 +117,9 @@ function buildCoffeeAggregates(sessionList: Session[]): CoffeeAggregate[] {
   return Object.values(acc).sort((a, b) => b.count - a.count);
 }
 
-function serialiseSessionForCoach(s: Session): string {
+/** Exported for tests: this is the line the coach model actually reads, so a
+ *  field that never reaches it is a field the coach cannot use. */
+export function serialiseSessionForCoach(s: Session): string {
   const date = new Date(s.createdAt).toISOString().slice(0, 10);
   const c = s.coffee;
   const r = s.result;
@@ -135,6 +137,11 @@ function serialiseSessionForCoach(s: Session): string {
   if (r?.bitterness) tasteBits.push(`bitter=${r.bitterness}`);
   if (r?.finish) tasteBits.push(`finish=${r.finish}`);
   if (r?.clarity) tasteBits.push(`clarity=${r.clarity}`);
+  // The clearest over-extraction marker in the log — a dry, puckering finish
+  // means ground too fine / too hot / too long, which "bitter" alone does not
+  // distinguish from a dark-roast bitterness the brew can't fix. Collected on
+  // every tasting and read by no prompt until 2026-08-23.
+  if (r?.astringency) tasteBits.push(`astringent=${r.astringency}`);
 
   const meta: string[] = [];
   if (c?.variety) meta.push(`var=${c.variety}`);
@@ -183,6 +190,14 @@ function serialiseSessionForCoach(s: Session): string {
     coffeeLabel,
     meta.join(" "),
     recipe.join(" "),
+    // The per-session sensory reading. Assembled since this formatter was
+    // written and, until 2026-08-23, JOINED INTO NOTHING — `tasteBits` was
+    // built and then never placed in this array, so body/acidity/sweetness/
+    // bitterness/finish/clarity reached the coach on no session, ever (git
+    // log -S 'tasteBits.join' returns no commit). The coach was left inferring
+    // taste from the flavour-note list and the star rating alone, which is
+    // precisely the axis it is asked to reason across.
+    tasteBits.join(" "),
     quality.join(" "),
     flavors ? `[${flavors}]` : "",
     r?.freeNotes ? `note="${r.freeNotes.slice(0, 120)}"` : "",
