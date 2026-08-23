@@ -22,6 +22,7 @@ import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
+import { resolveStartBrewTarget } from "@/lib/chat/chatBrewTarget";
 import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import { AGENT_SYSTEM_PROMPT, TOOLS } from "@/lib/chat/agentPrompt";
 import {
@@ -69,6 +70,15 @@ export interface NavAction {
   /** Stable reference recipe this adapts ("Japanese Iced V60"), or "Own recipe". */
   basedOn?: string;
   recipe?: BrewRecipe;
+  // Identity for a bag NOT in the library yet (2026-08-23): a brand-new bag
+  // has no id, and the model used to invent one — a plausible slug for a row
+  // that doesn't exist, so the pill fetched nothing and the tap went nowhere.
+  // With roaster+name the pill brews via chatBrewIdentity and the coffee row
+  // is created on the derived slug when the brew is saved.
+  roaster?: string;
+  name?: string;
+  origin?: string;
+  process?: string;
   // ── remember_advice payload ─────────────────────────────────────────
   // A durable coach note the chat worked out for a specific bag. The
   // button is tap-to-save: nothing is written until the user taps it,
@@ -129,6 +139,10 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
       title: input.title,
       basedOn: input.basedOn,
       recipe: cleanChatRecipe(input.recipe),
+      roaster: input.roaster,
+      name: input.name,
+      origin: input.origin,
+      process: input.process,
     };
   }
   if (toolName === "remember_advice") {
@@ -430,6 +444,10 @@ export async function POST(req: NextRequest) {
       const seen = new Set(rotationCoffees.map((c) => c.id));
       return [...rotationCoffees, ...recentLibrary.filter((c) => !seen.has(c.id))];
     })();
+    // The only ids the model can honestly know are the ones this turn's
+    // context offers — resolveStartBrewTarget checks a start_brew against
+    // exactly this set, so an invented id can never reach a pill.
+    const knownCoffeeIds: ReadonlySet<string> = new Set(library.map((c) => c.id));
 
     const profileBlock = formatProfileForPrompt(userPrefs);
     // Server read wins; the client's array is the fallback for a failed query.
@@ -714,10 +732,47 @@ export async function POST(req: NextRequest) {
                 const okResults: Anthropic.ToolResultBlockParam[] = [];
                 const rejections: Anthropic.ToolResultBlockParam[] = [];
                 const acceptedActions: NavAction[] = [];
-                let droppedBrew = false;
+                let droppedBrew: false | "target" | "recipe" = false;
 
                 for (const block of toolBlocks) {
                   const action = toNavAction(block.name, block.input as NavAction, attachedImageUrl);
+
+                  if (block.name === "start_brew") {
+                    // Target first, recipe second — a perfect recipe on a pill
+                    // that points at nothing is still a dead button. The model
+                    // once invented a plausible id for a bag not yet in the
+                    // library (ids are derived slugs, so a guess can look
+                    // exactly right — the DAK Cassis pill of 2026-08-23), and
+                    // the tap fetched a non-existent coffee and discarded the
+                    // recipe. knownCoffeeIds is what this turn's context
+                    // actually offered; anything else is bounced back through
+                    // the same repair round the recipe checks use.
+                    const target = resolveStartBrewTarget(action, knownCoffeeIds);
+                    if (!target.ok) {
+                      console.warn(
+                        `[explore-agent] start_brew target rejected (${brewRepairSpent ? "final" : "first"}): ` +
+                          `id=${action.id ?? "(none)"} roaster=${action.roaster ? "y" : "n"} name=${action.name ? "y" : "n"}`,
+                      );
+                      if (!brewRepairSpent) {
+                        rejections.push({
+                          type: "tool_result",
+                          tool_use_id: block.id,
+                          content: target.problem,
+                          is_error: true,
+                        });
+                        continue;
+                      }
+                      droppedBrew = "target";
+                      okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                      continue;
+                    }
+                    // Keep only an id the tap can actually fetch (or the
+                    // library row the names resolve to); a guessed id is
+                    // stripped so the pill brews from roaster+name instead of
+                    // 404ing first.
+                    if (target.id) action.id = target.id;
+                    else delete action.id;
+                  }
 
                   if (block.name === "start_brew" && action.recipe) {
                     const problems = validateRecipe(action.recipe, {
@@ -741,7 +796,7 @@ export async function POST(req: NextRequest) {
                       }
                       // Second attempt still not brewable — the pill is dropped
                       // rather than handing the timer a recipe that can't be poured.
-                      droppedBrew = true;
+                      droppedBrew = "recipe";
                       okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
                       continue;
                     }
@@ -765,7 +820,10 @@ export async function POST(req: NextRequest) {
                 navSuggestions.push(...acceptedActions);
                 if (droppedBrew) {
                   send("delta", {
-                    text: "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.",
+                    text:
+                      droppedBrew === "target"
+                        ? "\n\nI couldn't pin down which bag that Brew button should start, so I've left it off. Name the bag (or add it to your library) and I'll wire it up."
+                        : "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.",
                   });
                 }
                 send("done", {
