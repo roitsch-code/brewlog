@@ -589,7 +589,13 @@ export const EXPANDED_RECIPES: Recipe[] = [
     sources: [
       { type: "video", citation: "Tim Wendelboe YouTube channel — V60 method", year: 2019 },
     ],
-    verified: true,
+    // Downgraded 2026-08-23: was verified:true with only this generic citation
+    // — no in-session cross-check against Wendelboe's own publication on
+    // record, and CLAUDE.md's #528 entry records it as staying unaudited.
+    // verified:true would make it a reconcileToReference snap target, letting
+    // an unaudited pour plan overwrite candidates' mechanics (the april-1-2-3
+    // class). Re-verify against the primary source before flipping back.
+    verified: false,
   },
 
   {
