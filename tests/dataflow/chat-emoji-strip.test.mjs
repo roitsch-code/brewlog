@@ -72,3 +72,21 @@ test("the route actually strips before sending", () => {
   assert.match(route, /const text = emoji\.push\(event\.delta\.text\)/);
   assert.match(route, /send\("delta", \{ text \}\)/, "the SENT text must be the stripped text");
 });
+
+test("arrows and the check mark are house typography, NOT emoji (2026-08-23)", () => {
+  // The model routinely writes these in recipe tables; the original ranges
+  // deleted them and users read "Bloom  108g". The live measurement's "emoji"
+  // column (12/20 runs) was counting exactly these.
+  assert.equal(stripEmoji("- **0:00** — Bloom → 108g in ~8s"), "- **0:00** — Bloom → 108g in ~8s");
+  assert.equal(stripEmoji("Pours: 108 + 142 + 170 + 180 = 600g ✓"), "Pours: 108 + 142 + 170 + 180 = 600g ✓");
+  assert.equal(stripEmoji("← ↑ → ↓ ⇒"), "← ↑ → ↓ ⇒");
+});
+
+test("real BMP emoji still go: coffee cup, heart, star, heavy check", () => {
+  assert.equal(stripEmoji("coffee ☕ time"), "coffee  time");
+  assert.equal(stripEmoji("❤️"), "");
+  assert.equal(stripEmoji("nice ⭐ cup"), "nice  cup");
+  // U+2714 HEAVY CHECK MARK renders emoji-style — stays stripped; only the
+  // typographic ✓ (U+2713) passes.
+  assert.equal(stripEmoji("done ✔"), "done ");
+});

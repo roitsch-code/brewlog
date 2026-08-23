@@ -15,16 +15,24 @@
  */
 
 /**
- * A whole astral pair, or a BMP emoji / dingbat / arrow, or the variation
- * selector and zero-width joiner that glue sequences together.
+ * A whole astral pair, or a BMP emoji / dingbat, or the variation selector and
+ * zero-width joiner that glue sequences together.
  *
  * Matching the PAIR rather than the high surrogate alone matters: removing half
  * a pair leaves a lone low surrogate, which renders as a replacement character —
- * visibly worse than the emoji. Ranges mirror `loadingInsightLint.ts`; both
- * avoid the `u` flag because the project's TS target predates it.
+ * visibly worse than the emoji.
+ *
+ * DELIBERATE deviation from `loadingInsightLint.ts`'s ranges (2026-08-23): the
+ * basic-arrows block (U+2190–21FF, → above all) and the check mark ✓ (U+2713)
+ * are NOT stripped. They are house typography, not emoji — the app's own native
+ * step format is "Pour 2 → 180g", and the model routinely writes "Bloom → 108g"
+ * / "= 600g ✓" in recipe tables; until this fix users read "Bloom  108g". The
+ * first live measurement's "emoji" column (12/20 runs) was counting exactly
+ * these, not faces. Real emoji — astral pairs, ☕, ❤️, ⭐, dingbats — still go.
+ * Both regexes avoid the `u` flag because the project's TS target predates it.
  */
 const EMOJI_GLOBAL_RE =
-  /[\uD800-\uDBFF][\uDC00-\uDFFF]|[←-⇿⌀-➿⬀-⯿️‍]/g;
+  /[\uD800-\uDBFF][\uDC00-\uDFFF]|[⌀-✒✔-➿⬀-⯿️‍]/g;
 
 /** Remove emoji from a complete string. */
 export function stripEmoji(text: string): string {
