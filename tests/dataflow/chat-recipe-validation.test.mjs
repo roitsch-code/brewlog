@@ -104,10 +104,16 @@ test("the chat prompt carries the percolation shape rule", () => {
   // targetTimeSec and the pour count, so "no dead air" alone asks the model to
   // reason about an output it never writes. Measured 2026-08-22: dead-gap was
   // the only failure mode that survived a repair round.
-  assert.match(PROMPT, /minimum water steps/i, "the floors table must be present");
-  assert.match(PROMPT, /up to 3:30/, "floor row: short brews");
-  assert.match(PROMPT, /3:30–5:00|3:30-5:00/, "floor row: mid brews");
+  assert.match(PROMPT, /water steps \(bloom \+ pours\)/i, "the floors table must be present");
+  assert.match(PROMPT, /up to 5:00/, "floor row: normal brews");
   assert.match(PROMPT, /over 5:00/, "floor row: long brews");
+  // The disc column is load-bearing, not decoration. With the Drip Assist the
+  // drawdown reserve is 7% instead of 33%, so the pour phase is ~40% longer and
+  // the bare-brewer count leaves a hole. Measured 2026-08-23 (run 3): all six
+  // remaining first-try failures were dead-gap, and every gooseneck-less one
+  // had followed the bare count.
+  assert.match(PROMPT, /with the Drip Assist/i, "the disc column must exist");
+  assert.match(PROMPT, /always needs one more pour/i, "and say plainly that the disc needs one more");
   assert.match(PROMPT, /FLOORS, not targets/i, "one more pour must read as safe");
   assert.match(PROMPT, /Do not pad the clock/i, "stretching the clock is the other half of the failure");
 });

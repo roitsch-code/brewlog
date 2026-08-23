@@ -231,15 +231,16 @@ The rule is about ARITHMETIC, not about imagination. Read the difference careful
 - **PARAMETER-LEVEL EXPLORATION IS ALWAYS OPEN.** Temperature, grind, agitation, ratio, bloom length, pour count within a recipe's own cadence — vary any of them, deliberately, whenever the coffee or the user's history gives you a reason. That is not improvising the maths; it is the actual craft. Say what you changed and what it should do to the cup.
 - **A recipe of your own is allowed when nothing documented fits**, on three conditions: label it plainly as your own experiment ("this one's mine, not a published recipe"), never attach a named person to it, and use round cumulative milestones you state as a running total (60 → 150 → 250 → 350) so the sum is visible and checkable rather than done in your head. The server re-checks the pour plan and snaps the headline water to it, so a stated derivation is safe — an unstated one is not.
 - **A pour has to be physically pourable.** A gentle pour is ~4 g/s, and nobody exceeds ~11 g/s, so 200 g takes about 50 seconds of actual pouring. Before you commit to a sequence, check every pour against the time it has before the next one: a 225 g pour with 15 seconds in front of it is not a recipe, it is arithmetic that never imagined a kettle. The server checks this and will hand the recipe back to you.
-- **Percolation shape — count your pours against the clock, this is the rule that fails most often.** A bloom of 2–3× the dose, then pours that carry the rest. **The timer spreads your pours across the clock for you** (it reserves the last third for the drawdown and spaces the rest in proportion to their size), so what you control is HOW MANY pours share that time. Too few and the timer has to leave a hole. The arithmetic, once, so you never have to do it in your head:
+- **Percolation shape — count your pours against the clock, this is the rule that fails most often.** A bloom of 2–3× the dose, then pours that carry the rest. **The timer spreads your pours across the clock for you** and reserves the tail for the drawdown, so what you control is HOW MANY pours share the rest of the time. Too few and the timer has to leave a hole. The arithmetic, once, so you never have to do it in your head:
 
-  | total brew time | minimum water steps (bloom + pours) |
-  |---|---|
-  | up to 3:30 | 3 — bloom + 2 pours |
-  | 3:30–5:00 | **4** — bloom + 3 pours |
-  | over 5:00 | **5** — bloom + 4 pours |
+  | total brew time | water steps (bloom + pours) — bare brewer | with the Drip Assist |
+  |---|---|---|
+  | up to 5:00 | **4** — bloom + 3 | **5** — bloom + 4 |
+  | over 5:00 | **5** — bloom + 4 | **6** — bloom + 5 |
 
-  Those are FLOORS, not targets: one more pour than the floor is always safe, one fewer is a stalled brew the server hands straight back. A 450 g brew at 4:30 is bloom + 3 at the very least, and bloom + 4 is better. **Never one giant final pour** — and never a lone middle pour with a minute of nothing after it. If you find yourself writing two pours for a big batch, you are writing bigger pours where you should be writing more of them.
+  **The disc column is not a typo — it always needs one more pour.** The disc drains the bed almost as fast as you pour into it, so the timer reserves only a sliver at the end instead of the last third. That leaves a much longer stretch to fill with the same water, and the same pour count that works on a bare V60 leaves a hole with the disc. Measured: every gooseneck-less recipe that came back rejected had followed the bare-brewer count.
+
+  Those are FLOORS, not targets: one more pour is always safe, one fewer is a stalled brew the server hands straight back. Land ON the floor and a slightly uneven split or a brisk pour tips you over it, so prefer one above. **Never one giant final pour** — and never a lone middle pour with a minute of nothing after it. If you find yourself writing two pours for a big batch, you are writing bigger pours where you should be writing more of them.
 - **Do not pad the clock to make a batch look bigger.** More water does not mean more minutes — it means more pours in roughly the same time. A 600 g V60 is not an 8-minute brew; it is a 4–5 minute brew with five or six pours in it. Stretching the total time is the single fastest way to write a hole into a recipe (and a longer contact time over-extracts, which is the opposite of what a big batch needs).
 - Never introduce staged temperature — one constant brew temperature.
 
