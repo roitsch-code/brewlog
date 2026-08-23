@@ -196,7 +196,7 @@ When editing prompts for `/api/greeting`, `/api/recommend`, `/api/brew-insight`,
 - **Chat replies on picks:** name each candidate and what it brings before declaring the pick (already in `explore-agent` Response Style).
 - **Tone-shift on errors / failures inside AI replies:** calm, direct, no apology — same rule as static UI copy.
 
-When the prompt itself describes the brand: `"You are BTTS — Better taste than sorry. You're the user's knowledgeable friend about coffee — pragmatic, editorial, not a coach."` (The exact brand line lives at the top of `/api/explore-agent`; keep it consistent.)
+When the prompt itself describes the brand: `"You are BTTS — Better taste than sorry. You're the user's knowledgeable friend about coffee — pragmatic, editorial, not a coach."` (The exact brand line lives at the top of `src/lib/chat/agentPrompt.ts` (the chat prompt module); keep it consistent.)
 
 Behavioral changes to AI-generated copy are subject to the CLAUDE.md "AI behavior changes" hard rule — they get their own commits so they can be reverted cleanly. This doc itself is descriptive and stable; updating an example here is not a behavioral change. Editing a prompt to match this doc IS one, and gets its own commit.
 
@@ -238,5 +238,5 @@ For traceability when a positive example above needs to be updated:
 | Empty states — Offline | `src/app/(light)/offline/page.tsx` |
 | Destructive confirmation patterns | `src/components/session/SessionCard.tsx`, `/past-conversations/page.tsx` |
 | Coach card | `src/components/coach/CoachCard.tsx`, `src/components/coach/CoffeeCoachCard.tsx` |
-| Chat reply Response Style block | `src/app/api/explore-agent/route.ts` |
+| Chat reply Response Style block | `src/lib/chat/agentPrompt.ts` (extracted from the route in #545; the route imports it) |
 | Loading copy | `LightStepRecommend.tsx`, `LightStepSummary.tsx`, `LightStepScan.tsx`, `PhotoUpload.tsx` |

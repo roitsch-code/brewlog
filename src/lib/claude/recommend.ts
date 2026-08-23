@@ -145,7 +145,7 @@ function guardRecipeFidelity(
  * Raises only, capped +120s; never touches iced (different water basis),
  * cold-brew steeps, or immersion (their time is the steep, not drawdown).
  */
-function calibrateTargetTimes(
+export function calibrateTargetTimes(
   candidates: RecommendationCandidate[],
   pastSessions: Session[],
   isPercolation: (method?: string) => boolean,

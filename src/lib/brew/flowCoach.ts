@@ -7,8 +7,9 @@
  * Grounded in the research (docs/plan): the scale (under the whole brewer)
  * measures water ADDED, so the live signal is your POUR RATE (slope of weight
  * over time) and your progress toward each pour's target. The intended pour
- * rate is ~POUR_RATE_GPS (4 g/s — within the practical 3–5 g/s band); we coach
- * toward it with a tolerance band, sanity-capped. Drawdown rate is NOT visible
+ * rate is PER-RECIPE (#489): the pour's own authored grams-over-time when it
+ * reads as a real pour, the ~POUR_RATE_GPS (4 g/s) house estimate as the
+ * fallback; we coach toward it with a tolerance band, sanity-capped 2–11 g/s. Drawdown rate is NOT visible
  * to the scale (mass is conserved when you're not pouring) → that's a post-brew
  * judgment from total time, handled elsewhere.
  *

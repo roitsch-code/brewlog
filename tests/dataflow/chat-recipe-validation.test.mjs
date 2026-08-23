@@ -134,3 +134,23 @@ test("the route actually uses that prompt module", () => {
   );
   assert.match(ROUTE, /system:\s*systemBlocks/, "and pass it to the model");
 });
+
+test("start_brew's recipe is sanitized through cleanChatRecipe before anything reads it", () => {
+  // Unwiring cleanChatRecipe from toNavAction would keep every other test
+  // green (the validator still runs — on the RAW recipe) while silently
+  // re-opening the #410 blank-pour-guide bug: drifted step actions
+  // ("Steep"/"Plunge") never match the renderer's vocabulary and the timer
+  // shows nothing. Pin the wiring, not just the function.
+  assert.match(
+    ROUTE,
+    /import\s*\{[^}]*cleanChatRecipe[^}]*\}\s*from\s*"@\/lib\/chat\/agentContext"/,
+    "the route must import cleanChatRecipe",
+  );
+  const startBrew = ROUTE.slice(ROUTE.indexOf('toolName === "start_brew"'));
+  assert.ok(startBrew.length > 0, "start_brew mapping must exist");
+  assert.match(
+    startBrew.slice(0, 600),
+    /recipe:\s*cleanChatRecipe\(input\.recipe\)/,
+    "the start_brew action's recipe must be the CLEANED recipe",
+  );
+});

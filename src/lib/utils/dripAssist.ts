@@ -21,8 +21,8 @@ export function isDripAssistMethod(method?: string): boolean {
  *
  * +5° is the delta both in-repo tables agree on — docs/grind-settings.md
  * ("V60 + Drip Assist ... ~+5° coarser than the standard V60") and the
- * NICHE° GRIND REFERENCE block in recommendPrompt.ts (V60 396–406 vs
- * V60 + Drip Assist 401–411). Their absolute baselines differ; the OFFSET is
+ * NICHE° GRIND REFERENCE block in recommendPrompt.ts (V60 375–385 vs
+ * V60 + Drip Assist 380–390, post-#527 measured baseline). The OFFSET is
  * what's consistent, so the offset is what's enforced here. Direction is
  * owner-confirmed; the exact magnitude is an estimate, which is why this only
  * ever nudges a grind that clearly isn't carrying the disc at all.
