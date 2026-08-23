@@ -85,10 +85,17 @@ export function measuredTimeDelta(
 /**
  * Builds a sensory preference signal string from extended TasteResult fields.
  * Only included when ≥3 sessions have at least one sensory field filled.
+ *
+ * Astringency is in here (since 2026-08-23) because it is the single clearest
+ * OVER-EXTRACTION marker the log collects — the dry, mouth-puckering finish of
+ * a grind too fine, water too hot, or contact too long. It was collected on
+ * every tasting and read by nothing, so a "3★, bitter=harsh" line reached the
+ * coach with the one signal that tells over-extraction from a simply bitter
+ * roast stripped out of it.
  */
 function buildSensoryPatterns(sessions: Session[]): string {
   const sensoryData = sessions.filter(
-    (s) => s.result?.clarity || s.result?.sweetness || s.result?.bitterness
+    (s) => s.result?.clarity || s.result?.sweetness || s.result?.bitterness || s.result?.astringency
   );
   if (sensoryData.length < 3) return "";
 
@@ -118,6 +125,11 @@ function buildSensoryPatterns(sessions: Session[]): string {
     }
     if (r.balance) {
       const key = `balance:${r.balance}`;
+      groups[key] = groups[key] ?? [];
+      groups[key].push(r.rating);
+    }
+    if (r.astringency) {
+      const key = `astringency:${r.astringency}`;
       groups[key] = groups[key] ?? [];
       groups[key].push(r.rating);
     }
