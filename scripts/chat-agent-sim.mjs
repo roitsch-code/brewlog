@@ -106,7 +106,10 @@ function contextBlock() {
     `Every bag here is brewable and linkable by its id.\n` + K.formatLibraryForAgent(LIBRARY);
 }
 
-const EMOJI = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[←-⇿⌀-➿⬀-⯿]/;
+// Mirrors stripEmoji.ts's PRODUCTION ranges (arrows + ✓ are house typography,
+// not violations) — a metric counting → in pour tables reads as "prompt rules
+// not landing" when nothing is wrong.
+const EMOJI = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[⌀-✒✔-➿⬀-⯿]/;
 
 async function oneTurn(scenario) {
   const messages = [{ role: "user", content: scenario.ask + "\n" + contextBlock() }];
