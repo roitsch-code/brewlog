@@ -6,6 +6,7 @@ import {
   DRIP_ASSIST_DRAWDOWN_FRAC,
 } from "../utils/pourSequence";
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
+import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import type {
   CoffeeIdentity,
@@ -698,6 +699,18 @@ export async function generateRecommendation(
   };
   const selectedRecipes = selectRecipes(selectionInput, 4);
 
+  // MEASURED GRIND — the user's OWN logged grind settings for the brewers they
+  // actually use at this batch size (2026-08-23). Every per-method row in
+  // grindSettings.ts except the V60 is an ESTIMATE, while brew.grindSettingUsed
+  // has recorded the real thing on every brew. Reported, never enforced: grind
+  // is bean-dependent, so a deterministic override would flatten exactly the
+  // variation a recipe exists to express. "" when nothing is measured.
+  const measuredGrindBlock = formatMeasuredGrindForPrompt(
+    buildMeasuredGrind(pastSessions, targetWaterMl, context.preferredMethod),
+    sessionGrinder,
+  );
+
+
   // A locked method the corpus has NO documented recipe for (e.g. the Orea
   // Apex/Classic/Open bottoms — the corpus holds recipes for none of them) used
   // to inject an EMPTY recipe block, leaving the model to invent a recipe with
@@ -780,7 +793,7 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}
+${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${measuredGrindBlock}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +

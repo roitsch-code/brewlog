@@ -40,4 +40,6 @@ Two relationships fall out of those points:
 
 > Grind coarser/finer to adjust timing. Temperature controls extraction chemistry — never use it to fix flow speed.
 
+**Since 2026-08-23 `/recommend` also carries the owner's OWN measured grind** for the brewers they actually use at the batch size in question (`src/lib/claude/measuredGrind.ts` → the MEASURED GRIND block): median, range and the ≥4★ window from `brew.grindSettingUsed`, pooled by brewer family and volume. That block beats this table wherever it exists — these per-method rows stay the fallback for a brewer with fewer than 3 logged brews at that size. It is reported to the model, never enforced: grind is bean-dependent.
+
 > **The `/recommend` prompt no longer keeps its own copy of these numbers out of sync.** Its NICHE° GRIND REFERENCE block is corrected to this measured baseline and pinned to `grindSettings.ts` by `tests/dataflow/grind-reference-consistency.test.mjs`, so the ~+21° drift that put V60 at 396–406° (≈6 Comandante clicks coarser than the owner grinds) cannot recur silently.
