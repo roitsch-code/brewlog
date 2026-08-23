@@ -5,7 +5,8 @@ import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sessions, coffees } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
-import type { Session } from "@/lib/types/session";
+import type { BrewLog, CoffeeIdentity, Session, TasteResult } from "@/lib/types/session";
+import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
 import { FieldZonesSchema } from "@/lib/field/schema";
 import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
 import { deriveIdentitySummary } from "@/lib/coffee/blend";
@@ -68,6 +69,11 @@ const SessionPostSchema = z.object({
   recommendation: z.record(z.string(), z.unknown()).optional(),
   brew: z.object({
     methodUsed: z.string().max(100).optional(),
+    // Index of the brewed recommendation candidate. Without it every
+    // downstream reader (resolveBrewedRecipe) falls back to method-name
+    // matching — the exact #193 bug class — which picks the WRONG candidate
+    // whenever both share a method (always true for locked-method brews).
+    selectedCandidateIdx: z.number().int().min(0).max(10).optional(),
     doseGrams: z.number().min(0).max(500).optional(),
     waterGrams: z.number().min(0).max(2000).optional(),
     dripAssist: z.boolean().optional(),
@@ -80,6 +86,15 @@ const SessionPostSchema = z.object({
     actualTempC: z.number().min(0).max(120).optional(),
     followedAgitation: z.enum(["yes", "partially", "no"]).optional(),
     agitationNote: z.string().max(500).optional(),
+    // Objective Acaia pour analysis, authored by our own client (analyzeFlow).
+    // Deliberately NOT re-modelled field-by-field: a structured copy here
+    // would silently strip any field the FlowAnalysis type gains later — the
+    // exact bug this entry (and the sensory comment below) exists to fix.
+    // The shape is owned by src/lib/brew/flowAnalysis.ts.
+    flowAnalysis: z
+      .custom<FlowAnalysis>((v) => typeof v === "object" && v !== null)
+      .optional(),
+    flowSource: z.enum(["measured", "self-report"]).optional(),
   }).optional(),
   result: z.object({
     rating: z.number().min(0).max(5),
@@ -116,6 +131,23 @@ const SessionPostSchema = z.object({
   // so re-scans of the same bag don't drift the coffee's Field.
   fieldZones: FieldZonesSchema.nullable().optional(),
 });
+
+// ── Compile-time parity guards ──────────────────────────────────────────────
+// Zod strips unknown keys SILENTLY, so any field a Session sub-type carries
+// that this schema doesn't list is thrown away at save time with no error
+// anywhere. That is exactly how the extended sensory fields were lost once
+// (see the `result` comment above) and how brew.selectedCandidateIdx /
+// flowAnalysis / flowSource were lost a second time. These asserts make tsc
+// fail — naming the missing keys — whenever a type gains a field the schema
+// doesn't know. If tsc points here: add the field to the schema above.
+type SessionPost = z.infer<typeof SessionPostSchema>;
+type MissingKeys<T, S> = [Exclude<keyof T, keyof S>] extends [never]
+  ? true
+  : Exclude<keyof T, keyof S>;
+const _brewSchemaCoversBrewLog: MissingKeys<BrewLog, NonNullable<SessionPost["brew"]>> = true;
+const _resultSchemaCoversTasteResult: MissingKeys<TasteResult, NonNullable<SessionPost["result"]>> = true;
+const _coffeeSchemaCoversIdentity: MissingKeys<CoffeeIdentity, NonNullable<SessionPost["coffee"]>> = true;
+void _brewSchemaCoversBrewLog; void _resultSchemaCoversTasteResult; void _coffeeSchemaCoversIdentity;
 
 export const dynamic = "force-dynamic";
 

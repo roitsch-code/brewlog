@@ -206,7 +206,15 @@ function refGrindString(ref: Recipe, doseRatio: number, discOffset = 0): string 
   return `${scaledRefGrind(range, doseRatio) + discOffset}°`;
 }
 
-/** The published mid, shifted coarser for a bigger bed (~+20°/doubling). */
+/** The published mid, shifted coarser for a bigger bed (~+20°/doubling).
+ *
+ * Linear in doseRatio, which matches the measured anchor pair exactly at 2×
+ * (15g=380° → 30g=400°, grind-settings.md). Below 1× it would UNDER-shoot the
+ * measured slope (0.5× → −10° here vs the −20° the anchors imply) — but that
+ * branch never executes: the batch nudge fires only at doseRatio ≥ 1.3 and
+ * only ever COARSENS, so the down-scaling side of the prose rule
+ * (DOSE_SCALING_RULE's "halving goes the same amount finer") is model
+ * guidance only, never enforced through this formula. */
 function scaledRefGrind(range: [number, number], doseRatio: number): number {
   return Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
 }

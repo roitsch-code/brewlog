@@ -408,7 +408,7 @@ function scoreRecipe(
 
   // No pedigree or verification bonus: every recipe is ranked purely on how
   // well it matches the brew context (roast / process / variety / goal /
-  // occasion). All 133 recipes — championship, reference, and the Markus
+  // occasion). All 135 recipes — championship, reference, and the Markus
   // additions — compete on equal footing, best-match wins.
 
   return { recipe, score, reasons };

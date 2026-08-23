@@ -4,10 +4,11 @@
  * The goal is that the last pour lands at exactly:
  *     (targetTimeSec - drawdownReserve)
  *
- * We reserve 33% of the total brew time for the final drawdown
- * (~89s at 270s total, ~69s at 210s total), subtract the bloom, and
- * evenly space the (n - 2) intervals between the first pour after
- * bloom and the final pour. That guarantees the clock milestone above.
+ * We reserve a method-aware fraction of the total brew time for the final
+ * drawdown (33% bare, 7% with the Drip Assist — see drawdownReserveFrac),
+ * subtract the bloom, and size the (n - 2) intervals between the first pour
+ * after bloom and the final pour PROPORTIONALLY to each pour's grams (time
+ * follows water, #438). That guarantees the clock milestone above.
  *
  * Two renderers consume this module:
  *  - Percolation (V60/Orea/Kalita/Chemex) → cumulative-grams `PourStep[]`,

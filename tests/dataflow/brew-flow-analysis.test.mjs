@@ -273,3 +273,37 @@ test("a swirl that never settles back is still treated as a real change", () => 
   // 800 raw − 300 folded = 500g of actual water, same as the clean brew.
   assert.ok(Math.abs(r.finalGrams - 500) <= 5, `expected ~500g of water, got ${r.finalGrams}`);
 });
+
+test("per-pour intended duration honours the recipe's AUTHORED pour time (Kasuya-style fast pours)", () => {
+  // A structured recipe authoring 60g pours in 10s each (6 g/s — a real pour
+  // rate, Kasuya pours exactly this). The house ~4 g/s fallback would call
+  // each of these a 15s pour and misplace targetSec by 5s — the live coach
+  // and expectedGramsAt already use the authored rate; the post-brew
+  // analysis must agree with them.
+  const KASUYA = buildBrewTimeline(
+    {
+      doseGrams: 20, waterGrams: 300, waterTempC: 93, grindSize: "coarse", targetTimeSec: 210,
+      pourSteps: [
+        { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 10 },
+        { label: "Pour 2", action: "pour", waterGramsAtEnd: 120, durationSec: 10 },
+        { label: "Pour 3", action: "pour", waterGramsAtEnd: 180, durationSec: 10 },
+        { label: "Final", action: "final", waterGramsAtEnd: 300, durationSec: 30 },
+      ],
+    },
+    ROAST,
+    NOW,
+  );
+  const curve = [];
+  for (let t = 0; t <= 210; t += 5) {
+    const g = Math.min(300, t * 2);
+    curve.push({ tSec: t, grams: g });
+  }
+  const a = analyzeFlow(KASUYA, curve);
+  assert.ok(a, "expected an analysis");
+  // Authored 10s, not the house-rate 60/4 = 15s.
+  assert.equal(a.perPour[0].intendedPourSec, 10);
+  assert.equal(a.perPour[1].intendedPourSec, 10);
+  // A pour whose authored time reads as a rest (below 2 g/s) still falls back
+  // to the house rate: 120g over 30s = 4 g/s is plausible, so it stays 30.
+  assert.equal(a.perPour[3].intendedPourSec, 30);
+});

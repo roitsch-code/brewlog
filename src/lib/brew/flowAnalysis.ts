@@ -12,7 +12,7 @@
  * the MEASURED grade automatically — no self-report needed.
  */
 import { expectedGramsAt, type BrewTimeline } from "@/lib/brew/timeline";
-import { pourDurationSec } from "@/lib/utils/pourSequence";
+import { intendedPourDurationSec } from "@/lib/utils/pourSequence";
 
 export interface FlowCurvePoint {
   /** Seconds since brew start. */
@@ -255,7 +255,12 @@ export function analyzeFlow(
   for (const step of pours) {
     const target = step.targetCumulativeGrams as number;
     const pourGrams = step.pourGrams != null && step.pourGrams > 0 ? step.pourGrams : target - prevTarget;
-    const intendedPourSec = pourDurationSec(Math.max(1, pourGrams));
+    // The pour's own authored duration when it reads as a real pour, house
+    // ~4 g/s fallback otherwise — the SAME model expectedGramsAt (and the live
+    // coach) use. Using the bare house rate here made errorSec and the Summary
+    // drift floor disagree with the coach for fast-authored pours (Kasuya
+    // pours 60g in 10s; the house rate called that a 15s pour).
+    const intendedPourSec = intendedPourDurationSec(Math.max(1, pourGrams), step.pourDurationSec);
     const targetSec = step.startSec + intendedPourSec;
     const actualSec = timeToReach(curve, target);
     perPour.push({
