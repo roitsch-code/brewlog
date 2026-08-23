@@ -42,9 +42,20 @@ const MIN_DELTA = {
   clicks: 1.5, // Comandante clicks
 } as const;
 
+/**
+ * Water is a CHOICE, not a reading, so it can't use MIN_DELTA's scatter logic:
+ * the comparison is "how often was the clarity blend in the good cups vs the
+ * bad ones". 40 percentage points is the floor — with 4–6 brews a side, a
+ * smaller gap is one or two brews and means nothing. Both waters must also
+ * genuinely appear in the segment, or a user who only ever used one would be
+ * told his single habit is the reason.
+ */
+const MIN_WATER_SPLIT = 0.4;
+const MIN_WATER_USES = 2;
+
 /** One dial that separated the liked brews from the disliked ones. */
 export interface SeparatingDial {
-  dial: "temp" | "ratio" | "niche" | "clicks";
+  dial: "temp" | "ratio" | "niche" | "clicks" | "water";
   /** Mean among the clear hits / the clear misses, in that dial's own unit. */
   hitValue: number;
   missValue: number;
@@ -150,41 +161,82 @@ function grindReading(raw: string | undefined): { value: number; unit: "niche" |
   return null;
 }
 
+/**
+ * The dials of ONE brew — what the user actually turned, not what the recipe
+ * asked for.
+ *
+ * This reads `brew.actualTempC` / `brew.grindSettingUsed` FIRST and falls back
+ * to the recipe only when the brew didn't record its own. Until 2026-08-23 it
+ * read the recipe alone, which quietly made the whole analysis a study of the
+ * RECIPES rather than of the user: every deviation — the grind nudged two
+ * degrees coarser at the grinder, the kettle that landed at 96 instead of 94 —
+ * was invisible, and a segment where the user consistently corrected the same
+ * way looked like it had no separation at all. The fields are pre-filled from
+ * the recipe and editable, so on a followed-to-the-letter brew both paths agree
+ * and nothing changes; they diverge exactly when the user did something.
+ *
+ * Dose/water follow the same rule (`brew.*` is what external sessions carry),
+ * so a café brew with no recipe attached can now contribute its ratio.
+ */
 function dialsOf(s: Session): Dials | null {
   const recipe = resolveBrewedRecipe(s).recipe;
-  if (!recipe) return null;
+  const b = s.brew;
   const out: Dials = {};
 
-  const t = recipe.waterTempC;
+  const t = b?.actualTempC ?? recipe?.waterTempC;
   if (typeof t === "number" && t >= 70 && t <= 100) out.temp = t;
 
-  const dose = recipe.doseGrams;
-  const water = recipe.waterGrams;
+  const dose = b?.doseGrams ?? recipe?.doseGrams;
+  const water = b?.waterGrams ?? recipe?.waterGrams;
   if (typeof dose === "number" && dose > 0 && typeof water === "number" && water > 0) {
     const r = water / dose;
     if (r >= 8 && r <= 22) out.ratio = r;
   }
 
-  const g = grindReading(recipe.grindSize);
+  const g = grindReading(b?.grindSettingUsed ?? recipe?.grindSize);
   if (g?.unit === "niche") out.niche = g.value;
   if (g?.unit === "clicks") out.clicks = g.value;
 
   return Object.keys(out).length > 0 ? out : null;
 }
 
-const UNIT: Record<keyof Dials, string> = {
+/**
+ * Which water this brew used, or null when it wasn't recorded.
+ *
+ * Deliberately NOT defaulting to the daily water the way brewSignature does:
+ * a signature needs a number for every brew, but a CONTRAST needs to know the
+ * difference between "he used the daily water" and "nobody wrote it down".
+ * Guessing here would manufacture a separation out of missing data.
+ */
+export function waterOf(s: Session): "clarity" | "daily" | null {
+  const src = s.context?.waterSource;
+  if (typeof src !== "string" || !src.trim()) return null;
+  // "championship" is the flow's id for the 1:2 filtered+distilled clarity
+  // blend (~73 ppm); "tap" is the BWT-filtered daily driver (~220 ppm), and
+  // the legacy "diluted" (~150 ppm) sits on the daily side of the split.
+  return src === "championship" ? "clarity" : "daily";
+}
+
+const UNIT: Record<keyof Dials | "water", string> = {
   temp: "°C",
   ratio: "", // rendered as a ratio, e.g. "1:15.4"
   niche: "° on the Niche",
   clicks: " Comandante clicks",
+  water: "% clarity blend", // hit/miss values are shares, 0–100
 };
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 /** Phrase one separating dial in plain language, hits relative to misses. */
-function phrase(dial: keyof Dials, hit: number, miss: number): string {
+function phrase(dial: keyof Dials | "water", hit: number, miss: number): string {
   switch (dial) {
+    case "water":
+      // hit/miss are shares of clarity-blend use (0–1) in each group. Name the
+      // water that dominates the GOOD cups; the figures carry the rest.
+      return hit > miss
+        ? `the clarity blend (${Math.round(hit * 100)}% of your best against ${Math.round(miss * 100)}% of your worst)`
+        : `the daily BWT water (${Math.round((1 - hit) * 100)}% of your best against ${Math.round((1 - miss) * 100)}% of your worst)`;
     case "temp":
       return `${hit > miss ? "hotter" : "cooler"} water (${Math.round(hit)}° vs ${Math.round(miss)}°)`;
     case "ratio":
@@ -197,7 +249,15 @@ function phrase(dial: keyof Dials, hit: number, miss: number): string {
 }
 
 export function buildContextInsights(sessions: Session[]): ContextInsightsResult {
-  const bySegment = new Map<string, { hits: Dials[]; misses: Dials[]; total: number }>();
+  type Bucket = {
+    hits: Dials[];
+    misses: Dials[];
+    /** Water per brew, hits and misses kept apart; unrecorded water is omitted. */
+    hitWaters: Array<"clarity" | "daily">;
+    missWaters: Array<"clarity" | "daily">;
+    total: number;
+  };
+  const bySegment = new Map<string, Bucket>();
 
   for (const s of sessions) {
     const rating = s.result?.rating;
@@ -207,17 +267,27 @@ export function buildContextInsights(sessions: Session[]): ContextInsightsResult
     const dials = dialsOf(s);
     if (!dials) continue;
 
-    const bucket = bySegment.get(segment) ?? { hits: [], misses: [], total: 0 };
+    const bucket = bySegment.get(segment) ?? {
+      hits: [], misses: [], hitWaters: [], missWaters: [], total: 0,
+    };
     bucket.total += 1;
-    if (rating >= HIT_RATING) bucket.hits.push(dials);
-    else if (rating <= MISS_RATING) bucket.misses.push(dials);
+    const water = waterOf(s);
+    if (rating >= HIT_RATING) {
+      bucket.hits.push(dials);
+      if (water) bucket.hitWaters.push(water);
+    } else if (rating <= MISS_RATING) {
+      bucket.misses.push(dials);
+      if (water) bucket.missWaters.push(water);
+    }
     bySegment.set(segment, bucket);
   }
 
   const insights: ContextInsight[] = [];
   const inconclusiveSegments: string[] = [];
 
-  for (const [segment, { hits, misses, total }] of Array.from(bySegment.entries())) {
+  for (const [segment, { hits, misses, hitWaters, missWaters, total }] of Array.from(
+    bySegment.entries(),
+  )) {
     if (total < MIN_SEGMENT_BREWS) continue;
     if (hits.length < MIN_GROUP_BREWS || misses.length < MIN_GROUP_BREWS) {
       inconclusiveSegments.push(segment);
@@ -225,7 +295,34 @@ export function buildContextInsights(sessions: Session[]): ContextInsightsResult
     }
 
     // Rank the dials that genuinely separate the two groups, strongest first.
-    const separating: Array<{ dial: keyof Dials; hit: number; miss: number; strength: number }> = [];
+    const separating: Array<{
+      dial: keyof Dials | "water";
+      hit: number;
+      miss: number;
+      strength: number;
+    }> = [];
+
+    // Water competes for the same two clauses as the numeric dials — it is one
+    // of the strongest levers in this setup (~220 ppm vs ~73 ppm), and leaving
+    // it out was why the section could stare at a segment the user brews two
+    // different ways and call it inconclusive.
+    if (hitWaters.length >= MIN_GROUP_BREWS && missWaters.length >= MIN_GROUP_BREWS) {
+      const clarityUses = [...hitWaters, ...missWaters].filter((w) => w === "clarity").length;
+      const dailyUses = hitWaters.length + missWaters.length - clarityUses;
+      if (clarityUses >= MIN_WATER_USES && dailyUses >= MIN_WATER_USES) {
+        const hitShare = hitWaters.filter((w) => w === "clarity").length / hitWaters.length;
+        const missShare = missWaters.filter((w) => w === "clarity").length / missWaters.length;
+        const delta = Math.abs(hitShare - missShare);
+        if (delta >= MIN_WATER_SPLIT) {
+          separating.push({
+            dial: "water",
+            hit: hitShare,
+            miss: missShare,
+            strength: delta / MIN_WATER_SPLIT,
+          });
+        }
+      }
+    }
     for (const dial of ["temp", "ratio", "niche", "clicks"] as const) {
       const h = hits.map((d) => d[dial]).filter((v): v is number => typeof v === "number");
       const m = misses.map((d) => d[dial]).filter((v): v is number => typeof v === "number");
@@ -256,8 +353,20 @@ export function buildContextInsights(sessions: Session[]): ContextInsightsResult
       sentence: `Your best ${segment} took ${joined}.`,
       dials: top.map((s) => ({
         dial: s.dial,
-        hitValue: s.dial === "ratio" ? round1(s.hit) : Math.round(s.hit * 10) / 10,
-        missValue: s.dial === "ratio" ? round1(s.miss) : Math.round(s.miss * 10) / 10,
+        // Water is a share (0–1) — print it as a whole percentage so the
+        // greeting's "exact figures" rule stays honest for it too.
+        hitValue:
+          s.dial === "water"
+            ? Math.round(s.hit * 100)
+            : s.dial === "ratio"
+              ? round1(s.hit)
+              : Math.round(s.hit * 10) / 10,
+        missValue:
+          s.dial === "water"
+            ? Math.round(s.miss * 100)
+            : s.dial === "ratio"
+              ? round1(s.miss)
+              : Math.round(s.miss * 10) / 10,
         unit: UNIT[s.dial],
       })),
     });
