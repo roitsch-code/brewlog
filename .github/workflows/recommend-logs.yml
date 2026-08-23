@@ -1,0 +1,79 @@
+name: Recommend Logs (read-only)
+
+# Pull the app container's RECENT recommend-related log lines off the VPS so a
+# "Recommendation failed" report can be diagnosed from its actual error instead
+# of a guess. Read-only: it only reads docker logs, it changes nothing.
+#
+# Push-triggered on a marker file (NOT workflow_dispatch): the integration token
+# this repo's Claude sessions use cannot dispatch a workflow (403), so bumping
+# `.github/recommend-logs-trigger` and merging is the established way to fire
+# one. `.github/**` is paths-ignored by deploy.yml, so this never redeploys.
+#
+# STDIN TRAP (2026-08-17): the whole script is fed to the remote bash over
+# stdin and `docker compose exec -T` READS stdin — every exec here must carry
+# `</dev/null` or it swallows the rest of the script and later sections are
+# silently skipped while the run still goes green.
+#
+# PUBLIC-REPO SAFETY: this repo is public, so run logs are public. Output is
+# therefore filtered to recommendation-pipeline lines and their surrounding
+# stack frames, every line is truncated to 300 chars, and the whole section is
+# capped. It never cats the .env, never prints env values, and never runs
+# `docker compose config`/`docker inspect` (all of which would interpolate
+# secrets). Grep patterns are anchored to error/pipeline markers.
+
+on:
+  push:
+    paths:
+      - ".github/recommend-logs-trigger"
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch recommend errors from the VPS
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
+            set -uo pipefail
+            cd ${{ secrets.DEPLOY_PATH }} || exit 1
+
+            section() { printf '\n========== %s ==========\n' "$1"; }
+
+            section "Container status"
+            docker compose ps --format 'table {{.Name}}\t{{.Service}}\t{{.Status}}' || true
+
+            section "App restarts / exit code"
+            docker inspect --format '{{.Name}} restarts={{.RestartCount}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} started={{.State.StartedAt}}' \
+              $(docker compose ps -q app) 2>/dev/null || echo "could not read app state"
+
+            section "Memory (an OOM-killed generation looks like a failed recipe)"
+            free -h
+
+            # The error we are chasing. `recommend job error:` is logged by
+            # /api/recommend/start when the detached generation rejects; the
+            # stack frames follow it, so keep a window after each hit.
+            section "recommend job errors (last 2000 log lines, 300 chars/line)"
+            docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
+              | grep -a -A 25 -iE 'recommend job error|Failed to parse recommendation' \
+              | cut -c1-300 | tail -200 \
+              || echo "no matching lines"
+
+            section "Other pipeline errors + guard warnings (last 2000 lines)"
+            docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
+              | grep -a -iE '\[recommend\]|recommendProvider|anthropic|mistral|rate.?limit|overloaded|401|429|500 |ECONN|ETIMEDOUT|abort' \
+              | grep -a -viE 'api[_-]?key|authorization|bearer|sk-' \
+              | cut -c1-300 | tail -120 \
+              || echo "no matching lines"
+
+            section "Unhandled rejections / crashes (last 2000 lines)"
+            docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
+              | grep -a -A 15 -iE 'UnhandledPromiseRejection|FATAL ERROR|heap out of memory|TypeError|RangeError' \
+              | cut -c1-300 | tail -120 \
+              || echo "no matching lines"
+
+            section "Done"
+          REMOTE
