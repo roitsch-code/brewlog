@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw, Bookmark, Check, Plus } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
 import { startBrewAgain, startBrewFromChat } from "@/lib/flow/brewAgain";
+import { chatBrewIdentity } from "@/lib/chat/chatBrewTarget";
 import type { CoffeeIdentity } from "@/lib/types/session";
 
 /**
@@ -186,56 +187,72 @@ export default function ActionPill({ action }: { action: NavAction }) {
       return;
     }
 
-    if ((action.destination === "brew_again" || action.destination === "start_brew") && action.id) {
+    if (action.destination === "brew_again" || action.destination === "start_brew") {
       // Hydrate the flow store with the coffee first.
       // Same pattern /coffees and /coffees/[id] use for "Brew this".
-      try {
-        const res = await fetch(`/api/coffees/${action.id}`, { cache: "no-store" });
-        if (res.ok) {
-          const row = (await res.json()) as CoffeeRow | null;
-          if (row && row.id) {
-            const identity: CoffeeIdentity = {
-              roaster: row.roaster,
-              name: row.name,
-              origin: row.origin,
-              process: row.process,
-              components: row.components ?? undefined,
-              roastLevel: "Light",
-              roastDate: row.latestRoastDate,
-              bagPhotoUrl: row.bagPhotoUrl,
-              aiExtracted: false,
-              coffeeId: row.id,
-            };
-            const fieldZones = row.fieldZones ?? null;
-            const r = action.recipe;
-            // start_brew with a complete recipe → jump STRAIGHT to the brew
-            // timer with the chat's exact recipe (no context/recommend, so it
-            // isn't re-generated). If the payload is incomplete, fall back to
-            // the normal "brew again" path (Step Context) rather than break.
-            if (
-              action.destination === "start_brew" &&
-              r &&
-              typeof r.doseGrams === "number" &&
-              typeof r.waterGrams === "number" &&
-              typeof r.waterTempC === "number" &&
-              typeof r.targetTimeSec === "number"
-            ) {
-              startBrewFromChat(
-                identity,
-                fieldZones,
-                r,
-                action.method || "Brew",
-                action.title,
-                action.basedOn,
-              );
-            } else {
+      let identity: CoffeeIdentity | null = null;
+      let fieldZones: import("@/lib/field/types").FieldZones | null = null;
+      if (action.id) {
+        try {
+          const res = await fetch(`/api/coffees/${action.id}`, { cache: "no-store" });
+          if (res.ok) {
+            const row = (await res.json()) as CoffeeRow | null;
+            if (row && row.id) {
+              identity = {
+                roaster: row.roaster,
+                name: row.name,
+                origin: row.origin,
+                process: row.process,
+                components: row.components ?? undefined,
+                roastLevel: "Light",
+                roastDate: row.latestRoastDate,
+                bagPhotoUrl: row.bagPhotoUrl,
+                aiExtracted: false,
+                coffeeId: row.id,
+              };
               // Generative Field v1.1 — lift the persisted Field composition.
-              startBrewAgain(identity, fieldZones);
+              fieldZones = row.fieldZones ?? null;
             }
           }
+        } catch {
+          /* fall through — the roaster+name fallback below may still brew */
         }
-      } catch {
-        /* fall through to plain navigation if the fetch fails */
+      }
+      // No library row (a bag not yet added, or an id whose fetch failed) —
+      // the chat's recipe must still be brewable: synthesise the identity from
+      // the action's own roaster+name. Saving the brew then creates/merges the
+      // coffee row on the derived slug, the app's oldest coffee-creation path.
+      // Before this existed, a start_brew for a brand-new bag threw the whole
+      // validated recipe away and navigated to a blank flow (the dead "Brew
+      // DAK Cassis" pill, 2026-08-23).
+      if (!identity && action.destination === "start_brew") {
+        identity = chatBrewIdentity(action);
+      }
+      if (identity) {
+        const r = action.recipe;
+        // start_brew with a complete recipe → jump STRAIGHT to the brew
+        // timer with the chat's exact recipe (no context/recommend, so it
+        // isn't re-generated). If the payload is incomplete, fall back to
+        // the normal "brew again" path (Step Context) rather than break.
+        if (
+          action.destination === "start_brew" &&
+          r &&
+          typeof r.doseGrams === "number" &&
+          typeof r.waterGrams === "number" &&
+          typeof r.waterTempC === "number" &&
+          typeof r.targetTimeSec === "number"
+        ) {
+          startBrewFromChat(
+            identity,
+            fieldZones,
+            r,
+            action.method || "Brew",
+            action.title,
+            action.basedOn,
+          );
+        } else {
+          startBrewAgain(identity, fieldZones);
+        }
       }
     }
     router.push(destinationToPath(action));

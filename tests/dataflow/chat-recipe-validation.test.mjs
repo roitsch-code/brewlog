@@ -32,10 +32,17 @@ test("the route imports the shared validator", () => {
 
 test("start_brew is validated before it becomes an action", () => {
   // The call must sit inside the start_brew branch, not somewhere decorative.
+  // Since 2026-08-23 the branch checks the TARGET first (an invented id — the
+  // dead DAK Cassis pill — is bounced before the recipe is even looked at),
+  // so the window covers both checks and asserts their order.
   const branch = ROUTE.slice(ROUTE.indexOf('block.name === "start_brew"'));
   assert.ok(branch.length > 0, "start_brew branch must exist");
-  const head = branch.slice(0, 1200);
-  assert.match(head, /validateRecipe\(/, "start_brew must call validateRecipe");
+  const head = branch.slice(0, 3600);
+  const targetIdx = head.indexOf("resolveStartBrewTarget(");
+  const recipeIdx = head.indexOf("validateRecipe(");
+  assert.ok(targetIdx > 0, "start_brew must resolve its target");
+  assert.ok(recipeIdx > 0, "start_brew must call validateRecipe");
+  assert.ok(targetIdx < recipeIdx, "target check runs first — a perfect recipe on a dead pill is still a dead button");
   assert.match(head, /problems\.length > 0/, "it must act on the problems it finds");
 });
 
@@ -64,7 +71,10 @@ test("the repair budget is exactly one round per turn", () => {
 });
 
 test("a recipe that fails twice yields no brew button", () => {
-  assert.match(ROUTE, /droppedBrew = true/, "the second failure must drop the action");
+  // droppedBrew carries WHICH kind of failure dropped the pill, so the user
+  // hears the right explanation — both drop sites must exist.
+  assert.match(ROUTE, /droppedBrew = "recipe"/, "a twice-failed recipe must drop the action");
+  assert.match(ROUTE, /droppedBrew = "target"/, "a twice-failed target must drop the action");
   // And the user is told, rather than the pill silently vanishing.
   const idx = ROUTE.indexOf("droppedBrew) {");
   assert.ok(idx > 0);
