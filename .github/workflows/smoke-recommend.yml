@@ -1,0 +1,47 @@
+name: Smoke test recommend (live API call)
+
+# Fires ONE real /recommend model call through the app's own callRecommendModel
+# and fails loudly if the API rejects it.
+#
+# This is the gate that was missing on 2026-08-21, when `temperature: 0.8` made
+# claude-opus-4-7 400 every recipe request and /recommend stayed dead for two
+# days behind a fully green tsc + test suite + CI + deploy. Nothing offline can
+# catch a well-formed request that the live API refuses.
+#
+# Costs roughly one Opus call (~$0.20) per run, so it is ON DEMAND rather than
+# on every deploy — wiring it into deploy.yml is a cost call for the owner.
+# Run it after ANY change to a model call: parameters, model id, provider, or
+# prompt structure.
+#
+# Triggers:
+#   - workflow_dispatch: the "Run workflow" button.
+#   - push to .github/smoke-recommend-trigger on main: the route-around for
+#     Claude Code sessions, whose integration token cannot workflow_dispatch
+#     (403). Bump that file in a PR to fire a run. Same pattern as
+#     .github/verify-cache-trigger.
+#
+# Skips green when ANTHROPIC_API_KEY is unset. Prints usage numbers and the
+# response SHAPE only — never the API key and never the recipe text.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/smoke-recommend-trigger
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      RECOMMEND_PROVIDER: anthropic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: One live recommend call
+        run: node scripts/smoke-recommend-call.mjs
