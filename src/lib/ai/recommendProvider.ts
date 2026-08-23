@@ -70,18 +70,19 @@ async function callAnthropic(userMessage: string): Promise<{ text: string; usage
   const res = await anthropic().messages.create({
     model: RECOMMEND_MODEL,
     max_tokens: MAX_TOKENS,
-    // Sampling temperature, stated rather than inherited. The Mistral path
-    // below sets 0.5 with a written rationale; the Anthropic path set nothing,
-    // so it silently ran at the SDK default (1.0) and the reasoning behind the
-    // number was lost in the #519 rollback to Opus.
-    //
-    // 0.8 is deliberate: below the default, because this call emits recipe
-    // NUMBERS and numeric discipline is the thing worth protecting; well above
-    // Mistral's 0.5, because Opus follows instructions faithfully enough that
-    // low temperature makes it converge on the single most-likely pick — which
-    // is the repetition being fixed. The deterministic guards (capacity,
-    // volume, fidelity, grind-unit, drip-assist) are the net underneath.
-    temperature: 0.8,
+    // NO `temperature` HERE — DO NOT RE-ADD IT. `claude-opus-4-7` rejects the
+    // parameter outright: the API answers
+    //   400 invalid_request_error: "`temperature` is deprecated for this model."
+    // with `x-should-retry: false`, so the request can never succeed. #541 added
+    // `temperature: 0.8` (reasoning: sit below the SDK default to protect the
+    // recipe NUMBERS, above Mistral's 0.5 so Opus doesn't converge on one pick)
+    // and that single line took /recommend down completely from 2026-08-21 until
+    // 2026-08-23 — every recipe request 400'd, and the client showed only its
+    // generic "Recommendation failed". Sampling is the model's own now; the
+    // variety levers are input-side (rotated menu, mixed seed, exploration slot)
+    // and the deterministic guards (capacity, volume, fidelity, grind-unit,
+    // drip-assist) are the net underneath. Pinned by
+    // tests/dataflow/recommend-request-shape.test.mjs.
     system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
     messages: [{ role: "user", content: userMessage }],
   });
