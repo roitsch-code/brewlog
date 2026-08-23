@@ -69,6 +69,31 @@ jobs:
               | cut -c1-300 | tail -120 \
               || echo "no matching lines"
 
+            # The chat's Brew pills are persisted verbatim in
+            # conversation_messages.actions, so "the button did nothing" can be
+            # diagnosed from what the pill actually carried: was there an id,
+            # and does that id exist in coffees (the tap handler requires both
+            # before it can seed the timer). Read-only SELECT; prints ids,
+            # numbers and a short label — never full recipe text or prose.
+            section "Latest chat start_brew / brew_again pills (id + library check)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(m.created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
+                     a->>'destination' AS dest,
+                     COALESCE(a->>'id','(NO ID)') AS coffee_id,
+                     EXISTS (SELECT 1 FROM coffees c WHERE c.id = a->>'id') AS in_library,
+                     left(COALESCE(a->>'label',''),48) AS label,
+                     (a->'recipe'->>'doseGrams') AS dose,
+                     (a->'recipe'->>'waterGrams') AS water,
+                     (a->'recipe'->>'waterTempC') AS temp,
+                     (a->'recipe'->>'targetTimeSec') AS t_sec,
+                     jsonb_array_length(COALESCE(a->'recipe'->'pourSteps','[]'::jsonb)) AS steps
+              FROM conversation_messages m
+              CROSS JOIN LATERAL jsonb_array_elements(m.actions) a
+              WHERE m.actions IS NOT NULL
+                AND a->>'destination' IN ('start_brew','brew_again')
+              ORDER BY m.created_at DESC
+              LIMIT 8;" </dev/null || echo "psql query failed"
+
             section "Unhandled rejections / crashes (last 2000 lines)"
             docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
               | grep -a -A 15 -iE 'UnhandledPromiseRejection|FATAL ERROR|heap out of memory|TypeError|RangeError' \
