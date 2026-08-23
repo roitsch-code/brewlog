@@ -68,7 +68,9 @@ Hard prohibitions when you wrote a recipe for a library bag:
 - Do NOT use brew_again — it throws your recipe away and re-asks context, re-generating a possibly different recipe.
 - Do NOT answer with just prose and no action. A written recipe with no start_brew button is a failure.
 
-Every bag in the Coffee Library block carries an [id:…]. Use that id — the bag does NOT need to be ★ IN ROTATION to brew it. If the user names a bag that isn't in the block at all, then you genuinely don't have its id: say so briefly and offer a coffee_library link, rather than guessing an id.
+Every bag in the Coffee Library block carries an [id:…]. Use that id — the bag does NOT need to be ★ IN ROTATION to brew it. **NEVER guess or construct an id** — ids only come from the library context, and an invented one points the button at a coffee that doesn't exist, so it silently does nothing (the server rejects it).
+
+**A bag NOT in the Coffee Library yet — a fresh photo, a bag they just bought — still gets its Brew button.** Omit \`id\` and pass the bag's \`roaster\` and \`name\` (exactly as printed — they form the bag's identity), plus \`origin\` and \`process\` when you know them. The button then opens the timer with your exact recipe, and the bag lands in the library automatically when the brew is saved. So write the recipe, call start_brew with roaster+name, and (when appropriate) offer add_coffee alongside — the user can brew first and add later, or both.
 
 Non-negotiable recipe rules:
 - The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
@@ -89,7 +91,7 @@ Hard rules:
 - Use the roaster and coffee name **exactly as printed on the bag**. Those two form the coffee's identity, so a paraphrase creates a second entry for the same bag.
 - Tasting notes are the ones **printed on the bag**, in English. Never your own guesses about how it tastes.
 - **One call per bag.** Two bags in one photo means two calls — one button each, named so the user can tell them apart.
-- The bag has **no id until it is added**. So in the same turn, do NOT call remember_advice, coffee_detail, or start_brew for it — you have no id to pass and the button would do nothing. If you have durable brewing guidance for it, put it in this call's observation + suggestion instead: the same tap saves it as that coffee's coach note, and the recipe builder reads it from then on.
+- The bag has **no id until it is added**. So in the same turn, do NOT call remember_advice or coffee_detail for it — you have no id to pass and the button would do nothing. If you have durable brewing guidance for it, put it in this call's observation + suggestion instead: the same tap saves it as that coffee's coach note, and the recipe builder reads it from then on. (start_brew is the one action that DOES work for a new bag — via roaster+name, no id; see its rules.)
 - Once the bag is added it behaves like any other library bag — the user can ask for a recipe next turn and you'll have its id.
 
 Do NOT call it for: a coffee they're merely curious about or considering buying, or a café's coffee they drank out. For a bag that IS already in the library, link to it with coffee_detail — with ONE exception: if the user is supplying something that bag is missing (its photo, a roast date, the variety), call add_coffee again with what you now know. Adding an existing bag only ever FILLS BLANKS — it never overwrites anything already recorded — so it is the safe way to complete a half-filled entry.
@@ -333,12 +335,16 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "start_brew",
     description:
-      "Drop the user straight into the step-by-step brew TIMER with the EXACT recipe you just gave them — no context questions, no re-recommendation. CALL THIS WHENEVER your message lays out a complete recipe (dose/water/temp/grind/pour sequence) for a SPECIFIC bag in their Coffee Library — it is the button for that message. The bag's id comes from the Coffee Library block; it does NOT need to be in rotation. This is the most common request ('how would you brew the Lot01', 'give me an AeroPress recipe for X'). Never answer such a request with only a library link or a brew_again button. The recipe you pass here MUST be identical to the one in your message — same dose, water, temperature, grind, total time, and the same pour-by-pour sequence. Do not round or restate differently.",
+      "Drop the user straight into the step-by-step brew TIMER with the EXACT recipe you just gave them — no context questions, no re-recommendation. CALL THIS WHENEVER your message lays out a complete recipe (dose/water/temp/grind/pour sequence) for a SPECIFIC bag — it is the button for that message. For a bag in their Coffee Library, pass its id from the library block (it does NOT need to be in rotation). For a bag NOT in the library yet (a fresh photo, a new purchase), omit id and pass roaster + name instead — the button works and the bag is created when the brew is saved. NEVER invent an id. This is the most common request ('how would you brew the Lot01', 'give me an AeroPress recipe for X'). Never answer such a request with only a library link or a brew_again button. The recipe you pass here MUST be identical to the one in your message — same dose, water, temperature, grind, total time, and the same pour-by-pour sequence. Do not round or restate differently.",
     input_schema: {
       type: "object",
       properties: {
         label: { type: "string", description: "Button label, e.g. 'Brew Quiquira (Iced)'" },
-        id: { type: "string", description: "The coffee's UUID from the library context." },
+        id: { type: "string", description: "The coffee's id, copied EXACTLY from the [id:…] in the library context. OMIT for a bag not in the library — never construct one." },
+        roaster: { type: "string", description: "The bag's roaster, exactly as printed. REQUIRED when id is omitted (bag not in the library yet); harmless alongside an id." },
+        name: { type: "string", description: "The coffee's name, exactly as printed. REQUIRED when id is omitted; together with roaster it forms the bag's identity." },
+        origin: { type: "string", description: "Origin country, when known. Only meaningful for a bag not in the library yet." },
+        process: { type: "string", description: "Natural | Washed | Honey | Anaerobic | Other, when known. Only for a bag not in the library yet." },
         method: { type: "string", description: "Brewer AND any pour-control in use, exactly as the brew screen should print it, e.g. 'V60', 'Japanese Iced V60', 'AeroPress', 'Orea V4 Classic + Drip Assist'. Whatever you omit here disappears from the screen the user brews from." },
         title: { type: "string", description: "Short recipe name shown on the brew screen, e.g. 'Japanese Iced V60 — Quiquira'." },
         basedOn: { type: "string", description: "Reference recipe this adapts (e.g. 'Japanese Iced V60'), or 'Own recipe'." },
