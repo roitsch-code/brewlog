@@ -8,10 +8,12 @@ name: Smoke test recommend (live API call)
 # days behind a fully green tsc + test suite + CI + deploy. Nothing offline can
 # catch a well-formed request that the live API refuses.
 #
-# Costs roughly one Opus call (~$0.20) per run, so it is ON DEMAND rather than
-# on every deploy — wiring it into deploy.yml is a cost call for the owner.
-# Run it after ANY change to a model call: parameters, model id, provider, or
-# prompt structure.
+# Since 2026-08-23 this ALSO runs automatically after every deploy — the owner
+# approved the ~$0.20/deploy cost, so deploy.yml carries a `smoke` job with the
+# same steps (needs: deploy). This standalone workflow stays for on-demand runs
+# between deploys: after rotating the API key, when Anthropic announces a model
+# change, or any time "does the recipe call still work?" needs an answer
+# without shipping anything. Keep the two step-for-step in sync.
 #
 # Triggers:
 #   - workflow_dispatch: the "Run workflow" button.

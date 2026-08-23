@@ -124,3 +124,39 @@ jobs:
             echo "deploy failed after 5 retries"
             exit 1
           REMOTE
+
+  # One REAL /recommend model call after every deploy, through the app's own
+  # callRecommendModel (bundled from src/, not a reconstruction) — so a request
+  # the live API rejects fails THIS run, loudly, minutes after the merge,
+  # instead of failing silently on the owner's next brew.
+  #
+  # Why: on 2026-08-21 a single added parameter (`temperature: 0.8`, which
+  # claude-opus-4-7 refuses with a 400) killed every recipe request for two
+  # days while tsc, the full test suite, CI and this deploy all stayed green.
+  # No offline gate can see a well-formed request the live API refuses; only a
+  # real call can. Owner-approved cost: ~one Opus call (~$0.20) per deploy.
+  #
+  # Runs on the RUNNER against the same code the VPS just deployed (same
+  # commit, same bundler entry). It validates the model call — parameters,
+  # model id, system-block shape, key, quota — which is exactly the class that
+  # slipped through. It does NOT exercise the VPS container itself; the deploy
+  # job above already fails if the container doesn't come up.
+  #
+  # Skips green when ANTHROPIC_API_KEY is unset. Prints usage numbers and the
+  # response SHAPE only — never the key, never recipe text (public repo, public
+  # run logs).
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      RECOMMEND_PROVIDER: anthropic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: One live recommend call
+        run: node scripts/smoke-recommend-call.mjs
