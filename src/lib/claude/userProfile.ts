@@ -29,7 +29,11 @@ const CANONICAL_PROFILE = `**Equipment:**
 **Taste preferences:**
 - Likes: silky, balanced, floral/fruity light roasts — elegant, not wild
 - Avoids: extreme fermentation, infused varieties, heavy/dark roasts, anaerobic "fruit bombs"
-- Favourite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey`;
+- Not at home: pineapple-forward coffees. The Avoids line above filters PROCESSING and roast; this one is a FLAVOUR, so a washed or honey coffee can be loudly pineapple and pass that filter untouched. Soft, not a ban — he will happily drink a pineapple cup out at a cafe, he just does not want one on the home counter.
+- Scope of that dislike: it governs SELECTION — which bag to open, to buy, to explore — and never brewing. If a bag he already owns turns out pineapple-forward, brew it as well as it can be brewed; do not try to suppress the fruit and do not talk him out of the cup.
+- Favourite origins: Ethiopia Washed, Kenya AA Washed, Brazil Natural, Costa Rica Honey
+
+**Reading his logged brews:** the log holds coffees he already chose, so it arrives pre-filtered by his taste. A flavour being rare or absent there is NOT evidence that he dislikes it — he may simply never have bought one. Only the lines above state a dislike; infer no others from silence.`;
 
 export function formatProfileForPrompt(prefs: UserPreferences | null): string {
   let block = `## About you\n${CANONICAL_PROFILE}`;
