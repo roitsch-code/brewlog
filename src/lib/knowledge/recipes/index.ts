@@ -43,6 +43,7 @@ export {
   formatRecipeForPrompt,
   formatRecipesForPrompt,
   mixSeed,
+  LONG_DESIGNED_WAIT_SEC,
 } from "./helpers";
 
 export type { RecipeSelectionInput, ScoredRecipe } from "./helpers";

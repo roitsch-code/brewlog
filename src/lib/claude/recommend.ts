@@ -4,6 +4,7 @@ import { stripProactiveDripAssist, isDripAssistMethod } from "../utils/dripAssis
 import {
   DRAWDOWN_RESERVE_FRAC,
   DRIP_ASSIST_DRAWDOWN_FRAC,
+  maxRenderedPourGapSec,
 } from "../utils/pourSequence";
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
@@ -38,6 +39,7 @@ import {
   normaliseProcess,
   normaliseGoal,
   mixSeed,
+  LONG_DESIGNED_WAIT_SEC,
 } from "../knowledge/recipes";
 import {
   getVarietyPriorsForBag,
@@ -646,18 +648,21 @@ export async function generateRecommendation(
   // serveVolumeMl: vessel-capacity filter for plain hot brews only. Iced/cold
   // opt out (the vessel holds the hot portion / a concentrate). A locked method
   // also opts out — the user chose the vessel, so honour it with the volume.
-  const serveVolumeForOccasion =
-    context.occasion === "summer-time" || context.occasion === "cold-brew"
-      ? undefined
-      : targetWaterMl;
+  const isHotBrew =
+    context.occasion !== "summer-time" && context.occasion !== "cold-brew";
+  const serveVolumeForOccasion = isHotBrew ? targetWaterMl : undefined;
   const selectionInput = {
       brewersAvailable,
       lockedBrewers,
-      // Drip Assist locked → don't offer steep-/rest-heavy recipes: the disc
-      // drains almost as fast as it's poured, so a designed long wait is
-      // pointless on it (owner-flagged). Selection-level exclusion, recipes
-      // unaltered. Only the disc lock sets this (a plain V60 lock does not).
-      excludeLongWaits: Boolean(dripAssistLocked),
+      // Don't OFFER steep-/rest-heavy recipes (Kasuya Mugen 105s draw, Hedrick
+      // bypass 100s gap, Rao Rule-of-Thirds 80s rest) on any HOT brew — the owner
+      // brews from the schedule and a designed long wait between pours makes the
+      // coffee taste bad ("solche Rezepte mit mega langer Wartezeit funktionieren
+      // nicht ... sind raus"). Selection-level exclusion, recipes unaltered; the
+      // Drip Assist disc (drains as fast as it's poured) always excluded them, now
+      // every hot brew does. Iced/cold opt out (a cold steep IS a long wait) and
+      // the fallback-if-empty in selectRecipes keeps the menu non-empty.
+      excludeLongWaits: Boolean(dripAssistLocked) || isHotBrew,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
       // Blend: score the process match against EVERY component's process, so a
@@ -901,6 +906,40 @@ Return valid JSON only.`;
     isPercolation,
   );
 
+  //   6. LONG POUR GAPS — the owner's "pour 2 was somehow 2 minutes" report.
+  //      The prompt's pour-vs-clock floor (recommendPrompt.ts) is the primary
+  //      fix, but the model can still author a recipe with too few pours for its
+  //      targetTimeSec, and buildPourOver then renders a >75s hole between pours
+  //      (a stalled brew that over-extracts and tastes bad). This reads the
+  //      RENDERED schedule — the derived gap, not the authored numbers — and
+  //      drops any percolation candidate over the threshold. Recipes are never
+  //      rewritten (owner rule: we don't falsify recipes — we don't OFFER the
+  //      bad ones). If every candidate trips it (a rare double-leak), keep the
+  //      single LEAST-bad so the user still gets a recipe.
+  const gaps = discTimed.map((c) =>
+    isPercolation(c.method) ? maxRenderedPourGapSec(c.recipe, coffee.roastDate) : 0,
+  );
+  const gapKept = discTimed.filter((_, i) => gaps[i] <= LONG_DESIGNED_WAIT_SEC);
+  let gapGuarded = discTimed;
+  if (gapKept.length && gapKept.length < discTimed.length) {
+    discTimed.forEach((c, i) => {
+      if (gaps[i] > LONG_DESIGNED_WAIT_SEC) {
+        console.warn(
+          `[recommend] long-pour-gap: dropped "${c.title ?? c.method}" — ${Math.round(gaps[i])}s dead gap between pours (> ${LONG_DESIGNED_WAIT_SEC}s)`,
+        );
+      }
+    });
+    gapGuarded = gapKept;
+  } else if (!gapKept.length && discTimed.length > 1) {
+    // Every candidate has a long gap — keep only the least-bad one.
+    let best = 0;
+    for (let i = 1; i < gaps.length; i++) if (gaps[i] < gaps[best]) best = i;
+    console.warn(
+      `[recommend] long-pour-gap: all candidates over ${LONG_DESIGNED_WAIT_SEC}s — kept least-bad "${discTimed[best].title ?? discTimed[best].method}" (${Math.round(gaps[best])}s)`,
+    );
+    gapGuarded = [discTimed[best]];
+  }
+
   // Grinder UNIT. The user picks the grinder in the flow and the prompt says
   // "NEVER Niche°" / "NEVER clicks" for the one they didn't pick, but a hard
   // instruction stated only in prose is one this model leaks — the same failure
@@ -908,7 +947,7 @@ Return valid JSON only.`;
   // wrong number: "406" on a Comandante isn't approximately right, it is a
   // setting the grinder does not have. Converted, not flagged, using the
   // owner's own measured anchors (grindSettings.ts).
-  const candidates = discTimed.map((c) => {
+  const candidates = gapGuarded.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
     if (fixed === c.recipe.grindSize) return c;
     console.warn(

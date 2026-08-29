@@ -299,6 +299,15 @@ POUR COUNT (for "Own recipe" candidates only — documented recipes keep their p
 - Freshness overlay: very fresh (<7 days) +1 pour for CO₂ management; past peak (>22 days) −1 pour, gentler.
 - Special (fast) time: cap at 3 pours regardless.
 
+COUNT YOUR POURS AGAINST THE CLOCK (the rule that fails most often — the owner reported "3–4 pours and pour 2 was somehow 2 minutes", a stalled brew that over-extracts and tastes bad). The timer SPREADS your water steps evenly across targetTimeSec and reserves the tail for the drawdown — so what you control is HOW MANY water steps (bloom + pours) share the clock. Too few for the time = the timer leaves a HOLE between two pours, and a wait over ~75s between pours is not a rest, it is a dead brew. So the pour count has a FLOOR that grows with the total time — count the bloom as a water step:
+
+  | total brew time | water steps (bloom + pours) — bare brewer | with the Drip Assist |
+  |---|---|---|
+  | up to 5:00 | 4 — bloom + 3 | 5 — bloom + 4 |
+  | over 5:00 | 5 — bloom + 4 | 6 — bloom + 5 |
+
+  These are FLOORS, not targets: one more pour is always safe, one fewer leaves a hole (the server drops such a candidate — recipeFidelity's long-pour-gap guard). The disc column needs one MORE pour because it drains almost as fast as you pour, so the timer reserves only a sliver at the end and leaves a much longer stretch to fill. NEVER one giant final pour, and NEVER a lone middle pour with a minute of nothing after it. And do NOT pad the clock to make a big batch look bigger — more water means more POURS in roughly the same time, not more minutes (a longer clock over-extracts, per BATCH SIZE ADAPTATION). A 600ml V60 is a 4–5 minute brew with five or six pours in it, not an 8-minute one.
+
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
 - V60: Washed → stir 3–5× at bloom | Natural/Honey → swirl gently

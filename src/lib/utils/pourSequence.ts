@@ -583,3 +583,43 @@ export function hasImmersionShape(recipe: BrewRecipe): boolean {
     return false;
   });
 }
+
+/**
+ * The longest gap between consecutive pours on the RENDERED percolation timeline
+ * — the derived dead time the timer actually SHOWS, not the recipe's authored
+ * numbers. `buildPourOver` spreads a recipe's pours across its `targetTimeSec`
+ * and reserves the drawdown tail, so a recipe with FEW pours over a LONG clock
+ * renders a big hole even though every authored pour is short: bloom + 2 pours
+ * at 5:00 collapses to ONE ~2.5-minute gap. That is exactly the "3–4 pours and
+ * pour 2 was somehow 2 minutes" the owner reported — a stalled brew that
+ * over-extracts and tastes bad. `hasLongDesignedWait` cannot see it (it reads
+ * authored durations); this reads the schedule the user brews from.
+ *
+ * Returns 0 for immersion-shaped recipes (a steep is intentional there) and when
+ * no percolation schedule can be built (prose-only / <2 water pours).
+ */
+export function maxRenderedPourGapSec(
+  recipe: BrewRecipe,
+  roastDate?: string,
+  now: number = Date.now(),
+  method?: string,
+): number {
+  if (hasImmersionShape(recipe)) return 0;
+  const steps =
+    pourStepsFromStructured(recipe, roastDate, now, method) ??
+    (recipe.pourSequence
+      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate, now, method)
+      : null);
+  if (!steps) return 0;
+  const water = steps.filter((s) => s.pourGrams > 0);
+  let max = 0;
+  for (let i = 0; i < water.length - 1; i++) {
+    const pour = water[i];
+    // When this pour finishes pouring, at the recipe's own rate (fallback ~4 g/s)
+    // — mirrors validateRecipe's dead-gap check so the two surfaces agree.
+    const poursUntil = pour.startTimeSec + (pour.pourDurationSec ?? pour.pourGrams / POUR_RATE_GPS);
+    const gap = water[i + 1].startTimeSec - poursUntil;
+    if (gap > max) max = gap;
+  }
+  return max;
+}
