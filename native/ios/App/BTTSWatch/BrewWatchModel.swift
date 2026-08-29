@@ -10,19 +10,27 @@ private let wlog = Logger(subsystem: "com.roitsch.btts.watchkitapp", category: "
  BTTS watch app — runs the brew timeline locally and buzzes the wrist at each
  step, even with the screen off / wrist down, while the iPhone is active.
 
- HAPTIC MECHANISM (build 19 — back to the one that was CONFIRMED working in
- build 8): watchOS will NOT fire `WKInterfaceDevice` haptics for a backgrounded
- app — the documented EXCEPTION is an app with an active `HKWorkoutSession`
- (exactly how interval/HIIT timers buzz the wrist with the screen off). So at
- brew start we begin a lightweight workout session; while it runs the app stays
- alive in the background and every step buzzes even with the wrist down. We end
- it the moment the brew finishes. (The app must still be OPENED at brew start —
- Apple won't let a closed watch app start a session or buzz on its own.)
+ HAPTIC MECHANISM: watchOS will NOT fire `WKInterfaceDevice` haptics for a
+ backgrounded app — the documented EXCEPTION is an app with an active
+ `HKWorkoutSession` (exactly how interval/HIIT timers buzz the wrist with the
+ screen off). So at brew start we begin a workout session; while it runs the app
+ stays alive in the background and every step buzzes even with the wrist down. We
+ end it the moment the brew finishes. (The app must still be OPENED at brew start
+ — Apple won't let a closed watch app start a session or buzz on its own.)
+
+ THE FIX (build 20): builds 8–19 started a BARE session (`startActivity` only, no
+ builder). It buzzed at first but the owner reported the wrist going quiet after
+ the 2nd pour — a bare session without an actively-collecting builder gets
+ suspended by watchOS a minute or two into the background. The documented pattern
+ that survives a whole workout is a session PLUS an `HKLiveWorkoutBuilder` with
+ `beginCollection` (see startWorkoutSession). We collect heart rate / active
+ energy only to keep the session "live"; we never finish the workout, so nothing
+ is saved to Health.
 
  NOTE: build 17/18 tried a physical-therapy `WKExtendedRuntimeSession` +
  `notifyUser` instead, to dodge the HealthKit signing hassle — that mechanism
  did NOT buzz (rx reached the watch, but no haptic). HKWorkoutSession is the
- one that works; reverted to it.
+ one that works; the live builder makes it last.
 
  DELIVERY (kept from build 18): the iPhone re-sends the whole schedule every ~3 s
  over sendMessage + transferUserInfo + updateApplicationContext, with a stable
@@ -50,6 +58,15 @@ final class BrewWatchModel: NSObject, ObservableObject {
     private var ticker: Timer?
     private let healthStore = HKHealthStore()
     private var workoutSession: HKWorkoutSession?
+    /// The LIVE data-collecting builder attached to the session. A bare
+    /// `startActivity` session (builds 8–19) starts, but without a builder
+    /// actively collecting samples watchOS suspends the app after a minute or two
+    /// in the background — the "no buzz after the 2nd pour" the owner reported.
+    /// Apple's documented pattern for staying alive through a whole workout is a
+    /// session PLUS an HKLiveWorkoutBuilder with beginCollection — the strong
+    /// signal that this is a genuinely active workout. We never save it (no
+    /// finishWorkout), so nothing lands in the Health app.
+    private var workoutBuilder: HKLiveWorkoutBuilder?
     private var currentBrewId: Double = 0
     /// The last brewId we finished (auto-wind-down or explicit end). A stray late
     /// re-send from the phone with this id must NOT spin the workout session back
@@ -68,12 +85,17 @@ final class BrewWatchModel: NSObject, ObservableObject {
         requestWorkoutAuthorization()
     }
 
-    /// Ask once for permission to record a workout. We only need this to keep
-    /// the app alive for background haptics — no health data is recorded beyond
-    /// the bare session. Prompt appears the first time the watch app launches.
+    /// Ask once for permission to run a workout. We share the workout type and
+    /// READ heart rate + active energy so the live builder actually collects
+    /// samples — the collection is what keeps watchOS treating this as an active
+    /// workout (and thus keeps the app alive for background haptics). Nothing is
+    /// stored: we never finish the workout. Prompt appears on first launch.
     private func requestWorkoutAuthorization() {
         guard HKHealthStore.isHealthDataAvailable() else { wlog.error("health data unavailable"); return }
-        healthStore.requestAuthorization(toShare: [HKObjectType.workoutType()], read: []) { ok, err in
+        var read = Set<HKObjectType>()
+        if let hr = HKQuantityType.quantityType(forIdentifier: .heartRate) { read.insert(hr) }
+        if let ae = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) { read.insert(ae) }
+        healthStore.requestAuthorization(toShare: [HKObjectType.workoutType()], read: read) { ok, err in
             wlog.log("workout auth ok=\(ok) err=\(String(describing: err), privacy: .public)")
         }
     }
@@ -196,17 +218,35 @@ final class BrewWatchModel: NSObject, ObservableObject {
         config.locationType = .indoor
         do {
             let session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
+            // Attach a LIVE builder + data source and begin collecting. The bare
+            // startActivity of builds 8–19 kept haptics alive only briefly in the
+            // background; an actively-collecting builder is what makes watchOS
+            // sustain the session for the whole brew.
+            let builder = session.associatedWorkoutBuilder()
+            builder.dataSource = HKLiveWorkoutDataSource(healthStore: healthStore, workoutConfiguration: config)
             session.delegate = self
-            session.startActivity(with: Date())
+            builder.delegate = self
+            let start = Date()
+            session.startActivity(with: start)
+            builder.beginCollection(withStart: start) { ok, err in
+                wlog.log("workout beginCollection ok=\(ok) err=\(String(describing: err), privacy: .public)")
+            }
             workoutSession = session
-            wlog.log("workout session started")
+            workoutBuilder = builder
+            wlog.log("workout session started (live builder)")
         } catch {
             workoutSession = nil
+            workoutBuilder = nil
             wlog.error("workout session start failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private func endWorkoutSession() {
+        // Stop collecting and end the session. We deliberately do NOT finish the
+        // workout, so nothing is written to the Health app — the builder's data
+        // is discarded when it deallocates.
+        workoutBuilder?.endCollection(withEnd: Date()) { _, _ in }
+        workoutBuilder = nil
         workoutSession?.end()
         workoutSession = nil
     }
@@ -272,4 +312,13 @@ extension BrewWatchModel: HKWorkoutSessionDelegate {
         }
         wlog.error("workout failed: \(error.localizedDescription, privacy: .public)")
     }
+}
+
+// MARK: - HKLiveWorkoutBuilderDelegate
+
+// We don't use the collected samples — they exist only so watchOS treats the
+// session as an active workout and keeps the app alive for background haptics.
+extension BrewWatchModel: HKLiveWorkoutBuilderDelegate {
+    func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder, didCollectDataOf collectedTypes: Set<HKSampleType>) {}
+    func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
 }

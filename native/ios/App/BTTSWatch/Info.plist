@@ -31,6 +31,6 @@
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>BTTS runs a brief workout session during a brew so your wrist keeps getting each step's haptic cue while the screen is off. No health data is recorded beyond the session itself.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>BTTS runs a brief workout session during a brew so your wrist keeps getting each step's haptic cue while the screen is off. No health data is read.</string>
+	<string>BTTS reads basic workout metrics (heart rate, energy) during a brew only to keep the brew timer alive on your wrist so each step's haptic cue fires while the screen is off. Nothing is stored or shared.</string>
 </dict>
 </plist>
