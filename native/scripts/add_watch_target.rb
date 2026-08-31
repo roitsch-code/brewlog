@@ -1,23 +1,22 @@
 #!/usr/bin/env ruby
-# Adds the BTTSWatch watchOS app target to the Capacitor-generated Xcode
-# project, plus the phone-side BrewWatchPlugin.swift, an Embed Watch Content
-# phase, and the target dependency. Idempotent: re-running removes a prior
-# BTTSWatch target first so the project never accumulates duplicates.
-#
-# Why a script (not the Xcode GUI): the build is driven headless on this Mac /
-# CI, and the watch target must be reproducible from source. See
-# docs/ios-shell-roadmap.md (G4).
+# WAS: add the BTTSWatch watchOS app target. The Apple Watch step-haptics were
+# RETIRED on 2026-08-29 — background haptics never worked (buzzes died after the
+# 2nd pour once the wrist dropped) and the last attempt drained the watch battery
+# in a few hours. So this script now REMOVES any BTTSWatch target from the
+# cap-synced project and only wires the app-local plugins (ScreenAwake +
+# MainViewController) that used to ride alongside it. It keeps this filename
+# because .github/workflows/ios-testflight.yml and native/scripts/mac-build-upload.sh
+# call it by name (and add_widget_target.rb documents that MainViewController is
+# wired here). Idempotent: safe to re-run after every `cap sync`.
 require "xcodeproj"
 
 ROOT = File.expand_path("../ios/App", __dir__)
 PROJ = File.join(ROOT, "App.xcodeproj")
-WATCH_BUNDLE_ID = "com.roitsch.btts.watchkitapp"
-COMPANION_BUNDLE_ID = "com.roitsch.btts"
 
 project = Xcodeproj::Project.open(PROJ)
 app_target = project.targets.find { |t| t.name == "App" } or abort("App target not found")
 
-# --- Clean slate: drop any prior BTTSWatch target + group + embed phase -------
+# --- Drop any prior BTTSWatch target + group + embed phase (removes the watch) -
 project.targets.select { |t| t.name == "BTTSWatch" }.each do |t|
   app_target.dependencies.dup.each do |d|
     d.remove_from_project if d.target == t
@@ -30,61 +29,22 @@ app_target.build_phases.select { |p|
 if (g = project.main_group["BTTSWatch"])
   g.remove_from_project
 end
-# Drop prior refs to our app-target Swift files so we don't double-add them.
-# MainViewController.swift registers BrewWatchPlugin via capacitorDidLoad — an
-# app-local plugin is NOT auto-discovered by Capacitor (only npm plugins land
-# in packageClassList), so without this registration the JS side sees
-# window.Capacitor.Plugins.BrewWatch as undefined and never reaches the watch.
-APP_SWIFT_FILES = %w[BrewWatchPlugin.swift ScreenAwakePlugin.swift MainViewController.swift]
+
+# --- Wire the app-local plugins into the App target ---------------------------
+# MainViewController.swift registers WidgetBridge / LiveActivity / ScreenAwake in
+# capacitorDidLoad (an app-local plugin is NOT auto-discovered by Capacitor — only
+# npm plugins land in packageClassList — so without these refs the classes don't
+# compile). BrewWatchPlugin.swift is gone; sweep any stale ref to it too so the
+# pbxproj never dangles at a deleted file.
+STALE = %w[BrewWatchPlugin.swift ScreenAwakePlugin.swift MainViewController.swift]
+KEEP  = %w[ScreenAwakePlugin.swift MainViewController.swift]
 app_group = project.main_group["App"] or abort("App group not found")
-APP_SWIFT_FILES.each do |name|
-  if (old = app_group.files.find { |f| f.display_name == name })
+STALE.each do |name|
+  while (old = app_group.files.find { |f| f.display_name == name })
     old.remove_from_project
   end
 end
-
-# --- Watch file references ----------------------------------------------------
-watch_group = project.main_group.new_group("BTTSWatch", "BTTSWatch")
-swift_refs = %w[BTTSWatchApp.swift BrewWatchModel.swift ContentView.swift BrewLaunchIntent.swift].map { |f| watch_group.new_reference(f) }
-assets_ref = watch_group.new_reference("Assets.xcassets")
-watch_group.new_reference("Info.plist") # referenced via INFOPLIST_FILE, not a build phase
-watch_group.new_reference("BTTSWatch.entitlements") # referenced via CODE_SIGN_ENTITLEMENTS
-
-# --- The watch app target -----------------------------------------------------
-watch_target = project.new_target(:application, "BTTSWatch", :watchos, "9.0", nil, :swift)
-watch_target.add_file_references(swift_refs + [assets_ref])
-
-settings = {
-  "PRODUCT_BUNDLE_IDENTIFIER" => WATCH_BUNDLE_ID,
-  "PRODUCT_NAME" => "$(TARGET_NAME)",
-  "INFOPLIST_FILE" => "BTTSWatch/Info.plist",
-  "CODE_SIGN_ENTITLEMENTS" => "BTTSWatch/BTTSWatch.entitlements", # push + Time Sensitive Notifications (aps-environment + time-sensitive)
-  "GENERATE_INFOPLIST_FILE" => "NO",
-  "CODE_SIGN_STYLE" => "Automatic",
-  "SWIFT_VERSION" => "5.0",
-  "WATCHOS_DEPLOYMENT_TARGET" => "9.0",
-  "TARGETED_DEVICE_FAMILY" => "4",
-  "SDKROOT" => "watchos",
-  "ASSETCATALOG_COMPILER_APPICON_NAME" => "AppIcon",
-  "SKIP_INSTALL" => "YES", # embedded-only: keep the watch app OUT of Payload root (a stray top-level copy breaks watch-app install)
-  "MARKETING_VERSION" => "1.0",
-  "CURRENT_PROJECT_VERSION" => "1",
-}
-watch_target.build_configurations.each do |config|
-  settings.each { |k, v| config.build_settings[k] = v }
-end
-
-# --- Phone-side plugin + bridge VC into the App target ------------------------
-app_refs = APP_SWIFT_FILES.map { |name| app_group.new_reference(name) }
-app_target.add_file_references(app_refs)
-
-# --- Embed the watch app into the iOS app + build dependency ------------------
-app_target.add_dependency(watch_target)
-embed = app_target.new_copy_files_build_phase("Embed Watch Content")
-embed.symbol_dst_subfolder_spec = :products_directory
-embed.dst_path = "$(CONTENTS_FOLDER_PATH)/Watch"
-bf = embed.add_file_reference(watch_target.product_reference, true)
-bf.settings = { "ATTRIBUTES" => ["RemoveHeadersOnCopy"] }
+app_target.add_file_references(KEEP.map { |name| app_group.new_reference(name) })
 
 project.save
-puts "OK: added BTTSWatch target (#{watch_target.uuid}) + embed phase + plugin ref."
+puts "OK: removed any BTTSWatch target + wired app plugins (#{KEEP.join(', ')})."

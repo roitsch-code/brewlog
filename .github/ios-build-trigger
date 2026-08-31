@@ -1,4 +1,4 @@
 # Bump this file (change the line below) and merge to main to kick an iOS
 # TestFlight build — see the `push` trigger in .github/workflows/ios-testflight.yml.
 # Used when a session cannot reach the Actions "Run workflow" UI / workflow_dispatch.
-build: 2026-08-29T01 — watch: live HKWorkoutBuilder session (background haptics survive the whole brew — "no buzz after pour 2" fix)
+build: 2026-08-29T02 — RETIRE the Apple Watch app: remove the BTTSWatch target + BrewWatchPlugin (background haptics never worked + drained the battery)

@@ -18,8 +18,6 @@ import { buildBrewTimeline, type BrewTimeline } from "@/lib/brew/timeline";
 import type { BrewStepAction } from "@/lib/types/session";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 import { useBrewStepHaptics } from "@/hooks/useBrewStepHaptics";
-import { useBrewStepWatch } from "@/hooks/useBrewStepWatch";
-import { endBrewOnWatch } from "@/lib/native/brewWatch";
 import { useBrewLiveActivity } from "@/hooks/useBrewLiveActivity";
 import { boundariesFromTimeline } from "@/lib/native/brewNotifications";
 import { ScalePanel } from "@/components/flow/ScalePanel";
@@ -169,10 +167,6 @@ export default function LightStepBrew() {
   const handleDone = useCallback(
     (actualSec?: number) => {
       disableWakeLock();
-      // End the watch brew immediately on Done, so the workout session is torn
-      // down now rather than waiting for unmount / the watch's 8 s wind-down.
-      // Idempotent — the unmount cleanup also ends it.
-      endBrewOnWatch();
       // Guard the arg: if a click event leaks in via onNext={handleDone} it is
       // truthy, so `actualSec ?? elapsed` would store the (non-serializable)
       // event as actualTimeSec — which threw inside the localStorage-persisted
@@ -247,12 +241,6 @@ export default function LightStepBrew() {
     samplesRef.current,
     isDripAssistMethod(method),
   );
-  // Hand the whole step schedule to the paired Apple Watch at brew start; the
-  // watch app runs the timeline and buzzes the wrist per step via a
-  // physical-therapy extended-runtime session (fires screen-off / wrist-down,
-  // directly on the watch — no notification delay). Native-only no-op.
-  useBrewStepWatch(boundaries, elapsed, started, recipeName ?? "Brew");
-
   // Live Activity — live brew timer on the lock screen / Dynamic Island. The
   // timer + progress tick natively; the step label updates on step change.
   // Native-only no-op.
