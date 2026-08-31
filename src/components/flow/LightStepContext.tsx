@@ -100,7 +100,7 @@ const OCCASIONS = [
 
 const AMOUNTS = [
   { id: "small", label: "Small", sub: "350 ml", footnote: "A single cup — focused tasting, faster brew." },
-  { id: "big", label: "Big", sub: "520 ml", footnote: "A mug or two to share." },
+  { id: "big", label: "Big", sub: "450 ml", footnote: "A larger cup or two to share — your everyday amount." },
   { id: "custom", label: "Custom", sub: "enter ml", footnote: "Set your own target in millilitres." },
   { id: "surprise", label: "Surprise me", sub: "Claude picks", footnote: "Claude picks the volume to match this coffee." },
 ];
@@ -137,18 +137,18 @@ const APPROACHES: ReadonlyArray<{ id: ApproachId; label: string; sub: string; fo
 // excluded — the Hario disc only controls pour rate, no effect when
 // there's no pouring phase).
 const METHODS = [
-  { id: "V60", label: "V60", sub: "Hario cone" },
-  { id: "Orea Fast", label: "Orea Fast", sub: "fast drip, max ~500 ml" },
-  { id: "Orea Apex", label: "Orea Apex", sub: "clarity & brightness" },
-  { id: "Orea Classic", label: "Orea Classic", sub: "sweetness focus" },
-  { id: "Orea Open", label: "Orea Open", sub: "open bed, max flow, max ~500 ml" },
-  { id: "Kalita Wave", label: "Kalita Wave", sub: "even bed, max ~500 ml" },
-  { id: "Origami (cone)", label: "Origami (cone)", sub: "ceramic, V60-like clarity, max ~500 ml" },
-  { id: "Origami (wave)", label: "Origami (wave)", sub: "ceramic, Kalita-like sweetness, max ~500 ml" },
-  { id: "Chemex", label: "Chemex", sub: "clean & bright, max ~600 ml" },
+  { id: "V60", label: "V60", sub: "Hario cone, max 550 ml" },
+  { id: "Orea Fast", label: "Orea Fast", sub: "fast drip, max 450 ml" },
+  { id: "Orea Apex", label: "Orea Apex", sub: "clarity & brightness, max 450 ml" },
+  { id: "Orea Classic", label: "Orea Classic", sub: "sweetness focus, max 450 ml" },
+  { id: "Orea Open", label: "Orea Open", sub: "open bed, max flow, max 450 ml" },
+  { id: "Kalita Wave", label: "Kalita Wave", sub: "even bed, max 450 ml" },
+  { id: "Origami (cone)", label: "Origami (cone)", sub: "V60-like clarity, max 500 ml" },
+  { id: "Origami (wave)", label: "Origami (wave)", sub: "Kalita-like sweetness, max 500 ml" },
+  { id: "Chemex", label: "Chemex", sub: "clean & bright, 350–750 ml" },
   { id: "AeroPress", label: "AeroPress", sub: "max 230 ml · or concentrate" },
-  { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 400 ml" },
-  { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, ≥ 500 ml" },
+  { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 450 ml" },
+  { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, 500–1000 ml" },
   // Emergency-only: the Drip Assist disc is retired from daily use, but kept
   // selectable for when there's no gooseneck kettle around (e.g. travelling).
   // The "drip assist" token is stripped in normaliseEquipmentKey, so this maps

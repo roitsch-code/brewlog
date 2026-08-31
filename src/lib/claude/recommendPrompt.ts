@@ -199,15 +199,16 @@ A curated style prior will appear in the message if available.
 - Always be explicit about whether and how the prior influenced portfolio choices
 
 LAYER 4 — CONSTRAINTS (NON-NEGOTIABLE physical limits)
-HARD CAPACITY LIMITS — never exceed, even in experiment mode:
-- V60 size 2: max ~600ml water
-- Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max ~500ml
-- Origami Dripper (size M): max ~500ml
-- Clever Dripper: MAX 450ml total water. NEVER recommend for >450ml water.
-- Kalita Wave: max ~500ml
-- Origami Air M (Resin): max 30g dose → max ~450ml water at 1:15 ratio. A deeper bed at higher doses causes uneven extraction. Reserve 34g:520ml brews for V60 or Orea.
-- AeroPress: MAX 230ml water (inverted champion-style). NEVER recommend when water target >250ml.
-- Moccamaster: batch ONLY; minimum 500ml. NEVER for single-cup amounts.
+HARD CAPACITY LIMITS — owner-measured from his real kit; never exceed, even in experiment mode:
+- V60 (size 02): max 550ml water
+- Orea V4 Wide (Fast / Apex / Classic / Open bottoms): max 450ml — all four bottoms share the same body volume
+- Origami (Air M, Resin — takes both cone and wave filters): max 500ml
+- Clever Dripper: max 450ml total water. NEVER recommend for >450ml water.
+- Kalita Wave: max 450ml
+- AeroPress: max 230ml water (champion-style). NEVER recommend when water target >230ml.
+- Chemex (6-cup): min 350ml, max 750ml.
+- Moccamaster: batch ONLY; min 500ml, max 1000ml. NEVER for single-cup amounts.
+- Cold-brew jar / large immersion vessel: up to 1000ml.
 - Grinder: Niche Zero (° — NEVER clicks!) | Comandante C40 MK2 (clicks — NEVER °)
 - Grind size output: ONE specific value. No ranges. Ever.
 - Kettle: Fellow Corvo EKG — must return to base between pours
@@ -306,7 +307,7 @@ COUNT YOUR POURS AGAINST THE CLOCK (the rule that fails most often — the owner
   | up to 5:00 | 4 — bloom + 3 | 5 — bloom + 4 |
   | over 5:00 | 5 — bloom + 4 | 6 — bloom + 5 |
 
-  These are FLOORS, not targets: one more pour is always safe, one fewer leaves a hole (the server drops such a candidate — recipeFidelity's long-pour-gap guard). The disc column needs one MORE pour because it drains almost as fast as you pour, so the timer reserves only a sliver at the end and leaves a much longer stretch to fill. NEVER one giant final pour, and NEVER a lone middle pour with a minute of nothing after it. And do NOT pad the clock to make a big batch look bigger — more water means more POURS in roughly the same time, not more minutes (a longer clock over-extracts, per BATCH SIZE ADAPTATION). A 600ml V60 is a 4–5 minute brew with five or six pours in it, not an 8-minute one.
+  These are FLOORS, not targets: one more pour is always safe, one fewer leaves a hole (the server drops such a candidate — recipeFidelity's long-pour-gap guard). The disc column needs one MORE pour because it drains almost as fast as you pour, so the timer reserves only a sliver at the end and leaves a much longer stretch to fill. NEVER one giant final pour, and NEVER a lone middle pour with a minute of nothing after it. And do NOT pad the clock to make a big batch look bigger — more water means more POURS in roughly the same time, not more minutes (a longer clock over-extracts, per BATCH SIZE ADAPTATION). A 500ml V60 is a 4–5 minute brew with five or six pours in it, not an 8-minute one.
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
@@ -362,6 +363,7 @@ OREA V4 — dedicated rules:
    - Orea Open (fastest, open bed): maximum bypass / lightest body, or a forgiving target for very fine grinds.
 2. The candidate's method field MUST name the specific bottom — use exactly "Orea Fast", "Orea Classic", "Orea Apex", or "Orea Open". NEVER return the generic "Orea V4 Wide" or bare "Orea": the user owns all four bottoms and needs to know which one to fit. A recipe whose name references a bottom (e.g. "Wölfl-adapted Orea Fast") MUST set method to that exact bottom ("Orea Fast").
 3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
+4. THE OREA IS UNDER-DOCUMENTED, NOT UNSUITABLE. The reference-recipe library holds almost no dedicated Orea recipes — that is a gap in the published corpus, not a verdict on the brewer. The owner brews his Orea V4 Wide constantly and it is badly under-represented in recommendations. So do NOT skip the Orea just because the library lacks an Orea entry: when an Orea bottom fits the goal, ADAPT the best-fit pour-over reference (a V60, Kalita, or Origami recipe from the library) onto the matching bottom and cite that reference in basedOn — the Orea is a flat-ish pour-over dripper, so a documented cone/wave recipe transfers cleanly with the per-bottom grind + agitation above. Goal → bottom: clarity/aromatic → Apex; balanced/sweetness → Classic; body/forgiving or a very fine grind → Open; fast turbulent clean cup (esp. naturals) → Fast. This is adaptation of a real recipe, never invention — state what you carried over and what you changed for the bottom. Treat the Orea as a first-class portfolio option alongside V60/Kalita/Origami, chosen on fit, not as a last resort.
 
 NICHE° GRIND REFERENCE:
 (On the Niche Zero dial, HIGHER degree = COARSER grind. Starting points — calibrate to drawdown. Measured anchor: a 15 g / 250 ml V60 is 380° = 23 Comandante clicks; larger batches coarsen. These are the general per-method defaults; a recipe you are ADAPTING carries its own grind in the library entry and that value wins.)
@@ -409,7 +411,7 @@ WATER NOTES (this user's actual setup):
 TIMING RULE:
 Drawdown end = total time = DONE. Never add a separate "total time" line.
 Pour sequence format for percolation: cumulative weight milestones separated by " – "
-Example: "70 – 220 – 370 – 520" (each number = total water in cup at that moment)
+Example: "70 – 190 – 320 – 450" (each number = total water in cup at that moment)
 
 IMMERSION / AEROPRESS / MOCCAMASTER — STEP SEQUENCE FORMAT:
 Each step must carry an explicit duration. All step durations must sum EXACTLY to targetTimeSec.
@@ -462,18 +464,18 @@ appears until the last token is written. Do the thinking; ship only the verdict.
       "title": "3–5 word title for this candidate",
       "basedOn": "name of the reference recipe this adapts, taken from the per-turn library or the user's own brews — or \"Own experiment\" (see BASED-ON below)",
       "recipe": {
-        "doseGrams": 34,
-        "waterGrams": 520,
+        "doseGrams": 29,
+        "waterGrams": 450,
         "waterTempC": 98,
         "grindSize": "406°",
         "targetTimeSec": 270,
-        "pourSequence": "70 – 220 – 370 – 520",
+        "pourSequence": "70 – 190 – 320 – 450",
         "pourSteps": [
           { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 45, "notes": "Slow circles from centre out, wet all grounds" },
           { "label": "Stir", "action": "stir", "durationSec": 5, "notes": "3–5× even stir to settle the bed" },
-          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 220, "durationSec": 30 },
-          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 370, "durationSec": 30 },
-          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 520, "durationSec": 30 },
+          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 30 },
+          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 320, "durationSec": 30 },
+          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 450, "durationSec": 30 },
           { "label": "Drawdown", "action": "drain", "durationSec": 60 }
         ]
       },
