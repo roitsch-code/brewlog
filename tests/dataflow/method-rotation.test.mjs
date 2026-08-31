@@ -204,13 +204,21 @@ test("selectRecipes DEMOTES dominant brewers within ties — never excludes them
       );
     }
   }
-  // …but nothing is excluded and scores never regress: the demotion is
-  // tie-scoped, so the menu's score profile is identical (only reordered).
-  assert.deepEqual(
-    after.map((s) => s.score),
-    before.map((s) => s.score),
-    "tie-scoped demotion must not change the score profile",
-  );
+  // …but nothing is excluded and scores never REGRESS. The demotion is
+  // tie-scoped (never promotes a lower score above a higher one), but with the
+  // one-per-brewer cap it can swap a demoted brewer's slot for an EQUAL-OR-
+  // HIGHER-scored fresh brewer — which is exactly what the Orea recipe additions
+  // enabled: demoting v60/clever now surfaces a score-6 Orea where a score-5
+  // filler used to sit. So the guarantee is "no regression", not "identical".
+  const beforeScores = before.map((s) => s.score).sort((a, b) => b - a);
+  const afterScores = after.map((s) => s.score).sort((a, b) => b - a);
+  assert.equal(afterScores.length, beforeScores.length, "menu size unchanged");
+  for (let i = 0; i < beforeScores.length; i++) {
+    assert.ok(
+      afterScores[i] >= beforeScores[i],
+      `tie-scoped demotion must not lower any rank's score (rank ${i}: ${afterScores[i]} < ${beforeScores[i]})`,
+    );
+  }
 });
 
 test("a genuinely higher-scoring recipe on a dominant brewer STILL leads (no ban)", () => {

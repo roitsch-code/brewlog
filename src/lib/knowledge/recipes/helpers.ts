@@ -10,12 +10,14 @@ import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
 import { MARKUS_ADDITIONS } from "./markusAdditions";
+import { OREA_WIDE_RECIPES } from "./oreaWide";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
   ...REFERENCE_RECIPES,
   ...EXPANDED_RECIPES,
   ...MARKUS_ADDITIONS,
+  ...OREA_WIDE_RECIPES,
 ];
 
 /**
