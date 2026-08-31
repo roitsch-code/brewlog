@@ -1,5 +1,5 @@
 import { callRecommendModel } from "../ai/recommendProvider";
-import { vesselOverflow, vesselTooSmallForTarget } from "../utils/vesselCapacity";
+import { vesselOverflow, vesselCannotServe, VESSEL_CAPS } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist, isDripAssistMethod } from "../utils/dripAssist";
 import {
   DRAWDOWN_RESERVE_FRAC,
@@ -250,9 +250,9 @@ function guardVolumeTarget(
 ): RecommendationCandidate[] {
   if (!targetMl || skip) return candidates;
   const safe = candidates.filter((c) => {
-    const tooSmall = vesselTooSmallForTarget(c.method, targetMl);
-    if (tooSmall) {
-      console.warn(`[recommend] volume guard dropped "${c.title}" — ${tooSmall}`);
+    const cannotServe = vesselCannotServe(c.method, targetMl);
+    if (cannotServe) {
+      console.warn(`[recommend] volume guard dropped "${c.title}" — ${cannotServe}`);
       return false;
     }
     const water = c.recipe?.waterGrams as number | undefined;
@@ -382,7 +382,7 @@ export async function generateRecommendation(
     small:
       "target ~350g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~21–25g) — state the ratio; do NOT default to a fixed 23g. Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M (dose limit 30g). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
     big:
-      "target ~520g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~31–37g) — state the ratio; do NOT default to a fixed 34g. Suitable: V60, Orea, Kalita, Chemex. NOT Origami Air M (a dose above 30g makes the bed too deep ✗). NOT Clever Dripper (520ml > 450ml ✗). NOT AeroPress (520ml > 230ml ✗). NOT Moccamaster (batch only).",
+      "target ~450g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~27–32g) — state the ratio; do NOT default to a fixed dose. Suitable: V60, Orea (any bottom), Clever Dripper (450ml = max ✓), Kalita, Chemex, Origami. NOT AeroPress (max 230ml). NOT Moccamaster (batch only, min 500ml).",
     batch:
       "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
     custom: context.customWaterMl
@@ -401,7 +401,7 @@ export async function generateRecommendation(
     context.amount === "custom"
       ? context.customWaterMl ?? null
       : context.amount === "big"
-        ? 520
+        ? 450
         : context.amount === "small"
           ? 350
           : null; // surprise → model's call
@@ -458,27 +458,38 @@ export async function generateRecommendation(
       context.amount === "custom"
         ? (context.customWaterMl ?? 350)
         : context.amount === "big"
-        ? 520
+        ? 450
         : context.amount === "small"
         ? 350
         : null;
     if (!ml) return "";
     type Violation = { method: string; reason: string };
+    // Derived from VESSEL_CAPS (the single source of truth in vesselCapacity.ts)
+    // so the prompt's forbidden list can never drift from the deterministic
+    // guards again — they did drift before (UI "Clever 400ml" vs code 450).
     const allViolations: Violation[] = [];
-    if (ml > 230) allViolations.push({ method: "AeroPress", reason: "max 230ml" });
-    if (ml > 450) allViolations.push({ method: "Clever Dripper", reason: "max 450ml" });
-    if (ml > 450) allViolations.push({ method: "Origami Air M", reason: "30g dose limit → max ~450ml" });
-    if (ml < 500) allViolations.push({ method: "Moccamaster", reason: "batch only, min 500ml" });
+    for (const cap of VESSEL_CAPS) {
+      if (cap.label === "Cold-brew jar") continue; // not a hot-brew method
+      if (cap.maxMl != null && ml > cap.maxMl) {
+        allViolations.push({ method: cap.label, reason: `max ${cap.maxMl}ml` });
+      } else if (cap.minMl != null && ml < cap.minMl) {
+        allViolations.push({ method: cap.label, reason: `batch only, min ${cap.minMl}ml` });
+      }
+    }
 
     // If the user has explicitly locked a method that would normally be
     // forbidden at this volume, exempt it — both their method choice and
     // their volume are absolute user instructions. Note the trade-off but
     // honor both. Without this exemption the AI silently swapped the
     // method or clamped the ml (Markus' "450ml + Clever → recipe came
-    // back at 360ml" report).
+    // back at 360ml" report). Match the locked method to its cap label via
+    // the same VESSEL_CAPS regex, so "Orea Classic" resolves to "Orea" etc.
     const lockedLower = lockedMethodBase.toLowerCase();
-    const lockedViolation = lockedLower
-      ? allViolations.find((v) => v.method.toLowerCase() === lockedLower)
+    const lockedLabel = lockedLower
+      ? VESSEL_CAPS.find((c) => c.match.test(lockedLower))?.label
+      : undefined;
+    const lockedViolation = lockedLabel
+      ? allViolations.find((v) => v.method === lockedLabel)
       : undefined;
     const enforced = lockedViolation
       ? allViolations.filter((v) => v !== lockedViolation)
@@ -596,7 +607,7 @@ export async function generateRecommendation(
     context.amount === "custom"
       ? (context.customWaterMl ?? 350)
       : context.amount === "big"
-        ? 520
+        ? 450
         : context.amount === "small"
           ? 350
           : context.amount === "batch"

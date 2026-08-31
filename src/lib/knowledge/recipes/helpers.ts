@@ -5,17 +5,19 @@ import type {
   Process,
   Goal,
 } from "./types";
-import { vesselTooSmallForTarget } from "../../utils/vesselCapacity";
+import { vesselCannotServe } from "../../utils/vesselCapacity";
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
 import { MARKUS_ADDITIONS } from "./markusAdditions";
+import { OREA_WIDE_RECIPES } from "./oreaWide";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
   ...REFERENCE_RECIPES,
   ...EXPANDED_RECIPES,
   ...MARKUS_ADDITIONS,
+  ...OREA_WIDE_RECIPES,
 ];
 
 /**
@@ -352,7 +354,7 @@ function scoreRecipe(
   // HARD CAPACITY CONSTRAINT. The caller only sets serveVolumeMl for plain hot
   // brews (omitted for iced / cold brew, where the vessel holds less than the
   // drink volume) and never when a method is locked (USER OVERRIDE).
-  if (input.serveVolumeMl && vesselTooSmallForTarget(recipe.brewer, input.serveVolumeMl)) {
+  if (input.serveVolumeMl && vesselCannotServe(recipe.brewer, input.serveVolumeMl)) {
     return null;
   }
 

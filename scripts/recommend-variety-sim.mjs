@@ -151,7 +151,7 @@ const DAY = 86_400_000;
 // Mirrors recommend.ts: same inputs, same order, same seed derivation.
 function selectionFor(scenario, pastSessions) {
   const { coffee, context } = scenario;
-  const targetWaterMl = context.amount === "big" ? 520 : 350;
+  const targetWaterMl = context.amount === "big" ? 450 : 350;
 
   const methodRecency = K.buildMethodRecency(pastSessions, {
     lockedMethod: undefined,
@@ -243,7 +243,7 @@ function buildUserMessage(scenario, pastSessions, sel) {
 
   const guide =
     context.amount === "big"
-      ? "target ~520g water / 34g dose (1:15.3)."
+      ? "target ~450g water / ~29g dose (1:15.5). Suitable: V60, Orea, Clever Dripper, Kalita, Chemex, Origami. NOT AeroPress (max 230ml). NOT Moccamaster (batch only)."
       : "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper, Kalita, Chemex, Origami Air M. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).";
   const waterNote =
     context.waterSource === "championship"
