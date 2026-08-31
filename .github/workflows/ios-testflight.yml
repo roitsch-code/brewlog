@@ -1,7 +1,7 @@
 name: iOS TestFlight
 
-# Builds the BTTS iOS shell (iPhone app + Apple Watch app + home-screen widget)
-# and uploads it to
+# Builds the BTTS iOS shell (iPhone app + home-screen widget; the Apple Watch app
+# was retired 2026-08-29) and uploads it to
 # TestFlight — AUTOMATICALLY, every month, so the 90-day TestFlight build expiry
 # can never silently kill the installed app. Also runnable on demand.
 #
@@ -116,18 +116,18 @@ jobs:
           security find-identity -v -p codesigning "$KEYCHAIN" | grep -i "Apple Distribution" \
             || { echo "::error::distribution identity not usable after import"; exit 1; }
 
-      - name: Install the xcodeproj gem (watch + widget target injectors)
+      - name: Install the xcodeproj gem (widget/share target injectors + app-plugin wiring)
         run: gem install xcodeproj --no-document
 
-      - name: Sync Capacitor project + re-add the watch & widget targets
+      - name: Sync Capacitor project + re-add the widget/share targets
         working-directory: native
         run: |
           set -euo pipefail
           npm ci
           npx cap sync ios
           npm run assets || true   # Splash.imageset is absent; the icons (what matters) still generate
-          ruby scripts/add_watch_target.rb
-          ruby scripts/add_widget_target.rb   # WidgetKit extension — after cap sync + the watch script
+          ruby scripts/add_watch_target.rb    # now: removes any watch target + wires app-local plugins (watch retired 2026-08-29)
+          ruby scripts/add_widget_target.rb   # WidgetKit extension — after cap sync + the app-plugin wiring
           ruby scripts/add_share_target.rb    # Share Extension ("Add to BTTS")
 
       - name: Write the App Store Connect API key
@@ -281,8 +281,9 @@ jobs:
             -authenticationKeyIssuerID "$ASC_ISSUER_ID"
 
       - name: Verify the IPA shape before upload
-        # App.app must be the ONLY thing at Payload root, with the watch app
-        # embedded inside it (the SKIP_INSTALL=NO stray-watch-app trap).
+        # App.app must be the ONLY thing at Payload root. (The Apple Watch app was
+        # retired 2026-08-29 — background haptics never worked + drained the
+        # battery — so there is no App.app/Watch/ any more.)
         run: |
           set -euo pipefail
           IPA="$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)"
@@ -292,8 +293,8 @@ jobs:
           echo "Payload root:"; ls "$RUNNER_TEMP/unzip/Payload"
           appcount="$(ls "$RUNNER_TEMP/unzip/Payload" | grep -c '\.app$' || true)"
           [ "$appcount" = "1" ] || { echo "::error::Payload root must contain exactly one .app, found $appcount"; exit 1; }
-          ls "$RUNNER_TEMP/unzip/Payload/App.app/Watch/"*.app >/dev/null 2>&1 \
-            || { echo "::error::watch app not embedded under App.app/Watch"; exit 1; }
+          ! ls "$RUNNER_TEMP/unzip/Payload/App.app/Watch/"*.app >/dev/null 2>&1 \
+            || { echo "::error::a watch app is still embedded — the retirement did not take"; exit 1; }
           ls "$RUNNER_TEMP/unzip/Payload/App.app/PlugIns/BTTSWidget.appex" >/dev/null 2>&1 \
             || { echo "::error::widget extension not embedded under App.app/PlugIns"; exit 1; }
 
