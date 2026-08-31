@@ -3,7 +3,7 @@ import { useRef, useEffect, useCallback } from "react";
 // App-local Capacitor plugin (`native/ios/App/App/ScreenAwakePlugin.swift`,
 // registered in MainViewController.capacitorDidLoad). It flips iOS's
 // `isIdleTimerDisabled`. We read it off the injected `window.Capacitor.Plugins`
-// (the same pattern as brewWatch.ts) rather than importing the npm
+// (the same app-local-plugin pattern as widgetBridge.ts) rather than importing the npm
 // `@capacitor-community/keep-awake` plugin — that one was never linked into the
 // iOS binary (absent from CapApp-SPM/Package.swift), so its call was a silent
 // no-op and the screen slept. This app-local plugin is compiled in for certain.
