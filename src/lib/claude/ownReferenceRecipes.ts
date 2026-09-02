@@ -31,6 +31,20 @@ import { brewMethodKey } from "../utils/brewMethodKey";
 export const MIN_RATING = 4;
 export const MAX_REFERENCES = 3;
 
+/**
+ * Immersion vs pour-over are separate brewing CATEGORIES, not interchangeable
+ * "brewer variety" — a Clever (immersion) is never a like-for-like swap for a
+ * V60 (pour-over). Own-references are varied WITHIN a category and never
+ * cross-substituted (owner rule). Keyed on the brewer family via brewMethodKey,
+ * which collapses "AeroPress" / "AeroPress (Prismo)" → "aeropress" and any
+ * "Clever …" → "clever".
+ */
+export type BrewCategory = "immersion" | "pour-over";
+const IMMERSION_FAMILIES: ReadonlySet<string> = new Set(["clever", "aeropress"]);
+export function ownRefCategory(method: string): BrewCategory {
+  return IMMERSION_FAMILIES.has(brewMethodKey(method)) ? "immersion" : "pour-over";
+}
+
 export interface OwnReference {
   /** Stable, quotable name — this is what `basedOn` has to echo. */
   name: string;
@@ -48,6 +62,8 @@ export interface OwnReference {
   notes?: string;
   /** 3 = same bag, 2 = same origin+process, 1 = same brewer. */
   relevance: number;
+  /** Immersion (Clever/AeroPress) vs pour-over — never mixed as "variety". */
+  category: BrewCategory;
 }
 
 function shortDate(iso: string | undefined): string {
@@ -148,6 +164,7 @@ export function buildOwnReferences(
       pourPlan,
       notes: s.result?.freeNotes?.trim() || undefined,
       relevance,
+      category: ownRefCategory(method),
     });
   }
 
@@ -161,9 +178,43 @@ export function buildOwnReferences(
     if (!held || c.rating > held.rating) bestPerPairing.set(key, c);
   }
 
-  return Array.from(bestPerPairing.values())
-    .sort((a, b) => b.relevance - a.relevance || b.rating - a.rating)
-    .slice(0, MAX_REFERENCES);
+  // Spread the budget across distinct APPROACHES (brewer families) so the block
+  // never says one thing three times (e.g. 3× Clever water-first) — the
+  // self-reinforcing loop that made the recommender repeat the owner's beloved
+  // Clever every turn. This is WITHIN-category variety only: it just avoids
+  // near-identical entries, it never drops the user's own immersion brew to
+  // insert a pour-over (or vice versa) — it only ever cites brews the user
+  // actually logged, in relevance order.
+  const sorted = Array.from(bestPerPairing.values()).sort(
+    (a, b) => b.relevance - a.relevance || b.rating - a.rating,
+  );
+  const picked: OwnReference[] = [];
+  const usedKeys = new Set<string>();
+  // Pass 1: one per approach-key — but a same-bag (relevance 3) reference is the
+  // single most relevant fact in the prompt, so it is kept UNCONDITIONALLY.
+  for (const c of sorted) {
+    if (picked.length >= MAX_REFERENCES) break;
+    const key = brewMethodKey(c.method);
+    if (c.relevance === 3) {
+      picked.push(c);
+      usedKeys.add(key);
+      continue;
+    }
+    if (usedKeys.has(key)) continue;
+    picked.push(c);
+    usedKeys.add(key);
+  }
+  // Pass 2: if variety left slots empty (e.g. the owner only brews Clever),
+  // backfill with the next-best remaining brews — distinct bags carry different
+  // numbers/pour-plans, so it stays varied immersion, never a fabricated swap.
+  if (picked.length < MAX_REFERENCES) {
+    for (const c of sorted) {
+      if (picked.length >= MAX_REFERENCES) break;
+      if (picked.includes(c)) continue;
+      picked.push(c);
+    }
+  }
+  return picked;
 }
 
 /**
@@ -176,10 +227,17 @@ export function buildOwnReferences(
  * directions: one said "repeating a result they already loved is usually the
  * right answer" while the other asked for different references — and the
  * instruction carrying concrete numbers wins that argument every time.
+ *
+ * `dominantFamilies` — brewer-family keys (brewMethodKey form) that have led the
+ * recent recommendation sets. A reference on a dominant family gets a WITHIN-
+ * category "you have brewed this a lot lately, vary the recipe/technique" nudge
+ * — never a cross-category "switch to a pour-over" push (immersion and pour-over
+ * are not interchangeable). Fit still decides the category.
  */
 export function formatOwnReferencesForPrompt(
   refs: OwnReference[],
   recentlyRecommended: string[] = [],
+  dominantFamilies: Set<string> = new Set(),
 ): string {
   if (refs.length === 0) return "";
   const seenRecently = (name: string): boolean =>
@@ -202,9 +260,14 @@ export function formatOwnReferencesForPrompt(
         : r.relevance === 2
           ? "same origin + process"
           : "same brewer, different coffee";
+    const familyDominant = dominantFamilies.has(brewMethodKey(r.method));
     const staleness = seenRecently(r.name)
       ? " — ALREADY RECOMMENDED RECENTLY: build on it, don't re-serve it"
-      : "";
+      : familyDominant
+        ? r.category === "immersion"
+          ? " — YOU HAVE BREWED THIS IMMERSION APPROACH A LOT LATELY: if the bean still calls for immersion, vary the recipe/technique (bloom-first vs water-first, dose, grind) rather than re-serving this identical one. Do NOT switch to a pour-over just to be different — let fit decide the category."
+          : " — YOU HAVE BREWED THIS POUR-OVER A LOT LATELY: if the bean still calls for pour-over, vary the recipe/technique rather than re-serving this identical one. Do NOT switch to immersion just to be different — let fit decide the category."
+        : "";
     return [
       `${i + 1}. ${r.name} — ${r.rating}★ (${scope})${staleness}`,
       `   ${r.doseGrams}g : ${r.waterGrams}g${r.waterTempC ? ` at ${r.waterTempC}°C` : ""}${r.grindSize ? ` · grind ${r.grindSize}` : ""}${timing ? ` · ${timing}` : ""}`,

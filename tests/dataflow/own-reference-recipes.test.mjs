@@ -11,7 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { pathToFileURL } from "node:url";
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import path from "node:path";
@@ -21,7 +21,7 @@ const dir = await mkdtemp(join(tmpdir(), "ownref-"));
 const out = join(dir, "o.mjs");
 await build({
   stdin: {
-    contents: `export { buildOwnReferences, formatOwnReferencesForPrompt, MIN_RATING, MAX_REFERENCES } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/ownReferenceRecipes.ts"))};
+    contents: `export { buildOwnReferences, formatOwnReferencesForPrompt, ownRefCategory, MIN_RATING, MAX_REFERENCES } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/ownReferenceRecipes.ts"))};
 export { resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};`,
     resolveDir: ROOT,
     loader: "ts",
@@ -35,6 +35,7 @@ export { resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claud
 const {
   buildOwnReferences,
   formatOwnReferencesForPrompt,
+  ownRefCategory,
   MIN_RATING,
   MAX_REFERENCES,
   resolveReference,
@@ -212,4 +213,109 @@ test("an own-reference name never binds to a published recipe", () => {
       `"${refs[0].name}" bound to a published recipe — the fidelity guard would overwrite the user's own numbers`,
     );
   }
+});
+
+// ── Immersion vs pour-over are separate categories, never mixed ─────────────
+// The owner's Clever (immersion) was crowding out every recommendation because
+// his Clever-heavy ≥4★ history filled all three own-reference slots with one
+// approach, framed as "build on it". The fix varies WITHIN a category and never
+// treats a pour-over as an interchangeable swap for an immersion brew.
+
+test("brewers are tagged with the right category", () => {
+  assert.equal(ownRefCategory("Clever Dripper"), "immersion");
+  assert.equal(ownRefCategory("AeroPress"), "immersion");
+  assert.equal(ownRefCategory("AeroPress (Prismo)"), "immersion");
+  assert.equal(ownRefCategory("V60"), "pour-over");
+  assert.equal(ownRefCategory("Orea V4 Classic"), "pour-over");
+  assert.equal(ownRefCategory("Chemex"), "pour-over");
+  assert.equal(ownRefCategory("Kalita Wave"), "pour-over");
+});
+
+test("near-identical approaches don't crowd out the slots (no 3× Clever)", () => {
+  // Four well-rated Clever brews on four different bags + a V60 + an Orea. A
+  // naive top-3-by-rating would return three Clevers. Within-category variety
+  // must collapse the Clevers to one immersion slot and show the real pour-overs.
+  const sessions = [
+    brew({ rating: 5.0, method: "Clever Dripper", roaster: "A", name: "C1", origin: "X", process: "Washed" }),
+    brew({ rating: 4.9, method: "Clever Dripper", roaster: "B", name: "C2", origin: "X", process: "Washed" }),
+    brew({ rating: 4.8, method: "Clever Dripper", roaster: "C", name: "C3", origin: "X", process: "Washed" }),
+    brew({ rating: 4.7, method: "Clever Dripper", roaster: "D", name: "C4", origin: "X", process: "Washed" }),
+    brew({ rating: 4.6, method: "V60", roaster: "E", name: "P1", origin: "X", process: "Washed" }),
+    brew({ rating: 4.5, method: "Orea Classic", roaster: "F", name: "P2", origin: "X", process: "Washed" }),
+  ];
+  const refs = buildOwnReferences(sessions, {
+    roaster: "Z",
+    name: "Unrelated",
+    origin: "Y",
+    process: "Natural",
+  });
+  assert.equal(refs.length, MAX_REFERENCES);
+  assert.equal(
+    refs.filter((r) => r.category === "immersion").length,
+    1,
+    "the four Clever brews collapse to one immersion slot, not three",
+  );
+  assert.ok(
+    refs.some((r) => r.category === "pour-over"),
+    "the user's real pour-over brews are shown, not squeezed out by Clever",
+  );
+});
+
+test("a Clever-only owner still gets his varied Clever brews (backfill, nothing invented)", () => {
+  const sessions = [
+    brew({ rating: 5.0, method: "Clever Dripper", roaster: "A", name: "C1", origin: "X", process: "Washed" }),
+    brew({ rating: 4.8, method: "Clever Dripper", roaster: "B", name: "C2", origin: "X", process: "Washed" }),
+    brew({ rating: 4.6, method: "Clever Dripper", roaster: "C", name: "C3", origin: "X", process: "Washed" }),
+  ];
+  const refs = buildOwnReferences(sessions, { roaster: "Z", name: "Unrelated", origin: "Y", process: "Natural" });
+  // No fabrication, no cross-category swap: distinct bags carry different
+  // numbers, so it's varied immersion — and only the user's own brews appear.
+  assert.equal(refs.length, MAX_REFERENCES);
+  assert.ok(refs.every((r) => r.category === "immersion"));
+  assert.equal(new Set(refs.map((r) => r.name)).size, MAX_REFERENCES);
+});
+
+test("a same-bag reference is never dropped, even when it's outranked", () => {
+  const sessions = [
+    // Unrelated coffee, higher rating, pour-over.
+    brew({ rating: 5, method: "V60", roaster: "Other", name: "Other Bag", origin: "Kenya", process: "Washed" }),
+    // The bag in hand, lower rating, immersion → relevance 3, must survive.
+    brew({ rating: 4, method: "Clever Dripper" }),
+  ];
+  const refs = buildOwnReferences(sessions, TARGET);
+  assert.ok(
+    refs.some((r) => r.relevance === 3 && r.category === "immersion"),
+    "the same-bag immersion brew must survive despite a higher-rated pour-over",
+  );
+});
+
+test("a dominant brewer family gets a within-category vary nudge, never a cross-category one", () => {
+  const refs = buildOwnReferences([brew({ rating: 4.5, method: "Clever Dripper" })], TARGET);
+  const nudged = formatOwnReferencesForPrompt(refs, [], new Set(["clever"]));
+  assert.match(nudged, /IMMERSION APPROACH A LOT LATELY/);
+  assert.match(nudged, /Do NOT switch to a pour-over/);
+  assert.ok(!/POUR-OVER A LOT LATELY/.test(nudged), "must not use the opposite-category wording");
+  // Not dominant → no nudge, but the entry still appears (nothing excluded).
+  const plain = formatOwnReferencesForPrompt(refs, [], new Set());
+  assert.ok(!/A LOT LATELY/.test(plain));
+  assert.ok(plain.includes(refs[0].name));
+});
+
+test("a dominant pour-over family gets the pour-over nudge, not the immersion one", () => {
+  const refs = buildOwnReferences([brew({ rating: 4.5, method: "V60" })], TARGET);
+  const nudged = formatOwnReferencesForPrompt(refs, [], new Set(["v60"]));
+  assert.match(nudged, /POUR-OVER A LOT LATELY/);
+  assert.match(nudged, /Do NOT switch to immersion/);
+  assert.ok(!/IMMERSION APPROACH/.test(nudged));
+});
+
+test("recommend.ts wires the brewer-freshness set into the own-reference block", async () => {
+  // Consumer wiring, not just the producer: this repo has twice shipped a
+  // function documented as feeding a prompt while the route never called it.
+  const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
+  assert.match(
+    src,
+    /formatOwnReferencesForPrompt\([\s\S]*?methodRecency\.recentBrewers[\s\S]*?brewMethodKey[\s\S]*?\)/,
+    "the dominant-family set (methodRecency.recentBrewers via brewMethodKey) must reach formatOwnReferencesForPrompt",
+  );
 });

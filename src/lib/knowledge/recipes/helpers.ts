@@ -558,6 +558,29 @@ export function hasLongDesignedWait(recipe: Recipe): boolean {
 }
 
 /**
+ * The immersion brewers, as a closed set. For these a long designed `wait` IS
+ * the steep — the whole method — not a pour-over dead-gap, so the long-wait
+ * exclusion must never touch them.
+ *
+ * Keyed on the brewer FAMILY (not the recipe's step shape): a step-shape probe
+ * like hasImmersionShape() misfires here because V60 bypass/draw recipes
+ * (kasuya-mugen-flat, hedrick-bypass-v60) trip it too — and it reads a
+ * different field (BrewRecipe.pourSteps) than the corpus (Recipe.pourSequence).
+ * Brewer family is the correct, robust key.
+ */
+export const IMMERSION_BREWERS: ReadonlySet<BrewerType> = new Set<BrewerType>([
+  "clever",
+  "aeropress",
+  "aeropress-prismo",
+]);
+
+/** True when a recipe brews by full immersion (Clever / AeroPress), whose long
+ * `wait` is the intended steep rather than a pour-over dead-gap. */
+export function isImmersionRecipe(recipe: Recipe): boolean {
+  return IMMERSION_BREWERS.has(recipe.brewer);
+}
+
+/**
  * Select the most relevant recipes for a brew. Returns up to `limit` recipes
  * sorted by score (descending). Diversity rule: never return more than one
  * recipe per brewer — we want the AI to see a varied portfolio, not five V60s.
@@ -594,13 +617,20 @@ export function selectRecipes(
     (r) => (demoteBrewers ? demoteBrewers.has(r.brewer) : false),
   );
 
-  // Drip Assist: drop steep-/rest-heavy recipes so the disc is never handed a
-  // recipe designed around a long wait it can't honour (owner-flagged). The
-  // recipe is never rewritten — just not offered. Fall back to the full set if
-  // excluding would leave nothing.
+  // Drop POUR-OVER recipes whose design builds in a long dead-gap between pours
+  // (Kasuya Mugen 105s draw, Hedrick bypass 100s gap, Rao Rule-of-Thirds 80s
+  // rest) — the Drip Assist disc can't honour them, and on any hot brew the
+  // owner has flagged such long waits as tasting bad. IMMERSION recipes are
+  // exempt: a Clever/AeroPress steep is a long `wait` BY DESIGN (it is the whole
+  // method, not a dead-gap), so lumping them in with pour-over long-waits wrongly
+  // stripped every immersion recipe from the hot menu and left the model to reach
+  // for a Clever out-of-menu instead. The recipe is never rewritten — just not
+  // offered. Fall back to the full set if excluding would leave nothing.
   let scored = ordered;
   if (input.excludeLongWaits) {
-    const kept = ordered.filter((s) => !hasLongDesignedWait(s.recipe));
+    const kept = ordered.filter(
+      (s) => isImmersionRecipe(s.recipe) || !hasLongDesignedWait(s.recipe),
+    );
     if (kept.length) scored = kept;
   }
 

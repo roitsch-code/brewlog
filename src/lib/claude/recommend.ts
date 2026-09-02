@@ -665,14 +665,17 @@ export async function generateRecommendation(
   const selectionInput = {
       brewersAvailable,
       lockedBrewers,
-      // Don't OFFER steep-/rest-heavy recipes (Kasuya Mugen 105s draw, Hedrick
-      // bypass 100s gap, Rao Rule-of-Thirds 80s rest) on any HOT brew — the owner
-      // brews from the schedule and a designed long wait between pours makes the
-      // coffee taste bad ("solche Rezepte mit mega langer Wartezeit funktionieren
-      // nicht ... sind raus"). Selection-level exclusion, recipes unaltered; the
-      // Drip Assist disc (drains as fast as it's poured) always excluded them, now
-      // every hot brew does. Iced/cold opt out (a cold steep IS a long wait) and
-      // the fallback-if-empty in selectRecipes keeps the menu non-empty.
+      // Don't OFFER POUR-OVER recipes with a long dead-gap between pours (Kasuya
+      // Mugen 105s draw, Hedrick bypass 100s gap, Rao Rule-of-Thirds 80s rest) on
+      // any HOT brew — the owner brews from the schedule and a designed long wait
+      // between pours makes the coffee taste bad ("solche Rezepte mit mega langer
+      // Wartezeit funktionieren nicht ... sind raus"). IMMERSION recipes are
+      // EXEMPT inside selectRecipes: a Clever/AeroPress steep IS the method, not a
+      // dead-gap, so this no longer strips every immersion recipe from the hot
+      // menu (which had left the model reaching for a Clever out-of-menu).
+      // Selection-level exclusion, recipes unaltered; the Drip Assist disc always
+      // excluded the pour-over long-waits, now every hot brew does. Iced/cold opt
+      // out and the fallback-if-empty in selectRecipes keeps the menu non-empty.
       excludeLongWaits: Boolean(dripAssistLocked) || isHotBrew,
       roastLevel: normaliseRoastLevel(coffee.roastLevel),
       process: normaliseProcess(coffee.process),
@@ -766,6 +769,12 @@ export async function generateRecommendation(
     // other: an own reference the user was just served is marked "build on it,
     // don't re-serve it" rather than offered as the safe repeat.
     selectionInput.recentReferenceNames,
+    // Carry the SAME brewer-freshness signal the menu uses into this block, as
+    // family keys: a reference on a brewer that has dominated recent recs gets a
+    // WITHIN-category "vary the recipe/technique" nudge (never a cross-category
+    // "switch to a pour-over"). Without this the freshness lever never reached
+    // the own-reference block — the actual driver of the Clever-water-first loop.
+    new Set(Array.from(methodRecency.recentBrewers).map((b) => brewMethodKey(b))),
   );
 
   // Compact technique vocabulary — id + one-line description per technique.
