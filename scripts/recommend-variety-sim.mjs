@@ -60,7 +60,8 @@ export {
 } from ${q("src/lib/knowledge/recipes/index.ts")};
 export { ALL_RECIPES } from ${q("src/lib/knowledge/recipes/index.ts")};
 export { buildMethodRecency } from ${q("src/lib/claude/methodRotation.ts")};
-export { buildOwnReferences, formatOwnReferencesForPrompt } from ${q("src/lib/claude/ownReferenceRecipes.ts")};
+export { buildOwnReferences, formatOwnReferencesForPrompt, ownRefCategory } from ${q("src/lib/claude/ownReferenceRecipes.ts")};
+export { brewMethodKey } from ${q("src/lib/utils/brewMethodKey.ts")};
 export { getVarietyPriorsForBag, formatVarietyPriorsForPrompt } from ${q("src/lib/knowledge/varieties/index.ts")};
 export { TECHNIQUES } from ${q("src/lib/knowledge/techniques/index.ts")};
 export { getRoasterPrior, formatRoasterPriorForPrompt } from ${q("src/lib/roasters/priors.ts")};
@@ -121,7 +122,7 @@ const SCENARIOS = [
     },
   },
   {
-    label: "Natural Ethiopian heirloom · deep focus · high-clarity · 350ml",
+    label: "Natural Ethiopian heirloom · deep focus · high-clarity · 350ml (pour-over fits)",
     coffee: {
       roaster: "Friedhats", name: "Guji (sim)", origin: "Ethiopia", region: "Guji",
       variety: "Heirloom", process: "Natural", roastLevel: "Light",
@@ -131,6 +132,25 @@ const SCENARIOS = [
       occasion: "focus", amount: "small", timeAvailable: "normal",
       grinder: "Niche Zero", waterSource: "championship", intent: "high-clarity",
     },
+  },
+  {
+    // Immersion genuinely fits (honey process, body-forward, big batch, daily
+    // water) AND the owner's history is Clever-heavy — the exact case where the
+    // recommender used to answer "Clever water-first" every single brew. The fix
+    // must (a) offer immersion when it fits, (b) vary WHICH immersion recipe.
+    label: "Honey Colombian Pink Bourbon · social · body-forward · 450ml (immersion fits, Clever-heavy history)",
+    coffee: {
+      roaster: "El Vergel", name: "Pink Bourbon (sim)", origin: "Colombia", region: "Tolima",
+      variety: "Pink Bourbon", process: "Honey", roastLevel: "Medium-Light",
+      tastingNotesFromBag: ["red apple", "brown sugar", "almond"],
+    },
+    context: {
+      occasion: "social", amount: "big", timeAvailable: "normal",
+      grinder: "Niche Zero", waterSource: "tap", intent: "body-forward",
+    },
+    // Seed the past with well-rated Clever brews so the own-reference
+    // reinforcement (the real driver) is live from brew 1.
+    seedCleverCount: 12,
   },
 ];
 
@@ -153,9 +173,18 @@ function selectionFor(scenario, pastSessions) {
   const { coffee, context } = scenario;
   const targetWaterMl = context.amount === "big" ? 450 : 350;
 
+  // recommend.ts: the LATEST logged session's timestamp seeds every tie-break
+  // for the turn (the menu rotation AND the brewer-freshness demotion share it).
+  const rotationSeed =
+    pastSessions.reduce((m, s) => {
+      const t = Date.parse(s.createdAt ?? "");
+      return Number.isFinite(t) ? Math.max(m, t) : m;
+    }, 0) || pastSessions.length;
+
   const methodRecency = K.buildMethodRecency(pastSessions, {
     lockedMethod: undefined,
     occasion: context.occasion,
+    rotationSeed,
   });
 
   const brewersAvailable = K.brewersAvailableFromEquipment([
@@ -163,10 +192,15 @@ function selectionFor(scenario, pastSessions) {
     ...K.CANONICAL_EQUIPMENT,
   ]);
 
+  const isHotBrew =
+    context.occasion !== "summer-time" && context.occasion !== "cold-brew";
   const input = {
     brewersAvailable,
     lockedBrewers: new Set(),
-    excludeLongWaits: false,
+    // Production rule (recommend.ts): exclude pour-over long-waits on every hot
+    // brew. Category-aware since this fix — immersion steeps are exempt, so the
+    // Clever/AeroPress recipes return to the menu when they fit.
+    excludeLongWaits: isHotBrew,
     roastLevel: K.normaliseRoastLevel(coffee.roastLevel),
     process: K.normaliseProcess(coffee.process),
     processes: [],
@@ -175,12 +209,7 @@ function selectionFor(scenario, pastSessions) {
     occasion: context.occasion,
     maxWaterMl: targetWaterMl,
     serveVolumeMl: targetWaterMl,
-    // recommend.ts: the LATEST logged session's timestamp.
-    rotationSeed:
-      pastSessions.reduce((m, s) => {
-        const t = Date.parse(s.createdAt ?? "");
-        return Number.isFinite(t) ? Math.max(m, t) : m;
-      }, 0) || pastSessions.length,
+    rotationSeed,
     recentReferenceNames: recentReferenceNames(pastSessions),
     demoteBrewers: methodRecency.recentBrewers,
   };
@@ -236,6 +265,8 @@ function buildUserMessage(scenario, pastSessions, sel) {
   const recipesBlock = sel.selected.length ? `\n${K.formatRecipesForPrompt(sel.selected)}` : "";
   const ownReferenceBlock = K.formatOwnReferencesForPrompt(
     K.buildOwnReferences(pastSessions, coffee, undefined),
+    recentReferenceNames(pastSessions),
+    new Set(Array.from(sel.methodRecency.recentBrewers).map((b) => K.brewMethodKey(b))),
   );
   const techniquesBlock =
     "\nAVAILABLE TECHNIQUES (atomic moves you can compose with — cite by id when adapting a recipe):\n" +
@@ -315,6 +346,52 @@ function synthSession(scenario, candidates, iso, rating) {
   };
 }
 
+// Seed a Clever-heavy ≥4★ history so the own-reference block is Clever-heavy
+// from brew 1 — reproducing the owner's real reinforcement loop. Each brew is a
+// distinct day BEFORE START_MS, shaped exactly like buildOwnReferences reads a
+// logged session (methodUsed + primaryRecipe with a ≥2-milestone pour plan).
+function seedCleverHistory(coffee, n) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const iso = new Date(START_MS - (i + 1) * DAY).toISOString();
+    const recipe = {
+      doseGrams: 30,
+      waterGrams: 450,
+      waterTempC: 98,
+      grindSize: "410°",
+      targetTimeSec: 240,
+      pourSteps: [
+        { action: "pour", label: "Pour", waterGramsAtEnd: 225 },
+        { action: "final", label: "Fill", waterGramsAtEnd: 450 },
+        { action: "wait", label: "Steep" },
+        { action: "drain", label: "Drawdown", waterGramsAtEnd: 450 },
+      ],
+    };
+    out.push({
+      id: `seed-clever-${i}`,
+      createdAt: iso,
+      createdAtMs: Date.parse(iso),
+      coffee: { ...coffee },
+      brew: { methodUsed: "Clever Dripper", selectedCandidateIdx: 0, actualTimeSec: 235 },
+      recommendation: {
+        primaryMethod: "Clever Dripper",
+        candidates: [
+          {
+            method: "Clever Dripper",
+            title: "Hoffmann Water-First",
+            basedOn: "Hoffmann Ultimate Clever",
+            role: "anchor",
+            recipe,
+          },
+        ],
+        primaryRecipe: recipe,
+      },
+      result: { rating: 4.5 },
+    });
+  }
+  return out;
+}
+
 // A menu-respecting stand-in for the model: takes the top menu entry and the
 // best entry on a DIFFERENT brewer (what the prompt's pairing rule asks for).
 // Offline this is the optimistic case — it shows the variety the selector makes
@@ -388,13 +465,19 @@ function inMenu(basedOn, names) {
 }
 
 async function runScenario(scenario) {
-  const past = [];
+  const past = scenario.seedCleverCount
+    ? seedCleverHistory(scenario.coffee, scenario.seedCleverCount)
+    : [];
   const menus = new Set();
   const leads = new Set();
   const menuFollowPairs = new Set();
   const livePairs = new Set();
   const liveTuples = new Set();
   const liveMethods = new Set();
+  // Presence-per-brew tallies (deduped within a brew): how often each brewing
+  // CATEGORY and each brewer FAMILY shows up across the BREWS iterations.
+  const catCount = { immersion: 0, "pour-over": 0 };
+  const brewerCount = {};
   let snapped = 0;
   let outOfMenu = 0;
   let liveCandidates = 0;
@@ -449,6 +532,18 @@ async function runScenario(scenario) {
       );
     }
 
+    // Per-category + per-brewer presence for THIS brew (deduped across its
+    // candidates), so a brewer that appears in both candidates still counts once.
+    const catsThisBrew = new Set();
+    const famsThisBrew = new Set();
+    for (const c of candidates) {
+      const method = c.method ?? "";
+      famsThisBrew.add(K.brewMethodKey(method));
+      catsThisBrew.add(K.ownRefCategory(method));
+    }
+    for (const cat of catsThisBrew) catCount[cat] = (catCount[cat] ?? 0) + 1;
+    for (const fam of famsThisBrew) brewerCount[fam] = (brewerCount[fam] ?? 0) + 1;
+
     // Feed it back — this is the loop no existing test runs.
     past.unshift(synthSession(scenario, candidates, iso, 4));
   }
@@ -460,6 +555,7 @@ async function runScenario(scenario) {
     livePairs: livePairs.size, liveTuples: liveTuples.size,
     liveMethods: liveMethods.size, liveCandidates,
     snapped, outOfMenu, inTok, outTok, rows,
+    catCount, brewerCount,
   };
 }
 
@@ -499,6 +595,24 @@ for (const r of results) {
 }
 lines.push("");
 lines.push("**The number that matches the complaint** is *distinct (method←basedOn)* and *distinct headline numbers* across all candidates — not the menu count. A high menu count with a low pair count is exactly the failure this harness exists to expose.");
+lines.push("");
+
+// Category-by-fit + within-category variety — the C-intent this fix targets.
+lines.push("## Category by fit + per-brewer frequency");
+lines.push("");
+lines.push("Presence per brew (deduped within a brew), over the whole run. Category should track FIT — high immersion where a bag suits it, low where it doesn't — and no single brewer should own the run.");
+lines.push("");
+lines.push("| scenario | immersion | pour-over | per-brewer (appearances / " + BREWS + ") |");
+lines.push("|---|---|---|---|");
+for (const r of results) {
+  const brewers = Object.entries(r.brewerCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([fam, n]) => `${fam}: ${n}`)
+    .join(" · ");
+  lines.push(
+    `| ${r.label} | ${r.catCount.immersion}/${BREWS} | ${r.catCount["pour-over"]}/${BREWS} | ${brewers} |`,
+  );
+}
 lines.push("");
 
 for (const r of results) {
