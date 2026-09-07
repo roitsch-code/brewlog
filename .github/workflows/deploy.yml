@@ -166,3 +166,37 @@ jobs:
       - run: npm ci
       - name: One live recommend call
         run: node scripts/smoke-recommend-call.mjs
+
+  # Identity guard: assert the public domain actually serves BTTS after deploy —
+  # not a co-hosted sibling app. On 2026-09-07 bettertastethansorry.com served
+  # the "Ladeplanner" because a sibling reused the Compose service name `app` on
+  # the shared Docker network and Caddy round-robined between two apps. The
+  # container_name/Caddyfile fix makes that impossible for BTTS, and THIS job is
+  # the tripwire so any future routing/naming regression fails the deploy loudly
+  # within a minute instead of surfacing on the owner's phone. No secrets; reads
+  # only the public login page (allows the brief caddy rebind to settle).
+  verify-domain:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Domain must serve BTTS, never a sibling app
+        run: |
+          URL="https://bettertastethansorry.com/login"
+          ok=0
+          for i in $(seq 1 12); do
+            body="$(curl -sS --max-time 15 "$URL" 2>/dev/null || true)"
+            if printf '%s' "$body" | grep -qiE 'Ladeplan|Laden am Zielort|E-Autos'; then
+              echo "::error::${URL} served a CO-HOSTED SIBLING app (Ladeplanner) — Caddy is routing to the wrong container. Check container_name / Caddy upstream / shared Docker network."
+              exit 1
+            fi
+            if printf '%s' "$body" | grep -qiE '<title>BTTS|Better taste|light/login'; then
+              ok=$((ok+1))
+            fi
+            sleep 4
+          done
+          if [ "$ok" -ge 9 ]; then
+            echo "verify-domain OK: BTTS served on $ok/12 probes"
+          else
+            echo "::error::${URL} did not consistently serve BTTS ($ok/12) — the domain may be down or misrouted."
+            exit 1
+          fi
