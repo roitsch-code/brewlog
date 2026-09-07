@@ -33,9 +33,22 @@ nano .env  # fill in all values
 rclone config
 # → new remote named "storagebox" → SFTP → your storage box hostname + credentials
 
+# Co-hosting edge networks (REQUIRED before `up`): BrewLog's Caddy is the one
+# public reverse proxy and reaches each co-hosted sibling over that sibling's
+# DEDICATED edge network — never over brewlog_default. docker-compose.yml
+# declares these two as `external`, so they must exist first (idempotent):
+docker network create healthsync_edge  || true
+docker network create ladeplanner_edge || true
+
 # Build and start
 docker compose pull  # or: docker compose build
 docker compose up -d
+
+# Verify the siblings are reachable over the edges (after they're up too):
+#   docker network inspect healthsync_edge  --format '{{range .Containers}}{{.Name}} {{end}}'
+#   docker network inspect ladeplanner_edge --format '{{range .Containers}}{{.Name}} {{end}}'
+# healthsync_edge → brewlog-caddy brewlog-app healthsync-web healthsync-authelia
+# ladeplanner_edge → brewlog-caddy ladeplanner-app
 
 # Run DB migrations (first time only)
 docker compose exec app node -e "
