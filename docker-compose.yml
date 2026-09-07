@@ -20,13 +20,17 @@ services:
       dockerfile: Dockerfile
     image: brewlog-app:latest
     # A STABLE, GLOBALLY-UNIQUE container name so Caddy can target THIS app and
-    # only this app. Co-hosted sibling apps (HealthSync, Ladeplanner) join the
-    # shared `brewlog_default` network, and at least one of them also names its
-    # service `app` — so the bare `app` alias resolves to MULTIPLE containers and
-    # Caddy's `reverse_proxy app:3000` round-robins between two different apps
+    # only this app. A co-hosted sibling (Ladeplanner) also named its service
+    # `app` and — while both were on the shared `brewlog_default` network — the
+    # bare `app` alias resolved to MULTIPLE containers, so Caddy's
+    # `reverse_proxy app:3000` round-robined between two different apps
     # (bettertastethansorry.com started serving the Ladeplanner, 2026-09-07).
     # A container_name is unique per Docker host, so `brewlog-app` can never
     # resolve to a sibling. Caddyfile targets this name, not `app`.
+    # RULE for every co-hosted app on this VPS: unique container names, NO shared
+    # "everything" network, reverse proxy targets a unique name. Siblings no
+    # longer join brewlog_default — each gets a dedicated edge network to Caddy
+    # (healthsync_edge, ladeplanner_edge; declared at the bottom of this file).
     container_name: brewlog-app
     restart: unless-stopped
     depends_on:
@@ -74,20 +78,25 @@ services:
       APNS_PRODUCTION: ${APNS_PRODUCTION:-true}
       # One-way caffeine push to the co-hosted HealthSync app. BrewLog POSTs each
       # logged coffee's volume to HealthSync's ingest endpoint. URL defaults to the
-      # INTERNAL Docker address: this app and healthsync-web both sit on the
-      # `brewlog_default` network (HealthSync's cohost compose joins it as external),
-      # so it reaches HealthSync directly — no Caddy, no Authelia forward-auth, no
-      # public-DNS hairpin. That direct path is why the public URL default was
-      # fragile: from inside this container the public host had to loop back through
-      # Caddy AND clear the Authelia gate, and a POST that hit the gate got a silent
-      # 303 to the login page instead of the endpoint. Override in .env only if the
-      # container name differs (verify with `docker ps`). SECRET must equal
-      # HealthSync's INGEST_SECRET; empty → the push no-ops (now logged, not silent).
-      # deploy.yml syncs the secret from the GitHub secret HEALTHSYNC_INGEST_SECRET.
-      HEALTHSYNC_INGEST_URL: ${HEALTHSYNC_INGEST_URL:-http://healthsync-healthsync-web-1:3000/api/ingest/brewlog}
+      # INTERNAL Docker address: this app reaches healthsync-web over the DEDICATED
+      # `healthsync_edge` network they now share (2026-09-07: HealthSync moved off
+      # brewlog_default onto its own edge; `app` joins that edge below). Direct →
+      # no Caddy, no Authelia forward-auth, no public-DNS hairpin. That direct path
+      # is why the public URL default was fragile: from inside this container the
+      # public host had to loop back through Caddy AND clear the Authelia gate, and
+      # a POST that hit the gate got a silent 303 to the login page instead of the
+      # endpoint. `healthsync-web` is HealthSync's fixed container_name — stable
+      # across its redeploys. Override in .env only if that name changes (verify
+      # with `docker ps`). SECRET must equal HealthSync's INGEST_SECRET; empty →
+      # the push no-ops (now logged, not silent). deploy.yml syncs the secret from
+      # the GitHub secret HEALTHSYNC_INGEST_SECRET.
+      HEALTHSYNC_INGEST_URL: ${HEALTHSYNC_INGEST_URL:-http://healthsync-web:3000/api/ingest/brewlog}
       HEALTHSYNC_INGEST_SECRET: ${HEALTHSYNC_INGEST_SECRET:-}
     expose:
       - "3000"
+    # default → postgres + caddy (BrewLog's own internal net).
+    # healthsync_edge → the caffeine push reaches healthsync-web directly.
+    networks: [default, healthsync_edge]
 
   caddy:
     image: caddy:2-alpine
@@ -102,6 +111,13 @@ services:
       - caddy-config:/config
     depends_on:
       - app
+    # BrewLog's Caddy is the ONE public reverse proxy (holds 80/443) and routes to
+    # each co-hosted app over that app's DEDICATED edge network — never over a
+    # shared "everything" network. `default` reaches brewlog-app; the two edges
+    # reach the siblings by their unique container names (healthsync-web,
+    # healthsync-authelia, ladeplanner-app). Declaring them here (not a manual
+    # `docker network connect`) means the links survive every redeploy.
+    networks: [default, healthsync_edge, ladeplanner_edge]
 
   ofelia:
     image: mcuadros/ofelia:latest
@@ -111,6 +127,23 @@ services:
     volumes:
       - ./deploy/ofelia.ini:/etc/ofelia/config.ini:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+
+networks:
+  # BrewLog's own internal network (postgres, app, caddy, ofelia). Compose names
+  # it `brewlog_default`; keep it PRIVATE to BrewLog — co-hosted siblings must NOT
+  # join it (that shared "everything" net is what let a sibling's generic `app`
+  # alias hijack the reverse proxy on 2026-09-07).
+  default:
+  # Dedicated edge networks: one per co-hosted sibling, shared only between
+  # BrewLog's Caddy (+ app, for the HealthSync caffeine push) and that sibling's
+  # public-facing containers. Created ONCE on the host so both stacks reference
+  # them as external and they survive either stack's redeploy:
+  #   docker network create healthsync_edge
+  #   docker network create ladeplanner_edge
+  healthsync_edge:
+    external: true
+  ladeplanner_edge:
+    external: true
 
 volumes:
   pg-data:
