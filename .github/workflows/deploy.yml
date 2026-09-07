@@ -47,7 +47,13 @@ jobs:
           #      <service>` overlapped with the workflow (June 2026
           #      deploy hit "removal of container <id> is already in
           #      progress" exactly that way).
-          #      --no-deps keeps postgres + caddy + ofelia untouched.
+          #      --no-deps keeps postgres + ofelia untouched. caddy IS
+          #      recreated alongside app so it re-reads the bind-mounted
+          #      Caddyfile — needed since the upstream was changed from the
+          #      ambiguous `app` alias to the unique `brewlog-app` container
+          #      (2026-09-07, the Ladeplanner cross-serving incident). The
+          #      brief 80/443 rebind is acceptable; caddy-data/config volumes
+          #      persist so certs are not re-issued.
           #      --force-recreate handles the "container already exists"
           #      and "in-progress removal" daemon states gracefully.
           #   4. fallback retry loop for the rare daemon wedge.
@@ -105,7 +111,7 @@ jobs:
             docker compose restart ofelia \
               || echo "WARNING: ofelia restart failed — cron config may be stale"
 
-            if docker compose up -d --force-recreate --no-deps app; then
+            if docker compose up -d --force-recreate --no-deps app caddy; then
               exit 0
             fi
 
@@ -115,7 +121,7 @@ jobs:
               docker ps -aq --filter 'label=com.docker.compose.project=brewlog' \
                             --filter 'label=com.docker.compose.service=app' \
                 | xargs -r docker rm -f >/dev/null 2>&1 || true
-              if docker compose up -d --force-recreate --no-deps app; then
+              if docker compose up -d --force-recreate --no-deps app caddy; then
                 exit 0
               fi
               echo "retry $attempt failed, sleeping..."
