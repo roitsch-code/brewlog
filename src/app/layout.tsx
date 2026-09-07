@@ -74,11 +74,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             sessionStorage → no reload loop (a persistently-broken chunk shows the
             error rather than looping; a fresh app launch resets the flag). A
             1.5s watchdog reloads even if the cache purge hangs. Caused by the
-            June-2026 widget-deploy incident — see docs/ios-shell-roadmap. */}
+            June-2026 widget-deploy incident — see docs/ios-shell-roadmap.
+
+            Two triggers: (a) a thrown ChunkLoadError / dynamic-import failure
+            (matched by message), and (b) a TOP-LEVEL <script>/<link> under
+            /_next/static that fails to LOAD. Case (b) is the "opens but no
+            buttons" shape — a stale precached shell references chunk hashes a
+            newer build no longer has, the app never hydrates, and the resource
+            error carries an EMPTY message so the message-regex can't see it. We
+            detect it via the failing element (e.target) in the capture-phase
+            error listener. Sept-2026: this stranded PWAs because the SW couldn't
+            update (middleware was 307-ing /workbox-*.js to /login). */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var K='btts_chunk_reloaded';function c(m){return /ChunkLoadError|Loading chunk [\\w-]+ failed|Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(m||'')}function h(m){if(!c(m))return;try{if(sessionStorage.getItem(K))return;sessionStorage.setItem(K,'1')}catch(e){}var done=false;function go(){if(done)return;done=true;location.reload()}try{var t=[];if(window.caches&&caches.keys){t.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}))}if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){t.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}))}Promise.all(t).then(go).catch(go);setTimeout(go,1500)}catch(e){go()}}window.addEventListener('error',function(e){h((e&&e.message)||(e&&e.error&&e.error.message)||'')},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;h((r&&r.message)||String(r||''))})}catch(e){}})();",
+              "(function(){try{var K='btts_chunk_reloaded';function c(m){return /ChunkLoadError|Loading chunk [\\w-]+ failed|Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module/i.test(m||'')}function heal(){try{if(sessionStorage.getItem(K))return;sessionStorage.setItem(K,'1')}catch(e){}var done=false;function go(){if(done)return;done=true;location.reload()}try{var t=[];if(window.caches&&caches.keys){t.push(caches.keys().then(function(ks){return Promise.all(ks.map(function(k){return caches.delete(k)}))}))}if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){t.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.unregister()}))}))}Promise.all(t).then(go).catch(go);setTimeout(go,1500)}catch(e){go()}}function h(m){if(c(m))heal()}window.addEventListener('error',function(e){var tg=e&&e.target;if(tg&&tg.tagName&&(tg.tagName==='SCRIPT'||tg.tagName==='LINK')){var u=tg.src||tg.href||'';if(u.indexOf('/_next/static/')!==-1){heal();return}}h((e&&e.message)||(e&&e.error&&e.error.message)||'')},true);window.addEventListener('unhandledrejection',function(e){var r=e&&e.reason;h((r&&r.message)||String(r||''))})}catch(e){}})();",
           }}
         />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
