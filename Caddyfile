@@ -1,3 +1,9 @@
 bettertastethansorry.com, staging.bettertastethansorry.com {
-    reverse_proxy app:3000
+    # Target the app by its UNIQUE container name, never the bare `app` service
+    # alias: co-hosted sibling apps share the brewlog_default network and one
+    # also uses the service name `app`, so `app:3000` round-robins across two
+    # different apps and this domain intermittently served the Ladeplanner
+    # (2026-09-07). `brewlog-app` (docker-compose container_name) resolves to
+    # this app alone.
+    reverse_proxy brewlog-app:3000
 }

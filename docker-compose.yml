@@ -19,6 +19,15 @@ services:
       context: .
       dockerfile: Dockerfile
     image: brewlog-app:latest
+    # A STABLE, GLOBALLY-UNIQUE container name so Caddy can target THIS app and
+    # only this app. Co-hosted sibling apps (HealthSync, Ladeplanner) join the
+    # shared `brewlog_default` network, and at least one of them also names its
+    # service `app` — so the bare `app` alias resolves to MULTIPLE containers and
+    # Caddy's `reverse_proxy app:3000` round-robins between two different apps
+    # (bettertastethansorry.com started serving the Ladeplanner, 2026-09-07).
+    # A container_name is unique per Docker host, so `brewlog-app` can never
+    # resolve to a sibling. Caddyfile targets this name, not `app`.
+    container_name: brewlog-app
     restart: unless-stopped
     depends_on:
       postgres:
