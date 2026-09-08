@@ -7,3 +7,42 @@ bettertastethansorry.com, staging.bettertastethansorry.com {
     # this app alone.
     reverse_proxy brewlog-app:3000
 }
+
+# ── Co-hosted siblings (2026-09-08) ──────────────────────────────────────────
+# BrewLog's Caddy is the ONE public reverse proxy on this VPS, so the sibling
+# apps' site blocks live HERE, in the repo. They used to be hand-added to the
+# live /opt/brewlog/Caddyfile — but every deploy does `git reset --hard`, which
+# wiped them and took down the Wall AND the Ladeplanner (2026-09-07/08). Keeping
+# them in the repo means a deploy RESTORES them instead of killing them.
+# Caddy reaches each sibling by its unique container name over that sibling's
+# dedicated edge network (see docker-compose.yml: caddy joins healthsync_edge +
+# ladeplanner_edge). No sibling sits on brewlog_default.
+
+# Authelia login portal for the Wall (password + TOTP).
+auth.markus-reuter.com {
+    reverse_proxy healthsync-authelia:9091
+}
+
+# HealthSync "The Wall" — everything behind Authelia (password + 2FA), EXCEPT the
+# machine endpoints under /api/ingest: those carry their own x-ingest-secret and
+# must bypass the 2FA gate (iOS shortcuts / HealthKit push / cron). Without the
+# bypass /api/ingest/* gets a silent 303 to the login page.
+health.markus-reuter.com {
+    @ingest path /api/ingest*
+    handle @ingest {
+        reverse_proxy healthsync-web:3000
+    }
+    handle {
+        forward_auth healthsync-authelia:9091 {
+            uri /api/authz/forward-auth
+            copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+        }
+        reverse_proxy healthsync-web:3000
+    }
+}
+
+# Ladeplanner (electric-charging-tool). Note the domain spelling: one "n"
+# (ladeplaner), while the container is ladeplanner-app (two n's).
+ladeplaner.markus-reuter.com {
+    reverse_proxy ladeplanner-app:3000
+}
