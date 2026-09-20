@@ -107,23 +107,25 @@ test("the chat prompt carries the percolation shape rule", () => {
   assert.match(PROMPT, /water steps \(bloom \+ pours\)/i, "the floors table must be present");
   assert.match(PROMPT, /up to 5:00/, "floor row: normal brews");
   assert.match(PROMPT, /over 5:00/, "floor row: long brews");
-  // The disc column is load-bearing, not decoration. With the Drip Assist the
-  // drawdown reserve is 7% instead of 33%, so the pour phase is ~40% longer and
-  // the bare-brewer count leaves a hole. Measured 2026-08-23 (run 3): all six
-  // remaining first-try failures were dead-gap, and every gooseneck-less one
-  // had followed the bare count.
-  assert.match(PROMPT, /with the Drip Assist/i, "the disc column must exist");
-  assert.match(PROMPT, /always needs one more pour/i, "and say plainly that the disc needs one more");
-  assert.match(PROMPT, /FLOORS, not targets/i, "one more pour must read as safe");
+  assert.match(PROMPT, /FLOORS, not targets/i, "the floors must read as safe, not exact");
   assert.match(PROMPT, /Do not pad the clock/i, "stretching the clock is the other half of the failure");
 });
 
-test("the disc is described as replacing the stream, not the hand", () => {
-  assert.match(
-    PROMPT,
-    /replaces the STREAM, not the HAND/,
-    "without this the model proposes patient-pour recipes to someone with no gooseneck",
-  );
+test("the user does NOT use a pour-control disc, and the prompt says so", () => {
+  // The owner brews without a Drip Assist. The chat used to force one onto every
+  // no-gooseneck recipe (welded a disc onto the method string, 7% drawdown, an
+  // extra pour), which is what jammed the timing on his travel recipes. The
+  // prompt must state the disc is out, so the model never reintroduces it.
+  assert.match(PROMPT, /does NOT use a pour-control disc/i, "the disc must be declared out");
+  assert.doesNotMatch(PROMPT, /\+ Drip Assist/i, "no method-string example may weld a disc on");
+  assert.doesNotMatch(PROMPT, /with the Drip Assist/i, "the disc pour-count column must be gone");
+});
+
+test("no-gooseneck steers to a forgiving brew, without a disc", () => {
+  // Without a gooseneck AND without a disc, the model should favour a steady
+  // hand-pour and lead with immersion — never a precision-pour technique.
+  assert.match(PROMPT, /no gooseneck kettle/i, "the no-gooseneck case must be handled");
+  assert.match(PROMPT, /Immersion \(Clever, AeroPress\) needs no pour control/i, "immersion is the forgiving fallback");
 });
 
 test("a user-stated constraint outranks the rest of the prompt, including narrowing", () => {
