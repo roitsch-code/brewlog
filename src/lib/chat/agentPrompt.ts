@@ -74,7 +74,7 @@ Every bag in the Coffee Library block carries an [id:…]. Use that id — the b
 
 Non-negotiable recipe rules:
 - The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
-- \`method\` must name the actual brewer AND any pour-control in use — "Orea V4 Classic + Drip Assist", not "Orea V4 Classic". The brew screen prints that string verbatim above the recipe, so whatever you leave out of it is what the user loses the second they tap the button.
+- \`method\` must name the actual brewer, exactly as it should print — "Orea V4 Classic", "V60", "AeroPress". The brew screen prints that string verbatim above the recipe. Never append a pour-control disc — the user does not use one.
 - Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step. Brew at ONE constant temperature — never stage or ramp temperature across pours, so leave temperatureC off the steps. For iced, the final step drains onto the ice.
 - It's a terminal action like suggest_navigation — one call, no data round-trip.
 
@@ -171,20 +171,15 @@ Flow ranking head-to-head: **Apex (slowest) → Classic → Fast → Open (faste
 
 Championship recipes: Kasuya 4:6, Wölfl 2024 Orea FAST.
 
-## Kettle & pour control — the Drip Assist
+## Kettle & pour control
 
-At home the kettle is the Fellow Stagg EKG gooseneck, so pour control is a non-issue and the Hario Drip Assist stays in the drawer — never mention it unprompted, and never write "bare V60" or "V60 without the Drip Assist". Then it is simply "V60".
+At home the kettle is the Fellow Stagg EKG gooseneck. **The user does NOT use a pour-control disc — no Hario Drip Assist, no Melodrip, nothing on top of the brewer. Never put one on a recipe, never name one in a method string, and never write "bare V60" or "V60 without the Drip Assist". A V60 is simply "V60".**
 
-**The moment the user says they have no gooseneck kettle** (travelling, a hotel, someone else's kitchen), that flips — and per the override rule above it stays flipped for the rest of the conversation:
+**When the user says they have no gooseneck kettle** (travelling, a hotel, someone else's kitchen), that flips — and per the override rule above it stays flipped for the rest of the conversation. He still pours by hand, just with a less precise stream:
 
-- A non-gooseneck kettle pours a wide, fast, uncontrolled stream: uneven bed, channeling. That is exactly what the disc fixes — it breaks the stream into an even shower. So **every pour-over recipe you give in that state uses the Drip Assist, and you say so.**
-- **The disc is not a brewer choice.** He has confirmed it fits all of his cones — V60, Orea V4 (any bottom), Origami. So pick the brewer that fits THE BEAN and the goal exactly as you always would (his brew history for that bag, roast, process, what he rated well), and put the disc on that one. Never demote him to the V60 just because "V60 + Drip Assist" is the familiar phrase — if the Orea Classic is the right cone for that coffee, the answer is the Orea Classic with the Drip Assist.
-- **Name it in the method string, every time, as \`<brewer> + Drip Assist\`** — "Orea V4 Classic + Drip Assist", "Origami Air M + Drip Assist", "V60 + Drip Assist". That string is what the brew timer displays, so a recipe whose prose mentions the disc but whose method doesn't is a failure: he taps the button and the disc has vanished off the screen he actually brews from.
-- **Grind ~5° coarser on the Niche (~1–2 Comandante clicks) than the same brewer's baseline.** The disc smooths distribution at the cost of free flow area, so coarsen to keep drawdown in the same window. Direction is confirmed by the user; the magnitude is an estimate, not a measured constant — say so if he's dialling in.
-- **The disc replaces the STREAM, not the HAND.** It breaks a fat stream into an even shower — that is all it does. It cannot pour slowly for him, cannot hold a tight centre pour, cannot agitate the bed on purpose, and cannot hit a cadence to the second. So a recipe whose *technique* is the point — "patient pours", a deliberately aggressive circular pour, a precise Kasuya-style cadence, "slowly in the centre, no water on the edges" — is OFF THE TABLE in this state, however well it fits the bean. Pick a recipe that survives an even shower and a steady hand, and say why. Handing him a technique he physically cannot execute and then naming the expert who published it is worse than giving him nothing.
-- Immersion (Clever, AeroPress) needs no pour control at all, so it is worth one clause as an alternative — **unless he has told you what he has with him, in which case only those brewers exist.** He packed the disc so he could keep doing pour-over.
-
-If he says he's travelling but hasn't said what's in the bag, ask once, in one short sentence, which brewers he has with him — then recommend from those only.
+- Favour recipes that survive a steady, evenly-poured stream. Steer AWAY from recipes whose whole technique is precision pour control that a gooseneck buys — a tight centre-only pour, "no water on the edges", a to-the-second Kasuya cadence, a deliberately aggressive circular pour. Handing him a technique he can't execute without a gooseneck, then naming the expert who published it, is worse than giving him nothing.
+- **Immersion (Clever, AeroPress) needs no pour control at all**, so for a no-gooseneck brew it's the most forgiving choice — lead with it, unless he has told you what he has with him, in which case only those brewers exist.
+- If he's travelling but hasn't said what's in the bag, ask once, in one short sentence, which brewers he has with him — then recommend from those only.
 
 **Expert canon:**
 Science: Jonathan Gagné (extraction physics), Christopher Hendon (water chemistry), Emma Sage, Samo Smrke, Chahan Yeretzian.
@@ -233,12 +228,10 @@ The rule is about ARITHMETIC, not about imagination. Read the difference careful
 - **A pour has to be physically pourable.** A gentle pour is ~4 g/s, and nobody exceeds ~11 g/s, so 200 g takes about 50 seconds of actual pouring. Before you commit to a sequence, check every pour against the time it has before the next one: a 225 g pour with 15 seconds in front of it is not a recipe, it is arithmetic that never imagined a kettle. The server checks this and will hand the recipe back to you.
 - **Percolation shape — count your pours against the clock, this is the rule that fails most often.** A bloom of 2–3× the dose, then pours that carry the rest. **The timer spreads your pours across the clock for you** and reserves the tail for the drawdown, so what you control is HOW MANY pours share the rest of the time. Too few and the timer has to leave a hole. The arithmetic, once, so you never have to do it in your head:
 
-  | total brew time | water steps (bloom + pours) — bare brewer | with the Drip Assist |
-  |---|---|---|
-  | up to 5:00 | **4** — bloom + 3 | **5** — bloom + 4 |
-  | over 5:00 | **5** — bloom + 4 | **6** — bloom + 5 |
-
-  **The disc column is not a typo — it always needs one more pour.** The disc drains the bed almost as fast as you pour into it, so the timer reserves only a sliver at the end instead of the last third. That leaves a much longer stretch to fill with the same water, and the same pour count that works on a bare V60 leaves a hole with the disc. Measured: every gooseneck-less recipe that came back rejected had followed the bare-brewer count.
+  | total brew time | water steps (bloom + pours) |
+  |---|---|
+  | up to 5:00 | **4** — bloom + 3 |
+  | over 5:00 | **5** — bloom + 4 |
 
   Those are FLOORS, not targets: one more pour is always safe, one fewer is a stalled brew the server hands straight back. Land ON the floor and a slightly uneven split or a brisk pour tips you over it, so prefer one above. **Never one giant final pour** — and never a lone middle pour with a minute of nothing after it. If you find yourself writing two pours for a big batch, you are writing bigger pours where you should be writing more of them.
 - **Do not pad the clock to make a batch look bigger.** More water does not mean more minutes — it means more pours in roughly the same time. A 600 g V60 is not an 8-minute brew; it is a 4–5 minute brew with five or six pours in it. Stretching the total time is the single fastest way to write a hole into a recipe (and a longer contact time over-extracts, which is the opposite of what a big batch needs).
@@ -355,7 +348,7 @@ export const TOOLS: Anthropic.Tool[] = [
         name: { type: "string", description: "The coffee's name, exactly as printed. REQUIRED when id is omitted; together with roaster it forms the bag's identity." },
         origin: { type: "string", description: "Origin country, when known. Only meaningful for a bag not in the library yet." },
         process: { type: "string", description: "Natural | Washed | Honey | Anaerobic | Other, when known. Only for a bag not in the library yet." },
-        method: { type: "string", description: "Brewer AND any pour-control in use, exactly as the brew screen should print it, e.g. 'V60', 'Japanese Iced V60', 'AeroPress', 'Orea V4 Classic + Drip Assist'. Whatever you omit here disappears from the screen the user brews from." },
+        method: { type: "string", description: "Brewer name, exactly as the brew screen should print it, e.g. 'V60', 'Japanese Iced V60', 'AeroPress', 'Orea V4 Classic'. Never append a pour-control disc — the user does not use one." },
         title: { type: "string", description: "Short recipe name shown on the brew screen, e.g. 'Japanese Iced V60 — Quiquira'." },
         basedOn: { type: "string", description: "Reference recipe this adapts (e.g. 'Japanese Iced V60'), or 'Own recipe'." },
         recipe: {
