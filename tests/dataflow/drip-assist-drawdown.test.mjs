@@ -24,12 +24,12 @@ import path from "node:path";
 const ROOT = process.cwd();
 const entry = `
 export {
-  drawdownReserveFrac,
+  minDrawdownSec,
   pourStepsFromStructured,
-  DRAWDOWN_RESERVE_FRAC,
-  DRIP_ASSIST_DRAWDOWN_FRAC,
+  pourScheduleFor,
+  MIN_DRAWDOWN_SEC,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
-export { calibrateDripAssistFinish } from ${JSON.stringify(
+export { calibrateDripAssistFinish, DRIP_ASSIST_DRAWDOWN_KEEP, DRIP_ASSIST_DRAWDOWN_FLOOR_SEC } from ${JSON.stringify(
   path.join(ROOT, "src/lib/claude/recommend.ts"),
 )};
 export {
@@ -52,11 +52,13 @@ await build({
   logLevel: "silent",
 });
 const {
-  drawdownReserveFrac,
+  minDrawdownSec,
   pourStepsFromStructured,
-  DRAWDOWN_RESERVE_FRAC,
-  DRIP_ASSIST_DRAWDOWN_FRAC,
+  pourScheduleFor,
+  MIN_DRAWDOWN_SEC,
   calibrateDripAssistFinish,
+  DRIP_ASSIST_DRAWDOWN_KEEP,
+  DRIP_ASSIST_DRAWDOWN_FLOOR_SEC,
   selectRecipes,
   brewersFromMethod,
   hasLongDesignedWait,
@@ -91,51 +93,93 @@ function recipe(targetTimeSec) {
 
 const starts = (steps) => steps.map((s) => s.startTimeSec);
 
-test("drawdownReserveFrac: thin for the disc, standard otherwise", () => {
-  assert.equal(drawdownReserveFrac(DISC), DRIP_ASSIST_DRAWDOWN_FRAC);
-  assert.equal(drawdownReserveFrac("Orea Classic + Drip Assist"), DRIP_ASSIST_DRAWDOWN_FRAC);
-  assert.equal(drawdownReserveFrac("V60"), DRAWDOWN_RESERVE_FRAC);
-  assert.equal(drawdownReserveFrac("Orea Classic"), DRAWDOWN_RESERVE_FRAC);
-  assert.equal(drawdownReserveFrac(undefined), DRAWDOWN_RESERVE_FRAC);
-  assert.ok(DRIP_ASSIST_DRAWDOWN_FRAC < DRAWDOWN_RESERVE_FRAC);
+test("the drawdown floor is a physics floor, not a per-method reserve", () => {
+  // Until Sep 2026 the disc was modelled as a SMALLER SHARE of the clock (7% vs
+  // 33%), which is what let the renderer re-derive the cadence from the clock.
+  // Cadence-first there is no share: the pours take their own time and the disc
+  // is handled by shortening the TAIL at recommend time (below).
+  assert.equal(minDrawdownSec(DISC), MIN_DRAWDOWN_SEC);
+  assert.equal(minDrawdownSec("V60"), MIN_DRAWDOWN_SEC);
+  assert.equal(minDrawdownSec(undefined), MIN_DRAWDOWN_SEC);
+  assert.ok(DRIP_ASSIST_DRAWDOWN_KEEP < 1, "the disc keeps only part of the bare tail");
 });
 
-test("render: the disc's final pour lands near the finish, the bare brew leaves a long tail", () => {
+test("render: the disc and the bare brew pour identically — only the tail differs", () => {
   const r = recipe(200);
-  const bare = pourStepsFromStructured(r, undefined, NOW); // no method → 0.33
-  const disc = pourStepsFromStructured(r, undefined, NOW, DISC); // → 0.07
+  const bare = pourStepsFromStructured(r, undefined, NOW);
+  const disc = pourStepsFromStructured(r, undefined, NOW, DISC);
 
-  const bareLast = bare[bare.length - 1].startTimeSec;
-  const discLast = disc[disc.length - 1].startTimeSec;
+  // Same recipe, same pours: the disc changes how fast the bed DRAINS, not how
+  // the user pours, so the cadence is identical and the method never re-times it.
+  assert.deepEqual(starts(disc), starts(bare), "the disc must not move a pour");
 
-  // Bare: final pour at ~target*(1-0.33) → a ~66s dead drawdown tail.
-  assert.ok(Math.abs(bareLast - Math.round(200 * (1 - 0.33))) <= 2, `bareLast=${bareLast}`);
-  const bareTail = 200 - bareLast;
-  // Disc: final pour at ~target*(1-0.07) → a thin ~14s drainage margin.
-  assert.ok(Math.abs(discLast - Math.round(200 * (1 - 0.07))) <= 2, `discLast=${discLast}`);
-  const discTail = 200 - discLast;
-
-  assert.ok(discTail < bareTail, `disc tail ${discTail} should be < bare tail ${bareTail}`);
-  assert.ok(discTail <= 20, `disc drawdown tail ${discTail}s should be thin`);
-  assert.ok(bareTail >= 55, `bare drawdown tail ${bareTail}s should be the full reserve`);
+  // This fixture authors no rests, so the fallback spaces the pours to leave a
+  // drawdown near the corpus median: bloom 45s, pours 20s each, 12s rests.
+  assert.deepEqual(starts(bare), [0, 45, 77, 109]);
+  const schedule = pourScheduleFor(r, undefined, NOW);
+  assert.equal(schedule.pourPhaseEndSec, 129);
+  assert.equal(schedule.drawdownSec, 200 - 129, "the clock's leftover IS the drawdown");
 });
 
-test("compose: the recommend-time shrink + render reserve reproduce the bare cadence, shorter", () => {
+test("compose: the recommend-time shrink removes the tail and nothing else", () => {
   const bareRecipe = recipe(200);
-  const bareSteps = pourStepsFromStructured(bareRecipe, undefined, NOW); // method undefined
+  const bareSteps = pourStepsFromStructured(bareRecipe, undefined, NOW);
+  const discSteps = (t) => pourStepsFromStructured({ ...bareRecipe, targetTimeSec: t }, undefined, NOW, DISC);
 
   // The real recommend-side function decides the shrunk clock for a locked disc.
   const candidate = { method: DISC, recipe: bareRecipe, role: "anchor", title: "T", whyChosen: "", confidence: "high" };
   const [out] = calibrateDripAssistFinish([candidate], true, isPercolation);
   const TD = out.recipe.targetTimeSec;
 
-  assert.ok(TD < 200, `shrunk total ${TD} should be shorter than 200`);
+  // Bare drawdown is 200 − 129 = 71s; the disc keeps ~21% of it (floored at 10s),
+  // so the clock loses the difference and nothing else.
+  const bareTail = 71;
+  const expectedDiscTail = Math.max(
+    DRIP_ASSIST_DRAWDOWN_FLOOR_SEC,
+    Math.round(bareTail * DRIP_ASSIST_DRAWDOWN_KEEP),
+  );
+  assert.equal(TD, 200 - (bareTail - expectedDiscTail));
   assert.ok(TD >= 130 && TD <= 160, `shrunk total ${TD} ≈ 0.72*200`);
+  assert.ok(TD < 200, `shrunk total ${TD} should be shorter than 200`);
 
-  // Render that shorter clock as a disc brew → the pour START times must match
-  // the bare brew's exactly (same cadence), only the total is shorter.
-  const discSteps = pourStepsFromStructured({ ...bareRecipe, targetTimeSec: TD }, undefined, NOW, DISC);
-  assert.deepEqual(starts(discSteps), starts(bareSteps), "disc cadence must equal the bare cadence");
+  // The shortened clock still ends after the last pour is poured.
+  const discSchedule = pourScheduleFor({ ...bareRecipe, targetTimeSec: TD }, undefined, NOW, DISC);
+  assert.ok(TD >= discSchedule.pourPhaseEndSec, "the shrunk clock must not cut a pour");
+  // This fixture authors no rests, so the fallback re-spaces them for the shorter
+  // clock — the pours move a little. A recipe that states its own cadence does
+  // not, which is the case that matters and is asserted next.
+  assert.ok(Math.abs(starts(discSteps(TD))[3] - starts(bareSteps)[3]) <= 5);
+});
+
+test("compose: a recipe with its OWN rests keeps its cadence exactly when the disc shortens the clock", () => {
+  // The real case once a recipe times itself: pours at 0 / 45 / 110 / 175
+  // whatever the clock says, because the recipe says so.
+  const authored = {
+    doseGrams: 22,
+    waterGrams: 350,
+    waterTempC: 94,
+    grindSize: "385",
+    // Pours run to 3:15; a bare cone then drains for ~70s, which is the tail the
+    // disc does not need.
+    targetTimeSec: 265,
+    pourSteps: [
+      { action: "bloom", label: "Bloom", waterGramsAtEnd: 45, durationSec: 10 },
+      { action: "wait", label: "Rest", durationSec: 35 },
+      { action: "pour", label: "Pour 2", waterGramsAtEnd: 150, durationSec: 20 },
+      { action: "wait", label: "Rest", durationSec: 45 },
+      { action: "pour", label: "Pour 3", waterGramsAtEnd: 250, durationSec: 20 },
+      { action: "wait", label: "Rest", durationSec: 45 },
+      { action: "final", label: "Final pour", waterGramsAtEnd: 350, durationSec: 20 },
+    ],
+  };
+  const bare = pourStepsFromStructured(authored, undefined, NOW);
+  const candidate = { method: DISC, recipe: authored, role: "anchor", title: "T", whyChosen: "", confidence: "high" };
+  const [out] = calibrateDripAssistFinish([candidate], true, isPercolation);
+  const TD = out.recipe.targetTimeSec;
+  assert.ok(TD < 265, "the fictional tail is removed");
+  const disc = pourStepsFromStructured({ ...authored, targetTimeSec: TD }, undefined, NOW, DISC);
+  assert.deepEqual(starts(disc), starts(bare), "an authored cadence is clock-independent");
+  assert.deepEqual(starts(bare), [0, 45, 110, 175]);
 });
 
 test("recommend-side guards: only a locked, percolation, hot disc candidate is shrunk", () => {

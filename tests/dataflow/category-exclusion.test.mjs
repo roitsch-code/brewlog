@@ -77,7 +77,7 @@ test("with excludeLongWaits, immersion survives the hot menu and the flagged pou
       roastLevel: "light",
       process: "washed",
       goal: "balanced",
-      excludeLongWaits: true, // the production rule on every hot brew
+      excludeLongWaits: true, // the production rule when the disc is locked
       rotationSeed: 1,
     },
     20,
@@ -92,11 +92,13 @@ test("with excludeLongWaits, immersion survives the hot menu and the flagged pou
   }
 });
 
-test("recommend.ts still applies excludeLongWaits on hot brews (consumer wiring)", async () => {
+test("recommend.ts applies excludeLongWaits when the DISC is locked (consumer wiring)", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(
     src,
-    /excludeLongWaits:\s*Boolean\(dripAssistLocked\)\s*\|\|\s*isHotBrew/,
-    "the category-aware exclusion is only reached because recommend.ts sets excludeLongWaits on hot brews",
+    /excludeLongWaits:\s*Boolean\(dripAssistLocked\),/,
+    "the disc is the only case that excludes a designed long wait — #566 widened this to every " +
+      "hot brew to chase a hole the RENDERER was making, which threw the expert big-batch recipes " +
+      "off the menu",
   );
 });

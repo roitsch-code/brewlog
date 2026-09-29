@@ -302,11 +302,17 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Rest", action: "wait", durationSec: 35 },
       { label: "Pour 3 — strength phase (60%, third)", action: "pour", waterGramsAtEnd: 180, durationSec: 10 },
       { label: "Rest", action: "wait", durationSec: 35 },
-      { label: "Pour 4 — acid/sweet phase (40%, first)", action: "pour", waterGramsAtEnd: 220, durationSec: 10 },
+      // The 40% phase is 120g of the stated 300g over two pours = 60g each, the
+      // same size as the 60%-phase pours. The entry used to stop at 260g and
+      // park the missing 40g in a "settling" note on the drain step, which is
+      // not a thing a drawdown does — the pour plan simply never poured the
+      // recipe's own water. Corrected from the entry's OWN dose/water/ratio and
+      // phase labels; no new parameter is introduced.
+      { label: "Pour 4 — acid/sweet phase (40%, first)", action: "pour", waterGramsAtEnd: 240, durationSec: 10 },
       { label: "Rest", action: "wait", durationSec: 35 },
-      { label: "Pour 5 — acid/sweet phase (40%, second)", action: "pour", waterGramsAtEnd: 260, durationSec: 10 },
+      { label: "Pour 5 — acid/sweet phase (40%, second)", action: "pour", waterGramsAtEnd: 300, durationSec: 10 },
       { label: "Rest", action: "wait", durationSec: 20 },
-      { label: "Drawdown", action: "drain", durationSec: 30, notes: "final 40g settling" },
+      { label: "Drawdown", action: "drain", durationSec: 30 },
     ],
     // Pours (50s) + rests (160s) + drawdown (30s) = 240s. Was 210s, which made
     // the brew timer finish 30s before the pour guide completed its steps.

@@ -167,6 +167,42 @@ for (const r of ALL_RECIPES) {
   } else if (stepTemps.size === 1) {
     W(id, `pour step restates base temp as temperatureC — convention says omit it`);
   }
+  // PHYSICS OF THE POUR PLAN (Sep 2026). The brew timer follows a recipe's own
+  // cadence now, so these are no longer cosmetic: a pour nobody can pour, or a
+  // pour plan that stops short of the recipe's own water, reaches the user.
+  //
+  //  - Pour rate: on a POUR-OVER the corpus spans ~2–8 g/s (Hoffmann's Ultimate,
+  //    240g in 30s, is the fastest published pour). Under 2 g/s is the
+  //    rest-folded-into-the-step convention (Orea Wide, Christensen) and fine.
+  //    Immersion and machine brewers are exempt: filling a Clever, an AeroPress
+  //    or a Moccamaster reservoir is not pouring onto a bed, and those steps
+  //    legitimately run 15–180 g/s.
+  //  - Final milestone: must reach the recipe's water, except where the build
+  //    deliberately splits it — iced (hot half onto ice), a bypass dilution, or
+  //    a machine drip that authors no milestones at all.
+  const POUR_ACTIONS = new Set(["bloom", "pour", "final", "melodrip"]);
+  const IMMERSION_BREWERS = new Set(["clever", "aeropress", "aeropress-prismo", "cold-brew-jar", "moccamaster"]);
+  const isPourOver = !IMMERSION_BREWERS.has(r.brewer);
+  const splitBuild =
+    seq.some((x) => x.action === "bypass") ||
+    (r.occasions || []).includes("summer-time") ||
+    /iced|flash|japanese/i.test(id);
+  let prevPourCum = 0;
+  for (const [i, s] of seq.entries()) {
+    if (!POUR_ACTIONS.has(s.action) || typeof s.waterGramsAtEnd !== "number") continue;
+    const grams = s.waterGramsAtEnd - prevPourCum;
+    prevPourCum = s.waterGramsAtEnd;
+    if (isPourOver && grams > 0 && typeof s.durationSec === "number" && s.durationSec > 0) {
+      const rate = grams / s.durationSec;
+      if (rate > 12) {
+        E(id, `step ${i} (${s.label ?? s.action}) pours ${grams}g in ${s.durationSec}s = ${rate.toFixed(1)} g/s — nobody pours that fast`);
+      }
+    }
+  }
+  if (maxCum > 0 && !splitBuild && Math.abs(maxCum - water) > 1) {
+    E(id, `pour plan reaches ${maxCum}g but the recipe says ${water}g of water`);
+  }
+
   if (!(r.totalTimeSec > 0)) E(id, `bad totalTimeSec ${r.totalTimeSec}`);
   else {
     if (durSum > r.totalTimeSec + 5) E(id, `brew-step durations sum ${durSum}s > totalTimeSec ${r.totalTimeSec}s (timer ends before steps do)`);

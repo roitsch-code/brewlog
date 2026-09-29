@@ -36,12 +36,15 @@ import { LONG_DESIGNED_WAIT_SEC } from "@/lib/knowledge/recipes/helpers";
 import type { BrewRecipe } from "@/lib/types/session";
 import { DRIP_ASSIST_GRIND_OFFSET_DEG, isDripAssistMethod } from "@/lib/utils/dripAssist";
 import { isComandante, nicheToClicks, normalizeGrindToGrinder } from "@/lib/utils/grindUnit";
-import { PACE_RATE_MAX_GPS } from "@/lib/utils/pourSequence";
+import { MAX_POUR_RATE_GPS, pourScheduleFor } from "@/lib/utils/pourSequence";
 import { vesselOverflow } from "@/lib/utils/vesselCapacity";
 
 export type RecipeProblemCode =
   | "pour-too-fast"
   | "dead-gap"
+  | "clock-too-short"
+  | "milestones-not-increasing"
+  | "immersion-sum-mismatch"
   | "grind-unit"
   | "drip-assist-grind"
   | "reference-drift"
@@ -65,13 +68,12 @@ export interface RecipeValidationContext {
 }
 
 /**
- * The fastest anyone pours by hand. Deliberately the repo's own upper bound for
- * a *sane* pour rather than a tighter "gentle" figure: the corpus genuinely
- * spans ~3–10 g/s (median 5.2), so a stricter limit would reject real published
- * recipes. Anything past this is not a pour, it is arithmetic that never
- * imagined a kettle.
+ * The fastest anyone pours by hand: the corpus's own fastest published pour,
+ * Hoffmann's Ultimate V60 at 240 g in 30 s. The corpus spans ~2–8 g/s (median
+ * 5.0), so a stricter limit would reject real recipes and a looser one would
+ * wave through arithmetic that never imagined a kettle.
  */
-const MAX_POURABLE_RATE_GPS = PACE_RATE_MAX_GPS;
+const MAX_POURABLE_RATE_GPS = MAX_POUR_RATE_GPS;
 
 /** Water-adding steps, in timeline order. */
 function waterSteps(steps: TimelineStep[]): TimelineStep[] {
@@ -85,35 +87,97 @@ function fmtClock(sec: number): string {
 }
 
 /**
- * Every pour needs enough room to physically happen. For a mid-brew pour that
- * room is the gap to the next step; for the final pour it is whatever the clock
- * has left, because a recipe that promises to be finished before its own last
- * pour could end is inconsistent no matter where the drawdown sits.
+ * Every pour needs enough room to physically happen.
+ *
+ * This deliberately judges the duration the MODEL AUTHORED, not the slot the
+ * renderer ends up giving the pour. Since Sep 2026 the schedule corrects an
+ * impossible rate by stretching the slot, so checking the rendered timeline
+ * would make this check permanently silent — and the chat, which has already
+ * said "225 g over 30 seconds" out loud in its message, would keep saying it
+ * while the timer quietly did something else.
  */
-function checkPourability(steps: TimelineStep[], targetTimeSec: number): RecipeProblem[] {
+function checkPourability(steps: TimelineStep[]): RecipeProblem[] {
   const problems: RecipeProblem[] = [];
-  const pours = waterSteps(steps);
 
-  for (let i = 0; i < pours.length; i++) {
-    const pour = pours[i];
+  for (const pour of waterSteps(steps)) {
     const grams = pour.pourGrams ?? 0;
-    const next = pours[i + 1];
-    const availableSec = (next ? next.startSec : targetTimeSec) - pour.startSec;
-    if (availableSec <= 0) continue;
-
-    const minSec = grams / MAX_POURABLE_RATE_GPS;
-    if (minSec > availableSec) {
+    const authored = pour.pourDurationSec;
+    if (!grams || !authored || authored <= 0) continue;
+    const rate = grams / authored;
+    if (rate > MAX_POURABLE_RATE_GPS + 0.01) {
       problems.push({
         code: "pour-too-fast",
         message:
-          `"${pour.label}" pours ${Math.round(grams)}g but only has ${Math.round(availableSec)}s ` +
-          `before ${next ? `the next pour at ${fmtClock(next.startSec)}` : `the brew ends at ${fmtClock(targetTimeSec)}`} ` +
-          `— that is ${(grams / availableSec).toFixed(1)} g/s. Nobody pours faster than ~${MAX_POURABLE_RATE_GPS} g/s, ` +
-          `and a gentle pour is ~4 g/s. Split this into more pours, or give it more time.`,
+          `"${pour.label}" pours ${Math.round(grams)}g in ${Math.round(authored)}s — that is ` +
+          `${rate.toFixed(1)} g/s. Nobody pours faster than ~${MAX_POURABLE_RATE_GPS} g/s ` +
+          `(Hoffmann's fastest published pour), and a gentle pour is ~4 g/s. ` +
+          `Give it ${Math.ceil(grams / MAX_POURABLE_RATE_GPS)}s or more, or split it into two pours.`,
       });
     }
   }
   return problems;
+}
+
+/**
+ * The clock has to outlast the recipe's own pour plan. A recipe that says it
+ * finishes at 3:30 while its steps run to 4:10 is not a fast brew, it is one
+ * that never added its own numbers up.
+ */
+function checkClock(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipeProblem[] {
+  const schedule = pourScheduleFor(recipe, ctx.roastDate, ctx.now ?? Date.now(), ctx.method);
+  if (!schedule || !schedule.extended) return [];
+  return [
+    {
+      code: "clock-too-short",
+      message:
+        `The pours run to ${fmtClock(schedule.pourPhaseEndSec)} but targetTimeSec is ` +
+        `${fmtClock(recipe.targetTimeSec)} — the brew would be declared finished while you are ` +
+        `still pouring. Set targetTimeSec to at least ${fmtClock(schedule.finishSec)} ` +
+        `(pours plus a drawdown), or pour less water.`,
+    },
+  ];
+}
+
+/** Water can only be added, so the cumulative milestones can only rise. */
+function checkMilestones(recipe: BrewRecipe): RecipeProblem[] {
+  const steps = recipe.pourSteps;
+  if (!Array.isArray(steps)) return [];
+  let prev = 0;
+  for (const s of steps) {
+    if (typeof s.waterGramsAtEnd !== "number") continue;
+    if (s.waterGramsAtEnd <= prev) {
+      return [
+        {
+          code: "milestones-not-increasing",
+          message:
+            `"${s.label}" leaves ${s.waterGramsAtEnd}g in the brewer after the previous step ` +
+            `already reached ${prev}g. waterGramsAtEnd is the RUNNING TOTAL, not the amount ` +
+            `this pour adds — each one must be larger than the last.`,
+        },
+      ];
+    }
+    prev = s.waterGramsAtEnd;
+  }
+  return [];
+}
+
+/** An immersion recipe's own step durations ARE its clock. */
+function checkImmersionSum(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipeProblem[] {
+  const steps = recipe.pourSteps;
+  if (!Array.isArray(steps) || steps.length === 0) return [];
+  const timeline = buildBrewTimeline(recipe, ctx.roastDate, ctx.now ?? Date.now(), ctx.method);
+  if (timeline.shape !== "immersion") return [];
+  const sum = timeline.steps.reduce((acc, s) => acc + Math.max(0, s.endSec - s.startSec), 0);
+  if (!sum || Math.abs(sum - recipe.targetTimeSec) <= 5) return [];
+  return [
+    {
+      code: "immersion-sum-mismatch",
+      message:
+        `The timed steps add up to ${fmtClock(sum)} but targetTimeSec says ` +
+        `${fmtClock(recipe.targetTimeSec)}. On an immersion brew the steps ARE the clock — ` +
+        `make them match.`,
+    },
+  ];
 }
 
 /**
@@ -130,7 +194,8 @@ function checkDeadGaps(steps: TimelineStep[]): RecipeProblem[] {
     const pour = pours[i];
     const next = pours[i + 1];
     // When the pour finishes, at the recipe's own intended rate.
-    const poursUntil = pour.startSec + (pour.pourDurationSec ?? (pour.pourGrams ?? 0) / 4);
+    const poursUntil =
+      pour.startSec + (pour.timingDurationSec ?? (pour.pourGrams ?? 0) / 4);
     const gap = next.startSec - poursUntil;
     if (gap > LONG_DESIGNED_WAIT_SEC) {
       problems.push({
@@ -269,14 +334,17 @@ export function validateRecipe(
     // Percolation only: an immersion steep has no pour cadence to be wrong about,
     // and its step durations are authored rather than derived.
     if (timeline.shape === "percolation") {
-      problems.push(...checkPourability(timeline.steps, timeline.targetTimeSec));
+      problems.push(...checkPourability(timeline.steps));
       problems.push(...checkDeadGaps(timeline.steps));
+      problems.push(...checkClock(recipe, ctx));
     }
   } catch {
     // A recipe the timeline builder can't read is a rendering problem, not a
     // brewing one — sanitizePourSteps already guards that path. Don't block on it.
   }
 
+  problems.push(...checkMilestones(recipe));
+  problems.push(...checkImmersionSum(recipe, ctx));
   problems.push(...checkGrindUnit(recipe, ctx.grinder));
   problems.push(...checkDripAssistGrind(recipe, ctx));
   problems.push(...checkReferenceDrift(recipe, ctx));

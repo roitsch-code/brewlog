@@ -21,13 +21,12 @@
  * renderer arrays and the cue boundaries are unchanged across the recipe corpus.
  */
 import type { BrewRecipe, BrewStepAction } from "@/lib/types/session";
+import { intendedPourDurationSec } from "@/lib/utils/pourSequence";
 import {
   buildGuideSteps,
   hasImmersionShape,
   isAgitationPourAction,
-  intendedPourDurationSec,
-  parsePourSteps,
-  pourStepsFromStructured,
+  pourScheduleFor,
   type AgitationAction,
   type GuideStep,
   type PourStep,
@@ -55,6 +54,9 @@ export interface TimelineStep {
    * flow coach coaches against instead of a global house constant. Undefined →
    * the coach falls back to the ~4 g/s house rate. */
   pourDurationSec?: number;
+  /** How long this step OCCUPIES on the rendered timeline (see PourStep). The
+   * expected-grams ramp and the dead-gap check both measure from it. */
+  timingDurationSec?: number;
   /** Pre-brew handling (immersion invert/load/assemble) — excluded from `steps`. */
   isSetup: boolean;
   /** Swirl / stir / tap / agitate-bed. */
@@ -75,6 +77,14 @@ export interface BrewTimeline {
   /** Immersion pre-brew steps (invert/load); empty for percolation. */
   setupSteps: TimelineStep[];
   targetTimeSec: number;
+  /** Elapsed second at which the pour phase is over and drawdown begins. */
+  pourPhaseEndSec: number;
+  /** Seconds of drawdown the clock leaves after the pour phase. */
+  drawdownSec: number;
+  /** When the brew is really over: `targetTimeSec`, or the pour phase plus the
+   * drawdown floor when the recipe's own cadence needs more than its clock says.
+   * The timer, the step cues and the Live Activity all end here. */
+  finishSec: number;
   /** True when grams-over-time comparison is meaningful (percolation). Immersion
    * only has sparse checkpoints, so live grams-comparison degrades to timing. */
   hasGramsCurve: boolean;
@@ -115,6 +125,7 @@ function fromPourStep(p: PourStep, all: PourStep[], i: number, targetTimeSec: nu
     targetCumulativeGrams: p.cumulativeGrams,
     pourGrams: p.pourGrams,
     pourDurationSec: p.pourDurationSec,
+    timingDurationSec: p.timingDurationSec,
     isSetup: false,
     isAgitation: isAgitationPourAction(p.action),
     temperatureC: p.temperatureC,
@@ -143,6 +154,10 @@ export function buildBrewTimeline(
     // brew screen's pace line) target the actual pour. Single-pour immersion (the
     // common AeroPress/Clever "add all water", delta == total) is unchanged; a
     // rare second pour now coaches against its own increment instead of the total.
+    let immersionEnd = 0;
+    for (const g of guideSteps) {
+      if (!g.isSetup) immersionEnd = Math.max(immersionEnd, g.startTimeSec + g.durationSec);
+    }
     let prevCumulative = 0;
     for (const s of normalized) {
       if (s.targetCumulativeGrams == null) continue;
@@ -159,24 +174,29 @@ export function buildBrewTimeline(
       steps: normalized.filter((s) => !s.isSetup),
       setupSteps: normalized.filter((s) => s.isSetup),
       targetTimeSec,
+      // An immersion guide's steps ARE its clock; there is no drawdown tail to
+      // reserve, so the phase ends where the last step does.
+      pourPhaseEndSec: immersionEnd,
+      drawdownSec: Math.max(0, targetTimeSec - immersionEnd),
+      finishSec: Math.max(targetTimeSec, immersionEnd),
       hasGramsCurve: false,
     };
   }
 
-  const pourSteps =
-    pourStepsFromStructured(recipe, roastDate, now, method) ??
-    (recipe.pourSequence && recipe.targetTimeSec
-      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate, now, method)
-      : null);
-  if (pourSteps) {
+  const schedule = pourScheduleFor(recipe, roastDate, now, method);
+  if (schedule) {
+    const pourSteps = schedule.steps;
     return {
       shape: "percolation",
       pourSteps,
       guideSteps: null,
       proseSequence: null,
-      steps: pourSteps.map((p, i) => fromPourStep(p, pourSteps, i, targetTimeSec)),
+      steps: pourSteps.map((p, i) => fromPourStep(p, pourSteps, i, schedule.finishSec)),
       setupSteps: [],
       targetTimeSec,
+      pourPhaseEndSec: schedule.pourPhaseEndSec,
+      drawdownSec: schedule.drawdownSec,
+      finishSec: schedule.finishSec,
       hasGramsCurve: true,
     };
   }
@@ -190,6 +210,9 @@ export function buildBrewTimeline(
     steps: [],
     setupSteps: [],
     targetTimeSec,
+    pourPhaseEndSec: 0,
+    drawdownSec: targetTimeSec,
+    finishSec: targetTimeSec,
     hasGramsCurve: false,
   };
 }
@@ -216,7 +239,7 @@ export function expectedGramsAt(timeline: BrewTimeline, tSec: number): number | 
     // Ramp over the recipe's OWN intended pour time when it authored a plausible
     // one, else the ~4 g/s house estimate — so "where you should be" matches the
     // recipe's intended pour speed (a 6 g/s Kasuya pour fills in 10 s, not 15 s).
-    const dur = intendedPourDurationSec(pourGrams, s.pourDurationSec);
+    const dur = Math.max(1, s.timingDurationSec ?? intendedPourDurationSec(pourGrams, s.pourDurationSec));
     const pourEnd = s.startSec + dur;
     if (tSec < s.startSec) {
       return prevC; // resting between the previous pour's end and this pour
