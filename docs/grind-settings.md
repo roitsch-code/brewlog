@@ -15,6 +15,8 @@ Two relationships fall out of those points:
 
 - **Niche ↔ Comandante:** ~**3.3° per click** (anchor 380°=23, 400°=29). `clicks ≈ 23 + (niche − 380) × 0.3`.
 - **Dose scaling (same method/ratio):** doubling the dose runs **~+20° / +6 clicks coarser** (bigger bed → more flow resistance). Halving goes the same amount finer. Guideline, not a hard table.
+  - **Applied logarithmically in code** (`scaleGrind`, `src/lib/recipe/scaleRecipe.ts`): `Δ° = 20 × log₂(doseRatio)`. So 1.5× is ≈ +12°, 2× is +20°, 0.5× is −20°. The old linear form `20 × (ratio − 1)` matched the measured anchors only at exactly 2× and got the halving side wrong (−10° instead of −20°).
+  - Direction corroborated by Wendelboe's own brew guide: *"for less volumes grind finer than if you are brewing more volume"* (timwendelboe.no), and by Rao and Gagné on bed depth (a deeper bed adds flow resistance, so it wants a coarser grind).
 
 ## Per-method defaults
 

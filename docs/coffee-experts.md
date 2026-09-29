@@ -273,6 +273,43 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 
 ---
 
+## 4b. Scaling a recipe to a different batch
+
+> Researched Sep 2026 from primary sources; the code that implements it is `src/lib/recipe/scaleRecipe.ts`, and the numbers below are its rules.
+
+**The one verified pair of the same recipe at two sizes** is Hoffmann's, both published by Hario:
+
+| | 1 Cup (15 g : 250 g) | Ultimate (30 g : 500 g) | what moved |
+|---|---|---|---|
+| Ratio | 1:16.7 | 1:16.7 | held |
+| Bloom | 50 g | 60 g | grows with the dose |
+| Main pours | 4 × 50 g, ~10 s each, 10 s pauses | 2 pours, 30 s each | HIS choice of technique, not a scaling law |
+| Pour phase ends | 2:00 | 1:45 | earlier |
+| Total | ~3:00 | ~3:30 | **+17 % for 2× water** |
+| Drawdown | ~60 s | ~105 s | **×1.75 for 2× water** |
+
+**What every source agrees holds constant:** the brew ratio, the temperature, and the rests. Kasuya's 4:6 at 30 g : 450 g is five 90 g pours on the same 45 s intervals — the pour SIZE scales, the count and the cadence do not (philocoffea.com). Rao pours twice at any batch size and caps the V60 dose at 20–25 g, because a deeper bed forces a coarser grind (scottrao.com, "Bed depth: why it matters"). Mardan's Chemex scales its bloom with the brewer (40 g for 3-cup, 80 g for 6-cup) and his Moccamaster "scales 1:16 linearly 31 g/500 g up to 78 g/1250 g".
+
+**What moves, and by how much:**
+
+| Parameter | Rule | Source |
+|---|---|---|
+| Dose | × the water factor (the ratio holds) | all of the above |
+| Every milestone | × the water factor | all |
+| Each pour's SECONDS | its new grams ÷ the reference's own pour rate — NOT the reference's seconds | Hoffmann's rates (5 → 6.7–8 g/s), Gagné targets 5 g/s |
+| Pour count | unchanged; add one only if a pour would need > 8 g/s | Kasuya 5, Rao 2, Hoffmann's Dara pair 4 |
+| Rests | unchanged | Kasuya 45 s at both sizes |
+| Grind | +20° on the Niche per DOUBLING of dose, same amount finer when halving | owner-measured (380° at 15 g, 400° at 30 g); direction from Wendelboe, Rao, Gagné |
+| Drawdown | ≈ × √(water factor) | between Hoffmann's measured ×1.75 and the corpus's flat big batches — an ESTIMATE, overridden by the owner's own measured brew times |
+| Total time | the SUM of the above, never a multiple of the original | Hoffmann +17 % for 2×; Gagné's bed-depth table +13 % to +26 % |
+| Temperature | unchanged | all |
+
+**The physics underneath it** is bed depth. Gagné: *"A thicker percolation medium offers a larger resistance to the flow of water"*, and when depth increases you must *"either grind coarser or accept longer brew times"* — his own cheat sheet does both, moving a 17 mm bed at ~3:50 to a 22–23 mm bed at ~4:50+. Rao: *"If a bed is too deep, one has to use a very coarse grind"*, and *"shallow beds are more prone to astringency"*.
+
+**Sources:** [Hoffmann 1 Cup](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-1-cup-v60-technique) · [Hoffmann Ultimate](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-uitimate-v60-technique) · [Kasuya 4:6, Philocoffea](https://philocoffea.com/?mode=f3) · [Rao on bed depth](https://www.scottrao.com/blog/2025/11/11/bed-depth-why-it-matters) · [Gagné on bed depth](https://coffeeadastra.com/2025/11/28/the-pulsar-mini-and-the-importance-of-bed-depth/) · [Gagné V60 guide](https://coffeeadastra.com/2018/11/30/brewing-better-coffee/) · [Wendelboe pour-over guide](https://timwendelboe.no/pages/how-to-brew-pourover-and-filter-coffee)
+
+---
+
 ## 5. What's deliberately NOT here
 
 - **Espresso recipes.** BrewLog is filter-only; espresso has its own canon outside this corpus.
