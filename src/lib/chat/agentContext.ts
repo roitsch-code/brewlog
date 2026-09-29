@@ -62,7 +62,10 @@ export function recipeLibraryBlock(): string {
     groups
       .map(
         ([brewer, rs]) =>
-          `\n### ${brewer} (${rs.length})\n\n` + rs.map(formatRecipeForPrompt).join("\n\n"),
+          // Unscaled on purpose: this block is memoized once per process and
+          // prompt-cached, so it cannot carry a per-turn batch size. The chat
+          // gets its scaling through the recipe validator instead.
+          `\n### ${brewer} (${rs.length})\n\n` + rs.map((r) => formatRecipeForPrompt(r)).join("\n\n"),
       )
       .join("\n");
   return recipeLibraryCache;

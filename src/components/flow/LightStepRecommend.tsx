@@ -14,7 +14,8 @@ import { buildCraftingPhases } from "@/lib/craftingPhases";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { MAX_CHARS } from "@/lib/insights/loadingInsightLint";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import type { RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
+import type { BrewRecipe, RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
+import { pourScheduleFor } from "@/lib/utils/pourSequence";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 
 /**
@@ -304,9 +305,7 @@ export default function LightStepRecommend() {
               <div className="border-t border-light-foreground/10 pt-4">
                 <p className="label-eyebrow mb-4">Pour sequence</p>
                 <PourSequence
-                  sequence={activeRecipe.pourSequence}
-                  totalGrams={activeRecipe.waterGrams}
-                  targetTimeSec={activeRecipe.targetTimeSec}
+                  recipe={activeRecipe}
                   roastDate={draft.coffee?.roastDate}
                   method={activeMethod}
                   process={draft.coffee?.process}
@@ -353,19 +352,17 @@ function getFinalAgitation(method?: string): string | null {
 }
 
 function PourSequence({
-  sequence,
-  targetTimeSec,
+  recipe,
   roastDate,
   method,
   process,
 }: {
-  sequence: string;
-  totalGrams: number;
-  targetTimeSec: number;
+  recipe: BrewRecipe;
   roastDate?: string;
   method?: string;
   process?: string;
 }) {
+  const sequence = recipe.pourSequence ?? "";
   const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
   const isCumulative = parts.length >= 2 && parts.every((p) => /^\d+$/.test(p));
 
@@ -390,13 +387,13 @@ function PourSequence({
 
   const milestones = parts.map(Number);
   const n = milestones.length;
-  const daysOld = roastDate
-    ? Math.max(0, Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000))
-    : null;
-  const bloomDur =
-    daysOld === null ? 45 : daysOld < 7 ? 50 : daysOld < 22 ? 45 : 30;
-  const interval = n > 1 ? (targetTimeSec - bloomDur) / (n - 1) : 0;
-  const stepTimes = milestones.map((_, i) => (i === 0 ? 0 : Math.round(bloomDur + (i - 1) * interval)));
+  // The preview shows the SAME schedule the brew timer will run. It used to
+  // carry its own `(target − bloom) / (n − 1)` spacing, which was a third timing
+  // model and already disagreed with the timer before the cadence-first rewrite.
+  const schedule = pourScheduleFor(recipe, roastDate, undefined, method);
+  const waterSteps = (schedule?.steps ?? []).filter((st) => st.pourGrams > 0);
+  const stepTimes = milestones.map((_, i) => waterSteps[i]?.startTimeSec ?? 0);
+  const targetTimeSec = schedule?.finishSec ?? recipe.targetTimeSec;
 
   const rows: { time: string; label: React.ReactNode; isFirst?: boolean }[] = [
     {

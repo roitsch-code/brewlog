@@ -216,6 +216,12 @@ export default function LightStepBrew() {
   // Percolation → cumulative-grams pour-over renderer; immersion → action-aware
   // step guide; prose → legacy "·"-separated string. All derived once above.
   const steps = timeline?.pourSteps ?? null;
+  // When the brew is really over. Cadence-first, a recipe whose own pour plan
+  // needs more time than its `targetTimeSec` claims (a chat recipe that slipped
+  // the validator, or a session saved before Sep 2026) renders past the clock
+  // rather than cutting a pour short — so the timer, the step cues and the Live
+  // Activity all end at `finishSec`, never at a promise the pours can't keep.
+  const finishSec = timeline?.finishSec ?? recipe?.targetTimeSec ?? 0;
   const guideSteps = timeline?.guideSteps ?? null;
   const proseSequence = timeline?.proseSequence ?? null;
   timelineRef.current = timeline;
@@ -250,7 +256,7 @@ export default function LightStepBrew() {
     started,
     recipeName ?? "Brew",
     draft.coffee?.name ?? "",
-    recipe?.targetTimeSec ?? 0,
+    finishSec,
   );
 
   // Cold brew is a long cold immersion steep (hours) — no live pour timer. When
@@ -329,7 +335,7 @@ export default function LightStepBrew() {
         )}
 
         <LightCircularTimer
-          targetSeconds={recipe?.targetTimeSec}
+          targetSeconds={finishSec || recipe?.targetTimeSec}
           onComplete={handleTimerComplete}
           onTick={handleTick}
         />
@@ -338,7 +344,7 @@ export default function LightStepBrew() {
           <LivePourSequence
             steps={steps}
             elapsed={elapsed}
-            targetTimeSec={recipe.targetTimeSec}
+            targetTimeSec={finishSec || recipe.targetTimeSec}
             started={started}
             waterGrams={recipe.waterGrams}
             coach={coach}

@@ -214,7 +214,7 @@ HARD CAPACITY LIMITS — owner-measured from his real kit; never exceed, even in
 - Kettle: Fellow Corvo EKG — must return to base between pours
 
 Time constraints — the app offers TWO choices for normal occasions, "normal" and "special":
-- "normal" (~3–5 min): the everyday default — V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 180–330; aim for the ~4–5 min middle unless the method runs faster.
+- "normal" (~3–5 min): the everyday default — V60, Kalita, Orea, Clever, Moccamaster (it batch-brews 750g in ~3:30), Kasuya 4:6. targetTimeSec 180–330 — but the clock is the SUM of your own steps (see TIME YOUR OWN STEPS), not a number to aim at. A 250ml V60 lands near 3:00 because that is what its pours and drawdown add up to; a 500ml one lands near 4:00 for the same reason.
 - "special" = a FAST shot (~2 min or under): AeroPress, Wölfl Orea Fast, turbo-style. targetTimeSec ≤ 150. Cap at 3 pours.
 - "long-steep": only ever sent by the Cold Brew occasion — the steep IS the time. Ignore the fast/normal vocabulary entirely and follow the COLD BREW RECIPES block (targetTimeSec = steep seconds, e.g. 43200 for 12h).
 (Legacy guard: an old session may send "quick" — treat it as "special" (fast, ≤150s); "unhurried" — treat it as the slow end of "normal", ≤~330s.)
@@ -289,9 +289,15 @@ Preserve that recipe's DEFINING mechanics exactly. Only the gram amounts (dose, 
 - Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour — Comandante 40–45 clicks ≈ Niche 435–455°) STAYS super-coarse; never substitute a normal V60 grind (~380°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
 - Its pour COUNT and cadence. A 10-pulse recipe stays 10 pulses on its published spacing (Kasuya Super Coarse = bloom for 30s, then ~30g every 15s, finishing ~3:30). Do NOT collapse it to 4 pours and do NOT stretch the spacing (15s → ~28s) — that doubles the brew and abandons the method.
 - Its temperature and its TOTAL brew time.
-Scaling water for a small batch change (e.g. 300 → 350ml, +17% grams) moves the gram milestones proportionally but does NOT lengthen total time or coarsen the grind: Kasuya Super Coarse is ~3:30 at both 300ml and 350ml. Adding 50ml must never add 1:15. The POUR COUNT ADAPTATION defaults below apply ONLY to "Own recipe" candidates — never to override a documented recipe's published structure.
+When the entry carries a "Scaled to your Ng" line, THAT is the arithmetic — its milestones, its per-step seconds, its grind and its total are what this reference becomes at this batch, and a candidate based on it should match them. Small changes stay small: +17% of water is a few seconds per pour and a couple of degrees of grind, never another 1:15 on the clock.
 
-BATCH SIZE ADAPTATION (LARGE change — the flow lever is GRIND, NEVER the clock): when the target volume is substantially larger than the reference recipe's published batch (roughly >30% more water — e.g. a 250–300ml recipe taken to 450ml+, or any batch of ≥450ml), a deeper bed adds flow resistance, so you MUST grind COARSER to keep flow and contact time under control — about +20° on the Niche per DOUBLING of dose (so ~+10° for a 1.5× batch, ~+20° for a 2× batch; this is the user's own measured grind-scaling, grind-settings.md). Keeping the single-cup grind on a big batch is the classic failure: the bed clogs, the water sits, and it over-extracts. Do NOT "fix" a big batch by stretching targetTimeSec — a longer clock means longer contact means a bitter, over-extracted cup. The coarser grind is EXACTLY what lets the larger volume drain in a controlled, only-modestly-longer time at the correct extraction; drawdown overhead stays roughly constant with volume (same principle as the immersion drain note below). Place the extra water with at most ONE additional pour, on the reference recipe's cadence — do not slow the cadence down. So: bigger batch = coarser grind + (optionally) one more pour, NOT a longer brew time.
+BATCH SIZE ADAPTATION — the per-turn library already does this for you. When a reference's published batch differs from this brew, its entry carries a "Scaled to your Ng" line: dose, every milestone, every step's seconds, the grind and the total, already converted. Use those numbers. The rules behind them, for when you are writing your own recipe:
+
+- The RATIO holds, so the dose follows the water. The pour COUNT holds — Kasuya's 4:6 at 450 ml is five 90 g pours on the same 45 s intervals, not more pours; Rao pours twice at any batch. The RESTS hold: a 35 s interval is 35 s at any size. The TEMPERATURE holds.
+- What grows is each POUR, and therefore how long it takes: 60 g at 6 g/s is 10 s, 90 g at 6 g/s is 15 s. That is where most of the extra time comes from.
+- GRIND COARSER for a bigger bed: +20° on the Niche per DOUBLING of dose, so ~+12° at 1.5×, +20° at 2×. Halving goes the same amount FINER (Wendelboe: "for less volumes grind finer than if you are brewing more volume"). A deeper bed adds flow resistance; keeping the single-cup grind on a big batch is the classic failure — the bed clogs, the water sits, it over-extracts.
+- The DRAWDOWN grows, but far less than the water does: Hoffmann's own two V60 techniques go 60 s at 250 ml to 105 s at 500 ml. Roughly the square root of the volume factor.
+- The total time is then the SUM of those — bloom + pours + rests + drawdown. NEVER stretch the clock as a multiple of the water: a 2× batch is ~15–25% longer, not twice as long, and a longer clock means longer contact means a bitter cup. Equally, do not keep the single-cup clock on a double batch and call it faithful.
 
 POUR COUNT (for "Own recipe" candidates only — documented recipes keep their published count, see RECIPE FIDELITY). Default 4 pours; adjust per the EXTRACTION BUDGET above, NOT as independent rules:
 - Washed / clarity goal: 4–5 pours — more input opens a shy washed up.
@@ -300,14 +306,13 @@ POUR COUNT (for "Own recipe" candidates only — documented recipes keep their p
 - Freshness overlay: very fresh (<7 days) +1 pour for CO₂ management; past peak (>22 days) −1 pour, gentler.
 - Special (fast) time: cap at 3 pours regardless.
 
-COUNT YOUR POURS AGAINST THE CLOCK (the rule that fails most often — the owner reported "3–4 pours and pour 2 was somehow 2 minutes", a stalled brew that over-extracts and tastes bad). The timer SPREADS your water steps evenly across targetTimeSec and reserves the tail for the drawdown — so what you control is HOW MANY water steps (bloom + pours) share the clock. Too few for the time = the timer leaves a HOLE between two pours, and a wait over ~75s between pours is not a rest, it is a dead brew. So the pour count has a FLOOR that grows with the total time — count the bloom as a water step:
+TIME YOUR OWN STEPS — THE TIMER FOLLOWS THEM. Every step you write occupies the seconds you give it, in order, and the drawdown is whatever the clock has left after the last pour. Nothing is re-spaced for you, so the recipe has to add up:
 
-  | total brew time | water steps (bloom + pours) — bare brewer | with the Drip Assist |
-  |---|---|---|
-  | up to 5:00 | 4 — bloom + 3 | 5 — bloom + 4 |
-  | over 5:00 | 5 — bloom + 4 | 6 — bloom + 5 |
-
-  These are FLOORS, not targets: one more pour is always safe, one fewer leaves a hole (the server drops such a candidate — recipeFidelity's long-pour-gap guard). The disc column needs one MORE pour because it drains almost as fast as you pour, so the timer reserves only a sliver at the end and leaves a much longer stretch to fill. NEVER one giant final pour, and NEVER a lone middle pour with a minute of nothing after it. And do NOT pad the clock to make a big batch look bigger — more water means more POURS in roughly the same time, not more minutes (a longer clock over-extracts, per BATCH SIZE ADAPTATION). A 500ml V60 is a 4–5 minute brew with five or six pours in it, not an 8-minute one.
+- Give every step a durationSec. A pour's duration is its grams divided by a real pour rate: ~4 g/s is a gentle gooseneck, 6 g/s is Kasuya's own pace, 8 g/s is the fastest anyone publishes (Hoffmann's Ultimate moves 240 g in 30 s). A 200 g pour is therefore 25–50 s, never 15.
+- Write the PAUSES as their own "wait" steps — that is the cadence, and without them your pours run back-to-back. The rest after the bloom is one of them. A normal pulse pause is 10–45 s (Hoffmann pauses 10 s between pulses, Kasuya 35 s between his). A wait over 75 s is not a rest, it is a stalled brew that over-extracts, and the server drops such a candidate.
+- Do NOT write a trailing "Drawdown" step. The drawdown is targetTimeSec minus the end of your last pour; you set it by choosing the total, not by adding a step.
+- targetTimeSec = the bloom, every pour, every wait, plus the drawdown you want. A bare cone drains for 40–90 s after the last pour (Hoffmann's 1-cup 60 s, his Ultimate 105 s, Kasuya 35 s); the Drip Assist drains as fast as you pour, so its tail is a sliver. If your steps outrun your clock the server raises the clock — it never cuts a pour short.
+- More water means BIGGER pours, not more minutes and not automatically more pours (see BATCH SIZE ADAPTATION). Keep the pour count the reference uses; add one only if a pour would otherwise need more than 8 g/s.
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
 PERCOLATION:
@@ -338,7 +343,7 @@ CHEMEX — dedicated rules:
    (Slightly lower than V60 — thick filter slows flow, adding contact time)
 4. Ratio: 1:15–1:16 standard | 1:16–1:17 for lean/clarity focus
 5. Niche°: see the NICHE° GRIND REFERENCE block (Chemex sits coarser than Kalita — the thick filter adds resistance).
-6. Max practical volume: 600 ml. Minimum for good cup quality: 300 ml.
+6. Volume window: 350–750 ml (matches the HARD CAPACITY LIMITS above).
 
 ORIGAMI DRIPPER — dedicated rules:
 1. Japanese ceramic dripper with 20 vertical ribs. Two filter shapes — pick based on goal:
@@ -471,12 +476,14 @@ appears until the last token is written. Do the thinking; ship only the verdict.
         "targetTimeSec": 270,
         "pourSequence": "70 – 190 – 320 – 450",
         "pourSteps": [
-          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 45, "notes": "Slow circles from centre out, wet all grounds" },
+          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 15, "notes": "Slow circles from centre out, wet all grounds" },
           { "label": "Stir", "action": "stir", "durationSec": 5, "notes": "3–5× even stir to settle the bed" },
-          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 30 },
-          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 320, "durationSec": 30 },
-          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 450, "durationSec": 30 },
-          { "label": "Drawdown", "action": "drain", "durationSec": 60 }
+          { "label": "Bloom rest", "action": "wait", "durationSec": 25 },
+          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 25 },
+          { "label": "Pause", "action": "wait", "durationSec": 15 },
+          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 320, "durationSec": 25 },
+          { "label": "Pause", "action": "wait", "durationSec": 15 },
+          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 450, "durationSec": 25 }
         ]
       },
       "whyChosen": "ONE short sentence: why this candidate for THIS coffee. Make it the mechanism, not a restatement of the numbers above it.",

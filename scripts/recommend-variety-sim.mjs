@@ -192,15 +192,13 @@ function selectionFor(scenario, pastSessions) {
     ...K.CANONICAL_EQUIPMENT,
   ]);
 
-  const isHotBrew =
-    context.occasion !== "summer-time" && context.occasion !== "cold-brew";
   const input = {
     brewersAvailable,
     lockedBrewers: new Set(),
-    // Production rule (recommend.ts): exclude pour-over long-waits on every hot
-    // brew. Category-aware since this fix — immersion steeps are exempt, so the
-    // Clever/AeroPress recipes return to the menu when they fit.
-    excludeLongWaits: isHotBrew,
+    // Production rule (recommend.ts): a designed long wait is only excluded when
+    // the DISC is locked. It was excluded on every hot brew between #566 and the
+    // cadence-first rewrite, to chase a hole the renderer was making.
+    excludeLongWaits: Boolean(scenario.lockedMethod?.match(/drip\s*assist/i)),
     roastLevel: K.normaliseRoastLevel(coffee.roastLevel),
     process: K.normaliseProcess(coffee.process),
     processes: [],

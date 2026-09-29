@@ -22,6 +22,8 @@ export {
   hasImmersionShape, getActiveIdx, isAgitationPourAction, pourDurationSec,
   poursCompleteAtSec, POUR_RATE_GPS, pourPace, pourTargetRateGPS,
   PACE_RATE_MIN_GPS, PACE_RATE_MAX_GPS,
+  MAX_POUR_RATE_GPS, MIN_DRAWDOWN_SEC, pourPhaseEndSec, pourScheduleFor,
+  FALLBACK_REST_MIN_SEC, FALLBACK_REST_MAX_SEC, pourTimingDurationSec,
 } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "pourseq-"));
@@ -47,6 +49,13 @@ const {
   POUR_RATE_GPS,
   pourPace,
   pourTargetRateGPS,
+  MAX_POUR_RATE_GPS,
+  MIN_DRAWDOWN_SEC,
+  pourPhaseEndSec,
+  pourScheduleFor,
+  FALLBACK_REST_MIN_SEC,
+  FALLBACK_REST_MAX_SEC,
+  pourTimingDurationSec,
   PACE_RATE_MIN_GPS,
   PACE_RATE_MAX_GPS,
 } = await import(pathToFileURL(out).href);
@@ -82,27 +91,27 @@ test("getBloomDuration: exactly 22 days old → 30s (boundary)", () => {
 
 // ── parsePourSteps: core invariant ─────────────────────────────────────────
 
-test("parsePourSteps: last pour lands at targetTime − drawdownReserve", () => {
-  // 270s target, 4 pours, peak roast (45s bloom): last pour must be at 181s
+test("parsePourSteps: a string recipe times its pours, then drains what's left", () => {
+  // No authored durations, so each pour takes grams ÷ 4 g/s and the rests are
+  // spread over what is left once a corpus-median drawdown is set aside. 270s,
+  // 4 pours, peak roast: pours 13/33/35/45s, drawdown target 97s, so the two
+  // gaps get 10s each… clamped up to the 10s minimum, leaving 92s of drawdown.
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
   assert.ok(steps, "should parse");
+  assert.deepEqual(
+    steps.map((s) => s.startTimeSec),
+    [0, 45, 88, 133],
+  );
   const last = steps.at(-1);
-  assert.equal(last.startTimeSec, 270 - Math.round(270 * 0.33)); // 270 − 89 = 181
-  assert.equal(last.startTimeSec, 181);
   assert.equal(last.action, "final");
+  // The final pour gets the time it physically needs, whatever the clock says.
+  assert.equal(last.timingDurationSec, 45);
 });
 
-test("parsePourSteps: classic 4-pour Kasuya-style schedule at peak roast", () => {
+test("parsePourSteps: classic 4-pour schedule at peak roast", () => {
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
   assert.ok(steps);
   assert.equal(steps.length, 4);
-  assert.deepEqual(
-    steps.map((s) => s.startTimeSec),
-    // bloom@0, then the 136s window (270 − 45 − 89) is split PROPORTIONALLY to each
-    // pour's grams: gap1 ∝ 130g, gap2 ∝ 140g → pour2@110, final@181 (still
-    // target − reserve). Pour 130g/140g get ~65/71s, not an equal ~68/68s.
-    [0, 45, 110, 181],
-  );
   assert.deepEqual(
     steps.map((s) => s.pourGrams),
     [50, 130, 140, 180],
@@ -111,34 +120,53 @@ test("parsePourSteps: classic 4-pour Kasuya-style schedule at peak roast", () =>
     steps.map((s) => s.label),
     ["Bloom", "Pour 2", "Pour 3", "Final pour"],
   );
+  // Every pour is scheduled at a rate a human can actually pour.
+  for (const st of steps) {
+    assert.ok(
+      st.pourGrams / st.timingDurationSec <= MAX_POUR_RATE_GPS + 0.001,
+      `${st.label} pours ${st.pourGrams}g in ${st.timingDurationSec}s`,
+    );
+  }
 });
 
-test("parsePourSteps: 210s total with peak roast, 4 pours", () => {
-  const steps = parsePourSteps("40 – 140 – 240 – 340", 210, peakRoast, NOW);
-  assert.ok(steps);
-  const last = steps.at(-1);
-  // 210 × 0.33 = 69.3 → 69s reserve. Last pour at 210 − 69 = 141s.
-  assert.equal(last.startTimeSec, 141);
+test("parsePourSteps: a shorter clock tightens the rests, never the pours", () => {
+  const long = parsePourSteps("40 – 140 – 240 – 340", 300, peakRoast, NOW);
+  const short = parsePourSteps("40 – 140 – 240 – 340", 210, peakRoast, NOW);
+  assert.ok(long && short);
+  // Same water, same pour times — only the gaps between them move.
+  assert.deepEqual(
+    long.map((s) => s.timingDurationSec),
+    short.map((s) => s.timingDurationSec),
+  );
+  assert.ok(short[2].startTimeSec < long[2].startTimeSec);
+  // 210s: pours 10/25/25/25, drawdown target 76s → 10s gaps.
+  assert.deepEqual(
+    short.map((s) => s.startTimeSec),
+    [0, 45, 80, 115],
+  );
 });
 
-test("parsePourSteps: very fresh bean (50s bloom) shifts schedule", () => {
-  const steps = parsePourSteps("50 – 180 – 320 – 500", 270, freshRoast, NOW);
-  assert.ok(steps);
-  assert.equal(steps[0].startTimeSec, 0);
-  assert.equal(steps[1].startTimeSec, 50); // bloom done at 50s, not 45s
-  // Final still lands at drawdown-reserve boundary
-  assert.equal(steps.at(-1).startTimeSec, 270 - Math.round(270 * 0.33));
+test("parsePourSteps: very fresh bean (50s bloom) shifts the schedule", () => {
+  const peak = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
+  const fresh = parsePourSteps("50 – 180 – 320 – 500", 270, freshRoast, NOW);
+  assert.ok(peak && fresh);
+  assert.equal(fresh[0].startTimeSec, 0);
+  assert.equal(fresh[1].startTimeSec, 50); // bloom done at 50s, not 45s
+  // Everything after the bloom shifts by the same 5s — the cadence is intact.
+  for (let i = 1; i < peak.length; i++) {
+    assert.equal(fresh[i].startTimeSec - peak[i].startTimeSec, 5);
+  }
 });
 
-test("parsePourSteps: 3-pour schedule has one interval between pour 1 and final", () => {
-  // n=3 means n-2=1 interval
+test("parsePourSteps: 3-pour schedule has one rest between pour 2 and the final", () => {
   const steps = parsePourSteps("60 – 250 – 450", 240, peakRoast, NOW);
   assert.ok(steps);
   assert.equal(steps.length, 3);
-  // bloom at 0, pour 2 at 45, final at 240 − round(240×0.33)=240−79=161
-  assert.equal(steps[0].startTimeSec, 0);
-  assert.equal(steps[1].startTimeSec, 45);
-  assert.equal(steps[2].startTimeSec, 161);
+  // pours 15/48/50s; one gap gets 11s once an 86s drawdown is set aside.
+  assert.deepEqual(
+    steps.map((s) => s.startTimeSec),
+    [0, 45, 104],
+  );
 });
 
 test("parsePourSteps: 2-pour (bloom + single pour) edge case", () => {
@@ -147,9 +175,11 @@ test("parsePourSteps: 2-pour (bloom + single pour) edge case", () => {
   assert.ok(steps);
   assert.equal(steps.length, 2);
   assert.equal(steps[0].startTimeSec, 0);
-  // With n=2, the "final" pour starts at bloomDur (45s) — the formula's
-  // defined behaviour for the trivial case.
+  // With n=2 there are no gaps to fill: the single pour starts when the bloom
+  // is done and takes the time its 260g needs (65s at 4 g/s), leaving the rest
+  // of the clock as drawdown.
   assert.equal(steps[1].startTimeSec, 45);
+  assert.equal(steps[1].timingDurationSec, 65);
 });
 
 test("parsePourSteps: pourGrams are derived from cumulative milestones", () => {
@@ -174,16 +204,26 @@ test("parsePourSteps: rejects non-numeric sequences", () => {
   assert.equal(parsePourSteps("", 270, peakRoast, NOW), null);
 });
 
-test("parsePourSteps: drawdown reserve scales proportionally (not fixed)", () => {
-  // Short brew (180s) and long brew (300s) should each reserve 33% for drawdown
-  const short = parsePourSteps("30 – 120 – 210 – 300", 180, peakRoast, NOW);
-  const long = parsePourSteps("60 – 200 – 360 – 500", 300, peakRoast, NOW);
+test("parsePourSteps: the pour cadence does not stretch with the clock", () => {
+  // Under the old reserve model a longer clock pushed every pour later in
+  // proportion. Cadence-first, the pours take the time their water needs and a
+  // longer clock only buys more drawdown.
+  const short = parsePourSteps("50 – 180 – 320 – 500", 180, peakRoast, NOW);
+  const long = parsePourSteps("50 – 180 – 320 – 500", 300, peakRoast, NOW);
   assert.ok(short && long);
-  assert.equal(short.at(-1).startTimeSec, 180 - Math.round(180 * 0.33)); // 180−59=121
-  assert.equal(long.at(-1).startTimeSec, 300 - Math.round(300 * 0.33));  // 300−99=201
+  assert.deepEqual(
+    short.map((s) => s.timingDurationSec),
+    long.map((s) => s.timingDurationSec),
+  );
+  // The short clock can't hold its own pours, so it ends when they do.
+  const shortSchedule = pourScheduleFor(
+    { pourSequence: "50 – 180 – 320 – 500", targetTimeSec: 180, doseGrams: 30, waterGrams: 500, waterTempC: 94, grindSize: "x" },
+    peakRoast,
+    NOW,
+  );
+  assert.ok(shortSchedule.extended, "180s cannot hold four pours plus a drawdown");
+  assert.ok(shortSchedule.finishSec >= shortSchedule.pourPhaseEndSec + MIN_DRAWDOWN_SEC);
 });
-
-// ── parsePourSteps: tolerant annotation parsing (the staged-temp fix) ───────
 
 test("parsePourSteps: tolerates inline temperature annotations", () => {
   // The bug: "70 (@70°C) – …" used to fail /^\d+$/ and collapse to one step.
@@ -220,9 +260,19 @@ test("parsePourSteps: plain numeric milestones carry no temp/note", () => {
 
 // ── pourStepsFromStructured: structured percolation ────────────────────────
 
-test("pourStepsFromStructured: structured V60 times identically to its string", () => {
+test("pourStepsFromStructured: a structured recipe follows its OWN authored rests", () => {
+  // The string form has no rests to follow, so it spreads them over the clock.
+  // The structured form authors a 30s bloom rest and nothing between the later
+  // pours — so those pour back-to-back, exactly as written. Before Sep 2026 both
+  // produced the same schedule, because both were re-derived from targetTimeSec
+  // and the authored rests were discarded.
   const recipe = {
+    doseGrams: 30,
+    waterGrams: 500,
+    waterTempC: 94,
+    grindSize: "x",
     targetTimeSec: 270,
+    pourSequence: "",
     pourSteps: [
       { label: "Bloom", action: "bloom", waterGramsAtEnd: 50, temperatureC: 94 },
       { label: "Rest", action: "wait", durationSec: 30 },
@@ -233,17 +283,22 @@ test("pourStepsFromStructured: structured V60 times identically to its string", 
     ],
   };
   const fromStruct = pourStepsFromStructured(recipe, peakRoast, NOW);
-  const fromString = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  assert.ok(fromStruct && fromString);
+  assert.ok(fromStruct);
+  // Bloom block = its 13s pour + the authored 30s rest; then the three pours run
+  // back-to-back at 4 g/s (33s, 35s, 45s).
   assert.deepEqual(
     fromStruct.map((s) => s.startTimeSec),
-    fromString.map((s) => s.startTimeSec),
+    [0, 43, 76, 111],
   );
   assert.deepEqual(
     fromStruct.map((s) => s.cumulativeGrams),
-    fromString.map((s) => s.cumulativeGrams),
+    [50, 180, 320, 500],
   );
-  // …but structured carries the per-pour temperatures the string lacks
+  // The trailing "Drawdown" step is not cadence — it is what the clock has left.
+  const schedule = pourScheduleFor(recipe, peakRoast, NOW);
+  assert.equal(schedule.pourPhaseEndSec, 156);
+  assert.equal(schedule.drawdownSec, 270 - 156);
+  // …and structured carries the per-pour temperatures the string lacks
   assert.equal(fromStruct[0].temperatureC, 94);
   assert.equal(fromStruct[1].temperatureC, 92);
 });
@@ -308,12 +363,12 @@ test("getActiveIdx: returns bloom before first pour", () => {
 
 test("getActiveIdx: advances exactly at each step's startTime", () => {
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  // Steps at [0, 45, 110, 181] (proportional spacing — see the Kasuya test above)
+  // Steps at [0, 45, 88, 133] — see the cadence test above.
   assert.equal(getActiveIdx(45, steps), 1);
-  assert.equal(getActiveIdx(109, steps), 1);
-  assert.equal(getActiveIdx(110, steps), 2);
-  assert.equal(getActiveIdx(180, steps), 2);
-  assert.equal(getActiveIdx(181, steps), 3);
+  assert.equal(getActiveIdx(87, steps), 1);
+  assert.equal(getActiveIdx(88, steps), 2);
+  assert.equal(getActiveIdx(132, steps), 2);
+  assert.equal(getActiveIdx(133, steps), 3);
   assert.equal(getActiveIdx(500, steps), 3); // stays on final after target time
 });
 
@@ -340,17 +395,18 @@ test("pourStepsFromStructured: swirl/stir become their own steps, timed AFTER th
   };
   const steps = pourStepsFromStructured(recipe, peakRoast, NOW);
   assert.ok(steps);
-  // Pours @0/45/161 (peak bloom 45, drawdown reserve 79, one 116s interval).
-  // Stir lands at bloom-start 0 + pourDuration(50g)=13. Swirl at final-start
-  // 161 + pourDuration(100g)=25 = 186.
+  // No authored rests → the fallback spreads them. Bloom 45s (roast age, since
+  // the recipe timed no bloom block); stir lands the instant the bloom pour is
+  // done (13s); pour 2 takes 38s plus a rest, and the final pour's swirl lands
+  // when it finishes pouring (124 + 25).
   assert.deepEqual(
     steps.map((s) => [s.action, s.startTimeSec]),
     [
       ["bloom", 0],
       ["stir", 13],
       ["pour", 45],
-      ["final", 161],
-      ["swirl", 186],
+      ["final", 124],
+      ["swirl", 149],
     ],
   );
   // Agitation steps carry no grams and inherit the preceding pour's total.
@@ -491,36 +547,37 @@ test("brewedRecipeName: a real reference is appended", () => {
 
 // ── poursCompleteAtSec (the "last pour disappears too fast" fix) ─────────────
 
-test("poursCompleteAtSec: a BIG final pour stays active long enough to pour it (not the old 20s cap)", () => {
-  // Asser-style 60–120–240 @ 220s: final pour adds 120g, which needs 30s at 4g/s.
+test("poursCompleteAtSec: the pour phase ends when the last pour is poured", () => {
+  // Asser-style 60–120–240 @ 220s: the final pour adds 120g, which needs 30s.
   const steps = parsePourSteps("60 – 120 – 240", 220, peakRoast, NOW);
   const last = steps[steps.length - 1];
   assert.equal(last.action, "final");
   assert.equal(last.pourGrams, 120);
-  const doneAt = poursCompleteAtSec(steps, 220);
-  const grace = doneAt - last.startTimeSec;
-  assert.equal(doneAt, 177); // 147 (final start) + 30s pour time
-  assert.equal(grace, pourDurationSec(120)); // grace == physical pour time (30s)
-  assert.ok(grace > 20, "a big final pour must exceed the old flat 20s cap");
+  assert.equal(last.timingDurationSec, pourDurationSec(120)); // 30s
+  // No invented grace: the phase is over when the step it occupies is over.
+  assert.equal(poursCompleteAtSec(steps), last.startTimeSec + 30);
+  assert.equal(poursCompleteAtSec(steps), 135);
 });
 
-test("poursCompleteAtSec: a SMALL final pour keeps the ≤20s grace (unchanged behaviour)", () => {
+test("poursCompleteAtSec: a small final pour ends the phase sooner", () => {
   const steps = parsePourSteps("50 – 100 – 150 – 200 – 250 – 300", 210, peakRoast, NOW);
   const last = steps[steps.length - 1];
   assert.equal(last.pourGrams, 50);
-  const grace = poursCompleteAtSec(steps, 210) - last.startTimeSec;
-  assert.equal(grace, 20); // 35%-of-drawdown grace, capped at 20 as before
-  assert.ok(grace >= pourDurationSec(50), "still long enough to pour 50g");
+  assert.equal(poursCompleteAtSec(steps) - last.startTimeSec, pourDurationSec(50));
 });
 
-test("poursCompleteAtSec: a trailing swirl near target uses the short agitation grace", () => {
+test("poursCompleteAtSec: a trailing swirl extends the phase by its own duration", () => {
   const steps = [
-    { index: 0, label: "Bloom", cumulativeGrams: 50, pourGrams: 50, startTimeSec: 0, action: "bloom" },
-    { index: 1, label: "Final pour", cumulativeGrams: 240, pourGrams: 190, startTimeSec: 120, action: "final" },
-    { index: 2, label: "Swirl", cumulativeGrams: 240, pourGrams: 0, startTimeSec: 185, action: "swirl" },
+    { index: 0, label: "Bloom", cumulativeGrams: 50, pourGrams: 50, startTimeSec: 0, action: "bloom", timingDurationSec: 13 },
+    { index: 1, label: "Final pour", cumulativeGrams: 240, pourGrams: 190, startTimeSec: 120, action: "final", timingDurationSec: 48 },
+    { index: 2, label: "Swirl", cumulativeGrams: 240, pourGrams: 0, startTimeSec: 185, action: "swirl", timingDurationSec: 5 },
   ];
   assert.ok(isAgitationPourAction(steps[steps.length - 1].action));
-  assert.equal(poursCompleteAtSec(steps, 200), 195); // 185 + 10s agitation grace
+  assert.equal(poursCompleteAtSec(steps), 190);
+  // A step saved before `timingDurationSec` existed still measures sensibly:
+  // an agitation falls back to the 5s default, a pour to its grams ÷ 4 g/s.
+  const legacy = steps.map(({ timingDurationSec, ...rest }) => rest);
+  assert.equal(poursCompleteAtSec(legacy), 190);
 });
 
 test("poursCompleteAtSec: empty steps → 0 (no crash)", () => {
@@ -529,50 +586,38 @@ test("poursCompleteAtSec: empty steps → 0 (no crash)", () => {
 
 // ── proportional pour spacing (time follows water) ───────────────────────────
 
-test("proportional spacing: a big pour gets proportionally more time than a small one", () => {
-  // bloom 50, then +130 / +140 / +180. The 130g and 140g pours sit between bloom
-  // and the final pour; their gaps split the window proportionally (≈65 / ≈71s),
-  // not equally — so the bigger 140g gap is the longer one.
-  const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  const t = steps.map((s) => s.startTimeSec);
-  assert.deepEqual(t, [0, 45, 110, 181]);
-  const gap1 = t[2] - t[1]; // covers the 130g pour
-  const gap2 = t[3] - t[2]; // covers the 140g pour
-  assert.ok(gap2 > gap1, "the 140g pour's gap must exceed the 130g pour's gap");
+test("a big pour occupies more of the clock than a small one", () => {
+  const steps = parsePourSteps("40 – 240 – 280", 240, peakRoast, NOW);
+  assert.ok(steps);
+  // 200g takes 50s to pour, 40g takes 10s — the time each pour owns follows its
+  // water, because it IS the time that water takes.
+  assert.equal(steps[1].timingDurationSec, 50);
+  assert.equal(steps[2].timingDurationSec, 10);
 });
 
-test("proportional spacing: EQUAL pours reproduce the old uniform schedule exactly", () => {
-  // 40 → 140 → 240 → 340: three equal 100g pours. Equal weights ⇒ uniform interval,
-  // identical to the pre-change schedule.
-  const steps = parsePourSteps("40 – 140 – 240 – 340", 210, peakRoast, NOW);
-  assert.deepEqual(
-    steps.map((s) => s.startTimeSec),
-    [0, 45, 93, 141], // bloom45, reserve round(210*0.33)=69, interval (210-45-69)/2=48
+test("equal pours produce an even schedule", () => {
+  const steps = parsePourSteps("50 – 150 – 250 – 350", 270, peakRoast, NOW);
+  assert.ok(steps);
+  const gaps = [];
+  for (let i = 1; i < steps.length - 1; i++) {
+    gaps.push(steps[i + 1].startTimeSec - steps[i].startTimeSec);
+  }
+  assert.equal(new Set(gaps).size, 1, `equal pours should be evenly spaced, got ${gaps}`);
+});
+
+test("the final pour gets the time its water needs, never the clock's leftovers", () => {
+  // The reported defect: a 225g final pour squeezed into the 15s a fixed
+  // reserve left it (15 g/s). Whatever the clock says, the pour is scheduled at
+  // a rate a person can pour.
+  const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
+  assert.ok(steps);
+  const last = steps.at(-1);
+  assert.equal(last.pourGrams, 180);
+  assert.ok(
+    last.pourGrams / last.timingDurationSec <= MAX_POUR_RATE_GPS,
+    `final pour is ${(last.pourGrams / last.timingDurationSec).toFixed(1)} g/s`,
   );
 });
-
-test("proportional spacing: the final pour still lands at target − reserve", () => {
-  for (const [seq, target] of [
-    ["50 – 180 – 320 – 500", 270],
-    ["30 – 90 – 400 – 460 – 500", 300],
-    ["60 – 250 – 450", 240],
-  ]) {
-    const steps = parsePourSteps(seq, target, peakRoast, NOW);
-    const reserve = Math.round(target * 0.33);
-    assert.equal(steps.at(-1).startTimeSec, target - reserve, `${seq} final lands at target−reserve`);
-    assert.equal(steps[0].startTimeSec, 0, `${seq} bloom@0`);
-  }
-});
-
-// NOTE: the weight-gated `weightedActiveIdx` was removed — the active step now
-// advances purely on the recipe's TIME schedule (`getActiveIdx`, tested above),
-// with the live weight box on each step showing poured-vs-target. No peak, no
-// weight-hold, so there is nothing to "freeze".
-
-// ── pourPace / pourTargetRateGPS ──────────────────────────────────────────────
-// The concrete pour-pace the brew screen shows under the grams row, and the
-// single target-rate source the flow coach ALSO grades against.
-
 test("pourTargetRateGPS: authored pour time drives the rate (Kasuya 60g/10s = 6 g/s)", () => {
   assert.ok(Math.abs(pourTargetRateGPS(60, 10) - 6) < 1e-9);
 });

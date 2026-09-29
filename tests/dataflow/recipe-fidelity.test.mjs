@@ -80,8 +80,14 @@ test("a mangled Kasuya Super Coarse is snapped back to the published recipe", ()
   assert.equal(changed, true, "should detect drift and correct");
   assert.match(reference, /Super Coarse/);
 
-  // Total time snapped back to the published ~3:30 (210s), NOT 4:45.
-  assert.equal(recipe.targetTimeSec, 210);
+  // Snapped back to the published recipe SCALED to this 350ml batch, not to the
+  // 300ml published clock and not to the 4:45 the model invented. The reference
+  // is 20g : 300g / 3:30; at 350ml its pours take a little longer and its
+  // drawdown grows with the batch, so the honest total is a little over 3:30.
+  assert.ok(
+    recipe.targetTimeSec > 210 && recipe.targetTimeSec < 240,
+    `expected the scaled clock, got ${recipe.targetTimeSec}s`,
+  );
 
   // Grind snapped back into the super-coarse range (published 435–455°), NOT 412°.
   const deg = Number(/(\d{2,3})/.exec(recipe.grindSize)[1]);

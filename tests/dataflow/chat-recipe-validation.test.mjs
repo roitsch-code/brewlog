@@ -94,28 +94,34 @@ test("accepted actions still reach the user when a sibling action is rejected", 
 
 test("the chat prompt carries the pourability rule", () => {
   assert.match(PROMPT, /4 g\/s/, "the gentle-pour rate must be stated");
-  assert.match(PROMPT, /11 g\/s/, "the physical ceiling must be stated");
+  // The ceiling is the corpus's own fastest published pour — Hoffmann's
+  // Ultimate V60, 240g in 30s. It was 11 g/s (the DISPLAY clamp) until Sep 2026,
+  // which waved through pours no expert writes.
+  assert.match(PROMPT, /8 \(Hoffmann's Ultimate/, "the physical ceiling must be the published one");
 });
 
-test("the chat prompt carries the percolation shape rule", () => {
+test("the chat prompt tells the model the timer follows its own step times", () => {
+  // Until Sep 2026 the timer re-derived every pour start from targetTimeSec, so
+  // the prompt taught the model to reason about pour COUNT against the clock —
+  // floors in a table — because the durations it wrote were discarded. The timer
+  // now runs the cadence the model writes, so the rule is the cadence itself.
+  assert.match(PROMPT, /the timer follows them/i, "the model must know its durations are used");
+  assert.match(PROMPT, /write the PAUSES as their own "wait" steps/i, "rests are steps now");
+  assert.match(PROMPT, /do not write a trailing "Drawdown" step/i);
+  assert.match(PROMPT, /targetTimeSec is the sum of all of it/i, "the clock must be stated as a sum");
   assert.match(PROMPT, /Never one giant final pour/i);
-  // The rule is stated as pour-count floors against the clock, because that is
-  // the lever the model actually controls: the timer DERIVES the gaps from
-  // targetTimeSec and the pour count, so "no dead air" alone asks the model to
-  // reason about an output it never writes. Measured 2026-08-22: dead-gap was
-  // the only failure mode that survived a repair round.
-  assert.match(PROMPT, /water steps \(bloom \+ pours\)/i, "the floors table must be present");
-  assert.match(PROMPT, /up to 5:00/, "floor row: normal brews");
-  assert.match(PROMPT, /over 5:00/, "floor row: long brews");
-  // The disc column is load-bearing, not decoration. With the Drip Assist the
-  // drawdown reserve is 7% instead of 33%, so the pour phase is ~40% longer and
-  // the bare-brewer count leaves a hole. Measured 2026-08-23 (run 3): all six
-  // remaining first-try failures were dead-gap, and every gooseneck-less one
-  // had followed the bare count.
-  assert.match(PROMPT, /with the Drip Assist/i, "the disc column must exist");
-  assert.match(PROMPT, /always needs one more pour/i, "and say plainly that the disc needs one more");
-  assert.match(PROMPT, /FLOORS, not targets/i, "one more pour must read as safe");
-  assert.match(PROMPT, /Do not pad the clock/i, "stretching the clock is the other half of the failure");
+  assert.doesNotMatch(
+    PROMPT,
+    /water steps \(bloom \+ pours\)/i,
+    "the pour-count floors were a workaround for the renderer inventing gaps — they must not come back",
+  );
+});
+
+test("the chat prompt carries the scaling model", () => {
+  assert.match(PROMPT, /bigger pours, not more of them/i, "pour count holds when scaling");
+  assert.match(PROMPT, /per DOUBLING of dose/i, "the grind law must be logarithmic");
+  assert.match(PROMPT, /grind finer for less volume|grind finer than if you are brewing more volume/i, "and must cover scaling DOWN");
+  assert.match(PROMPT, /square root of the volume factor/i, "the drawdown growth must be stated");
 });
 
 test("the disc is described as replacing the stream, not the hand", () => {

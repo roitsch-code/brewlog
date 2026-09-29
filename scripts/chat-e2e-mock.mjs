@@ -29,9 +29,21 @@ const MOCK_PORT = Number(process.env.MOCK_PORT || 9911);
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const PIN = process.env.AUTH_PIN || "1234";
 
-// ── The recipe the owner was actually handed, to the gram ────────────────────
-// Orea V4 Classic + Drip Assist, 450 ml: the final pour is 225 g — half the
-// water — in the 15 s the clock has left, after a 2-minute hole.
+// ── A recipe that genuinely cannot be brewed ─────────────────────────────────
+// Orea V4 Classic + Drip Assist, 450 ml. The shape is the one the owner was
+// handed — a 225 g final pour on a 3:30 clock — but the defect is now in the
+// recipe rather than in the renderer.
+//
+// The original fixture here WAS his recipe to the gram, and it gave that pour
+// 30 s (7.5 g/s) and three pours over 3:30, which is brewable. What he saw —
+// 225 g in 15 s after a two-minute hole — was manufactured by a renderer that
+// discarded the authored durations and re-spread the pours around a fixed 33%
+// drawdown reserve. That renderer is gone (cadence-first, Sep 2026), so the
+// old fixture now passes and proves nothing.
+//
+// This one is broken as WRITTEN, which no renderer can rescue: the final pour
+// is 225 g in 10 s (22.5 g/s — nobody pours that), and the recipe itself parks
+// the brew for two minutes before it.
 const BROKEN_RECIPE = {
   doseGrams: 28,
   waterGrams: 450,
@@ -41,7 +53,8 @@ const BROKEN_RECIPE = {
   pourSteps: [
     { label: "Bloom", action: "bloom", waterGramsAtEnd: 90, durationSec: 45 },
     { label: "Pour 2", action: "pour", waterGramsAtEnd: 225, durationSec: 30 },
-    { label: "Final pour", action: "final", waterGramsAtEnd: 450, durationSec: 30 },
+    { label: "Wait", action: "wait", durationSec: 120 },
+    { label: "Final pour", action: "final", waterGramsAtEnd: 450, durationSec: 10 },
   ],
 };
 

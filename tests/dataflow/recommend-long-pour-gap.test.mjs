@@ -49,14 +49,35 @@ const water = (grams, action, durationSec = 10) => ({
   durationSec,
 });
 
-test("bloom + 2 pours over a 5:00 clock renders a >2-minute hole (the report)", () => {
+test("bloom + 2 pours over a 5:00 clock no longer renders a hole (the report, fixed)", () => {
+  // THE REPORT: "3–4 pours and pour 2 was somehow 2 minutes". This exact recipe
+  // used to render a ~105s hole — not because of anything it said, but because
+  // the renderer reserved a third of the clock for drawdown and then spread two
+  // pours across what was left. Cadence-first (Sep 2026) the pours take the time
+  // their water needs and the leftover becomes drawdown, so the hole is gone.
   const recipe = {
     targetTimeSec: 300,
     pourSteps: [water(50, "bloom"), water(175, "pour"), water(300, "final")],
   };
   const gap = maxRenderedPourGapSec(recipe, OLD_ROAST, NOW);
-  assert.ok(gap > 75, `expected a long derived gap, got ${gap}s`);
-  assert.ok(gap > 100, `expected roughly the ~2-minute hole the owner saw, got ${gap}s`);
+  assert.ok(gap <= 75, `the renderer must not invent a hole, got ${gap}s`);
+});
+
+test("a recipe that AUTHORS a two-minute wait still trips the guard", () => {
+  // What the guard is for now: a recipe whose own plan parks the brew. Kasuya's
+  // Mugen draw (105s) is a real, published example of this shape.
+  const recipe = {
+    targetTimeSec: 300,
+    pourSteps: [
+      water(50, "bloom"),
+      { action: "wait", durationSec: 30 },
+      water(175, "pour"),
+      { action: "wait", durationSec: 120 },
+      water(300, "final"),
+    ],
+  };
+  const gap = maxRenderedPourGapSec(recipe, OLD_ROAST, NOW);
+  assert.ok(gap > 75, `an authored 2-minute park must be caught, got ${gap}s`);
 });
 
 test("bloom + 4 pours over a 3:30 clock stays under the threshold", () => {
@@ -102,9 +123,11 @@ test("recommend.ts imports the gap metric and feeds the guarded set to candidate
   );
 });
 
-test("recommendPrompt.ts carries the pour-vs-clock FLOOR rule", async () => {
-  const src = await readFile(path.join(ROOT, "src/lib/claude/recommendPrompt.ts"), "utf8");
-  assert.match(src, /COUNT YOUR POURS AGAINST THE CLOCK/, "the floor rule must be present");
-  assert.match(src, /FLOORS, not targets/, "must state it as a floor, not a target");
-  assert.match(src, /water steps \(bloom \+ pours\)/, "must count water steps incl. the bloom");
+test("the gap guard passes the method, so a disc recipe is judged as it renders", async () => {
+  const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
+  assert.match(
+    src,
+    /maxRenderedPourGapSec\(c\.recipe,\s*coffee\.roastDate,\s*undefined,\s*c\.method\)/,
+    "the guard must render with the candidate's own method, or a disc brew is checked as a bare one",
+  );
 });

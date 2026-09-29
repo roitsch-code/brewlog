@@ -31,7 +31,7 @@ export { buildBrewTimeline, expectedGramsAt, activeStepAt } from ${JSON.stringif
 export { buildBrewBoundaries, boundariesFromTimeline } from ${JSON.stringify(
   path.join(ROOT, "src/lib/native/brewNotifications.ts"),
 )};
-export { pourStepsFromStructured, parsePourSteps, buildGuideSteps, hasImmersionShape, getActiveIdx } from ${JSON.stringify(
+export { pourStepsFromStructured, parsePourSteps, buildGuideSteps, hasImmersionShape, getActiveIdx, MAX_POUR_RATE_GPS } from ${JSON.stringify(
   path.join(ROOT, "src/lib/utils/pourSequence.ts"),
 )};
 `;
@@ -56,6 +56,7 @@ const {
   buildGuideSteps,
   hasImmersionShape,
   getActiveIdx,
+  MAX_POUR_RATE_GPS,
 } = await import(pathToFileURL(out).href);
 
 // Fixed clock + roast date so the bloom-duration math is deterministic.
@@ -168,7 +169,11 @@ for (const [name, recipe] of Object.entries(RECIPES)) {
     const tl = buildBrewTimeline(recipe, ROAST, NOW);
     const leg = legacy(recipe);
     const fromTimeline = boundariesFromTimeline(tl);
-    const fromLegacy = buildBrewBoundaries(leg.pourSteps, leg.guideSteps, recipe.targetTimeSec);
+    // The cue schedule is derived from the SAME builders the renderers use, so it
+    // can never drift from them. It ends at `finishSec` rather than the recipe's
+    // `targetTimeSec`, because a recipe whose own pour plan outruns its clock is
+    // not finished when the clock says so (cadence-first, Sep 2026).
+    const fromLegacy = buildBrewBoundaries(leg.pourSteps, leg.guideSteps, tl.finishSec);
     assert.deepEqual(fromTimeline, fromLegacy, "boundary schedule changed — haptics/watch would drift");
   });
 
@@ -217,14 +222,19 @@ test("percolation: a leading BLOOM REST wait stays percolation (Origami-wave bug
   assert.ok(tl.pourSteps && tl.pourSteps.length > 0, "must take the LivePourSequence path");
   assert.equal(tl.guideSteps, null, "must NOT build immersion guide steps");
 
-  // The single big Final Pour must now get a physically-pourable window: its
-  // grams / its window must sit near a gentle pour rate, not the impossible ~8 g/s.
+  // The single big Final Pour must get a physically-pourable slot. The bound is
+  // the corpus's own fastest published pour — Hoffmann's Ultimate V60 moves 240g
+  // in 30s = 8 g/s — so a recipe is held to what an expert actually pours, not
+  // to a stricter number that would reject his recipe.
   const finalPour = tl.pourSteps.filter((p) => p.action === "final").at(-1);
   assert.ok(finalPour, "final pour present");
-  const nextStep = tl.pourSteps.find((p) => p.startTimeSec > finalPour.startTimeSec);
-  const windowSec = (nextStep ? nextStep.startTimeSec : tl.targetTimeSec) - finalPour.startTimeSec;
-  const rate = finalPour.pourGrams / windowSec;
-  assert.ok(rate <= 6, `final pour rate ${rate.toFixed(1)} g/s still implies a hard/impossible pour`);
+  const rate = finalPour.pourGrams / finalPour.timingDurationSec;
+  assert.ok(
+    rate <= MAX_POUR_RATE_GPS + 0.001,
+    `final pour rate ${rate.toFixed(1)} g/s still implies an impossible pour`,
+  );
+  // And the clock must not end while that pour is still running.
+  assert.ok(tl.finishSec >= finalPour.startTimeSec + finalPour.timingDurationSec);
 });
 
 test("immersion: a MID-brew steep (wait before drain/press) still routes to the guide", () => {

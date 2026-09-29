@@ -159,6 +159,11 @@ export interface PourStep {
    * coach against the recipe's own rate instead of a global constant. Undefined
    * for string-parsed recipes → the coach falls back to the ~4 g/s house rate. */
   pourDurationSec?: number;
+  /** How long this step OCCUPIES on the rendered timeline — the pour's own
+   * corrected time (see pourTimingDurationSec), or an agitation step's duration.
+   * `startTimeSec + timingDurationSec` is when the step is done, which is what
+   * the drawdown, the dead-gap check and the drain card all measure from. */
+  timingDurationSec: number;
 }
 
 /** True for the discrete agitation step actions (swirl/stir/tap). */
@@ -169,24 +174,14 @@ export function isAgitationPourAction(a: PourStep["action"]): a is AgitationActi
 /**
  * Elapsed second at which all pours are complete and the brew enters drawdown —
  * i.e. when the live pour card should stop showing the last step and switch to
- * "draining". The grace after the last step MUST cover the time to physically
- * pour its water (`grams ÷ POUR_RATE_GPS`): a flat 20 s cap used to cut big
- * final pours short (a 120 g final pour needs ~30 s at 4 g/s but the card
- * flipped to "draining" after 20 s while you were still pouring). A trailing
- * swirl/stir/tap is quick (~10 s). Otherwise keep the prior ≤20 s /
- * 35 %-of-drawdown grace. Pure so it's unit-tested alongside the pour math.
+ * "draining". Cadence-first, this is simply the end of the pour phase: the last
+ * step's start plus the time that step occupies. No grace is invented, because
+ * the schedule already gives every pour the seconds it needs (before Sep 2026 it
+ * did not, and this function had to guess one).
  */
-export function poursCompleteAtSec(steps: PourStep[], targetTimeSec: number): number {
+export function poursCompleteAtSec(steps: PourStep[], _targetTimeSec?: number): number {
   if (steps.length === 0) return 0;
-  const last = steps[steps.length - 1];
-  const lastWork = isAgitationPourAction(last.action)
-    ? 10
-    : pourDurationSec(last.pourGrams);
-  const grace = Math.max(
-    lastWork,
-    Math.min(20, Math.round((targetTimeSec - last.startTimeSec) * 0.35)),
-  );
-  return last.startTimeSec + grace;
+  return pourPhaseEndSec(steps);
 }
 
 /** A timed, action-aware step for non-percolation methods (immersion,
@@ -216,6 +211,10 @@ export interface GuideStep {
  * @param roastDate ISO date string. Defaults to peak window (45s) if omitted.
  * @param now injected clock for deterministic testing
  */
+export const PEAK_BLOOM_SEC = 45;
+/** However short a recipe's own bloom, a past-peak shift can't erase it. */
+export const MIN_BLOOM_SEC = 15;
+
 export function getBloomDuration(roastDate?: string, now: number = Date.now()): number {
   if (roastDate) {
     const daysOld = Math.floor((now - new Date(roastDate).getTime()) / 86_400_000);
@@ -263,9 +262,21 @@ interface Milestone {
   agitationAfter?: AgitationAction;
   /** Optional note carried onto the agitation step. */
   agitationNote?: string;
+  /** Authored duration of that agitation step (seconds), when the recipe gave one. */
+  agitationDurationSec?: number;
   /** The recipe's authored pour time for this pour (seconds), when known — the
    * intended-rate source (grams ÷ this). Undefined for string-parsed recipes. */
   pourDurationSec?: number;
+  /**
+   * Σ of the authored `wait` durations the recipe places between this pour (or
+   * its agitation) and the next water step — the recipe's OWN rest.
+   *
+   *  - `undefined` on EVERY milestone = the recipe authored no rests anywhere,
+   *    so the fallback distributes them (see buildPourSchedule).
+   *  - `0` = rests exist elsewhere in this recipe but not here, i.e. the pours
+   *    are deliberately back-to-back (Hoffmann's big-batch 30 g : 500 g).
+   */
+  restAfterSec?: number;
 }
 
 const AGITATION_LABEL: Record<AgitationAction, string> = {
@@ -274,107 +285,251 @@ const AGITATION_LABEL: Record<AgitationAction, string> = {
   tap: "Tap to level",
 };
 
-/** Fraction of total brew time reserved for the final drawdown — the dead air
- * AFTER the last pour, before the cup is through. The bare-percolation default. */
-export const DRAWDOWN_RESERVE_FRAC = 0.33;
+/** Default seconds for an agitation step the recipe didn't time itself. */
+const DEFAULT_AGITATION_SEC = 5;
 
-/** The Drip Assist disc distributes water across the whole bed, so it drains
- * almost as fast as it's poured — the long drawdown a bare V60 needs doesn't
- * happen (owner-observed). A thin drainage margin instead of the full reserve, so
- * the timer's finish matches when the cup is actually through. Estimate: direction
- * owner-confirmed, magnitude to be firmed up by one measured disc brew. */
-export const DRIP_ASSIST_DRAWDOWN_FRAC = 0.07;
+/**
+ * The drawdown floor — the dead air AFTER the last pour, before the cup is
+ * through. A FLOOR, not a reserve: the drawdown is whatever the recipe's clock
+ * has left once its own cadence has played out, and this only stops a clock from
+ * ending while the bed is still full.
+ *
+ * MEASURED, not chosen (Sep 2026, over the 93 percolation recipes in the corpus):
+ * drawdowns run from 5 s to 225 s, median 70 s. The 5 s is Wölfl's WBrC-winning
+ * Orea Fast — a verified championship recipe — so any larger floor would rewrite
+ * a published recipe, which is exactly what the old fixed 33 % reserve did. A
+ * bare V60 wanting 60–90 s of drawdown gets it from the recipe, not from here.
+ */
+export const MIN_DRAWDOWN_SEC = 5;
 
-/** The drawdown reserve fraction for a brew method: thin for the Drip Assist disc,
- * the standard reserve for everything else. Method omitted (the golden corpus, any
- * non-disc caller) → the standard reserve, so those schedules stay byte-identical. */
-export function drawdownReserveFrac(method?: string): number {
-  return isDripAssistMethod(method) ? DRIP_ASSIST_DRAWDOWN_FRAC : DRAWDOWN_RESERVE_FRAC;
+/** The drawdown floor for a brew method. One number today; kept as a function
+ * because the Drip Assist's tail is calibrated separately (see recommend.ts). */
+export function minDrawdownSec(_method?: string): number {
+  return MIN_DRAWDOWN_SEC;
 }
 
 /**
- * Time a set of cumulative-grams milestones with the drawdown-reserve formula:
- * reserve a method-dependent fraction of total for drawdown (33% bare, a thin
- * margin with the Drip Assist disc — see drawdownReserveFrac), subtract the
- * bloom, evenly space the (n − 2) intervals so the final pour lands at
- * (target − reserve). Shared by the string parser and the structured-percolation
- * builder so both produce an identical schedule.
- *
- * Agitation is now a DISCRETE step: when a milestone carries `agitationAfter`,
- * a swirl/stir/tap step is inserted at `pourStart + pourDurationSec(pourGrams)`
- * — i.e. the instant that pour finishes pouring at the user's pour rate —
- * clamped to land before the next pour (or, for the final pour, before target).
- * So "swirl after the pour" is timed by physics, not guessed.
+ * The fastest a pour is ever SCHEDULED at. Hoffmann's Ultimate V60 — the fastest
+ * pour anyone in the corpus publishes — moves 240 g in 30 s = 8 g/s. An authored
+ * duration implying more than this is not a pour anyone makes, so the schedule
+ * stretches the slot to `grams / 8` instead of promising the impossible (the
+ * "225 g with 15 s left" report). Distinct from PACE_RATE_MAX_GPS (11), which
+ * only clamps what the live coach DISPLAYS.
  */
-function buildPourOver(
+export const MAX_POUR_RATE_GPS = 8;
+
+/** Rest bounds used only when a recipe authored no rests of its own: 10 s is
+ * Hoffmann's own inter-pulse pause (the shortest real one), 45 s is Kasuya's 4:6
+ * interval (the longest normal one). Anything past 45 s is a designed steep and
+ * has to be authored as a `wait`. */
+export const FALLBACK_REST_MIN_SEC = 10;
+export const FALLBACK_REST_MAX_SEC = 45;
+
+/**
+ * The share of the clock a recipe that authored NO rests should leave as
+ * drawdown. MEASURED: the median drawdown across the 93 percolation recipes in
+ * the corpus is 36 % of the clock. (The old renderer imposed a fixed 33 % on
+ * EVERY recipe, which is why it re-timed published ones — but as a default for a
+ * recipe that states no cadence of its own, that number turns out to be about
+ * right.) Only a floor-and-ceiling guide: the rest clamp wins, and what is left
+ * over is the drawdown.
+ */
+export const FALLBACK_DRAWDOWN_SHARE = 0.36;
+
+/**
+ * The most drawdown a clock may promise before it is padding rather than
+ * draining. MEASURED: the longest verified tail in the corpus is Hoffmann's
+ * Chemex at 225 s = 60 % of its clock, and the longest of any recipe is 65 %, so
+ * this admits every published recipe and still rejects a model that inflated
+ * `targetTimeSec` ("a 500 ml V60 is an 8-minute brew") rather than adding pours.
+ */
+export const MAX_DRAWDOWN_SHARE = 0.65;
+export const MAX_DRAWDOWN_FLOOR_SEC = 240;
+
+export function maxDrawdownSec(targetTimeSec: number): number {
+  return Math.max(MAX_DRAWDOWN_FLOOR_SEC, Math.round(targetTimeSec * MAX_DRAWDOWN_SHARE));
+}
+
+/**
+ * The longest clock a pour phase ending at `pourPhaseEndSec` may claim before
+ * its drawdown breaches `maxDrawdownSec`. Solved for the clock rather than
+ * clamped against it, because the cap is a share OF the clock — trimming by the
+ * cap alone would not converge.
+ */
+export function maxTargetTimeSec(pourPhaseEndSec: number): number {
+  return Math.max(
+    pourPhaseEndSec + MAX_DRAWDOWN_FLOOR_SEC,
+    Math.round(pourPhaseEndSec / (1 - MAX_DRAWDOWN_SHARE)),
+  );
+}
+
+/**
+ * How long this pour OCCUPIES on the timeline.
+ *
+ *  - Authored rate in [MIN_POUR_RATE_GPS, MAX_POUR_RATE_GPS] → the recipe's own
+ *    time, verbatim. This is the whole point: Kasuya pours 60 g in 10 s and the
+ *    timer must say 10 s.
+ *  - Faster than MAX_POUR_RATE_GPS → stretched to `grams / MAX_POUR_RATE_GPS`;
+ *    nobody pours faster, so the promise is corrected rather than shown.
+ *  - Slower than MIN_POUR_RATE_GPS (or missing) → the authored value is a rest
+ *    folded into the step (the Orea-Wide / Christensen convention), so the POUR
+ *    is the ~4 g/s house estimate and the remainder becomes rest.
+ */
+export function pourTimingDurationSec(grams: number, authoredSec?: number): number {
+  const g = Math.max(1, grams);
+  if (authoredSec && authoredSec > 0) {
+    const rate = g / authoredSec;
+    if (rate > MAX_POUR_RATE_GPS) return Math.max(1, Math.ceil(g / MAX_POUR_RATE_GPS));
+    if (rate >= MIN_POUR_RATE_GPS) return Math.round(authoredSec);
+  }
+  return pourDurationSec(g);
+}
+
+/** A rendered pour schedule plus the clock facts derived from it. */
+export interface PourSchedule {
+  steps: PourStep[];
+  /** Elapsed second at which the last pour (and any trailing agitation) is done. */
+  pourPhaseEndSec: number;
+  /** Seconds of drawdown the clock actually leaves after the pour phase. */
+  drawdownSec: number;
+  /** When the brew is really finished: `targetTimeSec`, or the pour phase plus
+   * the drawdown floor when the recipe's own cadence needs more than the clock. */
+  finishSec: number;
+  /** True when `finishSec > targetTimeSec` — the recipe under-promised its clock. */
+  extended: boolean;
+}
+
+/**
+ * Time a set of cumulative-grams milestones CADENCE-FIRST: every step occupies
+ * the time the recipe gave it, and the drawdown is whatever the clock has left.
+ *
+ * Until Sep 2026 this worked the other way round — a fixed fraction of
+ * `targetTimeSec` was reserved for the drawdown and the pours were spread across
+ * the remainder in proportion to their grams. That inverted the physics. It
+ * produced dead air wherever a recipe had fewer pours than the clock had room
+ * for (a bloom + 2 pours on a 5-minute clock left a 105 s hole), squeezed the
+ * final pour into the reserve regardless of its size (225 g in 15 s = 15 g/s),
+ * and re-timed every published recipe: Kasuya's 45 s intervals rendered as 32 s,
+ * Rao's designed 58 s rest as a 106 s gap. Hoffmann's own 1-cup technique now
+ * renders at exactly his published 0:45 / 1:10 / 1:30 / 1:50.
+ *
+ * The bloom is the one step the roast date gets a say in, because CO2
+ * off-gassing depends on the bean and not on the recipe. It is a DELTA, though,
+ * not a replacement: a recipe that times its own bloom block (pour + swirl +
+ * rest) keeps it, shifted by how far this bean is from the peak window
+ * (+5 s very fresh, 0 at peak, −15 s past peak). Replacing the block outright
+ * would overwrite Rao's designed 60 s bloom with 45 s and push Kurasu's fast
+ * 30 s Origami past its own clock. A recipe that authors no bloom block (a
+ * grams string) falls back to the roast-age duration alone.
+ *
+ * Agitation is a DISCRETE step placed the instant its pour finishes, occupying
+ * its own authored duration, so "swirl after the pour" is timed by the recipe
+ * rather than guessed.
+ */
+function buildPourSchedule(
   milestones: Milestone[],
   targetTimeSec: number,
   roastDate?: string,
   now: number = Date.now(),
   method?: string,
-): PourStep[] | null {
+): PourSchedule | null {
   const n = milestones.length;
   if (n < 2) return null;
 
-  const bloomDur = getBloomDuration(roastDate, now);
-  const drawdownReserve = Math.round(targetTimeSec * drawdownReserveFrac(method));
-  const remaining = targetTimeSec - bloomDur - drawdownReserve;
+  const minDrawdown = minDrawdownSec(method);
 
-  // Each pour's water increment (milestone 0 = bloom). The time GAP after a pour
-  // (before the next) is sized PROPORTIONALLY to that pour's grams — time follows
-  // water, so a big pour gets the seconds it physically needs (≈ grams ÷ POUR_RATE)
-  // instead of an equal slice that flips the step before you've finished pouring
-  // (the "200 ml pour disappears after 15 s" bug). Post-bloom pours are indices
-  // 1..n-1; the (n-2) gaps cover pours 1..n-2 (the final pour is poured during the
-  // drawdown reserve). The gaps sum to `remaining`, so the final pour still lands
-  // exactly at target − reserve, and EQUAL-size pours reproduce the old uniform
-  // schedule byte-for-byte (uniformInterval is the fallback when total weight is 0).
   const increments = milestones.map((m, i) =>
     i === 0 ? m.grams : m.grams - milestones[i - 1].grams,
   );
-  const uniformInterval = n > 2 ? remaining / (n - 2) : 0;
-  let gapWeightTotal = 0;
-  for (let i = 1; i <= n - 2; i++) gapWeightTotal += Math.max(0, increments[i]);
+  const timing = milestones.map((m, i) => pourTimingDurationSec(increments[i], m.pourDurationSec));
+  const agitation = milestones.map((m) =>
+    m.agitationAfter ? Math.max(1, Math.round(m.agitationDurationSec ?? DEFAULT_AGITATION_SEC)) : 0,
+  );
 
-  // Cumulative start time per pour index (0 = bloom@0), rounded per step but
-  // accumulated as a float so rounding never compounds and the final start is exact.
+  // The bloom's slot: the recipe's own block (pour + agitation + rest) shifted by
+  // the roast-age delta, or the roast-age duration outright when it authored none.
+  const roastShift = getBloomDuration(roastDate, now) - PEAK_BLOOM_SEC;
+  // The block is measured from the AUTHORED pour time, so correcting an
+  // impossible bloom rate borrows from the bloom's own rest instead of pushing
+  // every later pour back — the same rule the post-bloom pours follow. Hoffmann
+  // authors his bloom as 5 s + 5 s swirl + 35 s rest; the pour renders longer
+  // (50 g in 5 s is 10 g/s), and pour 2 still lands at his published 0:45.
+  const authoredBloom =
+    milestones[0].restAfterSec != null
+      ? (milestones[0].pourDurationSec ?? timing[0]) + agitation[0] + milestones[0].restAfterSec
+      : 0;
+  const bloomDur =
+    authoredBloom > 0
+      ? Math.max(MIN_BLOOM_SEC, timing[0] + agitation[0], Math.round(authoredBloom + roastShift))
+      : getBloomDuration(roastDate, now);
+
+  // Does the recipe time its own rests? A recipe with `wait` steps between its
+  // pours (every corpus entry) is followed verbatim. One without any (today's
+  // /recommend output, every persisted session, a string `pourSequence`) gets
+  // rests distributed across whatever the clock has spare.
+  const authoredRests = milestones.some((m) => m.restAfterSec != null);
+
+  let fallbackRest = 0;
+  if (!authoredRests && n > 2) {
+    // Post-bloom pours are 1..n-1, so the gaps between them number n-2. Aim to
+    // leave a drawdown of the corpus-median share rather than filling the clock
+    // with rests — a bare cone still has to drain after the last pour.
+    let pourTimeAfterBloom = 0;
+    for (let i = 1; i < n; i++) pourTimeAfterBloom += timing[i] + agitation[i];
+    const wantDrawdown = Math.max(
+      minDrawdown,
+      Math.round(targetTimeSec * FALLBACK_DRAWDOWN_SHARE),
+    );
+    const spare = targetTimeSec - bloomDur - wantDrawdown - pourTimeAfterBloom;
+    fallbackRest = Math.min(
+      FALLBACK_REST_MAX_SEC,
+      Math.max(FALLBACK_REST_MIN_SEC, Math.round(spare / (n - 2))),
+    );
+  }
+
+  // Start times: the bloom owns its roast-age slot (its own pour, agitation and
+  // rest all live inside it); after that each pour starts when the previous
+  // one's pour + agitation + rest is done.
   const starts: number[] = new Array(n);
   starts[0] = 0;
   let acc = bloomDur;
   for (let i = 1; i < n; i++) {
     starts[i] = Math.round(acc);
     if (i < n - 1) {
-      acc +=
-        gapWeightTotal > 0
-          ? (remaining * Math.max(0, increments[i])) / gapWeightTotal
-          : uniformInterval;
+      let rest: number;
+      if (authoredRests) {
+        // A pour stretched off an impossible authored rate borrows that time from
+        // its own rest, so the recipe's overall cadence is preserved.
+        const stretch = Math.max(0, timing[i] - (milestones[i].pourDurationSec ?? timing[i]));
+        rest = Math.max(0, (milestones[i].restAfterSec ?? 0) - stretch);
+      } else {
+        rest = fallbackRest;
+      }
+      acc += timing[i] + agitation[i] + rest;
     }
   }
-  const pourStartSec = (i: number) => starts[i];
 
   const out: PourStep[] = [];
   milestones.forEach((m, i) => {
-    const pourGrams = i === 0 ? m.grams : m.grams - milestones[i - 1].grams;
-    const start = pourStartSec(i);
+    const start = starts[i];
     out.push({
       index: 0, // re-indexed after interleaving
       label: i === 0 ? "Bloom" : i === n - 1 ? "Final pour" : `Pour ${i + 1}`,
       cumulativeGrams: m.grams,
-      pourGrams,
+      pourGrams: increments[i],
       startTimeSec: start,
       action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
       temperatureC: m.temperatureC,
       notes: m.notes,
       pourDurationSec: m.pourDurationSec,
+      timingDurationSec: timing[i],
     });
 
     if (m.agitationAfter) {
-      // The pour finishes pouring `pourGrams` after `pourDurationSec` seconds
-      // (the physical ~4 g/s estimate — robust to a mis-authored short duration).
-      // Clamp so the agitation always lands before the next pour starts (or, on
-      // the final pour, before the target finish) — never overlapping.
-      const ceiling = (i < n - 1 ? pourStartSec(i + 1) : targetTimeSec) - 1;
-      const agStart = Math.min(start + pourDurationSec(pourGrams), Math.max(start + 1, ceiling));
+      // Lands the instant the pour finishes at its rendered rate. The clamp is a
+      // belt-and-braces guard: cadence-first already leaves room for it.
+      const ceiling = (i < n - 1 ? starts[i + 1] : Math.max(targetTimeSec, starts[i] + timing[i] + agitation[i])) - 1;
+      const agStart = Math.min(start + timing[i], Math.max(start + 1, ceiling));
       out.push({
         index: 0,
         label: AGITATION_LABEL[m.agitationAfter],
@@ -383,6 +538,7 @@ function buildPourOver(
         startTimeSec: agStart,
         action: m.agitationAfter,
         notes: m.agitationNote,
+        timingDurationSec: agitation[i],
       });
     }
   });
@@ -392,7 +548,44 @@ function buildPourOver(
   // re-index in timeline order.
   out.sort((a, b) => a.startTimeSec - b.startTimeSec);
   out.forEach((s, i) => (s.index = i));
-  return out;
+
+  const phaseEnd = pourPhaseEndSec(out);
+  const finishSec = Math.max(targetTimeSec, phaseEnd + minDrawdown);
+  return {
+    steps: out,
+    pourPhaseEndSec: phaseEnd,
+    drawdownSec: finishSec - phaseEnd,
+    finishSec,
+    extended: finishSec > targetTimeSec,
+  };
+}
+
+/** Elapsed second at which the pour phase is over — the last step's start plus
+ * the time that step occupies. The drawdown begins here. */
+export function pourPhaseEndSec(steps: PourStep[]): number {
+  let end = 0;
+  for (const s of steps) {
+    // `timingDurationSec` is always set by the builder; the fallback covers a
+    // hand-built or pre-Sep-2026 persisted step that predates the field.
+    const occupies = Number.isFinite(s.timingDurationSec)
+      ? Math.max(1, s.timingDurationSec)
+      : isAgitationPourAction(s.action)
+        ? DEFAULT_AGITATION_SEC
+        : pourDurationSec(s.pourGrams);
+    end = Math.max(end, s.startTimeSec + occupies);
+  }
+  return end;
+}
+
+/** Cadence-first pour schedule (steps only). See buildPourSchedule. */
+function buildPourOver(
+  milestones: Milestone[],
+  targetTimeSec: number,
+  roastDate?: string,
+  now: number = Date.now(),
+  method?: string,
+): PourStep[] | null {
+  return buildPourSchedule(milestones, targetTimeSec, roastDate, now, method)?.steps ?? null;
 }
 
 /**
@@ -421,15 +614,43 @@ export function parsePourSteps(
   return buildPourOver(milestones, targetTimeSec, roastDate, now, method);
 }
 
+/**
+ * The rendered schedule for a recipe, whichever form it carries — structured
+ * steps first, then a cumulative-grams string. The ONE place the brew screen,
+ * the timeline and every guard ask "what will the user actually be asked to do
+ * and when is this brew over". Null for immersion or genuine prose.
+ */
+export function pourScheduleFor(
+  recipe: BrewRecipe,
+  roastDate?: string,
+  now: number = Date.now(),
+  method?: string,
+): PourSchedule | null {
+  if (hasImmersionShape(recipe)) return null;
+  const structured = structuredPourSchedule(recipe, roastDate, now, method);
+  if (structured) return structured;
+  if (!recipe.pourSequence || !recipe.targetTimeSec) return null;
+  const parts = recipe.pourSequence.split(/\s*[–—\-]\s*/).map((t) => t.trim());
+  const grams = parts.map(leadingGrams);
+  if (parts.length < 2 || grams.some((g) => g === null)) return null;
+  const milestones: Milestone[] = parts.map((part, i) => ({
+    grams: grams[i] as number,
+    temperatureC: tokenTemperature(part),
+    notes: tokenNote(part),
+  }));
+  return buildPourSchedule(milestones, recipe.targetTimeSec, roastDate, now, method);
+}
+
 const isAgitationStep = (a: BrewStepAction) =>
   a === "swirl" || a === "stir" || a === "agitate-bed";
 
 /**
  * Build a pour-over schedule from a recipe's STRUCTURED steps (the percolation
- * case). Milestones are the steps that add water (carry `waterGramsAtEnd`);
- * rests and drawdown are handled by the drawdown-reserve formula, exactly as
- * for a grams string — so a structured V60 times identically to its string
- * form, but now carries per-pour temperature and notes.
+ * case). Milestones are the steps that add water (carry `waterGramsAtEnd`); the
+ * `wait` steps BETWEEN them are the recipe's own rests and are carried through
+ * verbatim, which is what makes a published recipe render at its published
+ * times. A trailing `wait`/`drain` after the last water step is the drawdown,
+ * not cadence, so it is deliberately not counted (the clock already holds it).
  *
  * Agitation is RECIPE-DRIVEN, not assumed: each milestone gets an explicit
  * `agitation` of `"stir"`/`"swirl"` only when an agitation step sits next to it
@@ -444,11 +665,28 @@ export function pourStepsFromStructured(
   now: number = Date.now(),
   method?: string,
 ): PourStep[] | null {
+  return structuredPourSchedule(recipe, roastDate, now, method)?.steps ?? null;
+}
+
+/** The full schedule (steps + clock facts) for a structured percolation recipe. */
+export function structuredPourSchedule(
+  recipe: BrewRecipe,
+  roastDate?: string,
+  now: number = Date.now(),
+  method?: string,
+): PourSchedule | null {
   const src = recipe.pourSteps;
   if (!src || src.length === 0) return null;
+
+  // Index of the last water-bearing step: everything after it is drawdown.
+  let lastWaterIdx = -1;
+  for (let i = 0; i < src.length; i++) if (src[i].waterGramsAtEnd != null) lastWaterIdx = i;
+  if (lastWaterIdx < 0) return null;
+
   const milestones: Milestone[] = [];
   let last = -1;
-  for (const s of src) {
+  for (let i = 0; i < src.length; i++) {
+    const s = src[i];
     if (s.waterGramsAtEnd != null) {
       milestones.push({
         grams: s.waterGramsAtEnd,
@@ -459,13 +697,22 @@ export function pourStepsFromStructured(
       last = milestones.length - 1;
     } else if (isAgitationStep(s.action) && last >= 0) {
       // Attach this agitation to the pour it follows (bloom-stir, post-pour
-      // swirl, tap-to-level) — it becomes its own flow-rate-timed step.
+      // swirl, tap-to-level) — it becomes its own timed step.
       milestones[last].agitationAfter =
         s.action === "swirl" ? "swirl" : s.action === "agitate-bed" ? "tap" : "stir";
       milestones[last].agitationNote = s.notes;
+      if (typeof s.durationSec === "number" && s.durationSec > 0) {
+        milestones[last].agitationDurationSec = s.durationSec;
+      }
+    } else if (s.action === "wait" && last >= 0 && i < lastWaterIdx) {
+      // The recipe's own rest between two pours. Kept verbatim — this is the
+      // cadence (Kasuya's 35 s, Hoffmann's 10 s). Waits AFTER the last pour are
+      // the drawdown and are excluded by the `i < lastWaterIdx` guard.
+      milestones[last].restAfterSec =
+        (milestones[last].restAfterSec ?? 0) + Math.max(0, s.durationSec ?? 0);
     }
   }
-  return buildPourOver(milestones, recipe.targetTimeSec, roastDate, now, method);
+  return buildPourSchedule(milestones, recipe.targetTimeSec, roastDate, now, method);
 }
 
 export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[]): number {
@@ -480,13 +727,13 @@ export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[])
 // ── Immersion / AeroPress / staged guide ─────────────────────────────────────
 
 /** Pre-brew handling that happens before the timer runs. */
-function isSetupAction(action: BrewStepAction, label: string): boolean {
+export function isSetupAction(action: BrewStepAction, label: string): boolean {
   if (action === "invert") return true;
   return /^\s*(assemble|position|set.?up|load|rinse|place)\b/i.test(label);
 }
 
 /** Sensible duration when a structured step omits one. */
-function defaultDuration(action: BrewStepAction): number {
+export function defaultDuration(action: BrewStepAction): number {
   switch (action) {
     case "press":
       return 25;
@@ -604,20 +851,15 @@ export function maxRenderedPourGapSec(
   now: number = Date.now(),
   method?: string,
 ): number {
-  if (hasImmersionShape(recipe)) return 0;
-  const steps =
-    pourStepsFromStructured(recipe, roastDate, now, method) ??
-    (recipe.pourSequence
-      ? parsePourSteps(recipe.pourSequence, recipe.targetTimeSec, roastDate, now, method)
-      : null);
-  if (!steps) return 0;
-  const water = steps.filter((s) => s.pourGrams > 0);
+  const schedule = pourScheduleFor(recipe, roastDate, now, method);
+  if (!schedule) return 0;
+  const water = schedule.steps.filter((s) => s.pourGrams > 0);
   let max = 0;
   for (let i = 0; i < water.length - 1; i++) {
     const pour = water[i];
-    // When this pour finishes pouring, at the recipe's own rate (fallback ~4 g/s)
-    // — mirrors validateRecipe's dead-gap check so the two surfaces agree.
-    const poursUntil = pour.startTimeSec + (pour.pourDurationSec ?? pour.pourGrams / POUR_RATE_GPS);
+    // When this pour finishes, at its RENDERED rate — mirrors validateRecipe's
+    // dead-gap check so the two surfaces agree on what a hole is.
+    const poursUntil = pour.startTimeSec + pour.timingDurationSec;
     const gap = water[i + 1].startTimeSec - poursUntil;
     if (gap > max) max = gap;
   }

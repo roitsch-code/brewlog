@@ -167,7 +167,10 @@ export function buildBrewBoundaries(
  * "boundaries from the intended flow".
  */
 export function boundariesFromTimeline(timeline: BrewTimeline): BrewBoundary[] {
-  return buildBrewBoundaries(timeline.pourSteps, timeline.guideSteps, timeline.targetTimeSec);
+  // `finishSec`, not `targetTimeSec`: the "brew finishing" cue has to land when
+  // the brew is really over, which for a recipe whose own pour plan outruns its
+  // clock is later than the clock claims (see BrewTimeline.finishSec).
+  return buildBrewBoundaries(timeline.pourSteps, timeline.guideSteps, timeline.finishSec);
 }
 
 // ── Native bridge access ─────────────────────────────────────────────────────
