@@ -60,7 +60,11 @@ test("large batch + single-cup grind → grind coarsened to the batch value", ()
     "Kasuya 4:6",
   );
   assert.equal(changed, true);
-  assert.equal(recipe.grindSize, "405°"); // 395 + 10 (grind-settings +20°/doubling)
+  // 395 + 12. The owner's law is +20° per DOUBLING (grind-settings.md), so it is
+  // logarithmic: 1.5× is 20·log2(1.5) ≈ 12, not the 20·(1.5−1) = 10 the old
+  // linear form gave. Linear only matched the measured anchors at exactly 2×,
+  // and got the halving side — "the same amount finer" — plainly wrong.
+  assert.equal(recipe.grindSize, "407°");
   assert.match(reference, /Kasuya/);
   assert.match(reasons[0], /too fine/i);
 });

@@ -788,7 +788,16 @@ export async function generateRecommendation(
         lockedMethodHasNoRecipe
           ? `(No documented recipe exists specifically for ${context.preferredMethod}. The recipes below are the closest matches on your other cones — adapt the nearest to the ${context.preferredMethod}, keeping its filter geometry. Do NOT invent parameters.)\n`
           : ""
-      }${formatRecipesForPrompt(recipesForPrompt)}`
+      }${formatRecipesForPrompt(
+        recipesForPrompt,
+        "RELEVANT REFERENCE RECIPES",
+        // Hand the model each reference ALREADY scaled to this brew. Doing the
+        // arithmetic in prose is what produced 8 g/s pours and single-cup clocks
+        // on a 450ml batch.
+        targetWaterMl
+          ? { scaleTo: { targetWaterGrams: targetWaterMl, method: context.preferredMethod } }
+          : undefined,
+      )}`
     : "";
 
   // The user's own well-rated brews, offered as references beside the corpus.

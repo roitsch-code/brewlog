@@ -32,6 +32,7 @@
  *     would mis-map the milestones.
  */
 
+import { scaleGrind, scaleRecipe } from "@/lib/recipe/scaleRecipe";
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session";
 import type { Recipe } from "../knowledge/recipes";
 import { ALL_RECIPES } from "../knowledge/recipes";
@@ -174,20 +175,17 @@ function hasIceOrBypass(ref: Recipe): boolean {
   return ref.pourSequence?.some((s) => s.action === "bypass") ?? false;
 }
 
-/** Scale the reference's structured pour sequence to the candidate's batch.
- * Milestones scale by the water ratio; durations (the cadence) are preserved
- * verbatim; per-step temperatures are dropped (single-temperature rule). */
-function scalePourSteps(ref: Recipe, k: number): BrewPourStep[] {
-  return ref.pourSequence.map((s) => {
-    const step: BrewPourStep = {
-      label: s.label,
-      action: s.action as BrewStepAction,
-    };
-    if (typeof s.waterGramsAtEnd === "number") step.waterGramsAtEnd = Math.round(s.waterGramsAtEnd * k);
-    if (typeof s.durationSec === "number") step.durationSec = s.durationSec;
-    if (s.notes) step.notes = s.notes;
-    return step;
-  });
+/**
+ * The reference, scaled to the candidate's batch. Delegates to the ONE scaling
+ * model (`src/lib/recipe/scaleRecipe.ts`), so the numbers this guard snaps a
+ * drifted candidate to are the same ones the prompt showed the model.
+ *
+ * It used to scale the milestones here and copy every step DURATION verbatim,
+ * which turned a 50 g pulse over 10 s into an 80 g pulse over 10 s — 8 g/s —
+ * and snapped `targetTimeSec` back to the single-cup total whatever the batch.
+ */
+function scaledReference(ref: Recipe, targetWaterGrams: number, method?: string) {
+  return scaleRecipe(ref, targetWaterGrams, { method });
 }
 
 /** Cumulative-grams milestone string (" – "-joined) for the legacy renderer. */
@@ -198,25 +196,10 @@ function cumulativeGramsString(steps: BrewPourStep[]): string {
     .join(" – ");
 }
 
-/** The published grind, scaling-adjusted to the candidate's dose (a bigger
- * bed legitimately runs a touch coarser — ~+20°/doubling per grind-settings). */
-function refGrindString(ref: Recipe, doseRatio: number, discOffset = 0): string {
-  const range = refGrindRange(ref);
-  if (!range) return ref.grind?.referenceSetting ?? ref.grind?.description ?? "";
-  return `${scaledRefGrind(range, doseRatio) + discOffset}°`;
-}
-
-/** The published mid, shifted coarser for a bigger bed (~+20°/doubling).
- *
- * Linear in doseRatio, which matches the measured anchor pair exactly at 2×
- * (15g=380° → 30g=400°, grind-settings.md). Below 1× it would UNDER-shoot the
- * measured slope (0.5× → −10° here vs the −20° the anchors imply) — but that
- * branch never executes: the batch nudge fires only at doseRatio ≥ 1.3 and
- * only ever COARSENS, so the down-scaling side of the prose rule
- * (DOSE_SCALING_RULE's "halving goes the same amount finer") is model
- * guidance only, never enforced through this formula. */
-function scaledRefGrind(range: [number, number], doseRatio: number): number {
-  return Math.round((range[0] + range[1]) / 2) + Math.round(20 * (doseRatio - 1));
+/** The published grind, scaled to this batch (owner-measured +20°/doubling,
+ * applied logarithmically) with the Drip Assist offset where it applies. */
+function refGrindString(ref: Recipe, doseRatio: number, method?: string): string {
+  return scaleGrind(ref, doseRatio, method).text;
 }
 
 /** Which of the recipe's defining fields drifted, not just how many. */
@@ -243,20 +226,29 @@ function pourCountOf(steps: readonly { action?: string; waterGramsAtEnd?: number
  * total time, grind, or temperature beyond a generous tolerance — and has its
  * pour plan been restructured?
  */
-function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: number): Drift {
+function driftReasons(
+  recipe: BrewRecipe,
+  ref: Recipe,
+  k: number,
+  doseRatio: number,
+  method?: string,
+): Drift {
   const reasons: string[] = [];
   const drift: Drift = { time: false, grind: false, temp: false, pourCount: false, reasons };
 
   // Total time — published time barely moves for a small batch change. Allow a
   // floor of ±45s or ±20%, plus extra slack proportional to how much bigger
   // the batch is (a genuine 2× batch adds some drawdown).
-  const refTime = ref.totalTimeSec;
+  // The published time is the time for the PUBLISHED batch. Compare against the
+  // scaled one instead, so a 450ml brew is not measured against a 250ml clock.
+  const scaled = scaledReference(ref, recipe.waterGrams, method);
+  const refTime = scaled?.totalTimeSec ?? ref.totalTimeSec;
   if (refTime > 0 && typeof recipe.targetTimeSec === "number") {
-    const tol = Math.max(45, 0.2 * refTime) + (k > 1 ? (k - 1) * refTime * 0.3 : 0);
+    const tol = Math.max(45, 0.2 * refTime);
     if (Math.abs(recipe.targetTimeSec - refTime) > tol) {
       drift.time = true;
       reasons.push(
-        `total time ${recipe.targetTimeSec}s vs published ${refTime}s (±${Math.round(tol)}s allowed)`,
+        `total time ${recipe.targetTimeSec}s vs ${Math.round(refTime)}s for this batch (±${Math.round(tol)}s allowed)`,
       );
     }
   }
@@ -266,7 +258,7 @@ function driftReasons(recipe: BrewRecipe, ref: Recipe, k: number, doseRatio: num
   const range = refGrindRange(ref);
   const cg = parseGrindDegrees(recipe.grindSize);
   if (range && cg != null) {
-    const adj = 20 * (doseRatio - 1);
+    const adj = scaleGrind(ref, doseRatio, method).deltaDeg;
     const lo = range[0] + adj - 15;
     const hi = range[1] + adj + 15;
     if (cg < lo || cg > hi) {
@@ -347,7 +339,10 @@ export function reconcileToReference(
   if (k < 0.5 || k > 2.5) return { recipe, changed: false, reasons: [] };
   const doseRatio = dose > 0 && refDose > 0 ? dose / refDose : k;
 
-  const drift = driftReasons(recipe, ref, k, doseRatio);
+  const drift = driftReasons(recipe, ref, k, doseRatio, method);
+  // The reference, converted to this batch ONCE — the same numbers the prompt
+  // showed the model, so a snap can never contradict what it was handed.
+  const scaled = scaledReference(ref, recipe.waterGrams, method);
   const reasons = drift.reasons;
   if (reasons.length === 0) {
     // No full-signature drift — but a genuinely LARGER batch still needs a
@@ -367,7 +362,7 @@ export function reconcileToReference(
     const range = refGrindRange(ref);
     const cg = parseGrindDegrees(recipe.grindSize);
     if ((k >= 1.3 || discOffset > 0) && range && cg != null) {
-      const target = scaledRefGrind(range, doseRatio) + discOffset;
+      const target = Math.round((range[0] + range[1]) / 2) + scaleGrind(ref, doseRatio, method).deltaDeg;
       // Only correct a grind that is meaningfully too fine (>4° under target)
       // so normal brew-to-brew variation passes untouched.
       if (cg < target - 4) {
@@ -404,7 +399,7 @@ export function reconcileToReference(
   if (!mangled && driftedFields === 1) {
     if (drift.grind) {
       return {
-        recipe: { ...recipe, grindSize: refGrindString(ref, doseRatio, discOffset) },
+        recipe: { ...recipe, grindSize: refGrindString(ref, doseRatio, method) },
         changed: true,
         reasons,
         reference: ref.name,
@@ -426,7 +421,7 @@ export function reconcileToReference(
     // snap, which replaces both together.
     if (drift.time && !hasImmersionShape(recipe)) {
       return {
-        recipe: { ...recipe, targetTimeSec: ref.totalTimeSec },
+        recipe: { ...recipe, targetTimeSec: scaled?.totalTimeSec ?? ref.totalTimeSec },
         changed: true,
         reasons,
         reference: ref.name,
@@ -434,13 +429,13 @@ export function reconcileToReference(
     }
   }
 
-  const steps = scalePourSteps(ref, k);
+  const steps = scaled?.pourSteps ?? [];
   const fixed: BrewRecipe = {
     ...recipe,
-    waterTempC: refTemp(ref) ?? recipe.waterTempC,
-    grindSize: refGrindString(ref, doseRatio, discOffset),
-    targetTimeSec: ref.totalTimeSec,
-    pourSteps: steps,
+    waterTempC: scaled?.waterTempC ?? refTemp(ref) ?? recipe.waterTempC,
+    grindSize: refGrindString(ref, doseRatio, method),
+    targetTimeSec: scaled?.totalTimeSec ?? ref.totalTimeSec,
+    pourSteps: steps.length ? steps : recipe.pourSteps,
     pourSequence: cumulativeGramsString(steps) || recipe.pourSequence,
   };
   return { recipe: fixed, changed: true, reasons, reference: ref.name };

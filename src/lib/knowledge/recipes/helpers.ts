@@ -1,3 +1,4 @@
+import { formatScaledForPrompt, scaleRecipe } from "@/lib/recipe/scaleRecipe";
 import type {
   Recipe,
   BrewerType,
@@ -755,11 +756,32 @@ function formatGrind(recipe: Recipe): string {
   return parts.join(" ") || "unspecified";
 }
 
+/** How a reference should be shown for the batch the user is actually brewing. */
+export interface PromptScaleOptions {
+  /** The brew this turn is for, in grams of water. */
+  targetWaterGrams: number;
+  /** The method as the timer will show it, so the disc's grind offset applies. */
+  method?: string;
+}
+
 /**
  * Format a single recipe as a compact prompt block. Used inside a numbered
  * list of recipes injected into the system prompt for /recommend and /explore.
+ *
+ * `scaleTo` adds a second, already-scaled line. The model used to be handed
+ * Hoffmann's 15 g : 250 g and a prose instruction to scale it, which put the
+ * arithmetic — dose, every milestone, every pour's seconds, the grind and the
+ * clock — on the one participant who cannot check it. Now the sum is done
+ * deterministically (`scaleRecipe`) and the model adapts a correct template.
+ *
+ * The option is an OBJECT on purpose: `formatRecipeForPrompt` is called through
+ * `.map()` in the chat's context builder, and a positional second parameter
+ * would silently receive the array index.
  */
-export function formatRecipeForPrompt(recipe: Recipe): string {
+export function formatRecipeForPrompt(
+  recipe: Recipe,
+  opts?: { scaleTo?: PromptScaleOptions },
+): string {
   const verifiedTag = recipe.verified ? "" : " [pour sequence reconstructed]";
   const lines = [
     `▸ ${recipe.name} — ${recipe.attribution.person}${recipe.attribution.year ? ` (${recipe.attribution.year})` : ""}${verifiedTag}`,
@@ -772,6 +794,20 @@ export function formatRecipeForPrompt(recipe: Recipe): string {
     `  Science: ${recipe.science}`,
     `  When to use: ${recipe.whenToUse}`,
   ];
+
+  const scaleTo = opts?.scaleTo;
+  if (scaleTo) {
+    const scaled = scaleRecipe(recipe, scaleTo.targetWaterGrams, { method: scaleTo.method });
+    // Only worth a line when the batch genuinely differs, and only for a recipe
+    // whose cadence scales — an iced or bypass build splits its water on purpose.
+    if (
+      scaled &&
+      Math.abs(scaled.k - 1) > 0.1 &&
+      (scaled.shape === "percolation" || scaled.shape === "immersion")
+    ) {
+      lines.splice(5, 0, `  Scaled to your ${Math.round(scaleTo.targetWaterGrams)}g: ${formatScaledForPrompt(scaled)}`);
+    }
+  }
   return lines.filter(Boolean).join("\n");
 }
 
@@ -782,12 +818,16 @@ export function formatRecipeForPrompt(recipe: Recipe): string {
  */
 export function formatRecipesForPrompt(
   selected: ScoredRecipe[],
-  header = "RELEVANT REFERENCE RECIPES"
+  header = "RELEVANT REFERENCE RECIPES",
+  opts?: { scaleTo?: PromptScaleOptions },
 ): string {
   if (!selected.length) return "";
-  const intro = `${header} (${selected.length}) — selected for this coffee and equipment. Each entry is a documented expert recipe; cite by name when you draw from one, and explain the science behind your adaptation.`;
+  const scaleNote = opts?.scaleTo
+    ? ` Where an entry differs from your ${Math.round(opts.scaleTo.targetWaterGrams)}g brew, a "Scaled to your …" line gives it already converted — same ratio, same pour count, same rests, pours sized (and therefore timed) for this batch, grind adjusted, clock re-summed. Use those numbers rather than doing the arithmetic again.`
+    : "";
+  const intro = `${header} (${selected.length}) — selected for this coffee and equipment. Each entry is a documented expert recipe; cite by name when you draw from one, and explain the science behind your adaptation.${scaleNote}`;
   const blocks = selected
-    .map((s, i) => `${i + 1}. ${formatRecipeForPrompt(s.recipe)}`)
+    .map((s, i) => `${i + 1}. ${formatRecipeForPrompt(s.recipe, opts)}`)
     .join("\n\n");
   return `${intro}\n\n${blocks}`;
 }
