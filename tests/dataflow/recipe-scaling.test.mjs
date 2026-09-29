@@ -78,14 +78,18 @@ test("the rests are the recipe's cadence and do not scale", () => {
   assert.deepEqual(rests, refRests, "a 45s interval is 45s at any batch size");
 });
 
-test("a bigger pour takes LONGER at the same rate — it does not keep the reference's seconds", () => {
+test("a bigger pour takes LONGER in seconds — it does not keep the reference's seconds", () => {
   // The old guard copied `durationSec` verbatim, so Hoffmann's 50g/10s pulse
-  // became an 80g/10s pulse = 8 g/s. The pour keeps the RATE instead.
+  // became an 80g/10s pulse = 8 g/s. The pour is derived from a rate instead.
   const ref = byId("kasuya-4-6-standard"); // 60g in 10s = 6 g/s
-  const s = scaleRecipe(ref, 450); // 90g pours
+  const s = scaleRecipe(ref, 450); // 90g pours, k = 1.5
   const pours = waterSteps(s);
   for (const p of pours) {
-    assert.equal(p.durationSec, 15, "90g at Kasuya's own 6 g/s is 15s");
+    // 90g at 6 g/s would be 15s; the batch lifts the rate by sqrt(1.5) to
+    // ~7.3 g/s, so 13s. Longer than the 10s it was authored at either way —
+    // that is the whole point — and never the verbatim copy.
+    assert.equal(p.durationSec, 13);
+    assert.ok(p.durationSec > 10, "a 50% bigger pour cannot take the reference's seconds");
   }
   // And nothing is ever scheduled past what a person can pour.
   for (const p of pours) {
@@ -137,11 +141,46 @@ test("scaling DOWN shortens the brew and grinds finer", () => {
 test("the total time is the SUM of the scaled steps, never a multiple of the original", () => {
   const ref = byId("hoffmann-v60-better-one-cup"); // 3:00 at 250g
   const s = scaleRecipe(ref, 500);
-  // Hoffmann's own 30:500 technique finishes at 3:30, and the corpus's
-  // big-batch V60 at 4:35 — a doubled batch lands between them, nowhere near
-  // the 6:00 a linear stretch of the clock would give.
-  assert.ok(s.totalTimeSec >= 195 && s.totalTimeSec <= 290, `${s.totalTimeSec}s`);
+  // Hoffmann publishes BOTH ends of this scale: 3:00 at 15:250 and 3:30 at
+  // 30:500. A doubled batch must land near his answer, nowhere near the 6:00 a
+  // linear stretch of the clock gives. We land at 3:53 — 23s over, and the 23s
+  // are structural, not arithmetic: he redesigns four pulses into two
+  // back-to-back pours, and the scaler deliberately never restructures a pour
+  // plan it was given. The prompt carries "fewer, larger pours at a bigger
+  // batch" so the model can make that call; this function only does the maths.
+  assert.ok(s.totalTimeSec >= 195 && s.totalTimeSec <= 250, `${s.totalTimeSec}s`);
   assert.equal(s.totalTimeSec, Math.max(s.pourPhaseEndSec + s.drawdownSec, s.totalTimeSec));
+});
+
+test("a bigger batch is poured faster, not only for longer — and never past 8 g/s", () => {
+  const ref = byId("hoffmann-v60-better-one-cup");
+  const pourRates = (scaled) => {
+    let prev = 0;
+    const out = [];
+    for (const step of scaled.pourSteps) {
+      if (typeof step.waterGramsAtEnd !== "number") continue;
+      const grams = step.waterGramsAtEnd - prev;
+      prev = step.waterGramsAtEnd;
+      if (grams > 0 && step.durationSec > 0) out.push(grams / step.durationSec);
+    }
+    return out;
+  };
+  const refRates = pourRates(scaleRecipe(ref, 250));
+  const bigRates = pourRates(scaleRecipe(ref, 500));
+  assert.equal(refRates.length, bigRates.length);
+  for (const [i, rate] of bigRates.entries()) {
+    // Hoffmann roughly DOUBLES the rate for a doubled batch (3.3-5 -> 6.7-8 g/s);
+    // we move by sqrt(k), so every pour must be faster than the reference's and
+    // still inside what an expert actually publishes.
+    assert.ok(rate > refRates[i], `pour ${i}: ${rate.toFixed(2)} not faster than ${refRates[i].toFixed(2)} g/s`);
+    assert.ok(rate <= 8 + 1e-9, `pour ${i} pours at ${rate.toFixed(2)} g/s — past the published ceiling`);
+  }
+  // Scaling DOWN keeps the reference's rate: no source says a smaller batch
+  // should be poured more gently, and inventing that would be a brewing
+  // decision wearing an arithmetic costume.
+  for (const [i, rate] of pourRates(scaleRecipe(ref, 150)).entries()) {
+    assert.ok(Math.abs(rate - refRates[i]) < 0.9, `pour ${i}: ${rate.toFixed(2)} vs ${refRates[i].toFixed(2)} g/s`);
+  }
 });
 
 test("the temperature does not move with the batch", () => {
