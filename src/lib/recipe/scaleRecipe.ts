@@ -122,6 +122,31 @@ function referenceRateGPS(grams: number, authoredSec?: number): number {
   return Math.min(rate, MAX_POUR_RATE_GPS);
 }
 
+/**
+ * A bigger batch is poured FASTER, not only for longer.
+ *
+ * Hoffmann's own pair is the evidence, and it is the reason this exists: his
+ * 15 g : 250 g pours its pulses at 3.3–5 g/s, his 30 g : 500 g pours at
+ * 6.7–8 g/s. Holding the reference's rate through a doubling put the scaled
+ * 1-Cup at 4:16 — 46 s LONGER than the 3:30 Hoffmann himself publishes for that
+ * exact batch, which is the "you just stretched the clock" failure in miniature.
+ * Gagné says the same thing mechanically: a bigger dose wants "more agitation
+ * and more water column".
+ *
+ * Moves by sqrt(k), roughly HALF of what Hoffmann does (he ~doubles the rate for
+ * a doubled batch), so a scaled recipe errs on the gentle side; and never past
+ * MAX_POUR_RATE_GPS, his 8 g/s being the fastest pour anyone in this corpus
+ * publishes. Scaling DOWN keeps the reference's rate: nothing published says a
+ * smaller batch should be poured more slowly, and slowing it would be a real
+ * change in agitation dressed up as arithmetic.
+ */
+export const BATCH_RATE_EXP = 0.5;
+
+function batchPourRateGPS(refRate: number, doseRatio: number): number {
+  if (!(doseRatio > 1)) return refRate;
+  return Math.min(MAX_POUR_RATE_GPS, refRate * Math.pow(doseRatio, BATCH_RATE_EXP));
+}
+
 function refTempC(ref: Recipe): number | null {
   const t = ref.temperature;
   if (!t) return null;
@@ -227,11 +252,12 @@ export function scaleRecipe(
       const scaledCum = i === lastWaterIdx ? Math.round(targetWaterGrams) : Math.round(refCum * k);
       const scaledGrams = Math.max(0, scaledCum - prevScaledCum);
       prevScaledCum = scaledCum;
-      // The pour keeps the reference's RATE, so a bigger pour takes longer —
-      // it does not keep the reference's seconds, which is what turned a 50g
-      // pulse into an 8 g/s firehose. Rounded UP, so the rounding itself can
-      // never push the pour past the rate it was given.
-      const rate = referenceRateGPS(refGrams, s.durationSec);
+      // The pour scales by RATE, never by the reference's seconds — keeping the
+      // seconds is what turned a 50g pulse into an 8 g/s firehose. The rate
+      // itself rises with the batch (see batchPourRateGPS), so a doubled brew
+      // pours bigger AND faster the way the published pairs do. Rounded UP, so
+      // the rounding can never push the pour past the rate it was given.
+      const rate = batchPourRateGPS(referenceRateGPS(refGrams, s.durationSec), doseRatio);
       const durationSec = Math.max(1, Math.ceil(scaledGrams / rate));
       steps.push({
         label: rescaleLabel(s.label, s.waterGramsAtEnd as number, scaledCum),

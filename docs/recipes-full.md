@@ -1303,38 +1303,40 @@ _Sources:_ Hoffmann YouTube — V60 refresh 2024
 
 ---
 
-### Hoffmann V60 — Big Batch (size 02, 2 cups)
+### Hoffmann V60 — Ultimate Technique (30 g : 500 g)
 
-**Hoffmann V60 Big** · James Hoffmann (2020)
+**Hoffmann Ultimate V60** · James Hoffmann (2019) — World Barista Champion 2007, *World Atlas of Coffee* author
 
 | | |
 |---|---|
 | **Character** | Balanced |
 | **Brewer** | v60 |
 | **Dose / Water** | 30 g / 500 g (1:16.7) |
-| **Temperature** | 94°C |
-| **Grind (Niche)** | 382–392° |
-| **Total time** | 4:35 |
+| **Temperature** | 100°C (90–100) |
+| **Grind (Niche)** | 395–405° (owner-measured anchor; Hoffmann publishes only "medium fine") |
+| **Total time** | 3:30 |
 | **Best for** | roasts: light, medium-light, medium; process: any |
-| **Verified** | ⚠️ no (reconstructed — see notes) |
+| **Verified** | ⚠️ no (Hario's published card, not Hoffmann's own video) |
 
 **Brew steps:**
 
-- **0:00** — Bloom (90g)  → 90 g total (8s)
+- **0:00** — Bloom (→ 60 g)  → 60 g total (8s)
 - **0:08** — Swirl  (5s)
-- **0:13** — Bloom rest  (35s)
-- **0:48** — Pour 1 (to 300g)  → 300 g total (50s)
-- **1:38** — Pour 2 (to 500g)  → 500 g total (50s)
-- **2:28** — Final swirl  (5s)
-- **2:33** — Drawdown  (120s)
+- **0:13** — Bloom rest  (32s)
+- **0:45** — Pour 1 (→ 300 g)  → 300 g total (30s)
+- **1:15** — Pour 2 (→ 500 g)  → 500 g total (30s)
+- **1:45** — Stir  (5s) — 1× clockwise, 1× anticlockwise with a spoon
+- **1:50** — Drawdown  (100s) — drain a little, gentle swirl, finish by 3:30
 
-**Teaches:** Single V60 for 2-3 cups at 30g/500g. Same swirl-not-stir principles scale up cleanly if grind shifts slightly coarser to compensate for the deeper bed.
+**Teaches:** How Hoffmann himself scales: doubling the batch does NOT mean doubling the clock or adding pours. Four 50 g pulses at 250 g become TWO big pours at 500 g, poured faster (8 and 6.7 g/s), the pour phase finishes EARLIER (1:45 vs 2:00), and only the drawdown grows — 60 s to ~105 s. Total time rises ~17% for twice the coffee.
 
-**Why it works:** A 30g dose builds a meaningfully taller bed than 15-18g — more vertical extraction time per gram, more risk of over-extraction in the lower layers. Coarser grind compensates; the swirl-not-stir prevents fines compaction at the cone tip.
+**Why it works:** A 30 g bed is roughly twice as deep as a 15 g bed, so it resists flow more and drains longer; that is where the extra time goes, not into the pouring. Bigger pours also carry their own agitation, so the pulse count that keeps a single cup evenly saturated is unnecessary. The grind moves coarser (~+20° on the Niche per doubling) to keep the deeper bed from over-extracting at the bottom.
 
-**When to use:** Brewing for 2-3 people in one go, or weekend mornings when you want a full carafe without batching across two pour-overs.
+**When to use:** Brewing 450–500 ml on a V60 — two to three cups in one go — and any time a single-cup recipe needs scaling up: this is the worked example of how the numbers should move.
 
-_Sources:_ Hoffmann YouTube — bigger V60 batches
+_Sources:_ [Hario USA — James Hoffmann's Ultimate V60 Technique](https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-uitimate-v60-technique) (2019)
+
+> Corrected 2026-09-29. The previous entry (90 g bloom, two 50 s pours, 4:35, cited to "Hoffmann YouTube — bigger V60 batches") was a recipe Hoffmann never published.
 
 ---
 

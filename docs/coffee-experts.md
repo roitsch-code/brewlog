@@ -296,12 +296,15 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 |---|---|---|
 | Dose | × the water factor (the ratio holds) | all of the above |
 | Every milestone | × the water factor | all |
-| Each pour's SECONDS | its new grams ÷ the reference's own pour rate — NOT the reference's seconds | Hoffmann's rates (5 → 6.7–8 g/s), Gagné targets 5 g/s |
+| Each pour's SECONDS | its new grams ÷ the pour's RATE — never the reference's seconds | Hoffmann's rates, Gagné targets 5 g/s |
+| Each pour's RATE | rises with the batch by ≈ √(water factor), capped at 8 g/s; scaling DOWN keeps the reference's rate | Hoffmann pours 3.3–5 g/s at 250 g and 6.7–8 g/s at 500 g — we move half as far; Gagné: a bigger dose wants "more agitation and more water column" |
 | Pour count | unchanged; add one only if a pour would need > 8 g/s | Kasuya 5, Rao 2, Hoffmann's Dara pair 4 |
 | Rests | unchanged | Kasuya 45 s at both sizes |
 | Grind | +20° on the Niche per DOUBLING of dose, same amount finer when halving | owner-measured (380° at 15 g, 400° at 30 g); direction from Wendelboe, Rao, Gagné |
 | Drawdown | ≈ × √(water factor) | between Hoffmann's measured ×1.75 and the corpus's flat big batches — an ESTIMATE, overridden by the owner's own measured brew times |
 | Total time | the SUM of the above, never a multiple of the original | Hoffmann +17 % for 2×; Gagné's bed-depth table +13 % to +26 % |
+
+**Where the model stops, honestly.** Scaling Hoffmann's 1 Cup to 500 g gives 3:53; he himself publishes 3:30 for that batch. The 23 s are structural, not arithmetic — he redesigns four pulses into two back-to-back pours, and `scaleRecipe` deliberately never restructures a pour plan it was handed. "Fewer, larger pours at a bigger batch" is in the `/recommend` prompt so the model can make that call with its reasons; the function only does the maths, and the physics guard makes either version brewable.
 | Temperature | unchanged | all |
 
 **The physics underneath it** is bed depth. Gagné: *"A thicker percolation medium offers a larger resistance to the flow of water"*, and when depth increases you must *"either grind coarser or accept longer brew times"* — his own cheat sheet does both, moving a 17 mm bed at ~3:50 to a 22–23 mm bed at ~4:50+. Rao: *"If a bed is too deep, one has to use a very coarse grind"*, and *"shallow beds are more prone to astringency"*.

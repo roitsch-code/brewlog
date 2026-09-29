@@ -863,44 +863,101 @@ export const EXPANDED_RECIPES: Recipe[] = [
 
   {
     id: "hoffmann-v60-big-batch",
-    name: "Hoffmann V60 — Big Batch (size 02, 2 cups)",
-    shortName: "Hoffmann V60 Big",
+    name: "Hoffmann V60 — Ultimate Technique (30 g : 500 g)",
+    shortName: "Hoffmann Ultimate V60",
     attribution: {
       person: "James Hoffmann",
+      title: "World Barista Champion 2007, *World Atlas of Coffee* author",
       country: "United Kingdom",
-      year: 2020,
+      year: 2019,
     },
     category: "reference",
     brewer: "v60",
+    brewerNotes:
+      "Hario V60 size 02, paper filter rinsed. This is the LARGER half of Hoffmann's own published pair — the same cone, the same principles as his Better 1 Cup at 15 g : 250 g — which is what makes it the reference a 450–500 ml V60 brew should be built on rather than a stretched single cup.",
     dose: { grams: 30 },
     water: { grams: 500, ratio: "1:16.7" },
-    temperature: { celsius: 94 },
+    temperature: { celsius: 100, rangeC: [90, 100] },
     grind: {
-      nicheZeroDegrees: [382, 392],
-      description: "Slightly coarser than single-cup — bigger bed extracts longer",
+      referenceSetting: "medium fine",
+      nicheZeroDegrees: [395, 405],
+      description:
+        'Hoffmann publishes only "medium fine". The Niche range is the OWNER\'s measured anchor for exactly this batch — 30 g : 500 g on a V60 = 400° (docs/grind-settings.md) — about 20° coarser than his single cup, which is the deeper bed talking, not a different intent.',
     },
     pourSequence: [
-      { label: "Bloom (90g)", action: "pour", waterGramsAtEnd: 90, durationSec: 8 },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
-      { label: "Bloom rest", action: "wait", durationSec: 35 },
-      { label: "Pour 1 (to 300g)", action: "pour", waterGramsAtEnd: 300, durationSec: 50 },
-      { label: "Pour 2 (to 500g)", action: "pour", waterGramsAtEnd: 500, durationSec: 50 },
-      { label: "Final swirl", action: "swirl", durationSec: 5 },
-      { label: "Drawdown", action: "drain", durationSec: 120 },
+      {
+        label: "Bloom (→ 60 g)",
+        action: "pour",
+        waterGramsAtEnd: 60,
+        durationSec: 8,
+        notes:
+          "2x the dose. He publishes only that the bloom phase runs to 0:45; the 8 s is derived from this recipe's OWN published pour rate (240 g in 30 s = 8 g/s), not invented.",
+      },
+      {
+        label: "Swirl",
+        action: "swirl",
+        durationSec: 5,
+        notes: '"Swirl the coffee slurry until evenly mixed."',
+      },
+      { label: "Bloom rest", action: "wait", durationSec: 32 },
+      {
+        label: "Pour 1 (→ 300 g)",
+        action: "pour",
+        waterGramsAtEnd: 300,
+        durationSec: 30,
+        notes:
+          '"Add water aiming for 60% of total brew weight = 300 g in the next 30 s" — 8 g/s, the fastest pour any expert in this corpus publishes.',
+      },
+      {
+        label: "Pour 2 (→ 500 g)",
+        action: "pour",
+        waterGramsAtEnd: 500,
+        durationSec: 30,
+        notes:
+          'Straight on from pour 1, no pause: "100% of the total brew weight = 500 g in the next 30 s".',
+      },
+      {
+        label: "Stir",
+        action: "stir",
+        durationSec: 5,
+        notes: '"Stir 1x clockwise and 1x anticlockwise with spoon."',
+      },
+      {
+        label: "Drawdown",
+        action: "drain",
+        durationSec: 100,
+        notes:
+          'Let it drain a little, then give the V60 a gentle swirl to settle the bed. "Aim to finish drawdown by t = 3:30."',
+      },
     ],
-    totalTimeSec: 275,
-    techniques: ["swirl-not-stir"],
+    totalTimeSec: 210,
+    techniques: ["bloom", "swirl-not-stir", "batch-scaling"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
       goals: ["balanced"],
     },
-    teaches: "Single V60 for 2-3 cups at 30g/500g. Same swirl-not-stir principles scale up cleanly if grind shifts slightly coarser to compensate for the deeper bed.",
-    science: "A 30g dose builds a meaningfully taller bed than 15-18g — more vertical extraction time per gram, more risk of over-extraction in the lower layers. Coarser grind compensates; the swirl-not-stir prevents fines compaction at the cone tip.",
-    whenToUse: "Brewing for 2-3 people in one go, or weekend mornings when you want a full carafe without batching across two pour-overs.",
+    teaches:
+      "How Hoffmann himself scales: doubling the batch does NOT mean doubling the clock or adding pours. Four 50 g pulses at 250 g become TWO big pours at 500 g, poured faster (8 and 6.7 g/s), the pour phase finishes EARLIER (1:45 vs 2:00), and only the drawdown grows — 60 s to ~105 s. Total time rises ~17% for twice the coffee.",
+    science:
+      "A 30 g bed is roughly twice as deep as a 15 g bed, so it resists flow more and drains longer; that is where the extra time goes, not into the pouring. Bigger pours also carry their own agitation, so the pulse count that keeps a single cup evenly saturated is unnecessary — fewer, larger pours at a higher rate do the same work. The grind moves coarser (~+20° on the Niche per doubling) to keep the deeper bed from over-extracting at the bottom.",
+    whenToUse:
+      "Brewing 450–500 ml on a V60 — two to three cups in one go — and any time a single-cup recipe needs scaling up: this is the worked example of how the numbers should move.",
     sources: [
-      { type: "video", citation: "Hoffmann YouTube — bigger V60 batches", year: 2020 },
+      {
+        type: "article",
+        citation:
+          "Hario USA — James Hoffmann's Ultimate V60 Technique (published recipe card; retrieved 2026-09-29)",
+        url: "https://www.hario-usa.com/blogs/recipes-and-more-from-friends/james-hoffmann-uitimate-v60-technique",
+        year: 2019,
+      },
     ],
+    // Stays FALSE: the parameters above come from Hario's published card, not
+    // from Hoffmann's own video, which was not retrieved in-session. The card is
+    // a licensed republication, which is one step better than the unsourced
+    // "Hoffmann YouTube — bigger V60 batches" citation it replaces (90 g bloom,
+    // two 50 s pours, 4:35 — a recipe Hoffmann never published) but still not
+    // the originator's own publication.
     verified: false,
   },
 
