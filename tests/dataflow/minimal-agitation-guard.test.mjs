@@ -100,3 +100,84 @@ test("no-op when a minimal-agitation brewer already has no agitation", () => {
   const [c] = stripMinimalAgitationSwirls(input);
   assert.deepEqual(c.recipe.pourSteps, clean);
 });
+
+// ── Recipe fidelity (owner decision 2026-09-30) ───────────────────────────────
+// The guard used to strip EVERY stir/swirl on these brewers — including the
+// bloom stir the /recommend prompt itself asks for on Origami / Orea Apex, and
+// the published agitation in 12 of the 36 corpus recipes on these brewers
+// (Hoffmann Chemex, Hedrick Origami, three verified Moccamaster recipes …).
+// That rewrote published recipes, which the owner's rule forbids. Now it only
+// removes agitation the MODEL added: a step whose position (bloom / mid /
+// after the final pour / after the drawdown) does not occur in the `basedOn`
+// reference. With no resolvable reference, only bloom agitation stays.
+
+const fidelityEntry = `export { stripMinimalAgitationSwirls } from ${JSON.stringify(
+  path.join(ROOT, "src/lib/utils/agitationGuard.ts"),
+)}; export { resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};`;
+const out2 = join(dir, "g2.mjs");
+await build({
+  stdin: { contents: fidelityEntry, resolveDir: ROOT, loader: "ts" },
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  outfile: out2,
+  logLevel: "silent",
+});
+const F = await import(pathToFileURL(out2).href);
+const withRef = (method, basedOn, pourSteps) => ({ ...candidate(method, pourSteps), basedOn });
+const actionsOf = (c) => c.recipe.pourSteps.map((s) => s.action);
+
+test("Hoffmann Chemex keeps its published bloom swirl AND its post-final swirl", () => {
+  const steps = [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 90 },
+    { label: "Swirl", action: "swirl" },
+    { label: "Pour 1", action: "pour", waterGramsAtEnd: 300 },
+    { label: "Pour 2", action: "final", waterGramsAtEnd: 500 },
+    { label: "Swirl gently", action: "swirl" },
+  ];
+  const [c] = F.stripMinimalAgitationSwirls([withRef("Chemex", "Hoffmann Chemex", steps)], F.resolveReference);
+  assert.deepEqual(actionsOf(c), ["bloom", "swirl", "pour", "final", "swirl"], "a published recipe must not be rewritten");
+});
+
+test("a reference with no post-final agitation (Medina 2023) still loses a model-added settle swirl", () => {
+  const steps = [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
+    { label: "Pour 2", action: "pour", waterGramsAtEnd: 150 },
+    { label: "Pour 3", action: "final", waterGramsAtEnd: 248 },
+    { label: "Settle swirl", action: "swirl" },
+  ];
+  const [c] = F.stripMinimalAgitationSwirls([withRef("Origami (cone)", "Medina 2023", steps)], F.resolveReference);
+  assert.deepEqual(actionsOf(c), ["bloom", "pour", "final"]);
+});
+
+test("Own experiment on Origami keeps the bloom stir the prompt asks for, drops later agitation", () => {
+  const steps = [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
+    { label: "Bloom stir", action: "stir" },
+    { label: "Pour 2", action: "pour", waterGramsAtEnd: 180 },
+    { label: "Mid swirl", action: "swirl" },
+    { label: "Final", action: "final", waterGramsAtEnd: 300 },
+    { label: "Settle swirl", action: "swirl" },
+  ];
+  const [c] = F.stripMinimalAgitationSwirls([withRef("Origami (cone)", "Own experiment", steps)], F.resolveReference);
+  assert.deepEqual(actionsOf(c), ["bloom", "stir", "pour", "final"]);
+});
+
+test("a serving swirl after the drawdown survives only when the reference has one (Crema Chemex)", () => {
+  const steps = [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 50 },
+    { label: "Main pour", action: "final", waterGramsAtEnd: 400 },
+    { label: "Drawdown", action: "drain", durationSec: 45 },
+    { label: "Swirl Chemex", action: "swirl" },
+  ];
+  const [kept] = F.stripMinimalAgitationSwirls([withRef("Chemex", "Crema Chemex", steps)], F.resolveReference);
+  assert.ok(actionsOf(kept).includes("swirl"), "Crema's published final swirl must stay");
+  const [dropped] = F.stripMinimalAgitationSwirls([withRef("Chemex", "Hoffmann Chemex", steps)], F.resolveReference);
+  assert.ok(!actionsOf(dropped).includes("swirl"), "Hoffmann's Chemex has no after-drawdown swirl");
+});
+
+test("recommend.ts hands the guard the reference resolver (wiring)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
+  assert.match(src, /stripMinimalAgitationSwirls\(\s*mapped\s*,\s*resolveReference\s*\)/);
+});

@@ -47,7 +47,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
-import { reconcileToReference, reconcileWaterToPourPlan } from "./recipeFidelity";
+import { reconcileToReference, reconcileWaterToPourPlan, resolveReference } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
 import { sanitizePourSteps } from "../utils/pourSteps";
@@ -953,7 +953,7 @@ Return valid JSON only.`;
   //   3. any proactively-suggested Drip Assist.
   //   4. swirl/stir steps a minimal-agitation brewer (Origami/Chemex/Moccamaster)
   //      never wanted — incl. one sequenced after the drawdown.
-  const deSwirled = stripMinimalAgitationSwirls(mapped);
+  const deSwirled = stripMinimalAgitationSwirls(mapped, resolveReference);
 
   //   0a. PHYSICS. Before any clock tuning: the recipe's own numbers have to hold
   //       together — milestones that increase, a headline water that matches the
