@@ -44,6 +44,7 @@ export {
   formatRecipeForPrompt,
   formatRecipesForPrompt,
   mixSeed,
+  deriveRotationSeed,
   LONG_DESIGNED_WAIT_SEC,
 } from "./helpers";
 

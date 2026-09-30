@@ -494,8 +494,27 @@ export function mixSeed(seed: number): number {
   return (x ^ (x >>> 16)) >>> 0;
 }
 
+/**
+ * The per-turn rotation seed for /recommend: newest logged brew (so the menu
+ * moves with every brew) mixed with the request time (so asking again gives a
+ * fresh menu). ALWAYS a positive 32-bit integer.
+ *
+ * It used to be `latest ^ mixSeed(now)` inline in recommend.ts. `^` yields a
+ * SIGNED int32, so the seed was negative in ~50% of requests, and both
+ * `rotateTies` and `pickRepresentative` treated any seed <= 0 as "no seed" —
+ * every other brew got the menu in plain array order (measured 49.8%,
+ * 2026-09-30). Pinned by tests/dataflow/rotation-seed.test.mjs.
+ */
+export function deriveRotationSeed(latestSessionMs: number, nowMs: number): number {
+  const s = (mixSeed(latestSessionMs) ^ mixSeed(nowMs)) >>> 0;
+  return s === 0 ? 1 : s;
+}
+
 function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
-  if (seed <= 0) return scored;
+  // Only a missing/zero seed means "don't rotate". A negative seed is a valid
+  // seed (mixSeed takes its magnitude) — treating it as absent silently switched
+  // rotation off for half of all brews (see deriveRotationSeed).
+  if (!seed) return scored;
   seed = mixSeed(seed);
   const out: ScoredRecipe[] = [];
   let i = 0;
@@ -694,7 +713,7 @@ const REP_SCORE_TOLERANCE = 1;
  * would jump to "its second recipe" on the same brew.
  */
 function pickRepresentative(candidates: ScoredRecipe[], seed: number): ScoredRecipe {
-  if (candidates.length <= 1 || seed <= 0) return candidates[0];
+  if (candidates.length <= 1 || !seed) return candidates[0];
   const best = candidates[0].score;
   const eligible = candidates.filter((c) => c.score >= best - REP_SCORE_TOLERANCE);
   if (eligible.length <= 1) return candidates[0];

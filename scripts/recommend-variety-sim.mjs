@@ -56,7 +56,7 @@ export { SYSTEM_PROMPT } from ${q("src/lib/claude/recommendPrompt.ts")};
 export {
   selectRecipes, formatRecipesForPrompt, brewersAvailableFromEquipment,
   CANONICAL_EQUIPMENT, brewersFromMethod, normaliseRoastLevel,
-  normaliseProcess, normaliseGoal,
+  normaliseProcess, normaliseGoal, deriveRotationSeed,
 } from ${q("src/lib/knowledge/recipes/index.ts")};
 export { ALL_RECIPES } from ${q("src/lib/knowledge/recipes/index.ts")};
 export { buildMethodRecency } from ${q("src/lib/claude/methodRotation.ts")};
@@ -175,11 +175,15 @@ function selectionFor(scenario, pastSessions) {
 
   // recommend.ts: the LATEST logged session's timestamp seeds every tie-break
   // for the turn (the menu rotation AND the brewer-freshness demotion share it).
-  const rotationSeed =
+  // Same helper as recommend.ts (the inline XOR it replaced was signed and
+  // switched rotation off for ~half of all brews). The request time is held at
+  // the brew's own timestamp so the simulation stays reproducible.
+  const latestMs =
     pastSessions.reduce((m, s) => {
       const t = Date.parse(s.createdAt ?? "");
       return Number.isFinite(t) ? Math.max(m, t) : m;
     }, 0) || pastSessions.length;
+  const rotationSeed = K.deriveRotationSeed(latestMs, START_MS + pastSessions.length * DAY);
 
   const methodRecency = K.buildMethodRecency(pastSessions, {
     lockedMethod: undefined,
