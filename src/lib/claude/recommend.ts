@@ -39,7 +39,7 @@ import {
   normaliseRoastLevel,
   normaliseProcess,
   normaliseGoal,
-  mixSeed,
+  deriveRotationSeed,
   LONG_DESIGNED_WAIT_SEC,
 } from "../knowledge/recipes";
 import {
@@ -658,12 +658,13 @@ export async function generateRecommendation(
   // rotation — the #480 regression), mixed with a per-REQUEST component so
   // asking again gives a fresh menu instead of a byte-identical one. Fit still
   // decides: every use of this seed is tie-scoped.
-  const rotationSeed =
-    (pastSessions.reduce((m, s) => {
+  const rotationSeed = deriveRotationSeed(
+    pastSessions.reduce((m, s) => {
       const t = Date.parse(s.createdAt ?? "");
       return Number.isFinite(t) ? Math.max(m, t) : m;
-    }, 0) ||
-      pastSessions.length) ^ mixSeed(Date.now());
+    }, 0) || pastSessions.length,
+    Date.now(),
+  );
 
   // METHOD FIT & FRESHNESS — the fix for "always V60 and Clever water-first".
   // NO bans (owner's design rule: best fit always decides). Brewer families
