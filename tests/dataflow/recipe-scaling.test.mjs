@@ -254,3 +254,16 @@ test("WIRING: the chat's cached library block is deliberately unscaled", async (
   // formatRecipeForPrompt the ARRAY INDEX as its options object.
   assert.match(src, /rs\.map\(\(r\)\s*=>\s*formatRecipeForPrompt\(r\)\)/);
 });
+
+test("a partial pour plan is not scaled — no guessed per-pour numbers", () => {
+  // McCarthy's 2013 WBrC Kalita: the report gives the total (380 g) and the
+  // two kettle phases but not the gram split, so two pours carry no milestone.
+  // Scaling it produced 4:02 for a SMALLER batch than his 3:30 — confident
+  // and wrong. It must return nothing instead.
+  const partial = ALL_RECIPES.find((x) => x.id === "wbrc-2013-mccarthy");
+  assert.ok(partial, "fixture recipe must exist");
+  assert.equal(scaleRecipe(partial, 250), null);
+  // A complete plan still scales.
+  const complete = ALL_RECIPES.find((x) => x.id === "wbrc-2017-wang");
+  assert.ok(scaleRecipe(complete, 450));
+});

@@ -225,7 +225,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 90 },
     ],
     totalTimeSec: 195,
-    techniques: ["minimal-agitation", "high-agitation-high-extraction"],
+    techniques: ["high-agitation-high-extraction"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -803,7 +803,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Decant", action: "drain", durationSec: 10 },
     ],
     totalTimeSec: 615,
-    techniques: ["minimal-agitation"],
+    techniques: ["immersion-steep"],
     bestFor: {
       roastLevels: ["medium", "medium-light", "medium-dark"],
       processes: ["any"],
@@ -1081,7 +1081,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
     totalTimeSec: 180,
-    techniques: ["minimal-agitation"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -2171,7 +2171,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 100 },
     ],
     totalTimeSec: 228,
-    techniques: ["minimal-agitation"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural"],
@@ -2278,8 +2278,10 @@ export const EXPANDED_RECIPES: Recipe[] = [
     shortName: "Wallgren V60",
     attribution: {
       person: "Mikaela Wallgren",
-      title: "WBrC 2016 Finalist",
-      country: "Sweden",
+      // Finnish Brewers Cup champion, 2016 WBrC runner-up, then at The Coffee
+      // Collective, Copenhagen (Barista Magazine interview, verified 2026-09-30).
+      title: "2016 World Brewers Cup runner-up",
+      country: "Finland / Denmark",
       year: 2016,
     },
     category: "reference",
@@ -2405,15 +2407,15 @@ export const EXPANDED_RECIPES: Recipe[] = [
 
   {
     id: "wbrc-2017-harris",
-    name: "Harris WBrC 2017 (Dale Harris)",
-    shortName: "Harris 2017",
+    name: "Harris V60 (attributed — no published source found)",
+    shortName: "Harris V60 (unsourced)",
     attribution: {
       person: "Dale Harris",
-      title: "WBrC 2017 Champion",
+      title: "2017 World Barista Champion (WBC — espresso; not the World Brewers Cup)",
       country: "United Kingdom",
       year: 2017,
     },
-    category: "championship",
+    category: "experimental",
     brewer: "v60",
     brewerNotes: "Hario V60 size 02",
     dose: { grams: 14 },
@@ -2437,26 +2439,28 @@ export const EXPANDED_RECIPES: Recipe[] = [
       processes: ["washed", "natural"],
       goals: ["high-clarity"],
     },
-    teaches: "Dale Harris's championship routine — low dose, generous ratio, conservative V60 technique. Showcase rather than push: his coffee selection did the heavy lifting.",
+    teaches: "A low-dose, generous-ratio, conservative V60 — showcase rather than push. Attributed to Dale Harris, but no published source for these numbers was found (see notes).",
     science: "1:17.9 + 93°C is a measured-conservative extraction window, suitable for a coffee where the cup quality is already maximal before brewing. Light bloom stir disrupts CO2 channels without aggressive turbulence.",
     whenToUse: "Very expensive single-origin where you want to showcase the bean's natural character without imposing technique.",
     sources: [
-      { type: "official-competition", citation: "WBrC 2017 finals video archive", year: 2017 },
+      { type: "article", citation: "Barista Magazine — the 2017 World Barista Championship finals and winner (Harris's title only; no recipe)", url: "https://www.baristamagazine.com/the-2017-world-barista-championship-finals-and-winner/", year: 2017 },
     ],
     verified: false,
+    notes:
+      "Provenance corrected 2026-09-30. This entry was titled \"WBrC 2017 Champion\" and cited a \"WBrC 2017 finals video archive\". Dale Harris won the 2017 World BARISTA Championship (espresso, Seoul); the 2017 World Brewers Cup went to Chad Wang. No published filter recipe by Harris was located, so these numbers have no known source — treat it as an unsourced house V60, not his routine. Kept (not deleted) because #528 kept it on the old premise; removing it is the owner's call.",
   },
 
   {
     id: "wbrc-2018-rojewska",
-    name: "Rojewska WBrC 2018 (Agnieszka Rojewska)",
-    shortName: "Rojewska 2018",
+    name: "Rojewska V60 (attributed — no published source found)",
+    shortName: "Rojewska V60 (unsourced)",
     attribution: {
       person: "Agnieszka Rojewska",
-      title: "WBrC 2018 Champion + WBC 2018 Champion (only double-winner in history)",
+      title: "2018 World Barista Champion (WBC — espresso; not the World Brewers Cup)",
       country: "Poland",
       year: 2018,
     },
-    category: "championship",
+    category: "experimental",
     brewer: "v60",
     dose: { grams: 13 },
     water: { grams: 220, ratio: "1:16.9" },
@@ -2472,19 +2476,21 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 75 },
     ],
     totalTimeSec: 160,
-    techniques: ["minimal-agitation"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey"],
       goals: ["sweetness-forward", "balanced"],
     },
-    teaches: "Agnieszka Rojewska — only double-winner in WBC + WBrC history. Her 2018 routine: short total time, low dose, minimal pour count. The dose : water ratio + temp do most of the work.",
+    teaches: "Short total time, low dose, few pours — the ratio and temperature do most of the work. Attributed to Agnieszka Rojewska, but no published source for these numbers was found (see notes).",
     science: "13g dose at 1:16.9 + 92°C lands in a clean balanced extraction window. Two clean pours with minimal stir keeps the bed even without operator-driven variability.",
     whenToUse: "Small dose situations, café production, or when you want competition-grade clarity on a delicate coffee.",
     sources: [
-      { type: "official-competition", citation: "WBrC 2018 finals video archive", year: 2018 },
+      { type: "article", citation: "Barista Magazine — 2018 World Coffee Champions (Rojewska: WBC 2018; Fukahori: WBrC 2018). Titles only; no recipe", url: "https://www.baristamagazine.com/2018-world-coffee-champions/", year: 2018 },
     ],
     verified: false,
+    notes:
+      "Provenance corrected 2026-09-30. This entry claimed \"WBrC 2018 Champion + WBC 2018 Champion (only double-winner in history)\" and cited a \"WBrC 2018 finals video archive\". Agnieszka Rojewska won the 2018 World BARISTA Championship (Amsterdam); the 2018 World Brewers Cup went to Emi Fukahori (Belo Horizonte). She is not a double winner. No published filter recipe by Rojewska was located, so these numbers have no known source. Kept (not deleted) because #528 kept it on the old premise; removing it is the owner's call.",
   },
 
   // ── Misc additional ─────────────────────────────────────────────────────
@@ -2560,7 +2566,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "honey"],
       goals: ["balanced"],
-      occasions: ["batch"],
     },
     teaches: "Moccamaster batch scaled for natural-process light: slightly coarser grind compensates for the longer brew + bigger bed, preserves fruit clarity.",
     science: "Naturals contain more soluble fruit-derived compounds; over-extracting them produces 'overripe' or fermented flavors. Coarser grind shortens contact per particle while batch volume keeps total extraction yield in window.",
@@ -2598,7 +2603,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
       roastLevels: ["light", "medium-light"],
       processes: ["washed"],
       goals: ["high-clarity"],
-      occasions: ["batch"],
     },
     teaches: "Washed-process Moccamaster batch: slightly leaner ratio (1:16) than natural variant. Washed coffees can take more extraction without becoming muddy.",
     science: "Washed coffees have less fruit-derived solubles than naturals — they can be extracted harder for sweetness without the bitter Maillard wall. 1:16 ratio + medium grind lands clean.",
@@ -2851,7 +2855,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 70 },
     ],
     totalTimeSec: 171,
-    techniques: ["minimal-agitation"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["any"],
@@ -3047,7 +3051,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced", "explore"],
-      occasions: ["two cups", "guests"],
     },
     teaches: "Scaling the Origami to a two-cup 20 g / 320 g batch with four ascending pours — a deeper bed handled by slightly cooler water (90°C) and a medium grind.",
     science: "A bigger dose means a deeper bed and longer drawdown, so the recipe drops the temperature to 90°C and keeps the grind medium to avoid over-extracting the lower bed. The four-pour ladder (60/120/220/320) keeps the slurry replenished without stalling.",

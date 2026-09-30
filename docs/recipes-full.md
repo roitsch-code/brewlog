@@ -2273,7 +2273,9 @@ _Sources:_ World AeroPress Championship 2018 finalist routines
 
 ---
 
-### Harris WBrC 2017 (Dale Harris)
+### Harris V60 (attributed — no published source found)
+
+> Corrected 2026-09-30: Dale Harris won the 2017 World **Barista** Championship, not the Brewers Cup. No published filter recipe by him was located. See `expanded.ts` for the current entry.
 
 **Harris 2017** · Dale Harris (2017) — WBrC 2017 Champion
 
@@ -2307,7 +2309,9 @@ _Sources:_ WBrC 2017 finals video archive
 
 ---
 
-### Rojewska WBrC 2018 (Agnieszka Rojewska)
+### Rojewska V60 (attributed — no published source found)
+
+> Corrected 2026-09-30: Agnieszka Rojewska won the 2018 World **Barista** Championship; the 2018 Brewers Cup went to Emi Fukahori. She is not a double winner. See `expanded.ts` for the current entry.
 
 **Rojewska 2018** · Agnieszka Rojewska (2018) — WBrC 2018 Champion + WBC 2018 Champion (only double-winner in history)
 

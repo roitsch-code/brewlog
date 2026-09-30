@@ -22,6 +22,7 @@ const abs = (p) => path.join(ROOT, p);
 const entry = `
 export { ALL_RECIPES } from ${JSON.stringify(abs("src/lib/knowledge/recipes/index.ts"))};
 export { TECHNIQUES } from ${JSON.stringify(abs("src/lib/knowledge/techniques/data.ts"))};
+export * as VARIETY_DATA from ${JSON.stringify(abs("src/lib/knowledge/varieties/data.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "recipe-validate-"));
 const out = join(dir, "bundle.mjs");
@@ -33,7 +34,7 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { ALL_RECIPES, TECHNIQUES } = await import(pathToFileURL(out).href);
+const { ALL_RECIPES, TECHNIQUES, VARIETY_DATA } = await import(pathToFileURL(out).href);
 const techniqueIds = new Set(TECHNIQUES.map((t) => t.id));
 
 // ── Canonical enums (mirror types.ts) ──────────────────────────────────────
@@ -48,6 +49,7 @@ const PROCESSES = new Set(["washed", "natural", "honey", "anaerobic", "experimen
 const GOALS = new Set(["balanced", "high-clarity", "sweetness-forward", "body-forward", "aromatic", "explore"]);
 const ACTIONS = new Set(["pour", "stir", "swirl", "wait", "press", "invert", "flip", "drain", "bypass", "melodrip", "agitate-bed"]);
 const IMMERSION = new Set(["clever", "aeropress", "aeropress-prismo"]);
+const PARTITION_OCCASIONS = new Set(["summer-time", "iced", "cold-brew"]);
 
 const errors = [];
 const warns = [];
@@ -185,7 +187,7 @@ for (const r of ALL_RECIPES) {
   const isPourOver = !IMMERSION_BREWERS.has(r.brewer);
   const splitBuild =
     seq.some((x) => x.action === "bypass") ||
-    (r.occasions || []).includes("summer-time") ||
+    (r.bestFor?.occasions || []).includes("summer-time") ||
     /iced|flash|japanese/i.test(id);
   let prevPourCum = 0;
   for (const [i, s] of seq.entries()) {
@@ -217,6 +219,24 @@ for (const r of ALL_RECIPES) {
   for (const x of r.bestFor?.processes || []) if (!PROCESSES.has(x)) E(id, `bad process "${x}"`);
   for (const x of r.bestFor?.goals || []) if (!GOALS.has(x)) E(id, `bad goal "${x}"`);
 
+  // Occasion tags. Since 2026-09-30 the hot occasions (morning-ritual, focus,
+  // social, experiment) are scored from a recipe's SHAPE (occasionAffinity), so
+  // an occasion tag only matters for the two hard partitions. Free text like
+  // "guests" or "morning ritual" (with a space — never equal to the UI id)
+  // matched nothing and made recipes look occasion-aware when they weren't.
+  for (const x of r.bestFor?.occasions || []) {
+    if (!PARTITION_OCCASIONS.has(x)) E(id, `occasion tag "${x}" — only ${[...PARTITION_OCCASIONS].join(" / ")} are read; hot occasions come from the recipe's shape`);
+  }
+
+  // minimal-agitation means what the technique says: a single continuous pour
+  // (after an optional bloom), no stir, at most a swirl.
+  if ((r.techniques || []).includes("minimal-agitation")) {
+    const stirs = seq.filter((x) => x.action === "stir" || x.action === "agitate-bed").length;
+    const waterSteps = seq.filter((x) => x.action === "pour" || x.action === "melodrip").length;
+    if (stirs) E(id, `tagged minimal-agitation but has ${stirs} stir/bed-agitation step(s)`);
+    if (waterSteps > 2) E(id, `tagged minimal-agitation (a single continuous pour) but pours ${waterSteps} times`);
+  }
+
   // Narrative + provenance
   if (!r.teaches) W(id, "missing teaches");
   if (!r.science) W(id, "missing science");
@@ -233,10 +253,60 @@ for (const r of ALL_RECIPES) {
 // removed/renamed and the technique keeps citing it — happened with the
 // staged-temperature purge and the June 2026 inversion-exemplar fix).
 const recipeIds = new Set(ALL_RECIPES.map((r) => r.id));
+const recipeById = new Map(ALL_RECIPES.map((r) => [r.id, r]));
 for (const t of TECHNIQUES) {
   for (const rid of t.exemplifiedBy || []) {
     if (!recipeIds.has(rid)) E(`technique:${t.id}`, `exemplifiedBy "${rid}" not in recipe corpus`);
+    // Both directions must agree: an exemplar that doesn't itself use the
+    // technique teaches the model the wrong example.
+    else if (!(recipeById.get(rid).techniques || []).includes(t.id)) {
+      E(`technique:${t.id}`, `exemplifiedBy "${rid}", but that recipe does not list the technique`);
+    }
   }
+}
+
+// ── Championship titles ─────────────────────────────────────────────────────
+// Every "World Brewers Cup Champion" title must name that year's actual winner.
+// Found 2026-09-30: three espresso champions (Harris WBC 2017, Rojewska WBC
+// 2018, Douglas WBC 2022) were titled World Brewers Cup champions — one of them
+// a claimed "double winner" who never won the Brewers Cup — and two entries
+// both claimed 2017. The table holds only years verified in-session against a
+// published result; for any other year, at most one person may claim the title.
+const WBRC_WINNERS = {
+  2013: /McCarthy/i, //  Sprudge, "Meet the World's Best Brewer" (2013)
+  2017: /Chad Wang/i, // Sprudge Live + Barista Magazine "10 Minutes with Chad Wang"
+  2018: /Fukahori/i, //  Barista Magazine, "2018 World Coffee Champions"
+  2022: /Hsu/i, //       Sprudge, "Two new world coffee champions crowned in Melbourne"
+};
+const claimsWbrcTitle = (t) =>
+  /(world brewers cup|wbrc)[^,;+]*champion|champion[^,;+]*(world brewers cup|wbrc)/i.test(t) && !/runner|finalist|not the world brewers cup/i.test(t);
+const claimants = new Map();
+for (const r of ALL_RECIPES) {
+  const title = r.attribution?.title ?? "";
+  if (!claimsWbrcTitle(title)) continue;
+  // The championship year is the one IN the title; attribution.year is when this
+  // particular recipe was published (Kasuya's 4:6 Iced: "WBrC 2016 Champion", 2018).
+  const titleYear = Number((title.match(/\b(19|20)\d{2}\b/) || [])[0]);
+  const year = titleYear || r.attribution?.year;
+  const person = r.attribution?.person ?? "";
+  if (!year) { E(r.id, `championship title "${title}" has no year`); continue; }
+  const winner = WBRC_WINNERS[year];
+  if (winner && !winner.test(person)) E(r.id, `titled ${year} World Brewers Cup champion, but the ${year} winner is not "${person}"`);
+  if (!claimants.has(year)) claimants.set(year, new Set());
+  claimants.get(year).add(person.split(/[\/(]/)[0].trim());
+}
+for (const [year, people] of claimants) {
+  if (people.size > 1) E(`wbrc:${year}`, `${people.size} people are titled ${year} World Brewers Cup champion: ${[...people].join(", ")}`);
+}
+
+// ── Variety priors ──────────────────────────────────────────────────────────
+// The priors are injected into /recommend and the chat. Staged temperature was
+// removed from the app in June 2026, but three priors kept recommending
+// "Hsu-style staged temp" until 2026-09-30.
+for (const v of Object.values(VARIETY_DATA).flat()) {
+  if (!v || typeof v !== "object") continue;
+  const text = JSON.stringify(v);
+  if (/staged temp/i.test(text)) E(`variety:${v.id ?? v.name ?? "?"}`, "recommends staged temperature, which the app does not brew");
 }
 
 // ── Corpus-level summary ────────────────────────────────────────────────────

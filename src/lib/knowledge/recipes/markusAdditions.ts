@@ -3,7 +3,7 @@ import type { Recipe } from "./types";
 /**
  * Markus Additions — May 2026 (Pending Audit).
  *
- * 51 recipes researched in-session and reformatted to the file standard
+ * 45 recipes researched in-session and reformatted to the file standard
  * (48 batch + 3 Moccamaster). All carry `category: "experimental"` because
  * they are pending audit. MOST are `verified: false` — parameters come from
  * competition recipe databases (1Zpresso, WAC official, Sprudge), roastery
@@ -274,66 +274,56 @@ export const MARKUS_ADDITIONS: Recipe[] = [
   // ── V60 ──────────────────────────────────────────────────────────────────
 
   {
-    id: "wang-2017-inverse-kasuya-v60",
-    name: "Wang 2017 — Inverse-Kasuya V60",
+    // Rewritten 2026-09-30 from the sources below. The previous entry — "Wang
+    // 2017 — Inverse-Kasuya V60", 20 g : 300 g at 91 °C in six pours — was an
+    // invented concept carrying his name: every account of his winning open
+    // service is 15 g : 250 ml with ONE centre pour, finished at 2:00.
+    id: "wbrc-2017-wang",
+    name: "Wang 2017 — WBrC Centre-Pour V60",
     shortName: "Wang 2017",
     attribution: {
       person: "Chad Wang",
       title: "2017 World Brewers Cup Champion",
+      affiliation: "Jascaffe",
       country: "Taiwan",
       year: 2017,
     },
-    category: "experimental",
+    category: "championship",
     brewer: "v60",
-    brewerNotes:
-      "Hario V60. Six pours, but split 6:4 (early-heavy, late-light) — the inverse of Kasuya's 4:6 (early-light, late-heavy).",
-    dose: { grams: 20 },
-    water: { grams: 300, ratio: "1:15" },
-    temperature: { celsius: 91 },
+    brewerNotes: "Cold ceramic Hario V60 (Sprudge Live).",
+    dose: { grams: 15 },
+    water: { grams: 250, ratio: "1:16.7" },
+    temperature: { celsius: 92 },
     grind: {
-      referenceSetting: "medium (similar to Kasuya 4:6)",
-      nicheZeroDegrees: [382, 392],
-      description: "medium, similar to Kasuya 4:6 (estimate from grind description, not published)",
+      referenceSetting: "sifted so most particles are ~400 µm",
+      description: "very fine, then sifted to a narrow ~400 µm band (Barista Magazine reconstruction; Wang published no grinder setting)",
     },
     pourSequence: [
-      { label: "Pour 1 — strength phase (60%, first)", action: "pour", waterGramsAtEnd: 60, durationSec: 10, notes: "Wang inverts Kasuya: load the strength phase early when the bed is fresh." },
-      { label: "Rest", action: "wait", durationSec: 35 },
-      { label: "Pour 2 — strength phase (60%, second)", action: "pour", waterGramsAtEnd: 120, durationSec: 10 },
-      { label: "Rest", action: "wait", durationSec: 35 },
-      { label: "Pour 3 — strength phase (60%, third)", action: "pour", waterGramsAtEnd: 180, durationSec: 10 },
-      { label: "Rest", action: "wait", durationSec: 35 },
-      // The 40% phase is 120g of the stated 300g over two pours = 60g each, the
-      // same size as the 60%-phase pours. The entry used to stop at 260g and
-      // park the missing 40g in a "settling" note on the drain step, which is
-      // not a thing a drawdown does — the pour plan simply never poured the
-      // recipe's own water. Corrected from the entry's OWN dose/water/ratio and
-      // phase labels; no new parameter is introduced.
-      { label: "Pour 4 — acid/sweet phase (40%, first)", action: "pour", waterGramsAtEnd: 240, durationSec: 10 },
-      { label: "Rest", action: "wait", durationSec: 35 },
-      { label: "Pour 5 — acid/sweet phase (40%, second)", action: "pour", waterGramsAtEnd: 300, durationSec: 10 },
-      { label: "Rest", action: "wait", durationSec: 20 },
-      { label: "Drawdown", action: "drain", durationSec: 30 },
+      { label: "Bloom — 30 g spiral", action: "pour", waterGramsAtEnd: 30, durationSec: 30, notes: "Spiral 30 g over the bed and let it bloom; the centre pour starts at 0:30 (30 s bloom per Sprudge Live; the 30 g is Barista Magazine's reconstruction)." },
+      { label: "Centre pour to 250 g", action: "pour", waterGramsAtEnd: 250, durationSec: 45, notes: "One continuous pour into the centre, 40–45 s." },
+      { label: "Drawdown", action: "drain", durationSec: 45, notes: "Finished at 2:00 (Sprudge Live); the reconstruction allows 2:00–2:15." },
     ],
-    // Pours (50s) + rests (160s) + drawdown (30s) = 240s. Was 210s, which made
-    // the brew timer finish 30s before the pour guide completed its steps.
-    totalTimeSec: 240,
-    techniques: ["phase-separated-pouring"],
+    totalTimeSec: 120,
+    techniques: ["bloom", "central-pour", "continuous-pour"],
     bestFor: {
-      roastLevels: ["light", "medium-light"],
-      processes: ["washed", "honey"],
-      goals: ["balanced", "sweetness-forward"],
+      roastLevels: ["very-light", "light"],
+      processes: ["washed"],
+      goals: ["high-clarity"],
     },
     teaches:
-      "Reversing Kasuya's pour distribution puts body-extracting agitation early (when the bed is fresh, dense, high contact) and acidity/sweetness pours late (when the bed has thinned out). Result is body-forward with bright finish — opposite of Kasuya's bright-forward-with-sweet-finish.",
+      "A fine, sifted grind with one continuous centre pour finishes a 1:16.7 V60 in two minutes — the 2017 World Brewers Cup winning open service. Speed and a narrow particle band do the extracting, not many pours.",
     science:
-      "Early-heavy pours on a dry/lightly bloomed bed drive higher early extraction. Late-light pours barely disturb the depleted bed — they extract sugars (which are slower to come out) without dragging additional bitter compounds. The cup builds body-first, brightens last.",
+      "Sifting to a narrow band lets a fine grind run fast without its fines over-extracting; a single centre pour keeps water off the paper walls and leaves the bed undisturbed after the bloom, which is why the whole brew can finish in two minutes.",
     whenToUse:
-      "Coffee where you want the body upfront and the acidity as a counterpoint — middle-roasted natural honey processes, denser-bodied African washed.",
+      "A delicate washed light roast where you want a fast, clean, clarity-first cup. The reconstruction warns it does not suit every coffee.",
     sources: [
-      { type: "report", citation: "Specialty Coffee Association competition reporting (2017 WBrC, Budapest). Secondary attribution; primary video not found.", year: 2017 },
+      { type: "report", citation: "Sprudge Live — Chad Wang's 2017 World Brewers Cup routine (15 g : 250 ml, 92 °C, cold ceramic V60, 30 s bloom, centre pour, 2:00)", url: "http://sprudgelive.com/?p=12135", year: 2017 },
+      { type: "interview", citation: "Barista Magazine — 10 Minutes with Chad Wang: \"a very standard recipe of 1:16.67 … total brew time at two minutes\"", url: "https://www.baristamagazine.com/10-minutes-chad-wang/", year: 2017 },
+      { type: "article", citation: "Barista Magazine — Brewing Experiments: Chad Wang's 2017 WBrC recipe (Joshua Dusk-Peebles' reconstruction: 30 g spiral bloom, centre pour from 0:30 in 40–45 s, sifted ~400 µm, 93 °C)", url: "https://www.baristamagazine.com/world-brewers-2017-recipe/", year: 2017 },
     ],
     verified: false,
-    notes: "Reconstruction from competition reporting. Wang's exact published per-pour schedule isn't accessible in primary form — the 6:4 (60%-then-40%) structure is documented, the precise distribution is interpreted. Niche range estimated from the grind-feel description.",
+    notes:
+      "Competition reporting + a reconstruction, not Wang's own publication — hence verified:false. Temperature: Sprudge Live reports 92 °C; the reconstruction heated to 93 °C. The bloom weight and the pour window come from the reconstruction, not from Wang. His compulsory-round brew (Bonavita immersion, tightened to 1:8 and diluted to 1.45% TDS) is a different recipe.",
   },
 
   {
@@ -371,7 +361,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 40 },
     ],
     totalTimeSec: 180,
-    techniques: ["pulse-pouring", "minimal-agitation"],
+    techniques: ["pulse-pouring"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
@@ -393,11 +383,11 @@ export const MARKUS_ADDITIONS: Recipe[] = [
 
   {
     id: "douglas-2022-wbrc-v60-slow-pour",
-    name: "Douglas 2022 — WBrC V60 Slow-Pour",
-    shortName: "Douglas 2022",
+    name: "Douglas V60 Slow-Pour (attributed — no published source found)",
+    shortName: "Douglas V60 (unsourced)",
     attribution: {
       person: "Anthony Douglas",
-      title: "2022 World Brewers Cup Champion",
+      title: "2022 World Barista Champion (WBC — espresso; not the World Brewers Cup)",
       affiliation: "Axil Coffee Roasters",
       country: "Australia",
       year: 2022,
@@ -425,24 +415,24 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 50 },
     ],
     totalTimeSec: 210,
-    techniques: ["central-pour", "minimal-agitation"],
+    techniques: ["central-pour"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed", "anaerobic"],
-      varieties: ["Gesha", "Sidra"],
       goals: ["high-clarity"],
     },
     teaches:
-      "AU champion clarity — slow central pours minimise bed disturbance, lighter ratio (1:17) at 93°C lets even an anaerobic lot read as clean rather than fermenty.",
+      "Slow central pours minimise bed disturbance, lighter ratio (1:17) at 93°C lets even an anaerobic lot read as clean rather than fermenty.",
     science:
       "Slow central pours don't agitate the bed walls; extraction stays even across the puck. The lean 1:17 ratio combined with moderate 93°C keeps the brew in the Zone 1-2 window for the full extraction — sugars and acids without much Zone-3 bitterness.",
     whenToUse:
       "Anaerobic, double-fermented, or experimentally processed coffees where you want to highlight the clean fruit beneath the ferment rather than amplify it.",
     sources: [
-      { type: "report", citation: "World Brewers Cup 2022 final, Melbourne — competition reporting. Primary video not accessed.", year: 2022 },
+      { type: "article", citation: "Sprudge — two new world coffee champions crowned in Melbourne (Douglas: WBC 2022; Hsu: WBrC 2022). Titles only; no recipe", url: "https://sprudge.com/two-new-world-coffee-champions-crowned-in-melbourne-192878.html", year: 2022 },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
+    notes:
+      "Provenance corrected 2026-09-30. This entry was titled \"2022 World Brewers Cup Champion\" and cited the 2022 WBrC final. Anthony Douglas won the 2022 World BARISTA Championship (Melbourne); the 2022 World Brewers Cup went to Sherry (Shih Yuan) Hsu. No published filter recipe by Douglas was located, so these numbers have no known source. Kept (not deleted) so the owner can decide; the Gesha/Sidra variety tags were removed because they rested on the false title. Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -532,7 +522,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 60 },
     ],
     totalTimeSec: 210,
-    techniques: ["rao-spin", "central-pour", "minimal-agitation"],
+    techniques: ["rao-spin", "central-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
@@ -582,12 +572,11 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 80 },
     ],
     totalTimeSec: 270,
-    techniques: ["swirl-not-stir", "batch-scaling", "minimal-agitation"],
+    techniques: ["swirl-not-stir", "batch-scaling"],
     bestFor: {
       roastLevels: ["very-light", "light"],
       processes: ["washed"],
       goals: ["high-clarity"],
-      occasions: ["2-3 cups"],
     },
     teaches:
       "Scaling Wendelboe's two-pour V60 to a big batch — slightly coarser grind, longer bloom (to vent enough CO2 for the larger bed), longer pours. The 1:15.4 ratio is the same. Result: 2-3 cups of clean Nordic-light coffee from one brew.",
@@ -1064,6 +1053,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       roastLevels: ["light", "medium-light"],
       processes: ["washed", "natural"],
       goals: ["aromatic", "sweetness-forward"],
+      // Iced: it drains onto ice. Without this tag it sat in the HOT pool and
+      // surfaced for hot aromatic brews (found 2026-09-30).
+      occasions: ["summer-time"],
     },
     teaches:
       "Higher-dose Hoffmann iced variant — same flash-chill philosophy as server's standard version but with more coffee for a more concentrated final iced cup. Useful when ice will heavily dilute (warm room, slow service).",
@@ -1411,7 +1403,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
       goals: ["high-clarity", "balanced"],
-      occasions: ["4-5 cups"],
     },
     teaches:
       "The largest practical Chemex scale — 1L of brewed coffee from one filter. Requires slightly coarser grind (deeper bed contact) and longer pour windows. Ideal for entertaining.",
@@ -1658,7 +1649,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
       goals: ["high-clarity"],
-      occasions: ["5 cups"],
     },
     teaches:
       "Coarse grind compensates for the deep bed at 8-Cup scale — without it, the brew would over-extract from the bottom layers.",
@@ -1729,56 +1719,56 @@ export const MARKUS_ADDITIONS: Recipe[] = [
   // ── Kalita ───────────────────────────────────────────────────────────────
 
   {
-    id: "mccarthy-2013-kalita-wac-champion",
-    name: "McCarthy 2013 — Kalita WAC Champion",
-    shortName: "McCarthy Kalita",
+    // Rewritten 2026-09-30. The previous entry was named "Kalita WAC Champion"
+    // (it was the World Brewers Cup, not the AeroPress championship) and carried
+    // 20 g : 325 g at 96 °C in four equal pulses — none of which matches the
+    // report of his winning brew below.
+    id: "wbrc-2013-mccarthy",
+    name: "McCarthy 2013 — WBrC Kalita Wave",
+    shortName: "McCarthy 2013",
     attribution: {
       person: "Erin McCarthy",
-      title: "World Brewers Cup Champion 2013",
+      title: "2013 World Brewers Cup Champion",
+      affiliation: "Counter Culture Coffee",
+      country: "USA",
       year: 2013,
     },
-    category: "experimental",
+    category: "championship",
     brewer: "kalita-wave",
-    brewerNotes:
-      "Kalita Wave 185. McCarthy's championship pour pattern: bloom + multiple equal-pour pulses.",
-    dose: { grams: 20 },
-    water: { grams: 325, ratio: "1:16.25" },
-    temperature: { celsius: 96 },
+    brewerNotes: "Kalita Wave (size not stated in the report). One high-flow kettle, then two flow-restricted kettles at once.",
+    dose: { grams: 24 },
+    water: { grams: 380, ratio: "1:15.8" },
+    // "Just off boil" — the corpus writes off-the-boil as 99 °C (see Hoffmann's
+    // Japanese iced V60); the report gives no number.
+    temperature: { celsius: 99 },
     grind: {
-      referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
-      description: "medium (estimate from grind description, not published)",
+      description: "coarse, with the fines sifted out (Sprudge)",
     },
     pourSequence: [
-      { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
-      { label: "Wait", action: "wait", durationSec: 37 },
-      { label: "Pour 1 — slow circular", action: "pour", waterGramsAtEnd: 125, durationSec: 20 },
-      { label: "Wait", action: "wait", durationSec: 20 },
-      { label: "Pour 2", action: "pour", waterGramsAtEnd: 200, durationSec: 20 },
-      { label: "Wait", action: "wait", durationSec: 20 },
-      { label: "Pour 3", action: "pour", waterGramsAtEnd: 275, durationSec: 20 },
-      { label: "Wait", action: "wait", durationSec: 15 },
-      { label: "Pour 4", action: "pour", waterGramsAtEnd: 325, durationSec: 15 },
-      { label: "Drawdown", action: "drain", durationSec: 35 },
+      { label: "Bloom — 45 s", action: "pour", durationSec: 45, notes: "Wet the coarse, sifted bed and bloom 45 s. The report gives no bloom weight." },
+      { label: "First half — high-flow kettle", action: "pour", notes: "A high-flow kettle for the first half of the brew. The report gives no gram split." },
+      { label: "Second half — two restricted kettles", action: "pour", waterGramsAtEnd: 380, notes: "Two flow-restricted kettles at once, keeping a column of water above the grounds to limit agitation." },
+      { label: "Drawdown", action: "drain", notes: "Brew finished at 3:30." },
     ],
     totalTimeSec: 210,
-    techniques: ["pulse-pouring"],
+    techniques: ["fines-removal-sieving", "bloom", "flat-bed-pour"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
-      processes: ["washed", "natural"],
-      goals: ["sweetness-forward", "high-clarity"],
+      processes: ["washed"],
+      goals: ["sweetness-forward", "balanced"],
     },
     teaches:
-      "Multi-pulse Kalita — equal pours on a flat-bottom brewer produce metronomic, sweet extraction. McCarthy's championship choice was the Kalita Wave, not V60.",
+      "Remove the fines, grind coarse, and hold a column of water over a flat bed: sweetness without the bitterness a fine, agitated Kalita brew can pick up.",
     science:
-      "Kalita's flat bottom + 3-hole drain creates a thin even bed regardless of pour pattern. Multiple equal pulses maintain consistent slurry level and bed agitation across the brew, building sweetness without bitterness.",
+      "Sifting out fines removes the particles that over-extract first; a coarse grind under a steady water column keeps the flat bed evenly wetted with little turbulence, so the brew runs long enough to pull sweetness without dragging in bitter late compounds.",
     whenToUse:
-      "Sweet-target brews on Kalita — naturally-processed coffees, honey processes, anything where sweetness should lead.",
+      "A sweet, washed light-to-medium-light coffee on the Kalita when you can sift and want a calm, sweet cup.",
     sources: [
-      { type: "report", citation: "World Brewers Cup 2013 final — competition reporting", year: 2013 },
+      { type: "report", citation: "Sprudge — Meet the World's Best Brewer (2013 World Brewers Cup): Kalita Wave, 24 g, 380 ml just off boil, coarse and fines sifted, 45 s bloom, 3:30, high-flow then flow-restricted kettles", url: "https://sprudge.com/meet-the-worlds-best-brewer-james-mccarthy-brewers-cup-champ-38672.html", year: 2013 },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
+    notes:
+      "Competition reporting, not McCarthy's own publication — hence verified:false. Sprudge names him James McCarthy; most other coverage says Erin McCarthy (the same Counter Culture NYC brewer). The report gives no bloom weight and no gram split between the two kettle phases, so those steps carry no grams rather than invented ones.",
   },
 
   {
@@ -2276,7 +2266,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["any"],
       goals: ["balanced", "sweetness-forward"],
-      occasions: ["8-10 cups"],
     },
     teaches:
       "Bed-turn (not just stir) — Lykke's specific Scandi trick. The spoon physically turns the bed over rather than just agitating the surface. Particularly important for big-batch where channeling at depth matters more.",

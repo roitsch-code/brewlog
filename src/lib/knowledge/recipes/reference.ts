@@ -100,7 +100,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 55 },
     ],
     totalTimeSec: 180,
-    techniques: ["swirl-not-stir", "pulse-pouring"],
+    techniques: ["swirl-not-stir", "pulse-pouring", "bloom"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -325,7 +325,6 @@ export const REFERENCE_RECIPES: Recipe[] = [
       roastLevels: ["medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["balanced", "body-forward"],
-      occasions: ["multiple cups", "guests", "morning batch"],
     },
     teaches:
       "How a well-designed batch brewer can produce filter-quality coffee at scale. The Moccamaster's pulsing showerhead approximates a multi-pour V60 without operator skill.",
@@ -550,7 +549,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 35 },
     ],
     totalTimeSec: 210,
-    techniques: ["phase-separated-pouring"],
+    techniques: ["phase-separated-pouring", "pulse-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -1148,7 +1147,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 98 },
     ],
     totalTimeSec: 255,
-    techniques: ["rao-spin", "pulse-pouring"],
+    techniques: ["rao-spin", "pulse-pouring", "swirl-not-stir"],
     bestFor: {
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
@@ -1435,7 +1434,6 @@ export const REFERENCE_RECIPES: Recipe[] = [
       roastLevels: ["light", "medium-light", "medium"],
       processes: ["washed", "natural", "honey"],
       goals: ["high-clarity", "aromatic", "balanced"],
-      occasions: ["morning ritual"],
     },
     teaches:
       "Asser's 'show-horse' daily pour-over: a STAGED-AGITATION contrast on a 25/25/50 three-pour at 1:16. A forceful, bed-agitating second pour — drained completely — guarantees even saturation; an ultra-gentle 1–2 ml/s final pour then percolates slowly for clarity. The inverse of agitate-late recipes (e.g. Sweet & Balanced V60): it agitates in the MIDDLE, then deliberately settles.",

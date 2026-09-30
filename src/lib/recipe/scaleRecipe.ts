@@ -228,6 +228,16 @@ export function scaleRecipe(
   const waterTempC = refTempC(ref);
 
   const seq = ref.pourSequence ?? [];
+  // A PARTIAL pour plan can't be scaled: when some pours carry a cumulative
+  // milestone and others don't (a report that gives the total but not the
+  // split — McCarthy's 2013 Kalita), every per-pour number below would be
+  // guessed. Return nothing rather than a confident, wrong schedule; the model
+  // then sees the published recipe as it is. A plan with NO milestones at all
+  // (machine drip) is a different shape and is left as before.
+  const pourSteps = seq.filter((s) => s.action === "pour" || s.action === "melodrip");
+  const withMilestone = pourSteps.filter((s) => typeof s.waterGramsAtEnd === "number").length;
+  if (withMilestone > 0 && withMilestone < pourSteps.length) return null;
+
   const steps: BrewPourStep[] = [];
   let lastWaterIdx = -1;
   for (let i = 0; i < seq.length; i++) if (typeof seq[i].waterGramsAtEnd === "number") lastWaterIdx = i;
