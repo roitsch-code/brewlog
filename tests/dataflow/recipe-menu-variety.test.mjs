@@ -117,9 +117,24 @@ for (const { label, ctx } of CONTEXTS) {
 }
 
 test("a clear winner keeps winning — fit decides, freshness only breaks ties", () => {
-  // This context has a standout at score 9 with the runners-up at 7 and below.
-  // If variety ever started outranking fit, this is what would break.
-  const ctx = CONTEXTS[1].ctx;
+  // A standout carried by roast + process + goal + occasion (score 8 against
+  // 5): Kasuya's Super Coarse for a very-light washed, body-forward morning
+  // brew. If rotation ever started outranking fit, this is what would break.
+  //
+  // The fixture used to be CONTEXTS[1] (natural Heirloom, clarity), whose
+  // standout at 9 was bought by the Heirloom VARIETY tag (+3). Since
+  // 2026-09-30 variety is +1 and the goal +3 (owner decision — a tag on 11
+  // recipes must not outrank what the user asked for), and that context is an
+  // honest five-way tie at 8, which rotation is supposed to vary.
+  const ctx = {
+    roastLevel: M.normaliseRoastLevel("Very Light"),
+    process: M.normaliseProcess("Washed"),
+    variety: "Caturra",
+    goal: M.normaliseGoal("body-forward"),
+    occasion: "morning-ritual",
+    maxWaterMl: 300,
+    serveVolumeMl: 300,
+  };
   const leaders = new Set(SEEDS.map((s) => select(ctx, s)[0].recipe.id));
   assert.equal(
     leaders.size,

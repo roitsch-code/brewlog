@@ -7,6 +7,7 @@ import type {
   Goal,
 } from "./types";
 import { vesselCannotServe } from "../../utils/vesselCapacity";
+import { isSpecialTime, SPECIAL_MAX_SEC } from "../../utils/timeBudget";
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
@@ -287,6 +288,24 @@ export interface RecipeSelectionInput {
    * to the unfiltered set if excluding would leave nothing.
    */
   excludeLongWaits?: boolean;
+  /**
+   * The flow's time bucket ("normal" | "special" | "long-steep"; legacy
+   * "quick"). "special" is the fast shot: the menu is hard-filtered to recipes
+   * whose published clock is within SPECIAL_MAX_SEC (falls back to the full set
+   * if nothing fits). Until 2026-09-30 the selector ignored this entirely.
+   */
+  timeAvailable?: string;
+  /**
+   * What this exact bag has already been brewed with — the brewers and the
+   * `basedOn` reference names of its past sessions. Read ONLY by the Experiment
+   * occasion ("push methods or sequences you haven't tried on this coffee").
+   */
+  brewedOnThisCoffee?: BrewedOnThisCoffee;
+}
+
+export interface BrewedOnThisCoffee {
+  brewers: string[];
+  basedOn: string[];
 }
 
 /**
@@ -303,6 +322,75 @@ export interface ScoredRecipe {
   recipe: Recipe;
   score: number;
   reasons: string[];
+}
+
+/** Brewers whose bed is forgiving of an imperfect pour: immersion, flat-bottom
+ * and machine drip. Used by the Social occasion. */
+const FORGIVING_BREWERS = new Set<string>(["clever", "kalita-wave", "origami-wave", "orea-classic", "moccamaster"]);
+/** Brewers where the user does not pour at all during extraction. */
+const NON_POUR_BREWERS = new Set<string>(["clever", "aeropress", "aeropress-prismo", "moccamaster", "cold-brew-jar"]);
+
+/**
+ * How well a recipe's SHAPE fits a hot occasion — 1 or 0. The specification is
+ * each occasion's UI footnote (LightStepContext), i.e. product semantics the
+ * user already reads, not a brewing rule invented here:
+ *
+ * - morning-ritual — "a slower, deliberate pour that anchors the start of a
+ *   day": a hand-poured percolation with three or more pours and a clock of at
+ *   least three minutes.
+ * - focus / deep-focus — "a clean, mid-strength cup": brew ratio 1:15–1:17, no
+ *   bypass/concentrate build, and a balanced or clarity goal.
+ * - social — "a forgiving recipe that holds its character as it cools": a
+ *   forgiving bed (immersion / flat-bottom / machine) or a sweetness goal, and
+ *   never a clarity-only recipe (the least forgiving shape).
+ * - experiment — "push methods or sequences you haven't tried on this coffee":
+ *   a brewer AND a reference not yet brewed on this bag. No history → 0 for
+ *   every recipe (no signal rather than a guess).
+ *
+ * summer-time and cold-brew return 0 — they are hard partitions in scoreRecipe.
+ */
+export function occasionAffinity(
+  recipe: Recipe,
+  occasion: string | undefined,
+  brewed?: BrewedOnThisCoffee,
+): number {
+  const o = (occasion ?? "").toLowerCase();
+  const goals = recipe.bestFor.goals ?? [];
+  const pours = recipe.pourSequence.filter((s) => s.action === "pour").length;
+  switch (o) {
+    case "morning-ritual":
+      return !NON_POUR_BREWERS.has(recipe.brewer) && pours >= 3 && recipe.totalTimeSec >= 180 ? 1 : 0;
+    case "focus":
+    case "deep-focus": {
+      const ratio = recipe.water.grams / recipe.dose.grams;
+      const bypass = recipe.pourSequence.some((s) => s.action === "bypass");
+      const goalFits = goals.includes("balanced") || goals.includes("high-clarity");
+      return ratio >= 15 && ratio <= 17 && !bypass && goalFits ? 1 : 0;
+    }
+    case "social": {
+      const clarityOnly = goals.length > 0 && goals.every((g) => g === "high-clarity");
+      if (clarityOnly) return 0;
+      return FORGIVING_BREWERS.has(recipe.brewer) || goals.includes("sweetness-forward") ? 1 : 0;
+    }
+    case "experiment": {
+      if (!brewed || (brewed.brewers.length === 0 && brewed.basedOn.length === 0)) return 0;
+      if (brewed.brewers.includes(recipe.brewer)) return 0;
+      return matchesAnyName(recipe, brewed.basedOn) ? 0 : 1;
+    }
+    default:
+      return 0;
+  }
+}
+
+/** Does `recipe` answer to any of `names` (a basedOn string)? Exact or
+ * containment with a 6-char floor — the same binding resolveReference uses. */
+function matchesAnyName(recipe: Recipe, names: string[]): boolean {
+  const qs = names.map(normName).filter(Boolean);
+  if (!qs.length) return false;
+  const own = [normName(recipe.name), normName(recipe.shortName)].filter(Boolean);
+  return qs.some((q) =>
+    own.some((n) => n === q || ((n.includes(q) || q.includes(n)) && Math.min(n.length, q.length) >= 6)),
+  );
 }
 
 /**
@@ -389,30 +477,39 @@ function scoreRecipe(
       v.includes(rv.toLowerCase())
     );
     if (match) {
-      score += 3;
+      // +1, not +3 (owner decision 2026-09-30): only 11 recipes carry variety
+      // tags, almost all Geisha / SL28 / Heirloom, so at +3 a tag outranked the
+      // user's explicit goal — an SL28 bag got Du 2019 in every menu whatever
+      // was asked for, and a Bourbon/Caturra/Castillo bag never got a bonus.
+      score += 1;
       reasons.push(`variety match (${match})`);
     }
   }
 
+  // The goal is the strongest single fit term (+3): it is the one thing the
+  // user explicitly asked for on this brew.
   if (recipe.bestFor.goals?.includes(input.goal)) {
-    score += 2;
+    score += 3;
     reasons.push(`goal match (${input.goal})`);
   }
 
-  if (
-    input.occasion &&
-    recipe.bestFor.occasions?.some((o) =>
-      input.occasion!.toLowerCase().includes(o.toLowerCase())
-    )
-  ) {
-    score += 2;
-    reasons.push(`occasion match`);
+  // Occasion (+1). The old term matched the UI id against free-text recipe tags
+  // and never fired for a hot occasion ("morning ritual" with a space never
+  // contains in "morning-ritual"; focus / social / experiment had no tags), so
+  // all four produced byte-identical menus. It now reads the recipe's SHAPE
+  // against what each occasion's UI footnote promises — see occasionAffinity.
+  // Smaller than every bean and goal term, so it separates near-equals and
+  // never overrides fit. Iced and cold brew are hard partitions above.
+  const occ = occasionAffinity(recipe, input.occasion, input.brewedOnThisCoffee);
+  if (occ > 0) {
+    score += occ;
+    reasons.push(`occasion fit (${input.occasion})`);
   }
 
   // No pedigree or verification bonus: every recipe is ranked purely on how
   // well it matches the brew context (roast / process / variety / goal /
-  // occasion). All 135 recipes — championship, reference, and the Markus
-  // additions — compete on equal footing, best-match wins.
+  // occasion). The whole corpus — championship, reference, and the Markus
+  // additions — competes on equal footing, best-match wins.
 
   return { recipe, score, reasons };
 }
@@ -647,8 +744,14 @@ export function selectRecipes(
   // for a Clever out-of-menu instead. The recipe is never rewritten — just not
   // offered. Fall back to the full set if excluding would leave nothing.
   let scored = ordered;
+  // Special (the fast shot): offer only recipes whose published clock fits the
+  // ceiling. Falls back to the full set if nothing fits, like every filter here.
+  if (isSpecialTime(input.timeAvailable)) {
+    const fast = scored.filter((s) => s.recipe.totalTimeSec <= SPECIAL_MAX_SEC);
+    if (fast.length) scored = fast;
+  }
   if (input.excludeLongWaits) {
-    const kept = ordered.filter(
+    const kept = scored.filter(
       (s) => isImmersionRecipe(s.recipe) || !hasLongDesignedWait(s.recipe),
     );
     if (kept.length) scored = kept;

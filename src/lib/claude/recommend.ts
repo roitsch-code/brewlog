@@ -9,6 +9,8 @@ import {
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
+import { guardSpecialTime } from "../utils/timeBudget";
+import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { enforceRecipePhysics } from "../recipe/enforceRecipePhysics";
 import type {
   CoffeeIdentity,
@@ -382,9 +384,30 @@ export async function generateRecommendation(
   const timingStats = buildTimingStats(pastSessions, isPercolation);
 
   // Session arc: how many times has this exact coffee been brewed before?
-  const sessionCountForThisCoffee = pastSessions.filter(
+  const sessionsForThisCoffee = pastSessions.filter(
     s => s.coffee?.name === coffee.name && s.coffee?.roaster === coffee.roaster
-  ).length;
+  );
+  const sessionCountForThisCoffee = sessionsForThisCoffee.length;
+
+  // What this bag has already been brewed with — the Experiment occasion's
+  // whole meaning is "push what you haven't tried on THIS coffee", so the
+  // selector needs the brewers and references actually used on it.
+  const brewedOnThisCoffee = {
+    brewers: Array.from(
+      new Set(sessionsForThisCoffee.flatMap((s) => Array.from(brewersFromMethod(resolveBrewedRecipe(s).method)))),
+    ),
+    basedOn: Array.from(
+      new Set(
+        sessionsForThisCoffee
+          .map((s) => resolveBrewedRecipe(s).candidate?.basedOn?.trim() ?? "")
+          .filter((b) => b && !/^own (recipe|experiment)$/i.test(b)),
+      ),
+    ),
+  };
+  // The exploration slot normally opens from the 4th brew of a bag. On the
+  // Experiment occasion the user has asked for it outright, so it opens on
+  // every brew — including the first.
+  const explorationAlways = context.occasion === "experiment";
 
   // From the third brew of a bag onward, the SECOND candidate carries the
   // exploration. The two-candidate portfolio is deliberately kept (owner's
@@ -395,11 +418,12 @@ export async function generateRecommendation(
   const EXPLORATION_SLOT =
     " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
 
+  const earlySlot = explorationAlways ? EXPLORATION_SLOT : "";
   const sessionArcNote =
     sessionCountForThisCoffee === 0
-      ? "\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative."
+      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative.${earlySlot}`
       : sessionCountForThisCoffee <= 2
-      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.`
+      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.${earlySlot}`
       : sessionCountForThisCoffee <= 5
       ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. The character is understood. This portfolio should test something genuinely new — an unexplored method, an untested variable. Don't recycle what worked; push the boundary.${EXPLORATION_SLOT}`
       : `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Expert territory. Find the ceiling: what does this coffee do that no other has? What technique reveals its most distinctive character? What would a championship barista choose to showcase it?${EXPLORATION_SLOT}`;
@@ -755,6 +779,10 @@ export async function generateRecommendation(
       // Same tie-break for recently-dominant BREWERS: an equal-scored recipe
       // on a fresher brewer takes the menu slot (never an exclusion).
       demoteBrewers: methodRecency.recentBrewers,
+      // Special (fast shot) → only recipes whose clock fits the ceiling.
+      timeAvailable: context.timeAvailable,
+      // Experiment → steer toward brewers/references not yet used on this bag.
+      brewedOnThisCoffee,
   };
   const selectedRecipes = selectRecipes(selectionInput, 4);
 
@@ -1049,7 +1077,12 @@ Return valid JSON only.`;
   // wrong number: "406" on a Comandante isn't approximately right, it is a
   // setting the grinder does not have. Converted, not flagged, using the
   // owner's own measured anchors (grindSettings.ts).
-  const candidates = gapGuarded.map((c) => {
+  //   7. SPECIAL (fast shot) — every guard above can lift a clock (physics floor,
+  //      fidelity snap, measured timing calibration), so the ceiling is enforced
+  //      last. Drops over-ceiling candidates; keeps all if all are over.
+  const timeGuarded = guardSpecialTime(gapGuarded, context.timeAvailable);
+
+  const candidates = timeGuarded.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
     if (fixed === c.recipe.grindSize) return c;
     console.warn(

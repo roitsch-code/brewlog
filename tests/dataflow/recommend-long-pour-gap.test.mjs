@@ -116,10 +116,17 @@ test("recommend.ts imports the gap metric and feeds the guarded set to candidate
   assert.match(src, /LONG_DESIGNED_WAIT_SEC/, "recommend.ts must compare against the shared threshold");
   // The guarded set — not the raw discTimed — must be what the final candidates map over.
   assert.match(src, /gapGuarded/, "recommend.ts must build a gap-guarded candidate set");
+  // Since 2026-09-30 the Special (fast-shot) ceiling runs after the gap guard,
+  // so the chain is gapGuarded → guardSpecialTime → candidates.
   assert.match(
     src,
-    /candidates\s*=\s*gapGuarded\.map/,
-    "the final candidates MUST derive from gapGuarded, or the guard is dead code",
+    /timeGuarded\s*=\s*guardSpecialTime\(\s*gapGuarded/,
+    "the gap-guarded set MUST feed the Special guard, or the gap guard is dead code",
+  );
+  assert.match(
+    src,
+    /candidates\s*=\s*timeGuarded\.map/,
+    "the final candidates MUST derive from the guarded chain",
   );
 });
 
