@@ -48,11 +48,11 @@ export function freshnessNote(bucket: FreshnessBucket): string {
     case "peak":
       return "peak window — ideal";
     case "past-peak":
-      return "slightly past peak";
+      return "past peak — fewer pours, gentler agitation; keep the grind unless the drawdown runs fast";
     case "softening":
-      return "past peak, flavors softening";
+      return "softening — flavors fading; grind finer to recover solubility";
     case "stale":
-      return "likely stale";
+      return "likely stale — grind finer to recover solubility";
     default:
       return "";
   }

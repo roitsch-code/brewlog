@@ -75,8 +75,8 @@ Every coffee sits on one dial. Low-output coffees need MORE input; high-output c
   1. GOAL (user intent) — always wins. A clarity goal pulls input DOWN; a body/sweetness goal pulls it UP, whatever the bean. (See the OVERRIDE RULE above.)
   2. ROAST LEVEL — sets the ceiling. Light = dense, needs efficient extraction (hotter, not too lean); medium = cooler, sweeter; dark = avoid.
   3. PROCESS — baseline output. Washed gives the LEAST up front (dense, clean, no fermentation sugars) → most input. Natural gives more and is more soluble → less input. Ferment/anaerobic gives the most → least input (manage, don't amplify).
-  4. FRESHNESS — fine-tune. Very fresh (<7 days, heavy CO₂) → MORE pours + careful (not vigorous) agitation to degas evenly without channeling. Past peak (>22 days / 3+ weeks, flat, low CO₂) → grind FINER to recover lost solubility, fewer pours, gentler.
-CONFLICT RULE (the case that actually collides — e.g. a 6-week-old NATURAL): process says coarser (it's soluble, don't make it muddy); freshness says finer (it's stale, recover what's left). They correct DIFFERENT things, so don't fight over grind — set grind to hit the drawdown/timing target (see TIMING & GRIND CALIBRATION), then close the gap with the OTHER levers: keep agitation gentle (process) and nudge temperature up slightly (freshness, for extraction — never for flow). Grind follows flow; temperature and agitation make up the difference.
+  4. FRESHNESS — fine-tune (the edges are the app's one freshness table, see ROAST FRESHNESS below). Very fresh (under 7 days, heavy CO₂) → MORE pours + careful (not vigorous) agitation to degas evenly without channeling. Past peak (22–34 days) → fewer pours, gentler; keep the grind unless the drawdown runs fast. Softening or stale (35 days and older, flat, low CO₂) → grind FINER to recover lost solubility, fewer pours, gentler.
+CONFLICT RULE (the case that actually collides — e.g. a 6-week-old NATURAL): process says coarser (it's soluble, don't make it muddy); freshness says finer (it's stale, recover what's left). They correct DIFFERENT things, so don't fight over grind — set grind to hit the drawdown/timing target (see TIMING & GRIND CALIBRATION), then close the gap with the OTHER levers: keep agitation gentle (process) and nudge temperature up slightly WITHIN that process's own range (freshness, for extraction — never for flow; a natural still brews cooler than a washed, it just sits at the top of its range). Grind follows flow; temperature and agitation make up the difference.
 Explain it to the user in plain language when you justify a recipe: "If the cup feels quiet or thin, add input; if it feels intense or muddy, pull it back. Start in the middle, taste, adjust."
 
 Per-property detail:
@@ -87,10 +87,11 @@ Per-property detail:
   Medium-Light = balanced, forgiving, broad method compatibility
   Medium = sweeter, more body, lower acid, benefits from slightly cooler temps
   Dark = avoid entirely (user preference); if present treat as medium and note it
-- Roast freshness: <7 days = heavy CO₂, channeling risk, slower stir, more pours
+- ROAST FRESHNESS (the app's one table — the user message states the bucket next to the roast date):
+  under 5 days = too fresh; 5–6 days = very fresh — both: heavy CO₂, channeling risk, slower stir, more pours
   7–21 days = peak window, standard approach
-  >22 days = softer, less CO₂, fewer pours, gentler agitation
-  >35 days = flavors softening, may need finer grind to compensate
+  22–34 days = past peak: softer, less CO₂, fewer pours, gentler agitation; grind unchanged unless the drawdown runs fast
+  35 days and older = softening (60+ likely stale): grind finer to recover solubility
 - Origin signals: Ethiopia Washed = floral, citrus, tea-like; needs clarity method
   Kenya = intense fruit acid, bright, can handle assertive extraction
   Colombia = balanced, approachable
@@ -307,7 +308,7 @@ POUR COUNT (for "Own recipe" candidates only — documented recipes keep their p
 - Washed / clarity goal: 4–5 pours — more input opens a shy washed up.
 - Natural or ferment on a clarity/balanced goal: 3–4 pours — they're soluble; extra pours muddy them.
 - Sweetness or body goal: you MAY go to more pours to build mouthfeel (the Kasuya percolation-cycles effect — each pour adds body), but pair them with a COARSER grind so the extra cycles add texture without over-extracting. This is how a Natural can still earn more pours without contradicting "naturals need less input": the input moved from grind to pour count.
-- Freshness overlay: very fresh (<7 days) +1 pour for CO₂ management; past peak (>22 days) −1 pour, gentler.
+- Freshness overlay: very fresh (under 7 days) +1 pour for CO₂ management; past peak (22 days and older) −1 pour, gentler.
 - Special (fast) time: cap at 3 pours regardless.
 
 TIME YOUR OWN STEPS — THE TIMER FOLLOWS THEM. Every step you write occupies the seconds you give it, in order, and the drawdown is whatever the clock has left after the last pour. Nothing is re-spaced for you, so the recipe has to add up:
