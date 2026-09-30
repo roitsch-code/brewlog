@@ -32,6 +32,7 @@
  *     would mis-map the milestones.
  */
 
+import { wantsFinerForAge } from "../coffee/freshness";
 import { scaleGrind, scaleRecipe } from "@/lib/recipe/scaleRecipe";
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session";
 import type { Recipe } from "../knowledge/recipes";
@@ -254,13 +255,13 @@ function driftReasons(
   }
 
   // Grind — window is the published range, shifted by the dose-scaling
-  // adjustment, padded ±15° for normal brew-to-brew variation.
+  // adjustment, padded ±GRIND_TOL_DEG for normal brew-to-brew variation.
   const range = refGrindRange(ref);
   const cg = parseGrindDegrees(recipe.grindSize);
   if (range && cg != null) {
     const adj = scaleGrind(ref, doseRatio, method).deltaDeg;
-    const lo = range[0] + adj - 15;
-    const hi = range[1] + adj + 15;
+    const lo = range[0] + adj - GRIND_TOL_DEG;
+    const hi = range[1] + adj + GRIND_TOL_DEG;
     if (cg < lo || cg > hi) {
       drift.grind = true;
       reasons.push(
@@ -297,10 +298,27 @@ function driftReasons(
  * to the candidate's batch, snap its mechanical signature back to the faithful
  * scaled reference. Otherwise return the recipe untouched.
  */
+/** How far a candidate's grind may sit from the (scaled) published range
+ * before it counts as drift — normal brew-to-brew variation. */
+const GRIND_TOL_DEG = 15;
+/** How far under the batch target a grind may sit before the large-batch
+ * branch calls it "a single-cup grind on a big bed" and coarsens it. */
+const BATCH_UNDER_TOL_DEG = 4;
+
+export interface ReconcileOptions {
+  /** Days since roast. A bean 35+ days old ("softening"/"stale", see
+   * src/lib/coffee/freshness.ts) is legitimately ground FINER to recover
+   * solubility — the large-batch branch then tolerates up to GRIND_TOL_DEG
+   * under its target instead of BATCH_UNDER_TOL_DEG, so the age adjustment is
+   * not silently reversed. */
+  daysOld?: number | null;
+}
+
 export function reconcileToReference(
   recipe: BrewRecipe,
   basedOn: string | undefined,
   method?: string,
+  opts: ReconcileOptions = {},
 ): FidelityResult {
   const ref = resolveReference(basedOn);
   if (!ref || !ref.verified) return { recipe, changed: false, reasons: [] };
@@ -363,9 +381,12 @@ export function reconcileToReference(
     const cg = parseGrindDegrees(recipe.grindSize);
     if ((k >= 1.3 || discOffset > 0) && range && cg != null) {
       const target = Math.round((range[0] + range[1]) / 2) + scaleGrind(ref, doseRatio, method).deltaDeg;
-      // Only correct a grind that is meaningfully too fine (>4° under target)
-      // so normal brew-to-brew variation passes untouched.
-      if (cg < target - 4) {
+      // Only correct a grind that is meaningfully too fine so normal
+      // brew-to-brew variation passes untouched. A bean 35+ days old is ground
+      // finer ON PURPOSE (the prompt asks for it), so it gets the ordinary
+      // grind tolerance here instead of the batch branch's tight 4°.
+      const underTol = wantsFinerForAge(opts.daysOld) && discOffset === 0 ? GRIND_TOL_DEG : BATCH_UNDER_TOL_DEG;
+      if (cg < target - underTol) {
         return {
           recipe: { ...recipe, grindSize: `${target}°` },
           changed: true,

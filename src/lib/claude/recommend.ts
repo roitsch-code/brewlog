@@ -10,6 +10,7 @@ import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
 import { guardSpecialTime } from "../utils/timeBudget";
+import { daysSinceRoast, freshnessBucket, freshnessNote } from "../coffee/freshness";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { enforceRecipePhysics } from "../recipe/enforceRecipePhysics";
 import type {
@@ -126,11 +127,13 @@ function guardRecipeFidelity(
   basedOn: string | undefined,
   title: string,
   method?: string,
+  daysOld?: number | null,
 ): BrewRecipe {
   const { recipe: fixed, changed, reasons, reference } = reconcileToReference(
     recipe,
     basedOn,
     method,
+    { daysOld },
   );
   if (changed) {
     console.warn(
@@ -491,25 +494,9 @@ export async function generateRecommendation(
       ? "Diluted blend (legacy, ~150ppm) — soft, SCA-optimal for delicate light roasts"
       : "BWT-filtered daily water (~220ppm TDS, GH 5–6°dH, KH 4°dH) — moderate buffering; for delicate washed coffees note the clarity blend would lift brightness";
 
-  const daysOld = coffee.roastDate
-    ? Math.floor(
-        (Date.now() - new Date(coffee.roastDate).getTime()) / 86_400_000
-      )
-    : null;
-  const freshnessNote =
-    daysOld === null
-      ? ""
-      : daysOld < 5
-      ? "too fresh — heavy CO₂, channeling risk, bloom 50s+"
-      : daysOld < 7
-      ? "very fresh — bloom 50s recommended"
-      : daysOld < 22
-      ? "peak window — ideal"
-      : daysOld < 35
-      ? "slightly past peak"
-      : daysOld < 60
-      ? "past peak, flavors softening"
-      : "likely stale";
+  // One freshness table for the app (src/lib/coffee/freshness.ts).
+  const daysOld = daysSinceRoast(coffee.roastDate);
+  const freshnessNoteText = freshnessNote(freshnessBucket(daysOld));
 
   const lockedMethodBase = (context.preferredMethod ?? "").trim();
 
@@ -874,7 +861,7 @@ export async function generateRecommendation(
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}${blendNote}
-Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNote})` : ""}
+Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNoteText})` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
 ${roasterBlock}${historyBlock}${insightsBlock}${measuredFeedbackBlock}
 Context:
@@ -962,7 +949,7 @@ Return valid JSON only.`;
 
   const mapped: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
-    recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title, c.method),
+    recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title, c.method, daysOld),
     role: c.role as CandidateRole,
     title: c.title,
     ...(c.basedOn ? { basedOn: c.basedOn } : {}),

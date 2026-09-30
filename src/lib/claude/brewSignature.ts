@@ -1,4 +1,5 @@
 import type { Session } from "../types/session";
+import { daysSinceRoast, freshnessBucket } from "../coffee/freshness";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { brewMethodKey } from "../utils/brewMethodKey";
 
@@ -63,13 +64,24 @@ function normalizeProcess(process: string): string {
 // re-buckets historical sessions correctly with no migration.
 const normalizeMethod = brewMethodKey;
 
+// Coarser zones than the shared table, deliberately: signatures group brews
+// by broad freshness, and the zone strings are persisted in pattern output.
+// The EDGES come from src/lib/coffee/freshness.ts; the grouping is unchanged
+// (5–6 days counts as peak here, 35+ as stale).
 function classifyFreshnessZone(roastDate?: string): string {
-  if (!roastDate) return "unknown";
-  const days = Math.floor((Date.now() - new Date(roastDate).getTime()) / 86_400_000);
-  if (days < 5) return "too-fresh";
-  if (days <= 21) return "peak";
-  if (days <= 34) return "past-peak";
-  return "stale";
+  switch (freshnessBucket(daysSinceRoast(roastDate))) {
+    case "unknown":
+      return "unknown";
+    case "too-fresh":
+      return "too-fresh";
+    case "very-fresh":
+    case "peak":
+      return "peak";
+    case "past-peak":
+      return "past-peak";
+    default:
+      return "stale";
+  }
 }
 
 function extractGrindNumeric(grindSetting: string): number | null {

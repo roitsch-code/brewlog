@@ -29,6 +29,7 @@
  * later. The disc case is method-driven; every other brewer keeps the 33%.
  */
 
+import { daysSinceRoast, freshnessBucket } from "../coffee/freshness";
 import type { BrewRecipe, BrewPourStep, BrewStepAction } from "@/lib/types/session";
 import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 
@@ -216,13 +217,18 @@ export const PEAK_BLOOM_SEC = 45;
 export const MIN_BLOOM_SEC = 15;
 
 export function getBloomDuration(roastDate?: string, now: number = Date.now()): number {
-  if (roastDate) {
-    const daysOld = Math.floor((now - new Date(roastDate).getTime()) / 86_400_000);
-    if (daysOld < 7) return 50;
-    if (daysOld < 22) return 45;
-    return 30;
+  // Edges from the shared freshness table (src/lib/coffee/freshness.ts):
+  // too-fresh / very-fresh (< 7 days) 50s, peak (7–21) 45s, older 30s.
+  switch (freshnessBucket(daysSinceRoast(roastDate, now))) {
+    case "unknown":
+    case "peak":
+      return PEAK_BLOOM_SEC;
+    case "too-fresh":
+    case "very-fresh":
+      return 50;
+    default:
+      return 30;
   }
-  return 45;
 }
 
 /** Pull the leading cumulative-grams integer out of a milestone token. Returns
