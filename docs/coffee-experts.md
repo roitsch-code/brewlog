@@ -21,7 +21,9 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 
 | Year | Recipe | Brewer | Dose : Water | Ratio | Temp | Niche° | Total | Verified |
 |---|---|---|---|---|---|---|---|---|
+| 2013 | **McCarthy Kalita Wave** (Erin McCarthy, USA) | Kalita Wave | 24g : 380g | 1:15.8 | just off boil | — (coarse, fines sifted) | 3:30 | false |
 | 2016 | **Kasuya 4:6** (Tetsu Kasuya, Japan) | V60 size 02 | 20g : 300g | 1:15 | 92°C | 390–400° | 3:30 | true |
+| 2017 | **Wang Centre-Pour V60** (Chad Wang, Taiwan) | V60 (cold ceramic) | 15g : 250g | 1:16.7 | 92°C | — (fine, sifted ~400 µm) | 2:00 | false |
 | 2019 | **Du Origami Wave** (Jia Ning Du, China) | Origami + wave filter | 20g : 240g | 1:12 | 94°C | 377–387° | 3:15 | false |
 | 2023 | **Medina Conical** (Carlos Medina, Chile) | Conical paper filter | 15.5g : 250g | 1:16.1 | 91°C | 387–393° | 3:30 | false |
 | 2024 | **Wölfl Orea Fast** (Martin Wölfl, Austria) | Orea V4 Fast | 17g : 270g | 1:15.9 | 93°C | 380–390° | 2:20 | true |
@@ -58,6 +60,8 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Hoffmann Japanese Iced V60** | V60 onto ice | 32.5g : 500g (300 hot + 200 ice) | off the boil | calibrate | 2:45 | true |
 | **Hedrick Flash Brew Iced** | V60 (add ice AFTER) | 20g : 240g hot (+60g ice after) | a bit under boiling | calibrate (coarser) | 3:50 | true |
 | **Asser Daily Pour-Over** | V60 (conical) + Cafec Abaca | 15g : 240g (1:16) | 93°C | 380–397° (derived) | ~3:40 (reconstructed) | true |
+| **Eckroth Everyday V60** (Morgan Eckroth) | V60 | 16g : 250g | 96°C (205°F) | — (medium-fine) | 2:30–3:00 | true |
+| **Eckroth Upright AeroPress** (Morgan Eckroth) | Upright AeroPress, paper | 16.5g : 250g | 93°C (~200°F) | — (medium-fine) | ~2:20 | true |
 
 † **Hoffmann roast-temperature staircase (as he states it in the Better 1 Cup video):** light = **freshly boiled (100 °C)**, medium 96 °C, darkest roasts down to 90 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span. (Verified against the video transcription, June 2026.)
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
@@ -267,6 +271,9 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 | **James Bailey** | (originated water-first; Hoffmann popularised) | water-first (origin) |
 | **Martin Wölfl** | WBrC 2024 | melodrip-controlled-pouring (exemplar); else composition of fast-flow + light agitation |
 | **Carlos Medina** | WBrC 2023 | (none atomic — composition of lean ratio + moderate temp) |
+| **Chad Wang** | WBrC 2017 (centre-pour V60) | central-pour, continuous-pour |
+| **Erin McCarthy** | WBrC 2013 (Kalita Wave) | fines-removal-sieving, flat-bed-pour |
+| **Morgan Eckroth** | Everyday V60, Upright AeroPress | spiral-pour, pulse-pouring, immersion-steep |
 | **Jia Ning Du** | WBrC 2019 | low-mineral-water (application) |
 | **George Stanica** | WAC 2024 | concentrate-and-bypass (application) |
 | **Christopher Hendon** | (water chemistry foundation) | low-mineral-water (foundation) |

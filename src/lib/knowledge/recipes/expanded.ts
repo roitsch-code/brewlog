@@ -3107,4 +3107,99 @@ export const EXPANDED_RECIPES: Recipe[] = [
     ],
     verified: false,
   },
+
+  // ── Added 2026-09-30: recipes by women coffee experts, from primary sources ──
+  // The corpus had ~6 of 145 recipes by women. Only recipes whose numbers come
+  // from a named, reachable source are added; Easto, Kingston, Allen, Davies
+  // and a single-temperature Hsu recipe were searched for and not found. Emi
+  // Fukahori's published recipe is for a Hario Switch, which the owner doesn't
+  // own, so it is left out (owner decision); her 2018 routine stages the temp.
+  {
+    id: "eckroth-everyday-v60",
+    name: "Morgan Eckroth — Everyday V60",
+    shortName: "Eckroth V60",
+    attribution: {
+      person: "Morgan Eckroth",
+      title: "2022 US Barista Champion; 2022 World Barista Championship runner-up",
+      affiliation: "@morgandrinkscoffee",
+      country: "United States",
+      year: 2026,
+    },
+    category: "reference",
+    brewer: "v60",
+    brewerNotes: "Hario V60. Rinse the filter with preheated water first (it seals the paper and preheats the brewer); discard the rinse.",
+    dose: { grams: 16 },
+    water: { grams: 250, ratio: "1:15.6" },
+    temperature: { celsius: 96 },
+    grind: { description: "medium-fine (no grinder setting published)" },
+    pourSequence: [
+      { label: "Bloom — 50 g spiral", action: "pour", waterGramsAtEnd: 50, durationSec: 30, notes: "Spiral from the centre out until all the grounds are covered, then let it bloom; the next pour starts at 0:30." },
+      { label: "Pour 2 — spiral to 150 g", action: "pour", waterGramsAtEnd: 150, durationSec: 45, notes: "Starts at 0:30: spiral from the centre towards the edges and back in; the next pour starts at around 1:15." },
+      { label: "Pour 3 — spiral to 250 g", action: "pour", waterGramsAtEnd: 250, notes: "Starts at around 1:15. Only if it is running fast or needs more extraction: a light swirl of the brewer (optional in the source)." },
+      { label: "Drawdown", action: "drain", notes: "Aim to finish draining at about 2:30–3:00, depending on the coffee." },
+    ],
+    // Midpoint of the stated 2:30–3:00 drain target.
+    totalTimeSec: 165,
+    techniques: ["bloom", "spiral-pour", "pulse-pouring"],
+    bestFor: {
+      roastLevels: ["light", "medium-light"],
+      processes: ["any"],
+      goals: ["balanced"],
+    },
+    teaches:
+      "Three spiral pours — a 50 g bloom, then two 100 g pours — make an everyday light-roast V60 that finishes in 2:30–3:00 without timing five pulses.",
+    science:
+      "A spiral from the centre outwards wets the whole bed evenly; two equal main pours keep the slurry level steady, and a light swirl is the only extra agitation, used only when the brew runs fast.",
+    whenToUse: "A daily light-roast V60 when you want a clean cup with minimal fuss.",
+    sources: [
+      { type: "video", citation: "Morgan Eckroth (@morgandrinkscoffee), TikTok — 'no fuss every day coffee brewer and recipe' (Hario V60)", url: "https://www.tiktok.com/@morgandrinkscoffee/video/7626055267020754206", year: 2026 },
+      { type: "article", citation: "Sprudge — 2022 World Barista Championship final ranking (Eckroth 2nd)", url: "https://sprudge.com/two-new-world-coffee-champions-crowned-in-melbourne-192878.html", year: 2022 },
+    ],
+    verified: true,
+    notes:
+      "Cross-checked 2026-09-30 against the video's auto-generated captions (the creator's own words; speech recognition says '50 grams of coffee' for the bloom WATER). No pour durations are given beyond the 0:30 and ~1:15 pour starts, so step 2's 45 s is that interval. 205 °F = 96 °C. 16 g : 250 g is 1:15.6; the video says 1:15.5.",
+  },
+  {
+    id: "eckroth-upright-aeropress",
+    name: "Morgan Eckroth — Upright AeroPress",
+    shortName: "Eckroth AeroPress",
+    attribution: {
+      person: "Morgan Eckroth",
+      title: "2022 US Barista Champion; 2022 World Barista Championship runner-up",
+      affiliation: "@morgandrinkscoffee",
+      country: "United States",
+      year: 2026,
+    },
+    category: "reference",
+    brewer: "aeropress",
+    brewerNotes: "Upright (not inverted), paper filter, base set on the cup. Insert the plunger straight after stirring — the seal stops the drip-through.",
+    dose: { grams: 16.5 },
+    water: { grams: 250, ratio: "1:15" },
+    temperature: { celsius: 93 },
+    grind: { description: "medium-fine (no grinder setting published)" },
+    pourSequence: [
+      { label: "All the water at once", action: "pour", waterGramsAtEnd: 250, notes: "Tare, then add all 250 g in one go. A little drip-through at this point is fine." },
+      { label: "Stir", action: "stir", durationSec: 5, notes: "Back and forth for about five seconds so everything is saturated." },
+      { label: "Plunger in — brew", action: "wait", durationSec: 115, notes: "Insert the plunger straight away to create the seal; brew to 2:00." },
+      { label: "Press", action: "press", durationSec: 20, notes: "Lift brewer and cup off the scale, press slowly on a solid surface — 15–20 s, until the hiss." },
+    ],
+    totalTimeSec: 140,
+    techniques: ["immersion-steep"],
+    bestFor: {
+      roastLevels: ["light", "medium-light"],
+      processes: ["any"],
+      goals: ["balanced"],
+    },
+    teaches:
+      "An upright AeroPress needs no inversion: seal it with the plunger right after the stir and the chamber stops dripping, so it steeps like an inverted brew.",
+    science:
+      "Once the plunger's rubber touches the chamber walls, the air above the slurry holds it in place (a vacuum seal), so the full 250 g steeps for two minutes; a slow 15–20 s press then pushes it through the paper.",
+    whenToUse: "A quick single cup when you want an AeroPress without the spill risk of the inverted method.",
+    sources: [
+      { type: "video", citation: "Morgan Eckroth (@morgandrinkscoffee), TikTok — 'normal easy-peasy aeropress brewing … no inverted shenanigans'", url: "https://www.tiktok.com/@morgandrinkscoffee/video/7629768825780702495", year: 2026 },
+    ],
+    verified: true,
+    notes:
+      "Cross-checked 2026-09-30 against the video's auto-generated captions. '~200 °F' = 93 °C. The pour time isn't given; the brew runs to 2:00 and the press takes 15–20 s, so the total is ~2:20. 250 g is above the owner's measured 230 g AeroPress capacity — the app scales references to the served volume, and the vessel guard keeps it within capacity.",
+  },
 ];
