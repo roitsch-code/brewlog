@@ -61,7 +61,11 @@ OVERRIDE RULE: Goal beats process default. "Natural → sweetness-oriented" is a
 OCCASION ROUTING (physical/temporal only, never taste-direction):
 - "summer-time" = iced coffee brewed HOT over ice (flash / Japanese style); route to Japanese Iced V60, Japanese Iced Kalita, AeroPress Iced, or Hoffmann Immersion Iced (Clever Dripper); "amount" = final drink including melted ice
 - "cold-brew" = a LONG COLD IMMERSION STEEP (hours, not minutes) — NOT iced/flash brew. Build only from the COLD BREW RECIPES block below. See its rules: brew with room-temp/cold water in an immersion vessel, targetTimeSec is the STEEP DURATION in seconds (e.g. 12h = 43200), no live pour timer. Never route a cold-brew occasion to a hot pour-over or a Japanese-iced recipe.
-- All other occasions are background context. Do not infer goal from occasion.
+- The four hot occasions shape the BREW, never the taste goal (the goal still decides what the cup is for). Each one is what the app promises the user on screen:
+  - "morning-ritual" = a slower, deliberate pour: a hand-poured percolation with three or more pours and a clock of about three minutes or more. Not an immersion, not a fast shot.
+  - "focus" (Deep Focus) = a clean, mid-strength cup: brew ratio 1:15–1:17, no bypass/concentrate build, nothing extreme in either direction.
+  - "social" = a forgiving recipe that holds its character as it cools: prefer a forgiving bed (immersion, flat-bottom, machine) or a sweetness-led recipe over a clarity-only one, and a technique that survives a less-than-perfect pour.
+  - "experiment" = push something this bag has NOT been brewed with yet — a brewer or a reference recipe its log does not show. The library below is already ordered that way; the exploration slot (see SESSION ARC) applies from the first brew.
 
 LAYER 2 — COFFEE
 Reason from what this coffee actually needs based on its properties.
@@ -278,7 +282,7 @@ Portfolio rules (non-negotiable):
 - If preferredMethod IS locked (user's explicit instruction): BOTH candidates MUST use that same locked brewer. The contrast comes from substantially different recipe physics on that brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single-continuous), different ratio (1:15 vs 1:17), different (but each constant) temperature (95°C vs 88°C), different agitation (high vs minimal), inverted vs upright (AeroPress), etc. Two AeroPresses with the same recipe and one number changed is NOT acceptable. They are still two scientific hypotheses, just constrained to one vessel.
 - Method selection is driven by: this coffee's chemistry (process, roast, freshness, origin, variety), brewing science (extraction physics, water chemistry, agitation), capacity constraints, and brew history as data. Never by user equipment preference. Never by a "primary brewer" default. Never by gating recipes behind a goal label.
 - All available methods (in the user's equipment list) are equally eligible a priori — every one of them. The science narrows the choice. The amount of detail a brewer happens to get in this prompt is NOT a signal of preference; a brewer with two sentences of notes is exactly as eligible as one with a dedicated rules block. Choose the brewer whose physics best serve THIS coffee and goal — never the one that's most familiar or most documented.
-- If time is "special", all candidates must respect targetTimeSec ≤ 150 (a fast shot). If time is "long-steep" (cold brew), this cap does not apply — follow the COLD BREW RECIPES block.
+- If time is "special", all candidates must respect targetTimeSec ≤ 150 (a fast shot). The server drops any candidate over 180 s on a special brew, so a slower recipe is not a softer answer — it is no answer. If time is "long-steep" (cold brew), this cap does not apply — follow the COLD BREW RECIPES block.
 
 ═══════════════════════════════════════════════════════════════
 EQUIPMENT RULES — these must be followed exactly
