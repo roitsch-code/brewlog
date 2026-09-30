@@ -62,7 +62,6 @@ Each entry: dose / water / ratio / temperature / Niche Zero degrees / total time
 | **Asser Daily Pour-Over** | V60 (conical) + Cafec Abaca | 15g : 240g (1:16) | 93°C | 380–397° (derived) | ~3:40 (reconstructed) | true |
 | **Eckroth Everyday V60** (Morgan Eckroth) | V60 | 16g : 250g | 96°C (205°F) | — (medium-fine) | 2:30–3:00 | true |
 | **Eckroth Upright AeroPress** (Morgan Eckroth) | Upright AeroPress, paper | 16.5g : 250g | 93°C (~200°F) | — (medium-fine) | ~2:20 | true |
-| **Fukahori Easy Hario Switch** (Emi Fukahori) | Hario Switch (V60-shaped, valve) | 14g : 200g | 93°C | 387° (from 25 Comandante clicks) | 2:20 | false |
 
 † **Hoffmann roast-temperature staircase (as he states it in the Better 1 Cup video):** light = **freshly boiled (100 °C)**, medium 96 °C, darkest roasts down to 90 °C. The doc cell shows the full staircase range; brew by the bag's roast level. The TS `temperature.celsius` field is the canonical light-roast value; `rangeC` is the staircase span. (Verified against the video transcription, June 2026.)
 ‡ Hoffmann does not publish a Niche Zero degree number — calibrate empirically against the recipe's drawdown target. The old "Niche 396–406°" claim had no Hoffmann source behind it and was removed per the third Hard Rule. See `src/lib/knowledge/recipes/reference.ts` (Hoffmann V60 `notes`) for the rescue moves Hoffmann published in his 2024 follow-up video.
@@ -275,7 +274,6 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 | **Chad Wang** | WBrC 2017 (centre-pour V60) | central-pour, continuous-pour |
 | **Erin McCarthy** | WBrC 2013 (Kalita Wave) | fines-removal-sieving, flat-bed-pour |
 | **Morgan Eckroth** | Everyday V60, Upright AeroPress | spiral-pour, pulse-pouring, immersion-steep |
-| **Emi Fukahori** | Easy Hario Switch (her WBrC 2018 routine is staged-temperature, excluded) | central-pour, continuous-pour |
 | **Jia Ning Du** | WBrC 2019 | low-mineral-water (application) |
 | **George Stanica** | WAC 2024 | concentrate-and-bypass (application) |
 | **Christopher Hendon** | (water chemistry foundation) | low-mineral-water (foundation) |

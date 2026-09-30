@@ -3111,7 +3111,9 @@ export const EXPANDED_RECIPES: Recipe[] = [
   // ── Added 2026-09-30: recipes by women coffee experts, from primary sources ──
   // The corpus had ~6 of 145 recipes by women. Only recipes whose numbers come
   // from a named, reachable source are added; Easto, Kingston, Allen, Davies
-  // and a single-temperature Hsu recipe were searched for and not found.
+  // and a single-temperature Hsu recipe were searched for and not found. Emi
+  // Fukahori's published recipe is for a Hario Switch, which the owner doesn't
+  // own, so it is left out (owner decision); her 2018 routine stages the temp.
   {
     id: "eckroth-everyday-v60",
     name: "Morgan Eckroth — Everyday V60",
@@ -3199,55 +3201,5 @@ export const EXPANDED_RECIPES: Recipe[] = [
     verified: true,
     notes:
       "Cross-checked 2026-09-30 against the video's auto-generated captions. '~200 °F' = 93 °C. The pour time isn't given; the brew runs to 2:00 and the press takes 15–20 s, so the total is ~2:20. 250 g is above the owner's measured 230 g AeroPress capacity — the app scales references to the served volume, and the vessel guard keeps it within capacity.",
-  },
-  {
-    id: "fukahori-switch-easy",
-    name: "Emi Fukahori — Easy Hario Switch",
-    shortName: "Fukahori Switch",
-    attribution: {
-      person: "Emi Fukahori",
-      title: "2018 World Brewers Cup Champion",
-      affiliation: "MAME, Zürich",
-      country: "Switzerland",
-      year: 2024,
-    },
-    category: "reference",
-    brewer: "v60",
-    brewerNotes:
-      "Hario Switch — a V60-shaped cone with a valve. The first 50 g steeps with the valve CLOSED; on a plain V60 that water drains instead, so the bloom behaves like a normal V60 bloom.",
-    dose: { grams: 14 },
-    water: { grams: 200, ratio: "1:14.3" },
-    temperature: { celsius: 93 },
-    grind: {
-      referenceGrinder: "Comandante C40",
-      referenceSetting: "25 clicks",
-      // Derived with the app's measured map (23 clicks = 380°, ~3.3°/click).
-      nicheZeroDegrees: 387,
-      description: "25 clicks on the Comandante",
-    },
-    pourSequence: [
-      { label: "Bloom — 50 g, valve closed", action: "pour", waterGramsAtEnd: 50, durationSec: 30, notes: "Valve closed: the first 50 g steeps for 30 s." },
-      { label: "Open the valve, centre pour to 200 g", action: "pour", waterGramsAtEnd: 200, durationSec: 40, notes: "Open the valve at 0:30 and pour 150 g as one continuous stream into the centre; pouring ends at 1:10." },
-      { label: "Drawdown", action: "drain", durationSec: 70, notes: "Total brew time 2:20." },
-    ],
-    totalTimeSec: 140,
-    techniques: ["bloom", "central-pour", "continuous-pour"],
-    bestFor: {
-      roastLevels: ["very-light", "light"],
-      processes: ["any"],
-      goals: ["balanced"],
-    },
-    teaches:
-      "Steep the bloom, then one continuous centre pour: a Switch recipe simple enough that MAME uses it in every shop.",
-    science:
-      "With the valve closed the bloom water can't drain, so every particle is wetted evenly before the percolation starts; a single centre pour then keeps water off the paper walls and leaves the bed undisturbed through the drawdown.",
-    whenToUse: "A light-roast single cup on a Hario Switch (or a V60, accepting a normal draining bloom) when you want an easy, repeatable brew.",
-    sources: [
-      { type: "video", citation: "European Coffee Trip, YouTube — Emi Fukahori teaches her easy Hario Switch recipe (premiered 2024-03-30); numbers from the video description", url: "https://www.youtube.com/watch?v=3euEkTBxtEk", year: 2024 },
-      { type: "article", citation: "MAME brew guide (Fukahori's company): steep the first 50 g for 30 s, then a centre pour; 93 °C", url: "https://mame.coffee/products/altieri-luci-geisha-honey-omni" },
-    ],
-    verified: false,
-    notes:
-      "The numbers come from European Coffee Trip's description of the video in which Fukahori teaches the recipe, read by a research pass on 2026-09-30; a second fetch was blocked, so they are not re-verified first-hand — hence verified:false. MAME's own guide (read first-hand) confirms the structure and 93 °C. Her 2018 World Brewers Cup routine is NOT included: it stages the water temperature (80 / 95 / 80 °C), which the app does not brew.",
   },
 ];
