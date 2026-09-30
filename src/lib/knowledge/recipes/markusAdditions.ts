@@ -432,7 +432,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Provenance corrected 2026-09-30. This entry was titled \"2022 World Brewers Cup Champion\" and cited the 2022 WBrC final. Anthony Douglas won the 2022 World BARISTA Championship (Melbourne); the 2022 World Brewers Cup went to Sherry (Shih Yuan) Hsu. No published filter recipe by Douglas was located, so these numbers have no known source. Kept (not deleted) so the owner can decide; the Gesha/Sidra variety tags were removed because they rested on the false title. Niche range estimated from the grind-feel description.",
+      "Provenance corrected 2026-09-30. This entry was titled \"2022 World Brewers Cup Champion\" and cited the 2022 WBrC final. Anthony Douglas won the 2022 World BARISTA Championship (Melbourne); the 2022 World Brewers Cup went to Sherry (Shih Yuan) Hsu. No published filter recipe by Douglas was located, so these numbers have no known source. Owner decision 2026-09-30: kept in the corpus as an unsourced house V60 under this corrected name — do not re-raise. The Gesha/Sidra variety tags were removed because they rested on the false title. Niche range estimated from the grind-feel description.",
   },
 
   {

@@ -2447,7 +2447,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Provenance corrected 2026-09-30. This entry was titled \"WBrC 2017 Champion\" and cited a \"WBrC 2017 finals video archive\". Dale Harris won the 2017 World BARISTA Championship (espresso, Seoul); the 2017 World Brewers Cup went to Chad Wang. No published filter recipe by Harris was located, so these numbers have no known source — treat it as an unsourced house V60, not his routine. Kept (not deleted) because #528 kept it on the old premise; removing it is the owner's call.",
+      "Provenance corrected 2026-09-30. This entry was titled \"WBrC 2017 Champion\" and cited a \"WBrC 2017 finals video archive\". Dale Harris won the 2017 World BARISTA Championship (espresso, Seoul); the 2017 World Brewers Cup went to Chad Wang. No published filter recipe by Harris was located, so these numbers have no known source — treat it as an unsourced house V60, not his routine. Owner decision 2026-09-30: kept in the corpus as an unsourced house V60 under this corrected name — do not re-raise.",
   },
 
   {
@@ -2490,7 +2490,7 @@ export const EXPANDED_RECIPES: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Provenance corrected 2026-09-30. This entry claimed \"WBrC 2018 Champion + WBC 2018 Champion (only double-winner in history)\" and cited a \"WBrC 2018 finals video archive\". Agnieszka Rojewska won the 2018 World BARISTA Championship (Amsterdam); the 2018 World Brewers Cup went to Emi Fukahori (Belo Horizonte). She is not a double winner. No published filter recipe by Rojewska was located, so these numbers have no known source. Kept (not deleted) because #528 kept it on the old premise; removing it is the owner's call.",
+      "Provenance corrected 2026-09-30. This entry claimed \"WBrC 2018 Champion + WBC 2018 Champion (only double-winner in history)\" and cited a \"WBrC 2018 finals video archive\". Agnieszka Rojewska won the 2018 World BARISTA Championship (Amsterdam); the 2018 World Brewers Cup went to Emi Fukahori (Belo Horizonte). She is not a double winner. No published filter recipe by Rojewska was located, so these numbers have no known source. Owner decision 2026-09-30: kept in the corpus as an unsourced house V60 under this corrected name — do not re-raise.",
   },
 
   // ── Misc additional ─────────────────────────────────────────────────────
