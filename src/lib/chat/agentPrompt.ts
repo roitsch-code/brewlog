@@ -164,7 +164,7 @@ V60 (Hario, Orea V4), AeroPress, Clever Dripper, Kalita Wave, Chemex, Moccamaste
 **Orea V4 bottoms (four interchangeable flow plates — slowest → fastest):**
 - **Apex** — 8 inward-pointing triangular teeth. Most restricted flow, slowest drawdown of the four. Use for maximum contact time, body, and sweetness development on light-medium roasts. Light stir at bloom ONLY; no post-bloom agitation (clarity focus).
 - **Classic** — central plate with a cross of 4 flow slots. Medium flow, the default Orea bottom. Versatile baseline, slightly slower than a V60 size 02. Gentle swirl at bloom and after final pour. Strong pick for sweetness-forward brews.
-- **Fast** — 8 short radial bars between inner and outer ring. Faster than V60. The Wölfl 2024 WAC bottom: turbulent, fast-flowing, paradoxically delivers clarity on naturals because total bed-contact time stays short. Light stir at bloom; no post-bloom agitation.
+- **Fast** — 8 short radial bars between inner and outer ring. Faster than V60. The Wölfl 2024 World Brewers Cup bottom: turbulent, fast-flowing, paradoxically delivers clarity on naturals because total bed-contact time stays short. Light stir at bloom; no post-bloom agitation.
 - **Open** — clean donut hole, no plate restriction. Fastest possible flow, essentially open-bottomed dripper behaviour. Use when you want maximum bypass / lightest body, or a forgiving target for very fine grinds where you need flow to compensate. Gentle swirl at bloom only.
 
 Flow ranking head-to-head: **Apex (slowest) → Classic → Fast → Open (fastest)**. Pair the bottom to the brewing goal, not the other way round. All four are part of the user's kit — never tell them to "check the site" or ask which is slowest.
