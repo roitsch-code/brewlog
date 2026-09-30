@@ -203,7 +203,7 @@ export const TECHNIQUES: Technique[] = [
       "Sweetness-forward goals — the technique trades sweetness development for clarity",
     ],
     compatibleBrewers: ["v60", "orea-apex", "origami-cone"],
-    exemplifiedBy: ["wallgren-kalita-sieved"],
+    exemplifiedBy: ["kasuya-mugen-flat"], // was wallgren-kalita-sieved, which opens with a bed-agitation step (2026-09-30)
     sources: [
       {
         type: "transcript",

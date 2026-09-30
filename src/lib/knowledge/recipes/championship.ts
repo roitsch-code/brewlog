@@ -379,7 +379,7 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
       { label: "Drawdown", action: "drain", durationSec: 10 },
     ],
     totalTimeSec: 145,
-    techniques: ["high-agitation-high-extraction"],
+    techniques: ["high-agitation-high-extraction", "melodrip-controlled-pouring"],
     bestFor: {
       roastLevels: ["light", "medium-light"],
       processes: ["natural", "anaerobic", "honey", "washed"],

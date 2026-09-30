@@ -236,7 +236,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     density: "high",
     solubility: "high",
     brewingTendencies:
-      "Treat like a Gesha or top Ethiopian — clarity methods, championship water, careful temperature. Aromatic compounds dissipate above 96°C; cap temperature at 94–95°C unless using Hsu-style staged temp.",
+      "Treat like a Gesha or top Ethiopian — clarity methods, championship water, careful temperature. Aromatic compounds dissipate above 96°C; cap temperature at 94–95°C.",
     commonProcessings: ["washed", "honey", "natural"],
     pairsWellWithRecipes: [
       "hoffmann-v60-better-one-cup",
@@ -448,7 +448,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     density: "high",
     solubility: "high",
     brewingTendencies:
-      "Clarity methods. Naturals need temperature restraint (93°C) to avoid fermentation amplification. Washed Sidra suits Hsu-style staged temp or Du-style rich-ratio technique.",
+      "Clarity methods. Naturals need temperature restraint (93°C) to avoid fermentation amplification. Washed Sidra suits Du-style rich-ratio technique.",
     commonProcessings: ["washed", "natural", "honey", "anaerobic"],
     pairsWellWithRecipes: [
       "wbrc-2023-medina",
@@ -481,7 +481,7 @@ export const VARIETY_PRIORS: VarietyPrior[] = [
     density: "high",
     solubility: "high",
     brewingTendencies:
-      "The reference clarity coffee. Championship-style brewing rewards every variable: low-mineral water (<80 ppm), staged temperature, minimal agitation, lean ratio (1:16+). The variety has the highest aromatic ceiling — match the technique to the coffee.",
+      "The reference clarity coffee. Championship-style brewing rewards every variable: low-mineral water (<80 ppm), one careful temperature, minimal agitation, lean ratio (1:16+). The variety has the highest aromatic ceiling — match the technique to the coffee.",
     commonProcessings: ["washed", "natural", "honey"],
     pairsWellWithRecipes: [
       "wbrc-2019-du",      "hoffmann-v60-better-one-cup",
