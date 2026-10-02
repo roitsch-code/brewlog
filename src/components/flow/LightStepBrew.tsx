@@ -10,6 +10,7 @@ import {
   poursCompleteAtSec,
   getActiveIdx,
   pourPace,
+  stepPhaseAt,
   type PourStep,
   type GuideStep,
   type PourPace,
@@ -232,7 +233,13 @@ export default function LightStepBrew() {
   // haptics only — a 3-2-1 countdown then a strong buzz at each step, fired live
   // while the app is awake. Native-only no-op elsewhere.
   const boundaries = timeline ? boundariesFromTimeline(timeline) : [];
-  useBrewStepHaptics(boundaries, elapsed, started);
+  // The moment each pour's time is up and its rest begins — one light tap.
+  const restStarts = timeline?.shape === "percolation"
+    ? timeline.steps
+        .filter((s) => typeof s.pourEndSec === "number" && (s.restSec ?? 0) > 0)
+        .map((s) => s.pourEndSec as number)
+    : [];
+  useBrewStepHaptics(boundaries, elapsed, started, restStarts);
 
   // Live pour-flow comparison. Off the native shell / immersion / no weight yet
   // → cue "none", so the coach UI renders nothing (no-scale path unchanged).
@@ -430,13 +437,17 @@ function showsCoach(coach?: FlowComparison | null): coach is FlowComparison {
  * same intended-rate model the flow coach grades against), so it's the recipe's
  * "slow", not a generic one — and it renders whether or not a scale is connected. */
 function PourPaceLine({ pace }: { pace: PourPace }) {
-  const label = pace.descriptor.charAt(0).toUpperCase() + pace.descriptor.slice(1) + " pour";
+  // Grams-in-seconds FIRST: a person holds "55 g in 15 s", not "3.7 g/s"
+  // (owner, Oct 2026). The rate and its word stay as the secondary read.
   const rate = pace.rateGPS >= 10 ? String(Math.round(pace.rateGPS)) : pace.rateGPS.toFixed(1);
   return (
     <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-      <span className="font-fraunces text-[15px] leading-none text-light-foreground">{label}</span>
-      <span className="font-mono-num text-[13px] font-semibold text-light-foreground">~{rate} g/s</span>
-      <span className="font-mono-num text-[12px] text-light-muted-foreground">over ~{pace.seconds}s</span>
+      <span className="font-fraunces text-[15px] leading-none text-light-foreground tabular-nums">
+        {Math.round(pace.grams)} g in {pace.seconds} s
+      </span>
+      <span className="font-mono-num text-[12px] text-light-muted-foreground">
+        ~{rate} g/s · {pace.descriptor}
+      </span>
     </div>
   );
 }
@@ -480,17 +491,20 @@ function WeightHold({
  * agitation cards) and StepGuide. `progress` is 0..1 through the current step. */
 function StepProgressFooter({
   nextLabel,
+  label,
   countdownSec,
   progress,
 }: {
-  nextLabel: string;
+  nextLabel?: string;
+  /** Full label override ("Stop pouring in"); defaults to "{nextLabel} in". */
+  label?: string;
   countdownSec: number;
   progress: number;
 }) {
   const pct = Math.min(1, Math.max(0, progress)) * 100;
   return (
     <div className="mt-3 pt-3 border-t border-light-foreground/15 flex items-center gap-3">
-      <span className="text-[12px] text-light-muted-foreground shrink-0">{nextLabel} in</span>
+      <span className="text-[12px] text-light-muted-foreground shrink-0">{label ?? `${nextLabel} in`}</span>
       <div className="flex-1 h-1 rounded-full bg-light-foreground/15 overflow-hidden">
         <div
           className="h-full rounded-full bg-light-foreground transition-all duration-500"
@@ -532,9 +546,25 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
   // grams row so "slow" becomes a rate the live g/s can be read against. The
   // bloom is excluded — its job is even saturation, not a rate (and recipes
   // author its duration inconsistently), so the coach's "Gentle" carries it.
+  // The bloom shows its pour time too (Oct 2026): "55 g in 15 s" is exactly what
+  // was missing when the swirl arrived mid-pour. The pace is read off the time
+  // the schedule GIVES the pour (timingDurationSec), the same number the coach
+  // grades against and the swirl is placed by.
   const activePace =
-    activeStep && (activeStep.action === "pour" || activeStep.action === "final")
-      ? pourPace(activeStep.pourGrams, activeStep.pourDurationSec)
+    activeStep && !isAgitationPourAction(activeStep.action)
+      ? pourPace(activeStep.pourGrams, activeStep.timingDurationSec)
+      : null;
+  // Two phases per step: the ACTIVE part (pouring / swirling) and the REST
+  // after it. The card says which one you're in.
+  const activeEndSec = activeStep
+    ? activeStep.pourEndSec ?? activeStep.startTimeSec + Math.max(1, activeStep.timingDurationSec)
+    : 0;
+  const resting = !!activeStep && started && stepPhaseAt(activeStep, elapsed) === "rest";
+  const coachLiveGrams = coach?.liveGrams ?? null;
+  const coachLiveRate = coach?.liveRateGPS ?? null;
+  const nextPace =
+    nextStep && !isAgitationPourAction(nextStep.action)
+      ? pourPace(nextStep.pourGrams, nextStep.timingDurationSec)
       : null;
   // Draining begins a grace beyond the last step (poursCompleteAtSec covers the time to
   // physically pour it) — purely time-based, so it never waits on a weight reading.
@@ -552,6 +582,21 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
   // timer and the end-swirl never looks inert / "lost".
   const stepFooter = (() => {
     if (!activeStep) return null;
+    // Active phase with a rest after it: count down the POUR, not the next step,
+    // so "am I pouring too fast or too slow" has a clock to read against.
+    if (!resting && (activeStep.restSec ?? 0) > 0 && elapsed < activeEndSec) {
+      const span = activeEndSec - activeStep.startTimeSec;
+      const progress = span > 0 ? Math.min(1, Math.max(0, (elapsed - activeStep.startTimeSec) / span)) : 0;
+      const verb = isAgitationPourAction(activeStep.action) ? "Done in" : "Stop pouring in";
+      return (
+        <StepProgressFooter label={verb} countdownSec={Math.max(0, activeEndSec - elapsed)} progress={progress} />
+      );
+    }
+    if (resting && nextStep && nextCountdown !== null) {
+      const span = nextStep.startTimeSec - activeEndSec;
+      const progress = span > 0 ? Math.min(1, Math.max(0, (elapsed - activeEndSec) / span)) : 0;
+      return <StepProgressFooter nextLabel={nextStep.label} countdownSec={nextCountdown} progress={progress} />;
+    }
     if (nextStep && nextCountdown !== null) {
       const span = nextStep.startTimeSec - activeStep.startTimeSec;
       const progress = span > 0 ? Math.min(1, Math.max(0, (elapsed - activeStep.startTimeSec) / span)) : 0;
@@ -588,7 +633,14 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
               time={step.startTimeSec === 0 ? "0:00" : formatSeconds(step.startTimeSec)}
               label={
                 isAgitationPourAction(step.action) ? (
-                  <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
+                    <span className="font-mono-num text-[12px] text-light-muted-foreground">
+                      · {Math.max(1, step.timingDurationSec)} s
+                      {(step.restSec ?? 0) > 0 && i < steps.length - 1 ? ` · ${step.restSec} s rest` : ""}
+                      {(step.restSec ?? 0) > 0 && i === steps.length - 1 ? ` · drains ${step.restSec} s` : ""}
+                    </span>
+                  </div>
                 ) : (
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                     <span className="text-[14px] font-medium text-light-foreground">{step.label}</span>
@@ -597,6 +649,11 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
                     {step.temperatureC != null && (
                       <span className="font-mono-num text-[12px] text-light-muted-foreground">· {step.temperatureC}°C</span>
                     )}
+                    <span className="font-mono-num text-[12px] text-light-muted-foreground">
+                      · {Math.max(1, step.timingDurationSec)} s pour
+                      {(step.restSec ?? 0) > 0 && i < steps.length - 1 ? ` · ${step.restSec} s rest` : ""}
+                      {(step.restSec ?? 0) > 0 && i === steps.length - 1 ? ` · drains ${step.restSec} s` : ""}
+                    </span>
                   </div>
                 )
               }
@@ -616,7 +673,36 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
 
   return (
     <div className="space-y-3">
-      {activeStep && !allPoursDone && isAgitationPourAction(activeStep.action) && (
+      {activeStep && !allPoursDone && resting && (
+        // REST phase — the pour's time is up. Same place on screen, its own
+        // message: nothing to pour now, here is when and what comes next.
+        <div
+          key={`rest-${flashKey}`}
+          className="rounded-3xl bg-light-card-selected backdrop-blur-light-card backdrop-saturate-150 shadow-light-card-pressed p-4 animate-step-activate"
+        >
+          <p className="label-eyebrow mb-1">Now</p>
+          <p className="font-fraunces text-[28px] leading-tight text-light-foreground">Wait</p>
+          {nextStep && (
+            <p className="mt-1.5 font-fraunces text-[18px] leading-none text-light-foreground tabular-nums">
+              {nextStep.label} at {formatSeconds(nextStep.startTimeSec)}
+            </p>
+          )}
+          {nextStep && nextStep.pourGrams > 0 && (
+            <p className="font-chivo text-[13px] text-light-muted-foreground mt-2 tabular-nums">
+              +{nextStep.pourGrams}g → {nextStep.cumulativeGrams}g
+              {nextPace ? ` in ${nextPace.seconds} s` : ""}
+            </p>
+          )}
+          {showsCoach(coach) ? (
+            <CoachCue coach={coach} />
+          ) : coachLiveGrams != null ? (
+            <WeightHold liveGrams={coachLiveGrams} targetG={activeStep.cumulativeGrams} rateGPS={coachLiveRate} />
+          ) : null}
+          {stepFooter}
+        </div>
+      )}
+
+      {activeStep && !allPoursDone && !resting && isAgitationPourAction(activeStep.action) && (
         // Agitation step — its own prominent moment (the cue the 3-2-1 buzz lands on).
         <div
           key={`step-${flashKey}`}
@@ -649,7 +735,7 @@ function LivePourSequence({ steps, elapsed, targetTimeSec, started, waterGrams, 
         </div>
       )}
 
-      {activeStep && !allPoursDone && !isAgitationPourAction(activeStep.action) && (
+      {activeStep && !allPoursDone && !resting && !isAgitationPourAction(activeStep.action) && (
         // Pour step — the wireframe step widget: NOW / step name, +pour → cumulative
         // paired with the recipe total, the instruction, the live-scale coach inset,
         // then the always-on progress footer.

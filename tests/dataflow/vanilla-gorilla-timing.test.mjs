@@ -293,3 +293,15 @@ test("WIRING: the chat's start_brew recipe gets the same pour-time rule", async 
   const ctx = await readFile(path.join(ROOT, "src/lib/chat/agentContext.ts"), "utf8");
   assert.match(ctx, /return applyPourDurations\(reconcileWaterToPourPlan\(out\), ctx\)\.recipe/);
 });
+
+test("WIRING: the brew screen splits each step into pour and rest, and taps at the pour's end", async () => {
+  const ui = await readFile(path.join(ROOT, "src/components/flow/LightStepBrew.tsx"), "utf8");
+  assert.match(ui, /stepPhaseAt\(activeStep, elapsed\) === "rest"/, "the card must know the phase");
+  assert.match(ui, />Wait</, "the rest phase has its own card");
+  assert.match(ui, /"Stop pouring in"/, "the pour phase counts down the pour, not the next step");
+  assert.match(ui, /pourPace\(activeStep\.pourGrams, activeStep\.timingDurationSec\)/,
+    "the pace line reads the time the schedule gives the pour — bloom included");
+  assert.match(ui, /useBrewStepHaptics\(boundaries, elapsed, started, restStarts\)/);
+  const hook = await readFile(path.join(ROOT, "src/hooks/useBrewStepHaptics.ts"), "utf8");
+  assert.match(hook, /pourEndTap\(\)/, "a rest start fires the light tap");
+});
