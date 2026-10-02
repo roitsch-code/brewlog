@@ -65,6 +65,11 @@ test("the Drip Assist is a separate flow regime, not a separate brewer", () => {
 
 test("a V60 paper in an Origami is still an Origami", () => {
   assert.match(brewMethodKey("Origami (cone, V60 filter)"), /^origami/);
+  // The filter is the geometry: a wave (flat) bed and a cone must not pool.
+  assert.equal(brewMethodKey("Origami (wave)"), "origami-wave");
+  assert.equal(brewMethodKey("Origami (cone)"), "origami-cone");
+  assert.equal(brewMethodKey("Origami (cone, V60 filter)"), "origami-cone");
+  assert.notEqual(brewMethodKey("Origami (wave)"), brewMethodKey("Origami (cone)"));
   assert.equal(brewMethodKey("Origami Air M"), brewMethodKey("origami air m"));
 });
 

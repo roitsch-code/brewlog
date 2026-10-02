@@ -5,7 +5,7 @@
 // Why this exists: every per-method row in grindSettings.ts except the V60 is
 // marked confidence:"estimate", while brew.grindSettingUsed has recorded what
 // the owner actually ground at on every brew since the flow shipped. Timing
-// already learns from history (measuredTimeDelta); grind did not.
+// already learns from history (measured drawdowns); grind did not.
 //
 // This asserts BOTH the function AND the route-level interpolation. This repo
 // has twice shipped a function documented as feeding a prompt while nothing

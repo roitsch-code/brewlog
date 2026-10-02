@@ -16,8 +16,8 @@
  * Bands are STARTING DEFAULTS, tunable on-device — exact g/s is practical
  * guidance, never presented as hard law.
  */
-import { activeStepAt, expectedGramsAt, type BrewTimeline } from "@/lib/brew/timeline";
-import { pourTargetRateGPS } from "@/lib/utils/pourSequence";
+import { activeStepAt, expectedGramsAt, stepPhase, type BrewTimeline } from "@/lib/brew/timeline";
+import { pourTargetRateGPS, stepPourSec } from "@/lib/utils/pourSequence";
 
 export interface WeightSample {
   /** Wall-clock ms when the sample was read. */
@@ -66,6 +66,11 @@ const SLOW_MULT = 0.6;
 // Never cry "Slower" below this even at 1.5× a very gentle target — a genuinely
 // slow pour is never "too fast". Keeps the coach quiet on clarity brews.
 const FAST_FLOOR = 4; // g/s
+// No rate verdict until the rate itself means something: the slope is measured
+// over the trailing 1.5 s (flowRateGPS's window), so in the first 1.5 s of a
+// pour it is dominated by the kettle's opening surge. That surge is what made
+// the coach say "Slower" on the first second of a bloom (Vanilla Gorilla report).
+const RAMP_SEC = 1.5;
 // The recipe's intended rate is clamped to a sane pour band (2–11 g/s) before
 // coaching — see pourTargetRateGPS, the shared source of truth the brew screen
 // also displays, so the coached target and the shown target can never drift.
@@ -202,7 +207,7 @@ export function coachFlow(
   // truth the brew screen also displays, so the target you're coached to and the
   // target shown on the card are the same number. Replaces the old global 4 g/s
   // that flagged every legit fast pour as "too fast".
-  const targetRate = pourTargetRateGPS(pourGrams, step.pourDurationSec);
+  const targetRate = pourTargetRateGPS(pourGrams, stepPourSec({ ...step, pourGrams }));
 
   const partial: Omit<FlowComparison, "cue" | "message" | "detail" | "state"> = {
     liveGrams,
@@ -241,8 +246,26 @@ export function coachFlow(
     };
   }
 
+  // Past this step's pour time, in its REST: the plan has nothing to pour now.
+  // Grading a rate here is wrong in both directions — a user who is still
+  // pouring is late, not fast. Tell them to finish, never "Slower".
+  if (stepPhase(step, elapsed) === "rest") {
+    return {
+      ...partial,
+      cue: "keep-flow",
+      message: "Finish pour",
+      detail: fmtDetail(remaining, rate),
+      state: "behind",
+    };
+  }
+
   // Still pouring toward the target — coach the rate.
   const r = rate ?? 0;
+  const settling = elapsed - step.startSec < RAMP_SEC;
+  // "Too fast" must be visible in the GRAMS as well as the slope: the live
+  // weight has to be ahead of where the plan's ramp says it should be. A short
+  // burst that leaves you on or behind the ramp is not a pour that is too fast.
+  const aheadOfRamp = targetGramsNow == null || liveGrams - targetGramsNow > TOL_G;
   let cue: FlowCue = isBloom ? "bloom" : "steady";
   let message = isBloom ? "Gentle" : "Steady";
   let state: FlowComparison["state"] = "on-track";
@@ -251,16 +274,16 @@ export function coachFlow(
     cue = "keep-flow";
     message = "Keep going";
     state = "behind";
-  } else if (rateCoachingOff) {
+  } else if (rateCoachingOff || settling) {
     // Disc on: leave the cue as-is (grams-based state above still applies).
-  } else if (r > targetRate * FAST_MULT && r > FAST_FLOOR) {
+  } else if (r > targetRate * FAST_MULT && r > FAST_FLOOR && aheadOfRamp) {
     // Too fast RELATIVE TO THE RECIPE — >1.5× its own intended rate (and never
     // below the gentle FAST_FLOOR). A 6 g/s Kasuya pour no longer nags; a
     // clarity brew poured at double still does.
     cue = "pour-slower";
     message = "Slower";
     state = "ahead";
-  } else if (!rateCoachingOff && r < Math.min(targetRate * SLOW_MULT, SLOW_ABS) && remaining > EASE_OFF_G) {
+  } else if (r < Math.min(targetRate * SLOW_MULT, SLOW_ABS) && remaining > EASE_OFF_G) {
     cue = "pour-faster";
     message = "Faster";
     state = "behind";

@@ -166,12 +166,12 @@ test("WIRING: recommend.ts runs the guard and uses its output", async () => {
   assert.match(src, /enforceRecipePhysics/, "recommend.ts must import the guard");
   assert.match(
     src,
-    /const physicsChecked\s*=\s*deSwirled\.map/,
+    /const physicsChecked\s*=\s*pourTimed\.map/,
     "every candidate must go through the guard",
   );
   assert.match(
     src,
-    /calibrateTargetTimes\(\s*deSwirledSafe/,
+    /guardVesselCapacity\(\s*deSwirledSafe/,
     "the guarded candidates — not the raw ones — must flow on, or the guard is dead code",
   );
 });

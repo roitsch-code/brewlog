@@ -1,11 +1,12 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow, vesselCannotServe, VESSEL_CAPS } from "../utils/vesselCapacity";
-import { stripProactiveDripAssist, isDripAssistMethod } from "../utils/dripAssist";
+import { stripProactiveDripAssist } from "../utils/dripAssist";
 import {
   maxRenderedPourGapSec,
-  minDrawdownSec,
   pourScheduleFor,
 } from "../utils/pourSequence";
+import { drawdownFor } from "../brew/drawdown";
+import { applyPourDurations } from "../recipe/pourDurations";
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
@@ -26,7 +27,6 @@ import type { Session } from "../types/session";
 import type { UserPreferences } from "../types/preferences";
 import {
   buildTimingStats,
-  measuredTimeDelta,
   buildMeasuredFeedback,
   recentReferenceNames,
 } from "./historyUtils";
@@ -144,25 +144,21 @@ function guardRecipeFidelity(
 }
 
 /**
- * Deterministic timing calibration from MEASURED history: when past brews of
- * the same method at a similar volume reliably ran longer than their promised
- * clock (median ≥ +20s over ≥2 sessions), raise the candidate's targetTimeSec
- * by that measured median. The recipe-fidelity rule stays intact — the grind
- * guard remains the extraction lever — but the clock the timer promises must be
- * the one this batch size has actually been measuring, not the single-cup
- * reference time it mathematically can't hit (the "450ml at 3:30" complaint).
- * Capped at ±120s; never touches iced (different water basis), cold-brew steeps,
- * or immersion (their time is the steep, not drawdown).
+ * The promised clock = when the last pour ends + how long THIS setup drains.
  *
- * It corrects in BOTH directions since Sep 2026 (owner decision). It used to
- * raise only, because under the old reserve-based renderer shortening the clock
- * dragged every pour earlier with it — the cure was worse than the disease. The
- * cadence-first schedule fixes pour times from the recipe's own durations, so a
- * shorter clock now only trims the drawdown, and a cup that measurably finishes
- * early stops being timed a minute long. The floor is the pour phase plus the
- * drawdown minimum, so shortening can never cut a pour.
+ * Replaces two guards (Oct 2026). `calibrateTargetTimes` added the median
+ * (actual − target) of past brews on the brewer to the model's clock — but past
+ * brews had different pour phases, so a total-time delta does not carry over:
+ * it turned a 4:00 model guess into 4:35 for a cup that was through at 3:44
+ * (Vanilla Gorilla, Origami wave). `calibrateDripAssistFinish` trimmed the tail
+ * as a share of a clock that was itself a guess. Both are now one rule: render
+ * the pours, then add the drawdown from src/lib/brew/drawdown.ts — the owner's
+ * own measured drawdowns first, the disc estimate, then the published-recipe
+ * median for the brewer. A verified reference keeps its own published drawdown
+ * until the owner has measured his own. Iced, cold steeps and immersion are
+ * skipped (their time is the steep or the split build, not a drain).
  */
-export function calibrateTargetTimes(
+export function calibrateDrawdownClock(
   candidates: RecommendationCandidate[],
   pastSessions: Session[],
   isPercolation: (method?: string) => boolean,
@@ -174,80 +170,17 @@ export function calibrateTargetTimes(
     if (typeof t !== "number" || !(t > 0) || t >= 3600) return c;
     if (typeof c.recipe.iceGrams === "number" && c.recipe.iceGrams > 0) return c;
     if (!isPercolation(c.method)) return c;
-    const cal = measuredTimeDelta(
-      pastSessions,
-      c.method,
-      c.recipe.waterGrams as number | undefined,
-      isPercolation,
-    );
-    if (!cal || Math.abs(cal.deltaSec) < 20) return c;
-    const delta = Math.max(-120, Math.min(120, Math.round(cal.deltaSec / 5) * 5));
-    let next = t + delta;
-    if (delta < 0) {
-      // Never shorten into the pour phase: the floor is when the last pour ends
-      // plus this method's drawdown minimum.
-      const schedule = pourScheduleFor(c.recipe, roastDate, now, c.method);
-      const floor = schedule ? schedule.pourPhaseEndSec + minDrawdownSec(c.method) : t;
-      next = Math.max(floor, next);
-    }
+    const schedule = pourScheduleFor(c.recipe, roastDate, now, c.method);
+    if (!schedule) return c;
+    const est = drawdownFor(pastSessions, c.method, c.recipe.waterGrams);
+    if (!est) return c;
+    if (est.source === "corpus" && resolveReference(c.basedOn)?.verified) return c;
+    const next = schedule.pourPhaseEndSec + est.sec;
     if (next === t) return c;
     console.warn(
-      `[recommend] time calibration: "${c.title}" ${t}s → ${next}s (measured median ${cal.deltaSec >= 0 ? "+" : ""}${cal.deltaSec}s over ${cal.count} past ${c.method} brews at ~${c.recipe.waterGrams}g)`,
+      `[recommend] drawdown clock: "${c.title}" ${t}s → ${next}s (pours end ${schedule.pourPhaseEndSec}s + drawdown ${est.sec}s, ${est.detail})`,
     );
     return { ...c, recipe: { ...c.recipe, targetTimeSec: next } };
-  });
-}
-
-/**
- * Drip-Assist finish calibration. The disc distributes water across the whole bed,
- * so it drains almost as fast as it's poured — the long drawdown a bare V60 needs
- * doesn't happen (owner-observed; the "recipe finishes a minute early" report).
- *
- * Cadence-first, this is a pure TAIL operation: render the schedule, take the
- * drawdown the clock currently leaves, and replace it with the disc's thin
- * drainage margin. The pour phase is untouched by construction, so the shrunk
- * clock reproduces the bare brew's pour times exactly — only the dead tail goes.
- * (Before Sep 2026 this scaled the whole clock by a ratio of two reserve
- * fractions, which only left the cadence intact because the renderer re-derived
- * it from the same fractions.) Estimate: direction owner-confirmed, magnitude to
- * be firmed up by one measured disc brew. No-op unless the disc is the locked
- * method; iced / cold-brew / immersion are skipped (their time is the steep).
- */
-export const DRIP_ASSIST_DRAWDOWN_KEEP = 0.21;
-/** ...but a disc still holds and releases the water poured into it, so the tail
- * never collapses to nothing. Estimate, same provenance as the fraction above. */
-export const DRIP_ASSIST_DRAWDOWN_FLOOR_SEC = 10;
-
-export function calibrateDripAssistFinish(
-  candidates: RecommendationCandidate[],
-  discLocked: boolean,
-  isPercolation: (method?: string) => boolean,
-  roastDate?: string,
-  now: number = Date.now(),
-): RecommendationCandidate[] {
-  if (!discLocked) return candidates;
-  return candidates.map((c) => {
-    if (!isDripAssistMethod(c.method)) return c;
-    const t = c.recipe?.targetTimeSec;
-    if (typeof t !== "number" || !(t > 0) || t >= 3600) return c;
-    if (typeof c.recipe.iceGrams === "number" && c.recipe.iceGrams > 0) return c;
-    if (!isPercolation(c.method)) return c;
-    // Render WITHOUT the disc so we measure the bare drawdown this clock implies,
-    // then keep only the disc's share of it.
-    const bare = pourScheduleFor(c.recipe, roastDate, now, undefined);
-    if (!bare) return c;
-    const bareDrawdown = t - bare.pourPhaseEndSec;
-    if (!(bareDrawdown > 0)) return c;
-    const discDrawdown = Math.max(
-      DRIP_ASSIST_DRAWDOWN_FLOOR_SEC,
-      Math.round(bareDrawdown * DRIP_ASSIST_DRAWDOWN_KEEP),
-    );
-    const shrunk = t - (bareDrawdown - discDrawdown);
-    if (!(shrunk > 0) || shrunk >= t) return c;
-    console.warn(
-      `[recommend] drip-assist finish: "${c.title}" ${t}s → ${shrunk}s (drawdown ${bareDrawdown}s → ${discDrawdown}s; disc drains as poured)`,
-    );
-    return { ...c, recipe: { ...c.recipe, targetTimeSec: shrunk } };
   });
 }
 
@@ -960,8 +893,6 @@ Return valid JSON only.`;
 
   // Deterministic backstops over what the model returned (the prompt forbids
   // all of these, but a weaker model can still leak them — #453):
-  //   0. targetTimeSec calibrated to the MEASURED history for this method at
-  //      this batch size (raise-only — the promised clock must be achievable);
   //   1. over-capacity vessels (too small for the water it pours);
   //   2. vessels too small to SERVE the requested volume, or a recipe that
   //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
@@ -970,13 +901,24 @@ Return valid JSON only.`;
   //      never wanted — incl. one sequenced after the drawdown.
   const deSwirled = stripMinimalAgitationSwirls(mapped, resolveReference);
 
+  //   0. POUR TIMES. The model gives grams and cadence; the seconds each pour
+  //      takes come from the verified reference it adapts (scaled), else the
+  //      owner's measured ~4 g/s in whole 5-second steps (pourDurations.ts).
+  const pourTimed = deSwirled.map((c) => {
+    const res = applyPourDurations(c.recipe, { basedOn: c.basedOn, method: c.method });
+    for (const change of res.changes) {
+      console.warn(`[recommend] pour time: "${c.title ?? c.method}" ${change}`);
+    }
+    return res.recipe === c.recipe ? c : { ...c, recipe: res.recipe };
+  });
+
   //   0a. PHYSICS. Before any clock tuning: the recipe's own numbers have to hold
   //       together — milestones that increase, a headline water that matches the
   //       pour plan, no pour scheduled faster than anyone pours, immersion steps
   //       that sum to their clock, and a clock that leaves a real drawdown after
   //       the last pour without padding it. Repaired in place; a recipe whose
   //       milestones go backwards has no honest repair and is dropped.
-  const physicsChecked = deSwirled.map((c) => {
+  const physicsChecked = pourTimed.map((c) => {
     const res = enforceRecipePhysics(c.recipe, {
       method: c.method,
       roastDate: coffee.roastDate,
@@ -994,13 +936,7 @@ Return valid JSON only.`;
   }
   const deSwirledSafe = (physicsKept.length ? physicsKept : physicsChecked).map((r) => r.candidate);
 
-  const timeCalibrated = calibrateTargetTimes(
-    deSwirledSafe,
-    pastSessions,
-    isPercolation,
-    coffee.roastDate,
-  );
-  const capped = guardVesselCapacity(timeCalibrated);
+  const capped = guardVesselCapacity(deSwirledSafe);
   const volumeSafe = guardVolumeTarget(
     capped,
     targetWaterMl,
@@ -1011,12 +947,12 @@ Return valid JSON only.`;
       Boolean(lockedMethodBase),
   );
   const discGuarded = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
-  //   5. disc-locked finish: the Drip Assist drains as fast as it's poured, so the
-  //      promised clock drops its fictional ~33% drawdown tail (the "finishes a
-  //      minute early" report). Pairs with drawdownReserveFrac on the render side.
-  const discTimed = calibrateDripAssistFinish(
+  //   5. THE CLOCK. Pour phase + this setup's drawdown (measured first). Runs
+  //      after the disc guard because the brewer — disc or bare — decides the
+  //      drawdown. Never pads: the drawdown is clamped to MAX_DRAWDOWN_ABS_SEC.
+  const discTimed = calibrateDrawdownClock(
     discGuarded,
-    Boolean(dripAssistLocked),
+    pastSessions,
     isPercolation,
     coffee.roastDate,
   );

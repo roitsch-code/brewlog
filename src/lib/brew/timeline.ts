@@ -21,9 +21,9 @@
  * renderer arrays and the cue boundaries are unchanged across the recipe corpus.
  */
 import type { BrewRecipe, BrewStepAction } from "@/lib/types/session";
-import { intendedPourDurationSec } from "@/lib/utils/pourSequence";
 import {
   buildGuideSteps,
+  stepPourSec,
   hasImmersionShape,
   isAgitationPourAction,
   pourScheduleFor,
@@ -57,6 +57,12 @@ export interface TimelineStep {
   /** How long this step OCCUPIES on the rendered timeline (see PourStep). The
    * expected-grams ramp and the dead-gap check both measure from it. */
   timingDurationSec?: number;
+  /** End of the ACTIVE phase (pouring / agitating). After it, until `endSec`,
+   * the step is a REST: nothing to pour, the coach must not grade a rate.
+   * Percolation only; immersion steps leave it undefined. */
+  pourEndSec?: number;
+  /** Seconds of rest after the active phase (drawdown on the last step). */
+  restSec?: number;
   /** Pre-brew handling (immersion invert/load/assemble) — excluded from `steps`. */
   isSetup: boolean;
   /** Swirl / stir / tap / agitate-bed. */
@@ -126,6 +132,8 @@ function fromPourStep(p: PourStep, all: PourStep[], i: number, targetTimeSec: nu
     pourGrams: p.pourGrams,
     pourDurationSec: p.pourDurationSec,
     timingDurationSec: p.timingDurationSec,
+    pourEndSec: p.pourEndSec,
+    restSec: p.restSec,
     isSetup: false,
     isAgitation: isAgitationPourAction(p.action),
     temperatureC: p.temperatureC,
@@ -239,7 +247,7 @@ export function expectedGramsAt(timeline: BrewTimeline, tSec: number): number | 
     // Ramp over the recipe's OWN intended pour time when it authored a plausible
     // one, else the ~4 g/s house estimate — so "where you should be" matches the
     // recipe's intended pour speed (a 6 g/s Kasuya pour fills in 10 s, not 15 s).
-    const dur = Math.max(1, s.timingDurationSec ?? intendedPourDurationSec(pourGrams, s.pourDurationSec));
+    const dur = Math.max(1, stepPourSec({ ...s, pourGrams }));
     const pourEnd = s.startSec + dur;
     if (tSec < s.startSec) {
       return prevC; // resting between the previous pour's end and this pour
@@ -268,4 +276,14 @@ export function activeStepAt(timeline: BrewTimeline, elapsed: number, started: b
     if (elapsed >= timeline.steps[i].startSec) idx = i;
   }
   return idx;
+}
+
+/**
+ * Which phase of the active step the brew is in at `elapsed`: "active" while
+ * the step's pour / agitation is running, "rest" after it until the next step.
+ * Steps without an explicit active end (immersion, legacy) are always "active".
+ */
+export function stepPhase(step: TimelineStep, elapsed: number): "active" | "rest" {
+  if (typeof step.pourEndSec !== "number") return "active";
+  return elapsed < step.pourEndSec ? "active" : "rest";
 }

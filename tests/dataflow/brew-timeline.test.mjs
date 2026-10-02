@@ -264,11 +264,11 @@ test("percolation: expectedGramsAt is monotonic 0 → final", () => {
 });
 
 test("percolation: expectedGramsAt interpolates mid-bloom", () => {
-  // Structured: bloom 45g starting at t=0. pourDurationSec(45) = round(45/4) = 11s.
-  // At t=5: 45 * 5/11 ≈ 20.45g.
+  // Structured: bloom 45g starting at t=0. House pour time for 45 g = 11.25 s →
+  // nearest 5 s step = 10 s. At t=5: 45 * 5/10 = 22.5 g.
   const tl = buildBrewTimeline(RECIPES["percolation-structured-with-agitation"], ROAST, NOW);
   const g = expectedGramsAt(tl, 5);
-  assert.ok(Math.abs(g - (45 * 5) / 11) < 0.01, `mid-bloom interpolation off: ${g}`);
+  assert.ok(Math.abs(g - (45 * 5) / 10) < 0.01, `mid-bloom interpolation off: ${g}`);
 });
 
 test("immersion + prose: no grams curve (expectedGramsAt null)", () => {

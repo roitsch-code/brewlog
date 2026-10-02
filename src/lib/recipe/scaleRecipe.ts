@@ -47,7 +47,7 @@ import { MAX_POUR_RATE_GPS, MIN_POUR_RATE_GPS, POUR_RATE_GPS } from "@/lib/utils
  * pair 30→30 s) and are `verified:false`. The square root sits between "flat"
  * and "linear" and under Hoffmann's measured pair, so it never over-promises the
  * clock. The owner's OWN measured brew times override it entirely once there are
- * two brews in the volume bucket (`calibrateTargetTimes`).
+ * two brews in the volume bucket (`drawdownFor`, src/lib/brew/drawdown.ts).
  */
 export const DRAWDOWN_SCALE_EXP = 0.5;
 

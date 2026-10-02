@@ -172,7 +172,7 @@ test("start_brew's recipe is sanitized through cleanChatRecipe before anything r
   assert.ok(startBrew.length > 0, "start_brew mapping must exist");
   assert.match(
     startBrew.slice(0, 600),
-    /recipe:\s*cleanChatRecipe\(input\.recipe\)/,
+    /recipe:\s*cleanChatRecipe\(input\.recipe,\s*\{\s*basedOn:\s*input\.basedOn/,
     "the start_brew action's recipe must be the CLEANED recipe",
   );
 });

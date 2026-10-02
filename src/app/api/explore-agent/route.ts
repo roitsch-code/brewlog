@@ -138,7 +138,7 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
       method: input.method,
       title: input.title,
       basedOn: input.basedOn,
-      recipe: cleanChatRecipe(input.recipe),
+      recipe: cleanChatRecipe(input.recipe, { basedOn: input.basedOn, method: input.method }),
       roaster: input.roaster,
       name: input.name,
       origin: input.origin,
