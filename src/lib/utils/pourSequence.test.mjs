@@ -92,15 +92,15 @@ test("getBloomDuration: exactly 22 days old → 30s (boundary)", () => {
 // ── parsePourSteps: core invariant ─────────────────────────────────────────
 
 test("parsePourSteps: a string recipe times its pours, then drains what's left", () => {
-  // No authored durations, so each pour takes grams ÷ 4 g/s and the rests are
-  // spread over what is left once a corpus-median drawdown is set aside. 270s,
-  // 4 pours, peak roast: pours 13/33/35/45s, drawdown target 97s, so the two
-  // gaps get 10s each… clamped up to the 10s minimum, leaving 92s of drawdown.
+  // No authored durations, so each pour takes the house time (grams ÷ 4 g/s in
+  // whole 5 s steps) and the rests are spread over what is left once a
+  // corpus-median drawdown is set aside. 270s, 4 pours, peak roast: pours
+  // 15/35/35/45s, drawdown target 97s, so the two gaps get the 10s minimum.
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
   assert.ok(steps, "should parse");
   assert.deepEqual(
     steps.map((s) => s.startTimeSec),
-    [0, 45, 88, 133],
+    [0, 45, 90, 135],
   );
   const last = steps.at(-1);
   assert.equal(last.action, "final");
@@ -162,10 +162,10 @@ test("parsePourSteps: 3-pour schedule has one rest between pour 2 and the final"
   const steps = parsePourSteps("60 – 250 – 450", 240, peakRoast, NOW);
   assert.ok(steps);
   assert.equal(steps.length, 3);
-  // pours 15/48/50s; one gap gets 11s once an 86s drawdown is set aside.
+  // pours 15/50/50s; one gap gets the 10s minimum once an 86s drawdown is set aside.
   assert.deepEqual(
     steps.map((s) => s.startTimeSec),
-    [0, 45, 104],
+    [0, 45, 105],
   );
 });
 
@@ -284,11 +284,11 @@ test("pourStepsFromStructured: a structured recipe follows its OWN authored rest
   };
   const fromStruct = pourStepsFromStructured(recipe, peakRoast, NOW);
   assert.ok(fromStruct);
-  // Bloom block = its 13s pour + the authored 30s rest; then the three pours run
-  // back-to-back at 4 g/s (33s, 35s, 45s).
+  // Bloom block = its 15s pour + the authored 30s rest; then the three pours run
+  // back-to-back at the house time (35s, 35s, 45s).
   assert.deepEqual(
     fromStruct.map((s) => s.startTimeSec),
-    [0, 43, 76, 111],
+    [0, 45, 80, 115],
   );
   assert.deepEqual(
     fromStruct.map((s) => s.cumulativeGrams),
@@ -296,8 +296,8 @@ test("pourStepsFromStructured: a structured recipe follows its OWN authored rest
   );
   // The trailing "Drawdown" step is not cadence — it is what the clock has left.
   const schedule = pourScheduleFor(recipe, peakRoast, NOW);
-  assert.equal(schedule.pourPhaseEndSec, 156);
-  assert.equal(schedule.drawdownSec, 270 - 156);
+  assert.equal(schedule.pourPhaseEndSec, 160);
+  assert.equal(schedule.drawdownSec, 270 - 160);
   // …and structured carries the per-pour temperatures the string lacks
   assert.equal(fromStruct[0].temperatureC, 94);
   assert.equal(fromStruct[1].temperatureC, 92);
@@ -363,22 +363,23 @@ test("getActiveIdx: returns bloom before first pour", () => {
 
 test("getActiveIdx: advances exactly at each step's startTime", () => {
   const steps = parsePourSteps("50 – 180 – 320 – 500", 270, peakRoast, NOW);
-  // Steps at [0, 45, 88, 133] — see the cadence test above.
+  // Steps at [0, 45, 90, 135] — see the cadence test above.
   assert.equal(getActiveIdx(45, steps), 1);
-  assert.equal(getActiveIdx(87, steps), 1);
-  assert.equal(getActiveIdx(88, steps), 2);
-  assert.equal(getActiveIdx(132, steps), 2);
-  assert.equal(getActiveIdx(133, steps), 3);
+  assert.equal(getActiveIdx(89, steps), 1);
+  assert.equal(getActiveIdx(90, steps), 2);
+  assert.equal(getActiveIdx(134, steps), 2);
+  assert.equal(getActiveIdx(135, steps), 3);
   assert.equal(getActiveIdx(500, steps), 3); // stays on final after target time
 });
 
 // ── pourStepsFromStructured: agitation is a discrete, flow-rate-timed step ───
 
-test("pourDurationSec / POUR_RATE_GPS: pour time = grams ÷ rate", () => {
+test("pourDurationSec / POUR_RATE_GPS: grams ÷ rate, in whole 5-second steps", () => {
   assert.equal(POUR_RATE_GPS, 4);
   assert.equal(pourDurationSec(100), 25); // 100g ÷ 4 g/s
-  assert.equal(pourDurationSec(50), 13); // 12.5 → 13
-  assert.equal(pourDurationSec(0), 1); // floor of 1s, never 0
+  assert.equal(pourDurationSec(50), 15); // 12.5 → nearest 5 s step
+  assert.equal(pourDurationSec(85), 20); // 21.25 → 20
+  assert.equal(pourDurationSec(0), 5); // never under one 5 s step
 });
 
 test("pourStepsFromStructured: swirl/stir become their own steps, timed AFTER the pour", () => {
@@ -397,13 +398,13 @@ test("pourStepsFromStructured: swirl/stir become their own steps, timed AFTER th
   assert.ok(steps);
   // No authored rests → the fallback spreads them. Bloom 45s (roast age, since
   // the recipe timed no bloom block); stir lands the instant the bloom pour is
-  // done (13s); pour 2 takes 38s plus a rest, and the final pour's swirl lands
-  // when it finishes pouring (124 + 25).
+  // done (15s); pour 2 takes 40s plus a rest, and the final pour's swirl lands
+  // when it finishes pouring.
   assert.deepEqual(
     steps.map((s) => [s.action, s.startTimeSec]),
     [
       ["bloom", 0],
-      ["stir", 13],
+      ["stir", 15],
       ["pour", 45],
       ["final", 124],
       ["swirl", 149],
@@ -632,12 +633,12 @@ test("pourTargetRateGPS: an absurd authored time is clamped to the ceiling", () 
   assert.equal(pourTargetRateGPS(200, 1), PACE_RATE_MAX_GPS);
 });
 
-test("pourTargetRateGPS: an implausibly SLOW authored time is ignored (falls to ~4 g/s)", () => {
-  // 10g authored at 60s = 0.17 g/s < MIN_POUR_RATE_GPS → not a real pour time, so
-  // intendedPourDurationSec drops back to the house estimate (~4 g/s), never a
-  // near-zero rate.
-  const r = pourTargetRateGPS(10, 60);
-  assert.ok(r > PACE_RATE_MIN_GPS && r <= 4.5, `expected ~4 g/s house fallback, got ${r}`);
+test("pourTargetRateGPS: an implausibly SLOW authored time is ignored (falls to the house time)", () => {
+  // 40g authored at 60s = 0.67 g/s < MIN_POUR_RATE_GPS → not a real pour time, so
+  // intendedPourDurationSec drops back to the house time (40g → 10s = 4 g/s),
+  // never a near-zero rate.
+  const r = pourTargetRateGPS(40, 60);
+  assert.equal(r, 4);
 });
 
 test("pourPace: descriptor bands (house 4 g/s reads 'slow', Kasuya 6 'brisk')", () => {

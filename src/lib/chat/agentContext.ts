@@ -10,6 +10,7 @@
  * Everything here is Next-free and pure apart from the corpus memo.
  * Byte-identical move; no behaviour change.
  */
+import { applyPourDurations } from "@/lib/recipe/pourDurations";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
@@ -103,7 +104,10 @@ export function formatLibraryForAgent(library: CompactCoffee[]): string {
  *   3. snap the headline water to the actual pour plan (the "too much water"
  *      header-vs-plan mismatch /recommend already corrects).
  */
-export function cleanChatRecipe(recipe: BrewRecipe | undefined): BrewRecipe | undefined {
+export function cleanChatRecipe(
+  recipe: BrewRecipe | undefined,
+  ctx: { basedOn?: string; method?: string } = {},
+): BrewRecipe | undefined {
   if (!recipe) return undefined;
   const pourSteps = sanitizePourSteps(recipe.pourSteps);
   const out: BrewRecipe = {
@@ -111,7 +115,11 @@ export function cleanChatRecipe(recipe: BrewRecipe | undefined): BrewRecipe | un
     ...(pourSteps ? { pourSteps } : {}),
     pourSequence: recipe.pourSequence ?? pourSequenceFromSteps(pourSteps),
   };
-  return reconcileWaterToPourPlan(out);
+  // 4. Pour TIMES are the app's, not the model's — the same rule /recommend
+  //    applies (src/lib/recipe/pourDurations.ts): a verified reference's own
+  //    scaled times, else the owner's measured ~4 g/s in 5-second steps. The
+  //    rests absorb the difference, so the pours start where the chat said.
+  return applyPourDurations(reconcileWaterToPourPlan(out), ctx).recipe;
 }
 
 /**

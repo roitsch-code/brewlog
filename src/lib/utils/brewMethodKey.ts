@@ -14,6 +14,11 @@
  * the Drip Assist is not the same flow regime as an Orea without it. Pooling
  * those would average away the very difference the calibration exists to catch.
  *
+ * The Origami is split by its FILTER, because the filter decides the geometry:
+ * a wave (flat-bottom) filter drains like a Kalita, a cone filter like a V60.
+ * Pooling the two averaged a flat bed's drawdown with a cone's (Oct 2026). A
+ * label that names neither ("Origami Air M") stays "origami".
+ *
  * An unrecognised brewer falls back to its own normalised string rather than a
  * shared "other" bucket — two unknown brewers must not be averaged together.
  */
@@ -40,6 +45,10 @@ export function brewMethodKey(method?: string): string {
   const withoutDisc = raw.replace(DRIP_ASSIST, " ");
   const suffix = disc ? "+drip-assist" : "";
 
+  if (/origami/.test(withoutDisc)) {
+    if (/\bwave\b|flat|kalita/.test(withoutDisc)) return "origami-wave" + suffix;
+    if (/\bcone\b|conical|v60/.test(withoutDisc)) return "origami-cone" + suffix;
+  }
   for (const [re, family] of FAMILIES) {
     if (re.test(withoutDisc)) return family + suffix;
   }

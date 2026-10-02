@@ -1,32 +1,27 @@
 /**
  * Pour-over timing math — pure, deterministic, unit-tested.
  *
- * The goal is that the last pour lands at exactly:
- *     (targetTimeSec - drawdownReserve)
+ * CADENCE-FIRST (since Sep 2026): every step occupies the time the recipe gives
+ * it — a pour takes its pour time, an agitation its own duration, a rest its
+ * authored wait — and the drawdown is whatever the clock has left after the
+ * last pour. The clock itself is set upstream (src/lib/brew/drawdown.ts, from
+ * the owner's MEASURED drawdowns, else the corpus median for the brewer).
  *
- * We reserve a method-aware fraction of the total brew time for the final
- * drawdown (33% bare, 7% with the Drip Assist — see drawdownReserveFrac),
- * subtract the bloom, and size the (n - 2) intervals between the first pour
- * after bloom and the final pour PROPORTIONALLY to each pour's grams (time
- * follows water, #438). That guarantees the clock milestone above.
+ * Every rendered pour step carries BOTH phases explicitly:
+ *   - the POUR phase  `startTimeSec … pourEndSec`  (pour this many grams now)
+ *   - the REST phase  `pourEndSec … next start`    (`restSec`, wait)
+ * so the timer can say "55 g in 15 s" and then "Wait · Pour 2 at 0:50" instead
+ * of one countdown to the next step that mixes the two (Oct 2026 report).
+ *
+ * Pour TIME is human, not authored arithmetic: the house rate is the owner's
+ * own measured gooseneck pour (~4 g/s, POUR_RATE_GPS) in whole 5-second steps
+ * (housePourSec). A verified reference recipe's own published pour times are
+ * stamped onto the candidate upstream and are honoured verbatim here.
  *
  * Two renderers consume this module:
- *  - Percolation (V60/Orea/Kalita/Chemex) → cumulative-grams `PourStep[]`,
- *    timed by the drawdown-reserve formula (`parsePourSteps`).
+ *  - Percolation (V60/Orea/Kalita/Chemex) → cumulative-grams `PourStep[]`.
  *  - Immersion / AeroPress / staged routines → `GuideStep[]` with authored
- *    per-step durations and explicit actions (`buildGuideSteps`), so steep,
- *    flip and press become discrete, timed cues.
- *
- * NOTE — the 33% reserve is the DEFAULT for a bare percolation brew. A standard
- * V60 drawdown probably sits closer to 15–20% of total time, so the default is
- * still conservatively padded pending an empirical measurement — leave it until
- * that's done. The one calibrated case is the Drip Assist disc: it distributes
- * water evenly across the whole bed, so the bed drains almost as fast as it's
- * poured and the long drawdown tail simply doesn't happen (owner-observed, Aug
- * 2026 — the "recipe finishes a minute early" report). For a disc brew the
- * reserve collapses to a thin drainage margin (see drawdownReserveFrac), so the
- * timer's finish lands when the cup is actually through instead of ~a minute
- * later. The disc case is method-driven; every other brewer keeps the 33%.
+ *    per-step durations and explicit actions (`buildGuideSteps`).
  */
 
 import { daysSinceRoast, freshnessBucket } from "../coffee/freshness";
@@ -46,9 +41,28 @@ import { isDripAssistMethod } from "@/lib/utils/dripAssist";
  */
 export const POUR_RATE_GPS = 4;
 
-/** Seconds to physically pour `grams` at POUR_RATE_GPS (≥1s, rounded). */
+/**
+ * Pour times are shown in whole 5-second steps: a person reads "55 g in 15 s"
+ * and can hold it, not "in 13.75 s". Sourced from the corpus itself — 357 of
+ * the 402 authored pour times in src/lib/knowledge/recipes are multiples of 5 s.
+ */
+export const HOUSE_POUR_STEP_SEC = 5;
+
+/**
+ * The house pour time for `grams`: the owner's gooseneck rate (POUR_RATE_GPS)
+ * rounded to the nearest whole 5-second step, never under 5 s. MEASURED
+ * against the owner's own Acaia curve (Vanilla Gorilla, 2 Oct 2026): 55 g bloom
+ * reached in 12.4 s, 85 g in ~20 s, 80 g in ~19 s, 70 g in ~18 s — 3.5–4.4 g/s,
+ * i.e. the 4 g/s set here. 55 g → 15 s, 85 g → 20 s, 200 g → 50 s.
+ */
+export function housePourSec(grams: number): number {
+  const raw = Math.max(0, grams) / POUR_RATE_GPS;
+  return Math.max(HOUSE_POUR_STEP_SEC, Math.round(raw / HOUSE_POUR_STEP_SEC) * HOUSE_POUR_STEP_SEC);
+}
+
+/** Seconds to physically pour `grams` at the house rate (see housePourSec). */
 export function pourDurationSec(grams: number): number {
-  return Math.max(1, Math.round(grams / POUR_RATE_GPS));
+  return housePourSec(grams);
 }
 
 /** Slowest rate we'll believe is a real POUR time. A step whose authored
@@ -69,6 +83,26 @@ export function intendedPourDurationSec(grams: number, authoredSec?: number): nu
   const g = Math.max(1, grams);
   if (authoredSec && authoredSec > 0 && g / authoredSec >= MIN_POUR_RATE_GPS) return authoredSec;
   return pourDurationSec(g);
+}
+
+/**
+ * The intended pour time for a RENDERED step: the time the schedule actually
+ * gave the pour (`timingDurationSec`) when there is one — percolation — so the
+ * coach, the pace line, the swirl placement and the expected-grams ramp all use
+ * ONE number. Before Oct 2026 the coach read the authored time (uncapped) while
+ * the schedule stretched anything over 8 g/s, so a pour could be graded against
+ * a time the timer never gave it. Immersion steps carry no timing and keep the
+ * authored rule (filling a Clever is not pouring onto a bed).
+ */
+export function stepPourSec(step: {
+  pourGrams?: number;
+  pourDurationSec?: number;
+  timingDurationSec?: number;
+}): number {
+  if (typeof step.timingDurationSec === "number" && step.timingDurationSec > 0) {
+    return step.timingDurationSec;
+  }
+  return intendedPourDurationSec(Math.max(1, step.pourGrams ?? 1), step.pourDurationSec);
 }
 
 /** The intended pour rate is clamped to this sane pour band for BOTH display and
@@ -165,6 +199,13 @@ export interface PourStep {
    * `startTimeSec + timingDurationSec` is when the step is done, which is what
    * the drawdown, the dead-gap check and the drain card all measure from. */
   timingDurationSec: number;
+  /** End of this step's ACTIVE phase (pour / swirl): startTimeSec + timingDurationSec.
+   * Optional only so hand-built and legacy steps still type-check; every step the
+   * builder renders carries it. */
+  pourEndSec?: number;
+  /** Seconds of REST after the active phase before the next step starts — or, on
+   * the last step, the drawdown until the brew is finished. */
+  restSec?: number;
 }
 
 /** True for the discrete agitation step actions (swirl/stir/tap). */
@@ -350,10 +391,15 @@ export const FALLBACK_DRAWDOWN_SHARE = 0.36;
  * `targetTimeSec` ("a 500 ml V60 is an 8-minute brew") rather than adding pours.
  */
 export const MAX_DRAWDOWN_SHARE = 0.65;
-export const MAX_DRAWDOWN_FLOOR_SEC = 240;
+/** Absolute ceiling on a drawdown. The longest rendered drawdown in the corpus is
+ * a 1 L Chemex at 210 s (corpusDrawdownSamples in src/lib/brew/drawdown.ts
+ * renders them all); 240 s admits every published recipe. Until Oct 2026 this was a
+ * FLOOR (`max`), which let a 4:35 clock promise 240 s of drawdown after pours
+ * that ended at 2:40 — the Vanilla Gorilla report. */
+export const MAX_DRAWDOWN_ABS_SEC = 240;
 
 export function maxDrawdownSec(targetTimeSec: number): number {
-  return Math.max(MAX_DRAWDOWN_FLOOR_SEC, Math.round(targetTimeSec * MAX_DRAWDOWN_SHARE));
+  return Math.min(MAX_DRAWDOWN_ABS_SEC, Math.round(targetTimeSec * MAX_DRAWDOWN_SHARE));
 }
 
 /**
@@ -363,9 +409,9 @@ export function maxDrawdownSec(targetTimeSec: number): number {
  * cap alone would not converge.
  */
 export function maxTargetTimeSec(pourPhaseEndSec: number): number {
-  return Math.max(
-    pourPhaseEndSec + MAX_DRAWDOWN_FLOOR_SEC,
-    Math.round(pourPhaseEndSec / (1 - MAX_DRAWDOWN_SHARE)),
+  return Math.min(
+    pourPhaseEndSec + MAX_DRAWDOWN_ABS_SEC,
+    Math.floor(pourPhaseEndSec / (1 - MAX_DRAWDOWN_SHARE)),
   );
 }
 
@@ -557,6 +603,7 @@ function buildPourSchedule(
 
   const phaseEnd = pourPhaseEndSec(out);
   const finishSec = Math.max(targetTimeSec, phaseEnd + minDrawdown);
+  annotatePhases(out, finishSec);
   return {
     steps: out,
     pourPhaseEndSec: phaseEnd,
@@ -564,6 +611,22 @@ function buildPourSchedule(
     finishSec,
     extended: finishSec > targetTimeSec,
   };
+}
+
+/** Stamp each rendered step's active-phase end and the rest that follows it. */
+function annotatePhases(steps: PourStep[], finishSec: number): void {
+  steps.forEach((s, i) => {
+    const end = s.startTimeSec + Math.max(1, s.timingDurationSec);
+    const nextStart = i < steps.length - 1 ? steps[i + 1].startTimeSec : finishSec;
+    s.pourEndSec = Math.min(end, Math.max(s.startTimeSec + 1, nextStart));
+    s.restSec = Math.max(0, nextStart - s.pourEndSec);
+  });
+}
+
+/** Which phase a step is in at `elapsed`: actively pouring/agitating, or resting. */
+export function stepPhaseAt(step: PourStep, elapsed: number): "active" | "rest" {
+  const end = step.pourEndSec ?? step.startTimeSec + Math.max(1, step.timingDurationSec);
+  return elapsed < end ? "active" : "rest";
 }
 
 /** Elapsed second at which the pour phase is over — the last step's start plus

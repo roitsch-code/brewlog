@@ -6,7 +6,7 @@
  * baseline and re-based, never measured. Meanwhile the app has logged the real
  * thing on every brew since the flow shipped: `brew.grindSettingUsed`, the
  * setting actually ground at, alongside the rating the cup earned. Timing
- * already learns this way (`measuredTimeDelta`); grind did not, so the model
+ * already learns this way (measured drawdowns, src/lib/brew/drawdown.ts); grind did not, so the model
  * kept being handed an estimate for the exact brewer the user owns and has
  * brewed on dozens of times.
  *

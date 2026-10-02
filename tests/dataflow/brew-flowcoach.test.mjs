@@ -79,8 +79,13 @@ test("flowRateGPS = least-squares slope of the sample window", () => {
 // Mid-pour on step 1 (target 180g): elapsed in [45,93), plenty remaining.
 const ELAPSED_MID = 60;
 
+// "Too fast" needs the grams AHEAD of the plan's ramp as well as a fast slope
+// (Oct 2026): at t=60 the ramp expects ~106 g, so 130 g is genuinely ahead.
+// A fast slope while BEHIND the ramp is catching up, not pouring too fast.
+const AHEAD_G = 130;
+
 test("too fast → pour-slower", () => {
-  const c = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8));
+  const c = coachFlow(PERC, ELAPSED_MID, true, AHEAD_G, ramp(8));
   assert.equal(c.cue, "pour-slower");
   assert.equal(c.state, "ahead");
 });
@@ -159,9 +164,10 @@ const KASUYA_LIKE = buildBrewTimeline(
   NOW,
 );
 // The elapsed at which "Pour 2" (target 100, +60g at 6 g/s) is the active step,
-// picked mid-pour with plenty remaining.
+// picked mid-pour with plenty remaining — past the 1.5 s settling window in
+// which no rate verdict is given. The ramp there expects 40 + 60·3/10 = 58 g.
 const pour2 = KASUYA_LIKE.steps.find((s) => s.targetCumulativeGrams === 100);
-const P2_MID = pour2.startSec + 1;
+const P2_MID = pour2.startSec + 3;
 
 test("recipe-derived rate: a 6 g/s pour reads its own rate, not the house 4", () => {
   const c = coachFlow(KASUYA_LIKE, P2_MID, true, 70, ramp(6));
@@ -184,7 +190,7 @@ test("fallback: a string recipe (no authored durations) still targets ~4 g/s", (
   const c = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(4));
   assert.ok(Math.abs(c.targetRateGPS - 4) < 0.6, `fallback target ~4, got ${c.targetRateGPS}`);
   // And 6 g/s on that fallback recipe still nags (4×1.5=6 threshold).
-  assert.equal(coachFlow(PERC, ELAPSED_MID, true, 90, ramp(7)).cue, "pour-slower");
+  assert.equal(coachFlow(PERC, ELAPSED_MID, true, AHEAD_G, ramp(7)).cue, "pour-slower");
 });
 
 test("immersion: the water-POUR step gets scale coaching (AeroPress fix)", () => {
@@ -234,8 +240,8 @@ test("with the Drip Assist on, the rate verdicts stop but the grams keep coachin
   // bed's rate are decoupled by design — "Slower" judges the wrong quantity.
   // The cumulative grams are unaffected (water in the disc sits on the scale),
   // so those must keep working.
-  const judged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8));
-  const unjudged = coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8), true);
+  const judged = coachFlow(PERC, ELAPSED_MID, true, AHEAD_G, ramp(8));
+  const unjudged = coachFlow(PERC, ELAPSED_MID, true, AHEAD_G, ramp(8), true);
 
   assert.equal(judged.cue, "pour-slower", "control: this pour reads as too fast");
   assert.notEqual(unjudged.cue, "pour-slower", "the disc must silence the rate verdict");
@@ -248,4 +254,9 @@ test("with the Drip Assist on, the rate verdicts stop but the grams keep coachin
 
   // The measurements are untouched — only the verdict changed.
   assert.equal(unjudged.liveGrams, judged.liveGrams);
+});
+
+test("a fast slope while BEHIND the plan's ramp is catching up — never 'Slower'", () => {
+  // t=60, ramp expects ~106 g; 90 g at 8 g/s is closing the gap, not too fast.
+  assert.notEqual(coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8)).cue, "pour-slower");
 });

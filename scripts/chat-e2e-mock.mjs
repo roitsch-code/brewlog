@@ -41,9 +41,10 @@ const PIN = process.env.AUTH_PIN || "1234";
 // drawdown reserve. That renderer is gone (cadence-first, Sep 2026), so the
 // old fixture now passes and proves nothing.
 //
-// This one is broken as WRITTEN, which no renderer can rescue: the final pour
-// is 225 g in 10 s (22.5 g/s — nobody pours that), and the recipe itself parks
-// the brew for two minutes before it.
+// This one is broken as WRITTEN, which no renderer can rescue: the recipe parks
+// the brew for two minutes before its final pour. (Its 225 g in 10 s final pour
+// used to be the second defect; since Oct 2026 the app sets pour times itself,
+// so that one is corrected rather than sent back.)
 const BROKEN_RECIPE = {
   doseGrams: 28,
   waterGrams: 450,
@@ -249,8 +250,13 @@ try {
     const errored = toolResults.filter((t) => t.is_error);
     check("the repair went back as an ERROR tool_result", errored.length === 1, `error tool_results=${errored.length}`);
     const msg = errored[0]?.content ?? "";
-    check("it names the unpourable final pour", /225g/.test(msg) && /g\/s/.test(msg), msg.split("\n")[2]?.slice(0, 110));
-    check("it names the dead gap", /stalled brew|Nothing happens/.test(msg), msg.split("\n")[3]?.slice(0, 110));
+    // Pour TIMES are the app's job since Oct 2026 (src/lib/recipe/pourDurations.ts):
+    // the impossible 225 g / 10 s is re-timed to the house pace before the
+    // validator runs, so it is NOT the model's error to repair any more. What the
+    // app cannot fix is the recipe's own two-minute hole — that still goes back.
+    check("the impossible pour time is fixed by the app, not sent back", !(/225g/.test(msg) && /g\/s/.test(msg)),
+      msg.split("\n").slice(1, 4).join(" | ").slice(0, 160));
+    check("it names the dead gap", /stalled brew|Nothing happens/.test(msg), msg.split("\n").slice(1, 4).join(" | ").slice(0, 160));
     check("the stale bubble was retracted before the rewrite", r.retracted);
 
     const brew = r.actions.find((a) => a.destination === "start_brew");

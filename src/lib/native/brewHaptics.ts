@@ -77,6 +77,15 @@ export function countdownTap(): void {
   void h.impact({ style: TICK_STYLE }).catch(() => {});
 }
 
+/** One LIGHT tap when a pour's time is up and its rest begins — "stop
+ * pouring" (owner decision, Oct 2026). Deliberately lighter than the countdown
+ * so the two never read as the same cue. No-op off the native shell. */
+export function pourEndTap(): void {
+  const h = getHaptics();
+  if (!h) return;
+  void h.impact({ style: "LIGHT" }).catch(() => {});
+}
+
 /** The strong "do the step now" buzz at a boundary. No-op off the shell. */
 export function stepBuzz(): void {
   const h = getHaptics();
