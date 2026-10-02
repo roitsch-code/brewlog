@@ -314,10 +314,10 @@ POUR COUNT (for "Own recipe" candidates only — documented recipes keep their p
 
 TIME YOUR OWN STEPS — THE TIMER FOLLOWS THEM. Every step you write occupies the seconds you give it, in order, and the drawdown is whatever the clock has left after the last pour. Nothing is re-spaced for you, so the recipe has to add up:
 
-- Give every step a durationSec. A pour's duration is its grams divided by a real pour rate: ~4 g/s is a gentle gooseneck, 6 g/s is Kasuya's own pace, 8 g/s is the fastest anyone publishes (Hoffmann's Ultimate moves 240 g in 30 s). A 200 g pour is therefore 25–50 s, never 15.
+- Give every step a durationSec. POUR TIMES ARE SET BY THE APP: unless you are copying a verified reference's own scaled line, the server re-times every pour to the user's measured pace — grams ÷ 4 g/s in whole 5-second steps (55 g → 15 s, 85 g → 20 s, 200 g → 50 s) — and moves the difference into the rest after it, so the next pour still starts where you put it. Write pours at that pace and your timings survive unchanged. Your job is GRAMS and CADENCE: how many pours, how big, and how long to rest between them.
 - Write the PAUSES as their own "wait" steps — that is the cadence, and without them your pours run back-to-back. The rest after the bloom is one of them. A normal pulse pause is 10–45 s (Hoffmann pauses 10 s between pulses, Kasuya 35 s between his). A wait over 75 s is not a rest, it is a stalled brew that over-extracts, and the server drops such a candidate.
 - Do NOT write a trailing "Drawdown" step. The drawdown is targetTimeSec minus the end of your last pour; you set it by choosing the total, not by adding a step.
-- targetTimeSec = the bloom, every pour, every wait, plus the drawdown you want. A bare cone drains for 40–90 s after the last pour (Hoffmann's 1-cup 60 s, his Ultimate 105 s, Kasuya 35 s); the Drip Assist drains as fast as you pour, so its tail is a sliver. If your steps outrun your clock the server raises the clock — it never cuts a pour short.
+- targetTimeSec = the end of your last pour plus your best estimate of the drawdown. THE SERVER REPLACES THE DRAWDOWN with the user's own measured drawdown for this brewer and volume (or, without enough history, the published-recipe median for the brewer), so never pad the clock to "be safe" and never justify a recipe by its total time. Do not quote a total time in whyChosen or reasoning — the app shows the real one.
 - More water means BIGGER pours, not more minutes and not automatically more pours (see BATCH SIZE ADAPTATION). Keep the pour count the reference uses; add one only if a pour would otherwise need more than 8 g/s.
 
 AGITATION RULES (critical — determines stir vs swirl cues in brew timer):
@@ -482,14 +482,14 @@ appears until the last token is written. Do the thinking; ship only the verdict.
         "targetTimeSec": 270,
         "pourSequence": "70 – 190 – 320 – 450",
         "pourSteps": [
-          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 15, "notes": "Slow circles from centre out, wet all grounds" },
+          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 20, "notes": "Slow circles from centre out, wet all grounds" },
           { "label": "Stir", "action": "stir", "durationSec": 5, "notes": "3–5× even stir to settle the bed" },
-          { "label": "Bloom rest", "action": "wait", "durationSec": 25 },
-          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 25 },
-          { "label": "Pause", "action": "wait", "durationSec": 15 },
-          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 320, "durationSec": 25 },
-          { "label": "Pause", "action": "wait", "durationSec": 15 },
-          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 450, "durationSec": 25 }
+          { "label": "Bloom rest", "action": "wait", "durationSec": 20 },
+          { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 30 },
+          { "label": "Pause", "action": "wait", "durationSec": 10 },
+          { "label": "Pour 3", "action": "pour", "waterGramsAtEnd": 320, "durationSec": 35 },
+          { "label": "Pause", "action": "wait", "durationSec": 5 },
+          { "label": "Final pour", "action": "final", "waterGramsAtEnd": 450, "durationSec": 35 }
         ]
       },
       "whyChosen": "ONE short sentence: why this candidate for THIS coffee. Make it the mechanism, not a restatement of the numbers above it.",

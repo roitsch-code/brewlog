@@ -305,3 +305,13 @@ test("WIRING: the brew screen splits each step into pour and rest, and taps at t
   const hook = await readFile(path.join(ROOT, "src/hooks/useBrewStepHaptics.ts"), "utf8");
   assert.match(hook, /pourEndTap\(\)/, "a rest start fires the light tap");
 });
+
+test("PROMPTS: the model is told the app owns pour times and the drawdown", async () => {
+  const rec = await readFile(path.join(ROOT, "src/lib/claude/recommendPrompt.ts"), "utf8");
+  assert.match(rec, /POUR TIMES ARE SET BY THE APP/);
+  assert.match(rec, /THE SERVER REPLACES THE DRAWDOWN/);
+  assert.doesNotMatch(rec, /will hand the recipe back to you/);
+  const chat = await readFile(path.join(ROOT, "src/lib/chat/agentPrompt.ts"), "utf8");
+  assert.match(chat, /Pour TIMES are set by the app/);
+  assert.doesNotMatch(chat, /The server checks every pour and will hand the recipe back/);
+});
