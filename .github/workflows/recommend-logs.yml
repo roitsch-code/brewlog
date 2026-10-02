@@ -94,6 +94,87 @@ jobs:
               ORDER BY m.created_at DESC
               LIMIT 8;" </dev/null || echo "psql query failed"
 
+            # The recipe a session ACTUALLY brewed, resolved exactly like
+            # resolveBrewedRecipe (src/lib/utils/resolveRecipe.ts): the candidate
+            # at brew.selectedCandidateIdx, else the candidate matching
+            # brew.methodUsed, else primaryRecipe. Read-only; prints recipe
+            # numbers, method, a short coffee name and the Acaia per-pour reach
+            # times — never prose, never env. Expanded output (-x) so every field
+            # is its own line and the 300-char cut never truncates a row.
+            # Steps format: action:gramsAtEnd@authoredSec. Pours format:
+            # label:targetG target@Xs actual@Ys (from brew.flowAnalysis.perPour).
+            section "Last 10 brewed recipes (recipe numbers only)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -x -c "
+              WITH s AS (
+                SELECT created_at, coffee, context, recommendation, brew,
+                       NULLIF(brew->>'selectedCandidateIdx','')::int AS idx
+                FROM sessions
+                WHERE recommendation IS NOT NULL
+                ORDER BY created_at_ms DESC
+                LIMIT 10
+              ), r AS (
+                SELECT created_at, coffee, context, brew,
+                  COALESCE(
+                    CASE WHEN idx IS NOT NULL THEN recommendation->'candidates'->idx END,
+                    (SELECT c FROM jsonb_array_elements(COALESCE(recommendation->'candidates','[]'::jsonb)) c
+                       WHERE c->>'method' = brew->>'methodUsed' LIMIT 1),
+                    jsonb_build_object('method', recommendation->>'primaryMethod',
+                                       'recipe', recommendation->'primaryRecipe')) AS cand
+                FROM s)
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
+                left(coffee->>'name',24) AS coffee,
+                coffee->>'roastDate' AS roast_date,
+                left(COALESCE(brew->>'methodUsed', cand->>'method'),28) AS method,
+                left(cand->>'basedOn',40) AS based_on,
+                context->>'waterSource' AS water_source,
+                cand->'recipe'->>'doseGrams' AS dose,
+                cand->'recipe'->>'waterGrams' AS water,
+                cand->'recipe'->>'waterTempC' AS temp,
+                left(cand->'recipe'->>'grindSize',24) AS grind,
+                brew->>'grindSettingUsed' AS grind_used,
+                cand->'recipe'->>'targetTimeSec' AS target_sec,
+                brew->>'actualTimeSec' AS actual_sec,
+                (SELECT string_agg(left(p->>'action',5) ||
+                        COALESCE(':'||(p->>'waterGramsAtEnd'),'') || '@' || COALESCE(p->>'durationSec','?'),
+                        ' ' ORDER BY ord)
+                 FROM jsonb_array_elements(COALESCE(cand->'recipe'->'pourSteps','[]'::jsonb))
+                      WITH ORDINALITY t(p, ord)) AS steps,
+                (SELECT string_agg(left(p->>'label',10) || ':' || COALESCE(p->>'targetGrams','?') ||
+                        'g t@' || COALESCE(p->>'targetSec','?') || ' a@' || COALESCE(p->>'actualSec','-'),
+                        ' | ' ORDER BY ord)
+                 FROM jsonb_array_elements(COALESCE(brew->'flowAnalysis'->'perPour','[]'::jsonb))
+                      WITH ORDINALITY t(p, ord)) AS measured_pours
+              FROM r;" </dev/null | cut -c1-300 || echo "psql query failed"
+
+            # Ground truth for how long brews ACTUALLY run vs the clock they were
+            # promised, per brewer label and 50 g volume bucket. Read-only.
+            section "Actual vs promised time per method + volume (all sessions with both)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH s AS (
+                SELECT recommendation, brew,
+                       NULLIF(brew->>'selectedCandidateIdx','')::int AS idx
+                FROM sessions WHERE recommendation IS NOT NULL
+              ), r AS (
+                SELECT brew,
+                  COALESCE(
+                    CASE WHEN idx IS NOT NULL THEN recommendation->'candidates'->idx END,
+                    (SELECT c FROM jsonb_array_elements(COALESCE(recommendation->'candidates','[]'::jsonb)) c
+                       WHERE c->>'method' = brew->>'methodUsed' LIMIT 1),
+                    jsonb_build_object('method', recommendation->>'primaryMethod',
+                                       'recipe', recommendation->'primaryRecipe')) AS cand
+                FROM s)
+              SELECT left(lower(COALESCE(brew->>'methodUsed', cand->>'method')),30) AS method,
+                (round((cand->'recipe'->>'waterGrams')::numeric/50)*50)::int AS vol,
+                count(*) AS n,
+                percentile_cont(0.5) WITHIN GROUP (ORDER BY (brew->>'actualTimeSec')::numeric
+                   - (cand->'recipe'->>'targetTimeSec')::numeric) AS med_actual_minus_target,
+                percentile_cont(0.5) WITHIN GROUP (ORDER BY (brew->>'actualTimeSec')::numeric) AS med_actual
+              FROM r
+              WHERE brew->>'actualTimeSec' ~ '^[0-9.]+$'
+                AND cand->'recipe'->>'targetTimeSec' ~ '^[0-9.]+$'
+                AND cand->'recipe'->>'waterGrams' ~ '^[0-9.]+$'
+              GROUP BY 1,2 ORDER BY 1,2;" </dev/null | cut -c1-300 || echo "psql query failed"
+
             section "Unhandled rejections / crashes (last 2000 lines)"
             docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
               | grep -a -A 15 -iE 'UnhandledPromiseRejection|FATAL ERROR|heap out of memory|TypeError|RangeError' \
