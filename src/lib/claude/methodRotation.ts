@@ -175,7 +175,7 @@ export function buildMethodRecency(
     .join(", ");
 
   const note =
-    `\nMETHOD FIT & FRESHNESS: method choice must be re-derived from THIS coffee and THIS context — nothing is banned, best fit always decides. But these brewers have dominated your recent recommendation sets: ${dominantStr}. A dominant brewer must EARN its slot: include it only when it genuinely fits this coffee + context better than the alternatives, and state that specific, concrete advantage in whyChosen (if you cannot name one, it does not fit better). When several brewers fit equally well — which is common — choose the one LEAST recently recommended. The reference recipe library above is ordered best-fit-first with equal-fit ties broken toward brewers you have not seen lately; treat its order as meaningful.`;
+    `\nMETHOD FIT & FRESHNESS: method choice must be re-derived from THIS coffee and THIS context — nothing is banned, best fit always decides. But these brewers have dominated your recent recommendation sets: ${dominantStr}. A dominant brewer must EARN its slot: include it only when it genuinely fits this coffee + context better than the alternatives, and state that specific, concrete advantage in whyChosen (if you cannot name one, it does not fit better). When several brewers fit equally well — which is common — choose the one LEAST recently recommended. The RELEVANT REFERENCE RECIPES block in this message is ordered best-fit-first with equal-fit ties broken toward brewers you have not seen lately; treat its order as meaningful.`;
 
   return { note, recentBrewers };
 }

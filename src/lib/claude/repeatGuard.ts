@@ -93,11 +93,11 @@ export function formatRepeatRepair(
     .map(([f]) => f);
   const lines = offenders.map(
     (o) =>
-      `- Candidate ${o.index + 1} "${o.title}" (${o.method}, basedOn "${o.basedOn || "none"}") — ${o.method} was already offered in ${o.timesOffered} of the user's last ${window} recommendations, and this candidate is not a recipe from this turn's REFERENCE RECIPE LIBRARY.`,
+      `- Candidate ${o.index + 1} "${o.title}" (${o.method}, basedOn "${o.basedOn || "none"}") — ${o.method} was already offered in ${o.timesOffered} of the user's last ${window} recommendations, and this candidate is not a recipe from this turn's RELEVANT REFERENCE RECIPES.`,
   );
   return `
 
 REPAIR — REPETITION. Your previous answer repeated a brewer the user keeps being offered, from outside the library you were given:
 ${lines.join("\n")}
-Replace ONLY the candidate(s) above; keep any other candidate exactly as it was. The replacement must explore something the user has not been handed lately: either a recipe from this turn's REFERENCE RECIPE LIBRARY, or an Own experiment on a brewer family OTHER than ${crowded.join(", ")} that moves one named technique id from AVAILABLE TECHNIQUES. A library recipe on a recently-offered brewer is fine if the library actually holds one; a free-form one is not. Return the complete JSON again.`;
+Replace ONLY the candidate(s) above; keep any other candidate exactly as it was. The replacement must explore something the user has not been handed lately: either a recipe from this turn's RELEVANT REFERENCE RECIPES, or an Own experiment on a brewer family OTHER than ${crowded.join(", ")} that moves one named technique id from AVAILABLE TECHNIQUES. A library recipe on a recently-offered brewer is fine if the library actually holds one; a free-form one is not. Return the complete JSON again.`;
 }

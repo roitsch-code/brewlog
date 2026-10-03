@@ -527,7 +527,7 @@ export async function POST(req: NextRequest) {
     }
 
     // The corpus block above is cached and byte-identical on every turn of
-    // every conversation — 135 recipes with no scoring, rotation or cap, since
+    // every conversation — the whole corpus with no scoring, rotation or cap, since
     // the whole selection machinery is wired to /recommend only. Handed that
     // wall, the model reaches for the same salient entries every day. This is
     // the small piece that MOVES: the same scorer, seeded per day and per bag.
@@ -614,7 +614,7 @@ export async function POST(req: NextRequest) {
     const systemBlocks: Anthropic.TextBlockParam[] = [
       { type: "text", text: AGENT_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       { type: "text", text: profileBlock, cache_control: { type: "ephemeral" } },
-      // The corpus is STATIC — same ~39k tokens on every turn of every
+      // The corpus is STATIC — the same ~45k tokens on every turn of every
       // conversation. It was riding inside dynamicContext, which changes each
       // turn and so could never be cached; its own block can be.
       { type: "text", text: recipeLibraryBlock(), cache_control: { type: "ephemeral" } },

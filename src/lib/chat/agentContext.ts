@@ -22,7 +22,7 @@ import { pourSequenceFromSteps, sanitizePourSteps } from "@/lib/utils/pourSteps"
  * stated up front.
  *
  * Reported as "der Chat kennt nur V60". He was reading a real signal: the
- * corpus is 45/136 V60 (33%, the largest group by a factor of two) while his
+ * corpus is roughly one-third V60 (the largest group by a factor of two) while his
  * Orea V4 — one of his main brewers — has exactly ONE recipe, because that is
  * what the coffee world publishes, not what suits his beans. Dumped as a flat
  * list, recipe COUNT reads as endorsement, and the model reaches for the
@@ -34,7 +34,7 @@ import { pourSequenceFromSteps, sanitizePourSteps } from "@/lib/utils/pourSteps"
  * bean says so.
  *
  * Built once per process: the corpus is a compile-time constant, and this is a
- * ~39k-token string that used to be re-joined on every single chat turn.
+ * ~45k-token string that used to be re-joined on every single chat turn.
  */
 let recipeLibraryCache: string | null = null;
 export function recipeLibraryBlock(): string {
@@ -53,8 +53,9 @@ export function recipeLibraryBlock(): string {
     `HOW MANY RECIPES A BREWER HAS IS NOT A RECOMMENDATION. It reflects what the coffee world has published, ` +
     `nothing else. ${ALL_RECIPES.length} recipes across ${groups.length} brewers: ` +
     groups.map(([b, rs]) => `${b} ${rs.length}`).join(", ") + `. ` +
-    `The V60 is over-represented because it is the most written-about brewer on earth; the Orea has one entry ` +
-    `and is still one of the user's primary cones. Choose the brewer for the BEAN and the goal, then adapt the ` +
+    `The V60 is over-represented because it is the most written-about brewer on earth; the Orea V4 Wide — one of ` +
+    `the user's primary cones — has ${groups.filter(([b]) => /orea/i.test(b)).reduce((n, [, rs]) => n + rs.length, 0)} entries ` +
+    `across its four bottoms. Choose the brewer for the BEAN and the goal, then adapt the ` +
     `nearest recipe to it — a recipe published on a V60 usually transfers to another cone with the same geometry. ` +
     `Never pick a brewer because this library happens to hold more recipes for it.\n`;
 
