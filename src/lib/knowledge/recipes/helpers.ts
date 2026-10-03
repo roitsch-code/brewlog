@@ -384,7 +384,7 @@ export function occasionAffinity(
 
 /** Does `recipe` answer to any of `names` (a basedOn string)? Exact or
  * containment with a 6-char floor — the same binding resolveReference uses. */
-function matchesAnyName(recipe: Recipe, names: string[]): boolean {
+export function matchesAnyName(recipe: Recipe, names: string[]): boolean {
   const qs = names.map(normName).filter(Boolean);
   if (!qs.length) return false;
   const own = [normName(recipe.name), normName(recipe.shortName)].filter(Boolean);
@@ -523,7 +523,7 @@ function scoreRecipe(
  */
 /** Lowercase-alnum normalisation for recipe-name matching (mirrors
  * recipeFidelity's norm() so `basedOn` strings bind the same way). */
-function normName(s: string): string {
+export function normName(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
@@ -854,7 +854,7 @@ function formatPourSequence(recipe: Recipe): string {
     .join(" · ");
 }
 
-function formatTemperature(recipe: Recipe): string {
+export function formatTemperature(recipe: Recipe): string {
   const t = recipe.temperature;
   if (t.staged?.length) {
     return `staged ${t.staged.map((s) => `${s.celsius}°C`).join(" → ")}`;
@@ -864,7 +864,7 @@ function formatTemperature(recipe: Recipe): string {
   return "unspecified";
 }
 
-function formatGrind(recipe: Recipe): string {
+export function formatGrind(recipe: Recipe): string {
   const g = recipe.grind;
   const parts: string[] = [];
   if (g.nicheZeroDegrees !== undefined) {

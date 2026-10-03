@@ -2,19 +2,17 @@
  * "Today's angles" — a small, rotating set of concrete starting points for the
  * bags currently in rotation, injected into the home chat's per-turn context.
  *
- * THE PROBLEM IT SOLVES: the chat receives the ENTIRE recipe corpus — 135
- * recipes, full pour sequences, ~39k tokens — cached and byte-identical on
- * every turn of every conversation. There is no scoring, no rotation, no
- * per-brewer cap; /recommend's whole selection machinery is wired to
- * /recommend only. Handed an undifferentiated wall, a model reaches for the
- * most salient entries, and the most salient entries do not change between
- * Tuesday and Friday. That is the chat half of "immer der gleiche Scheiss".
+ * THE PROBLEM IT SOLVED (Aug 2026): the chat received the ENTIRE recipe corpus
+ * cached and byte-identical on every turn, with no scoring, rotation or cap, so
+ * the model reached for the same salient entries every day. This block runs
+ * the same selector /recommend trusts, seeded per day and per bag, and names a
+ * few concrete angles for the bags actually on the counter.
  *
- * The fix is not to shrink the corpus — it is the lookup reference and it stays
- * (also: it is the cached block, and cutting it would cost more than it saves).
- * It is to add a SMALL uncached block that DOES move: run the same selector
- * /recommend trusts, seeded per day and per bag, and name a couple of concrete
- * angles for the bags actually on the counter.
+ * SINCE 2026-10-03 (speed round) the full corpus is GONE from the chat: the
+ * cached block is a one-line-per-recipe index, and the recipes selected here
+ * are the ones whose FULL text the chat gets per turn (agentContext.ts
+ * `buildRecipeShortlist` renders them under the angle lines). Anything else is
+ * fetched on demand through the `lookup_recipe` tool.
  *
  * Every recipe named here is a real corpus recipe, so this adds no new surface
  * for fabrication — it changes which real recipes are salient, nothing else.
@@ -30,12 +28,14 @@ import {
   mixSeed,
 } from "../knowledge/recipes";
 import type { CompactCoffee } from "../claude/coffeeLibrary";
+import type { Recipe } from "../knowledge/recipes";
 
 /** Bags to surface angles for. Three keeps the block short enough that it reads
  * as a nudge rather than a second menu competing with the library above it. */
 const MAX_BAGS = 3;
-/** Angles per bag. Two gives the model a choice without deciding for it. */
-const ANGLES_PER_BAG = 2;
+/** Angles per bag. Three: these are also the recipes the chat holds in FULL
+ * this turn, so one more than before buys real choice at ~300 tokens each. */
+const ANGLES_PER_BAG = 3;
 
 /** Stable per-bag offset so two bags don't rotate in lockstep. */
 function hashId(id: string): number {
@@ -45,8 +45,7 @@ function hashId(id: string): number {
 }
 
 /** The first clause of a recipe's `teaches`, short enough to stay a nudge.
- * The full text runs to a paragraph, and this block sits next to a 39k-token
- * library — it earns attention by being brief. */
+ * The full text runs to a paragraph; the line earns attention by being brief. */
 function trimTeaches(teaches: string | undefined): string {
   const first = teaches?.split(/[.;]/)[0]?.trim() ?? "";
   if (first.length <= 90) return first;
@@ -64,13 +63,17 @@ export function daySeedFor(nowMs: number): number {
  * Build the block. Returns "" when there is nothing to say (no rotation bags,
  * or no recipe fits) so the caller can append it unconditionally.
  */
-export function buildTodaysAngles(rotation: CompactCoffee[], daySeed: number): string {
+export interface BagAngles {
+  bag: CompactCoffee;
+  recipes: Recipe[];
+}
+
+/** The selection itself — which real recipes are today's angles for each bag.
+ * agentContext.ts renders the FULL text of exactly these under the angle lines. */
+export function selectTodaysAngles(rotation: CompactCoffee[], daySeed: number): BagAngles[] {
   const bags = rotation.slice(0, MAX_BAGS);
-  if (bags.length === 0) return "";
-
   const brewersAvailable = brewersAvailableFromEquipment([...CANONICAL_EQUIPMENT]);
-  const lines: string[] = [];
-
+  const out: BagAngles[] = [];
   for (const bag of bags) {
     const selected = selectRecipes(
       {
@@ -79,15 +82,24 @@ export function buildTodaysAngles(rotation: CompactCoffee[], daySeed: number): s
         process: normaliseProcess(bag.process),
         variety: bag.variety,
         // "explore" on purpose: this block's job is to widen what comes to
-        // mind, not to re-derive the best everyday brew (the chat can do that
-        // from the full library when asked).
+        // mind, not to re-derive the best everyday brew.
         goal: normaliseGoal("explore"),
         rotationSeed: mixSeed(daySeed + hashId(bag.id)),
       },
       ANGLES_PER_BAG,
     );
-    if (selected.length === 0) continue;
+    if (selected.length) out.push({ bag, recipes: selected.map((s) => s.recipe) });
+  }
+  return out;
+}
 
+export function buildTodaysAngles(rotation: CompactCoffee[], daySeed: number): string {
+  const picked = selectTodaysAngles(rotation, daySeed);
+  if (picked.length === 0) return "";
+  const lines: string[] = [];
+
+  for (const { bag, recipes } of picked) {
+    const selected = recipes.map((recipe) => ({ recipe }));
     const angles = selected
       .map((s) => {
         // Brackets, not parentheses: recipe names contain parentheses ("April
@@ -107,7 +119,7 @@ export function buildTodaysAngles(rotation: CompactCoffee[], daySeed: number): s
   return (
     `\n## Today's angles — fresh starting points for the bags on the counter\n` +
     `Picked by the same scorer /recommend uses, re-rotated daily, so what comes to mind first is not the same every day. ` +
-    `These are SUGGESTIONS, not a shortlist: the full Reference Recipe Library above is still available and a better fit there beats anything here. ` +
+    `These are SUGGESTIONS, not a shortlist that excludes the rest: every other recipe in the Reference Recipe Index is still available in full through lookup_recipe, and a better fit there beats anything here. ` +
     `Use one when the user asks what to try, or when you would otherwise reach for the recipe you always reach for.\n` +
     lines.join("\n")
   );

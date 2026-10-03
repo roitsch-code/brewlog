@@ -28,8 +28,10 @@ const q = (rel) => JSON.stringify(path.join(ROOT, rel));
 
 const entry = `
 export { AGENT_SYSTEM_PROMPT, TOOLS } from ${q("src/lib/chat/agentPrompt.ts")};
-export { recipeLibraryBlock, formatLibraryForAgent, cleanChatRecipe, grinderFromConversation }
+export { recipeLibraryBlock, buildRecipeShortlist, formatLibraryForAgent, cleanChatRecipe, grinderFromConversation }
   from ${q("src/lib/chat/agentContext.ts")};
+export { lookupRecipe } from ${q("src/lib/chat/recipeLookup.ts")};
+export { daySeedFor } from ${q("src/lib/chat/todaysAngles.ts")};
 export { formatProfileForPrompt } from ${q("src/lib/claude/userProfile.ts")};
 export { validateRecipe, formatProblemsForModel } from ${q("src/lib/recipe/validateRecipe.ts")};
 `;
@@ -61,7 +63,11 @@ function must(name, cond) {
 }
 must("AGENT_SYSTEM_PROMPT", typeof K.AGENT_SYSTEM_PROMPT === "string" && K.AGENT_SYSTEM_PROMPT.length > 20000);
 must("TOOLS", Array.isArray(K.TOOLS) && K.TOOLS.some((t) => t.name === "start_brew"));
-must("recipeLibraryBlock", typeof K.recipeLibraryBlock === "function" && K.recipeLibraryBlock().length > 20000);
+// The index (one line per recipe) since 2026-10-03 — ~19k chars, not the ~172k corpus.
+must("recipeLibraryBlock", typeof K.recipeLibraryBlock === "function" && K.recipeLibraryBlock().length > 8000);
+must("buildRecipeShortlist", typeof K.buildRecipeShortlist === "function");
+must("lookupRecipe", typeof K.lookupRecipe === "function");
+must("TOOLS.lookup_recipe", K.TOOLS.some((t) => t.name === "lookup_recipe"));
 must("validateRecipe", typeof K.validateRecipe === "function");
 must("cleanChatRecipe", typeof K.cleanChatRecipe === "function");
 must("formatLibraryForAgent", typeof K.formatLibraryForAgent === "function");
@@ -103,7 +109,9 @@ const systemBlocks = [
 
 function contextBlock() {
   return `\n## Your Coffee Library — your owned bags, each with its [id:…]\n` +
-    `Every bag here is brewable and linkable by its id.\n` + K.formatLibraryForAgent(LIBRARY);
+    `Every bag here is brewable and linkable by its id.\n` + K.formatLibraryForAgent(LIBRARY) +
+    // The per-turn shortlist the route pushes (today's angles + their full text).
+    K.buildRecipeShortlist(LIBRARY.filter((c) => c.inRotation !== false), K.daySeedFor(Date.now()));
 }
 
 // Mirrors stripEmoji.ts's PRODUCTION ranges (arrows + ✓ are house typography,
@@ -135,10 +143,24 @@ async function oneTurn(scenario) {
   let firstTry = null;
 
   for (let round = 0; round < 2; round++) {
-    const res = await anthropic.messages.create({
+    let res = await anthropic.messages.create({
       model: "claude-sonnet-4-6", max_tokens: 2500,
       system: systemBlocks, tools: K.TOOLS, messages,
     });
+    // Exactly the route's lookup_recipe dispatch: answer the data tool and let
+    // the model continue (bounded, so a lookup loop cannot run away).
+    for (let hops = 0; hops < 4; hops++) {
+      const lookups = res.content.filter((b) => b.type === "tool_use" && b.name === "lookup_recipe");
+      if (lookups.length === 0 || res.content.some((b) => b.type === "tool_use" && b.name === "start_brew")) break;
+      messages.push({ role: "assistant", content: res.content });
+      messages.push({ role: "user", content: lookups.map((b) => ({
+        type: "tool_result", tool_use_id: b.id, content: K.lookupRecipe(String(b.input?.query ?? "")).text,
+      })) });
+      res = await anthropic.messages.create({
+        model: "claude-sonnet-4-6", max_tokens: 2500,
+        system: systemBlocks, tools: K.TOOLS, messages,
+      });
+    }
     text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     const call = res.content.find((b) => b.type === "tool_use" && b.name === "start_brew");
     if (!call) return { scenario, text, brew: null, repaired, firstTry, tokens: res.usage };

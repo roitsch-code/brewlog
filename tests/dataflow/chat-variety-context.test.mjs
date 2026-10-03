@@ -84,10 +84,10 @@ test("the chat route imports and pushes the recently-used-references block", () 
   assert.match(ROUTE, /Recently used references/);
 });
 
-test("the chat route imports and pushes today's angles", () => {
-  assert.match(ROUTE, /import\s*{[^}]*buildTodaysAngles[^}]*}\s*from\s*"@\/lib\/chat\/todaysAngles"/);
-  assert.match(ROUTE, /buildTodaysAngles\(rotationCoffees,/);
-  assert.match(ROUTE, /contextParts\.push\(anglesBlock\)/);
+test("the chat route pushes today's angles — now as the shortlist that carries their full text (2026-10-03)", () => {
+  assert.match(ROUTE, /import\s*{[^}]*buildRecipeShortlist[^}]*}\s*from\s*"@\/lib\/chat\/agentContext"/);
+  assert.match(ROUTE, /buildRecipeShortlist\(rotationCoffees,/);
+  assert.match(ROUTE, /contextParts\.push\(shortlistBlock\)/);
 });
 
 test("the chat route loads and pushes coach insights", () => {
