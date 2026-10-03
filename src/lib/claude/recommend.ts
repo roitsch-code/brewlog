@@ -894,16 +894,13 @@ ${
 
 ${varietyBlock}${recipesBlock}${ownReferenceBlock}${techniquesBlock}
 
-Pour sequence format: CUMULATIVE weight milestones separated by " – " for percolation (e.g. "50 – 180 – 320 – 500").
-For immersion methods (AeroPress, Clever, Moccamaster), use prose description instead.
-
-pourSteps — ALSO emit this structured array on every recipe. It is what the in-app timer advances through step by step, so it must be complete and ordered.
+pourSteps — the structured step array IS the recipe's pour plan (do not write a separate pour-sequence string; the app derives it). It is what the in-app timer advances through step by step, so it must be complete and ordered.
 - One object per physical step the brewer performs, in order.
 - action: one of bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed
-- waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps). These MUST match pourSequence.
+- waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps).
 - durationSec: how long the step takes, and the timer USES IT. Required on every step. POUR seconds are set by the app (grams ÷ the user's measured ~4 g/s pace) unless you copy a verified reference's own scaled line, so write a plausible value and spend your care on the WAIT steps, which the app keeps as written. Immersion / AeroPress: the timed (non-setup) steps MUST sum to targetTimeSec.
 - temperatureC: omit on every step. BrewLog brews at ONE constant temperature (the recipe's waterTempC) — never stage or ramp temperature across pours.
-- notes: one short, step-relevant hint (what to watch). Optional.
+- Do NOT emit notes on steps — the app supplies per-step hints. label + action + waterGramsAtEnd + durationSec is the whole step.
 - AGITATION IS AN EXPLICIT STEP, NOT A NOTE — and it must MIRROR the recipe you adapt. If the recipe you name in basedOn shows agitation in its pour sequence above — a bloom swirl, a between-pour stir, and ESPECIALLY a settle swirl/tap right before the drawdown — carry EACH of those into pourSteps as its own step ("action": "stir" | "swirl" | "agitate-bed") at the same point in the sequence. The end-of-brew settle swirl/tap (the one that flattens the bed just before drawdown) is part of the recipe — do NOT drop it; emit it as the last step before the "drain"/drawdown. The brew screen shows a stir/swirl prompt ONLY where such a step exists, so a dropped agitation step = a missing prompt mid-brew. EXCEPTION — explicitly minimal/reduced-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any recipe whose notes say "minimal/reduced agitation"): include NO agitation steps beyond what that recipe itself calls for — never add a trailing swirl such a recipe doesn't want.
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
 - PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are the pours, the agitation the reference calls for, AND the pauses between them as "wait" steps. Write the pauses — the timer runs your cadence, so without them the pours run back-to-back. A normal pause is 10–45 s. Do NOT emit a trailing "Drawdown" wait: the drawdown is targetTimeSec minus the end of your last pour, so you set it by choosing the total. Keep the pour count of the reference you adapt (a bigger batch means bigger pours, not more of them); add one only if a pour would otherwise need more than 8 g/s. The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
@@ -912,7 +909,7 @@ basedOn — name the reference this candidate adapts. Take it from what THIS TUR
 
 RECIPE FIELD CONSISTENCY — the recipe's structured fields ARE the brew the user makes; the app shows them as the headline and feeds pourSteps to the timer. They must all describe ONE recipe:
 - doseGrams / waterGrams / waterTempC / grindSize / targetTimeSec are the recipe you are actually instructing. When you adapt a reference recipe, put the ADAPTED numbers here — NEVER leave the reference recipe's published dose/water/temp in these fields while the pourSteps and prose describe a different brew. (The failure to avoid: header reads 18g:225g:93°C copied from the reference, while the pour plan pours to 230g and the rationale says "1:15.3 at 90°C" — three different recipes in one candidate.)
-- waterGrams MUST equal the final cumulative waterGramsAtEnd of your last water-adding pour (bloom/pour/final/melodrip — NOT bypass, which is separate dilution). The pourSequence milestones, the pourSteps milestones, and waterGrams must agree to the gram.
+- waterGrams MUST equal the final cumulative waterGramsAtEnd of your last water-adding pour (bloom/pour/final/melodrip — NOT bypass, which is separate dilution). The pourSteps milestones and waterGrams must agree to the gram.
 - doseGrams and waterGrams must match any ratio you state in whyChosen / reasoning (a "1:15.3" claim means waterGrams ≈ doseGrams × 15.3). waterTempC must match any temperature you mention in the prose. Compute the prose from the fields, never the reverse.
 
 CANDIDATE TITLES must be DISTINCT across the candidates in one response — the two candidates are different experiments, so they must read as different on the chip selector and the brew screen. Never give two candidates the same title (e.g. two "Inverted Long Immersion"); name each for the variable it tests.
