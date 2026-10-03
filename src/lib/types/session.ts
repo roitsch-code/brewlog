@@ -179,6 +179,11 @@ export interface Recommendation {
   sessionObjective?: string;
   coffeeAssessment?: string;
   generatedAt: string; // ISO timestamp
+  /** The Escher brew-pattern terrain computed for THIS recommendation (Sonnet,
+   * run.ts, from the same corpus + coffee). Optional: stored rows predate it.
+   * /api/brew-insight reuses it instead of making the same model call again
+   * on the Summary screen (2026-10-03). */
+  terrain?: string;
 }
 
 export interface BrewLog {

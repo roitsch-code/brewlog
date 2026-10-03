@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { buildEscherTerrain } from "@/lib/claude/escher";
+import { resolveTerrain } from "@/lib/claude/insightTerrain";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -108,6 +109,8 @@ export async function POST(req: NextRequest) {
           primaryMethod?: string;
           primaryRecipe?: RecipeNumbers;
           candidates?: { method?: string; recipe?: RecipeNumbers }[];
+          /** Terrain /recommend already computed for this brew (run.ts). */
+          terrain?: string;
         };
       };
       recentSessions?: Session[];
@@ -135,6 +138,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ terrain: null, adjustment: null });
     }
 
+    // The terrain /recommend computed for this brew rides on the recommendation
+    // (run.ts, 2026-10-03). When it is there, the corpus read and the Sonnet
+    // call below are skipped entirely — the Summary used to repeat both.
+    const precomputed = isExternal ? undefined : rec?.terrain;
+
     // The history-based terrain needs ≥3 sessions. LightStepSummary has always
     // POSTed `recentSessions: []`, so until 2026-10-03 this branch never ran and
     // the post-brew insight was a one-brew Haiku line every single time. Read the
@@ -142,20 +150,28 @@ export async function POST(req: NextRequest) {
     const sessions: Session[] =
       Array.isArray(recentSessions) && recentSessions.length > 0
         ? recentSessions
-        : await loadRecentSessions(60).catch(() => [] as Session[]);
+        : precomputed?.trim()
+          ? []
+          : await loadRecentSessions(60).catch(() => [] as Session[]);
 
     // Café sessions: no extraction adjustment advice (not actionable for a visited café)
     const adjustment = isExternal ? null : computeAdjustment(draft);
 
     // Escher terrain only makes sense for home brew history
-    const terrain = (!isExternal && sessions.length >= 3)
-      ? await buildEscherTerrain(sessions, {
+    const terrain = await resolveTerrain(
+      {
+        precomputed,
+        isExternal,
+        sessions,
+        coffee: {
           name: coffee.name ?? "",
           roaster: coffee.roaster ?? "",
           origin: coffee.origin ?? "",
           process: coffee.process ?? "",
-        }).catch(() => null)
-      : null;
+        },
+      },
+      buildEscherTerrain,
+    );
 
     // If terrain is empty, generate a one-liner via Haiku
     let finalTerrain = terrain;

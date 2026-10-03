@@ -12,6 +12,7 @@ import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import Chip from "@/components/ui/light/Chip";
 import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
 import { isDripAssistMethod } from "@/lib/utils/dripAssist";
+import { insightRequestKey } from "@/lib/brew/insightKey";
 
 /**
  * Light System fork of /components/flow/StepSummary.tsx.
@@ -39,7 +40,7 @@ import { isDripAssistMethod } from "@/lib/utils/dripAssist";
  */
 
 export default function LightStepSummary() {
-  const { draft, reset } = useFlowStore();
+  const { draft, reset, pendingInsight, setPendingInsight } = useFlowStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedOffline, setSavedOffline] = useState(false);
@@ -51,8 +52,13 @@ export default function LightStepSummary() {
   const [insightAction, setInsightAction] = useState<null | "saved" | "dismissed">(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (!draft.result?.rating) return;
+  // Which brew the insight must describe. The Log screen prefetches it on Save
+  // under this same key (2026-10-03); a stale or missing prefetch falls back to
+  // the request this screen always made.
+  const insightKey = insightRequestKey(draft.result, draft.brew);
+  const [awaitingPrefetch, setAwaitingPrefetch] = useState(false);
+
+  const fetchInsight = () => {
     setInsightLoading(true);
     fetch("/api/brew-insight", {
       method: "POST",
@@ -66,10 +72,45 @@ export default function LightStepSummary() {
       })
       .catch(() => {})
       .finally(() => setInsightLoading(false));
+  };
+
+  useEffect(() => {
+    if (!draft.result?.rating) return;
+    const pending = useFlowStore.getState().pendingInsight;
+    if (pending && pending.key === insightKey) {
+      if (pending.status === "done") {
+        setTerrain(pending.terrain);
+        setAdjustment(pending.adjustment);
+        return;
+      }
+      // Still in flight from the Log screen — show the same loading state and
+      // let the effect below pick it up when it lands.
+      setInsightLoading(true);
+      setAwaitingPrefetch(true);
+      return;
+    }
+    fetchInsight();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!awaitingPrefetch) return;
+    if (!pendingInsight) {
+      // The prefetch failed — make the request this screen always made.
+      setAwaitingPrefetch(false);
+      fetchInsight();
+      return;
+    }
+    if (pendingInsight.key !== insightKey || pendingInsight.status !== "done") return;
+    setTerrain(pendingInsight.terrain);
+    setAdjustment(pendingInsight.adjustment);
+    setInsightLoading(false);
+    setAwaitingPrefetch(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingInsight, awaitingPrefetch]);
+
   const finishSaved = (offline: boolean) => {
+    setPendingInsight(null);
     setSavedOffline(offline);
     setSaved(true);
     setTimeout(() => {
