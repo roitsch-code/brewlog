@@ -54,6 +54,20 @@ export function isInMenu(basedOn: string | undefined, menuNames: string[]): bool
   return menuNames.some((n) => matches(b, n));
 }
 
+/**
+ * Stricter than isInMenu: true only when `basedOn` names an actual recipe or
+ * own-reference from this turn — the own-work sentinels and an empty basedOn
+ * are free-form, and so are names the turn never offered. Used by the
+ * repetition guard (repeatGuard.ts), which only acts on free-form candidates.
+ */
+export function isMenuRecipe(basedOn: string | undefined, menuNames: string[]): boolean {
+  const b = norm(basedOn ?? "");
+  if (!b) return false;
+  if (b === "own recipe" || b === "own experiment") return false;
+  if (b.startsWith("your ")) return true;
+  return menuNames.some((n) => matches(b, n));
+}
+
 /** Every name this turn's menu can legitimately be cited as. */
 export function menuNamesOf(
   selected: { recipe: { name: string; shortName?: string } }[],
