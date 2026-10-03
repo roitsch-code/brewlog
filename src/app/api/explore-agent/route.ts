@@ -7,6 +7,7 @@ import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfil
 import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
 import { buildTodaysAngles, daySeedFor } from "@/lib/chat/todaysAngles";
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
+import { buildChatMeasuredBlock } from "@/lib/chat/measuredContext";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "@/lib/roasters/priors";
 import {
@@ -17,7 +18,7 @@ import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
 import { places, insights as insightsTable } from "@/lib/db/schema";
-import { and, or, ne, isNull, lte } from "drizzle-orm";
+import { and, desc, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
@@ -434,7 +435,11 @@ export async function POST(req: NextRequest) {
             ),
           ),
         )
-        .limit(5)
+        .orderBy(
+          sql`CASE ${insightsTable.status} WHEN 'confirmed' THEN 0 WHEN 'trying' THEN 1 WHEN 'new' THEN 2 ELSE 3 END`,
+          desc(insightsTable.latestSessionMs),
+        )
+        .limit(8)
         .catch(() => []),
     ]);
 
@@ -552,14 +557,25 @@ export async function POST(req: NextRequest) {
     // it the chat re-derives — or contradicts — findings the app has made and
     // the user has already acted on.
     if (Array.isArray(coachInsights) && coachInsights.length > 0) {
+      const verdict = (status: string) =>
+        status === "confirmed"
+          ? "[CONFIRMED by the user]"
+          : status === "trying"
+            ? "[TRYING — the user chose to test this]"
+            : "[new — unverified]";
       contextParts.push(
-        `\n## Coach insights — cross-session patterns the app has found in your brews\n` +
-          `Treat these as established for this user: build on them, don't re-derive them, and never contradict one without saying why.\n` +
+        `\n## Coach insights — cross-session patterns the app has found in your brews, with the user's verdict\n` +
+          `[CONFIRMED] = verified on their palate: a standing rule, never contradict it without saying why. [TRYING] = an experiment they chose to run: honour it when it applies. [new] = a hypothesis, not an instruction. Build on these, don't re-derive them.\n` +
           coachInsights
-            .map((r) => `- ${r.observation}${r.suggestion ? ` → ${r.suggestion}` : ""}`)
+            .map((r) => `- ${verdict(r.status)} ${r.observation}${r.suggestion ? ` → ${r.suggestion}` : ""}`)
             .join("\n"),
       );
     }
+
+    // The owner's MEASURED brewing — grind, drawdown, what-works-for-you —
+    // the same helpers /recommend reads (2026-10-03; the chat had none of them).
+    const measuredBlock = buildChatMeasuredBlock(corpusSessions, rotationCoffees, grinderFromConversation(messages));
+    if (measuredBlock) contextParts.push(measuredBlock);
 
     const recentRoasters = Array.from(
       new Set(
