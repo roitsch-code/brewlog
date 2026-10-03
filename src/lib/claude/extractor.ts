@@ -198,7 +198,9 @@ function findFlowCorrelation(
     };
   }
   const poorSlow = poorKnown.filter(s => s.flowOutcome === "too-slow").length / poorKnown.length;
-  if (poorSlow - goodFast > 0.4) {
+  const goodSlow = goodKnown.filter(s => s.flowOutcome === "too-slow").length / goodKnown.length;
+  // Until 2026-10-03 this subtracted the FAST share of the good group — the wrong group.
+  if (poorSlow - goodSlow > 0.4) {
     return {
       variable: "draw-down speed", tier: 2,
       finding: `slow draw-down appears ${countLabel(poorKnown.filter(s => s.flowOutcome === "too-slow").length)} in the weaker cups — possible fine grind or high agitation`,
