@@ -102,3 +102,19 @@ ${lines.join("\n")}
 Replace ONLY the candidate(s) above; keep any other candidate exactly as it was. The replacement must explore something the user has not been handed lately: either a recipe from this turn's RELEVANT REFERENCE RECIPES, or an Own experiment on a brewer family OTHER than ${crowded.join(", ")} that moves one named technique id from AVAILABLE TECHNIQUES. A library recipe on a recently-offered brewer is fine if the library actually holds one; a free-form one is not.`;
 }
 
+/**
+ * The same rule stated UP FRONT in the user message, so the model can honour it
+ * on the first answer instead of learning it from a repair round. Empty when no
+ * family is crowded. Written against the real block heading (RELEVANT
+ * REFERENCE RECIPES), like every other mention of the menu in the prompt.
+ */
+export function formatRepeatRuleUpfront(
+  offered: Map<BrewerFamily, number>,
+  window: number = REPEAT_WINDOW,
+): string {
+  const crowded = Array.from(offered.entries()).filter(([, n]) => n >= REPEAT_THRESHOLD);
+  if (crowded.length === 0) return "";
+  const list = crowded.map(([f, n]) => `${f} (${n} of the last ${window})`).join(", ");
+  return `
+- Repetition rule: ${list} — the user keeps being offered these. A FREE-FORM candidate (Own experiment / Own recipe / a basedOn that is not in this turn's RELEVANT REFERENCE RECIPES) may NOT sit on one of them. A recipe from this turn's RELEVANT REFERENCE RECIPES on one of them is fine when it is the best fit.`;
+}

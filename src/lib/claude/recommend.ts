@@ -53,7 +53,7 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan, resolveReference } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
-import { findRepeatOffenders, formatRepeatRepair, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
+import { findRepeatOffenders, formatRepeatRepair, formatRepeatRuleUpfront, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
 import {
   deriveConvergence,
   formatConvergenceNote,
@@ -837,10 +837,12 @@ export async function generateRecommendation(
   // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
   // the last 4 recommendations is sent back once. Inactive on a locked method
   // (every candidate is that brewer by request) and on cold brew (a different
-  // partition).
+  // partition). The rule is also stated UP FRONT in the user message, so the
+  // first answer can already honour it — a repair round doubles the wait.
   const repeatGuardActive =
     !lockedMethodBase && (context.occasion ?? "").toLowerCase() !== "cold-brew";
   const offered = recentlyOfferedFamilies(pastSessions);
+  const repeatRuleNote = repeatGuardActive ? formatRepeatRuleUpfront(offered) : "";
 
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
@@ -866,7 +868,7 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${measuredGrindBlock}
+${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +

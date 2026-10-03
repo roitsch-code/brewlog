@@ -116,9 +116,21 @@ test("a free-form experiment on a fresh brewer passes", () => {
   assert.deepEqual(offenders, []);
 });
 
+test("the rule is stated up front, named by crowded family; empty when nothing is crowded", () => {
+  const offered = G.recentlyOfferedFamilies(HISTORY);
+  const note = G.formatRepeatRuleUpfront(offered);
+  assert.match(note, /clever \(\d of the last 4\)/);
+  assert.match(note, /RELEVANT REFERENCE RECIPES/);
+  assert.doesNotMatch(note, /REFERENCE RECIPE LIBRARY/);
+  assert.equal(G.formatRepeatRuleUpfront(new Map()), "");
+  assert.equal(G.formatRepeatRuleUpfront(new Map([["kalita", 1]])), "", "below the threshold is not crowded");
+});
+
 test("recommend.ts states the rule up front, runs the guard on the FIRST answer and merges its repair with the convergence repair into ONE second call", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(src, /from "\.\/repeatGuard"/);
+  assert.match(src, /\$\{repeatRuleNote\}/, "the up-front rule must be interpolated into the user message");
+  assert.match(src, /const repeatRuleNote = repeatGuardActive \? formatRepeatRuleUpfront\(offered\) : ""/);
   assert.match(src, /findRepeatOffenders\(raw\.candidates, menuNames, offered\)/);
   assert.match(src, /repairs\.push\(formatRepeatRepair\(offenders, offered\)\)/);
   assert.match(src, /callRecommendModel\(\s*userMessage \+ repairs\.join\(/, "one merged repair call");
