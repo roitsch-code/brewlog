@@ -15,7 +15,7 @@ import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import type { BrewRecipe } from "@/lib/types/session";
-import { pourSequenceFromSteps, sanitizePourSteps } from "@/lib/utils/pourSteps";
+import { derivePourSequence, sanitizePourSteps } from "@/lib/utils/pourSteps";
 
 /**
  * The reference recipe corpus, grouped by brewer, with its own imbalance
@@ -114,13 +114,15 @@ export function cleanChatRecipe(
   const out: BrewRecipe = {
     ...recipe,
     ...(pourSteps ? { pourSteps } : {}),
-    pourSequence: recipe.pourSequence ?? pourSequenceFromSteps(pourSteps),
+    pourSequence: recipe.pourSequence ?? derivePourSequence(pourSteps),
   };
   // 4. Pour TIMES are the app's, not the model's — the same rule /recommend
   //    applies (src/lib/recipe/pourDurations.ts): a verified reference's own
   //    scaled times, else the owner's measured ~4 g/s in 5-second steps. The
   //    rests absorb the difference, so the pours start where the chat said.
-  return applyPourDurations(reconcileWaterToPourPlan(out), ctx).recipe;
+  const timed = applyPourDurations(reconcileWaterToPourPlan(out), ctx).recipe;
+  // 5. The string follows the (re-timed) steps, as in /recommend.
+  return { ...timed, pourSequence: derivePourSequence(timed.pourSteps) ?? timed.pourSequence };
 }
 
 /**

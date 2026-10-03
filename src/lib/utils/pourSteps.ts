@@ -82,3 +82,41 @@ export function pourSequenceFromSteps(steps: BrewPourStep[] | undefined): string
   if (grams.length < 2) return undefined;
   return grams.join(" – ");
 }
+
+function stepDurationText(sec: number | undefined): string {
+  if (!sec || sec <= 0) return "";
+  if (sec >= 60) {
+    const m = Math.floor(sec / 60);
+    const r = Math.round(sec - m * 60);
+    return `${m}:${String(r).padStart(2, "0")}`;
+  }
+  return `${Math.round(sec)}s`;
+}
+
+/**
+ * Derive the prose `pourSequence` an immersion / AeroPress / machine recipe
+ * used to carry from the model ("Add water 10s · Steep 1:30 · Press 30s").
+ * Setup steps with no duration are listed without a time. Joined with " · ",
+ * which is the separator the recommend card's prose renderer already splits
+ * on. Returns `undefined` for an empty or single-step plan.
+ */
+export function immersionProseFromSteps(steps: BrewPourStep[] | undefined): string | undefined {
+  if (!steps || steps.length < 2) return undefined;
+  const parts = steps.map((s) => {
+    const label = (s.label || s.action).trim();
+    const t = stepDurationText(s.durationSec);
+    return t ? `${label} ${t}` : label;
+  });
+  return parts.join(" · ");
+}
+
+/**
+ * THE server-side `pourSequence` (2026-10-03): the model no longer writes the
+ * string — it is derived from the structured steps it does write. Percolation
+ * gets the cumulative-grams milestones, everything else the step prose. Called
+ * once after sanitation and AGAIN after the guard chain, because the guards
+ * rewrite steps and a stale string would disagree with the timer.
+ */
+export function derivePourSequence(steps: BrewPourStep[] | undefined): string | undefined {
+  return pourSequenceFromSteps(steps) ?? immersionProseFromSteps(steps);
+}

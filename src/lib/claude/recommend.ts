@@ -61,7 +61,7 @@ import {
   formatConvergenceRepair,
   type ConvergenceState,
 } from "./convergence";
-import { sanitizePourSteps } from "../utils/pourSteps";
+import { derivePourSequence, sanitizePourSteps } from "../utils/pourSteps";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 import { formatInsightsBlock, type RecommendInsight } from "./insightsBlock";
@@ -117,6 +117,11 @@ function sanitizeRecipe(recipe: Record<string, unknown>): BrewRecipe {
   } else {
     delete out.pourSteps;
   }
+  // The pour-sequence string is DERIVED from the steps, not requested from the
+  // model (2026-10-03, speed round) — one less thing to write per candidate,
+  // and it cannot disagree with the steps the timer runs. A model-supplied
+  // string survives only when derivation has nothing to work with.
+  out.pourSequence = derivePourSequence(clean) ?? out.pourSequence;
   // Headline water must match the pour plan the timer runs — the model
   // occasionally leaves waterGrams on a reference recipe's published number
   // while the pourSteps describe the adapted brew (the "225g header vs pour-
@@ -1133,7 +1138,7 @@ Return valid JSON only.`;
   //      last. Drops over-ceiling candidates; keeps all if all are over.
   const timeGuarded = guardSpecialTime(gapGuarded, context.timeAvailable);
 
-  const candidates = timeGuarded.map((c) => {
+  const grindGuarded = timeGuarded.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
     if (fixed === c.recipe.grindSize) return c;
     console.warn(
@@ -1141,6 +1146,13 @@ Return valid JSON only.`;
     );
     return { ...c, recipe: { ...c.recipe, grindSize: fixed } };
   });
+
+  // Last: the pour-sequence string follows the steps the guards left behind
+  // (fidelity snap, physics, agitation, pour durations all rewrite steps).
+  const candidates = grindGuarded.map((c) => ({
+    ...c,
+    recipe: { ...c.recipe, pourSequence: derivePourSequence(c.recipe.pourSteps) ?? c.recipe.pourSequence },
+  }));
 
   return {
     recommendation: {

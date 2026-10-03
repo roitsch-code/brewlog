@@ -209,7 +209,7 @@ export async function runRecommendation(body: {
       }))
     : [];
 
-  const { recommendation } = await generateRecommendation(
+  const { recommendation, usage } = await generateRecommendation(
     coffee,
     context,
     prefs,
@@ -218,6 +218,13 @@ export async function runRecommendation(body: {
     terrain || undefined,
     coffeeHistory,
     allInsights.length > 0 ? allInsights : undefined,
+  );
+  // The one number that says how long the user waited: output tokens are the
+  // latency (~70 tok/s on Opus), `calls` says whether a repair round fired.
+  // recommend-logs.yml greps the `[recommend]` prefix, so this is the
+  // production before/after for every output-slimming change.
+  console.log(
+    `[recommend] usage in=${usage.input_tokens} out=${usage.output_tokens} calls=${usage.calls} candidates=${recommendation.candidates.length}`,
   );
   return recommendation;
 }

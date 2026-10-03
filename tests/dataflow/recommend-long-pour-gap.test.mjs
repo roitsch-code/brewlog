@@ -123,9 +123,12 @@ test("recommend.ts imports the gap metric and feeds the guarded set to candidate
     /timeGuarded\s*=\s*guardSpecialTime\(\s*gapGuarded/,
     "the gap-guarded set MUST feed the Special guard, or the gap guard is dead code",
   );
+  // … → normalizeGrindToGrinder (grindGuarded) → the pour-sequence re-derive
+  // that yields `candidates` (2026-10-03). Every link must chain.
+  assert.match(src, /grindGuarded\s*=\s*timeGuarded\.map/, "the grind-unit pass must read the time-guarded set");
   assert.match(
     src,
-    /candidates\s*=\s*timeGuarded\.map/,
+    /candidates\s*=\s*grindGuarded\.map/,
     "the final candidates MUST derive from the guarded chain",
   );
 });
