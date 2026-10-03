@@ -187,6 +187,13 @@ export function serialiseSessionForCoach(s: Session): string {
   if (r?.wouldBrewAgain != null) quality.push(`again=${r.wouldBrewAgain ? "y" : "n"}`);
   if (r?.improvedWhileCooling) quality.push("cooled-better");
   if (r?.matchedIntention != null) quality.push(`matched=${r.matchedIntention ? "y" : "n"}`);
+  // The user's own verdict against the previous brew of the same coffee
+  // (2026-10-03). "vs=better(4→4.5)" is worth more to the coach than either
+  // star alone: it is the one comparison the user made with both cups in mind.
+  if (r?.vsPrevious) {
+    const pair = r.previousRating != null && r.rating != null ? `(${r.previousRating}→${r.rating})` : "";
+    quality.push(`vs=${r.vsPrevious}${pair}`);
+  }
 
   const flavors = (r?.flavorNotes ?? []).slice(0, 6).join("/");
 
