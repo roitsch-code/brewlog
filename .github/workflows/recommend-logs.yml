@@ -156,7 +156,7 @@ jobs:
               SELECT to_char(s.created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
                 left(s.coffee->>'name',20) AS coffee,
                 left(COALESCE(s.coffee->>'process',''),10) AS proc,
-                left(COALESCE(s.context->>'goal',''),10) AS goal,
+                left(COALESCE(s.context->>'intent',''),10) AS goal,
                 left(COALESCE(s.context->>'occasion',''),12) AS occ,
                 COALESCE(s.context->>'waterAmount', s.context->>'amount','') AS amt,
                 left(COALESCE(s.context->>'preferredMethod',''),14) AS locked,
@@ -204,6 +204,137 @@ jobs:
                 AND cand->'recipe'->>'targetTimeSec' ~ '^[0-9.]+$'
                 AND cand->'recipe'->>'waterGrams' ~ '^[0-9.]+$'
               GROUP BY 1,2 ORDER BY 1,2;" </dev/null | cut -c1-300 || echo "psql query failed"
+
+            # ──────────────────────────────────────────────────────────────
+            # OUTCOME LEDGER (2026-10-03). Until this section existed, no
+            # workflow, script or query in this repo ever selected a rating:
+            # the app measured variety, physics and timing and never once
+            # asked whether a cup got BETTER. Every query below is a read-only
+            # SELECT over the owner's own home brews (mode='home', rated).
+            # Prints counts and averages only — never prose, never env.
+            # Coffee key = coffee->>'coffeeId', else roaster+name lowercased.
+            # ──────────────────────────────────────────────────────────────
+            section "OUTCOME LEDGER 0 — corpus size (home brews, rated)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT count(*) AS home_sessions,
+                     count(*) FILTER (WHERE (result->>'rating') ~ '^[0-9.]+$') AS rated,
+                     count(DISTINCT COALESCE(coffee->>'coffeeId', lower(coffee->>'roaster')||'__'||lower(coffee->>'name'))) AS coffees,
+                     count(DISTINCT lower(coffee->>'roaster')) AS roasters,
+                     min(created_at)::date AS first_brew, max(created_at)::date AS last_brew
+              FROM sessions WHERE mode = 'home';" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 1 — rating per month (is the average moving?)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','YYYY-MM') AS month,
+                     count(*) AS n,
+                     round(avg((result->>'rating')::numeric),2) AS avg_rating,
+                     round(100.0*count(*) FILTER (WHERE (result->>'rating')::numeric >= 4.5)/count(*)) AS pct_ge_4_5,
+                     round(100.0*count(*) FILTER (WHERE (result->>'rating')::numeric <= 3)/count(*)) AS pct_le_3
+              FROM sessions
+              WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              GROUP BY 1 ORDER BY 1;" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 2 — brew n vs brew n-1 of the SAME coffee, per quarter (does the next cup beat the last?)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH r AS (
+                SELECT created_at, (result->>'rating')::numeric AS rating,
+                       COALESCE(coffee->>'coffeeId', lower(coffee->>'roaster')||'__'||lower(coffee->>'name')) AS ck
+                FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              ), l AS (
+                SELECT created_at, rating, ck,
+                       lag(rating) OVER (PARTITION BY ck ORDER BY created_at) AS prev
+                FROM r)
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','YYYY-\"Q\"Q') AS quarter,
+                     count(*) AS pairs,
+                     count(*) FILTER (WHERE rating > prev) AS improved,
+                     count(*) FILTER (WHERE rating = prev) AS same,
+                     count(*) FILTER (WHERE rating < prev) AS worse,
+                     round(avg(rating - prev),2) AS mean_delta
+              FROM l WHERE prev IS NOT NULL
+              GROUP BY 1 ORDER BY 1;" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 3 — rating by brew index of that coffee (1st, 2nd, 3rd, 4-6th, 7+; the session-arc question)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH r AS (
+                SELECT (result->>'rating')::numeric AS rating,
+                       row_number() OVER (PARTITION BY COALESCE(coffee->>'coffeeId', lower(coffee->>'roaster')||'__'||lower(coffee->>'name')) ORDER BY created_at) AS idx
+                FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$')
+              SELECT CASE WHEN idx=1 THEN '1st' WHEN idx=2 THEN '2nd' WHEN idx=3 THEN '3rd' WHEN idx<=6 THEN '4th-6th' ELSE '7th+' END AS brew_of_coffee,
+                     count(*) AS n, round(avg(rating),2) AS avg_rating,
+                     round(100.0*count(*) FILTER (WHERE rating >= 4.5)/count(*)) AS pct_ge_4_5
+              FROM r GROUP BY 1 ORDER BY min(idx);" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 4 — rating by what the brewed candidate was based on"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH s AS (
+                SELECT result, recommendation, brew, NULLIF(brew->>'selectedCandidateIdx','')::int AS idx
+                FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              ), r AS (
+                SELECT (result->>'rating')::numeric AS rating,
+                  COALESCE(
+                    CASE WHEN idx IS NOT NULL THEN recommendation->'candidates'->idx END,
+                    (SELECT c FROM jsonb_array_elements(COALESCE(recommendation->'candidates','[]'::jsonb)) c
+                       WHERE c->>'method' = brew->>'methodUsed' LIMIT 1)) AS cand
+                FROM s)
+              SELECT CASE
+                       WHEN cand IS NULL THEN 'no candidate (chat/offline/legacy)'
+                       WHEN cand->>'basedOn' ~* '^own experiment' THEN 'Own experiment'
+                       WHEN cand->>'basedOn' ~* '^own recipe' THEN 'Own recipe'
+                       WHEN cand->>'basedOn' ~* '^your ' THEN 'Own past brew (reference)'
+                       WHEN COALESCE(cand->>'basedOn','') = '' THEN 'basedOn empty'
+                       ELSE 'Named published recipe' END AS based_on_kind,
+                     count(*) AS n, round(avg(rating),2) AS avg_rating,
+                     round(100.0*count(*) FILTER (WHERE rating >= 4.5)/count(*)) AS pct_ge_4_5,
+                     round(100.0*count(*) FILTER (WHERE rating <= 3)/count(*)) AS pct_le_3
+              FROM r GROUP BY 1 ORDER BY n DESC;" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 5 — best-fit slot (idx 0) vs exploration slot (idx 1)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT COALESCE(brew->>'selectedCandidateIdx','(none)') AS picked_idx,
+                     count(*) AS n, round(avg((result->>'rating')::numeric),2) AS avg_rating,
+                     round(100.0*count(*) FILTER (WHERE (result->>'rating')::numeric >= 4.5)/count(*)) AS pct_ge_4_5,
+                     round(100.0*count(*) FILTER (WHERE (result->>'rating')::numeric <= 3)/count(*)) AS pct_le_3
+              FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              GROUP BY 1 ORDER BY 1;" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 6 — rating by brewer (label as logged, n>=3)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT left(lower(COALESCE(brew->>'methodUsed', recommendation->>'primaryMethod','?')),30) AS method,
+                     count(*) AS n, round(avg((result->>'rating')::numeric),2) AS avg_rating,
+                     round(100.0*count(*) FILTER (WHERE (result->>'rating')::numeric >= 4.5)/count(*)) AS pct_ge_4_5
+              FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              GROUP BY 1 HAVING count(*) >= 3 ORDER BY avg_rating DESC, n DESC;" </dev/null || echo "psql query failed"
+
+            section "OUTCOME LEDGER 7 — coach insights: status counts + avg rating 21 days before vs after each saved/confirmed insight (approximation)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT status, source, count(*) FROM insights GROUP BY 1,2 ORDER BY 1,2;" </dev/null || echo "psql query failed"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(i.created_at AT TIME ZONE 'Europe/Berlin','MM-DD') AS saved, i.status, left(i.observation,50) AS observation,
+                     (SELECT round(avg((s.result->>'rating')::numeric),2) FROM sessions s WHERE s.mode='home' AND (s.result->>'rating') ~ '^[0-9.]+$'
+                        AND s.created_at BETWEEN i.created_at - interval '21 days' AND i.created_at) AS avg_before,
+                     (SELECT round(avg((s.result->>'rating')::numeric),2) FROM sessions s WHERE s.mode='home' AND (s.result->>'rating') ~ '^[0-9.]+$'
+                        AND s.created_at BETWEEN i.created_at AND i.created_at + interval '21 days') AS avg_after,
+                     (SELECT count(*) FROM sessions s WHERE s.mode='home' AND (s.result->>'rating') ~ '^[0-9.]+$'
+                        AND s.created_at BETWEEN i.created_at AND i.created_at + interval '21 days') AS n_after
+              FROM insights i WHERE i.status IN ('trying','confirmed','doesnt-apply')
+              ORDER BY i.created_at DESC LIMIT 15;" </dev/null | cut -c1-300 || echo "psql query failed"
+
+            section "OUTCOME LEDGER 8 — last 12 rated brews with the previous brew of the same coffee (the raw pairs)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH r AS (
+                SELECT created_at, coffee, brew, recommendation, (result->>'rating')::numeric AS rating,
+                       COALESCE(coffee->>'coffeeId', lower(coffee->>'roaster')||'__'||lower(coffee->>'name')) AS ck,
+                       NULLIF(brew->>'selectedCandidateIdx','')::int AS idx
+                FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+              ), l AS (
+                SELECT *, lag(rating) OVER (PARTITION BY ck ORDER BY created_at) AS prev_rating,
+                       lag(brew->>'methodUsed') OVER (PARTITION BY ck ORDER BY created_at) AS prev_method
+                FROM r)
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD') AS at_local, left(coffee->>'name',18) AS coffee,
+                     left(COALESCE(brew->>'methodUsed',''),16) AS method, rating,
+                     left(COALESCE(recommendation->'candidates'->idx->>'basedOn',''),30) AS based_on,
+                     prev_rating, left(COALESCE(prev_method,''),16) AS prev_method
+              FROM l ORDER BY created_at DESC LIMIT 12;" </dev/null | cut -c1-300 || echo "psql query failed"
 
             section "Unhandled rejections / crashes (last 2000 lines)"
             docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
