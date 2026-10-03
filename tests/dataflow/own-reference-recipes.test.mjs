@@ -315,7 +315,15 @@ test("recommend.ts wires the brewer-freshness set into the own-reference block",
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(
     src,
-    /formatOwnReferencesForPrompt\([\s\S]*?methodRecency\.recentBrewers[\s\S]*?brewMethodKey[\s\S]*?\)/,
-    "the dominant-family set (methodRecency.recentBrewers via brewMethodKey) must reach formatOwnReferencesForPrompt",
+    /formatOwnReferencesForPrompt\([\s\S]*?freshnessBrewers[\s\S]*?brewMethodKey[\s\S]*?\)/,
+    "the dominant-family set (freshnessBrewers via brewMethodKey) must reach formatOwnReferencesForPrompt",
+  );
+  // Since the convergence policy (2026-10-03) the set handed down is
+  // methodRecency.recentBrewers MINUS the ≥4★ base's brewer — rating-aware
+  // freshness: a brewer that just earned 4★ on this bag is not "stale".
+  assert.match(
+    src,
+    /const freshnessBrewers = new Set\(\s*Array\.from\(methodRecency\.recentBrewers\)\.filter\(\(b\) => !protectedBrewers\.has\(b\)\)/,
+    "freshnessBrewers must be methodRecency.recentBrewers minus the protected (≥4★ base) brewer",
   );
 });
