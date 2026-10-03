@@ -14,27 +14,30 @@ import { applyPourDurations } from "@/lib/recipe/pourDurations";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
+import { recipeIndexLine } from "@/lib/chat/recipeLookup";
+import { buildTodaysAngles, selectTodaysAngles } from "@/lib/chat/todaysAngles";
 import type { BrewRecipe } from "@/lib/types/session";
 import { derivePourSequence, sanitizePourSteps } from "@/lib/utils/pourSteps";
 
 /**
- * The reference recipe corpus, grouped by brewer, with its own imbalance
+ * The reference recipe INDEX, grouped by brewer, with the corpus's imbalance
  * stated up front.
  *
  * Reported as "der Chat kennt nur V60". He was reading a real signal: the
- * corpus is roughly one-third V60 (the largest group by a factor of two) while his
- * Orea V4 — one of his main brewers — has exactly ONE recipe, because that is
- * what the coffee world publishes, not what suits his beans. Dumped as a flat
- * list, recipe COUNT reads as endorsement, and the model reaches for the
- * brewer it saw thirty times.
+ * corpus is roughly one-third V60 (the largest group by a factor of two)
+ * because that is what the coffee world publishes, not what suits his beans.
+ * Dumped as a flat list, recipe COUNT reads as endorsement, and the model
+ * reaches for the brewer it saw thirty times. Grouping makes the shape visible,
+ * and the header says outright that frequency is an artefact of publishing.
  *
- * Grouping makes the shape visible instead of implicit, and the header says
- * outright that frequency is an artefact of publishing. Nothing is removed —
- * every recipe is still here, and a V60 is still the right answer whenever the
- * bean says so.
+ * SINCE 2026-10-03 (speed round) this is an INDEX, not the corpus: one line
+ * per recipe (name, person, brewer, headline numbers), ~5k tokens instead of
+ * the ~43k the full text cost on every single turn. The full text of the
+ * likeliest references for the bags on the counter arrives per turn in
+ * `buildRecipeShortlist`; anything else the model fetches with the
+ * `lookup_recipe` tool. Nothing is removed from reach — only from the prefix.
  *
- * Built once per process: the corpus is a compile-time constant, and this is a
- * ~45k-token string that used to be re-joined on every single chat turn.
+ * Built once per process and prompt-cached; it is a compile-time constant.
  */
 let recipeLibraryCache: string | null = null;
 export function recipeLibraryBlock(): string {
@@ -49,7 +52,10 @@ export function recipeLibraryBlock(): string {
   const groups = Array.from(byBrewer.entries()).sort((a, b) => b[1].length - a[1].length);
 
   const header =
-    `\n## Reference Recipe Library (championship + named-expert recipes documented in the app; cite by name when you draw from one)\n\n` +
+    `\n## Reference Recipe Index (every championship + named-expert recipe documented in the app, one line each)\n\n` +
+    `This is an INDEX for choosing, not a recipe to quote from: a line holds the headline numbers, never the pours. ` +
+    `The full text of the likeliest references for the bags on the counter is in the SHORTLIST in your per-turn context; ` +
+    `for any other entry call lookup_recipe with its exact name (or a person, or a brewer id) BEFORE you quote or adapt its sequence.\n\n` +
     `HOW MANY RECIPES A BREWER HAS IS NOT A RECOMMENDATION. It reflects what the coffee world has published, ` +
     `nothing else. ${ALL_RECIPES.length} recipes across ${groups.length} brewers: ` +
     groups.map(([b, rs]) => `${b} ${rs.length}`).join(", ") + `. ` +
@@ -57,20 +63,41 @@ export function recipeLibraryBlock(): string {
     `the user's primary cones — has ${groups.filter(([b]) => /orea/i.test(b)).reduce((n, [, rs]) => n + rs.length, 0)} entries ` +
     `across its four bottoms. Choose the brewer for the BEAN and the goal, then adapt the ` +
     `nearest recipe to it — a recipe published on a V60 usually transfers to another cone with the same geometry. ` +
-    `Never pick a brewer because this library happens to hold more recipes for it.\n`;
+    `Never pick a brewer because this index happens to hold more recipes for it.\n`;
 
   recipeLibraryCache =
     header +
     groups
-      .map(
-        ([brewer, rs]) =>
-          // Unscaled on purpose: this block is memoized once per process and
-          // prompt-cached, so it cannot carry a per-turn batch size. The chat
-          // gets its scaling through the recipe validator instead.
-          `\n### ${brewer} (${rs.length})\n\n` + rs.map((r) => formatRecipeForPrompt(r)).join("\n\n"),
-      )
+      .map(([brewer, rs]) => `\n### ${brewer} (${rs.length})\n` + rs.map((r) => recipeIndexLine(r)).join("\n"))
       .join("\n");
   return recipeLibraryCache;
+}
+
+/**
+ * Today's angles PLUS the full text of exactly those recipes (2026-10-03).
+ *
+ * The angle lines (todaysAngles.ts) say which real recipes are fresh for the
+ * bags on the counter; this block appends their complete documented text so
+ * the model can quote a pour sequence without a tool round-trip. Uncached and
+ * per turn (it rotates daily), ≤ MAX_BAGS × ANGLES_PER_BAG recipes, deduped.
+ * Returns "" when nothing is in rotation.
+ */
+export function buildRecipeShortlist(rotation: CompactCoffee[], daySeed: number): string {
+  const angles = buildTodaysAngles(rotation, daySeed);
+  if (!angles) return "";
+  const seen = new Set<string>();
+  const rs = selectTodaysAngles(rotation, daySeed)
+    .flatMap((b) => b.recipes)
+    .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+  if (rs.length === 0) return angles;
+  return (
+    angles +
+    `\n\n### SHORTLIST — full text of today's angles (${rs.length}). Quote and adapt from these directly; ` +
+    `for any recipe NOT here, call lookup_recipe before you state its sequence.\n\n` +
+    // Unscaled on purpose: the chat gets its scaling through the recipe
+    // validator instead, and this exact expression is pinned by a test.
+    rs.map((r) => formatRecipeForPrompt(r)).join("\n\n")
+  );
 }
 
 export function formatLibraryForAgent(library: CompactCoffee[]): string {

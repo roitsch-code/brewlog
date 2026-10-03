@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import Anthropic from "@anthropic-ai/sdk";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { buildRecentRecipes, recentReferenceNames } from "@/lib/claude/historyUtils";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
 import { loadUserProfile, formatProfileForPrompt } from "@/lib/claude/userProfile";
 import { loadRotationCoffees, loadCoffeeLibraryCompact } from "@/lib/claude/coffeeLibrary";
-import { buildTodaysAngles, daySeedFor } from "@/lib/chat/todaysAngles";
+import { daySeedFor } from "@/lib/chat/todaysAngles";
+import { lookupRecipe } from "@/lib/chat/recipeLookup";
+
+const LookupRecipeInput = z.object({ query: z.string().min(1) });
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { buildChatMeasuredBlock } from "@/lib/chat/measuredContext";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
@@ -15,7 +19,6 @@ import {
   formatVarietyPriorForPrompt,
 } from "@/lib/knowledge/varieties";
 import { TECHNIQUES } from "@/lib/knowledge/techniques";
-import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { db } from "@/lib/db/client";
 import { places, insights as insightsTable } from "@/lib/db/schema";
 import { and, desc, isNull, lte, ne, or, sql } from "drizzle-orm";
@@ -31,6 +34,7 @@ import {
   formatLibraryForAgent,
   grinderFromConversation,
   recipeLibraryBlock,
+  buildRecipeShortlist,
 } from "@/lib/chat/agentContext";
 import type { Session, BrewRecipe } from "@/lib/types/session";
 import type { NewCoffeePayload } from "@/lib/types/chatActions";
@@ -531,13 +535,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // The corpus block above is cached and byte-identical on every turn of
-    // every conversation — the whole corpus with no scoring, rotation or cap, since
-    // the whole selection machinery is wired to /recommend only. Handed that
-    // wall, the model reaches for the same salient entries every day. This is
-    // the small piece that MOVES: the same scorer, seeded per day and per bag.
-    const anglesBlock = buildTodaysAngles(rotationCoffees, daySeedFor(Date.now()));
-    if (anglesBlock) contextParts.push(anglesBlock);
+    // The cached block is an INDEX (one line per recipe) since 2026-10-03; the
+    // full text the model can quote from arrives HERE, per turn: today's angles
+    // for the bags on the counter (the same scorer /recommend uses, seeded per
+    // day and per bag) followed by exactly those recipes in full. Anything
+    // else it fetches with lookup_recipe.
+    const shortlistBlock = buildRecipeShortlist(rotationCoffees, daySeedFor(Date.now()));
+    if (shortlistBlock) contextParts.push(shortlistBlock);
 
     // What the user has just been served. The chat had no anti-repetition
     // signal of any kind: the recent-brews block exists so it can QUOTE the
@@ -630,9 +634,9 @@ export async function POST(req: NextRequest) {
     const systemBlocks: Anthropic.TextBlockParam[] = [
       { type: "text", text: AGENT_SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
       { type: "text", text: profileBlock, cache_control: { type: "ephemeral" } },
-      // The corpus is STATIC — the same ~45k tokens on every turn of every
-      // conversation. It was riding inside dynamicContext, which changes each
-      // turn and so could never be cached; its own block can be.
+      // The recipe INDEX (~5k tokens; the full ~43k-token corpus until
+      // 2026-10-03). Static, so it gets its own cached block; the per-turn
+      // shortlist with full text lives in dynamicContext.
       { type: "text", text: recipeLibraryBlock(), cache_control: { type: "ephemeral" } },
       ...(dynamicContext ? [{ type: "text" as const, text: dynamicContext }] : []),
     ];
@@ -919,6 +923,20 @@ export async function POST(req: NextRequest) {
                       type: "tool_result",
                       tool_use_id: block.id,
                       content: `Error fetching image: ${err instanceof Error ? err.message : "failed"}`,
+                      is_error: true,
+                    });
+                  }
+                } else if (block.name === "lookup_recipe") {
+                  const input = LookupRecipeInput.safeParse(block.input);
+                  if (input.success) {
+                    const found = lookupRecipe(input.data.query);
+                    send("status", { message: `Looking up "${input.data.query}"...` });
+                    toolResults.push({ type: "tool_result", tool_use_id: block.id, content: found.text });
+                  } else {
+                    toolResults.push({
+                      type: "tool_result",
+                      tool_use_id: block.id,
+                      content: 'lookup_recipe needs { "query": string } — a recipe name, person or brewer id.',
                       is_error: true,
                     });
                   }
