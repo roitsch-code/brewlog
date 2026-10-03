@@ -242,6 +242,14 @@ export interface TasteResult {
     question: string;
     answer: string;
   };
+  /** One tap on the post-brew log (2026-10-03): this cup against the previous
+   * brew of the SAME coffee. The most direct learning signal the app collects;
+   * read by the coach line and the outcome ledger. */
+  vsPrevious?: "better" | "same" | "worse";
+  /** The session the comparison was made against. */
+  previousSessionId?: string;
+  /** That session's rating at the time, so the pair survives later edits. */
+  previousRating?: number;
 }
 
 export interface ExternalPlace {

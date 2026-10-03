@@ -336,6 +336,14 @@ jobs:
                      prev_rating, left(COALESCE(prev_method,''),16) AS prev_method
               FROM l ORDER BY created_at DESC LIMIT 12;" </dev/null | cut -c1-300 || echo "psql query failed"
 
+            section "OUTCOME LEDGER 9 — the user's own verdict vs the previous brew of the same coffee (since 2026-10-03)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT COALESCE(result->>'vsPrevious','(not answered)') AS vs_previous, count(*) AS n,
+                     round(avg((result->>'rating')::numeric - NULLIF(result->>'previousRating','')::numeric),2) AS mean_star_delta
+              FROM sessions WHERE mode='home' AND (result->>'rating') ~ '^[0-9.]+$'
+                AND created_at >= '2026-10-03'
+              GROUP BY 1 ORDER BY n DESC;" </dev/null || echo "psql query failed"
+
             section "Unhandled rejections / crashes (last 2000 lines)"
             docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
               | grep -a -A 15 -iE 'UnhandledPromiseRejection|FATAL ERROR|heap out of memory|TypeError|RangeError' \

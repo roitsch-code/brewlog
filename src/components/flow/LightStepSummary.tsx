@@ -283,6 +283,12 @@ export default function LightStepSummary() {
             <span className="text-[15px] font-medium text-light-foreground">{result.rating} / 5</span>
           </div>
         ) : null}
+        {result?.rating && typeof result.previousRating === "number" ? (
+          <p className="text-[13px] text-light-muted-foreground -mt-2">
+            Last time {result.previousRating}★ → now {result.rating}★
+            {result.vsPrevious ? ` · you called it ${result.vsPrevious}` : ""}
+          </p>
+        ) : null}
 
         {brew?.flowAnalysis && (
           <PourAnalysisCard

@@ -12,6 +12,7 @@ import Card, { CardTitle } from "@/components/ui/light/Card";
 import FlavorWheel from "@/components/ui/FlavorWheel";
 import { SCA_WHEEL } from "@/lib/constants/scaFlavorWheel";
 import { BREW_METHODS } from "@/lib/constants/brewMethods";
+import type { PreviousBrewSummary } from "@/lib/brew/previousBrew";
 
 /**
  * Light System fork of /components/flow/StepLog.tsx.
@@ -142,6 +143,28 @@ export default function LightStepLog() {
   const [coachAnswer, setCoachAnswer] = useState<string>("");
   const [coachCustom, setCoachCustom] = useState<string>("");
 
+  // The previous brew of THIS coffee (2026-10-03). Fetched once; drives the
+  // "last time" card, the better/same/worse tap, and the coach's rating-drop
+  // signal (accepted by the route since June, never sent until now).
+  const [previous, setPrevious] = useState<PreviousBrewSummary | null>(null);
+  const [vsPrevious, setVsPrevious] = useState<"better" | "same" | "worse" | null>(null);
+  useEffect(() => {
+    if (isExternal) return;
+    const c = draft.coffee;
+    if (!c || (!c.coffeeId && !(c.roaster && c.name))) return;
+    const qs = new URLSearchParams();
+    if (c.coffeeId) qs.set("coffeeId", c.coffeeId);
+    if (c.roaster) qs.set("roaster", c.roaster);
+    if (c.name) qs.set("name", c.name);
+    fetch(`/api/sessions/previous?${qs.toString()}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: PreviousBrewSummary | null) => {
+        if (d && d.previous) setPrevious(d);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleFlavor = (f: string) =>
     setSelectedFlavors((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]));
 
@@ -169,6 +192,13 @@ export default function LightStepLog() {
     ...(improvedWhileCooling !== null ? { improvedWhileCooling } : {}),
     ...(matchedIntention !== null ? { matchedIntention } : {}),
     ...(coachAnswerData ? { coachAnswer: coachAnswerData } : {}),
+    ...(vsPrevious && previous?.previous
+      ? {
+          vsPrevious,
+          previousSessionId: previous.previous.id,
+          ...(typeof previous.previous.rating === "number" ? { previousRating: previous.previous.rating } : {}),
+        }
+      : {}),
   });
 
   const commitBrew = () => {
@@ -220,14 +250,26 @@ export default function LightStepLog() {
     // user explain something they had just told it. It stays available as
     // CONTEXT for a question raised by a real ambiguity, but it can no longer
     // be the reason one is asked.
+    // Rating drop against this coffee's own recent average (≥2 earlier
+    // ratings, ≥1★ below). The route has accepted `ratingDropVsAvg` since
+    // June; the client had no previous ratings to compute it from until the
+    // previous-brew fetch (2026-10-03).
+    const priorRatings = previous?.ratings ?? [];
+    const priorAvg =
+      priorRatings.length >= 2 ? priorRatings.reduce((a, b) => a + b, 0) / priorRatings.length : undefined;
+    const ratingDropVsAvg =
+      priorAvg != null && rating > 0 && rating - priorAvg <= -1 ? Number((rating - priorAvg).toFixed(2)) : undefined;
+
     const fireCount =
       (overrunPct != null && Math.abs(overrunPct) >= 20 ? 1 : 0) +
       (bitterAndLowRating ? 1 : 0) +
-      (muddyAndHighRating ? 1 : 0);
+      (muddyAndHighRating ? 1 : 0) +
+      (ratingDropVsAvg != null ? 1 : 0);
 
     return {
       shouldAsk: fireCount > 0,
       signals: {
+        ...(ratingDropVsAvg != null ? { ratingDropVsAvg } : {}),
         ...(overrunPct != null ? { timingOverrunPct: overrunPct } : {}),
         ...(bitterAndLowRating ? { bitterAndLowRating: true } : {}),
         ...(muddyAndHighRating ? { muddyAndHighRating: true } : {}),
@@ -319,6 +361,47 @@ export default function LightStepLog() {
           {rating === 0 ? "Tap to rate" : RATING_LABELS[rating] ?? ""}
         </p>
       </div>
+
+      {/* Last time with this coffee — the comparison the log never offered.
+          One optional tap; everything else about the brew stays as it was. */}
+      {previous?.previous && (
+        <div className="mb-10 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-5 py-4 space-y-3">
+          <p className="label-eyebrow text-light-muted-foreground text-xs tracking-widest uppercase">
+            Last time with this coffee
+          </p>
+          <p className="text-[14px] text-light-foreground leading-snug">
+            {typeof previous.previous.rating === "number" ? `${previous.previous.rating}★ · ` : ""}
+            {previous.previous.method}
+            {previous.previous.basedOn ? ` · ${previous.previous.basedOn}` : previous.previous.title ? ` · ${previous.previous.title}` : ""}
+          </p>
+          <p className="text-[13px] text-light-muted-foreground">
+            {[
+              previous.previous.doseGrams && previous.previous.waterGrams
+                ? `${previous.previous.doseGrams}g : ${previous.previous.waterGrams}g`
+                : "",
+              previous.previous.waterTempC ? `${previous.previous.waterTempC} °C` : "",
+              previous.previous.grindSize ? `grind ${previous.previous.grindSize}` : "",
+              previous.previous.actualTimeSec
+                ? `${Math.floor(previous.previous.actualTimeSec / 60)}:${String(previous.previous.actualTimeSec % 60).padStart(2, "0")}`
+                : "",
+              previous.previous.createdAt ? new Date(previous.previous.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          {previous.previous.freeNotes && (
+            <p className="text-[13px] italic text-light-muted-foreground">“{previous.previous.freeNotes}”</p>
+          )}
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            <span className="text-[13px] text-light-foreground mr-1">This cup vs last time</span>
+            {(["better", "same", "worse"] as const).map((v) => (
+              <Chip key={v} size="sm" selected={vsPrevious === v} onClick={() => setVsPrevious(vsPrevious === v ? null : v)}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-10">
         {/* ─── TASTE ─────────────────────────────────────────────

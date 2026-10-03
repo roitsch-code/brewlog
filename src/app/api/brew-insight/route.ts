@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import type { Session } from "@/lib/types/session";
 
@@ -134,7 +135,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ terrain: null, adjustment: null });
     }
 
-    const sessions: Session[] = Array.isArray(recentSessions) ? recentSessions : [];
+    // The history-based terrain needs ≥3 sessions. LightStepSummary has always
+    // POSTed `recentSessions: []`, so until 2026-10-03 this branch never ran and
+    // the post-brew insight was a one-brew Haiku line every single time. Read the
+    // corpus server-side (as /recommend does) when the client sends none.
+    const sessions: Session[] =
+      Array.isArray(recentSessions) && recentSessions.length > 0
+        ? recentSessions
+        : await loadRecentSessions(60).catch(() => [] as Session[]);
 
     // Café sessions: no extraction adjustment advice (not actionable for a visited café)
     const adjustment = isExternal ? null : computeAdjustment(draft);
