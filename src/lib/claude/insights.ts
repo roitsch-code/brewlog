@@ -34,10 +34,12 @@ import type { Session } from "@/lib/types/session";
 import { parseClaudeJson, z } from "./parseJson";
 import { buildSignatures } from "./brewSignature";
 import { formatMeasuredPour } from "@/lib/brew/flowAnalysis";
+import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
 import { extract, serialiseForEscher } from "./extractor";
 import { detectPatterns } from "./patterns";
 import type { PatternAnalysis } from "./patterns";
 import { callCoachModel } from "@/lib/ai/coachProvider";
+import { formatPriorInsightsForCoach } from "./coachPriors";
 
 const InsightItemSchema = z.object({
   observation: z.string().min(10).max(400),
@@ -155,6 +157,14 @@ export function serialiseSessionForCoach(s: Session): string {
 
   const recipe: string[] = [];
   if (b?.methodUsed || rec?.primaryMethod) recipe.push(`m=${b?.methodUsed ?? rec?.primaryMethod}`);
+  // WHICH recipe the brew followed. Never in this line before 2026-10-03, so
+  // the coach could not learn "reference X suits coffee type Y" — the single
+  // question the recommender most needs answered about this user.
+  {
+    const cand = resolveBrewedRecipe(s).candidate;
+    const ref = cand?.basedOn?.trim() || cand?.title?.trim();
+    if (ref) recipe.push(`rec="${ref.slice(0, 60)}"`);
+  }
   if (brewedRecipe?.doseGrams && brewedRecipe?.waterGrams) {
     recipe.push(`${brewedRecipe.doseGrams}g/${brewedRecipe.waterGrams}g`);
     recipe.push(`r=1:${Math.round((brewedRecipe.waterGrams / brewedRecipe.doseGrams) * 10) / 10}`);
@@ -363,6 +373,19 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
     formatPatternAnalysis(patternOutput),
     "",
     formatCoffeeAggregates(aggregates),
+    "",
+    // The coach's own earlier rows with the user's verdicts (coachPriors.ts).
+    // Without this a rejected insight came back reworded as `new`, and a
+    // confirmed one was neither built on nor kept out of the way.
+    formatPriorInsightsForCoach(
+      existing.map((r) => ({
+        observation: r.observation,
+        suggestion: r.suggestion,
+        status: r.status,
+        source: r.source,
+        createdAt: r.createdAt,
+      })),
+    ),
     "",
     "Write 5–8 multivariate insights now. JSON only.",
   ];
