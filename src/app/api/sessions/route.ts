@@ -11,6 +11,7 @@ import { FieldZonesSchema } from "@/lib/field/schema";
 import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
 import { deriveIdentitySummary } from "@/lib/coffee/blend";
 import { coffeeKeyFor } from "@/lib/coffee/coffeeKey";
+import { getOrGenerateInsights } from "@/lib/claude/insights";
 
 const SessionPostSchema = z.object({
   type: z.enum(["coffee", "wine"]),
@@ -264,6 +265,18 @@ export async function POST(req: NextRequest) {
       // a followed-recipe brew omits water (see buildCaffeinePayload step 2).
       recommendation: data.recommendation,
     });
+
+    // Coach regeneration on save (fire-and-forget). Until 2026-10-03 the coach
+    // only ever regenerated when the /taste page was OPENED, so /recommend and
+    // the chat read rows that lagged the log by however long it had been since
+    // the owner last looked at /taste. getOrGenerateInsights is cache-aware (it
+    // calls the model only when the corpus advanced past the newest row) and
+    // needs ≥4 rated brews; a failure here must never fail the save.
+    if (data.mode === "home" && typeof data.result?.rating === "number") {
+      void getOrGenerateInsights().catch((err) =>
+        console.warn("[sessions] coach regeneration after save failed:", String((err as Error)?.message ?? err).slice(0, 160)),
+      );
+    }
 
     if (data.coffee?.name) {
       // Shared with POST /api/coffees — a drifted copy of this derivation

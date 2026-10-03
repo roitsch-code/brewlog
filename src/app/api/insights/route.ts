@@ -292,7 +292,7 @@ export async function PATCH(req: NextRequest) {
         // (e.g. the GET cache check). 'doesnt-apply' is the spiritual
         // successor of dismissed.
         dismissedAt: status === "doesnt-apply" ? now : null,
-        // Confirmation bumps source so /recommend can weight it. Other
+        // Confirmation bumps source; since 2026-10-03 /recommend reads the status itself (insightsBlock.ts ranks confirmed → trying → new and labels each line). Other
         // transitions leave source untouched — a chat-authored note
         // (source='user-confirmed' at creation) must keep its provenance,
         // because regeneration uses it as a never-delete tier. The old

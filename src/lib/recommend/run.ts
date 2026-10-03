@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { generateRecommendation, type RecommendInsight } from "@/lib/claude/recommend";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { db } from "@/lib/db/client";
@@ -26,18 +26,39 @@ import type { CoffeeIdentity, Recommendation, Session, SessionContext } from "@/
 interface CoffeeHistory {
   commonNotes?: string[];
   writtenSummary?: string;
+  /** The coffee's own coach card (coffees.coach_insight), unless rejected. */
+  coachCard?: { observation: string; suggestion: string; status: string };
 }
 
 function mapCoffeeHistory(row: {
   commonNotes: unknown;
   writtenSummary: string | null;
+  coachInsight?: unknown;
 }): CoffeeHistory | undefined {
   const notes = Array.isArray(row.commonNotes) ? (row.commonNotes as string[]) : undefined;
   const summary = row.writtenSummary ?? undefined;
-  if ((!notes || notes.length === 0) && !summary) return undefined;
+  const card = row.coachInsight as
+    | { observation?: unknown; suggestion?: unknown; status?: unknown; snoozedUntil?: unknown }
+    | null
+    | undefined;
+  const snoozeActive =
+    card?.status === "snoozed" &&
+    typeof card.snoozedUntil === "string" &&
+    Date.parse(card.snoozedUntil) > Date.now();
+  const coachCard =
+    card &&
+    typeof card.observation === "string" &&
+    typeof card.suggestion === "string" &&
+    typeof card.status === "string" &&
+    card.status !== "doesnt-apply" &&
+    !snoozeActive
+      ? { observation: card.observation, suggestion: card.suggestion, status: card.status }
+      : undefined;
+  if ((!notes || notes.length === 0) && !summary && !coachCard) return undefined;
   return {
     commonNotes: notes && notes.length > 0 ? notes : undefined,
     writtenSummary: summary,
+    coachCard,
   };
 }
 
@@ -52,6 +73,7 @@ async function loadCoffeeHistory(
         .select({
           commonNotes: coffees.commonNotes,
           writtenSummary: coffees.writtenSummary,
+          coachInsight: coffees.coachInsight,
         })
         .from(coffees)
         .where(eq(coffees.id, coffeeId))
@@ -63,6 +85,7 @@ async function loadCoffeeHistory(
         .select({
           commonNotes: coffees.commonNotes,
           writtenSummary: coffees.writtenSummary,
+          coachInsight: coffees.coachInsight,
         })
         .from(coffees)
         .where(and(eq(coffees.roaster, roaster), eq(coffees.name, name)))
@@ -146,8 +169,11 @@ export async function runRecommendation(body: {
     })(),
     loadCoffeeHistory(coffee?.coffeeId, coffee?.roaster, coffee?.name),
     // Coach insights — exclude doesnt-apply AND actively-snoozed at the query
-    // layer. new / trying / confirmed / expired-snoozes all feed the prompt,
-    // with confirmed ranked higher by the recommend prompt block builder.
+    // layer. Ordered confirmed → trying → new (then newest first) BEFORE the
+    // limit, and the status/source travel with each row: until 2026-10-03 this
+    // query had no ORDER BY (an arbitrary 20 rows) and the mapping below dropped
+    // the status, so a row the user had confirmed on /taste read exactly like a
+    // fresh one — the comment here claimed a weighting that did not exist.
     db
       .select()
       .from(insightsTable)
@@ -161,7 +187,12 @@ export async function runRecommendation(body: {
           ),
         ),
       )
-      .limit(20)
+      .orderBy(
+        sql`CASE ${insightsTable.status} WHEN 'confirmed' THEN 0 WHEN 'trying' THEN 1 WHEN 'new' THEN 2 ELSE 3 END`,
+        desc(insightsTable.latestSessionMs),
+        desc(insightsTable.createdAt),
+      )
+      .limit(30)
       .catch(() => []),
   ]);
   const userRoasterPrior = userRoasterPriorResult;
@@ -172,6 +203,9 @@ export async function runRecommendation(body: {
         observation: row.observation,
         suggestion: row.suggestion,
         citationFields: row.citationFields ?? [],
+        status: row.status,
+        source: row.source,
+        createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : undefined,
       }))
     : [];
 
