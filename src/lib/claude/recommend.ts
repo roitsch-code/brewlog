@@ -353,12 +353,12 @@ export async function generateRecommendation(
   // boundary" was advice both candidates could quietly ignore in favour of the
   // safe pairing.
   const EXPLORATION_SLOT =
-    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
+    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Exploration means drawing something new OUT OF THIS BEAN, not changing vessel for its own sake: name the lever (a technique id from AVAILABLE TECHNIQUES — fines removal, a single long continuous pour, central-pour, a high-agitation extraction push, concentrate-and-bypass, a different water, a pour-count change) and what it should reveal in this coffee. Swapping to whichever brewer contrasts most easily (an immersion vessel next to a pour-over, for instance) is not exploration. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
 
   const earlySlot = explorationAlways ? EXPLORATION_SLOT : "";
   const sessionArcNote =
     sessionCountForThisCoffee === 0
-      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative.${earlySlot}`
+      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two candidates with genuinely different extraction physics (e.g., fast-flow high agitation vs flat-bed minimal agitation, many small pours vs few large ones, or high-clarity vs body-forward) so the cup comparison is informative. Immersion is one option among these, not the default contrast.${earlySlot}`
       : sessionCountForThisCoffee <= 2
       ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.${earlySlot}`
       : sessionCountForThisCoffee <= 5
