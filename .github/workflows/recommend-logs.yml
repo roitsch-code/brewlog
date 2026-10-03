@@ -146,6 +146,36 @@ jobs:
                       WITH ORDINALITY t(p, ord)) AS measured_pours
               FROM r;" </dev/null | cut -c1-300 || echo "psql query failed"
 
+            # Every candidate the app OFFERED (not just the brewed one) over the
+            # last 30 recommendations — the repetition question ("Clever water-
+            # first every other brew") is about what is offered, and only the
+            # brewed recipe was visible before. Method + basedOn + the context
+            # that drove it; no prose. Read-only.
+            section "Last 30 recommendations — all offered candidates"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(s.created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
+                left(s.coffee->>'name',20) AS coffee,
+                left(COALESCE(s.coffee->>'process',''),10) AS proc,
+                left(COALESCE(s.context->>'goal',''),10) AS goal,
+                left(COALESCE(s.context->>'occasion',''),12) AS occ,
+                COALESCE(s.context->>'waterAmount', s.context->>'amount','') AS amt,
+                left(COALESCE(s.context->>'preferredMethod',''),14) AS locked,
+                s.brew->>'selectedCandidateIdx' AS picked,
+                ord - 1 AS i,
+                left(c->>'method',26) AS method,
+                left(COALESCE(c->>'basedOn',''),44) AS based_on
+              FROM (SELECT * FROM sessions WHERE recommendation IS NOT NULL
+                    ORDER BY created_at_ms DESC LIMIT 30) s
+              CROSS JOIN LATERAL jsonb_array_elements(COALESCE(s.recommendation->'candidates','[]'::jsonb))
+                   WITH ORDINALITY t(c, ord)
+              ORDER BY s.created_at_ms DESC, ord;" </dev/null | cut -c1-300 || echo "psql query failed"
+
+            section "Guard + menu-binding lines (last 5000 log lines)"
+            docker compose logs --tail=5000 --no-color app 2>/dev/null </dev/null \
+              | grep -a -iE 'not in this turn.s menu|recipe-fidelity|long-pour-gap|capacity guard|volume guard|physics: dropped|special' \
+              | cut -c1-300 | tail -150 \
+              || echo "no matching lines"
+
             # Ground truth for how long brews ACTUALLY run vs the clock they were
             # promised, per brewer label and 50 g volume bucket. Read-only.
             section "Actual vs promised time per method + volume (all sessions with both)"
