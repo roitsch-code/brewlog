@@ -160,7 +160,7 @@ function refTemp(r: Recipe): number | null {
  * scales cannot overlap by magnitude — Niche degrees live in the mid-300s to
  * mid-400s, clicks in the teens to forties — so a bare number is unambiguous,
  * which is the same property `grindUnit.ts` already relies on. */
-function parseGrindDegrees(grindSize: string | undefined): number | null {
+export function parseGrindDegrees(grindSize: string | undefined): number | null {
   if (!grindSize) return null;
   const m = /(\d{1,3}(?:\.\d+)?)/.exec(grindSize);
   if (!m) return null;

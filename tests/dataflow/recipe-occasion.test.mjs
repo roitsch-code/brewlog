@@ -163,5 +163,8 @@ test("recommend.ts wires occasion history, the time bucket and the Special guard
   assert.match(src, /brewedOnThisCoffee\s*[,:]/, "selector must receive brewedOnThisCoffee");
   assert.match(src, /timeAvailable:\s*context\.timeAvailable/, "selector must receive the time bucket");
   assert.match(src, /guardSpecialTime\(/, "the post-parse Special guard must run");
-  assert.match(src, /context\.occasion === "experiment"/, "Experiment must open the exploration slot from brew 1");
+  // Since 2026-10-03 the exploration slot is ALWAYS on (slot 2, from brew 1,
+  // every occasion) — it is passed to the arc builder unconditionally.
+  assert.match(src, /explorationSlot:\s*EXPLORATION_SLOT/, "the exploration slot must be handed to the arc unconditionally");
+  assert.doesNotMatch(src, /explorationAlways/, "the Experiment-only gate on the exploration slot is gone");
 });

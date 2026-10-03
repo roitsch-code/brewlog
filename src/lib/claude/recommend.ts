@@ -54,6 +54,13 @@ import { reconcileToReference, reconcileWaterToPourPlan, resolveReference } from
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
 import { findRepeatOffenders, formatRepeatRepair, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
+import {
+  deriveConvergence,
+  formatConvergenceNote,
+  checkConvergence,
+  formatConvergenceRepair,
+  type ConvergenceState,
+} from "./convergence";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
@@ -326,6 +333,14 @@ export async function generateRecommendation(
   );
   const sessionCountForThisCoffee = sessionsForThisCoffee.length;
 
+  // CONVERGENCE (convergence.ts, owner decision 2026-10-03): the rating of the
+  // LAST brew of this coffee decides the first candidate. ≥4★ → reproduce it
+  // with exactly one change; <4★ → something genuinely different. The count-
+  // based arc this replaces told the model to "push the boundary" from brew 4
+  // and never to converge — measured on the real log, the next brew of a coffee
+  // beat the previous one no more often than it lost (see the module header).
+  const rawConvergence = deriveConvergence(sessionsForThisCoffee);
+
   // What this bag has already been brewed with — the Experiment occasion's
   // whole meaning is "push what you haven't tried on THIS coffee", so the
   // selector needs the brewers and references actually used on it.
@@ -341,29 +356,16 @@ export async function generateRecommendation(
       ),
     ),
   };
-  // The exploration slot normally opens from the 4th brew of a bag. On the
-  // Experiment occasion the user has asked for it outright, so it opens on
-  // every brew — including the first.
-  const explorationAlways = context.occasion === "experiment";
-
-  // From the third brew of a bag onward, the SECOND candidate carries the
-  // exploration. The two-candidate portfolio is deliberately kept (owner's
-  // call — a third candidate is more waiting on every brew), so exploration has
-  // to live inside it rather than beside it. Without naming a slot, "push the
-  // boundary" was advice both candidates could quietly ignore in favour of the
-  // safe pairing.
+  // The SECOND candidate is ALWAYS the exploration slot (owner decision
+  // 2026-10-03 — it used to open only from the 4th brew of a bag, or on the
+  // Experiment occasion). The two-candidate portfolio is deliberately kept (a
+  // third candidate is more waiting on every brew), so exploration lives inside
+  // it: slot 1 converges or diverges on the last rating, slot 2 explores.
   const EXPLORATION_SLOT =
     " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Exploration means drawing something new OUT OF THIS BEAN, not changing vessel for its own sake: name the lever (a technique id from AVAILABLE TECHNIQUES — fines removal, a single long continuous pour, central-pour, a high-agitation extraction push, concentrate-and-bypass, a different water, a pour-count change) and what it should reveal in this coffee. Swapping to whichever brewer contrasts most easily (an immersion vessel next to a pour-over, for instance) is not exploration. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
 
-  const earlySlot = explorationAlways ? EXPLORATION_SLOT : "";
-  const sessionArcNote =
-    sessionCountForThisCoffee === 0
-      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two candidates with genuinely different extraction physics (e.g., fast-flow high agitation vs flat-bed minimal agitation, many small pours vs few large ones, or high-clarity vs body-forward) so the cup comparison is informative. Immersion is one option among these, not the default contrast.${earlySlot}`
-      : sessionCountForThisCoffee <= 2
-      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.${earlySlot}`
-      : sessionCountForThisCoffee <= 5
-      ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. The character is understood. This portfolio should test something genuinely new — an unexplored method, an untested variable. Don't recycle what worked; push the boundary.${EXPLORATION_SLOT}`
-      : `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Expert territory. Find the ceiling: what does this coffee do that no other has? What technique reveals its most distinctive character? What would a championship barista choose to showcase it?${EXPLORATION_SLOT}`;
+  // The arc text itself is built further down, once the requested water is
+  // known (a ≥4★ base scales to today's amount at the same ratio).
   const totalPercolationSamples = Object.values(timingStats).reduce(
     (n, v) => n + v.count,
     0
@@ -638,6 +640,42 @@ export async function generateRecommendation(
   // If the user locked a method in the flow, hard-filter recipe selection to
   // that method so the prompt only carries recipes for the brewer they chose.
   const lockedBrewers = brewersFromMethod(context.preferredMethod);
+
+  // The effective convergence state for THIS turn. A locked method that is not
+  // the base's brewer, or a change of partition (hot ⟷ cold brew ⟷ iced) since
+  // the base was brewed, means there is nothing to reproduce or avoid: fall back
+  // to best fit for the first candidate (the "unrated" arc).
+  const partitionOf = (occasion?: string) => {
+    const o = (occasion ?? "").toLowerCase();
+    return o === "cold-brew" ? "cold" : o === "summer-time" ? "iced" : "hot";
+  };
+  const convergence: ConvergenceState = (() => {
+    const c = rawConvergence;
+    if (c.kind !== "converge" && c.kind !== "diverge") return c;
+    const base = c.kind === "converge" ? c.base : c.last;
+    if (lockedBrewers.size > 0) {
+      const baseBrewers = brewersFromMethod(base.method);
+      if (!Array.from(baseBrewers).some((b) => lockedBrewers.has(b))) return { kind: "unrated", count: c.count };
+    }
+    if (partitionOf(base.occasion) !== partitionOf(context.occasion)) return { kind: "unrated", count: c.count };
+    return c;
+  })();
+  const convergeBase = convergence.kind === "converge" ? convergence.base : null;
+  // Freshness levers must not push the first candidate off a ≥4★ base: the
+  // base's brewer is exempt from the menu demotion and the own-reference
+  // "don't re-serve it" tag, and its names are exempt from the recent-reference
+  // demotion. Rating-aware recency — a 4★ brewer is not "stale", it earned it.
+  const protectedBrewers = convergeBase ? brewersFromMethod(convergeBase.method) : new Set<string>();
+  const freshnessBrewers = new Set(
+    Array.from(methodRecency.recentBrewers).filter((b) => !protectedBrewers.has(b)),
+  );
+  const protectedNames = convergeBase
+    ? [convergeBase.name, convergeBase.basedOn ?? ""].map((n) => n.toLowerCase().trim()).filter((n) => n.length >= 6)
+    : [];
+  const isProtectedName = (n: string) => {
+    const x = n.toLowerCase().trim();
+    return protectedNames.some((p) => p === x || x.includes(p) || p.includes(x));
+  };
   // serveVolumeMl: vessel-capacity filter for plain hot brews only. Iced/cold
   // opt out (the vessel holds the hot portion / a concentrate). A locked method
   // also opts out — the user chose the vessel, so honour it with the volume.
@@ -696,10 +734,10 @@ export async function generateRecommendation(
       rotationSeed,
       // And demote references the user has JUST seen to the back of their tie
       // group, so an equal-scored fresh recipe takes the injected slot.
-      recentReferenceNames: recentReferenceNames(pastSessions),
+      recentReferenceNames: recentReferenceNames(pastSessions).filter((n) => !isProtectedName(n)),
       // Same tie-break for recently-dominant BREWERS: an equal-scored recipe
       // on a fresher brewer takes the menu slot (never an exclusion).
-      demoteBrewers: methodRecency.recentBrewers,
+      demoteBrewers: freshnessBrewers,
       // Special (fast shot) → only recipes whose clock fits the ceiling.
       timeAvailable: context.timeAvailable,
       // Experiment → steer toward brewers/references not yet used on this bag.
@@ -772,7 +810,7 @@ export async function generateRecommendation(
     // WITHIN-category "vary the recipe/technique" nudge (never a cross-category
     // "switch to a pour-over"). Without this the freshness lever never reached
     // the own-reference block — the actual driver of the Clever-water-first loop.
-    new Set(Array.from(methodRecency.recentBrewers).map((b) => brewMethodKey(b))),
+    new Set(Array.from(freshnessBrewers).map((b) => brewMethodKey(b))),
   );
 
   // Compact technique vocabulary — id + one-line description per technique.
@@ -791,6 +829,11 @@ export async function generateRecommendation(
   const blendNote = blendDesc
     ? `\nBLEND — this bag is ${componentsOf(coffee).length} components: ${blendDesc}. There is no single origin or process. Reason about the composite cup: extract to serve the component that needs the MOST care (typically the lightest-roasted / washed / most delicate one) without under-serving the others, and name that trade-off in your reasoning. Do not treat it as a single-origin of just one component.`
     : "";
+
+  const sessionArcNote = formatConvergenceNote(convergence, {
+    explorationSlot: EXPLORATION_SLOT,
+    targetWaterGrams: targetWaterMl,
+  });
 
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
@@ -873,7 +916,10 @@ Return valid JSON only.`;
   // stayed the same — the model was free to reach past it for whatever was most
   // salient. Never an exclusion (best fit decides, nothing is banned); this is
   // the signal that tells us whether rotating the menu can help at all.
-  const menuNames = menuNamesOf(recipesForPrompt, ownReferenceNamesForTurn);
+  const menuNames = menuNamesOf(
+    recipesForPrompt,
+    convergeBase ? [...ownReferenceNamesForTurn, convergeBase.name] : ownReferenceNamesForTurn,
+  );
 
   // Candidate-level repetition guard (repeatGuard.ts, owner decision
   // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
@@ -912,6 +958,51 @@ Return valid JSON only.`;
           `[recommend] repeat guard: repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
         );
       }
+    }
+  }
+
+  // Convergence check (convergence.ts): did the model obey the last rating?
+  // CONVERGE → first candidate = the ≥4★ base with exactly one dial changed;
+  // DIVERGE → first candidate ≠ the <4★ brew's brewer+reference. One repair
+  // round, then the repaired answer is used as is (logged, never rewritten
+  // silently — the user is about to read these numbers).
+  if (convergence.kind === "converge" || convergence.kind === "diverge") {
+    const violation = checkConvergence(convergence, raw.candidates[0]);
+    if (violation) {
+      console.warn(`[recommend] convergence (${violation.kind}): ${violation.reason} — one repair round`);
+      try {
+        const second = await callRecommendModel(
+          userMessage + formatConvergenceRepair(convergence, violation),
+        );
+        usage = {
+          input_tokens: usage.input_tokens + second.usage.input_tokens,
+          output_tokens: usage.output_tokens + second.usage.output_tokens,
+        };
+        const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
+        if (repaired) {
+          const left = checkConvergence(convergence, repaired.candidates[0]);
+          if (left) {
+            console.warn(`[recommend] convergence: still "${left.reason}" after repair — using the repaired answer anyway`);
+          } else {
+            console.log(`[recommend] convergence: repaired (${violation.kind})`);
+          }
+          raw = repaired;
+        } else {
+          console.warn("[recommend] convergence: repair answer did not parse — keeping the first answer");
+        }
+      } catch (err) {
+        console.warn(
+          `[recommend] convergence: repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
+        );
+      }
+    } else {
+      console.log(
+        `[recommend] convergence: ${convergence.kind} ok — first candidate ${
+          convergence.kind === "converge"
+            ? `reproduces the ${convergence.base.rating}★ ${convergence.base.method} base (change: ${raw.candidates[0]?.experiment ?? "unnamed"})`
+            : `differs from the ${convergence.last.rating}★ ${convergence.last.method} brew`
+        }`,
+      );
     }
   }
 
