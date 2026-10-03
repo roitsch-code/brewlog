@@ -144,6 +144,7 @@ export function serialiseSessionForCoach(s: Session): string {
   // distinguish from a dark-roast bitterness the brew can't fix. Collected on
   // every tasting and read by no prompt until 2026-08-23.
   if (r?.astringency) tasteBits.push(`astringent=${r.astringency}`);
+  if (r?.balance) tasteBits.push(`balance=${r.balance}`);
 
   const meta: string[] = [];
   if (c?.variety) meta.push(`var=${c.variety}`);
@@ -173,6 +174,12 @@ export function serialiseSessionForCoach(s: Session): string {
   if (b?.actualTempC ?? brewedRecipe?.waterTempC) recipe.push(`${b?.actualTempC ?? brewedRecipe?.waterTempC}°C`);
   if (b?.actualTimeSec) recipe.push(`t=${b.actualTimeSec}s`);
   if (b?.flow && b.flow !== "na") recipe.push(`flow=${b.flow}`);
+  // Logged on every brew, read by nothing until 2026-10-03: the user's own
+  // timing verdict, whether the recipe was followed, and what they actually did.
+  if (b?.timing) recipe.push(`timing=${b.timing}`);
+  if (b?.followedRecipe === true) recipe.push("followed=y");
+  if (b?.modifications?.trim()) recipe.push(`did="${b.modifications.trim().slice(0, 80)}"`);
+  if (b?.agitationNote?.trim()) recipe.push(`agit="${b.agitationNote.trim().slice(0, 60)}"`);
   // Objective pour measurement from a connected scale, when captured — the
   // channeling/overshoot signal the coach needs to tell "your technique" from
   // "the bean". Was stored and read by no prompt until now.
