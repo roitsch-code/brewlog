@@ -368,11 +368,11 @@ export function formatConvergenceRepair(state: ConvergenceState, v: ConvergenceV
     const b = state.base;
     return `
 
-REPAIR — CONVERGENCE. ${v.reason}. The last brew of this coffee earned ${b.rating}★; the FIRST candidate must be THAT brew (${b.method}, ${b.recipe.doseGrams}g : ${b.recipe.waterGrams}g at ${b.recipe.waterTempC}°C, grind ${b.recipe.grindSize}, pours ${pourPlanText(b.recipe)}) with EXACTLY ONE dial changed and named in \`experiment\`, basedOn "${b.name}". Keep the second candidate as the exploration. Return the full JSON again.`;
+REPAIR — CONVERGENCE. ${v.reason}. The last brew of this coffee earned ${b.rating}★; the FIRST candidate must be THAT brew (${b.method}, ${b.recipe.doseGrams}g : ${b.recipe.waterGrams}g at ${b.recipe.waterTempC}°C, grind ${b.recipe.grindSize}, pours ${pourPlanText(b.recipe)}) with EXACTLY ONE dial changed and named in \`experiment\`, basedOn "${b.name}". Keep the second candidate as the exploration.`;
   }
   if (state.kind !== "diverge") return "";
   const b = state.last;
   return `
 
-REPAIR — DIVERGENCE. ${v.reason}. That brew rated ${b.rating}★, so the FIRST candidate must be a genuinely different approach — another brewer family, or another reference recipe — chosen for fit. Keep the second candidate as the exploration. Return the full JSON again.`;
+REPAIR — DIVERGENCE. ${v.reason}. That brew rated ${b.rating}★, so the FIRST candidate must be a genuinely different approach — another brewer family, or another reference recipe — chosen for fit. Keep the second candidate as the exploration.`;
 }
