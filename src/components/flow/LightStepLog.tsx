@@ -13,6 +13,8 @@ import FlavorWheel from "@/components/ui/FlavorWheel";
 import { SCA_WHEEL } from "@/lib/constants/scaFlavorWheel";
 import { BREW_METHODS } from "@/lib/constants/brewMethods";
 import type { PreviousBrewSummary } from "@/lib/brew/previousBrew";
+import { insightRequestKey } from "@/lib/brew/insightKey";
+import type { TasteResult } from "@/lib/types/session";
 
 /**
  * Light System fork of /components/flow/StepLog.tsx.
@@ -50,7 +52,7 @@ const inputClass =
   "w-full rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-3 py-2.5 text-[14px] text-light-foreground placeholder:text-light-muted-foreground/70 outline-none";
 
 export default function LightStepLog() {
-  const { draft, setBrew, setResult, setStep } = useFlowStore();
+  const { draft, setBrew, setResult, setStep, setPendingInsight } = useFlowStore();
   const isExternal = draft.mode === "external";
   const rec = draft.recommendation;
   // Recipe the user actually brewed = the candidate they selected (by index),
@@ -290,8 +292,39 @@ export default function LightStepLog() {
     };
   };
 
+  /** Start the post-brew insight NOW (2026-10-03, speed round). The Summary used
+   * to request it on mount, so its whole latency was the "Reading the session…"
+   * wait. The route reads nothing the coach question adds (coachAnswer /
+   * vsPrevious are not inputs), so the provisional result is the final one as
+   * far as the insight is concerned; the key lets the Summary verify that. */
+  const prefetchInsight = (provisional: TasteResult) => {
+    const state = useFlowStore.getState();
+    const committedBrew = state.draft.brew;
+    const key = insightRequestKey(provisional, committedBrew);
+    setPendingInsight({ key, status: "loading", terrain: null, adjustment: null });
+    fetch("/api/brew-insight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        draft: { ...state.draft, brew: committedBrew, result: provisional },
+        recentSessions: [],
+      }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        setPendingInsight({
+          key,
+          status: "done",
+          terrain: typeof d?.terrain === "string" && d.terrain ? d.terrain : null,
+          adjustment: typeof d?.adjustment === "string" && d.adjustment ? d.adjustment : null,
+        });
+      })
+      .catch(() => setPendingInsight(null));
+  };
+
   const handleNext = async () => {
     commitBrew();
+    prefetchInsight(buildResult());
     const { shouldAsk, signals, context } = computeCoachSignals();
 
     if (!shouldAsk || isExternal) {

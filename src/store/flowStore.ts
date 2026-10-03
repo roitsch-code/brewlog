@@ -12,6 +12,13 @@ export type FlowStep =
   | "log"          // Taste documentation
   | "summary";     // Save
 
+export interface PendingInsight {
+  key: string;
+  status: "loading" | "done";
+  terrain: string | null;
+  adjustment: string | null;
+}
+
 interface FlowState {
   step: FlowStep;
   draft: DraftSession;
@@ -35,6 +42,11 @@ interface FlowState {
    * always-mounted RecommendJobWatcher polls it so generation survives the app
    * being backgrounded — see src/lib/recommend/jobStore.ts. */
   recommendJobId: string | null;
+  /** The post-brew insight, requested from the LOG screen the moment Save is
+   * tapped (in parallel with the coach question) so the Summary does not start
+   * the wait from zero. `key` = insightRequestKey(result, brew) of the draft it
+   * was requested for; the Summary ignores it when the key no longer matches. */
+  pendingInsight: PendingInsight | null;
   clarificationMessages: ClarificationMessage[];
   /** A URL shared into the app via the iOS Share Sheet ("Add to BTTS"), to be
    * auto-analyzed by the scan step on mount, then cleared. */
@@ -72,6 +84,7 @@ interface FlowState {
   setIsRecommending: (v: boolean) => void;
   setRecommendError: (err: string | null) => void;
   setRecommendJobId: (id: string | null) => void;
+  setPendingInsight: (p: PendingInsight | null) => void;
   addClarificationMessage: (msg: ClarificationMessage) => void;
   clearClarifications: () => void;
   reset: () => void;
@@ -109,6 +122,7 @@ export const useFlowStore = create<FlowState>()(
       isRecommending: false,
       recommendError: null,
       recommendJobId: null,
+      pendingInsight: null,
       clarificationMessages: [],
 
       setStep: (step) => set({ step }),
@@ -131,13 +145,14 @@ export const useFlowStore = create<FlowState>()(
       setIsRecommending: (v) => set({ isRecommending: v }),
       setRecommendError: (err) => set({ recommendError: err }),
       setRecommendJobId: (id) => set({ recommendJobId: id }),
+      setPendingInsight: (pendingInsight) => set({ pendingInsight }),
       addClarificationMessage: (msg) =>
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [] }),
       resumeColdBrew: (draft, fieldZones) =>
-        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false }),
+        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

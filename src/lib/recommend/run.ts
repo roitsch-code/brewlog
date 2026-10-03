@@ -226,5 +226,7 @@ export async function runRecommendation(body: {
   console.log(
     `[recommend] usage in=${usage.input_tokens} out=${usage.output_tokens} calls=${usage.calls} candidates=${recommendation.candidates.length}`,
   );
-  return recommendation;
+  // The terrain rides on the recommendation so the post-brew insight can
+  // reuse it — the Summary used to make the identical Sonnet call again.
+  return terrain ? { ...recommendation, terrain } : recommendation;
 }
