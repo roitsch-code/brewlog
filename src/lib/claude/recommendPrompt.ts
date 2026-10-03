@@ -393,7 +393,7 @@ ${COMANDANTE_BLOCK}
 
 ICED COFFEE RECIPES — use when occasion is "summer-time":
 Ratio rule: set the dose against the FINAL drink (hot water + ice) at ~1:15. Hoffmann's Japanese iced (verified) is 65 g per litre of final drink — 32.5 g for 300 g hot + 200 g ice; Hedrick's flash brew is 20 g for 240 g hot + 60 g ice. The hot water alone is therefore much stronger than a hot recipe (~1:9 at a 40% ice split).
-pourSequence = cumulative hot-water grams only (exclude ice weight). Ice goes in the server, not the brewer.
+waterGramsAtEnd milestones = cumulative hot-water grams only (exclude ice weight). Ice goes in the server, not the brewer.
 ALWAYS populate the recipe's iceGrams field on iced brews — the grams of ice the hot brew drains onto (the "+ Xg ice" figure in each recipe below). waterGrams stays the hot-brew amount; iceGrams is the ice; the user needs BOTH numbers to brew. Never omit iceGrams on an iced recipe.
 Grind finer than the hot equivalent (shorter brew time, higher concentration) — start from the NICHE° GRIND REFERENCE row for that brewer and go finer.
 The iced RECIPES themselves come from the per-turn RELEVANT REFERENCE RECIPES: on a summer-time brew that library holds the corpus's iced entries (Japanese Iced V60, Iced Kalita, Kasuya 4:6 Iced, Hedrick Flash Brew, Hoffmann Immersion Iced, AeroPress Iced). Take technique and numbers from the entries you were given and scale dose / water / ice proportionally.
@@ -422,24 +422,20 @@ WATER NOTES (this user's actual setup):
 
 TIMING RULE:
 Drawdown end = total time = DONE. Never add a separate "total time" line.
-Pour sequence format for percolation: cumulative weight milestones separated by " – "
-Example: "70 – 190 – 320 – 450" (each number = total water in cup at that moment)
+IMMERSION / AEROPRESS / MOCCAMASTER — STEP DURATIONS:
+Every pourSteps entry carries durationSec, and the timed (non-setup) durations must sum EXACTLY to targetTimeSec.
+Setup steps (invert, cap, assemble, flip) are listed with durationSec 0 — they don't count toward the sum.
+NEVER use "at X:XX" timestamp cues in a label. Durations only.
 
-IMMERSION / AEROPRESS / MOCCAMASTER — STEP SEQUENCE FORMAT:
-Each step must carry an explicit duration. All step durations must sum EXACTLY to targetTimeSec.
-Setup steps (inverted, cap, assemble, flip) are stated but NOT timed — they don't count toward the sum.
-Use mm:ss for steps ≥60s (e.g. "steep 3:40"). Use bare seconds for shorter steps (e.g. "swirl 5s", "pour 15s").
-NEVER use "at X:XX" timestamp cues. Durations only.
-
-Worked examples — verify your arithmetic before outputting:
+Worked examples (durationSec per step) — verify your arithmetic before outputting:
   Clever Dripper, targetTimeSec=300 (5:00):
-    "pour water 15s · swirl 5s · steep 3:40 · swirl 5s · drain 55s"  ← 15+5+220+5+55 = 300 ✓
+    pour 15 · swirl 5 · wait 220 · swirl 5 · drain 55  ← 15+5+220+5+55 = 300 ✓
   AeroPress inverted, targetTimeSec=150 (2:30):
-    "inverted · add water 10s · stir 2–3× 10s · steep 1:30 · stir 10s · press 30s"  ← 10+10+90+10+30 = 150 ✓
+    invert 0 · pour 10 · stir 10 · wait 90 · stir 10 · press 30  ← 10+10+90+10+30 = 150 ✓
   AeroPress inverted, targetTimeSec=180 (3:00):
-    "inverted · add water 10s · stir 2–3× 10s · steep 2:00 · stir 10s · press 30s"  ← 10+10+120+10+30 = 180 ✓
+    invert 0 · pour 10 · stir 10 · wait 120 · stir 10 · press 30  ← 10+10+120+10+30 = 180 ✓
   Moccamaster, targetTimeSec=210 (3:30 — Hoffmann measured ~3.5 min for 750g):
-    "fill tank 20s · brew 3:10"  ← 20+190 = 210 ✓
+    pour 20 (fill tank) · wait 190 (brew)  ← 20+190 = 210 ✓
 Formula: steep = targetTimeSec − (pour + stirs + press/drain overhead). Compute steep last.
 
 DRAIN / DRAWDOWN OVERHEAD IS ROUGHLY CONSTANT — it does NOT scale up with water volume.
@@ -478,10 +474,9 @@ appears until the last token is written. Do the thinking; ship only the verdict.
         "waterTempC": 98,
         "grindSize": "406°",
         "targetTimeSec": 270,
-        "pourSequence": "70 – 190 – 320 – 450",
         "pourSteps": [
-          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 20, "notes": "Slow circles from centre out, wet all grounds" },
-          { "label": "Stir", "action": "stir", "durationSec": 5, "notes": "3–5× even stir to settle the bed" },
+          { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 20 },
+          { "label": "Stir", "action": "stir", "durationSec": 5 },
           { "label": "Bloom rest", "action": "wait", "durationSec": 20 },
           { "label": "Pour 2", "action": "pour", "waterGramsAtEnd": 190, "durationSec": 30 },
           { "label": "Pause", "action": "wait", "durationSec": 10 },
