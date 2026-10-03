@@ -122,6 +122,9 @@ const SessionPostSchema = z.object({
     balance: z.enum(["unbalanced", "decent", "harmonious"]).optional(),
     improvedWhileCooling: z.boolean().optional(),
     matchedIntention: z.boolean().optional(),
+    vsPrevious: z.enum(["better", "same", "worse"]).optional(),
+    previousSessionId: z.string().optional(),
+    previousRating: z.number().min(0).max(5).optional(),
     coachAnswer: z.object({
       question: z.string().max(500),
       answer: z.string().max(500),
