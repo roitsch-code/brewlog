@@ -53,6 +53,7 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan, resolveReference } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
+import { findRepeatOffenders, formatRepeatRepair, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
 import { sanitizePourSteps } from "../utils/pourSteps";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
@@ -352,12 +353,12 @@ export async function generateRecommendation(
   // boundary" was advice both candidates could quietly ignore in favour of the
   // safe pairing.
   const EXPLORATION_SLOT =
-    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
+    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Exploration means drawing something new OUT OF THIS BEAN, not changing vessel for its own sake: name the lever (a technique id from AVAILABLE TECHNIQUES — fines removal, a single long continuous pour, central-pour, a high-agitation extraction push, concentrate-and-bypass, a different water, a pour-count change) and what it should reveal in this coffee. Swapping to whichever brewer contrasts most easily (an immersion vessel next to a pour-over, for instance) is not exploration. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
 
   const earlySlot = explorationAlways ? EXPLORATION_SLOT : "";
   const sessionArcNote =
     sessionCountForThisCoffee === 0
-      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two methods with genuinely different extraction physics (e.g., percolation + immersion, or high-clarity + body-forward) so the cup comparison is informative.${earlySlot}`
+      ? `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two candidates with genuinely different extraction physics (e.g., fast-flow high agitation vs flat-bed minimal agitation, many small pours vs few large ones, or high-clarity vs body-forward) so the cup comparison is informative. Immersion is one option among these, not the default contrast.${earlySlot}`
       : sessionCountForThisCoffee <= 2
       ? `\nSESSION ARC: Session ${sessionCountForThisCoffee + 1} of this coffee. Building on the baseline. Use what the first session suggested to refine, and push one variable further.${earlySlot}`
       : sessionCountForThisCoffee <= 5
@@ -861,9 +862,10 @@ CANDIDATE TITLES must be DISTINCT across the candidates in one response — the 
 
 Return valid JSON only.`;
 
-  const { text, usage } = await callRecommendModel(userMessage);
+  const first = await callRecommendModel(userMessage);
+  let usage = first.usage;
 
-  const raw = parseClaudeJson(text, RecommendationResponseSchema);
+  let raw = parseClaudeJson(first.text, RecommendationResponseSchema);
   if (!raw) throw new Error("Failed to parse recommendation from Claude");
 
   // Did the model actually use the menu it was given? Nothing checked this
@@ -872,6 +874,47 @@ Return valid JSON only.`;
   // salient. Never an exclusion (best fit decides, nothing is banned); this is
   // the signal that tells us whether rotating the menu can help at all.
   const menuNames = menuNamesOf(recipesForPrompt, ownReferenceNamesForTurn);
+
+  // Candidate-level repetition guard (repeatGuard.ts, owner decision
+  // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
+  // the last 4 recommendations gets one repair round. Menu recipes and own
+  // references are never touched. Inactive on a locked method (every candidate
+  // is that brewer by request) and on cold brew (a different partition).
+  if (!lockedMethodBase && (context.occasion ?? "").toLowerCase() !== "cold-brew") {
+    const offered = recentlyOfferedFamilies(pastSessions);
+    const offenders = findRepeatOffenders(raw.candidates, menuNames, offered);
+    if (offenders.length) {
+      console.warn(
+        `[recommend] repeat guard: ${offenders
+          .map((o) => `"${o.title}" (${o.method}, ${o.basedOn || "no basedOn"}, offered ${o.timesOffered}/${REPEAT_WINDOW})`)
+          .join("; ")} — one repair round`,
+      );
+      try {
+        const second = await callRecommendModel(
+          userMessage + formatRepeatRepair(offenders, offered),
+        );
+        usage = {
+          input_tokens: usage.input_tokens + second.usage.input_tokens,
+          output_tokens: usage.output_tokens + second.usage.output_tokens,
+        };
+        const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
+        if (repaired) {
+          const left = findRepeatOffenders(repaired.candidates, menuNames, offered);
+          if (left.length) {
+            console.warn(`[recommend] repeat guard: still ${left.length} repeat(s) after repair — using the repaired answer anyway`);
+          }
+          raw = repaired;
+        } else {
+          console.warn("[recommend] repeat guard: repair answer did not parse — keeping the first answer");
+        }
+      } catch (err) {
+        console.warn(
+          `[recommend] repeat guard: repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
+        );
+      }
+    }
+  }
+
   for (const c of raw.candidates) {
     if (!isInMenu(c.basedOn, menuNames)) {
       console.warn(
