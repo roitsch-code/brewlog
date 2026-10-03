@@ -116,10 +116,14 @@ test("a free-form experiment on a fresh brewer passes", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("recommend.ts runs the guard and feeds the repair into a second model call", async () => {
+test("recommend.ts states the rule up front, runs the guard on the FIRST answer and merges its repair with the convergence repair into ONE second call", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(src, /from "\.\/repeatGuard"/);
   assert.match(src, /findRepeatOffenders\(raw\.candidates, menuNames, offered\)/);
-  assert.match(src, /callRecommendModel\(\s*userMessage \+ formatRepeatRepair\(offenders, offered\)/);
+  assert.match(src, /repairs\.push\(formatRepeatRepair\(offenders, offered\)\)/);
+  assert.match(src, /callRecommendModel\(\s*userMessage \+ repairs\.join\(/, "one merged repair call");
+  assert.doesNotMatch(src, /callRecommendModel\(\s*userMessage \+ formatRepeatRepair/, "no standalone repeat-repair call");
   assert.match(src, /raw = repaired;/);
+  // first call + exactly one merged repair call — never a third generation.
+  assert.equal((src.match(/await callRecommendModel\(/g) ?? []).length, 2);
 });

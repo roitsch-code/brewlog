@@ -191,7 +191,8 @@ test("recommend.ts is wired: derives the state, builds the arc from it, checks c
   assert.match(src, /const sessionArcNote = formatConvergenceNote\(convergence,/, "the arc text must come from the state");
   assert.match(src, /explorationSlot:\s*EXPLORATION_SLOT/, "the exploration slot is always on");
   assert.match(src, /checkConvergence\(convergence, raw\.candidates\[0\]\)/, "candidate 1 must be checked");
-  assert.match(src, /formatConvergenceRepair\(convergence, violation\)/, "one repair round on a violation");
+  assert.match(src, /repairs\.push\(formatConvergenceRepair\(convergence, violation\)\)/, "the convergence repair joins the single merged repair call");
+  assert.doesNotMatch(src, /callRecommendModel\(\s*userMessage \+ formatConvergenceRepair/, "no standalone convergence-repair call");
   assert.match(src, /recentReferenceNames\(pastSessions\)\.filter\(\(n\) => !isProtectedName\(n\)\)/, "the base's names are exempt from recent-reference demotion");
   assert.match(src, /demoteBrewers:\s*freshnessBrewers/, "the base's brewer is exempt from menu demotion");
   assert.match(src, /convergeBase \? \[\.\.\.ownReferenceNamesForTurn, convergeBase\.name\]/, "the base name counts as a menu name (repeat guard + binding)");

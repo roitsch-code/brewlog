@@ -305,7 +305,7 @@ export async function generateRecommendation(
   insights?: RecommendInsight[],
 ): Promise<{
   recommendation: Recommendation;
-  usage: { input_tokens: number; output_tokens: number };
+  usage: { input_tokens: number; output_tokens: number; calls: number };
 }> {
   const equipment = preferences.equipment.length
     ? preferences.equipment.join(", ")
@@ -833,6 +833,15 @@ export async function generateRecommendation(
     targetWaterGrams: targetWaterMl,
   });
 
+  // Candidate-level repetition guard (repeatGuard.ts, owner decision
+  // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
+  // the last 4 recommendations is sent back once. Inactive on a locked method
+  // (every candidate is that brewer by request) and on cold brew (a different
+  // partition).
+  const repeatGuardActive =
+    !lockedMethodBase && (context.occasion ?? "").toLowerCase() !== "cold-brew";
+  const offered = recentlyOfferedFamilies(pastSessions);
+
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}${blendNote}
@@ -904,7 +913,7 @@ CANDIDATE TITLES must be DISTINCT across the candidates in one response — the 
 Return valid JSON only.`;
 
   const first = await callRecommendModel(userMessage);
-  let usage = first.usage;
+  let usage = { ...first.usage, calls: 1 };
 
   let raw = parseClaudeJson(first.text, RecommendationResponseSchema);
   if (!raw) throw new Error("Failed to parse recommendation from Claude");
@@ -919,89 +928,74 @@ Return valid JSON only.`;
     convergeBase ? [...ownReferenceNamesForTurn, convergeBase.name] : ownReferenceNamesForTurn,
   );
 
-  // Candidate-level repetition guard (repeatGuard.ts, owner decision
-  // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
-  // the last 4 recommendations gets one repair round. Menu recipes and own
-  // references are never touched. Inactive on a locked method (every candidate
-  // is that brewer by request) and on cold brew (a different partition).
-  if (!lockedMethodBase && (context.occasion ?? "").toLowerCase() !== "cold-brew") {
-    const offered = recentlyOfferedFamilies(pastSessions);
-    const offenders = findRepeatOffenders(raw.candidates, menuNames, offered);
-    if (offenders.length) {
-      console.warn(
-        `[recommend] repeat guard: ${offenders
-          .map((o) => `"${o.title}" (${o.method}, ${o.basedOn || "no basedOn"}, offered ${o.timesOffered}/${REPEAT_WINDOW})`)
-          .join("; ")} — one repair round`,
+  // ONE merged repair round (2026-10-03, speed round). The repeat guard and the
+  // convergence check used to run back to back, each with its own second model
+  // call — worst case three sequential ~30 s generations. Both checks read the
+  // FIRST answer, their corrections are appended together, and one call fixes
+  // both. They cannot contradict each other: the convergence base's name is in
+  // `menuNames`, so the ≥4★ reproduction is never a repeat offender, and the
+  // repeat repair touches only the offending candidates.
+  const offenders = repeatGuardActive
+    ? findRepeatOffenders(raw.candidates, menuNames, offered)
+    : [];
+  const convergenceActive = convergence.kind === "converge" || convergence.kind === "diverge";
+  const violation = convergenceActive ? checkConvergence(convergence, raw.candidates[0]) : null;
+  const repairs: string[] = [];
+  if (offenders.length) {
+    console.warn(
+      `[recommend] repeat guard: ${offenders
+        .map((o) => `"${o.title}" (${o.method}, ${o.basedOn || "no basedOn"}, offered ${o.timesOffered}/${REPEAT_WINDOW})`)
+        .join("; ")} — one repair round`,
+    );
+    repairs.push(formatRepeatRepair(offenders, offered));
+  }
+  if (violation) {
+    console.warn(`[recommend] convergence (${violation.kind}): ${violation.reason} — one repair round`);
+    repairs.push(formatConvergenceRepair(convergence, violation));
+  }
+  if (repairs.length) {
+    try {
+      const second = await callRecommendModel(
+        userMessage + repairs.join("\n") + "\n\nReturn the complete JSON again.",
       );
-      try {
-        const second = await callRecommendModel(
-          userMessage + formatRepeatRepair(offenders, offered),
-        );
-        usage = {
-          input_tokens: usage.input_tokens + second.usage.input_tokens,
-          output_tokens: usage.output_tokens + second.usage.output_tokens,
-        };
-        const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
-        if (repaired) {
+      usage = {
+        input_tokens: usage.input_tokens + second.usage.input_tokens,
+        output_tokens: usage.output_tokens + second.usage.output_tokens,
+        calls: usage.calls + 1,
+      };
+      const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
+      if (repaired) {
+        if (offenders.length) {
           const left = findRepeatOffenders(repaired.candidates, menuNames, offered);
           if (left.length) {
             console.warn(`[recommend] repeat guard: still ${left.length} repeat(s) after repair — using the repaired answer anyway`);
           }
-          raw = repaired;
-        } else {
-          console.warn("[recommend] repeat guard: repair answer did not parse — keeping the first answer");
         }
-      } catch (err) {
-        console.warn(
-          `[recommend] repeat guard: repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
-        );
-      }
-    }
-  }
-
-  // Convergence check (convergence.ts): did the model obey the last rating?
-  // CONVERGE → first candidate = the ≥4★ base with exactly one dial changed;
-  // DIVERGE → first candidate ≠ the <4★ brew's brewer+reference. One repair
-  // round, then the repaired answer is used as is (logged, never rewritten
-  // silently — the user is about to read these numbers).
-  if (convergence.kind === "converge" || convergence.kind === "diverge") {
-    const violation = checkConvergence(convergence, raw.candidates[0]);
-    if (violation) {
-      console.warn(`[recommend] convergence (${violation.kind}): ${violation.reason} — one repair round`);
-      try {
-        const second = await callRecommendModel(
-          userMessage + formatConvergenceRepair(convergence, violation),
-        );
-        usage = {
-          input_tokens: usage.input_tokens + second.usage.input_tokens,
-          output_tokens: usage.output_tokens + second.usage.output_tokens,
-        };
-        const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
-        if (repaired) {
+        if (violation) {
           const left = checkConvergence(convergence, repaired.candidates[0]);
           if (left) {
             console.warn(`[recommend] convergence: still "${left.reason}" after repair — using the repaired answer anyway`);
           } else {
             console.log(`[recommend] convergence: repaired (${violation.kind})`);
           }
-          raw = repaired;
-        } else {
-          console.warn("[recommend] convergence: repair answer did not parse — keeping the first answer");
         }
-      } catch (err) {
-        console.warn(
-          `[recommend] convergence: repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
-        );
+        raw = repaired;
+      } else {
+        console.warn("[recommend] repair answer did not parse — keeping the first answer");
       }
-    } else {
-      console.log(
-        `[recommend] convergence: ${convergence.kind} ok — first candidate ${
-          convergence.kind === "converge"
-            ? `reproduces the ${convergence.base.rating}★ ${convergence.base.method} base (change: ${raw.candidates[0]?.experiment ?? "unnamed"})`
-            : `differs from the ${convergence.last.rating}★ ${convergence.last.method} brew`
-        }`,
+    } catch (err) {
+      console.warn(
+        `[recommend] repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
       );
     }
+  } else if (convergenceActive) {
+    console.log(
+      `[recommend] convergence: ${convergence.kind} ok — first candidate ${
+        convergence.kind === "converge"
+          ? `reproduces the ${convergence.base.rating}★ ${convergence.base.method} base (change: ${raw.candidates[0]?.experiment ?? "unnamed"})`
+          : `differs from the ${convergence.last.rating}★ ${convergence.last.method} brew`
+      }`,
+    );
   }
 
   for (const c of raw.candidates) {

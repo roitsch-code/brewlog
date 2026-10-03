@@ -99,5 +99,6 @@ export function formatRepeatRepair(
 
 REPAIR — REPETITION. Your previous answer repeated a brewer the user keeps being offered, from outside the library you were given:
 ${lines.join("\n")}
-Replace ONLY the candidate(s) above; keep any other candidate exactly as it was. The replacement must explore something the user has not been handed lately: either a recipe from this turn's RELEVANT REFERENCE RECIPES, or an Own experiment on a brewer family OTHER than ${crowded.join(", ")} that moves one named technique id from AVAILABLE TECHNIQUES. A library recipe on a recently-offered brewer is fine if the library actually holds one; a free-form one is not. Return the complete JSON again.`;
+Replace ONLY the candidate(s) above; keep any other candidate exactly as it was. The replacement must explore something the user has not been handed lately: either a recipe from this turn's RELEVANT REFERENCE RECIPES, or an Own experiment on a brewer family OTHER than ${crowded.join(", ")} that moves one named technique id from AVAILABLE TECHNIQUES. A library recipe on a recently-offered brewer is fine if the library actually holds one; a free-form one is not.`;
 }
+
