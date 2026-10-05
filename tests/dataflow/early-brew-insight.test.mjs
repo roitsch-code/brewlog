@@ -20,7 +20,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const entry = `
 export { insightRequestKey } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/insightKey.ts"))};
-export { resolveTerrain } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/insightTerrain.ts"))};
+export { resolveTerrain, clipToSentences } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/insightTerrain.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "ebi-"));
 const out = join(dir, "m.mjs");
@@ -99,4 +99,16 @@ test("CONSUMERS: the Log screen prefetches on Save under the key; the Summary co
   assert.match(summary, /setPendingInsight\(null\);\n\s*setSavedOffline\(offline\);/, "cleared once the brew is saved");
   const store = await readFile(path.join(ROOT, "src/store/flowStore.ts"), "utf8");
   assert.equal((store.match(/pendingInsight: null/g) ?? []).length, 3, "initial state + reset + resumeColdBrew all clear it");
+});
+
+test("post-brew card stays short (2026-10-05): clip to 2 sentences, decimals and times intact; the route never ships the raw terrain", async () => {
+  assert.equal(M.clipToSentences("One. Two! Three? Four."), "One. Two!");
+  assert.equal(M.clipToSentences("Went from 4.5★ to 3:30 cleanly. Next try finer. Then more."), "Went from 4.5★ to 3:30 cleanly. Next try finer.");
+  assert.equal(M.clipToSentences("  no stop at the end  "), "no stop at the end");
+  assert.equal(M.clipToSentences(""), null);
+  assert.equal(M.clipToSentences(null), null);
+  const route = await readFile(path.join(ROOT, "src/app/api/brew-insight/route.ts"), "utf8");
+  assert.doesNotMatch(route, /let finalTerrain = terrain;/, "the multi-paragraph terrain must not become the card text");
+  assert.match(route, /const history = clipToSentences\(terrain, 4\);/);
+  assert.match(route, /finalTerrain = clipToSentences\(/);
 });
