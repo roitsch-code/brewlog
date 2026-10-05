@@ -398,7 +398,7 @@ export default function LightStepLog() {
       {/* Last time with this coffee — the comparison the log never offered.
           One optional tap; everything else about the brew stays as it was. */}
       {previous?.previous && (
-        <div className="mb-10 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-5 py-4 space-y-3">
+        <div className="mb-10 rounded-3xl bg-[hsl(36_55%_96%/0.30)] backdrop-blur-light-card backdrop-saturate-150 px-5 py-4 space-y-3">
           <p className="label-eyebrow text-light-muted-foreground text-xs tracking-widest uppercase">
             Last time with this coffee
           </p>
@@ -425,13 +425,15 @@ export default function LightStepLog() {
           {previous.previous.freeNotes && (
             <p className="text-[13px] italic text-light-muted-foreground">“{previous.previous.freeNotes}”</p>
           )}
-          <div className="flex items-center gap-2 flex-wrap pt-1">
-            <span className="text-[13px] text-light-foreground mr-1">This cup vs last time</span>
-            {(["better", "same", "worse"] as const).map((v) => (
-              <Chip key={v} size="sm" selected={vsPrevious === v} onClick={() => setVsPrevious(vsPrevious === v ? null : v)}>
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </Chip>
-            ))}
+          <div className="border-t border-light-foreground/10 pt-3 space-y-2">
+            <p className="text-[13px] text-light-foreground">This cup vs last time</p>
+            <div className="flex flex-nowrap gap-2">
+              {(["better", "same", "worse"] as const).map((v) => (
+                <Chip key={v} size="sm" selected={vsPrevious === v} onClick={() => setVsPrevious(vsPrevious === v ? null : v)}>
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </Chip>
+              ))}
+            </div>
           </div>
         </div>
       )}
