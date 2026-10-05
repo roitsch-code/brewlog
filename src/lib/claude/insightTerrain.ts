@@ -34,3 +34,20 @@ export async function resolveTerrain(
     return null;
   }
 }
+
+/**
+ * Deterministic length cap for the post-brew insight card (2026-10-05).
+ *
+ * The Escher terrain is up to three paragraphs of background written for the
+ * /recommend prompt. Once #604 started reusing it on the Summary card, the card
+ * grew to a wall of text. The card now always carries the short Haiku line, and
+ * this clip is the backstop if the model runs long: at most `max` sentences.
+ */
+export function clipToSentences(text: string | null | undefined, max = 2): string | null {
+  const t = (text ?? "").replace(/\s+/g, " ").trim();
+  if (!t) return null;
+  // A boundary is end punctuation followed by whitespace — so "4.5★" and
+  // "3:30" never split a sentence.
+  const parts = t.split(/(?<=[.!?])\s+/);
+  return parts.slice(0, max).join(" ").trim() || null;
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { buildEscherTerrain } from "@/lib/claude/escher";
-import { resolveTerrain } from "@/lib/claude/insightTerrain";
+import { resolveTerrain, clipToSentences } from "@/lib/claude/insightTerrain";
 import type { Session } from "@/lib/types/session";
 
 export const dynamic = "force-dynamic";
@@ -173,9 +173,12 @@ export async function POST(req: NextRequest) {
       buildEscherTerrain,
     );
 
-    // If terrain is empty, generate a one-liner via Haiku
-    let finalTerrain = terrain;
-    if (!finalTerrain) {
+    // The card ALWAYS carries the short Haiku line (2026-10-05). The Escher
+    // terrain is multi-paragraph background written for /recommend; shown on the
+    // card it became a wall of text. It now only informs the line below.
+    const history = clipToSentences(terrain, 4);
+    let finalTerrain: string | null = null;
+    {
       const prompt = isExternal
         ? `You are giving someone a brief insight after they tasted a coffee at a café. Speak directly to them as "you".
 
@@ -201,8 +204,8 @@ This session:
 ${brewedRecipe ? `- Recipe: ${brewedRecipe.doseGrams}g / ${brewedRecipe.waterGrams}g / ${brewedRecipe.waterTempC}°C` : ""}
 ${brew?.grindSettingUsed ? `- Grind used: ${brew.grindSettingUsed}` : ""}
 ${brew?.followedAgitation ? `- Agitation: ${brew.followedAgitation}` : ""}
-
-Write 1–2 sentences of personal, specific insight about this session. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis).
+${history ? `\nBackground — a pattern across their whole log (use it only if it bears on THIS brew, never restate it): ${history}\n` : ""}
+Write 1–2 sentences (max 40 words) of personal, specific insight about this session. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis).
 
 Do NOT restate the recipe's temperature, dose, water, grind, or time back to the brewer — not as digits AND not as spelled-out words (never write "96", "ninety-six degrees", "15 grams", etc.). Give the DIRECTION to change instead (hotter/cooler, finer/coarser, longer/shorter, a richer/leaner ratio). The recipe line above is context for your reasoning only.`;
 
@@ -212,7 +215,7 @@ Do NOT restate the recipe's temperature, dose, water, grind, or time back to the
           max_tokens: 120,
           messages: [{ role: "user", content: prompt }],
         });
-        finalTerrain = (msg.content[0] as { type: string; text: string })?.text?.trim() || null;
+        finalTerrain = clipToSentences((msg.content[0] as { type: string; text: string })?.text, 2);
       } catch {
         finalTerrain = null;
       }
