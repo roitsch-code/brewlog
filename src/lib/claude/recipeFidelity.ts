@@ -38,6 +38,7 @@ import type { BrewRecipe, BrewPourStep, BrewStepAction } from "../types/session"
 import type { Recipe } from "../knowledge/recipes";
 import { ALL_RECIPES } from "../knowledge/recipes";
 import { isDripAssistMethod, DRIP_ASSIST_GRIND_OFFSET_DEG } from "../utils/dripAssist";
+import { brewMethodKey } from "../utils/brewMethodKey";
 import { LOOKS_LIKE_CLICKS, clicksToNiche } from "../utils/grindUnit";
 import { hasImmersionShape } from "../utils/pourSequence";
 
@@ -133,6 +134,29 @@ export function resolveReference(basedOn: string | undefined): Recipe | null {
   // Require a meaningful overlap (≥6 chars or an exact hit) to avoid binding
   // a short query to an unrelated recipe.
   return bestScore >= 6 ? best : null;
+}
+
+const OREA_BOTTOM = /\b(fast|classic|open|apex)\b/;
+
+/**
+ * Is the candidate brewed on the SAME brewer the reference was published for?
+ * A reference's clock and drawdown belong to its geometry: Wölfl's 2024 recipe
+ * drains in ~10 s because it is an Orea FAST bottom, and the same pours on the
+ * Classic bottom took 48 s (Costa Rica Adelina Falla, 7 Oct 2026 — promised a
+ * 4 s drawdown). brewMethodKey pools every Orea bottom as "orea" for history
+ * pooling, so the bottom is compared separately here. No method → true (the
+ * caller has nothing to compare, keep the old behaviour).
+ */
+export function brewerMatchesReference(method: string | undefined, ref: Recipe): boolean {
+  if (!method) return true;
+  const refLabel = ref.brewer.replace(/-/g, " ");
+  // The Drip Assist is an accessory on the same brewer, not another brewer —
+  // its offsets are handled by the disc-aware paths, so compare bare brewers.
+  const bare = (k: string) => k.replace(/\+drip-assist$/, "");
+  if (bare(brewMethodKey(method)) !== bare(brewMethodKey(refLabel))) return false;
+  const a = method.toLowerCase().match(OREA_BOTTOM)?.[1];
+  const b = refLabel.toLowerCase().match(OREA_BOTTOM)?.[1];
+  return !(a && b && a !== b);
 }
 
 function refGrindRange(r: Recipe): [number, number] | null {
@@ -244,7 +268,9 @@ function driftReasons(
   // scaled one instead, so a 450ml brew is not measured against a 250ml clock.
   const scaled = scaledReference(ref, recipe.waterGrams, method);
   const refTime = scaled?.totalTimeSec ?? ref.totalTimeSec;
-  if (refTime > 0 && typeof recipe.targetTimeSec === "number") {
+  // On a different brewer/bottom the published clock is not this brew's clock
+  // (a Fast-bottom drawdown on a Classic bottom) — don't compare or snap time.
+  if (refTime > 0 && typeof recipe.targetTimeSec === "number" && brewerMatchesReference(method, ref)) {
     const tol = Math.max(45, 0.2 * refTime);
     if (Math.abs(recipe.targetTimeSec - refTime) > tol) {
       drift.time = true;
