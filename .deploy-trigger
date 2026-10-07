@@ -4,3 +4,4 @@
 # root-level marker like this is the deliberate "just deploy" lever: change the
 # value below and merge to main.
 redeploy: 2026-06-30.3  # sync MISTRAL_COACH_API_KEY onto VPS .env → coach flips to Mistral (PR #463)
+2026-10-07 redeploy #609 after transient next/font Google fetch failure
