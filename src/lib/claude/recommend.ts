@@ -50,7 +50,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
-import { reconcileToReference, reconcileWaterToPourPlan, resolveReference } from "./recipeFidelity";
+import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, brewerMatchesReference } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
 import { findRepeatOffenders, formatRepeatRepair, formatRepeatRuleUpfront, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
@@ -188,7 +188,11 @@ export function calibrateDrawdownClock(
     if (!schedule) return c;
     const est = drawdownFor(pastSessions, c.method, c.recipe.waterGrams);
     if (!est) return c;
-    if (est.source === "corpus" && resolveReference(c.basedOn)?.verified) return c;
+    // A verified reference keeps its own published drawdown — but only on the
+    // brewer it was published for. Wölfl's Orea FAST drawdown on a Classic
+    // bottom promised 4 s for a 48 s drain (7 Oct 2026).
+    const ref = resolveReference(c.basedOn);
+    if (est.source === "corpus" && ref?.verified && brewerMatchesReference(c.method, ref)) return c;
     const next = schedule.pourPhaseEndSec + est.sec;
     if (next === t) return c;
     console.warn(
