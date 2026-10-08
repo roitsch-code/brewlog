@@ -5,3 +5,4 @@
 # value below and merge to main.
 redeploy: 2026-06-30.3  # sync MISTRAL_COACH_API_KEY onto VPS .env → coach flips to Mistral (PR #463)
 2026-10-07 redeploy #609 after transient next/font Google fetch failure
+2026-10-08 redeploy #611 (first deploy failed fetching Google Fonts during next build)
