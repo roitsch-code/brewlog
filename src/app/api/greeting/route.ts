@@ -12,6 +12,7 @@ import {
   buildContextInsights,
   formatContextFindingsForGreeting,
 } from "@/lib/taste/brewContextInsights";
+import { pickGreetingBag } from "@/lib/greeting/pickBag";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -112,6 +113,9 @@ COFFEE-HISTORY DISCIPLINE
 - Each library line shows session count and average rating ("3.8★ over 5") or "unbrewed".
 - A coffee with session count > 0 HAS been brewed — never call it "untried". You may still recommend brewing it a new way.
 - "unbrewed" entries are the only ones you may frame as a first try.
+
+TODAY'S BAG (decided for you)
+- When the context carries a "TODAY'S BAG" line, that is the bag to name. Not another rotation bag, even if it looks like a better fit — the app rotates which bag gets the spotlight so the line doesn't repeat the same coffee every day. The library lines are context for pairing a method, not a menu to choose from.
 
 ROTATION DISCIPLINE
 - Library lines prefixed with "★ IN ROTATION" are the bags the user currently has access to. The suggestion MUST name a rotation bag. NEVER reference a non-rotation bag — it's out of reach.
@@ -253,10 +257,20 @@ export async function POST(req: NextRequest) {
     // narrowed to the kinds actually sitting in rotation, because the greeting
     // has to name a bag they can reach. Empty string when nothing qualifies,
     // which is the common case and correct: no finding, no claim.
-    const contrastBlock = formatContextFindingsForGreeting(
-      buildContextInsights(corpus).insights,
-      library,
-    );
+    // The bag is picked here, not by the model — see src/lib/greeting/pickBag.ts
+    // (the same bag every day despite several starred). Seeded by the Berlin
+    // date + time slot so it holds steady within a slot and moves between them.
+    const berlinDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin" }).format(now);
+    const lastBrewed = recentSessions[0]?.coffee
+      ? { roaster: recentSessions[0].coffee.roaster ?? "", name: recentSessions[0].coffee.name ?? "" }
+      : null;
+    const todaysBag = pickGreetingBag(library, lastBrewed, `${berlinDate}|${timeOfDay}`);
+
+    // Measured contrast — narrowed to TODAY'S bag only, so a finding about a
+    // different rotation bag can't pull the line back to that bag.
+    const contrastBlock = todaysBag
+      ? formatContextFindingsForGreeting(buildContextInsights(corpus).insights, [todaysBag])
+      : "";
 
     const userBlock = [
       `Time of day: ${timeOfDay} (local clock ${localHHMM}). Use this label exactly, or omit time entirely.`,
@@ -270,6 +284,9 @@ export async function POST(req: NextRequest) {
       libraryBlock.length > 0
         ? `Library snapshot (★ IN ROTATION = available now; lines show ORIGIN PROCESS so you can pair a method):\n${libraryBlock}`
         : "Library snapshot: empty.",
+      todaysBag
+        ? `TODAY'S BAG (name this one): ${todaysBag.roaster} — ${todaysBag.name} | ${todaysBag.origin} ${todaysBag.process}`
+        : "",
       insightsBlock.length > 0
         ? `COACH SIGNAL (multivariate observations from the user's full log — weave ONE in only if it's directly relevant to the bag/method you'd pair, else ignore):\n${insightsBlock}`
         : "",
