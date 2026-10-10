@@ -204,6 +204,42 @@ jobs:
                    WITH ORDINALITY t(c, ord)
               ORDER BY s.created_at_ms DESC, ord;" </dev/null | cut -c1-300 || echo "psql query failed"
 
+            # The owner's ACTUAL pour pace (2026-10-10: "Who says my pace is
+            # 4 g/s?"). POUR_RATE_GPS=4 was set by hand in June and re-stated
+            # from ONE scale curve in October; the Acaia has recorded the mean
+            # per-pour pour rate of every scale brew since (flowAnalysis.
+            # avgFlowRateGPS, PR #556+). Read-only; numbers only.
+            section "Owner's measured pour rate per scale brew (g/s, newest first)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
+                     left(COALESCE(brew->>'methodUsed',''),22) AS method,
+                     (brew->'flowAnalysis'->>'finalGrams') AS final_g,
+                     (brew->'flowAnalysis'->>'avgFlowRateGPS') AS avg_gps,
+                     (brew->'flowAnalysis'->>'peakFlowRateGPS') AS peak_gps,
+                     (brew->'flowAnalysis'->>'pourSteadiness') AS steadiness,
+                     (brew->'flowAnalysis'->>'overshootG') AS overshoot_g,
+                     jsonb_array_length(COALESCE(brew->'flowAnalysis'->'perPour','[]'::jsonb)) AS pours
+              FROM sessions
+              WHERE brew->'flowAnalysis'->>'avgFlowRateGPS' ~ '^[0-9.]+$'
+              ORDER BY created_at_ms DESC
+              LIMIT 25;" </dev/null | cut -c1-300 || echo "psql query failed"
+
+            section "Owner's measured pour rate — median / quartiles over all scale brews"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT count(*) AS n,
+                     round(percentile_cont(0.25) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgFlowRateGPS')::numeric)::numeric,2) AS p25,
+                     round(percentile_cont(0.5) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgFlowRateGPS')::numeric)::numeric,2) AS median,
+                     round(percentile_cont(0.75) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgFlowRateGPS')::numeric)::numeric,2) AS p75
+              FROM sessions
+              WHERE brew->'flowAnalysis'->>'avgFlowRateGPS' ~ '^[0-9.]+$';" </dev/null || echo "psql query failed"
+
+            # Which SEY bags exist — the 10-10 15:21 brew was pilled under
+            # 'Wilson Alba' while the owner brewed 'Susan Meneses'.
+            section "Library rows for roaster SEY (id, name, sessions, rotation)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT id, left(name,48) AS name, session_count, in_rotation, latest_roast_date
+              FROM coffees WHERE roaster ILIKE '%sey%' ORDER BY id;" </dev/null || echo "psql query failed"
+
             section "Guard + menu-binding lines (last 5000 log lines)"
             docker compose logs --tail=5000 --no-color app 2>/dev/null </dev/null \
               | grep -a -iE 'not in this turn.s menu|recipe-fidelity|long-pour-gap|capacity guard|volume guard|physics: dropped|special' \
