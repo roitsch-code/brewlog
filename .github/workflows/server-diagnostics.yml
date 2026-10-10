@@ -127,5 +127,14 @@ jobs:
             section "Crontab of this user  (backup cron lives in host crontab)"
             crontab -l 2>/dev/null || echo "no crontab for $(whoami) (it may live under root)"
 
+            section "Backups  (full list + restore drill: backup-drill.yml)"
+            cat "$HOME/.brewlog-backup.last" 2>/dev/null || echo "no backup state file for $(whoami) (written by deploy/backup.sh on success)"
+            tail -n 3 /var/log/brewlog-backup.log 2>/dev/null || echo "no /var/log/brewlog-backup.log readable by $(whoami)"
+            if rclone listremotes 2>/dev/null </dev/null | grep -qx 'storagebox:'; then
+              rclone lsl storagebox:backups/ </dev/null | sort -k2,2 -k3,3 | tail -n 3 | awk '{printf "%-34s %10d bytes  %s %s\n", $4, $1, $2, $3}'
+            else
+              echo "rclone remote 'storagebox:' not configured for $(whoami) — run backup-drill.yml for the sudo path"
+            fi
+
             section "Done"
           REMOTE
