@@ -106,10 +106,17 @@ rclone ls storagebox:backups/
 # Download a backup
 rclone copy storagebox:backups/brewlog_20250101_060000.sql.gz /tmp/
 
-# Restore into running postgres
-gunzip -c /tmp/brewlog_20250101_060000.sql.gz | \
-  docker exec -i brewlog-postgres-1 psql -U brewlog brewlog
+# Restore into running postgres (resolve the container through compose,
+# never by the hard-coded name — see backup.sh)
+cd /opt/brewlog && gunzip -c /tmp/brewlog_20250101_060000.sql.gz | \
+  docker compose exec -T postgres psql -U brewlog brewlog
 ```
+
+**Verified weekly, not assumed:** `.github/workflows/backup-drill.yml` (Mondays, or bump
+`.github/backup-drill-trigger`) lists the newest dumps, fails when the newest is older than
+48 h, and restores it into a throwaway `brewlog-drill-pg` container (no network) to count the
+rows. Retention on the Storage Box is 30 days (`BREWLOG_BACKUP_RETENTION_DAYS`). The photos in
+S3 are NOT covered by this backup.
 
 ---
 

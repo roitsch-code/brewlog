@@ -1,0 +1,143 @@
+name: Backup drill (list + restore)
+
+# The one question deploy.yml, migration.yml and server-diagnostics.yml never
+# answered: does the nightly backup actually exist, and can it be restored?
+# Before 2026-10-10 the backup was a host crontab set up once by hand, with
+# nothing in this repo checking that it ran, and no restore had ever been done.
+#
+# What this does, read-only except for a THROWAWAY Postgres container:
+#   1. lists the newest dumps on the Storage Box and FAILS if the newest is
+#      older than 48 h (the cron runs nightly, so one missed night is the alarm)
+#   2. copies the newest dump to the VPS, restores it into a fresh
+#      `postgres:16-alpine` container (unique name, no network — it can never
+#      touch the live database or the shared docker network), counts the rows
+#      of the tables that matter, and FAILS if `sessions` is empty
+#   3. removes the container and the local copy, whatever happened
+#
+# Triggers: weekly (Monday 05:05 UTC = 07:05 Düsseldorf) and a push to the
+# `.github/backup-drill-trigger` marker (bump it to run on demand — the
+# integration token cannot workflow_dispatch). `.github/**` is paths-ignored by
+# deploy.yml, so firing this never redeploys.
+#
+# STDIN TRAP: the script below is fed to the remote bash over stdin, so every
+# docker command that could read stdin carries </dev/null (see
+# server-diagnostics.yml). The restore pipes gunzip into `docker exec -i`
+# explicitly, which is the one place stdin is meant to be consumed.
+#
+# SECRET SAFETY: never prints the rclone config, the .env, or any dump content.
+# Only file names, sizes, dates and row counts reach the public run log.
+
+on:
+  schedule:
+    - cron: "5 5 * * 1"
+  push:
+    paths:
+      - ".github/backup-drill-trigger"
+
+concurrency:
+  group: backup-drill
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: List newest backups and restore the latest into a throwaway Postgres
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
+            set -uo pipefail
+
+            section() { printf '\n========== %s ==========\n' "$1"; }
+            fail() { echo "DRILL FAILED: $*" >&2; exit 1; }
+
+            DRILL_DIR=/tmp/brewlog-backup-drill
+            DRILL_PG=brewlog-drill-pg
+            cleanup() {
+              docker rm -f "$DRILL_PG" >/dev/null 2>&1 </dev/null || true
+              rm -rf "$DRILL_DIR"
+            }
+            trap cleanup EXIT
+
+            # The backup cron may run as root with root's rclone config, while
+            # this job logs in as the deploy user. Try the user's config first,
+            # then a password-less sudo. Neither → the backup is unverifiable
+            # from here, which is itself the finding.
+            if rclone listremotes 2>/dev/null </dev/null | grep -qx 'storagebox:'; then
+              RC="rclone"
+            elif sudo -n rclone listremotes 2>/dev/null </dev/null | grep -qx 'storagebox:'; then
+              RC="sudo -n rclone"
+            else
+              fail "rclone remote 'storagebox:' is not configured for $(whoami) and sudo -n rclone is not available — the backup cannot be verified from this job"
+            fi
+
+            section "Last successful backup run (state file written by deploy/backup.sh)"
+            cat "$HOME/.brewlog-backup.last" 2>/dev/null || sudo -n cat /root/.brewlog-backup.last 2>/dev/null || echo "no state file yet (written by backup.sh since 2026-10-10)"
+
+            section "Backup log tail"
+            tail -n 5 /var/log/brewlog-backup.log 2>/dev/null || echo "no /var/log/brewlog-backup.log readable by $(whoami)"
+
+            section "Newest dumps on the Storage Box"
+            LISTING=$($RC lsl storagebox:backups/ </dev/null) || fail "rclone lsl failed"
+            [ -n "$LISTING" ] || fail "storagebox:backups/ is EMPTY — there is no backup to restore"
+            # rclone lsl: "<size> <YYYY-MM-DD> <HH:MM:SS.sss> <name>"
+            SORTED=$(printf '%s\n' "$LISTING" | sort -k2,2 -k3,3)
+            printf '%s\n' "$SORTED" | tail -n 5 | awk '{printf "%-34s %10d bytes  %s %s\n", $4, $1, $2, $3}'
+            echo "total dumps: $(printf '%s\n' "$SORTED" | wc -l)"
+
+            NEWEST=$(printf '%s\n' "$SORTED" | tail -n 1)
+            NEWEST_NAME=$(printf '%s' "$NEWEST" | awk '{print $4}')
+            NEWEST_SIZE=$(printf '%s' "$NEWEST" | awk '{print $1}')
+            NEWEST_TS=$(printf '%s' "$NEWEST" | awk '{print $2" "$3}' | cut -d. -f1)
+            NEWEST_EPOCH=$(date -d "$NEWEST_TS" +%s)
+            AGE_H=$(( ( $(date +%s) - NEWEST_EPOCH ) / 3600 ))
+            echo "newest: $NEWEST_NAME  age: ${AGE_H} h  size: ${NEWEST_SIZE} bytes"
+            [ "$AGE_H" -le 48 ] || fail "newest dump is ${AGE_H} h old (limit 48 h) — the nightly backup is NOT running"
+            [ "$NEWEST_SIZE" -ge 10240 ] || fail "newest dump is only ${NEWEST_SIZE} bytes"
+
+            section "Restore drill into a throwaway Postgres (no network, unique name)"
+            mkdir -p "$DRILL_DIR"
+            $RC copy "storagebox:backups/$NEWEST_NAME" "$DRILL_DIR/" </dev/null || fail "could not download $NEWEST_NAME"
+            gzip -t "$DRILL_DIR/$NEWEST_NAME" || fail "$NEWEST_NAME is not a valid gzip file"
+
+            docker rm -f "$DRILL_PG" >/dev/null 2>&1 </dev/null || true
+            docker run -d --name "$DRILL_PG" --network none \
+              -e POSTGRES_USER=brewlog -e POSTGRES_PASSWORD=drill -e POSTGRES_DB=brewlog \
+              postgres:16-alpine >/dev/null </dev/null || fail "could not start the drill container"
+            for i in $(seq 1 30); do
+              docker exec "$DRILL_PG" pg_isready -U brewlog -d brewlog >/dev/null 2>&1 </dev/null && break
+              sleep 2
+            done
+            docker exec "$DRILL_PG" pg_isready -U brewlog -d brewlog </dev/null || fail "drill Postgres never became ready"
+
+            # ON_ERROR_STOP stays off on purpose: a dump can carry harmless
+            # ownership/extension statements. The row counts decide.
+            RESTORE_LOG="$DRILL_DIR/restore.log"
+            gunzip -c "$DRILL_DIR/$NEWEST_NAME" \
+              | docker exec -i "$DRILL_PG" psql -U brewlog -d brewlog -q -v ON_ERROR_STOP=0 >"$RESTORE_LOG" 2>&1
+            ERRS=$(grep -c '^ERROR' "$RESTORE_LOG" || true)
+            echo "restore finished — psql ERROR lines: $ERRS"
+            [ "$ERRS" -eq 0 ] || { echo "first errors:"; grep '^ERROR' "$RESTORE_LOG" | head -n 5; }
+
+            section "Row counts in the restored copy"
+            docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "
+              SELECT 'sessions',       count(*) FROM sessions
+              UNION ALL SELECT 'coffees',       count(*) FROM coffees
+              UNION ALL SELECT 'insights',      count(*) FROM insights
+              UNION ALL SELECT 'conversations', count(*) FROM conversations
+              UNION ALL SELECT 'places',        count(*) FROM places
+              UNION ALL SELECT 'drip_bags',     count(*) FROM drip_bags
+              UNION ALL SELECT 'cafe_visits',   count(*) FROM cafe_visits;" \
+              | awk -F'|' '{printf "%-14s %8d\n", $1, $2}'
+            SESSIONS=$(docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "SELECT count(*) FROM sessions" 2>/dev/null || echo 0)
+            NEWEST_SESSION=$(docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "SELECT max(created_at) FROM sessions" 2>/dev/null || echo "?")
+            echo "newest session in the dump: $NEWEST_SESSION"
+            [ "${SESSIONS:-0}" -gt 0 ] || fail "restored copy has 0 sessions — the dump is not a usable backup"
+
+            section "Done — backup verified: $NEWEST_NAME (${AGE_H} h old) restores with ${SESSIONS} sessions"
+          REMOTE
