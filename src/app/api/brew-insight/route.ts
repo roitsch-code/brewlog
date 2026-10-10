@@ -38,6 +38,11 @@ function computeAdjustment(draft: {
   const { clarity, sweetness, bitterness, craft, fit, roastQuality, attribution } = result;
   const { flow } = brew ?? {};
 
+  // The user blamed the recipe itself — don't coach their hands for it.
+  if (attribution === "recipe" && (result.rating ?? 5) <= 3) {
+    return "You put this one on the recipe, not your pour — next time start from a different reference rather than nudging this one.";
+  }
+
   // Craft is the problem — not the recipe
   if (craft === "off" && (result.rating ?? 5) < 4) {
     return "The execution looks like the main variable here, not the recipe. Same setup, more care next time before adjusting anything else.";

@@ -1014,7 +1014,9 @@ function proseToGuideSteps(sequence: string): GuideStep[] {
   let clock = 0;
   return all.map((label, i): GuideStep => {
     const action = actionFromText(label);
-    const setup = isSetupText(label);
+    // A drain/press/flip/bypass is a timed step even when worded "Place on carafe…".
+    const setup =
+      isSetupText(label) && !["drain", "press", "flip", "bypass"].includes(action);
     const durationSec = setup ? 0 : parseStepDuration(label);
     const startTimeSec = setup ? 0 : clock;
     if (!setup) clock += durationSec;

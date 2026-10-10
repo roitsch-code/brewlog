@@ -180,11 +180,20 @@ export function buildMeasuredFeedback(
       : "";
     const measuredCore = formatMeasuredPour(s.brew?.flowAnalysis);
     const measured = measuredCore ? `measured pour: ${measuredCore}` : "";
-    if (!asked && !measured) return null;
+    // The user's own "what held it back" verdict. "recipe" is the one that must
+    // reach this prompt: it says the reference itself failed (2026-10-10).
+    const att = s.result?.attribution;
+    const blamedName = att === "recipe" ? (brewedRecipeName(resolveBrewedRecipe(s).candidate) ?? "") : "";
+    const blamed = att
+      ? att === "recipe"
+        ? `the user blamed THE RECIPE${blamedName ? ` (${blamedName})` : ""} — do not re-serve it`
+        : `the user blamed ${att === "brew" ? "their own execution" : att === "bean" ? "the bean" : "the roaster"}`
+      : "";
+    if (!asked && !measured && !blamed) return null;
     const method = s.brew?.methodUsed || s.recommendation?.primaryMethod || "unknown";
     const coffeeName = s.coffee?.name || "unknown coffee";
     const rating = s.result?.rating != null ? `${s.result.rating}★` : "unrated";
-    return `- ${method} with ${coffeeName}: ${rating} · ${[measured, asked].filter(Boolean).join(" · ")}`;
+    return `- ${method} with ${coffeeName}: ${rating} · ${[measured, asked, blamed].filter(Boolean).join(" · ")}`;
   };
 
   const isCurrent = (s: Session) =>
@@ -203,7 +212,7 @@ export function buildMeasuredFeedback(
   ].slice(0, limit);
 
   return (
-    `\nMEASURED BREW FEEDBACK — recent sessions carrying a post-rating clarification (the user's own words resolving an ambiguous rating — "thin" answered as sour needs the OPPOSITE correction from "thin" answered as weak) and/or an objective Acaia pour measurement (steadiness = channeling signal, overshoot). Sessions of THIS coffee are listed first. Observations, not instructions — use them to disambiguate the CAUSE before choosing the fix:\n` +
+    `\nMEASURED BREW FEEDBACK — recent sessions carrying a post-rating clarification (the user's own words resolving an ambiguous rating — "thin" answered as sour needs the OPPOSITE correction from "thin" answered as weak) and/or an objective Acaia pour measurement (steadiness = channeling signal, overshoot), and/or the user's own verdict on what held a low-rated cup back (recipe / their execution / bean / roaster — when it is the recipe, the reference failed and must not come back). Sessions of THIS coffee are listed first. Observations, not instructions — use them to disambiguate the CAUSE before choosing the fix:\n` +
     ordered.map((x) => x.text).join("\n")
   );
 }

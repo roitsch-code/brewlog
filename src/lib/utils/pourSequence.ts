@@ -798,6 +798,11 @@ export function getActiveIdx(elapsed: number, steps: { startTimeSec: number }[])
 /** Pre-brew handling that happens before the timer runs. */
 export function isSetupAction(action: BrewStepAction, label: string): boolean {
   if (action === "invert") return true;
+  // An extraction moment is a timed brew step whatever its label says. Hoffmann's
+  // verified Clever ends on "Place on carafe — drawdown" (action drain): matching
+  // the "place" prefix moved the whole drawdown into the setup card and let the
+  // physics guard cut it off the clock (2026-10-10 report).
+  if (action === "drain" || action === "press" || action === "flip" || action === "bypass") return false;
   return /^\s*(assemble|position|set.?up|load|rinse|place)\b/i.test(label);
 }
 

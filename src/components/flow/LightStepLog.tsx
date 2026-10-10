@@ -112,7 +112,7 @@ export default function LightStepLog() {
   const [timing, setTiming] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const [attribution, setAttribution] = useState<"brew" | "bean" | "roaster" | null>(null);
+  const [attribution, setAttribution] = useState<"brew" | "recipe" | "bean" | "roaster" | null>(null);
   const [craft, setCraft] = useState<"off" | "solid" | "exceptional" | null>(null);
   const [fit, setFit] = useState<"not-my-style" | "neutral" | "my-kind" | null>(null);
   const [roastQuality, setRoastQuality] = useState<"poor" | "fine" | "exceptional" | null>(null);
@@ -686,7 +686,7 @@ export default function LightStepLog() {
               {rating <= 3 && (
                 <SensoryRow
                   label="What held it back most?"
-                  options={[{ id: "brew", label: "My brew" }, { id: "bean", label: "The bean" }, { id: "roaster", label: "The roaster" }]}
+                  options={[{ id: "recipe", label: "The recipe" }, { id: "brew", label: "My brew" }, { id: "bean", label: "The bean" }, { id: "roaster", label: "The roaster" }]}
                   value={attribution ?? ""}
                   onChange={(v) => setAttribution(v === "" ? null : (v as typeof attribution))}
                 />
