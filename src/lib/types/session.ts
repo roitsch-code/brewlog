@@ -225,7 +225,7 @@ export interface TasteResult {
   acidity: string; // low | medium | high | bright
   freeNotes?: string;
   wouldBrewAgain?: boolean; // full combination: this coffee + roaster + recipe + occasion
-  attribution?: "brew" | "bean" | "roaster"; // only set for low-rated sessions (≤3★)
+  attribution?: "brew" | "recipe" | "bean" | "roaster"; // only set for low-rated sessions (≤3★)
   craft?: "off" | "solid" | "exceptional";   // execution quality, independent of taste
   fit?: "not-my-style" | "neutral" | "my-kind"; // style alignment, independent of craft
   roastQuality?: "poor" | "fine" | "exceptional"; // assessment of the raw material

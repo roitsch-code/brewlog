@@ -191,6 +191,9 @@ export function serialiseSessionForCoach(s: Session): string {
   if (r?.craft) quality.push(`craft=${r.craft}`);
   if (r?.fit) quality.push(`fit=${r.fit}`);
   if (r?.roastQuality) quality.push(`roastQ=${r.roastQuality}`);
+  // "What held it back most?" — the user's own blame. held=recipe means the
+  // recommended recipe was the fault, not the hand or the bean (2026-10-10).
+  if (r?.attribution) quality.push(`held=${r.attribution}`);
   if (r?.wouldBrewAgain != null) quality.push(`again=${r.wouldBrewAgain ? "y" : "n"}`);
   if (r?.improvedWhileCooling) quality.push("cooled-better");
   if (r?.matchedIntention != null) quality.push(`matched=${r.matchedIntention ? "y" : "n"}`);
