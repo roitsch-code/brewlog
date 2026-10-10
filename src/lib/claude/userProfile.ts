@@ -23,7 +23,7 @@ const CANONICAL_PROFILE = `**Equipment:**
 - Primary brewer: V60 size 2 (daily driver)
 - Other brewers: Orea V4 Wide, Origami Air M (resin, AS-resin "Air" line — lighter, lower thermal mass than ceramic), Clever Dripper, Kalita Wave, AeroPress, Moccamaster, Chemex
 - Kettle: Fellow Stagg EKG (gooseneck, precise temp control, 60-min hold) — the default at home
-- Travel pour control: Hario V60 Drip Assist — the disc he packs for when there is no gooseneck kettle. He has confirmed it fits ALL of his cones (V60, Orea V4, Origami), so it is an accessory, never a brewer choice. At home with the Stagg it is unused; don't bring it up unprompted (see "Kettle & pour control")
+- Pour-control disc: he owns a Hario V60 Drip Assist (fits ALL of his cones — V60, Orea V4, Origami — an accessory, never a brewer choice) but uses it very rarely and only when HE decides to, never automatically. It exists in a conversation only once he says he is brewing with it; a missing gooseneck does NOT mean the disc. Don't bring it up unprompted (see "Kettle & pour control")
 - Water: BWT Bestmax Premium V filter (bypass 0) turns ~370 ppm Düsseldorf tap into ~220 ppm TDS (GH 5–6 °dH, KH 4 °dH) — the daily driver, fine straight for naturals & honeys. For washed/floral coffees a 1:2 blend (BWT-filtered + distilled) gives ~73 ppm TDS (KH ~1.3 °dH) for maximum clarity — ideal for championship methods (Peng, Kasuya, Wölfl)
 
 **Taste preferences:**

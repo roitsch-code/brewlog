@@ -125,12 +125,24 @@ test("the chat prompt carries the scaling model", () => {
   assert.match(PROMPT, /square root of the volume factor/i, "the drawdown growth must be stated");
 });
 
-test("the disc is described as replacing the stream, not the hand", () => {
-  assert.match(
+test("the Drip Assist is never automatic — only once the user says he is brewing with it (owner, 2026-10-10)", () => {
+  // Owner's rule, verbatim intent: "nicht nie, aber mega selten. Nicht
+  // automatisch — nie. Nur aktiv per Hand in der manuellen Selektion." Until
+  // this the prompt put the disc on EVERY pour-over the moment the user said
+  // "no gooseneck" (the #578 report: travel recipes carried a disc he never
+  // reached for, with the disc's thin drawdown jamming their timing).
+  assert.match(PROMPT, /The disc is never automatic/i, "the rule must be stated outright");
+  assert.match(PROMPT, /not "no gooseneck"/i, "a missing gooseneck must be named as NOT a trigger");
+  assert.doesNotMatch(
     PROMPT,
-    /replaces the STREAM, not the HAND/,
-    "without this the model proposes patient-pour recipes to someone with no gooseneck",
+    /every pour-over recipe you give in that state uses the Drip Assist/i,
+    "the automatic no-gooseneck → disc rule must stay gone",
   );
+  assert.match(PROMPT, /Only once he has said he is brewing with the disc/i, "the disc rules must be conditional on his statement");
+  // The physics of the disc still has to be right when he DOES use it.
+  assert.match(PROMPT, /replaces the STREAM, not the HAND/, "without this the model proposes patient-pour recipes under the disc");
+  // And the no-gooseneck case without a disc steers to a forgiving brew.
+  assert.match(PROMPT, /Immersion \(Clever, AeroPress\) needs no pour control/i, "immersion is the forgiving fallback");
 });
 
 test("a user-stated constraint outranks the rest of the prompt, including narrowing", () => {
