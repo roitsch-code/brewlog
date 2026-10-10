@@ -149,11 +149,11 @@ const METHODS = [
   { id: "AeroPress", label: "AeroPress", sub: "max 230 ml · or concentrate" },
   { id: "Clever Dripper", label: "Clever Dripper", sub: "immersion, max 450 ml" },
   { id: "Moccamaster", label: "Moccamaster", sub: "batch brewer, 500–1000 ml" },
-  // Emergency-only: the Drip Assist disc is retired from daily use, but kept
-  // selectable for when there's no gooseneck kettle around (e.g. travelling).
+  // The Drip Assist disc: used very rarely, and ONLY when the owner picks it
+  // here by hand — never set automatically by any surface (owner, 2026-10-10).
   // The "drip assist" token is stripped in normaliseEquipmentKey, so this maps
   // to the v60 brewer for recipe selection.
-  { id: "V60 + Drip Assist", label: "V60 + Drip Assist", sub: "no gooseneck? emergency only" },
+  { id: "V60 + Drip Assist", label: "V60 + Drip Assist", sub: "rarely — only when you pick it" },
 ];
 
 const WATERS = [
