@@ -238,6 +238,20 @@ jobs:
                 AND cand->'recipe'->>'targetTimeSec' ~ '^[0-9.]+$'
                 AND cand->'recipe'->>'waterGrams' ~ '^[0-9.]+$'
               GROUP BY 1,2 ORDER BY 1,2;" </dev/null | cut -c1-300 || echo "psql query failed"
+          REMOTE
+
+      # Second SSH step: GitHub refused to run the workflow once the first
+      # step's script passed ~24 KB (run 38057143622, "workflow file issue",
+      # zero jobs; proven by bisect on 2026-10-10 — the identical script minus
+      # 2.4 KB ran green). Same preamble, same read-only rules.
+      - name: Outcome ledger (read-only SQL over the owner's rated brews)
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} bash <<'REMOTE'
+            set -uo pipefail
+            cd ${{ secrets.DEPLOY_PATH }} || exit 1
+
+            section() { printf '\n========== %s ==========\n' "$1"; }
 
             # ──────────────────────────────────────────────────────────────
             # OUTCOME LEDGER (2026-10-03). Until this section existed, no
