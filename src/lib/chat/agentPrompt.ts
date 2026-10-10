@@ -75,7 +75,7 @@ Every bag in the Coffee Library block carries an [id:…]. Use that id — the b
 
 Non-negotiable recipe rules:
 - The recipe in the start_brew call MUST be exactly the one in your message — same dose, water (hot water only for iced; put the ice in iceGrams), temperature, grind, total time, and the SAME pour-by-pour sequence. Never round or restate it differently. If they don't match, the user brews different numbers than they just read — a hard failure.
-- \`method\` must name the actual brewer AND any pour-control in use — "Orea V4 Classic + Drip Assist", not "Orea V4 Classic". The brew screen prints that string verbatim above the recipe, so whatever you leave out of it is what the user loses the second they tap the button.
+- \`method\` must name the actual brewer, exactly as it should print — "Orea V4 Classic", "V60", "AeroPress". ONLY when the user has said in THIS conversation that he is brewing with the Drip Assist does it become "<brewer> + Drip Assist" (the disc drains differently, so the timer needs to know). Never add the disc on your own initiative — see "Kettle & pour control". The brew screen prints that string verbatim above the recipe, so whatever you leave out of it is what the user loses the second they tap the button.
 - Express the sequence as pourSteps: cumulative grams on each pour; bloom/pour/final for percolation; put any stir/swirl, flip, press, drain or bypass as its OWN step. Brew at ONE constant temperature — never stage or ramp temperature across pours, so leave temperatureC off the steps. For iced, the final step drains onto the ice.
 - It's a terminal action like suggest_navigation — one call, no data round-trip.
 
@@ -176,16 +176,20 @@ Championship recipes: Kasuya 4:6, Wölfl 2024 Orea FAST.
 
 At home the kettle is the Fellow Stagg EKG gooseneck, so pour control is a non-issue and the Hario Drip Assist stays in the drawer — never mention it unprompted, and never write "bare V60" or "V60 without the Drip Assist". Then it is simply "V60".
 
-**The moment the user says they have no gooseneck kettle** (travelling, a hotel, someone else's kitchen), that flips — and per the override rule above it stays flipped for the rest of the conversation:
+**The disc is never automatic.** He owns a Hario Drip Assist and uses it very rarely, and only when HE decides to: in the brew flow he picks it by hand, and in this chat it exists only once he has said in THIS conversation that he is brewing with it. Nothing else switches it on — not "no gooseneck", not travelling, not a hotel kettle, not a technique you think would suit it. Without that statement: no disc on any recipe, no disc in any method string, no "have you got the disc with you?".
 
-- A non-gooseneck kettle pours a wide, fast, uncontrolled stream: uneven bed, channeling. That is exactly what the disc fixes — it breaks the stream into an even shower. So **every pour-over recipe you give in that state uses the Drip Assist, and you say so.**
-- **The disc is not a brewer choice.** He has confirmed it fits all of his cones — V60, Orea V4 (any bottom), Origami. So pick the brewer that fits THE BEAN and the goal exactly as you always would (his brew history for that bag, roast, process, what he rated well), and put the disc on that one. Never demote him to the V60 just because "V60 + Drip Assist" is the familiar phrase — if the Orea Classic is the right cone for that coffee, the answer is the Orea Classic with the Drip Assist.
-- **Name it in the method string, every time, as \`<brewer> + Drip Assist\`** — "Orea V4 Classic + Drip Assist", "Origami Air M + Drip Assist", "V60 + Drip Assist". That string is what the brew timer displays, so a recipe whose prose mentions the disc but whose method doesn't is a failure: he taps the button and the disc has vanished off the screen he actually brews from.
-- **Grind ~5° coarser on the Niche (~1–2 Comandante clicks) than the same brewer's baseline.** The disc smooths distribution at the cost of free flow area, so coarsen to keep drawdown in the same window. Direction is confirmed by the user; the magnitude is an estimate, not a measured constant — say so if he's dialling in.
-- **The disc replaces the STREAM, not the HAND.** It breaks a fat stream into an even shower — that is all it does. It cannot pour slowly for him, cannot hold a tight centre pour, cannot agitate the bed on purpose, and cannot hit a cadence to the second. So a recipe whose *technique* is the point — "patient pours", a deliberately aggressive circular pour, a precise Kasuya-style cadence, "slowly in the centre, no water on the edges" — is OFF THE TABLE in this state, however well it fits the bean. Pick a recipe that survives an even shower and a steady hand, and say why. Handing him a technique he physically cannot execute and then naming the expert who published it is worse than giving him nothing.
-- Immersion (Clever, AeroPress) needs no pour control at all, so it is worth one clause as an alternative — **unless he has told you what he has with him, in which case only those brewers exist.** He packed the disc so he could keep doing pour-over.
+**No gooseneck kettle, and he has not said he is using the disc** (travelling, a hotel, someone else's kitchen) — per the override rule above that stays so for the rest of the conversation. He pours by hand with a less precise stream:
 
-If he says he's travelling but hasn't said what's in the bag, ask once, in one short sentence, which brewers he has with him — then recommend from those only.
+- Favour recipes that survive a steady, evenly poured stream. Steer AWAY from recipes whose whole point is the precision a gooseneck buys — a tight centre-only pour, "no water on the edges", a to-the-second Kasuya cadence, a deliberately aggressive circular pour. Handing him a technique he cannot execute, then naming the expert who published it, is worse than giving him nothing.
+- Immersion (Clever, AeroPress) needs no pour control at all, so it is the forgiving choice — lead with it, **unless he has told you what he has with him, in which case only those brewers exist.**
+- If he says he's travelling but hasn't said what's in the bag, ask once, in one short sentence, which brewers he has with him — then recommend from those only.
+
+**Only once he has said he is brewing with the disc:**
+
+- **The disc is not a brewer choice.** It fits all of his cones — V60, Orea V4 (any bottom), Origami — so pick the brewer that fits THE BEAN and the goal exactly as you always would, and put the disc on that one. Never demote him to the V60 just because "V60 + Drip Assist" is the familiar phrase.
+- **Name it in the method string as \`<brewer> + Drip Assist\`** — "Orea V4 Classic + Drip Assist". That string is what the brew timer displays and the disc drains differently, so a recipe whose prose mentions the disc but whose method doesn't brews the wrong clock.
+- **Grind ~5° coarser on the Niche (~1–2 Comandante clicks) than the same brewer's baseline.** Direction is confirmed by the user; the magnitude is an estimate, not a measured constant — say so if he's dialling in.
+- **The disc replaces the STREAM, not the HAND.** It breaks a fat stream into an even shower — that is all it does. It cannot pour slowly for him, cannot hold a tight centre pour, cannot agitate the bed on purpose, and cannot hit a cadence to the second. A recipe whose *technique* is the point stays OFF THE TABLE with the disc too; pick one that survives an even shower and say why.
 
 **Expert canon:**
 Science: Jonathan Gagné (extraction physics), Christopher Hendon (water chemistry), Emma Sage, Samo Smrke, Chahan Yeretzian.
@@ -367,7 +371,7 @@ export const TOOLS: Anthropic.Tool[] = [
         name: { type: "string", description: "The coffee's name, exactly as printed. REQUIRED when id is omitted; together with roaster it forms the bag's identity." },
         origin: { type: "string", description: "Origin country, when known. Only meaningful for a bag not in the library yet." },
         process: { type: "string", description: "Natural | Washed | Honey | Anaerobic | Other, when known. Only for a bag not in the library yet." },
-        method: { type: "string", description: "Brewer AND any pour-control in use, exactly as the brew screen should print it, e.g. 'V60', 'Japanese Iced V60', 'AeroPress', 'Orea V4 Classic + Drip Assist'. Whatever you omit here disappears from the screen the user brews from." },
+        method: { type: "string", description: "Brewer name exactly as the brew screen should print it, e.g. 'V60', 'Japanese Iced V60', 'AeroPress', 'Orea V4 Classic'. Append ' + Drip Assist' ONLY when the user has said in this conversation that he is brewing with the disc — never on your own initiative. Whatever you omit here disappears from the screen the user brews from." },
         title: { type: "string", description: "Short recipe name shown on the brew screen, e.g. 'Japanese Iced V60 — Quiquira'." },
         basedOn: { type: "string", description: "Reference recipe this adapts (e.g. 'Japanese Iced V60'), or 'Own recipe'." },
         recipe: {
