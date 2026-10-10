@@ -25,6 +25,7 @@ import type { BrewPourStep, BrewRecipe } from "@/lib/types/session";
 import {
   MAX_POUR_RATE_GPS,
   defaultDuration,
+  hasImmersionShape,
   isSetupAction,
   maxDrawdownSec,
   maxTargetTimeSec,
@@ -96,7 +97,10 @@ export function enforceRecipePhysics(
   // 3. No pour faster than anyone pours. The authored duration is what the
   //    renderer trusts, so raising it here keeps the recipe and the render in
   //    agreement instead of leaving the renderer to silently stretch it.
-  if (Array.isArray(out.pourSteps)) {
+  //    Not for immersion: filling a sealed Clever / AeroPress is not pouring onto
+  //    a bed (the corpus lint exempts it for the same reason) — stretching it
+  //    rewrote Hoffmann's verified 300 g-in-15 s fill to 38 s.
+  if (Array.isArray(out.pourSteps) && !hasImmersionShape(out)) {
     let prevGrams = 0;
     let touched = false;
     const fixed = out.pourSteps.map((s) => {
