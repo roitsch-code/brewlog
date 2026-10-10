@@ -102,7 +102,12 @@ jobs:
               fi
             fi
 
-            docker compose build app
+            # Fonts are vendored in the repo (scripts/vendor-google-fonts.mjs), so
+            # the build itself needs no network. What still can: npm ci / apk /
+            # the base image, but only when their cached layer is invalidated
+            # (a lockfile change). One retry covers a registry blip there; the
+            # old container keeps serving until a build succeeds.
+            docker compose build app || { echo "build failed — retrying once in 30 s"; sleep 30; docker compose build app; }
 
             # Ofelia reads its bind-mounted deploy/ofelia.ini only at startup —
             # restart it so cron-config changes take effect (a plain restart,
