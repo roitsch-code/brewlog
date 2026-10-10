@@ -119,7 +119,10 @@ test("the Drip Assist offset rides on top of the batch adjustment", () => {
 test("a reference with no published Niche number keeps its prose and states the delta", () => {
   // Hoffmann publishes no grinder setting, so inventing a number would fabricate
   // a parameter. The prose is kept and the shift is named beside it.
-  const ref = byId("hoffmann-v60-better-one-cup");
+  // (The Hoffmann 1-Cup carries the OWNER's measured anchor since 2026-10-10;
+  // April's house V60 is the verified V60 with no number.)
+  const ref = byId("rolf-april-v60");
+  assert.equal(ref.grind?.nicheZeroDegrees, undefined);
   const g = scaleGrind(ref, 2);
   assert.equal(g.prose, true);
   assert.equal(g.nicheRange, null);

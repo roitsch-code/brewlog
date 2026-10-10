@@ -1,4 +1,5 @@
 import { formatScaledForPrompt, scaleRecipe } from "@/lib/recipe/scaleRecipe";
+import { REFERENCE_BATCH_WINDOW } from "@/lib/recipe/batchWindow";
 import type {
   Recipe,
   BrewerType,
@@ -429,11 +430,16 @@ function scoreRecipe(
   const wantIced = input.occasion?.toLowerCase() === "summer-time";
   if (isIcedRecipe !== wantIced) return null;
 
-  // Hard filter: if a water cap is set, exclude recipes whose total water
-  // exceeds it by more than 20% (some recipes have published variants at
-  // larger doses).
-  if (input.maxWaterMl && recipe.water.grams > input.maxWaterMl * 1.2) {
-    return null;
+  // Hard filter: a recipe is offered only within ±20 % of its PUBLISHED
+  // water (the same REFERENCE_BATCH_WINDOW every adaptation step uses). Above
+  // the batch since #480; BELOW it since 2026-10-10 — a single-cup recipe
+  // stretched to a 450 g batch is not that recipe (owner decision: "don't
+  // scale the 1-cup, use the 2-cup").
+  if (input.maxWaterMl) {
+    const w = recipe.water.grams;
+    if (w > input.maxWaterMl * (1 + REFERENCE_BATCH_WINDOW) || w < input.maxWaterMl / (1 + REFERENCE_BATCH_WINDOW)) {
+      return null;
+    }
   }
 
   // Hard filter: exclude vessels that physically can't SERVE the requested
@@ -922,9 +928,12 @@ export function formatRecipeForPrompt(
     const scaled = scaleRecipe(recipe, scaleTo.targetWaterGrams, { method: scaleTo.method });
     // Only worth a line when the batch genuinely differs, and only for a recipe
     // whose cadence scales — an iced or bypass build splits its water on purpose.
+    // `> 0.1` used to miss exactly 450 g off a 500 g recipe (k − 1 = −0.0999…),
+    // so the model scaled Hoffmann's Ultimate itself, unguarded. Any batch
+    // that differs gets the line; beyond the window the recipe isn't offered.
     if (
       scaled &&
-      Math.abs(scaled.k - 1) > 0.1 &&
+      Math.abs(scaled.k - 1) > 0.01 &&
       (scaled.shape === "percolation" || scaled.shape === "immersion")
     ) {
       lines.splice(5, 0, `  Scaled to your ${Math.round(scaleTo.targetWaterGrams)}g: ${formatScaledForPrompt(scaled)}`);

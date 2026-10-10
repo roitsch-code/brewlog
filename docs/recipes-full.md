@@ -1264,45 +1264,6 @@ _Sources:_ Matt Winton interviews + demonstrations 2022
 
 _Sources:_ Hoffmann YouTube — Ultimate French Press technique
 
----
-
-### Hoffmann V60 — 2024 Refinement
-
-**Hoffmann V60 2024** · James Hoffmann (2024)
-
-| | |
-|---|---|
-| **Character** | Balanced · Clarity |
-| **Brewer** | v60 |
-| **Dose / Water** | 18 g / 300 g (1:16.7) |
-| **Temperature** | 94°C |
-| **Grind (Niche)** | 377–387° |
-| **Total time** | 3:20 |
-| **Best for** | roasts: light, medium-light, medium; process: any |
-| **Verified** | ⚠️ no (reconstructed — see notes) |
-
-**Brew steps:**
-
-- **0:00** — Bloom (60g)  → 60 g total (5s)
-  - _3x dose still, but for 18g that's 54-60g_
-- **0:05** — Swirl  (5s)
-- **0:10** — Bloom rest  (35s)
-- **0:45** — Pour 1 (target 60% by 1:15 = 180g)  → 180 g total (30s)
-  - _concentric circles outward_
-- **1:15** — Pour 2 (to 300g)  → 300 g total (30s)
-- **1:45** — Final swirl  (5s)
-- **1:50** — Drawdown  (90s)
-
-**Teaches:** Hoffmann's 2024 update of the Better 1 Cup, scaled to 18g/300g. Same principles (3x bloom, swirl not stir, 60% target by 1:15) with refined timing as he's iterated.
-
-**Why it works:** Scaling up the Better 1 Cup formula to two cups requires only minor changes — slightly slower bloom + main pours to keep agitation in the same range. The fundamentals (CO2 evacuation, even saturation, 60/40 first-pour rule) remain.
-
-**When to use:** Default V60 when brewing for two people, or when you want Hoffmann's reliable framework at a slightly larger scale.
-
-_Sources:_ Hoffmann YouTube — V60 refresh 2024
-
----
-
 ### Hoffmann V60 — Ultimate Technique (30 g : 500 g)
 
 **Hoffmann Ultimate V60** · James Hoffmann (2019) — World Barista Champion 2007, *World Atlas of Coffee* author

@@ -25,7 +25,7 @@
  * gets SHORTER still hands the spare seconds to the rest, so the next pour
  * starts where the recipe put it.
  */
-import { resolveReference } from "@/lib/claude/recipeFidelity";
+import { referenceAppliesAtBatch, resolveReference } from "@/lib/claude/recipeFidelity";
 import { scaleRecipe } from "@/lib/recipe/scaleRecipe";
 import type { BrewPourStep, BrewRecipe } from "@/lib/types/session";
 import { hasImmersionShape, housePourSec } from "@/lib/utils/pourSequence";
@@ -49,6 +49,9 @@ function referencePourTimes(
 ): { times: number[]; name: string } | null {
   const ref = resolveReference(basedOn);
   if (!ref || !ref.verified) return null;
+  // A reference's own pour times are only its own within ±20 % of its
+  // published water (REFERENCE_BATCH_WINDOW); beyond that the pace is the owner's.
+  if (!referenceAppliesAtBatch(ref, recipe.waterGrams)) return null;
   const scaled = scaleRecipe(ref, recipe.waterGrams, { method });
   if (!scaled || scaled.shape !== "percolation") return null;
   const times = scaled.pourSteps

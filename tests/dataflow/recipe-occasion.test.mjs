@@ -75,10 +75,17 @@ const select = (c, goal, occasion, extra = {}) =>
 const key = (sel) => sel.map((s) => s.recipe.id).join("|");
 
 test("the goal outranks a variety tag: the lead recipe carries the goal the user asked for", () => {
+  // Since 2026-10-10 the menu only offers recipes published within ±20 % of
+  // the batch (src/lib/recipe/batchWindow.ts), so a goal whose every tagged
+  // recipe is published at another size (at 350 g: "aromatic") cannot lead —
+  // that is the owner's rule, not a scoring defect. Check the goals that HAVE
+  // an in-window recipe for the brewers available.
+  const inWindow = (r) => r.water.grams <= 350 * 1.2 && r.water.grams >= 350 / 1.2 && BREWERS.has(r.brewer);
   const misses = [];
   for (const c of COFFEES) {
     for (const g of GOALS) {
       if (g === "balanced") continue;
+      if (!M.ALL_RECIPES.some((r) => inWindow(r) && r.bestFor.goals?.includes(g))) continue;
       const lead = select(c, g, "morning-ritual")[0].recipe;
       if (!lead.bestFor.goals?.includes(g)) misses.push(`${c.label} / ${g} → ${lead.id} ${JSON.stringify(lead.bestFor.goals)}`);
     }

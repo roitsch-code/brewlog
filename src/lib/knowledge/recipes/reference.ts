@@ -45,15 +45,23 @@ export const REFERENCE_RECIPES: Recipe[] = [
       referenceGrinder: "Various",
       referenceSetting:
         "medium-fine — finer than most people expect, but not super fine; for light roasts you want this fine",
+      // Hoffmann publishes no Niche number. This range is the OWNER's measured
+      // anchor for exactly this recipe — 15 g : 250 g on a V60 = 380°, 23
+      // Comandante clicks (docs/grind-settings.md, May 2026) — the same way
+      // the Ultimate entry carries his 400° at 30 g : 500 g. Until 2026-10-10
+      // the entry had no number at all, so the model invented one and nothing
+      // could check it (the SEY V60 of 10-10 went out on "26 clicks").
+      nicheZeroDegrees: [375, 385],
+      description: "medium-fine; the Niche range is the owner's measured 380° at this exact batch, not Hoffmann's",
     },
     pourSequence: [
       {
         label: "Bloom (→ 50 g)",
         action: "pour",
         waterGramsAtEnd: 50,
-        durationSec: 5,
+        durationSec: 10,
         notes:
-          "~5 g/s circular pour, spout held low (a high pour breaks the stream and dissipates energy before it hits the bed — less agitation, not more).",
+          "~5 g/s circular pour (0:00–0:10 in the video), spout held low (a high pour breaks the stream and dissipates energy before it hits the bed — less agitation, not more).",
       },
       {
         label: "Gentle swirl",
@@ -62,7 +70,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
         notes:
           "Even saturation through bulk-puck motion. Don't push grounds up the wall.",
       },
-      { label: "Bloom rest", action: "wait", durationSec: 35 },
+      { label: "Bloom rest", action: "wait", durationSec: 30 },
       {
         label: "Pulse 1 (→ 100 g)",
         action: "pour",
