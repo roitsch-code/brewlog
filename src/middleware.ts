@@ -14,7 +14,17 @@ const PUBLIC_PATHS = ["/login", "/api/auth", "/api/research", "/api/admin", "/ap
 // prefix (the hashes change every build). Keep this list in sync with the
 // `config.matcher` negative-lookahead below — the matcher decides whether
 // middleware runs at all, this array is the belt-and-braces runtime guard.
-const STATIC_PATHS = ["/_next", "/favicon.ico", "/sw.js", "/swe-worker-", "/workbox-", "/fallback-", "/manifest.json", "/icons", "/screenshots"];
+//
+// `/_next/static` only — NOT the bare `/_next` prefix (2026-10-10). The bare
+// prefix also waved through `/_next/image`, the image optimizer, which the
+// matcher below excluded as well: the optimizer answered UNAUTHENTICATED
+// requests from the public internet. Next 14.2.x has no patch for its
+// optimizer advisories (incl. an unauthenticated RCE via AVIF input,
+// GHSA-2xp9-vwfh-vxw4, fixed only in 15.5.24+), so until the Next 15 migration
+// the optimizer is gated behind the session cookie like every page. The only
+// `next/image` consumer is PhotoUpload inside the authenticated brew flow; the
+// login page, the service worker and the PWA icons never touch `/_next/image`.
+const STATIC_PATHS = ["/_next/static", "/favicon.ico", "/sw.js", "/swe-worker-", "/workbox-", "/fallback-", "/manifest.json", "/icons", "/screenshots"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -45,5 +55,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|swe-worker-|workbox-|fallback-|manifest.json|icons|screenshots).*)"],
+  // `_next/image` is deliberately NOT excluded here — see STATIC_PATHS above.
+  matcher: ["/((?!_next/static|favicon.ico|sw.js|swe-worker-|workbox-|fallback-|manifest.json|icons|screenshots).*)"],
 };
