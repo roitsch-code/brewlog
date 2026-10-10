@@ -1,20 +1,22 @@
 /**
- * The owner's MEASURED pour pace — the rate at which he actually delivers
- * water from the kettle, read off his own Acaia curves.
+ * The owner's MEASURED pour pace — the rate at which his hand actually
+ * delivers water, read off his own Acaia curves.
  *
- * Why (2026-10-10, "Who says my pace is 4 g/s?"): POUR_RATE_GPS = 4 was set by
- * hand in June 2026 and re-stated in October from ONE scale curve. The Acaia
- * has recorded the mean per-pour pour rate of every scale brew since the
- * sessions schema stopped dropping flowAnalysis (#556): over 24 scale brews
- * the median is 2.35 g/s (quartiles 2.2–3.1; recommend-logs run 38057995770).
- * The house constant was nearly double what he pours. Every pour the app
- * timed at 4 g/s was therefore shorter than his hand, and the rest after it
- * started while he was still pouring.
+ * CORRECTION (2026-10-10, same day as #620): the first version read
+ * flowAnalysis.avgFlowRateGPS and called its 2.35 g/s median "his pace". That
+ * field is pourGrams ÷ (this target reached − the PREVIOUS target reached),
+ * which INCLUDES the rest before the pour — a delivery rate over the cadence,
+ * not a pour rate. His real per-pour reach times (bloom 90 g at 17.9 s, 72 g
+ * at 18 s, 70 g in ~14 s of pouring) are 4–5 g/s. For a few hours every
+ * house-paced pour was planned at 2.4 g/s, nearly twice as long as he pours.
  *
- * What avgFlowRateGPS measures: grams of a pour ÷ (the time the curve reached
- * the target − the time the step started). That includes the moment of
- * hesitation before the kettle tips, which is exactly what a timer that plans
- * his pours should include. It is the DELIVERED rate, not the hand's peak.
+ * Now this reads ONLY flowAnalysis.avgPourRateGPS — pourGrams ÷ (target
+ * reached − the curve's RISE for that pour), i.e. the hand's time, rest
+ * excluded — which is written from 2026-10-10 on. Sessions saved before it
+ * carry no value and are ignored, so the pace stays the house 4 g/s until
+ * enough clean brews exist (MIN_PACE_SAMPLES_*). "Who says my pace is 4 g/s?"
+ * — his own curves, roughly; the number is re-read from them once there are
+ * enough.
  *
  * Same discipline as the measured drawdown (src/lib/brew/drawdown.ts): his
  * own numbers first, the house estimate only when he has not measured enough.
@@ -48,11 +50,12 @@ function median(xs: number[]): number {
 
 const clamp = (g: number) => Math.min(PACE_CLAMP_GPS[1], Math.max(PACE_CLAMP_GPS[0], g));
 
-/** Every scale brew's measured mean pour rate, with the brewer it was poured on. */
+/** Every scale brew's measured HAND pour rate (avgPourRateGPS — never the
+ * rest-inclusive avgFlowRateGPS), with the brewer it was poured on. */
 export function measuredPaceSamples(sessions: Session[]): Array<{ gps: number; key: string }> {
   const out: Array<{ gps: number; key: string }> = [];
   for (const s of sessions) {
-    const gps = s.brew?.flowAnalysis?.avgFlowRateGPS;
+    const gps = s.brew?.flowAnalysis?.avgPourRateGPS;
     if (typeof gps !== "number" || !Number.isFinite(gps) || gps <= 0) continue;
     // A rate under the clamp floor is not a pour he made — an un-tared scale
     // whose curve sat at the vessel's mass for minutes (10-04/10-05 2026 show

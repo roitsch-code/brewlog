@@ -78,6 +78,29 @@ test("per-pour timing: target reach times + error", () => {
   for (const p of a.perPour) assert.equal(typeof p.errorSec, "number");
 });
 
+test("the HAND pour rate excludes the rest; avgFlowRateGPS includes it (2026-10-10)", () => {
+  // Hoffmann-shaped brew: bloom, then three pours each poured at 5 g/s after
+  // a long rest. avgFlowRateGPS divides by rest+pour (the #620 mistake read
+  // that as "his pace"); avgPourRateGPS divides by the pour alone.
+  const curve = [
+    { tSec: 0, grams: 0 }, { tSec: 5, grams: 25 }, { tSec: 10, grams: 50 },
+    { tSec: 30, grams: 50 }, { tSec: 50, grams: 50 },
+    { tSec: 52, grams: 60 }, { tSec: 64, grams: 120 }, { tSec: 76, grams: 180 },
+    { tSec: 90, grams: 180 }, { tSec: 110, grams: 180 },
+    { tSec: 112, grams: 190 }, { tSec: 124, grams: 250 }, { tSec: 138, grams: 320 },
+    { tSec: 150, grams: 320 }, { tSec: 160, grams: 320 },
+    { tSec: 162, grams: 330 }, { tSec: 178, grams: 410 }, { tSec: 196, grams: 500 },
+    { tSec: 210, grams: 500 },
+  ];
+  const a = analyzeFlow(PERC, curve, 240);
+  assert.ok(a.avgPourRateGPS >= 4.5 && a.avgPourRateGPS <= 5.5, `hand rate ${a.avgPourRateGPS}`);
+  assert.ok(a.avgFlowRateGPS < 3.5, `rest-inclusive rate ${a.avgFlowRateGPS} must be far below the hand's`);
+  const p2 = a.perPour[1];
+  assert.equal(p2.pourStartSec, 50, "the last flat sample before the rise (errs ≤ one sample on the slow side)");
+  assert.equal(p2.pourSec, 26);
+  assert.equal(a.perPour[0].pourSec, 10, "the bloom is measured from t=0");
+});
+
 test("flow-rate + steadiness are computed", () => {
   const a = analyzeFlow(PERC, CURVE, 210);
   assert.ok(a.avgFlowRateGPS > 0);

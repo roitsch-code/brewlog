@@ -7,3 +7,4 @@
 2026-10-10 chat Brew pill: full recipe numbers (Hoffmann V60 thin/sour + nonsense timer)
 bisect 2: pill section back, script split into two steps
 2026-10-10 owner's measured pour rate + SEY library rows
+2026-10-10 hand pour rate (pour_gps) — branch run before merge

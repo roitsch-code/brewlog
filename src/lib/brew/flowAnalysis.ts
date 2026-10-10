@@ -34,6 +34,11 @@ export interface PourTiming {
   actualSec: number | null;
   /** actualSec − targetSec; positive = late. Null if never reached. */
   errorSec: number | null;
+  /** When water actually started landing for this pour (the curve's rise past
+   *  the previous target), or null if it never rose. */
+  pourStartSec?: number | null;
+  /** actualSec − pourStartSec: how long the HAND poured, rest excluded. */
+  pourSec?: number | null;
 }
 
 export interface FlowAnalysis {
@@ -41,8 +46,18 @@ export interface FlowAnalysis {
   targetTimeSec: number;
   finalGrams: number | null;
   perPour: PourTiming[];
-  /** Mean of the per-pour observed pour rates (g/s). */
+  /** Mean of pourGrams ÷ (this target reached − the PREVIOUS target reached).
+   *  That interval INCLUDES the rest before the pour, so this is a delivery
+   *  rate over the whole cadence, NOT how fast the hand pours — reading it as
+   *  a pour pace (2.35 g/s, #620, 2026-10-10) made every planned pour nearly
+   *  twice as long as the owner's real 4–5 g/s. Kept for the steadiness CV
+   *  and the Summary card's history; use avgPourRateGPS for the pace. */
   avgFlowRateGPS: number | null;
+  /** Mean of pourGrams ÷ (target reached − the curve's rise for that pour):
+   *  the HAND's pour rate, rest excluded. Null when no pour had a visible
+   *  rise. Written since 2026-10-10; older sessions carry no value, and
+   *  pourPace.ts deliberately ignores them. */
+  avgPourRateGPS?: number | null;
   peakFlowRateGPS: number | null;
   /** Coefficient of variation of per-pour rates — lower = steadier (channeling risk when high). */
   pourSteadiness: number | null;
@@ -55,6 +70,9 @@ export interface FlowAnalysis {
 }
 
 const REACH_TOL_G = 1.5; // treat the target as "reached" within this many grams
+/** A pour has STARTED once the curve sits this far above the previous target —
+ *  above scale noise and a settling drip, below the first second of any pour. */
+const RISE_G = 3;
 const MAX_STORED_POINTS = 80;
 
 /**
@@ -250,6 +268,7 @@ export function analyzeFlow(
   // Per-pour timing + observed rate.
   const perPour: PourTiming[] = [];
   const rates: number[] = [];
+  const pourRates: number[] = [];
   let prevTarget = 0;
   let prevReachSec = 0;
   for (const step of pours) {
@@ -263,6 +282,31 @@ export function analyzeFlow(
     const intendedPourSec = stepPourSec({ ...step, pourGrams });
     const targetSec = step.startSec + intendedPourSec;
     const actualSec = timeToReach(curve, target);
+    // Where the HAND started: after the previous target was reached, the
+    // curve sits flat (the rest) until it climbs RISE_G above the level it
+    // rested at; the pour began between the last flat sample and that rise,
+    // and the last flat sample is taken as the start (at ~2 Hz that errs by
+    // ≤0.5 s on the SLOW side — a planned pour a hair too long is safer than
+    // one too short). Measured from the previous reach, not from the step's
+    // planned start, so a pour the owner begins late still gets its own
+    // duration, not the delay. The rest level is read off the curve (not
+    // assumed = the target) so an overshot previous pour does not count as
+    // an already-started next one.
+    let pourStartSec: number | null = null;
+    if (actualSec != null) {
+      const reachIdx = Math.max(0, curve.findIndex((pt) => pt.tSec >= prevReachSec));
+      const restLevel = curve[reachIdx].grams;
+      let riseIdx = -1;
+      for (let i = reachIdx; i < curve.length; i++) {
+        if (curve[i].tSec > actualSec) break;
+        if (curve[i].grams >= restLevel + RISE_G) { riseIdx = i; break; }
+      }
+      if (riseIdx > 0) {
+        const startIdx = riseIdx - 1 >= reachIdx ? riseIdx - 1 : riseIdx;
+        pourStartSec = curve[startIdx].tSec;
+      }
+    }
+    const pourSec = pourStartSec != null && actualSec != null ? Math.max(0, actualSec - pourStartSec) : null;
     perPour.push({
       index: step.index,
       label: step.label,
@@ -271,16 +315,26 @@ export function analyzeFlow(
       intendedPourSec: Math.round(intendedPourSec * 10) / 10,
       actualSec,
       errorSec: actualSec != null ? Math.round((actualSec - targetSec) * 10) / 10 : null,
+      pourStartSec,
+      pourSec: pourSec != null ? Math.round(pourSec * 10) / 10 : null,
     });
     if (actualSec != null && actualSec > prevReachSec && pourGrams > 0) {
       const rate = pourGrams / (actualSec - prevReachSec);
       if (Number.isFinite(rate) && rate > 0) rates.push(rate);
+      // The hand's rate needs a visible rise AND at least one sample interval
+      // of pouring; a pour that "reached" on the very sample it rose on has no
+      // measurable duration and is left out rather than read as instantaneous.
+      if (pourSec != null && pourSec > 0) {
+        const pr = pourGrams / pourSec;
+        if (Number.isFinite(pr) && pr > 0) pourRates.push(pr);
+      }
       prevReachSec = actualSec;
     }
     prevTarget = target;
   }
 
   const avgFlowRateGPS = rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : null;
+  const avgPourRateGPS = pourRates.length ? pourRates.reduce((a, b) => a + b, 0) / pourRates.length : null;
   const peakFlowRateGPS = rates.length ? Math.max(...rates) : null;
   let pourSteadiness: number | null = null;
   if (rates.length >= 2 && avgFlowRateGPS) {
@@ -313,6 +367,7 @@ export function analyzeFlow(
     finalGrams: Math.round(finalGrams),
     perPour,
     avgFlowRateGPS: avgFlowRateGPS != null ? Math.round(avgFlowRateGPS * 10) / 10 : null,
+    avgPourRateGPS: avgPourRateGPS != null ? Math.round(avgPourRateGPS * 10) / 10 : null,
     peakFlowRateGPS: peakFlowRateGPS != null ? Math.round(peakFlowRateGPS * 10) / 10 : null,
     pourSteadiness: pourSteadiness != null ? Math.round(pourSteadiness * 100) / 100 : null,
     overshootG,
