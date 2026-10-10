@@ -24,13 +24,14 @@ import { places, insights as insightsTable } from "@/lib/db/schema";
 import { and, desc, isNull, lte, ne, or, sql } from "drizzle-orm";
 import { assertSafeHttpsUrl } from "@/lib/utils/safeFetch";
 import { sanitizePourSteps, pourSequenceFromSteps } from "@/lib/utils/pourSteps";
-import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
+import { reconcileWaterToPourPlan, resolveReference } from "@/lib/claude/recipeFidelity";
 import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
-import { resolveStartBrewTarget } from "@/lib/chat/chatBrewTarget";
+import { resolveStartBrewTarget, type KnownBag } from "@/lib/chat/chatBrewTarget";
+import { expectedChatClock, CHAT_CLOCK_TOLERANCE_SEC } from "@/lib/chat/chatClock";
 import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import { AGENT_SYSTEM_PROMPT, TOOLS } from "@/lib/chat/agentPrompt";
 import {
-  cleanChatRecipe,
+  cleanChatRecipeDetailed,
   formatLibraryForAgent,
   grinderFromConversation,
   recipeLibraryBlock,
@@ -143,7 +144,7 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
       method: input.method,
       title: input.title,
       basedOn: input.basedOn,
-      recipe: cleanChatRecipe(input.recipe, { basedOn: input.basedOn, method: input.method }),
+      recipe: cleanStartBrewRecipe(input),
       roaster: input.roaster,
       name: input.name,
       origin: input.origin,
@@ -169,6 +170,25 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
   };
 }
 
+
+/**
+ * Clean a start_brew recipe and SAY what happened. Until 2026-10-10 the chat
+ * dropped `applyPourDurations(...).changes` on the floor, so a production log
+ * pull could not tell whether a pill's basedOn had bound to its reference,
+ * whether the pours were the reference's or the house pace, or what the app
+ * had rewritten. /recommend has logged all three for weeks.
+ */
+function cleanStartBrewRecipe(input: NavAction): BrewRecipe | undefined {
+  const cleaned = cleanChatRecipeDetailed(input.recipe, { basedOn: input.basedOn, method: input.method });
+  if (!cleaned) return undefined;
+  const ref = resolveReference(input.basedOn);
+  console.log(
+    `[explore-agent] start_brew cleaned: basedOn="${input.basedOn ?? ""}" ` +
+      `bound=${ref ? `${ref.id} (verified=${ref.verified})` : "none"} pours=${cleaned.pourSource}` +
+      (cleaned.pourChanges.length ? ` changes=${JSON.stringify(cleaned.pourChanges)}` : ""),
+  );
+  return cleaned.recipe;
+}
 
 const isActionTool = (name: string) =>
   name === "suggest_navigation" ||
@@ -457,6 +477,24 @@ export async function POST(req: NextRequest) {
     // context offers — resolveStartBrewTarget checks a start_brew against
     // exactly this set, so an invented id can never reach a pill.
     const knownCoffeeIds: ReadonlySet<string> = new Set(library.map((c) => c.id));
+    const knownBags: ReadonlyMap<string, KnownBag> = new Map(
+      library.map((c) => [c.id, { roaster: c.roaster, name: c.name }]),
+    );
+    const roastDateOf = (id: string | undefined) =>
+      id ? library.find((c) => c.id === id)?.latestRoastDate ?? undefined : undefined;
+    // The grinder in the user's hand. Nothing named in the conversation means
+    // the home grinder — the Niche is code-canonical (CLAUDE.md single-user
+    // rule). The 10-10 pill carried "26 clicks" with no grinder named, and the
+    // unit check, keyed on a named grinder, never fired.
+    const grinderInHand = grinderFromConversation(messages) ?? "Niche Zero";
+    // Sessions for the clock (pours + the owner's measured drawdown). Loaded
+    // once, only when a start_brew actually needs vetting — not per turn.
+    let clockSessions: Session[] | null = null;
+    const sessionsForClock = async (): Promise<Session[]> => {
+      if (clockSessions) return clockSessions;
+      clockSessions = await loadRecentSessions(150).catch(() => corpusSessions);
+      return clockSessions;
+    };
 
     const profileBlock = formatProfileForPrompt(userPrefs);
     // Server read wins; the client's array is the fallback for a failed query.
@@ -690,6 +728,62 @@ export async function POST(req: NextRequest) {
           // recipe in two attempts won't get there on the third, and each
           // attempt is a full round trip the user waits through.
           let brewRepairSpent = false;
+          // A Brew pill dropped after the repair round, from EITHER branch
+          // below — the user is told once, at the end of the turn.
+          let droppedBrewNotice: string | null = null;
+
+          type Vet =
+            | { ok: true; action: NavAction }
+            | { ok: false; problem: string; kind: "target" | "recipe"; codes: string[] };
+
+          /**
+           * The one gate a start_brew passes before it becomes a pill — target
+           * first (a perfect recipe on a pill that points at nothing is a dead
+           * button; a known id on the WRONG bag logs the brew under the wrong
+           * coffee), recipe second. Used by both tool branches: until
+           * 2026-10-10 a start_brew emitted in the same response as a data
+           * tool (lookup_recipe) skipped all of this (#605).
+           */
+          const vetStartBrew = async (action: NavAction): Promise<Vet> => {
+            const target = resolveStartBrewTarget(action, knownCoffeeIds, knownBags);
+            if (!target.ok) return { ok: false, problem: target.problem, kind: "target", codes: ["target"] };
+            if (target.id) action.id = target.id;
+            else delete action.id;
+            if (!action.recipe) return { ok: true, action };
+
+            const roastDate = roastDateOf(action.id);
+            const expectedClock =
+              expectedChatClock(action.recipe, action.method, await sessionsForClock(), roastDate) ?? undefined;
+            const problems = validateRecipe(action.recipe, {
+              method: action.method,
+              basedOn: action.basedOn,
+              grinder: grinderInHand,
+              roastDate,
+              expectedClock,
+            });
+            if (problems.length > 0) {
+              return { ok: false, problem: formatProblemsForModel(problems), kind: "recipe", codes: problems.map((pr) => pr.code) };
+            }
+            // Within tolerance the server sets the exact clock: pours end +
+            // the owner's measured drawdown, as /recommend does.
+            if (expectedClock && action.recipe.targetTimeSec !== expectedClock.sec) {
+              console.log(
+                `[explore-agent] start_brew clock: ${action.recipe.targetTimeSec}s → ${expectedClock.sec}s ` +
+                  `(pours end ${expectedClock.pourPhaseEndSec}s + drawdown ${expectedClock.drawdownSec}s, ${expectedClock.detail}; ` +
+                  `within ${CHAT_CLOCK_TOLERANCE_SEC}s)`,
+              );
+              action.recipe = { ...action.recipe, targetTimeSec: expectedClock.sec };
+            }
+            console.log(
+              `[explore-agent] start_brew accepted: id=${action.id ?? "(names)"} method="${action.method ?? ""}" ` +
+                `basedOn="${action.basedOn ?? ""}" grind="${action.recipe.grindSize ?? ""}" clock=${action.recipe.targetTimeSec}s`,
+            );
+            return { ok: true, action };
+          };
+          const droppedNotice = (kind: "target" | "recipe") =>
+            kind === "target"
+              ? "\n\nI couldn't pin down which bag that Brew button should start, so I've left it off. Name the bag (or add it to your library) and I'll wire it up."
+              : "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.";
 
           for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             const stream = client.messages.stream({
@@ -727,6 +821,7 @@ export async function POST(req: NextRequest) {
             const response = await stream.finalMessage();
 
             if (response.stop_reason === "end_turn") {
+              if (droppedBrewNotice) send("delta", { text: droppedBrewNotice });
               send("done", {
                 actions: navSuggestions.length > 0 ? navSuggestions : undefined,
               });
@@ -752,71 +847,29 @@ export async function POST(req: NextRequest) {
                 const okResults: Anthropic.ToolResultBlockParam[] = [];
                 const rejections: Anthropic.ToolResultBlockParam[] = [];
                 const acceptedActions: NavAction[] = [];
-                let droppedBrew: false | "target" | "recipe" = false;
 
                 for (const block of toolBlocks) {
                   const action = toNavAction(block.name, block.input as NavAction, attachedImageUrl);
 
                   if (block.name === "start_brew") {
-                    // Target first, recipe second — a perfect recipe on a pill
-                    // that points at nothing is still a dead button. The model
-                    // once invented a plausible id for a bag not yet in the
-                    // library (ids are derived slugs, so a guess can look
-                    // exactly right — the DAK Cassis pill of 2026-08-23), and
-                    // the tap fetched a non-existent coffee and discarded the
-                    // recipe. knownCoffeeIds is what this turn's context
-                    // actually offered; anything else is bounced back through
-                    // the same repair round the recipe checks use.
-                    const target = resolveStartBrewTarget(action, knownCoffeeIds);
-                    if (!target.ok) {
+                    const vet = await vetStartBrew(action);
+                    if (!vet.ok) {
                       console.warn(
-                        `[explore-agent] start_brew target rejected (${brewRepairSpent ? "final" : "first"}): ` +
-                          `id=${action.id ?? "(none)"} roaster=${action.roaster ? "y" : "n"} name=${action.name ? "y" : "n"}`,
+                        `[explore-agent] start_brew ${vet.kind} rejected (${brewRepairSpent ? "final" : "first"}): ` +
+                          vet.codes.join(", "),
                       );
                       if (!brewRepairSpent) {
                         rejections.push({
                           type: "tool_result",
                           tool_use_id: block.id,
-                          content: target.problem,
-                          is_error: true,
-                        });
-                        continue;
-                      }
-                      droppedBrew = "target";
-                      okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
-                      continue;
-                    }
-                    // Keep only an id the tap can actually fetch (or the
-                    // library row the names resolve to); a guessed id is
-                    // stripped so the pill brews from roaster+name instead of
-                    // 404ing first.
-                    if (target.id) action.id = target.id;
-                    else delete action.id;
-                  }
-
-                  if (block.name === "start_brew" && action.recipe) {
-                    const problems = validateRecipe(action.recipe, {
-                      method: action.method,
-                      basedOn: action.basedOn,
-                      grinder: grinderFromConversation(messages),
-                    });
-                    if (problems.length > 0) {
-                      console.warn(
-                        `[explore-agent] start_brew rejected (${brewRepairSpent ? "final" : "first"}): ` +
-                          problems.map((pr) => pr.code).join(", "),
-                      );
-                      if (!brewRepairSpent) {
-                        rejections.push({
-                          type: "tool_result",
-                          tool_use_id: block.id,
-                          content: formatProblemsForModel(problems),
+                          content: vet.problem,
                           is_error: true,
                         });
                         continue;
                       }
                       // Second attempt still not brewable — the pill is dropped
                       // rather than handing the timer a recipe that can't be poured.
-                      droppedBrew = "recipe";
+                      droppedBrewNotice = droppedNotice(vet.kind);
                       okResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
                       continue;
                     }
@@ -838,14 +891,7 @@ export async function POST(req: NextRequest) {
                 }
 
                 navSuggestions.push(...acceptedActions);
-                if (droppedBrew) {
-                  send("delta", {
-                    text:
-                      droppedBrew === "target"
-                        ? "\n\nI couldn't pin down which bag that Brew button should start, so I've left it off. Name the bag (or add it to your library) and I'll wire it up."
-                        : "\n\nI couldn't get that recipe to hold together, so there's no brew timer for it. Tell me what to change and I'll rework it.",
-                  });
-                }
+                if (droppedBrewNotice) send("delta", { text: droppedBrewNotice });
                 send("done", {
                   actions: navSuggestions.length > 0 ? navSuggestions : undefined,
                 });
@@ -930,6 +976,7 @@ export async function POST(req: NextRequest) {
                   const input = LookupRecipeInput.safeParse(block.input);
                   if (input.success) {
                     const found = lookupRecipe(input.data.query);
+                    console.log(`[explore-agent] lookup_recipe "${input.data.query.slice(0, 80)}" → ${found.text.length} chars`);
                     send("status", { message: `Looking up "${input.data.query}"...` });
                     toolResults.push({ type: "tool_result", tool_use_id: block.id, content: found.text });
                   } else {
@@ -941,7 +988,27 @@ export async function POST(req: NextRequest) {
                     });
                   }
                 } else if (isActionTool(block.name)) {
-                  navSuggestions.push(toNavAction(block.name, block.input as NavAction, attachedImageUrl));
+                  const action = toNavAction(block.name, block.input as NavAction, attachedImageUrl);
+                  if (block.name === "start_brew") {
+                    // Same gate as the action-only branch. A start_brew sent
+                    // alongside lookup_recipe used to skip it entirely.
+                    const vet = await vetStartBrew(action);
+                    if (!vet.ok) {
+                      console.warn(
+                        `[explore-agent] start_brew ${vet.kind} rejected (${brewRepairSpent ? "final" : "first"}, mixed): ` +
+                          vet.codes.join(", "),
+                      );
+                      if (!brewRepairSpent) {
+                        brewRepairSpent = true;
+                        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: vet.problem, is_error: true });
+                      } else {
+                        droppedBrewNotice = droppedNotice(vet.kind);
+                        toolResults.push({ type: "tool_result", tool_use_id: block.id, content: "Action noted." });
+                      }
+                      continue;
+                    }
+                  }
+                  navSuggestions.push(action);
                   toolResults.push({
                     type: "tool_result",
                     tool_use_id: block.id,

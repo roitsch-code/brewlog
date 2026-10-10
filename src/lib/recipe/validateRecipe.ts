@@ -38,11 +38,13 @@ import { DRIP_ASSIST_GRIND_OFFSET_DEG, isDripAssistMethod } from "@/lib/utils/dr
 import { isComandante, nicheToClicks, normalizeGrindToGrinder } from "@/lib/utils/grindUnit";
 import { MAX_POUR_RATE_GPS, pourScheduleFor } from "@/lib/utils/pourSequence";
 import { vesselOverflow } from "@/lib/utils/vesselCapacity";
+import { CHAT_CLOCK_TOLERANCE_SEC as CLOCK_TOLERANCE_SEC } from "@/lib/chat/chatClock";
 
 export type RecipeProblemCode =
   | "pour-too-fast"
   | "dead-gap"
   | "clock-too-short"
+  | "clock-off-drawdown"
   | "milestones-not-increasing"
   | "immersion-sum-mismatch"
   | "grind-unit"
@@ -64,7 +66,13 @@ export interface RecipeValidationContext {
   /** The grinder in the user's hand, when known ("Comandante C40" / "Niche Zero"). */
   grinder?: string;
   roastDate?: string;
-  now?: number;
+  now?: number;  /**
+   * The clock the server computed for this recipe — pours end + the owner's
+   * measured drawdown (src/lib/chat/chatClock.ts). When set, a targetTimeSec
+   * further than CHAT_CLOCK_TOLERANCE_SEC from it is a problem: the timer
+   * would promise a drawdown the cone does not deliver (10-10-2026).
+   */
+  expectedClock?: { sec: number; pourPhaseEndSec: number; drawdownSec: number; detail: string };
 }
 
 /**
@@ -139,6 +147,30 @@ function checkClock(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipePro
 }
 
 /** Water can only be added, so the cumulative milestones can only rise. */
+/**
+ * The clock has to match what the cone will actually do: pours end + the
+ * drawdown the owner has measured on this brewer at this batch. The model
+ * writes "3:00" from a published recipe's clock; the published drawdown is not
+ * his. Over the tolerance the recipe goes back with the exact number so the
+ * prose and the timer are corrected together (#198: never split them).
+ */
+function checkClockAgainstDrawdown(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipeProblem[] {
+  const exp = ctx.expectedClock;
+  if (!exp || typeof recipe.targetTimeSec !== "number") return [];
+  const diff = recipe.targetTimeSec - exp.sec;
+  if (Math.abs(diff) <= CLOCK_TOLERANCE_SEC) return [];
+  return [
+    {
+      code: "clock-off-drawdown",
+      message:
+        `targetTimeSec is ${fmtClock(recipe.targetTimeSec)} but the pours end at ${fmtClock(exp.pourPhaseEndSec)} ` +
+        `and the user's drawdown on this brewer is ${exp.drawdownSec}s (${exp.detail}), so the brew is over at ` +
+        `${fmtClock(exp.sec)}. Set targetTimeSec to ${exp.sec} and state ${fmtClock(exp.sec)} as the total in your message ` +
+        `— ${diff > 0 ? "a longer clock promises a drawdown the cone will not deliver" : "a shorter clock ends the timer while the bed is still draining"}.`,
+    },
+  ];
+}
+
 function checkMilestones(recipe: BrewRecipe): RecipeProblem[] {
   const steps = recipe.pourSteps;
   if (!Array.isArray(steps)) return [];
@@ -343,6 +375,7 @@ export function validateRecipe(
     // brewing one — sanitizePourSteps already guards that path. Don't block on it.
   }
 
+  problems.push(...checkClockAgainstDrawdown(recipe, ctx));
   problems.push(...checkMilestones(recipe));
   problems.push(...checkImmersionSum(recipe, ctx));
   problems.push(...checkGrindUnit(recipe, ctx.grinder));

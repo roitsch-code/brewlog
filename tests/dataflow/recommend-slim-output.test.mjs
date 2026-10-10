@@ -97,7 +97,7 @@ test("CONSUMERS: /recommend derives after sanitation AND after the guard chain; 
   );
   const chat = await readFile(path.join(ROOT, "src/lib/chat/agentContext.ts"), "utf8");
   assert.match(chat, /pourSequence: recipe\.pourSequence \?\? derivePourSequence\(pourSteps\)/);
-  assert.match(chat, /pourSequence: derivePourSequence\(timed\.pourSteps\) \?\? timed\.pourSequence/);
+  assert.match(chat, /pourSequence: derivePourSequence\(r\.pourSteps\) \?\? r\.pourSequence/);
   const run = await readFile(path.join(ROOT, "src/lib/recommend/run.ts"), "utf8");
   assert.match(run, /const \{ recommendation, usage \} = await generateRecommendation\(/);
   assert.match(run, /\[recommend\] usage in=\$\{usage\.input_tokens\} out=\$\{usage\.output_tokens\} calls=\$\{usage\.calls\}/);

@@ -291,8 +291,8 @@ test("WIRING: /recommend stamps pour times, then sets the clock from the drawdow
 
 test("WIRING: the chat's start_brew recipe gets the same pour-time rule", async () => {
   const ctx = await readFile(path.join(ROOT, "src/lib/chat/agentContext.ts"), "utf8");
-  assert.match(ctx, /const timed = applyPourDurations\(reconcileWaterToPourPlan\(out\), ctx\)\.recipe/);
-  assert.match(ctx, /return \{ \.\.\.timed, pourSequence: derivePourSequence\(timed\.pourSteps\)/, "the string follows the re-timed steps");
+  assert.match(ctx, /const timed = applyPourDurations\(reconcileWaterToPourPlan\(out\), ctx\)/);
+  assert.match(ctx, /recipe: \{ \.\.\.r, pourSequence: derivePourSequence\(r\.pourSteps\)/, "the string follows the re-timed steps");
 });
 
 test("WIRING: the brew screen splits each step into pour and rest, and taps at the pour's end", async () => {
