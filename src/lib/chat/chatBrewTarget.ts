@@ -40,6 +40,32 @@ export type StartBrewTargetResult =
   | { ok: true; id?: string }
   | { ok: false; problem: string };
 
+/** What this turn's context knows about a library bag — enough to tell
+ * whether the names on a pill describe the bag its id points at. */
+export interface KnownBag {
+  roaster: string;
+  name: string;
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/**
+ * Do the roaster+name on a pill describe the library row its id points at?
+ * Containment either way on the name, same roaster — "Costa Rica Adelina
+ * Falla" still means "Costa Rica Adelina Fallas Honey", but "Susan Meneses"
+ * does not mean "Wilson Alba - Sierra Morena - End of Season".
+ */
+export function namesDescribeBag(roaster: string, name: string, bag: KnownBag): boolean {
+  const r = norm(roaster);
+  const n = norm(name);
+  const br = norm(bag.roaster);
+  const bn = norm(bag.name);
+  if (!n || !bn) return false;
+  const roasterOk = !r || !br || r === br || r.includes(br) || br.includes(r);
+  const nameOk = n === bn || n.includes(bn) || bn.includes(n);
+  return roasterOk && nameOk;
+}
+
 /**
  * Server-side check: does this start_brew point at something the tap handler
  * can actually brew? `knownIds` is the set of coffee ids this turn's context
@@ -55,12 +81,26 @@ export type StartBrewTargetResult =
 export function resolveStartBrewTarget(
   target: StartBrewTarget,
   knownIds: ReadonlySet<string>,
+  library?: ReadonlyMap<string, KnownBag>,
 ): StartBrewTargetResult {
   const id = target.id?.trim();
   const roaster = target.roaster?.trim();
   const name = target.name?.trim();
 
-  if (id && knownIds.has(id)) return { ok: true, id };
+  if (id && knownIds.has(id)) {
+    // A known id used to win outright. On 2026-10-10 the model put the id of
+    // SEY "Wilson Alba" on a pill whose roaster+name said SEY "Susan Meneses"
+    // (not in the library), the pill brewed Wilson Alba's row and the session
+    // was logged under the wrong bag. When the names plainly describe a
+    // DIFFERENT bag than the id, the names win: the id is dropped and the
+    // brew creates its own row on save, the app's oldest supported path.
+    const bag = library?.get(id);
+    if (roaster && name && bag && !namesDescribeBag(roaster, name, bag)) {
+      const derived = coffeeKeyFor(roaster, name);
+      return knownIds.has(derived) ? { ok: true, id: derived } : { ok: true };
+    }
+    return { ok: true, id };
+  }
 
   if (roaster && name) {
     // The model named the bag but guessed (or skipped) the id. If the derived

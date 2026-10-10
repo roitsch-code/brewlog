@@ -60,12 +60,20 @@ const BROKEN_RECIPE = {
 };
 
 // Same brewer, same volume, same bag — five pours, so every pour has room.
+// Grind in Niche DEGREES: no grinder is named in these conversations, so the
+// home grinder is the default and clicks are a wrong unit (10-10-2026 — the
+// SEY pill carried "26 clicks" and the check never fired). targetTimeSec is
+// what the server computes on CI's empty database: the house-timed pours end
+// at 175 s and the disc estimate adds 10 s (0.21 of the published Orea
+// median at 450 g) — the chat's clock is pours + drawdown now, not the
+// model's number.
+const GOOD_CLOCK = 185;
 const GOOD_RECIPE = {
   doseGrams: 28,
   waterGrams: 450,
   waterTempC: 94,
-  grindSize: "27 clicks",
-  targetTimeSec: 240,
+  grindSize: "398°",
+  targetTimeSec: GOOD_CLOCK,
   pourSteps: [
     { label: "Bloom", action: "bloom", waterGramsAtEnd: 60, durationSec: 15 },
     { label: "Pour 2", action: "pour", waterGramsAtEnd: 160, durationSec: 25 },
@@ -75,21 +83,35 @@ const GOOD_RECIPE = {
   ],
 };
 
+const startBrewTool = (recipe, note) => ({
+  id: `toolu_${Math.abs(hash(JSON.stringify(recipe) + (note || "")))}`,
+  name: "start_brew",
+  input: {
+    label: "Brew Lush Lemons — Orea Classic + Drip Assist",
+    id: "dak__lush_lemons",
+    method: "Orea V4 Classic + Drip Assist",
+    title: "Lush Lemons (450 ml)",
+    basedOn: "Own experiment",
+    recipe,
+  },
+});
+
 const startBrewBlock = (recipe, note) => ({
   kind: "tool_use",
   text: `Hier ist das Rezept${note ? ` (${note})` : ""}.`,
-  tool: {
-    id: `toolu_${Math.abs(hash(JSON.stringify(recipe) + (note || "")))}`,
-    name: "start_brew",
-    input: {
-      label: "Brew Lush Lemons — Orea Classic + Drip Assist",
-      id: "dak__lush_lemons",
-      method: "Orea V4 Classic + Drip Assist",
-      title: "Lush Lemons (450 ml)",
-      basedOn: "Own experiment",
-      recipe,
-    },
-  },
+  tool: startBrewTool(recipe, note),
+});
+
+// A model turn that calls a DATA tool and start_brew in the same response.
+// Until 2026-10-10 such a start_brew skipped validation entirely (#605 added
+// lookup_recipe; the mixed branch pushed the pill unvetted).
+const lookupAndBrewBlock = (recipe) => ({
+  kind: "tool_use",
+  text: "Ich schaue das Rezept nach und richte den Timer ein.",
+  tools: [
+    { id: "toolu_lookup_1", name: "lookup_recipe", input: { query: "Easy Does It" } },
+    startBrewTool(recipe, "mixed"),
+  ],
 });
 
 function hash(s) {
@@ -100,9 +122,19 @@ function hash(s) {
 
 // ── Scenarios: an ordered script of model turns per scenario ────────────────
 const SCENARIOS = {
-  "repair-then-accept": [startBrewBlock(BROKEN_RECIPE), startBrewBlock(GOOD_RECIPE, "korrigiert")],
+  // This conversation names the Comandante, so the corrected recipe must be
+  // in CLICKS — a Niche number there is the wrong unit and is rightly sent back.
+  "repair-then-accept": [startBrewBlock(BROKEN_RECIPE), startBrewBlock({ ...GOOD_RECIPE, grindSize: "28 clicks" }, "korrigiert")],
   "twice-broken": [startBrewBlock(BROKEN_RECIPE), startBrewBlock(BROKEN_RECIPE, "immer noch kaputt")],
   "good-first-try": [startBrewBlock(GOOD_RECIPE)],
+  // The 10-10-2026 pill: clicks with no grinder named + a clock the cone
+  // never delivers. Both go back in ONE repair; the repaired recipe passes.
+  "clicks-and-clock": [
+    startBrewBlock({ ...GOOD_RECIPE, grindSize: "27 clicks", targetTimeSec: 240 }),
+    startBrewBlock(GOOD_RECIPE, "in Grad, Uhr korrigiert"),
+  ],
+  // start_brew beside a data tool must be vetted like any other.
+  "mixed-bypass": [lookupAndBrewBlock(BROKEN_RECIPE), startBrewBlock(GOOD_RECIPE, "korrigiert")],
   // An emoji whose surrogate pair is deliberately split across two deltas.
   emoji: [{ kind: "text", chunks: ["Ha, völlig berechtigt", "! \ud83d", "\ude04 Nimm den Orea."] }],
 };
@@ -132,19 +164,23 @@ function streamTurn(res, turn) {
   sse(res, "content_block_stop", { type: "content_block_stop", index: 0 });
 
   if (turn.kind === "tool_use") {
-    sse(res, "content_block_start", {
-      type: "content_block_start", index: 1,
-      content_block: { type: "tool_use", id: turn.tool.id, name: turn.tool.name, input: {} },
-    });
-    // Real streams split the JSON; do the same so the SDK's accumulator is exercised.
-    const json = JSON.stringify(turn.tool.input);
-    for (let i = 0; i < json.length; i += 120) {
-      sse(res, "content_block_delta", {
-        type: "content_block_delta", index: 1,
-        delta: { type: "input_json_delta", partial_json: json.slice(i, i + 120) },
+    const tools = turn.tools ?? [turn.tool];
+    tools.forEach((tool, n) => {
+      const index = n + 1;
+      sse(res, "content_block_start", {
+        type: "content_block_start", index,
+        content_block: { type: "tool_use", id: tool.id, name: tool.name, input: {} },
       });
-    }
-    sse(res, "content_block_stop", { type: "content_block_stop", index: 1 });
+      // Real streams split the JSON; do the same so the SDK's accumulator is exercised.
+      const json = JSON.stringify(tool.input);
+      for (let i = 0; i < json.length; i += 120) {
+        sse(res, "content_block_delta", {
+          type: "content_block_delta", index,
+          delta: { type: "input_json_delta", partial_json: json.slice(i, i + 120) },
+        });
+      }
+      sse(res, "content_block_stop", { type: "content_block_stop", index });
+    });
   }
 
   sse(res, "message_delta", {
@@ -262,8 +298,36 @@ try {
     const brew = r.actions.find((a) => a.destination === "start_brew");
     check("a Brew button IS offered after the repair", !!brew);
     check("and it carries the CORRECTED recipe, not the broken one",
-      brew?.recipe?.targetTimeSec === 240 && brew?.recipe?.pourSteps?.length === 5,
+      brew?.recipe?.targetTimeSec === GOOD_CLOCK && brew?.recipe?.pourSteps?.length === 5,
       `targetTimeSec=${brew?.recipe?.targetTimeSec} pours=${brew?.recipe?.pourSteps?.length}`);
+  }
+
+  // ── 1b. Clicks at home + a fictional clock → one repair, then the timer ────
+  console.log("\nSCENARIO clicks-and-clock — the 10-10-2026 pill");
+  {
+    const r = await chat(cookie, "clicks-and-clock", "Lush Lemons Rezept bitte. 450ml.");
+    check("one repair round", r.control.calls === 2, `calls=${r.control.calls}`);
+    const msg = r.control.received[1]?.messages?.at(-1)?.content?.find?.((b) => b.type === "tool_result")?.content ?? "";
+    check("the rejection names the wrong grind unit", /wrong unit for the Niche Zero/.test(msg), msg.slice(0, 200));
+    check("the rejection names the clock vs the drawdown", /drawdown on this brewer/.test(msg) && /3:05/.test(msg), msg.slice(0, 300));
+    const brew = r.actions.find((a) => a.destination === "start_brew");
+    check("the repaired recipe reaches the Brew button in degrees", brew?.recipe?.grindSize === "398°", JSON.stringify(brew?.recipe?.grindSize));
+    check("with the computed clock", brew?.recipe?.targetTimeSec === GOOD_CLOCK, `targetTimeSec=${brew?.recipe?.targetTimeSec}`);
+  }
+
+  // ── 1c. start_brew beside lookup_recipe is vetted too ──────────────────────
+  console.log("\nSCENARIO mixed-bypass — start_brew in the same response as a data tool");
+  {
+    const r = await chat(cookie, "mixed-bypass", "Lush Lemons Rezept bitte. 450ml.");
+    check("the broken pill was sent back (second model call carries an error tool_result)",
+      r.control.calls === 2 &&
+        (r.control.received[1]?.messages?.at(-1)?.content ?? []).some((b) => b.type === "tool_result" && b.is_error === true),
+      `calls=${r.control.calls}`);
+    const brew = r.actions.find((a) => a.destination === "start_brew");
+    check("the corrected recipe is the one on the Brew button",
+      brew?.recipe?.targetTimeSec === GOOD_CLOCK && brew?.recipe?.pourSteps?.length === 5,
+      `targetTimeSec=${brew?.recipe?.targetTimeSec} pours=${brew?.recipe?.pourSteps?.length}`);
+    check("exactly one Brew button", r.actions.filter((a) => a.destination === "start_brew").length === 1);
   }
 
   // ── 2. Still broken after the repair → no button ───────────────────────────
@@ -284,7 +348,7 @@ try {
     check("no repair round is triggered", r.control.calls === 1, `calls=${r.control.calls}`);
     const brew = r.actions.find((a) => a.destination === "start_brew");
     check("the Brew button is offered", !!brew);
-    check("the recipe is untouched", brew?.recipe?.targetTimeSec === 240);
+    check("the recipe is untouched", brew?.recipe?.targetTimeSec === GOOD_CLOCK && brew?.recipe?.grindSize === "398°");
   }
 
   // ── 4. Emoji never reach the client ────────────────────────────────────────

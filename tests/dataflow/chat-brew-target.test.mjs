@@ -137,8 +137,10 @@ test("the route gates start_brew through resolveStartBrewTarget with the turn's 
     path.join(ROOT, "src/app/api/explore-agent/route.ts"),
     "utf8",
   );
-  assert.match(src, /import \{ resolveStartBrewTarget \} from "@\/lib\/chat\/chatBrewTarget"/);
-  assert.match(src, /resolveStartBrewTarget\(action, knownCoffeeIds\)/);
+  assert.match(src, /import \{ resolveStartBrewTarget, type KnownBag \} from "@\/lib\/chat\/chatBrewTarget"/);
+  // Since 2026-10-10 the gate also gets the library NAMES, so a known id on
+  // a pill whose roaster+name describe a different bag is dropped.
+  assert.match(src, /resolveStartBrewTarget\(action, knownCoffeeIds, knownBags\)/);
   // knownCoffeeIds must be built from the SAME library the prompt context uses.
   assert.match(src, /knownCoffeeIds[\s\S]{0,200}library\.map\(\(c\) => c\.id\)/);
 });

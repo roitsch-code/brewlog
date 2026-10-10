@@ -35,9 +35,13 @@ test("start_brew is validated before it becomes an action", () => {
   // Since 2026-08-23 the branch checks the TARGET first (an invented id — the
   // dead DAK Cassis pill — is bounced before the recipe is even looked at),
   // so the window covers both checks and asserts their order.
-  const branch = ROUTE.slice(ROUTE.indexOf('block.name === "start_brew"'));
-  assert.ok(branch.length > 0, "start_brew branch must exist");
+  // Since 2026-10-10 both checks live in ONE gate (vetStartBrew) that both
+  // tool branches call — a start_brew beside a lookup_recipe used to skip
+  // validation entirely.
+  const branch = ROUTE.slice(ROUTE.indexOf("const vetStartBrew = async"));
+  assert.ok(branch.length > 0, "the start_brew gate must exist");
   const head = branch.slice(0, 3600);
+  assert.ok((ROUTE.match(/await vetStartBrew\(action\)/g) ?? []).length >= 2, "both tool branches call the gate");
   const targetIdx = head.indexOf("resolveStartBrewTarget(");
   const recipeIdx = head.indexOf("validateRecipe(");
   assert.ok(targetIdx > 0, "start_brew must resolve its target");
@@ -49,14 +53,13 @@ test("start_brew is validated before it becomes an action", () => {
 test("a failed recipe goes back to the model as an error tool_result", () => {
   assert.match(
     ROUTE,
-    /content:\s*formatProblemsForModel\(problems\)/,
-    "the model must receive the formatted problems",
+    /problem:\s*formatProblemsForModel\(problems\)/,
+    "the gate must hand the model the formatted problems",
   );
-  const idx = ROUTE.indexOf("formatProblemsForModel(problems)");
-  assert.match(
-    ROUTE.slice(idx, idx + 200),
-    /is_error:\s*true/,
-    "the tool_result must be flagged as an error so the model treats it as a failure",
+  // Both branches send that text back as an ERROR tool_result.
+  assert.ok(
+    (ROUTE.match(/content:\s*vet\.problem,?\s*\n?\s*is_error:\s*true/g) ?? []).length >= 2,
+    "the tool_result must be flagged as an error so the model treats it as a failure (both branches)",
   );
 });
 
@@ -73,12 +76,10 @@ test("the repair budget is exactly one round per turn", () => {
 test("a recipe that fails twice yields no brew button", () => {
   // droppedBrew carries WHICH kind of failure dropped the pill, so the user
   // hears the right explanation — both drop sites must exist.
-  assert.match(ROUTE, /droppedBrew = "recipe"/, "a twice-failed recipe must drop the action");
-  assert.match(ROUTE, /droppedBrew = "target"/, "a twice-failed target must drop the action");
+  assert.ok((ROUTE.match(/droppedBrewNotice = droppedNotice\(vet\.kind\)/g) ?? []).length >= 2, "both branches drop a twice-failed pill");
+  assert.match(ROUTE, /kind === "target"\s*\?/, "the notice names the kind of failure");
   // And the user is told, rather than the pill silently vanishing.
-  const idx = ROUTE.indexOf("droppedBrew) {");
-  assert.ok(idx > 0);
-  assert.match(ROUTE.slice(idx, idx + 400), /send\("delta"/, "the user must be told why there's no timer");
+  assert.match(ROUTE, /if \(droppedBrewNotice\) send\("delta", \{ text: droppedBrewNotice \}\)/, "the user must be told why there's no timer");
 });
 
 test("accepted actions still reach the user when a sibling action is rejected", () => {
@@ -165,14 +166,15 @@ test("start_brew's recipe is sanitized through cleanChatRecipe before anything r
   // shows nothing. Pin the wiring, not just the function.
   assert.match(
     ROUTE,
-    /import\s*\{[^}]*cleanChatRecipe[^}]*\}\s*from\s*"@\/lib\/chat\/agentContext"/,
-    "the route must import cleanChatRecipe",
+    /import\s*\{[^}]*cleanChatRecipeDetailed[^}]*\}\s*from\s*"@\/lib\/chat\/agentContext"/,
+    "the route must import cleanChatRecipeDetailed",
   );
   const startBrew = ROUTE.slice(ROUTE.indexOf('toolName === "start_brew"'));
   assert.ok(startBrew.length > 0, "start_brew mapping must exist");
+  assert.match(startBrew.slice(0, 600), /recipe:\s*cleanStartBrewRecipe\(input\)/, "the start_brew action's recipe must be the CLEANED recipe");
   assert.match(
-    startBrew.slice(0, 600),
-    /recipe:\s*cleanChatRecipe\(input\.recipe,\s*\{\s*basedOn:\s*input\.basedOn/,
-    "the start_brew action's recipe must be the CLEANED recipe",
+    ROUTE,
+    /cleanChatRecipeDetailed\(input\.recipe,\s*\{\s*basedOn:\s*input\.basedOn/,
+    "cleanStartBrewRecipe must run the shared cleaner",
   );
 });

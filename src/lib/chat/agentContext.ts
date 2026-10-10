@@ -136,6 +136,21 @@ export function cleanChatRecipe(
   recipe: BrewRecipe | undefined,
   ctx: { basedOn?: string; method?: string } = {},
 ): BrewRecipe | undefined {
+  return cleanChatRecipeDetailed(recipe, ctx)?.recipe;
+}
+
+export interface CleanedChatRecipe {
+  recipe: BrewRecipe;
+  /** Where the pour seconds came from (src/lib/recipe/pourDurations.ts). */
+  pourSource: "reference" | "house" | "none";
+  /** Every pour time the app changed — /recommend logs these, the chat never did. */
+  pourChanges: string[];
+}
+
+export function cleanChatRecipeDetailed(
+  recipe: BrewRecipe | undefined,
+  ctx: { basedOn?: string; method?: string } = {},
+): CleanedChatRecipe | undefined {
   if (!recipe) return undefined;
   const pourSteps = sanitizePourSteps(recipe.pourSteps);
   const out: BrewRecipe = {
@@ -145,11 +160,15 @@ export function cleanChatRecipe(
   };
   // 4. Pour TIMES are the app's, not the model's — the same rule /recommend
   //    applies (src/lib/recipe/pourDurations.ts): a verified reference's own
-  //    scaled times, else the owner's measured ~4 g/s in 5-second steps. The
-  //    rests absorb the difference, so the pours start where the chat said.
-  const timed = applyPourDurations(reconcileWaterToPourPlan(out), ctx).recipe;
+  //    scaled times, else the owner's measured pace in 5-second steps.
+  const timed = applyPourDurations(reconcileWaterToPourPlan(out), ctx);
   // 5. The string follows the (re-timed) steps, as in /recommend.
-  return { ...timed, pourSequence: derivePourSequence(timed.pourSteps) ?? timed.pourSequence };
+  const r = timed.recipe;
+  return {
+    recipe: { ...r, pourSequence: derivePourSequence(r.pourSteps) ?? r.pourSequence },
+    pourSource: timed.source,
+    pourChanges: timed.changes,
+  };
 }
 
 /**
