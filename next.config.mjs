@@ -32,9 +32,17 @@ const nextConfig = {
     ];
   },
   images: {
+    // The optimizer fetches whatever upstream URL matches these patterns and
+    // decodes it. `*.your-objectstorage.com` matched EVERY Hetzner Object
+    // Storage bucket of every customer, so an attacker could park a crafted
+    // file in their own bucket and have this server decode it (the Next 14
+    // optimizer advisories, see src/middleware.ts). With the real bucket host
+    // known from NEXT_PUBLIC_S3_PUBLIC_URL_PREFIX only that host is allowed;
+    // the wildcard survives solely as the fallback for an env without it (CI).
     remotePatterns: [
-      ...(s3Hostname ? [{ protocol: "https", hostname: s3Hostname }] : []),
-      { protocol: "https", hostname: "*.your-objectstorage.com" },
+      ...(s3Hostname
+        ? [{ protocol: "https", hostname: s3Hostname }]
+        : [{ protocol: "https", hostname: "*.your-objectstorage.com" }]),
       { protocol: "https", hostname: "firebasestorage.googleapis.com" },
     ],
   },

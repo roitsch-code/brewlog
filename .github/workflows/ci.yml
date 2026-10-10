@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - name: Type-check
@@ -27,6 +27,15 @@ jobs:
         run: node tests/recipes/validate.mjs
       - name: Data-flow / resolution tests
         run: node --test $(find tests -name '*.test.mjs')
+      # Dependency advisories, production deps only. REPORT, not yet a gate:
+      # Next 14.2.x carries advisories that are fixed only in 15.5.x/16, so a
+      # blocking critical-level gate would be permanently red until the Next 15
+      # migration lands. The optimizer surface is gated behind the session
+      # cookie meanwhile (src/middleware.ts). Flip `continue-on-error` to false
+      # the day the audit comes back clean at --audit-level=critical.
+      - name: Dependency audit (report)
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=critical
 
   # Visual smoke test: boot the app against a throwaway Postgres, log in via
   # the PIN path, and screenshot every key screen. Download the
@@ -61,7 +70,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - name: Ensure psql is available
@@ -133,7 +142,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - name: Apply migrations
