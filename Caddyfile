@@ -5,7 +5,19 @@ bettertastethansorry.com, staging.bettertastethansorry.com {
     # different apps and this domain intermittently served the Ladeplanner
     # (2026-09-07). `brewlog-app` (docker-compose container_name) resolves to
     # this app alone.
-    reverse_proxy brewlog-app:3000
+    #
+    # /_next/image is the Next.js image optimizer. Next 14.2.x answers it BEFORE
+    # the auth middleware runs (verified 2026-10-10), it carries unpatched
+    # advisories incl. an unauthenticated RCE via AVIF input, and the app no
+    # longer uses it (images.unoptimized in next.config.mjs). Kill it at the edge
+    # so no request ever reaches the handler. Remove with the Next 15 migration.
+    @imgopt path /_next/image*
+    handle @imgopt {
+        respond 404
+    }
+    handle {
+        reverse_proxy brewlog-app:3000
+    }
 }
 
 # ── Co-hosted siblings (2026-09-08) ──────────────────────────────────────────
