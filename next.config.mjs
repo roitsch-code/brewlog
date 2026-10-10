@@ -32,6 +32,18 @@ const nextConfig = {
     ];
   },
   images: {
+    // The optimizer is OFF (2026-10-10). Next 14.2.x serves /_next/image
+    // BEFORE the middleware runs — verified against a local production build:
+    // /coffees redirects to /login, /_next/image answers 200 with no cookie,
+    // whatever the matcher says — so the cookie gate in src/middleware.ts
+    // cannot protect it, and Next 14 has unpatched optimizer advisories incl.
+    // an unauthenticated RCE via AVIF input (GHSA-2xp9-vwfh-vxw4, fixed only in
+    // 15.5.24+). `unoptimized` makes every next/image a plain <img> (the only
+    // consumer is the scan preview in PhotoUpload, which shows the S3 original
+    // anyway), and the Caddyfile answers /_next/image* with 404 before the app
+    // ever sees it. Real fix: the Next 15 migration.
+    unoptimized: true,
+    // Kept for the day the optimizer comes back, tightened meanwhile:
     // The optimizer fetches whatever upstream URL matches these patterns and
     // decodes it. `*.your-objectstorage.com` matched EVERY Hetzner Object
     // Storage bucket of every customer, so an attacker could park a crafted
