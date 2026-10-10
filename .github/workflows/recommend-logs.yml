@@ -64,7 +64,7 @@ jobs:
 
             section "Other pipeline errors + guard warnings (last 2000 lines)"
             docker compose logs --tail=2000 --no-color app 2>/dev/null </dev/null \
-              | grep -a -iE '\[recommend\]|recommendProvider|anthropic|mistral|rate.?limit|overloaded|401|429|500 |ECONN|ETIMEDOUT|abort' \
+              | grep -a -iE '\[recommend\]|\[explore-agent\]|recommendProvider|anthropic|mistral|rate.?limit|overloaded|401|429|500 |ECONN|ETIMEDOUT|abort' \
               | grep -a -viE 'api[_-]?key|authorization|bearer|sk-' \
               | cut -c1-300 | tail -120 \
               || echo "no matching lines"
@@ -94,6 +94,39 @@ jobs:
               ORDER BY m.created_at DESC
               LIMIT 8;" </dev/null || echo "psql query failed"
 
+            # The chat pill's ACTUAL recipe (2026-10-10, the "standard Hoffmann
+            # V60 was thin, sour and the timer made no sense" report): until now
+            # only the step COUNT was visible, so whether the chat bound its
+            # basedOn to the verified reference, kept Hoffmann's pauses, wrote
+            # the grind, or set a clock with any drawdown left could not be read
+            # off production at all. Numbers only, never prose (public run log).
+            # Steps format: action:gramsAtEnd@sec (sec = after cleanChatRecipe).
+            section "Last 3 chat start_brew pills — full recipe numbers"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -x -c "
+              SELECT to_char(m.created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
+                     COALESCE(a->>'id','(NO ID)') AS coffee_id,
+                     left(COALESCE(a->>'label',''),48) AS label,
+                     left(COALESCE(a->>'method',''),40) AS method,
+                     left(COALESCE(a->>'basedOn',''),60) AS based_on,
+                     left(COALESCE(a->>'title',''),48) AS title,
+                     (a->'recipe'->>'doseGrams') AS dose,
+                     (a->'recipe'->>'waterGrams') AS water,
+                     (a->'recipe'->>'waterTempC') AS temp,
+                     left(COALESCE(a->'recipe'->>'grindSize',''),40) AS grind,
+                     (a->'recipe'->>'targetTimeSec') AS target_sec,
+                     left(COALESCE(a->'recipe'->>'pourSequence',''),120) AS pour_sequence,
+                     (SELECT string_agg(left(p->>'action',5) ||
+                             COALESCE(':'||(p->>'waterGramsAtEnd'),'') || '@' || COALESCE(p->>'durationSec','?'),
+                             ' ' ORDER BY ord)
+                      FROM jsonb_array_elements(COALESCE(a->'recipe'->'pourSteps','[]'::jsonb))
+                           WITH ORDINALITY t(p, ord)) AS steps
+              FROM conversation_messages m
+              CROSS JOIN LATERAL jsonb_array_elements(m.actions) a
+              WHERE m.actions IS NOT NULL
+                AND a->>'destination' = 'start_brew'
+              ORDER BY m.created_at DESC
+              LIMIT 3;" </dev/null | cut -c1-300 || echo "psql query failed"
+
             # The recipe a session ACTUALLY brewed, resolved exactly like
             # resolveBrewedRecipe (src/lib/utils/resolveRecipe.ts): the candidate
             # at brew.selectedCandidateIdx, else the candidate matching
@@ -113,7 +146,7 @@ jobs:
                 ORDER BY created_at_ms DESC
                 LIMIT 10
               ), r AS (
-                SELECT created_at, coffee, context, brew,
+                SELECT created_at, coffee, context, brew, recommendation,
                   COALESCE(
                     CASE WHEN idx IS NOT NULL THEN recommendation->'candidates'->idx END,
                     (SELECT c FROM jsonb_array_elements(COALESCE(recommendation->'candidates','[]'::jsonb)) c
@@ -124,6 +157,7 @@ jobs:
               SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
                 left(coffee->>'name',24) AS coffee,
                 coffee->>'roastDate' AS roast_date,
+                CASE WHEN recommendation->>'reasoning' = 'From the chat.' THEN 'chat' ELSE 'recommend' END AS source,
                 left(COALESCE(brew->>'methodUsed', cand->>'method'),28) AS method,
                 left(cand->>'basedOn',40) AS based_on,
                 context->>'waterSource' AS water_source,
