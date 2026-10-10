@@ -24,6 +24,7 @@ export { calibrateDrawdownClock } from ${JSON.stringify(path.join(ROOT, "src/lib
 export { brewerMatchesReference, resolveReference, reconcileToReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
 export { drawdownFor } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/drawdown.ts"))};
 export { pourScheduleFor } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
+export { scaleRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
 `;
 const out = path.join(ROOT, "node_modules/.cache/ref-brewer-mismatch/bundle.mjs");
 await build({
@@ -89,9 +90,32 @@ test("Adelina on the CLASSIC bottom: the clock gets a real drawdown, not 4 s", (
   assert.ok(c.recipe.targetTimeSec - end >= 20, `drawdown ${c.recipe.targetTimeSec - end}s`);
 });
 
-test("on the FAST bottom it was written for, the verified recipe keeps its own clock", () => {
+test("on the FAST bottom at 350 g (outside Wölfl's ±20 % window) the clock is pours end + the brewer's corpus drawdown", () => {
+  // Since 2026-10-10 the verified-reference branch no longer keeps the MODEL's
+  // clock (180 s here, 5 s of drawdown): it is pours end + the published
+  // drawdown scaled — and only within the batch window the reference applies
+  // in. 350 g is 1.3× Wölfl's 270 g, so the generic estimate decides.
   const [c] = K.calibrateDrawdownClock([cand("Orea Fast")], [], isPercolation, ROAST, NOW);
-  assert.equal(c.recipe.targetTimeSec, 180);
+  const end = K.pourScheduleFor(ADELINA, ROAST, NOW, "Orea Fast").pourPhaseEndSec;
+  const est = K.drawdownFor([], "Orea Fast", 350);
+  assert.equal(c.recipe.targetTimeSec, end + est.sec);
+  assert.notEqual(c.recipe.targetTimeSec, 180, "the model's clock is not kept");
+});
+
+test("on the FAST bottom within the window (300 g) the clock is pours end + Wölfl's scaled drawdown", () => {
+  const k = 300 / 350;
+  const recipe = {
+    ...ADELINA,
+    waterGrams: 300,
+    pourSteps: ADELINA.pourSteps.map((s) =>
+      typeof s.waterGramsAtEnd === "number" ? { ...s, waterGramsAtEnd: Math.round(s.waterGramsAtEnd * k) } : s,
+    ),
+  };
+  const [c] = K.calibrateDrawdownClock([cand("Orea Fast", recipe)], [], isPercolation, ROAST, NOW);
+  const end = K.pourScheduleFor(recipe, ROAST, NOW, "Orea Fast").pourPhaseEndSec;
+  const scaled = K.scaleRecipe(K.resolveReference(WOLFL), 300, { method: "Orea Fast" });
+  assert.equal(c.recipe.targetTimeSec, end + Math.round(scaled.drawdownSec));
+  assert.ok(scaled.drawdownSec > 0);
 });
 
 test("fidelity no longer snaps a Classic clock back to the Fast recipe's time", () => {
@@ -122,5 +146,5 @@ test("…but on the Fast bottom a drifted clock is still caught (within the ±20
 
 test("wiring: recommend.ts gates the exemption on the brewer match", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(src, /ref\?\.verified && brewerMatchesReference\(c\.method, ref\)/);
+  assert.match(src, /ref\?\.verified &&\s*brewerMatchesReference\(c\.method, ref\) &&\s*referenceAppliesAtBatch\(ref, c\.recipe\.waterGrams\)/);
 });

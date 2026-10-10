@@ -54,7 +54,12 @@ export function normalizeGrindToGrinder(
   grinder: string | undefined,
 ): string | undefined {
   if (!grindSize) return grindSize;
-  const m = /(\d{1,3}(?:\.\d+)?)/.exec(grindSize);
+  // The setting is the number the string STARTS with ("380°", "26 clicks",
+  // "~400", "406° (Niche Zero)"). A number buried in prose is not a setting:
+  // "medium-fine (≈+10° coarser than the published single-cup setting)" is the
+  // scaled-grind text of a reference with no Niche number, and reading its
+  // "10" as 10 Comandante clicks turned a V60 grind into 337° (2026-10-10).
+  const m = /^\s*[~≈]?\s*(\d{1,3}(?:\.\d+)?)/.exec(grindSize);
   if (!m) return grindSize;
   const n = Number(m[1]);
   if (!Number.isFinite(n)) return grindSize;

@@ -179,6 +179,29 @@ function refTemp(r: Recipe): number | null {
   return null;
 }
 
+/**
+ * Is the candidate's temperature one the reference itself allows? A recipe
+ * that publishes a RANGE (Hoffmann's roast staircase: 100 °C light, 96 medium,
+ * down to 90 dark — rangeC [90, 100]) allows anything inside it. Until
+ * 2026-10-10 the guard compared against `celsius` alone (100) with ±6 °C, so
+ * every 93 °C Hoffmann came back at 100 °C whatever the roast, while the
+ * prompt says ≤95 °C for heirloom/Gesha. Outside the range (or the ±6 °C
+ * band of a single published value) → the nearest allowed value.
+ */
+export function refTempTarget(r: Recipe, candidate: number): { ok: boolean; target: number | null } {
+  const t = r.temperature;
+  if (Array.isArray(t.rangeC) && t.rangeC.length === 2) {
+    const lo = Math.min(t.rangeC[0], t.rangeC[1]);
+    const hi = Math.max(t.rangeC[0], t.rangeC[1]);
+    if (candidate >= lo && candidate <= hi) return { ok: true, target: null };
+    return { ok: false, target: candidate < lo ? lo : hi };
+  }
+  const single = refTemp(r);
+  if (single == null) return { ok: true, target: null };
+  if (Math.abs(candidate - single) <= 6) return { ok: true, target: null };
+  return { ok: false, target: single };
+}
+
 /** Pull the grind out of a free-text string AS NICHE DEGREES, converting a
  * Comandante clicks value first.
  *
@@ -303,11 +326,15 @@ function driftReasons(
     }
   }
 
-  // Temperature — chemistry knob, shouldn't move much from the published value.
-  const rt = refTemp(ref);
-  if (rt != null && typeof recipe.waterTempC === "number" && Math.abs(recipe.waterTempC - rt) > 6) {
-    drift.temp = true;
-    reasons.push(`temp ${recipe.waterTempC}° vs published ${rt}°`);
+  // Temperature — chemistry knob; anything the reference itself publishes
+  // (a roast-staircase range, or ±6 °C of a single value) is not drift.
+  if (typeof recipe.waterTempC === "number") {
+    const tt = refTempTarget(ref, recipe.waterTempC);
+    if (!tt.ok) {
+      drift.temp = true;
+      const pub = Array.isArray(ref.temperature.rangeC) ? `${ref.temperature.rangeC[0]}–${ref.temperature.rangeC[1]}°` : `${refTemp(ref)}°`;
+      reasons.push(`temp ${recipe.waterTempC}° vs published ${pub}`);
+    }
   }
 
   // Pour PLAN structure. The documented mangle was Kasuya's 10-pulse recipe
@@ -462,7 +489,7 @@ export function reconcileToReference(
     }
     if (drift.temp) {
       return {
-        recipe: { ...recipe, waterTempC: refTemp(ref) ?? recipe.waterTempC },
+        recipe: { ...recipe, waterTempC: refTempTarget(ref, recipe.waterTempC as number).target ?? recipe.waterTempC },
         changed: true,
         reasons,
         reference: ref.name,
@@ -485,10 +512,18 @@ export function reconcileToReference(
   }
 
   const steps = scaled?.pourSteps ?? [];
+  // A reference with no Niche number has only PROSE for a grind. Writing that
+  // prose into grindSize put "(≈+10° coarser …)" on the card and the grind-unit
+  // guard read the 10 as clicks → 337° (2026-10-10). The candidate's own
+  // number stays; prose can't be a setting.
+  const refGrind = scaleGrind(ref, doseRatio, method);
   const fixed: BrewRecipe = {
     ...recipe,
-    waterTempC: scaled?.waterTempC ?? refTemp(ref) ?? recipe.waterTempC,
-    grindSize: refGrindString(ref, doseRatio, method),
+    waterTempC:
+      typeof recipe.waterTempC === "number"
+        ? refTempTarget(ref, recipe.waterTempC).target ?? recipe.waterTempC
+        : scaled?.waterTempC ?? refTemp(ref) ?? recipe.waterTempC,
+    grindSize: refGrind.prose ? recipe.grindSize : refGrind.text,
     targetTimeSec: scaled?.totalTimeSec ?? ref.totalTimeSec,
     pourSteps: steps.length ? steps : recipe.pourSteps,
     pourSequence: cumulativeGramsString(steps) || recipe.pourSequence,
