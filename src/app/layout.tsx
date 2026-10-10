@@ -1,42 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { JetBrains_Mono, Instrument_Serif, Fraunces, Chivo } from "next/font/google";
+// Self-hosted (scripts/vendor-google-fonts.mjs) — NOT next/font/google, which
+// fetched from Google on every build and failed four deploys in Oct 2026.
+// fonts.css defines --font-jetbrains-mono / -instrument-serif / -fraunces / -chivo.
+import "./fonts.css";
 import "./globals.css";
 import ScrollContainer from "@/components/layout/ScrollContainer";
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-jetbrains-mono",
-});
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
-  variable: "--font-instrument-serif",
-  display: "swap",
-});
-
-// Light System §3.1 (anthracite revision) — Fraunces for hero questions,
-// Chivo for body text inside the (light) route group. Variables are
-// exposed globally so the (light) scope can opt in via `font-fraunces`
-// / `font-chivo` Tailwind utilities. Dark-scope consumers continue to
-// use Instrument Serif / Geist.
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
-const chivo = Chivo({
-  subsets: ["latin"],
-  weight: ["200", "400", "500", "600"],
-  variable: "--font-chivo",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bettertastethansorry.com"),
@@ -59,7 +29,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${jetbrainsMono.variable} ${instrumentSerif.variable} ${fraunces.variable} ${chivo.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
         {/* Stale-chunk self-heal. After a deploy, an installed PWA / WKWebView
             can hold a cached HTML shell that references JS chunk filenames the
