@@ -54,25 +54,25 @@ function kasuyaBatch({ dose, water, grind, time = 210 }) {
   };
 }
 
-test("large batch + single-cup grind → grind coarsened to the batch value", () => {
-  const { recipe, changed, reasons, reference } = reconcileToReference(
-    kasuyaBatch({ dose: 30, water: 450, grind: "395°" }), // 1.5× the 300g reference
-    "Kasuya 4:6",
-  );
-  assert.equal(changed, true);
-  // 395 + 12. The owner's law is +20° per DOUBLING (grind-settings.md), so it is
-  // logarithmic: 1.5× is 20·log2(1.5) ≈ 12, not the 20·(1.5−1) = 10 the old
-  // linear form gave. Linear only matched the measured anchors at exactly 2×,
-  // and got the halving side — "the same amount finer" — plainly wrong.
-  assert.equal(recipe.grindSize, "407°");
-  assert.match(reference, /Kasuya/);
-  assert.match(reasons[0], /too fine/i);
+test("1.5× the reference water is NOT that recipe any more — nothing is snapped (2026-10-10)", () => {
+  // The large-batch grind guard (≥1.3×, +20°/doubling) is superseded by the
+  // owner's rule that a published recipe applies only within ±20 % of its
+  // water (src/lib/recipe/batchWindow.ts): a 300 g Kasuya at 450 g is not
+  // "Kasuya scaled", so the reference does not apply and the model's grind,
+  // clock and pour plan are left exactly as written. /recommend relabels such
+  // a candidate "Own recipe (after Kasuya 4:6, published at 300 g)" instead.
+  const input = kasuyaBatch({ dose: 30, water: 450, grind: "395°", time: 210 });
+  const { recipe, changed, reasons } = reconcileToReference(input, "Kasuya 4:6");
+  assert.equal(changed, false);
+  assert.deepEqual(reasons, []);
+  assert.equal(recipe.grindSize, "395°");
+  assert.equal(recipe.targetTimeSec, 210);
+  assert.deepEqual(recipe.pourSteps, input.pourSteps);
 });
 
-test("coarsening NEVER stretches the total time or the pour plan", () => {
-  const input = kasuyaBatch({ dose: 30, water: 450, grind: "395°", time: 210 });
+test("coarsening NEVER stretches the total time or the pour plan (within the window the guard still never touches the clock)", () => {
+  const input = kasuyaBatch({ dose: 24, water: 360, grind: "395°", time: 210 }); // 1.2× — the window's edge
   const { recipe } = reconcileToReference(input, "Kasuya 4:6");
-  // Grind is the flow lever; the clock is untouched (a longer clock over-extracts).
   assert.equal(recipe.targetTimeSec, 210);
   assert.equal(recipe.pourSequence, input.pourSequence);
   assert.deepEqual(recipe.pourSteps, input.pourSteps);

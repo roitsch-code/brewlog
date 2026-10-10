@@ -95,12 +95,19 @@ function kasuyaBatch({ dose, water, grind, time = 210 }) {
   };
 }
 
-test("a stale bean's finer grind on a big batch is not reversed (within the 15° grind tolerance)", () => {
-  // Kasuya 4:6 ×1.5: the batch target is 407°. 395° is 12° finer.
-  const fresh = F.reconcileToReference(kasuyaBatch({ dose: 30, water: 450, grind: "395°" }), "Kasuya 4:6", undefined, { daysOld: 10 });
-  assert.equal(fresh.recipe.grindSize, "407°", "a peak-window bean still gets the batch coarsening");
-  const stale = F.reconcileToReference(kasuyaBatch({ dose: 30, water: 450, grind: "395°" }), "Kasuya 4:6", undefined, { daysOld: 45 });
-  assert.equal(stale.changed, false, "a 45-day bean ground finer on purpose must be left alone");
-  const tooFine = F.reconcileToReference(kasuyaBatch({ dose: 30, water: 450, grind: "388°" }), "Kasuya 4:6", undefined, { daysOld: 45 });
-  assert.equal(tooFine.recipe.grindSize, "407°", "beyond the tolerance it is still a single-cup grind on a big bed");
+test("a stale bean's finer grind is never reversed — and a 1.5× batch is no longer 'the same recipe' at all", () => {
+  // Since 2026-10-10 a reference applies only within ±20 % of its published
+  // water (src/lib/recipe/batchWindow.ts, owner decision). Kasuya's 300 g at
+  // 450 g is outside it, so the guard — and with it the large-batch branch
+  // that used to re-coarsen a stale bean's grind — does not run at all. The
+  // protection this test was written for is now moot: nothing can reverse a
+  // grind on a batch the reference does not apply to.
+  for (const daysOld of [10, 45]) {
+    const r = F.reconcileToReference(kasuyaBatch({ dose: 30, water: 450, grind: "395°" }), "Kasuya 4:6", undefined, { daysOld });
+    assert.equal(r.changed, false, `${daysOld}-day bean, 1.5× batch: the reference does not apply, nothing is snapped`);
+  }
+  // Within the window the large-batch branch needs ≥1.3×, which the window
+  // excludes — so a finer grind on a stale bean is left alone there too.
+  const inWindow = F.reconcileToReference(kasuyaBatch({ dose: 22, water: 330, grind: "388°" }), "Kasuya 4:6", undefined, { daysOld: 45 });
+  assert.equal(inWindow.recipe.grindSize, "388°");
 });

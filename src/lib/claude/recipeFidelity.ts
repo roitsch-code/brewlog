@@ -41,6 +41,7 @@ import { isDripAssistMethod, DRIP_ASSIST_GRIND_OFFSET_DEG } from "../utils/dripA
 import { brewMethodKey } from "../utils/brewMethodKey";
 import { LOOKS_LIKE_CLICKS, clicksToNiche } from "../utils/grindUnit";
 import { hasImmersionShape } from "../utils/pourSequence";
+import { batchWithinWindow } from "../recipe/batchWindow";
 
 export interface FidelityResult {
   recipe: BrewRecipe;
@@ -110,6 +111,12 @@ function norm(s: string): string {
  * specific overlap so a vague "V60" doesn't bind to an arbitrary recipe.
  * Prefers a verified recipe when two match equally well.
  */
+/** Does this reference apply at this batch at all (water within ±20 %)? See
+ * src/lib/recipe/batchWindow.ts for the rule and its owner decision. */
+export function referenceAppliesAtBatch(ref: Recipe, waterGrams: number): boolean {
+  return batchWithinWindow(ref.water?.grams ?? 0, waterGrams);
+}
+
 export function resolveReference(basedOn: string | undefined): Recipe | null {
   if (!basedOn) return null;
   const q = norm(basedOn);
@@ -379,8 +386,9 @@ export function reconcileToReference(
   if (!(refWater > 0) || !(water > 0)) return { recipe, changed: false, reasons: [] };
 
   const k = water / refWater;
-  // Only reconcile a genuine "same recipe, scaled" case.
-  if (k < 0.5 || k > 2.5) return { recipe, changed: false, reasons: [] };
+  // Only reconcile a reference that applies at this batch (±20 %). A 250 g
+  // recipe is not "the same recipe scaled" at 450 g — see REFERENCE_BATCH_WINDOW.
+  if (!referenceAppliesAtBatch(ref, water)) return { recipe, changed: false, reasons: [] };
   const doseRatio = dose > 0 && refDose > 0 ? dose / refDose : k;
 
   const drift = driftReasons(recipe, ref, k, doseRatio, method);

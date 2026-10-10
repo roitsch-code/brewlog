@@ -50,7 +50,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
-import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, brewerMatchesReference } from "./recipeFidelity";
+import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, brewerMatchesReference, referenceAppliesAtBatch } from "./recipeFidelity";
 import { buildMethodRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
 import { findRepeatOffenders, formatRepeatRepair, formatRepeatRuleUpfront, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
@@ -1041,11 +1041,29 @@ Return valid JSON only.`;
   //      never wanted — incl. one sequenced after the drawdown.
   const deSwirled = stripMinimalAgitationSwirls(mapped, resolveReference);
 
+  //   -1. BATCH WINDOW. A candidate that names a reference published for a
+  //       batch this brew is not within ±20 % of is not that recipe (owner
+  //       decision 2026-10-10; src/lib/recipe/batchWindow.ts). The menu no
+  //       longer offers such a reference, but the model can still reach for
+  //       one from memory. The recipe stays; the name stops claiming a
+  //       published recipe at a size it was never published for.
+  const batchChecked = deSwirled.map((c) => {
+    const ref = resolveReference(c.basedOn);
+    const water = c.recipe?.waterGrams;
+    if (!ref || !(typeof water === "number" && water > 0) || referenceAppliesAtBatch(ref, water)) return c;
+    const relabel = `Own recipe (after ${ref.shortName || ref.name}, published at ${ref.water.grams} g)`;
+    console.warn(
+      `[recommend] batch window: "${c.title ?? c.method}" basedOn "${c.basedOn}" is published at ${ref.water.grams} g, ` +
+        `this brew pours ${Math.round(water)} g — relabelled "${relabel}"`,
+    );
+    return { ...c, basedOn: relabel };
+  });
+
   //   0. POUR TIMES. The model gives grams and cadence; the seconds each pour
   //      takes come from the verified reference it adapts (scaled), else the
   //      owner's MEASURED pace (pourPace.ts; 4 g/s only with no history) in
   //      whole 5-second steps (pourDurations.ts).
-  const pourTimed = deSwirled.map((c) => {
+  const pourTimed = batchChecked.map((c) => {
     const pace = measuredPourPace(pastSessions, c.method);
     const res = applyPourDurations(c.recipe, { basedOn: c.basedOn, method: c.method, pourRateGPS: pace.gps });
     if (res.source === "house") console.log(`[recommend] pour pace: "${c.title ?? c.method}" ${pace.gps} g/s (${pace.detail})`);

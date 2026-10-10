@@ -101,10 +101,23 @@ test("fidelity no longer snaps a Classic clock back to the Fast recipe's time", 
   assert.ok(!(r.reasons ?? []).some((x) => /total time/.test(x)));
 });
 
-test("…but on the Fast bottom a drifted clock is still caught", () => {
-  const model = { ...ADELINA, targetTimeSec: 215 };
+test("…but on the Fast bottom a drifted clock is still caught (within the ±20 % batch window)", () => {
+  // Wölfl publishes 270 g; 350 g is 1.3× and since 2026-10-10 outside the window
+  // a reference applies in (src/lib/recipe/batchWindow.ts), so the same recipe
+  // at 300 g (1.11×) is the case the clock check still runs on.
+  const k = 300 / 350;
+  const model = {
+    ...ADELINA,
+    waterGrams: 300,
+    targetTimeSec: 215,
+    pourSteps: ADELINA.pourSteps.map((s) =>
+      typeof s.waterGramsAtEnd === "number" ? { ...s, waterGramsAtEnd: Math.round(s.waterGramsAtEnd * k) } : s,
+    ),
+  };
   const r = K.reconcileToReference(model, WOLFL, "Orea Fast");
-  assert.ok((r.reasons ?? []).some((x) => /total time/.test(x)));
+  assert.ok((r.reasons ?? []).some((x) => /total time/.test(x)), JSON.stringify(r.reasons));
+  const outside = K.reconcileToReference({ ...ADELINA, targetTimeSec: 215 }, WOLFL, "Orea Fast");
+  assert.equal(outside.changed, false, "at 350 g the 270 g recipe does not apply — nothing to snap to");
 });
 
 test("wiring: recommend.ts gates the exemption on the brewer match", async () => {

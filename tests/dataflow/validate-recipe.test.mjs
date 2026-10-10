@@ -72,10 +72,14 @@ test("THE ANCHOR: the reported recipe is brewable — the RENDERER was the defec
   // was left. Cadence-first (Sep 2026) the recipe renders as written, so it
   // passes — and the two assertions below are what "passes" has to mean.
   const problems = validateRecipe(SCREENSHOT_RECIPE, SCREENSHOT_CTX);
+  // The pours, gaps and clock are sound. The ONE thing left is the owner's
+  // 2026-10-10 rule: "April Coffee 1-2-3 Method" is published for 250 g and
+  // this brew pours 450 g — a single-cup recipe is not that recipe at 1.8×, so
+  // the basedOn is sent back (src/lib/recipe/batchWindow.ts).
   assert.deepEqual(
     codes(problems),
-    [],
-    `the recipe itself is sound; got ${JSON.stringify(problems, null, 2)}`,
+    ["reference-wrong-batch"],
+    `the render is sound and only the batch rule fires; got ${JSON.stringify(problems, null, 2)}`,
   );
 });
 

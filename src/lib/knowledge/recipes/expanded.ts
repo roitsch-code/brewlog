@@ -819,49 +819,6 @@ export const EXPANDED_RECIPES: Recipe[] = [
   },
 
   {
-    id: "hoffmann-v60-2024",
-    name: "Hoffmann V60 — 2024 Refinement",
-    shortName: "Hoffmann V60 2024",
-    attribution: {
-      person: "James Hoffmann",
-      country: "United Kingdom",
-      year: 2024,
-    },
-    category: "reference",
-    brewer: "v60",
-    dose: { grams: 18 },
-    water: { grams: 300, ratio: "1:16.7" },
-    temperature: { celsius: 94 },
-    grind: {
-      nicheZeroDegrees: [377, 387],
-      description: "Slight refinement vs Better 1 Cup — slightly coarser to slow drawdown",
-    },
-    pourSequence: [
-      { label: "Bloom (60g)", action: "pour", waterGramsAtEnd: 60, durationSec: 5, notes: "3x dose still, but for 18g that's 54-60g" },
-      { label: "Swirl", action: "swirl", durationSec: 5 },
-      { label: "Bloom rest", action: "wait", durationSec: 35 },
-      { label: "Pour 1 (target 60% by 1:15 = 180g)", action: "pour", waterGramsAtEnd: 180, durationSec: 30, notes: "concentric circles outward" },
-      { label: "Pour 2 (to 300g)", action: "pour", waterGramsAtEnd: 300, durationSec: 30 },
-      { label: "Final swirl", action: "swirl", durationSec: 5 },
-      { label: "Drawdown", action: "drain", durationSec: 90 },
-    ],
-    totalTimeSec: 200,
-    techniques: ["swirl-not-stir"],
-    bestFor: {
-      roastLevels: ["light", "medium-light", "medium"],
-      processes: ["any"],
-      goals: ["balanced", "high-clarity"],
-    },
-    teaches: "Hoffmann's 2024 update of the Better 1 Cup, scaled to 18g/300g. Same principles (3x bloom, swirl not stir, 60% target by 1:15) with refined timing as he's iterated.",
-    science: "Scaling up the Better 1 Cup formula to two cups requires only minor changes — slightly slower bloom + main pours to keep agitation in the same range. The fundamentals (CO2 evacuation, even saturation, 60/40 first-pour rule) remain.",
-    whenToUse: "Default V60 when brewing for two people, or when you want Hoffmann's reliable framework at a slightly larger scale.",
-    sources: [
-      { type: "video", citation: "Hoffmann YouTube — V60 refresh 2024", year: 2024 },
-    ],
-    verified: false,
-  },
-
-  {
     id: "hoffmann-v60-big-batch",
     name: "Hoffmann V60 — Ultimate Technique (30 g : 500 g)",
     shortName: "Hoffmann Ultimate V60",

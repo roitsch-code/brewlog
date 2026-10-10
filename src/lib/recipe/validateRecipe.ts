@@ -30,7 +30,9 @@
  * what the user will actually be asked to do.
  */
 import { buildBrewTimeline, type TimelineStep } from "@/lib/brew/timeline";
-import { reconcileToReference } from "@/lib/claude/recipeFidelity";
+import { reconcileToReference, referenceAppliesAtBatch, resolveReference } from "@/lib/claude/recipeFidelity";
+import { ALL_RECIPES } from "@/lib/knowledge/recipes";
+import { REFERENCE_BATCH_WINDOW } from "@/lib/recipe/batchWindow";
 import { NICHE_GRIND_SETTINGS } from "@/lib/constants/grindSettings";
 import { LONG_DESIGNED_WAIT_SEC } from "@/lib/knowledge/recipes/helpers";
 import type { BrewRecipe } from "@/lib/types/session";
@@ -50,6 +52,7 @@ export type RecipeProblemCode =
   | "grind-unit"
   | "drip-assist-grind"
   | "reference-drift"
+  | "reference-wrong-batch"
   | "vessel-overflow";
 
 export interface RecipeProblem {
@@ -329,6 +332,42 @@ function checkDripAssistGrind(recipe: BrewRecipe, ctx: RecipeValidationContext):
  * The escape hatch is real and is the honest answer: a recipe of the chat's own
  * design should say so, and then this check does not apply to it at all.
  */
+/**
+ * The reference named in basedOn is published for a batch this recipe is not
+ * within ±20 % of — it does not apply (src/lib/recipe/batchWindow.ts). The
+ * SEY V60 of 10-10-2026 was a 300 g entry stretched to 450 g; the owner's
+ * rule is "don't scale the 1-cup, use the 2-cup". Names the author's other
+ * size when the corpus has one.
+ */
+function checkReferenceBatch(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipeProblem[] {
+  if (!ctx.basedOn || !(recipe.waterGrams > 0)) return [];
+  const ref = resolveReference(ctx.basedOn);
+  if (!ref || referenceAppliesAtBatch(ref, recipe.waterGrams)) return [];
+  const published = ref.water?.grams ?? 0;
+  const isIced = (r: typeof ref) => !!r.bestFor?.occasions?.some((o) => /summer-time|iced|cold-brew/i.test(o));
+  const sibling = ALL_RECIPES.filter(
+    (r) =>
+      r.id !== ref.id &&
+      r.brewer === ref.brewer &&
+      r.attribution.person === ref.attribution.person &&
+      isIced(r) === isIced(ref) &&
+      referenceAppliesAtBatch(r, recipe.waterGrams),
+  ).sort((a, b) => Number(b.verified) - Number(a.verified))[0];
+  return [
+    {
+      code: "reference-wrong-batch",
+      message:
+        `"${ref.name}" is published for ${published} g of water; this recipe pours ${Math.round(recipe.waterGrams)} g, ` +
+        `which is outside the ±${Math.round(REFERENCE_BATCH_WINDOW * 100)}% a published recipe can be adapted — a single-cup recipe is not ` +
+        `the same recipe at a bigger batch. ` +
+        (sibling
+          ? `Use "${sibling.name}" (${sibling.water.grams} g) instead — call lookup_recipe for it — or another reference published near ${Math.round(recipe.waterGrams)} g, `
+          : `Use a reference published near ${Math.round(recipe.waterGrams)} g (lookup_recipe by brewer), `) +
+        `or brew ${published} g, or call it your own recipe.`,
+    },
+  ];
+}
+
 function checkReferenceDrift(recipe: BrewRecipe, ctx: RecipeValidationContext): RecipeProblem[] {
   if (!ctx.basedOn) return [];
   const result = reconcileToReference(recipe, ctx.basedOn, ctx.method);
@@ -380,6 +419,7 @@ export function validateRecipe(
   problems.push(...checkImmersionSum(recipe, ctx));
   problems.push(...checkGrindUnit(recipe, ctx.grinder));
   problems.push(...checkDripAssistGrind(recipe, ctx));
+  problems.push(...checkReferenceBatch(recipe, ctx));
   problems.push(...checkReferenceDrift(recipe, ctx));
   problems.push(...checkVessel(recipe, ctx.method));
 
