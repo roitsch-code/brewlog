@@ -16,9 +16,14 @@
  *  - otherwise every pour gets the house time (housePourSec: the owner's
  *    measured ~4 g/s in whole 5-second steps).
  *
- * The cadence the model wrote is kept: a pour that gets longer borrows the
- * difference from the rest that follows it, a pour that gets shorter gives it
- * back, so the NEXT pour still starts when the recipe said it would.
+ * The PAUSES the recipe wrote are kept (owner decision, 2026-10-10): a pour
+ * that gets longer at the owner's pace pushes the next pour later — it never
+ * eats the rest after it. Until then the rest absorbed the difference, clamped
+ * at zero: Hoffmann's "10 s pour, 10 s pause" became a 20 s pour with NO
+ * pause, and three pulses merged into one continuous pour (the SEY V60 of
+ * 10-10 lost its 35 s bloom rest to a 10 s one the same way). A pour that
+ * gets SHORTER still hands the spare seconds to the rest, so the next pour
+ * starts where the recipe put it.
  */
 import { resolveReference } from "@/lib/claude/recipeFidelity";
 import { scaleRecipe } from "@/lib/recipe/scaleRecipe";
@@ -56,7 +61,7 @@ function referencePourTimes(
 
 export function applyPourDurations(
   recipe: BrewRecipe,
-  ctx: { basedOn?: string; method?: string } = {},
+  ctx: { basedOn?: string; method?: string; pourRateGPS?: number } = {},
 ): PourDurationResult {
   const steps = recipe.pourSteps;
   if (!Array.isArray(steps) || steps.length === 0) return { recipe, source: "none", changes: [] };
@@ -79,19 +84,21 @@ export function applyPourDurations(
     const s = out[idx];
     const grams = Math.max(0, (s.waterGramsAtEnd as number) - prevGrams);
     prevGrams = s.waterGramsAtEnd as number;
-    const next = ref ? ref.times[n] : housePourSec(grams);
+    const next = ref ? ref.times[n] : housePourSec(grams, ctx.pourRateGPS);
     const old = typeof s.durationSec === "number" && s.durationSec > 0 ? s.durationSec : undefined;
     if (old === next) return;
     s.durationSec = next;
     changes.push(
       `"${s.label}" ${grams}g: ${old ?? "?"}s → ${next}s (${ref ? `${ref.name}, scaled` : "house pour time"})`,
     );
-    // Keep the cadence: the first rest before the next pour absorbs the change.
-    if (old === undefined || n === waterIdx.length - 1) return;
+    // A shorter pour gives its spare seconds to the first rest before the
+    // next pour (the next pour starts where the recipe put it). A LONGER pour
+    // never takes them back: the rest keeps its authored length and the next
+    // pour starts later.
+    if (old === undefined || n === waterIdx.length - 1 || old <= next) return;
     for (let j = idx + 1; j < waterIdx[n + 1]; j++) {
       if (out[j].action !== "wait") continue;
-      const before = out[j].durationSec ?? 0;
-      out[j].durationSec = Math.max(0, before + (old - next));
+      out[j].durationSec = (out[j].durationSec ?? 0) + (old - next);
       break;
     }
   });

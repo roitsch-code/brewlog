@@ -106,7 +106,7 @@ test("house pour time: the owner's measured ~4 g/s in whole 5-second steps", () 
   assert.equal(K.housePourSec(3), 5, "never under 5 s");
 });
 
-test("VG: the 55 g bloom gets 15 s, not the model's 10 s — and the cadence holds", () => {
+test("VG: the 55 g bloom gets 15 s, not the model's 10 s — and the PAUSES hold", () => {
   const res = K.applyPourDurations(VG, { basedOn: "Your Origami (wave)", method: METHOD });
   assert.equal(res.source, "house");
   const water = res.recipe.pourSteps.filter((s) => s.waterGramsAtEnd != null);
@@ -114,11 +114,14 @@ test("VG: the 55 g bloom gets 15 s, not the model's 10 s — and the cadence hol
     water.map((s) => s.durationSec),
     [15, 20, 20, 20, 15],
   );
-  // The model's rests absorb the change so each pour still STARTS where the
-  // recipe put it — only the split between pouring and resting moves.
-  const before = K.pourScheduleFor(VG, ROAST, NOW, METHOD).steps.filter((s) => s.pourGrams > 0);
+  // Owner decision (2026-10-10): a pour that gets longer at his pace never
+  // eats the rest after it — the rests stay as written and the next pour
+  // starts later. (Until then the rests absorbed the change and a 10 s pour +
+  // 10 s pause became a 20 s pour with no pause.)
+  const waits = res.recipe.pourSteps.filter((s) => s.action === "wait").map((s) => s.durationSec);
+  assert.deepEqual(waits, [35, 18, 15, 15], "every authored rest survives untouched");
   const after = K.pourScheduleFor(res.recipe, ROAST, NOW, METHOD).steps.filter((s) => s.pourGrams > 0);
-  assert.deepEqual(after.map((s) => s.startTimeSec), before.map((s) => s.startTimeSec));
+  assert.deepEqual(after.map((s) => s.startTimeSec), [0, 55, 93, 128, 163], "each pour starts after the previous pour + its rest");
   // The swirl now comes AFTER the 15 s bloom pour, not at 10 s.
   const swirl = K.pourScheduleFor(res.recipe, ROAST, NOW, METHOD).steps.find((s) => s.action === "swirl");
   assert.equal(swirl.startTimeSec, 15);
@@ -158,11 +161,11 @@ test("every rendered step carries its pour phase AND its rest", () => {
   const recipe = K.applyPourDurations(VG, { method: METHOD }).recipe;
   const steps = K.pourScheduleFor(recipe, ROAST, NOW, METHOD).steps;
   const pour2 = steps.find((s) => s.label === "Pour 2");
-  assert.equal(pour2.startTimeSec, 50);
-  assert.equal(pour2.pourEndSec, 70, "85 g in 20 s");
-  assert.equal(pour2.restSec, 15, "then wait until Pour 3 at 1:25");
-  assert.equal(K.stepPhaseAt(pour2, 69), "active");
-  assert.equal(K.stepPhaseAt(pour2, 70), "rest");
+  assert.equal(pour2.startTimeSec, 55);
+  assert.equal(pour2.pourEndSec, 75, "85 g in 20 s");
+  assert.equal(pour2.restSec, 18, "then the authored 18 s rest, Pour 3 at 1:33");
+  assert.equal(K.stepPhaseAt(pour2, 74), "active");
+  assert.equal(K.stepPhaseAt(pour2, 75), "rest");
   for (let i = 0; i < steps.length - 1; i++) {
     assert.equal(steps[i].pourEndSec + steps[i].restSec, steps[i + 1].startTimeSec);
   }
@@ -271,10 +274,10 @@ test("coach: in the REST after a pour it never says 'Slower' — a late pour is 
 });
 
 test("coach: 'Slower' needs the grams to be AHEAD of the plan, not just a fast slope", () => {
-  // 5 s into Pour 2 the ramp expects 55 + 85·5/20 ≈ 76 g.
-  const onRamp = K.coachFlow(timeline(), 55, true, 78, samples(9, 78));
+  // 5 s into Pour 2 (which starts at 0:55) the ramp expects 55 + 85·5/20 ≈ 76 g.
+  const onRamp = K.coachFlow(timeline(), 60, true, 78, samples(9, 78));
   assert.notEqual(onRamp.cue, "pour-slower");
-  const ahead = K.coachFlow(timeline(), 55, true, 100, samples(9, 100));
+  const ahead = K.coachFlow(timeline(), 60, true, 100, samples(9, 100));
   assert.equal(ahead.cue, "pour-slower");
 });
 

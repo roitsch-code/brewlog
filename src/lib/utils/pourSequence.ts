@@ -49,14 +49,20 @@ export const POUR_RATE_GPS = 4;
 export const HOUSE_POUR_STEP_SEC = 5;
 
 /**
- * The house pour time for `grams`: the owner's gooseneck rate (POUR_RATE_GPS)
- * rounded to the nearest whole 5-second step, never under 5 s. MEASURED
- * against the owner's own Acaia curve (Vanilla Gorilla, 2 Oct 2026): 55 g bloom
- * reached in 12.4 s, 85 g in ~20 s, 80 g in ~19 s, 70 g in ~18 s — 3.5–4.4 g/s,
- * i.e. the 4 g/s set here. 55 g → 15 s, 85 g → 20 s, 200 g → 50 s.
+ * The house pour time for `grams` at `rateGPS`, rounded to the nearest whole
+ * 5-second step, never under 5 s.
+ *
+ * The rate is a PARAMETER since 2026-10-10. POUR_RATE_GPS (4) was set by hand
+ * in June and restated from ONE scale curve on 2 Oct (3.5–4.4 g/s on that
+ * brew); over the 24 scale brews the Acaia has recorded since the sessions
+ * schema stopped dropping flowAnalysis, the owner's median delivered rate is
+ * 2.35 g/s (quartiles 2.2–3.1). The callers that know his history pass his
+ * MEASURED pace (src/lib/brew/pourPace.ts); 4 g/s stays the fallback for a
+ * caller with no sessions.
  */
-export function housePourSec(grams: number): number {
-  const raw = Math.max(0, grams) / POUR_RATE_GPS;
+export function housePourSec(grams: number, rateGPS: number = POUR_RATE_GPS): number {
+  const rate = rateGPS > 0 ? rateGPS : POUR_RATE_GPS;
+  const raw = Math.max(0, grams) / rate;
   return Math.max(HOUSE_POUR_STEP_SEC, Math.round(raw / HOUSE_POUR_STEP_SEC) * HOUSE_POUR_STEP_SEC);
 }
 

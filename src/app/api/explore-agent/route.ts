@@ -28,6 +28,7 @@ import { reconcileWaterToPourPlan, resolveReference } from "@/lib/claude/recipeF
 import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
 import { resolveStartBrewTarget, type KnownBag } from "@/lib/chat/chatBrewTarget";
 import { expectedChatClock, CHAT_CLOCK_TOLERANCE_SEC } from "@/lib/chat/chatClock";
+import { measuredPourPace } from "@/lib/brew/pourPace";
 import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import { AGENT_SYSTEM_PROMPT, TOOLS } from "@/lib/chat/agentPrompt";
 import {
@@ -144,7 +145,9 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
       method: input.method,
       title: input.title,
       basedOn: input.basedOn,
-      recipe: cleanStartBrewRecipe(input),
+      // Cleaned (sanitised, water reconciled, pours timed at the owner's
+      // MEASURED pace) inside vetStartBrew, which has his sessions. Raw here.
+      recipe: input.recipe,
       roaster: input.roaster,
       name: input.name,
       origin: input.origin,
@@ -178,13 +181,13 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
  * whether the pours were the reference's or the house pace, or what the app
  * had rewritten. /recommend has logged all three for weeks.
  */
-function cleanStartBrewRecipe(input: NavAction): BrewRecipe | undefined {
-  const cleaned = cleanChatRecipeDetailed(input.recipe, { basedOn: input.basedOn, method: input.method });
+function cleanStartBrewRecipe(input: NavAction, pourRateGPS: number): BrewRecipe | undefined {
+  const cleaned = cleanChatRecipeDetailed(input.recipe, { basedOn: input.basedOn, method: input.method, pourRateGPS });
   if (!cleaned) return undefined;
   const ref = resolveReference(input.basedOn);
   console.log(
     `[explore-agent] start_brew cleaned: basedOn="${input.basedOn ?? ""}" ` +
-      `bound=${ref ? `${ref.id} (verified=${ref.verified})` : "none"} pours=${cleaned.pourSource}` +
+      `bound=${ref ? `${ref.id} (verified=${ref.verified})` : "none"} pours=${cleaned.pourSource} pace=${pourRateGPS}g/s` +
       (cleaned.pourChanges.length ? ` changes=${JSON.stringify(cleaned.pourChanges)}` : ""),
   );
   return cleaned.recipe;
@@ -751,9 +754,15 @@ export async function POST(req: NextRequest) {
             else delete action.id;
             if (!action.recipe) return { ok: true, action };
 
+            const sessions = await sessionsForClock();
+            const pace = measuredPourPace(sessions, action.method);
+            const cleaned = cleanStartBrewRecipe(action, pace.gps);
+            if (!cleaned) return { ok: false, problem: "start_brew needs a recipe with at least two steps.", kind: "recipe", codes: ["recipe"] };
+            action.recipe = cleaned;
+
             const roastDate = roastDateOf(action.id);
             const expectedClock =
-              expectedChatClock(action.recipe, action.method, await sessionsForClock(), roastDate) ?? undefined;
+              expectedChatClock(action.recipe, action.method, sessions, roastDate) ?? undefined;
             const problems = validateRecipe(action.recipe, {
               method: action.method,
               basedOn: action.basedOn,
