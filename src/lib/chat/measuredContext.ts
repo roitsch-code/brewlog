@@ -11,6 +11,7 @@ import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "../claude/meas
 import { drawdownFor } from "../brew/drawdown";
 import { buildContextInsights, formatContextFindingsForGreeting } from "../taste/brewContextInsights";
 import { brewMethodKey } from "../utils/brewMethodKey";
+import { formatPourPaceForPrompt, measuredPourPace } from "../brew/pourPace";
 
 /** The two batch sizes the owner actually brews (the flow's Small / Big presets). */
 export const CHAT_MEASURED_VOLUMES = [350, 450] as const;
@@ -44,6 +45,12 @@ export function buildChatMeasuredBlock(
   const grind = CHAT_MEASURED_VOLUMES.map((v) => formatMeasuredGrindForPrompt(buildMeasuredGrind(sessions, v), grinder))
     .filter(Boolean);
   if (grind.length) parts.push(grind.join("\n"));
+
+  // His delivered pour rate, read off the Acaia (2026-10-10 — "Who says my
+  // pace is 4 g/s?"). Only once measured: the house fallback is not a fact
+  // about him and has no place in a block titled "your measured brewing".
+  const pace = measuredPourPace(sessions);
+  if (pace.source !== "house") parts.push(formatPourPaceForPrompt(pace));
 
   const dd = measuredDrawdownLines(sessions);
   if (dd.length) {

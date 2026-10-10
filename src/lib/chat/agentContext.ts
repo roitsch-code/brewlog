@@ -134,7 +134,7 @@ export function formatLibraryForAgent(library: CompactCoffee[]): string {
  */
 export function cleanChatRecipe(
   recipe: BrewRecipe | undefined,
-  ctx: { basedOn?: string; method?: string } = {},
+  ctx: { basedOn?: string; method?: string; pourRateGPS?: number } = {},
 ): BrewRecipe | undefined {
   return cleanChatRecipeDetailed(recipe, ctx)?.recipe;
 }
@@ -149,7 +149,7 @@ export interface CleanedChatRecipe {
 
 export function cleanChatRecipeDetailed(
   recipe: BrewRecipe | undefined,
-  ctx: { basedOn?: string; method?: string } = {},
+  ctx: { basedOn?: string; method?: string; pourRateGPS?: number } = {},
 ): CleanedChatRecipe | undefined {
   if (!recipe) return undefined;
   const pourSteps = sanitizePourSteps(recipe.pourSteps);

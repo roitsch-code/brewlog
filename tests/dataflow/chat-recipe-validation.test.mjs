@@ -171,7 +171,11 @@ test("start_brew's recipe is sanitized through cleanChatRecipe before anything r
   );
   const startBrew = ROUTE.slice(ROUTE.indexOf('toolName === "start_brew"'));
   assert.ok(startBrew.length > 0, "start_brew mapping must exist");
-  assert.match(startBrew.slice(0, 600), /recipe:\s*cleanStartBrewRecipe\(input\)/, "the start_brew action's recipe must be the CLEANED recipe");
+  // Since the measured pour pace (2026-10-10) the cleaning happens inside the
+  // start_brew gate, which has the owner's sessions; the raw recipe never
+  // reaches a pill because the gate replaces it before accepting.
+  assert.match(ROUTE, /const cleaned = cleanStartBrewRecipe\(action, pace\.gps\);\s*\n\s*if \(!cleaned\) return \{ ok: false/, "the gate cleans the recipe and refuses an uncleanable one");
+  assert.match(ROUTE, /action\.recipe = cleaned;/, "the pill carries the CLEANED recipe");
   assert.match(
     ROUTE,
     /cleanChatRecipeDetailed\(input\.recipe,\s*\{\s*basedOn:\s*input\.basedOn/,

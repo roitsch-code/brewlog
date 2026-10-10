@@ -62,6 +62,7 @@ import {
   type ConvergenceState,
 } from "./convergence";
 import { derivePourSequence, sanitizePourSteps } from "../utils/pourSteps";
+import { formatPourPaceForPrompt, measuredPourPace } from "../brew/pourPace";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 import { formatInsightsBlock, type RecommendInsight } from "./insightsBlock";
@@ -762,6 +763,11 @@ export async function generateRecommendation(
     buildMeasuredGrind(pastSessions, targetWaterMl, context.preferredMethod),
     sessionGrinder,
   );
+  // MEASURED POUR PACE — his delivered pour rate off the Acaia (2026-10-10).
+  // The prompt used to state "4 g/s" as his pace; it was never measured. Only
+  // once measured: the house fallback is not a fact about him.
+  const pace = measuredPourPace(pastSessions, context.preferredMethod);
+  const measuredPaceBlock = pace.source === "house" ? "" : `\n\n${formatPourPaceForPrompt(pace)}`;
 
 
   // A locked method the corpus has NO documented recipe for (e.g. the Orea
@@ -877,7 +883,7 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}
+${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}${measuredPaceBlock}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +
@@ -902,7 +908,7 @@ pourSteps — the structured step array IS the recipe's pour plan (do not write 
 - One object per physical step the brewer performs, in order.
 - action: one of bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed
 - waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps).
-- durationSec: how long the step takes, and the timer USES IT. Required on every step. POUR seconds are set by the app (grams ÷ the user's measured ~4 g/s pace) unless you copy a verified reference's own scaled line, so write a plausible value and spend your care on the WAIT steps, which the app keeps as written. Immersion / AeroPress: the timed (non-setup) steps MUST sum to targetTimeSec.
+- durationSec: how long the step takes, and the timer USES IT. Required on every step. POUR seconds are set by the app (grams ÷ the user's MEASURED pour pace — the MEASURED POUR PACE line above when present, 4 g/s only without one) unless you copy a verified reference's own scaled line, so write a plausible value and spend your care on the WAIT steps, which the app keeps exactly as written — a pour that takes longer at the user's pace pushes the next pour later, it never shortens the rest. Immersion / AeroPress: the timed (non-setup) steps MUST sum to targetTimeSec.
 - temperatureC: omit on every step. BrewLog brews at ONE constant temperature (the recipe's waterTempC) — never stage or ramp temperature across pours.
 - Do NOT emit notes on steps — the app supplies per-step hints. label + action + waterGramsAtEnd + durationSec is the whole step.
 - AGITATION IS AN EXPLICIT STEP, NOT A NOTE — and it must MIRROR the recipe you adapt. If the recipe you name in basedOn shows agitation in its pour sequence above — a bloom swirl, a between-pour stir, and ESPECIALLY a settle swirl/tap right before the drawdown — carry EACH of those into pourSteps as its own step ("action": "stir" | "swirl" | "agitate-bed") at the same point in the sequence. The end-of-brew settle swirl/tap (the one that flattens the bed just before drawdown) is part of the recipe — do NOT drop it; emit it as the last step before the "drain"/drawdown. The brew screen shows a stir/swirl prompt ONLY where such a step exists, so a dropped agitation step = a missing prompt mid-brew. EXCEPTION — explicitly minimal/reduced-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any recipe whose notes say "minimal/reduced agitation"): include NO agitation steps beyond what that recipe itself calls for — never add a trailing swirl such a recipe doesn't want.
@@ -1037,9 +1043,12 @@ Return valid JSON only.`;
 
   //   0. POUR TIMES. The model gives grams and cadence; the seconds each pour
   //      takes come from the verified reference it adapts (scaled), else the
-  //      owner's measured ~4 g/s in whole 5-second steps (pourDurations.ts).
+  //      owner's MEASURED pace (pourPace.ts; 4 g/s only with no history) in
+  //      whole 5-second steps (pourDurations.ts).
   const pourTimed = deSwirled.map((c) => {
-    const res = applyPourDurations(c.recipe, { basedOn: c.basedOn, method: c.method });
+    const pace = measuredPourPace(pastSessions, c.method);
+    const res = applyPourDurations(c.recipe, { basedOn: c.basedOn, method: c.method, pourRateGPS: pace.gps });
+    if (res.source === "house") console.log(`[recommend] pour pace: "${c.title ?? c.method}" ${pace.gps} g/s (${pace.detail})`);
     for (const change of res.changes) {
       console.warn(`[recommend] pour time: "${c.title ?? c.method}" ${change}`);
     }
