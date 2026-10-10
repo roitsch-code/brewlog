@@ -7,6 +7,7 @@ import {
 } from "../utils/pourSequence";
 import { drawdownFor } from "../brew/drawdown";
 import { applyPourDurations } from "../recipe/pourDurations";
+import { scaleRecipe } from "../recipe/scaleRecipe";
 import { normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
@@ -190,10 +191,32 @@ export function calibrateDrawdownClock(
     const est = drawdownFor(pastSessions, c.method, c.recipe.waterGrams);
     if (!est) return c;
     // A verified reference keeps its own published drawdown — but only on the
-    // brewer it was published for. Wölfl's Orea FAST drawdown on a Classic
-    // bottom promised 4 s for a 48 s drain (7 Oct 2026).
+    // brewer it was published for (Wölfl's Orea FAST drawdown on a Classic
+    // bottom promised 4 s for a 48 s drain, 7 Oct 2026) — and "its own
+    // drawdown" means the PUBLISHED one scaled to this batch, added to where
+    // THIS recipe's pours end. Until 2026-10-10 this branch kept the MODEL's
+    // clock untouched, which with house-paced pours left as little as the 5 s
+    // physics floor of drawdown on a verified Hoffmann.
     const ref = resolveReference(c.basedOn);
-    if (est.source === "corpus" && ref?.verified && brewerMatchesReference(c.method, ref)) return c;
+    // …and only within the ±20 % batch window a reference applies in — outside
+    // it the published drawdown is not this batch's (the same rule as the
+    // fidelity snap and the pour-time copy, #621).
+    if (
+      est.source === "corpus" &&
+      ref?.verified &&
+      brewerMatchesReference(c.method, ref) &&
+      referenceAppliesAtBatch(ref, c.recipe.waterGrams)
+    ) {
+      const scaled = scaleRecipe(ref, c.recipe.waterGrams, { method: c.method });
+      const dd = scaled?.drawdownSec;
+      if (!(typeof dd === "number" && dd > 0)) return c;
+      const own = schedule.pourPhaseEndSec + Math.round(dd);
+      if (own === t) return c;
+      console.warn(
+        `[recommend] drawdown clock: "${c.title}" ${t}s → ${own}s (pours end ${schedule.pourPhaseEndSec}s + ${ref.shortName || ref.name}'s published drawdown ${Math.round(dd)}s scaled)`,
+      );
+      return { ...c, recipe: { ...c.recipe, targetTimeSec: own } };
+    }
     const next = schedule.pourPhaseEndSec + est.sec;
     if (next === t) return c;
     console.warn(
