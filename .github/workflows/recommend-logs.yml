@@ -214,6 +214,7 @@ jobs:
               SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS at_local,
                      left(COALESCE(brew->>'methodUsed',''),22) AS method,
                      (brew->'flowAnalysis'->>'finalGrams') AS final_g,
+                     (brew->'flowAnalysis'->>'avgPourRateGPS') AS pour_gps,
                      (brew->'flowAnalysis'->>'avgFlowRateGPS') AS avg_gps,
                      (brew->'flowAnalysis'->>'peakFlowRateGPS') AS peak_gps,
                      (brew->'flowAnalysis'->>'pourSteadiness') AS steadiness,
@@ -224,7 +225,9 @@ jobs:
               ORDER BY created_at_ms DESC
               LIMIT 25;" </dev/null | cut -c1-300 || echo "psql query failed"
 
-            section "Owner's measured pour rate — median / quartiles over all scale brews"
+            # avg_gps = grams ÷ (reach − previous reach), rest INCLUDED — not a pour
+            # pace. pour_gps (since 2026-10-10) = grams ÷ the hand's pouring time.
+            section "Owner's measured pour rate — median / quartiles over all scale brews (avg_gps, rest-inclusive)"
             docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
               SELECT count(*) AS n,
                      round(percentile_cont(0.25) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgFlowRateGPS')::numeric)::numeric,2) AS p25,
@@ -232,6 +235,15 @@ jobs:
                      round(percentile_cont(0.75) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgFlowRateGPS')::numeric)::numeric,2) AS p75
               FROM sessions
               WHERE brew->'flowAnalysis'->>'avgFlowRateGPS' ~ '^[0-9.]+$';" </dev/null || echo "psql query failed"
+
+            section "Owner's HAND pour rate — median / quartiles (pour_gps, rest excluded; written since 2026-10-10)"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT count(*) AS n,
+                     round(percentile_cont(0.25) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgPourRateGPS')::numeric)::numeric,2) AS p25,
+                     round(percentile_cont(0.5) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgPourRateGPS')::numeric)::numeric,2) AS median,
+                     round(percentile_cont(0.75) WITHIN GROUP (ORDER BY (brew->'flowAnalysis'->>'avgPourRateGPS')::numeric)::numeric,2) AS p75
+              FROM sessions
+              WHERE brew->'flowAnalysis'->>'avgPourRateGPS' ~ '^[0-9.]+$';" </dev/null || echo "psql query failed"
 
             # Which SEY bags exist — the 10-10 15:21 brew was pilled under
             # 'Wilson Alba' while the owner brewed 'Susan Meneses'.

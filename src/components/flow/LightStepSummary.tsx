@@ -556,8 +556,8 @@ function PourAnalysisCard({
           accent={gradeColor}
         />
         {!discMetered && <AnalysisStat label="Flow" value={gradeLabel} accent={gradeColor} />}
-        {analysis.avgFlowRateGPS != null && (
-          <AnalysisStat label="Avg pour" value={`${analysis.avgFlowRateGPS} g/s`} />
+        {(analysis.avgPourRateGPS ?? analysis.avgFlowRateGPS) != null && (
+          <AnalysisStat label="Avg pour" value={`${analysis.avgPourRateGPS ?? analysis.avgFlowRateGPS} g/s`} />
         )}
         {analysis.overshootG != null && (
           <AnalysisStat

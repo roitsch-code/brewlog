@@ -41,34 +41,49 @@ export { buildChatMeasuredBlock } from ${JSON.stringify(path.join(ROOT, "src/lib
 });
 const M = await import(pathToFileURL(out).href);
 
-// The production readout, newest first: (method, avgFlowRateGPS).
-const PROD = [
+// Every scale brew up to 2026-10-10 carries ONLY avgFlowRateGPS — grams ÷
+// (reach − previous reach), rest INCLUDED. The first version of this module
+// read that as the owner's pace (2.35 g/s median) and planned every pour
+// nearly twice as long as he pours. Those sessions are the OLD record below
+// and must be ignored; only avgPourRateGPS (the hand's rate, written since
+// 2026-10-10) counts.
+const OLD = [
   ["V60", 4], ["V60", 1.9], ["Orea Classic", 2.3], ["V60", 2.2], ["V60", 2.2], ["V60", 1.4], ["V60", 3.2],
   ["Origami (wave)", 2.5], ["V60", 4.4], ["Origami (wave)", 3.7], ["Orea Classic", 2.1], ["V60", 2.7],
-  ["Orea Open", 1.6], ["Orea V4 Classic + Drip Assist", 2.2], ["Orea V4 Classic", 3.5], ["Orea Fast", 2.2],
-  ["Origami (wave)", 2.9], ["Origami (wave)", 2.3], ["V60", 2.2], ["Orea Classic", 2.1], ["Origami (wave)", 2.4],
-  ["Origami (wave)", 3.1], ["V60", 3.8], ["Kalita Wave", 3],
 ];
-const session = (method, gps, i) => ({
+const fa = (extra) => ({ perPour: [], samples: [], totalTimeSec: 0, targetTimeSec: 0, finalGrams: null, avgFlowRateGPS: null, peakFlowRateGPS: null, pourSteadiness: null, overshootG: null, derivedFlow: "perfect", ...extra });
+const session = (method, flow, i) => ({
   id: `s${i}`, type: "brew", mode: "home", createdAt: "2026-10-01T08:00:00Z", createdAtMs: 1 + i,
   coffee: { roaster: "r", name: "n", origin: "", process: "Washed", roastLevel: "Light" },
-  context: {}, brew: { methodUsed: method, flowAnalysis: { avgFlowRateGPS: gps, perPour: [], samples: [], totalTimeSec: 0, targetTimeSec: 0, finalGrams: null, peakFlowRateGPS: null, pourSteadiness: null, overshootG: null, derivedFlow: "perfect" } },
+  context: {}, brew: { methodUsed: method, flowAnalysis: fa(flow) },
   result: { rating: 4, flavorNotes: [] },
 });
-const SESSIONS = PROD.map(([m, g], i) => session(m, g, i));
+const OLD_SESSIONS = OLD.map(([m, g], i) => session(m, { avgFlowRateGPS: g }, i));
+// The hand's rates the real reach times imply (bloom 90 g at 17.9 s ≈ 5 g/s,
+// 72 g at 18 s ≈ 4, 70 g in ~14 s ≈ 5) — the shape of what the new field holds.
+const NEW = [
+  ["V60", 5], ["V60", 4], ["V60", 5.1], ["V60", 4.4], ["Orea Classic", 3.7], ["Origami (wave)", 4.6],
+];
+const SESSIONS = NEW.map(([m, g], i) => session(m, { avgPourRateGPS: g, avgFlowRateGPS: g / 2 }, 100 + i));
 
-test("ANCHOR: over the production record the V60 pace is ~2.7 g/s, not 4", () => {
+test("ANCHOR: the old rest-inclusive record is IGNORED — with no hand-rate data the pace is the house 4 g/s", () => {
+  const p = M.measuredPourPace(OLD_SESSIONS, "V60");
+  assert.deepEqual([p.source, p.gps, p.count], ["house", 4, 0]);
+  assert.equal(M.measuredPaceSamples(OLD_SESSIONS).length, 0, "avgFlowRateGPS is never a pace sample");
+});
+
+test("the hand's rate (avgPourRateGPS) is what the pace reads: V60 median 4.7 g/s, all 4.5", () => {
   const p = M.measuredPourPace(SESSIONS, "V60");
   assert.equal(p.source, "measured-brewer");
-  assert.equal(p.count, 9, "the 1.4 g/s un-tared-scale brew is below the floor and dropped");
-  assert.equal(p.gps, 2.7);
+  assert.equal(p.count, 4);
+  assert.equal(p.gps, 4.7);
   const all = M.measuredPourPace(SESSIONS);
   assert.equal(all.source, "measured-all");
-  assert.equal(all.gps, 2.4, "overall median of the 23 usable brews");
+  assert.equal(all.gps, 4.5);
 });
 
 test("fewer than 3 brews on a brewer → the overall median; fewer than 5 overall → the house 4 g/s", () => {
-  assert.equal(M.measuredPourPace(SESSIONS, "Kalita Wave").source, "measured-all");
+  assert.equal(M.measuredPourPace(SESSIONS, "Orea Classic").source, "measured-all");
   const few = M.measuredPourPace(SESSIONS.slice(0, 2), "V60");
   assert.deepEqual([few.source, few.gps], ["house", M.POUR_RATE_GPS]);
   assert.equal(M.measuredPourPace([], "V60").gps, 4);
@@ -114,8 +129,9 @@ test("a SHORTER pour hands its spare seconds to the rest, so the next pour start
 
 test("the chat's measured block carries the pace once it is measured, never the house fallback", () => {
   const block = M.buildChatMeasuredBlock(SESSIONS, []);
-  assert.match(block, /MEASURED POUR PACE — the user delivers water at ~2\.4 g\/s/);
+  assert.match(block, /MEASURED POUR PACE — the user delivers water at ~4\.5 g\/s/);
   assert.doesNotMatch(M.buildChatMeasuredBlock(SESSIONS.slice(0, 3), []), /MEASURED POUR PACE/);
+  assert.doesNotMatch(M.buildChatMeasuredBlock(OLD_SESSIONS, []), /MEASURED POUR PACE/, "the old record never produces a pace line");
 });
 
 test("WIRING: /recommend and the chat time pours at the measured pace", async () => {
