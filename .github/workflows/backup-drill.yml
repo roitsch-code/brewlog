@@ -107,25 +107,39 @@ jobs:
 
             docker rm -f "$DRILL_PG" >/dev/null 2>&1 </dev/null || true
             docker run -d --name "$DRILL_PG" --network none \
-              -e POSTGRES_USER=brewlog -e POSTGRES_PASSWORD=drill -e POSTGRES_DB=brewlog \
+              -e POSTGRES_USER=brewlog -e POSTGRES_PASSWORD=drill -e PGPASSWORD=drill -e POSTGRES_DB=brewlog \
               postgres:16-alpine >/dev/null </dev/null || fail "could not start the drill container"
-            for i in $(seq 1 30); do
-              docker exec "$DRILL_PG" pg_isready -U brewlog -d brewlog >/dev/null 2>&1 </dev/null && break
+            # READINESS RACE (2026-10-12 drill failure): the image's entrypoint
+            # first runs a TEMPORARY init server with listen_addresses='' (unix
+            # socket only), stops it, then starts the real one. A socket probe
+            # answers "ready" during init, the restore went into the temporary
+            # server and the next query hit the restart gap. TCP on 127.0.0.1
+            # (loopback exists under --network none) only answers once the FINAL
+            # server is up, so every probe and every psql below goes over it.
+            PSQL_HOST="-h 127.0.0.1"
+            for i in $(seq 1 60); do
+              docker exec "$DRILL_PG" pg_isready $PSQL_HOST -U brewlog -d brewlog >/dev/null 2>&1 </dev/null && break
               sleep 2
             done
-            docker exec "$DRILL_PG" pg_isready -U brewlog -d brewlog </dev/null || fail "drill Postgres never became ready"
+            docker exec "$DRILL_PG" pg_isready $PSQL_HOST -U brewlog -d brewlog </dev/null || fail "drill Postgres never became ready"
 
             # ON_ERROR_STOP stays off on purpose: a dump can carry harmless
-            # ownership/extension statements. The row counts decide.
+            # ownership/extension statements. The row counts decide. A psql that
+            # could not connect at all is NOT harmless — that fails the drill.
             RESTORE_LOG="$DRILL_DIR/restore.log"
             gunzip -c "$DRILL_DIR/$NEWEST_NAME" \
-              | docker exec -i "$DRILL_PG" psql -U brewlog -d brewlog -q -v ON_ERROR_STOP=0 >"$RESTORE_LOG" 2>&1
+              | docker exec -i "$DRILL_PG" psql $PSQL_HOST -U brewlog -d brewlog -q -v ON_ERROR_STOP=0 >"$RESTORE_LOG" 2>&1
+            RESTORE_RC=$?
+            if grep -q '^psql: error' "$RESTORE_LOG"; then
+              head -n 3 "$RESTORE_LOG"
+              fail "restore could not connect to the drill Postgres"
+            fi
             ERRS=$(grep -c '^ERROR' "$RESTORE_LOG" || true)
-            echo "restore finished — psql ERROR lines: $ERRS"
+            echo "restore finished (psql exit $RESTORE_RC) — psql ERROR lines: $ERRS"
             [ "$ERRS" -eq 0 ] || { echo "first errors:"; grep '^ERROR' "$RESTORE_LOG" | head -n 5; }
 
             section "Row counts in the restored copy"
-            docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "
+            docker exec "$DRILL_PG" psql $PSQL_HOST -U brewlog -d brewlog -At </dev/null -c "
               SELECT 'sessions',       count(*) FROM sessions
               UNION ALL SELECT 'coffees',       count(*) FROM coffees
               UNION ALL SELECT 'insights',      count(*) FROM insights
@@ -134,8 +148,8 @@ jobs:
               UNION ALL SELECT 'drip_bags',     count(*) FROM drip_bags
               UNION ALL SELECT 'cafe_visits',   count(*) FROM cafe_visits;" \
               | awk -F'|' '{printf "%-14s %8d\n", $1, $2}'
-            SESSIONS=$(docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "SELECT count(*) FROM sessions" 2>/dev/null || echo 0)
-            NEWEST_SESSION=$(docker exec "$DRILL_PG" psql -U brewlog -d brewlog -At </dev/null -c "SELECT max(created_at) FROM sessions" 2>/dev/null || echo "?")
+            SESSIONS=$(docker exec "$DRILL_PG" psql $PSQL_HOST -U brewlog -d brewlog -At </dev/null -c "SELECT count(*) FROM sessions" 2>/dev/null || echo 0)
+            NEWEST_SESSION=$(docker exec "$DRILL_PG" psql $PSQL_HOST -U brewlog -d brewlog -At </dev/null -c "SELECT max(created_at) FROM sessions" 2>/dev/null || echo "?")
             echo "newest session in the dump: $NEWEST_SESSION"
             [ "${SESSIONS:-0}" -gt 0 ] || fail "restored copy has 0 sessions — the dump is not a usable backup"
 
