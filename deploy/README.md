@@ -138,8 +138,8 @@ curl -X POST http://localhost:3000/api/coffees/compact \
 
 ```bash
 crontab -e
-# Add:
-0 2 * * * /opt/brewlog/deploy/backup.sh >> /var/log/brewlog-backup.log 2>&1
+# Add (03:00 UTC = 05:00 Düsseldorf in summer, 04:00 in winter):
+0 3 * * * /opt/brewlog/deploy/backup.sh >> /var/log/brewlog-backup.log 2>&1
 ```
 
 ---
