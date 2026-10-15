@@ -55,8 +55,14 @@ jobs:
             cd ${{ secrets.DEPLOY_PATH }}
 
             # Read the file straight from origin/main without disturbing the
-            # VPS working tree (mirrors migration.yml).
-            git fetch origin main
+            # VPS working tree (mirrors migration.yml). Deploy fetches on the
+            # same push; a concurrent fetch fails with "cannot lock ref"
+            # (2026-10-15, #634), so retry a few times before giving up.
+            for i in 1 2 3 4 5; do
+              git fetch origin main && break
+              [ "$i" = 5 ] && exit 1
+              sleep 10
+            done
             path="src/lib/db/migrations/$MIGRATION_FILE"
             if ! git cat-file -e "FETCH_HEAD:$path" 2>/dev/null; then
               echo "Migration file not found at $path on origin/main"
