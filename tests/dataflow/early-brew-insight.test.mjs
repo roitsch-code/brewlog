@@ -98,7 +98,7 @@ test("CONSUMERS: the Log screen prefetches on Save under the key; the Summary co
   assert.match(summary, /fetch\("\/api\/brew-insight"/, "the fallback request stays");
   assert.match(summary, /setPendingInsight\(null\);\n\s*setSavedOffline\(offline\);/, "cleared once the brew is saved");
   const store = await readFile(path.join(ROOT, "src/store/flowStore.ts"), "utf8");
-  assert.equal((store.match(/pendingInsight: null/g) ?? []).length, 3, "initial state + reset + resumeColdBrew all clear it");
+  assert.equal((store.match(/pendingInsight: null/g) ?? []).length, 4, "initial state + reset + resumeForRating + resumeColdBrew all clear it");
 });
 
 test("post-brew card stays short (2026-10-05): clip to 2 sentences, decimals and times intact; the route never ships the raw terrain", async () => {

@@ -38,6 +38,7 @@ const STATIC_ROUTES = [
   ["past-conversations", "/past-conversations"],
   ["onboarding", "/onboarding"],
   ["offline", "/offline"],
+  ["brew-unrated", "/brew/unrated"],
 ];
 
 async function settle(page) {

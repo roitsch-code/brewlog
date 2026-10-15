@@ -355,3 +355,28 @@ export const loadingInsights = pgTable(
 
 export type LoadingInsightRow = typeof loadingInsights.$inferSelect;
 export type NewLoadingInsightRow = typeof loadingInsights.$inferInsert;
+
+// Brews that finished the timer but are not rated yet (migration 0025). The
+// Log screen writes the whole in-flight draft here when it opens, so starting
+// another brew can no longer erase it; the sessions POST deletes the row once
+// the brew is rated (body.pendingBrewId). Kept OUT of `sessions` on purpose —
+// no corpus reader (recommend, coach, chat, stats) ever sees an unrated brew.
+export const pendingBrews = pgTable(
+  "pending_brews",
+  {
+    id: text("id").primaryKey(),
+    /** When the brew finished (Log screen opened) — becomes the session's createdAt. */
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    createdAtMs: bigint("created_at_ms", { mode: "number" }).notNull(),
+    /** The flowStore DraftSession as it stood when the Log screen opened. */
+    draft: jsonb("draft").$type<Record<string, unknown>>().notNull(),
+    fieldZones: jsonb("field_zones"),
+    /** Set by Dismiss: stops the Home reminder; the row stays ratable. */
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
+  },
+  (t) => ({
+    createdAtMsIdx: index("pending_brews_created_at_ms_idx").on(t.createdAtMs.desc()),
+  })
+);
+
+export type PendingBrewRow = typeof pendingBrews.$inferSelect;

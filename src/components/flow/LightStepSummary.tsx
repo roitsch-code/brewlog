@@ -40,7 +40,7 @@ import { insightRequestKey } from "@/lib/brew/insightKey";
  */
 
 export default function LightStepSummary() {
-  const { draft, reset, pendingInsight, setPendingInsight } = useFlowStore();
+  const { draft, reset, pendingInsight, setPendingInsight, pendingBrewId, brewedAt } = useFlowStore();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedOffline, setSavedOffline] = useState(false);
@@ -126,7 +126,10 @@ export default function LightStepSummary() {
       ...draft,
       fieldZones: useFlowStore.getState().fieldZones,
       type: "coffee" as const,
-      createdAt: new Date().toISOString(),
+      // A parked brew is dated to when it was brewed, not when it was rated.
+      createdAt: brewedAt ?? new Date().toISOString(),
+      // Lets the server drop the Home "to rate" row once this save lands.
+      ...(pendingBrewId ? { pendingBrewId } : {}),
     };
 
     // Offline → queue immediately and sync on reconnect (LightShell flushes).

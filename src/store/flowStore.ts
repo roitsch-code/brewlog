@@ -63,6 +63,19 @@ interface FlowState {
    * arms the mic (which sounds the listening earcon), then clears it. Cleared
    * back to false in steady state so a normal app open never auto-listens. */
   pendingVoiceChat: boolean;
+  /** The pending_brews row (migration 0025) this draft is parked under. Set
+   * when the Log screen opens, so a brew that is never rated — or is overwritten
+   * by the next brew — survives server-side and shows on the Home card. The
+   * Summary save sends it as body.pendingBrewId so the server drops the row. */
+  pendingBrewId: string | null;
+  /** When the brew finished (Log screen opened), ISO — the session's createdAt,
+   * so a brew rated hours later is dated to when it was brewed. */
+  brewedAt: string | null;
+  /** True once the pending_brews PUT succeeded (false → the Log screen retries). */
+  pendingBrewSynced: boolean;
+  /** Entered via the Home "to rate" card — Back from the Log returns to the
+   * list instead of the (finished) timer. */
+  resumedForRating: boolean;
 
   // Actions
   setStep: (step: FlowStep) => void;
@@ -88,6 +101,10 @@ interface FlowState {
   addClarificationMessage: (msg: ClarificationMessage) => void;
   clearClarifications: () => void;
   reset: () => void;
+  setPendingBrew: (id: string, brewedAt: string) => void;
+  setPendingBrewSynced: (v: boolean) => void;
+  /** Re-open a parked, unrated brew on the Log screen. */
+  resumeForRating: (args: { id: string; brewedAt: string; draft: DraftSession; fieldZones: FieldZones | null }) => void;
   /** Re-hydrate a parked cold-brew session (snapshot stored at steep start) so
    * the user can return to LOG it after steeping — even if they ran other
    * brews in between (which overwrite the single live draft). Lands on the
@@ -117,6 +134,10 @@ export const useFlowStore = create<FlowState>()(
       pendingChatUrl: null,
       pendingChatImageData: null,
       pendingVoiceChat: false,
+      pendingBrewId: null,
+      brewedAt: null,
+      pendingBrewSynced: false,
+      resumedForRating: false,
       isDripBag: false,
       isAnalyzing: false,
       isRecommending: false,
@@ -150,9 +171,13 @@ export const useFlowStore = create<FlowState>()(
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false }),
+      setPendingBrew: (pendingBrewId, brewedAt) => set({ pendingBrewId, brewedAt, pendingBrewSynced: false }),
+      setPendingBrewSynced: (pendingBrewSynced) => set({ pendingBrewSynced }),
+      resumeForRating: ({ id, brewedAt, draft, fieldZones }) =>
+        set({ step: "log", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: id, brewedAt, pendingBrewSynced: true, resumedForRating: true }),
       resumeColdBrew: (draft, fieldZones) =>
-        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false }),
+        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

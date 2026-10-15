@@ -58,6 +58,7 @@ Every route lives in the **`(light)` route group** (BTTS Light theme — cream b
 | `(light)/page.tsx` | Home — welcome haiku (`/api/greeting`), Action Pill (Brew-Again candidates), inline AI chat over `/api/explore-agent` |
 | `(light)/past-conversations[/[id]]` | Archived chat threads (list + read-only replay) |
 | `(light)/brew/new` | The brew flow — routes `flowStore.step` to `LightStep*` (mode → scan → context → recommend → brew → log → summary) |
+| `(light)/brew/unrated` | "To rate": brews that reached the Log screen but were never saved (`pending_brews`). Rate → resumes the Log screen; Dismiss → stops the Home reminder, keeps the brew (still ratable under "Dismissed"). The Home `UnratedBrewsCard` (shown only while the haiku is up) counts the open ones; one → straight to its Log screen |
 | `(light)/brew/[id]` | Read-only session detail: 2×2 stat grid (Dose/Grind, Water/Temp), notes, taste, reasoning; Field from `lib/field/cache.ts` |
 | `(light)/coffees` | Coffee library (search, bag-photo cards, Brew CTA gated on `inRotation`); offline read path + inline recipe picker |
 | `(light)/coffees/[id]` | Coffee detail: Field, rotation toggle, Brew CTA, `CoffeeCoachCard` (reads `coffees.coach_insight`), rating history, brew signatures, All-brews list |
@@ -76,7 +77,8 @@ Every route lives in the **`(light)` route group** (BTTS Light theme — cream b
 | Route | Purpose |
 |-------|---------|
 | `auth/*` | WebAuthn challenge/login/register/logout/status/reset-passkey. `register` is allowed only with no stored credential (first run / after reset) or a valid session — an unauthenticated register used to be an account takeover. |
-| `sessions`, `sessions/[id]` | ★ Core CRUD. POST creates/merges the `coffees` row via `coffeeKeyFor(roaster, name)` — the shared slug; zod-schemas with **compile-time parity guards** so a new `BrewLog`/`TasteResult`/`CoffeeIdentity` field can never again be silently stripped. A rated home save kicks the coach regeneration. |
+| `sessions`, `sessions/[id]` | ★ Core CRUD. POST creates/merges the `coffees` row via `coffeeKeyFor(roaster, name)` — the shared slug; zod-schemas with **compile-time parity guards** so a new `BrewLog`/`TasteResult`/`CoffeeIdentity` field can never again be silently stripped. A rated home save kicks the coach regeneration. `body.pendingBrewId` deletes that `pending_brews` row once the session is written (also on the offline-queue dedup path). `createdAt` = the brew time the client sends (a late-rated brew carries when it was brewed); `createdAtMs` stays the SAVE time on purpose — the coach + per-coffee insight caches regenerate only when the newest `createdAtMs` advances. |
+| `pending-brews`, `pending-brews/[id]` | Unrated-brew parking (migration 0025). GET = open ones (`?all=true` incl. dismissed); `[id]` GET = full draft to resume, PUT = idempotent upsert under a client-made id (written by `useParkPendingBrew` when the Log screen opens, home brews only, retried on reconnect), PATCH `{dismissed}`. A separate table so NO `sessions` reader (recommend, coach, chat, stats) ever sees an unrated brew. |
 | `sessions/previous` | Previous HOME brew of this coffee + last 5 ratings — the Log screen's "Last time with this coffee" card and the better/same/worse verdict (`result.vsPrevious`) |
 | `coffees`, `coffees/[id]` | Library GET / **POST standalone creator** (idempotent merge, never overwrites; id = `coffeeKeyFor`) / GET-PUT-DELETE |
 | `coffees/[id]/insight` | Per-coffee coach card (`coffees.coach_insight`; regenerates only while status is `new`/`doesnt-apply`) |
@@ -127,7 +129,7 @@ Every route lives in the **`(light)` route group** (BTTS Light theme — cream b
 
 | File | Purpose |
 |------|---------|
-| `src/store/flowStore.ts` | ★ Zustand brew-flow state, localStorage-persisted (survives a mid-brew reload; "New Session" calls `reset()`) |
+| `src/store/flowStore.ts` | ★ Zustand brew-flow state, localStorage-persisted (survives a mid-brew reload; "New Session" calls `reset()`). `pendingBrewId`/`brewedAt` tie the draft to its `pending_brews` row; `resumeForRating()` re-opens a parked brew on the Log screen (Back → `/brew/unrated`) |
 | `src/hooks/` | `useOnline`, `useWakeLock` (iOS shell via the app-local `ScreenAwake` plugin, Web Wake Lock fallback), `useVoiceCapture` / `useVoicePlayback`, `useAcaiaScale`, `useBrewStepHaptics`, `useBrewLiveActivity`, `useFieldMotion`, `usePresence` |
 | `src/middleware.ts` | ★ The cookie gate (see API Routes) |
 | `src/app/fonts.css` + `src/app/fonts/` | Vendored Google fonts (`scripts/vendor-google-fonts.mjs`) — `next/font/google` fetched from Google on every VPS build and broke four deploys; pinned by `tests/dataflow/fonts-self-hosted.test.mjs` |
@@ -137,9 +139,9 @@ Every route lives in the **`(light)` route group** (BTTS Light theme — cream b
 
 ### Database (Postgres + Drizzle)
 
-15 tables: `sessions`, `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts` (dead schema), `places` (6,202 rows in prod, loaded outside the repo), `conversations`, `conversation_messages`, `cafe_visits`, `insights`, `drip_bags`, `loading_insights`; plus `lessons` (dead schema, read by nothing). Sessions keep `coffee`/`context`/`recommendation`/`brew`/`result` as JSONB; `createdAtMs` is the indexed feed order.
+16 tables: `sessions`, `pending_brews` (unrated brews parked by the Log screen, deleted on save), `coffees`, `auth_credentials`, `auth_challenges`, `preferences`, `roasters`, `knowledge`, `coffee_alerts` (dead schema), `places` (6,202 rows in prod, loaded outside the repo), `conversations`, `conversation_messages`, `cafe_visits`, `insights`, `drip_bags`, `loading_insights`; plus `lessons` (dead schema, read by nothing). Sessions keep `coffee`/`context`/`recommendation`/`brew`/`result` as JSONB; `createdAtMs` is the indexed feed order.
 
-Migrations `src/lib/db/migrations/0000`–`0024` (0003 absent; 0001+ applied via the marker or `psql`, Drizzle's journal only knows `0000_init`). The most recent: 0023 `coffees.variety/region/roast_level` (backfilled 55 rows → 45/48/49), 0024 one-off data fix (the 2026-10-10 15:21 chat brew → SEY Susan Meneses). The CI screenshots job applies them all to an empty DB, so every file must be a no-op there.
+Migrations `src/lib/db/migrations/0000`–`0025` (0003 absent; 0001+ applied via the marker or `psql`, Drizzle's journal only knows `0000_init`). The most recent: 0023 `coffees.variety/region/roast_level` (backfilled 55 rows → 45/48/49), 0024 one-off data fix (the 2026-10-10 15:21 chat brew → SEY Susan Meneses), 0025 `pending_brews`. The CI screenshots job applies them all to an empty DB, so every file must be a no-op there.
 
 ### Key dependencies
 
@@ -231,7 +233,7 @@ Cause: the May 2026 calibration session reconstructed Hoffmann's 1-Cup from memo
 - **Tailwind scans only `src/{app,components,pages}`** — class strings that live solely in `src/lib` are never generated. Export a raw CSS value and apply it inline (`src/lib/theme/gradients.ts`).
 - **Nothing may extend past the viewport, and every `overflow-y-auto` box needs `.scroll-y-only`.** `overflow-x: hidden` still makes a draggable scroll container in WebKit; `overflow-y: auto` promotes the other axis to `auto`. Don't use `overflow-x: clip` (computes back to hidden) or a blanket `touch-action: pan-y` (breaks the chip carousels).
 - **Continuously iterated `@keyframes` live co-located in the component** (`<style jsx global>`), never in `globals.css` — the installed PWA serves a stale cached stylesheet. **No `filter: blur()` on the Field discs** (85 % of raster cost for nothing visible). Rest-state `filter: none` on animated inline-block words or Fraunces descenders clip. See `docs/liquid-design.md`.
-- **Zod schemas on every POST**, `deepStripNulls()` before parsing; the sessions schema has compile-time parity guards — extend the schema when a Session sub-type gains a field.
+- **Zod schemas on every POST** (there is no `deepStripNulls()` helper in `src/` — an earlier line here claimed one); the sessions schema has compile-time parity guards — extend the schema when a Session sub-type gains a field.
 - **Never import from `app/api/*/route.ts` in client components**; shared types in `src/lib/types/`.
 - **A shared CTA forwards its click event** — `onNext={handleDone}` once passed a SyntheticEvent as `actualTimeSec` and broke saving; wrap or coerce.
 - **Never assume a Capacitor plugin's return shape**, and a Capacitor npm plugin in `package.json` is not necessarily linked into the iOS binary — app-local, explicitly registered plugins are the reliable pattern.

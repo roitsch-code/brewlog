@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useFlowStore } from "@/store/flowStore";
+import { useParkPendingBrew } from "@/hooks/useParkPendingBrew";
 import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Hero from "@/components/ui/light/Hero";
 import { nextHeroQuestion, LOG_QUESTIONS } from "@/lib/heroQuestions";
@@ -52,7 +54,10 @@ const inputClass =
   "w-full rounded-2xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-3 py-2.5 text-[14px] text-light-foreground placeholder:text-light-muted-foreground/70 outline-none";
 
 export default function LightStepLog() {
-  const { draft, setBrew, setResult, setStep, setPendingInsight } = useFlowStore();
+  const { draft, setBrew, setResult, setStep, setPendingInsight, resumedForRating } = useFlowStore();
+  const router = useRouter();
+  // Park the brew server-side so it can't be lost before it is rated.
+  useParkPendingBrew();
   const isExternal = draft.mode === "external";
   const rec = draft.recommendation;
   // Recipe the user actually brewed = the candidate they selected (by index),
@@ -384,7 +389,14 @@ export default function LightStepLog() {
   };
 
   return (
-    <LightFlowShell onNext={handleNext} nextDisabled={!canProceed} nextLabel="Save">
+    <LightFlowShell
+      onNext={handleNext}
+      nextDisabled={!canProceed}
+      nextLabel="Save"
+      // Resumed from the Home "to rate" card: the timer is long finished, so
+      // Back returns to the list instead of re-opening the brew step.
+      onBack={resumedForRating ? () => router.push("/brew/unrated") : undefined}
+    >
       <Hero eyebrow="Taste Log" question={heroQuestion} />
 
       {/* Rating — central hero-adjacent affordance */}
