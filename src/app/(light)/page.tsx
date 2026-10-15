@@ -6,6 +6,7 @@ import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
 import ChatInput, { type SendPayload } from "@/components/ui/light/ChatInput";
 import ChatThread, { type Message } from "@/components/ui/light/ChatThread";
 import HaikuStarter from "@/components/ui/light/HaikuStarter";
+import UnratedBrewsCard from "@/components/ui/light/UnratedBrewsCard";
 import { useVoicePlayback } from "@/hooks/useVoicePlayback";
 import { useFlowStore } from "@/store/flowStore";
 import type { Session } from "@/lib/types/session";
@@ -542,6 +543,10 @@ export default function HomePage() {
           {!showStarter && <ChatThread messages={messages} loading={loading} />}
           <HaikuStarter text={starter} show={showStarter} />
         </section>
+
+        {/* Brews that finished the timer but were never rated — only while
+            the haiku shows, so it never sits on top of a live conversation. */}
+        {showStarter && <UnratedBrewsCard />}
 
         <ChatInput
           loading={loading}

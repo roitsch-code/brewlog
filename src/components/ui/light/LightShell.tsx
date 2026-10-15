@@ -7,6 +7,7 @@ import NativeWidgetBridge from "@/components/native/NativeWidgetBridge";
 import Field from "./Field";
 import ConnectionStatus from "./ConnectionStatus";
 import RecommendJobWatcher from "./RecommendJobWatcher";
+import { rescueOrphanBrewOnce } from "@/lib/flow/parkBrew";
 
 // Run the legacy-notification sweep once per app session, not per route mount.
 let didSweepNotifications = false;
@@ -38,6 +39,12 @@ export default function LightShell({ children }: { children: ReactNode }) {
     if (didSweepNotifications) return;
     didSweepNotifications = true;
     void sweepBrewNotifications();
+  }, []);
+
+  // A brewed-but-unsaved draft left on the phone is parked server-side before
+  // any New Session / Brew Again can reset() it (see rescueOrphanBrewOnce).
+  useEffect(() => {
+    void rescueOrphanBrewOnce();
   }, []);
 
   return (

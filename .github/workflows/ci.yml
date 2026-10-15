@@ -99,6 +99,11 @@ jobs:
           BASE_URL: http://localhost:3000
           AUTH_PIN: "1234"
           OUT_DIR: screenshots
+      - name: Unrated brews end-to-end (park → Home card → rate → dismiss)
+        run: node tests/smoke/unrated-brews-e2e.mjs
+        env:
+          BASE_URL: http://localhost:3000
+          AUTH_PIN: "1234"
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4

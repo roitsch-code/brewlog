@@ -3,7 +3,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { sessions, coffees } from "@/lib/db/schema";
+import { sessions, coffees, pendingBrews } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
 import type { BrewLog, CoffeeIdentity, Session, TasteResult } from "@/lib/types/session";
 import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
@@ -134,6 +134,10 @@ const SessionPostSchema = z.object({
   // coffees.field_zones on first insert; ignored on subsequent saves
   // so re-scans of the same bag don't drift the coffee's Field.
   fieldZones: FieldZonesSchema.nullable().optional(),
+  // The pending_brews row this save completes (migration 0025) — set when the
+  // brew was parked on the Log screen. Deleted once the session is written, so
+  // the Home "to rate" card drops it. Not a Session field; never stored.
+  pendingBrewId: z.string().max(64).optional(),
 });
 
 // ── Compile-time parity guards ──────────────────────────────────────────────
@@ -154,6 +158,16 @@ const _coffeeSchemaCoversIdentity: MissingKeys<CoffeeIdentity, NonNullable<Sessi
 void _brewSchemaCoversBrewLog; void _resultSchemaCoversTasteResult; void _coffeeSchemaCoversIdentity;
 
 export const dynamic = "force-dynamic";
+
+/** The brew is rated and saved — drop its "to rate" row. A failure here must
+ * never fail the save (the worst case is a stale card the owner can dismiss). */
+async function clearPendingBrew(id: string): Promise<void> {
+  try {
+    await db.delete(pendingBrews).where(eq(pendingBrews.id, id));
+  } catch (err) {
+    console.warn("[sessions] clearing pending brew failed:", String((err as Error)?.message ?? err).slice(0, 160));
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -199,7 +213,7 @@ export async function POST(req: NextRequest) {
     // Extract the top-level fieldZones (v1.1 Generative Field) before
     // narrowing the rest to Session-shape — fieldZones is routed to
     // the coffees table separately, not into sessions.coffee JSONB.
-    const { fieldZones: incomingFieldZones, ...sessionData } = parsed.data;
+    const { fieldZones: incomingFieldZones, pendingBrewId, ...sessionData } = parsed.data;
     const data = sessionData as Omit<Session, "id">;
 
     // Blend normalisation (migration 0021). When the identity carries 2+
@@ -225,6 +239,11 @@ export async function POST(req: NextRequest) {
     }
 
     const sessionId = randomUUID();
+    // createdAt = the client's brew time (a brew rated later from pending_brews
+    // carries the moment it finished). createdAtMs stays the SAVE time on
+    // purpose: the coach and per-coffee insight caches regenerate only when the
+    // newest createdAtMs advances, so a back-dated value would leave a late-rated
+    // brew invisible to them.
     const createdAtMs = Date.now();
     const createdAt = new Date(data.createdAt);
 
@@ -239,6 +258,7 @@ export async function POST(req: NextRequest) {
       .where(eq(sessions.createdAt, createdAt))
       .limit(1);
     if (dupe[0]) {
+      if (pendingBrewId) await clearPendingBrew(pendingBrewId);
       return NextResponse.json({ id: dupe[0].id });
     }
 
@@ -255,6 +275,7 @@ export async function POST(req: NextRequest) {
       brew: data.brew,
       result: data.result,
     });
+    if (pendingBrewId) await clearPendingBrew(pendingBrewId);
 
     // One-way, fire-and-forget caffeine push to the co-hosted HealthSync app.
     // Past the dedup early-return above, so an offline-queue retry can't
