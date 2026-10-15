@@ -1,1 +1,2 @@
 0025_add_pending_brews.sql
+# re-run 2026-10-15: first run lost a git ref-lock race with deploy
