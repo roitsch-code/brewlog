@@ -62,6 +62,9 @@ jobs:
       AUTH_SECRET: ci-test-secret-not-a-real-secret-000000000000
       AUTH_PIN: "1234"
       PGPASSWORD: test
+      # No real bucket in CI — only the URL prefix, so PATCH /api/coffees/[id]
+      # can check a bag photo URL. The bag-photo e2e stubs /api/upload.
+      NEXT_PUBLIC_S3_PUBLIC_URL_PREFIX: http://localhost:3000/ci-s3
       # Optional: set an ANTHROPIC_API_KEY repo secret to get real AI content
       # (greeting, recommendations, chat) in the screenshots. Absent = empty
       # AI areas, run still passes.
@@ -101,6 +104,11 @@ jobs:
           OUT_DIR: screenshots
       - name: Unrated brews end-to-end (park → Home card → rate → dismiss)
         run: node tests/smoke/unrated-brews-e2e.mjs
+        env:
+          BASE_URL: http://localhost:3000
+          AUTH_PIN: "1234"
+      - name: Bag photo added after the fact (detail page → PATCH → reload)
+        run: node tests/smoke/bag-photo-e2e.mjs
         env:
           BASE_URL: http://localhost:3000
           AUTH_PIN: "1234"

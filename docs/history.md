@@ -8,6 +8,12 @@
 
 ### ✅ Done
 
+**Bag photo can be added after the fact (2026-10-15)**
+- **Report:** bags added from the chat without a picture (SEY Susan Meneses, Adelina Fallas …) had no way to get one later.
+- **Built:** the coffee detail page's photo slot is a tap target — "Add bag photo" when empty, a camera button on the photo to replace it. Picks a JPEG/PNG/WebP, uploads to `bags/` via `/api/upload`, then `PATCH /api/coffees/[id] {bagPhotoUrl}`. The PATCH only accepts a URL under the bucket's own `bags/` prefix. "Brew this" now fills a missing session photo from the coffee row, so the next brew of such a bag shows it too. The offline re-brew cache is refreshed with the new photo.
+- **Verified:** `tests/smoke/bag-photo-e2e.mjs` (CI screenshots job, also run locally against a real Postgres + dev server): empty state → pick file → row has the URL → reload still shows it; foreign URL and `..` both 400. The real S3 upload is the same `/api/upload` path the scan uses but was NOT exercised in a session (no bucket reachable); the phone is the first real run.
+- **Not done:** the photo is not run through `/api/analyze-bag`, so it does not fill missing fields or the Field colours.
+
 **Unrated brews are no longer lost (2026-10-15)**
 - **Report:** brews that ran through the timer (or were moved on to the taste log) but were not rated straight away "just disappear after a while" — a lot of data lost.
 - **Measured in the code:** a brew reached the database ONLY on the Summary screen's "Save Brew" (`LightStepSummary.tsx`). Until then it was one localStorage draft, and every entry into a new flow — New Session (`NavigationOverlay`), Brew Again (`brewAgain.ts`), the widget (`widgetDeepLinks.ts`), the drip scan — calls `reset()` and overwrote it. Nothing on Home led back to the Log screen. So it was not a timeout: the brew was unreachable, then overwritten, with its timer, Acaia flow analysis and recipe.
