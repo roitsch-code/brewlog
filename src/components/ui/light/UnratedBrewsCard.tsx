@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star, ChevronRight } from "lucide-react";
 import { fetchPendingBrews, resumePendingBrew } from "@/lib/flow/resumeRating";
+import { rescueOrphanBrewOnce } from "@/lib/flow/parkBrew";
 import { brewedWhen } from "@/lib/flow/brewedWhen";
 import type { PendingBrewSummary } from "@/lib/types/pendingBrew";
 
@@ -20,7 +21,11 @@ export default function UnratedBrewsCard() {
 
   useEffect(() => {
     let alive = true;
-    fetchPendingBrews()
+    // Child effects run before LightShell's, so start (or join) the rescue
+    // here and list only after it landed.
+    rescueOrphanBrewOnce()
+      .catch(() => {})
+      .then(() => fetchPendingBrews())
       .then((r) => {
         if (alive) setRows(r);
       })

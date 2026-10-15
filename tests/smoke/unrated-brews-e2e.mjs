@@ -17,10 +17,10 @@ import assert from "node:assert/strict";
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const PIN = process.env.AUTH_PIN || "1234";
 
-function seedDraft(name) {
+function seedDraft(name, step = "log") {
   return JSON.stringify({
     state: {
-      step: "log",
+      step,
       skipScan: true,
       draft: {
         type: "coffee",
@@ -60,6 +60,19 @@ async function main() {
   const login = await ctx.request.post(`${BASE}/api/auth/login`, { data: { type: "pin", pin: PIN } });
   assert.ok(login.ok(), `PIN login failed: ${login.status()}`);
   const page = await ctx.newPage();
+
+  // 0. App-start rescue: a brewed draft left on the phone (timer finished,
+  //    never saved, from before the Log screen parked on open) is parked the
+  //    moment the app opens on Home — no visit to the brew flow needed.
+  await page.goto(`${BASE}/offline`, { waitUntil: "domcontentloaded" });
+  await page.evaluate((v) => localStorage.setItem("brew-flow", v), seedDraft("E2E Rescued", "summary"));
+  await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Rate your E2E Rescued/ }).waitFor({ timeout: 60000 });
+  const rescued = (await json(ctx, "/api/pending-brews")).find((r) => r.coffeeName === "E2E Rescued");
+  assert.ok(rescued, "orphaned draft was not rescued");
+  await ctx.request.patch(`${BASE}/api/pending-brews/${rescued.id}`, { data: { dismissed: true } });
+  await page.evaluate(() => localStorage.removeItem("brew-flow"));
+  console.log("  ✓ App start rescued an unsaved brewed draft onto the Home card");
 
   // 1. Park.
   const brewedAt = await parkBrew(page, "E2E Kiambu");
