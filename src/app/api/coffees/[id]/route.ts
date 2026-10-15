@@ -4,6 +4,7 @@ import { eq, and, inArray, sql, desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { coffees, sessions } from "@/lib/db/schema";
 import { rowToCoffee } from "@/lib/db/helpers";
+import { getPublicUrlPrefix } from "@/lib/storage/s3";
 
 export const dynamic = "force-dynamic";
 
@@ -49,14 +50,29 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-// Either field is optional; PATCH must include at least one.
+// Every field is optional; PATCH must include at least one.
+// `bagPhotoUrl` adds or replaces the bag photo after the fact (a bag added from
+// the chat without a picture). It must point into our own bucket under `bags/`
+// — the value /api/upload just returned — never an arbitrary URL.
 const PatchSchema = z.object({
   personalNotes: z.string().max(5000).optional(),
   inRotation: z.boolean().optional(),
+  bagPhotoUrl: z.string().url().max(2000).optional(),
 }).refine(
-  (v) => v.personalNotes !== undefined || v.inRotation !== undefined,
-  { message: "must provide personalNotes or inRotation" },
+  (v) => v.personalNotes !== undefined || v.inRotation !== undefined || v.bagPhotoUrl !== undefined,
+  { message: "must provide personalNotes, inRotation or bagPhotoUrl" },
 );
+
+function isOwnBagPhotoUrl(url: string): boolean {
+  let prefix: string;
+  try {
+    prefix = getPublicUrlPrefix();
+  } catch {
+    return false;
+  }
+  const rest = url.startsWith(`${prefix}/bags/`) ? url.slice(prefix.length + 1) : null;
+  return rest !== null && !rest.includes("..");
+}
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -65,11 +81,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
+    if (parsed.data.bagPhotoUrl !== undefined && !isOwnBagPhotoUrl(parsed.data.bagPhotoUrl)) {
+      return NextResponse.json({ error: "Invalid photo URL" }, { status: 400 });
+    }
     const rows = await db.select({ id: coffees.id }).from(coffees).where(eq(coffees.id, params.id)).limit(1);
     if (rows.length === 0) return NextResponse.json(null, { status: 404 });
     const updates: Record<string, unknown> = {};
     if (parsed.data.personalNotes !== undefined) updates.personalNotes = parsed.data.personalNotes;
     if (parsed.data.inRotation !== undefined) updates.inRotation = parsed.data.inRotation;
+    if (parsed.data.bagPhotoUrl !== undefined) updates.bagPhotoUrl = parsed.data.bagPhotoUrl;
     await db.update(coffees).set(updates).where(eq(coffees.id, params.id));
     return NextResponse.json({ ok: true });
   } catch (err) {

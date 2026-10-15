@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Camera, Loader2, Menu } from "lucide-react";
 import type { Coffee } from "@/lib/types/coffee";
 import type { Session, CoffeeIdentity } from "@/lib/types/session";
 import SessionCard from "@/components/session/SessionCard";
@@ -47,6 +47,41 @@ export default function CoffeeDetailPage() {
   const [notesSaving, setNotesSaving] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  // Bag photo added/replaced after the fact — a bag added from the chat
+  // often has none. Upload → PATCH the coffee row → show it.
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const handleBagPhoto = async (file: File) => {
+    if (!coffee) return;
+    setPhotoUploading(true);
+    setPhotoError(null);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "bag.jpg";
+      const form = new FormData();
+      form.append("file", file);
+      form.append("path", `bags/${Date.now()}-${safeName}`);
+      const up = await fetch("/api/upload", { method: "POST", body: form });
+      const upData: { url?: string; error?: string } = await up.json().catch(() => ({}));
+      if (!up.ok || !upData.url) throw new Error(upData.error || "Upload failed");
+      const res = await fetch(`/api/coffees/${coffee.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bagPhotoUrl: upData.url }),
+      });
+      if (!res.ok) throw new Error("Couldn't save the photo");
+      const updated: Coffee = { ...coffee, bagPhotoUrl: upData.url };
+      setCoffee(updated);
+      // Keep the offline re-brew cache in step with the new photo.
+      void cacheBrewableCoffee(updated, sessions);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -219,6 +254,7 @@ export default function CoffeeDetailPage() {
     // variety is what reaches getVarietyPriorsForBag() in /recommend.
     const identity: CoffeeIdentity = {
       ...base,
+      bagPhotoUrl: base.bagPhotoUrl || coffee.bagPhotoUrl,
       variety: base.variety || variety,
       region: base.region || region,
       roastLevel: base.roastLevel || roastLevel || "Light",
@@ -257,6 +293,19 @@ export default function CoffeeDetailPage() {
 
         {coffee.bagPhotoUrl ? (
           <BagPhoto url={coffee.bagPhotoUrl} alt={coffee.name}>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={photoUploading}
+              aria-label="Change bag photo"
+              className="absolute right-3 top-3 w-11 h-11 rounded-full bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 text-light-foreground shadow-light-float flex items-center justify-center active:scale-95 transition-transform"
+            >
+              {photoUploading ? (
+                <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.5} />
+              ) : (
+                <Camera className="w-5 h-5" strokeWidth={1.5} />
+              )}
+            </button>
             <div className="absolute bottom-0 left-0 right-0 p-5">
               {coffee.process && (
                 <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
@@ -272,11 +321,19 @@ export default function CoffeeDetailPage() {
           </BagPhoto>
         ) : (
           <>
-            <div className="h-40 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex items-center justify-center">
-              <svg className="w-12 h-12 text-light-muted-foreground opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15a3.75 3.75 0 01-3.75 3.75H7.95A3.75 3.75 0 014.2 15m15.6 0H4.2m15.6 0H4.2" />
-              </svg>
-            </div>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={photoUploading}
+              className="w-full h-40 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 flex flex-col items-center justify-center gap-2 text-light-foreground active:scale-[0.99] transition-transform"
+            >
+              {photoUploading ? (
+                <Loader2 className="w-7 h-7 animate-spin" strokeWidth={1.5} />
+              ) : (
+                <Camera className="w-7 h-7" strokeWidth={1.5} />
+              )}
+              <span className="text-sm font-medium">{photoUploading ? "Uploading photo" : "Add bag photo"}</span>
+            </button>
             <div className="pt-4">
               {coffee.process && (
                 <p className="text-light-foreground/75 text-xs tracking-widest uppercase mb-1">{coffee.process}</p>
@@ -292,6 +349,21 @@ export default function CoffeeDetailPage() {
           </>
         )}
 
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          data-testid="bag-photo-input"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleBagPhoto(file);
+            e.target.value = "";
+          }}
+        />
+        {photoError && (
+          <p role="alert" className="text-light-destructive text-sm mt-2">{photoError}</p>
+        )}
       </div>
 
       {/* Stats row */}
