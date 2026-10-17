@@ -17,7 +17,9 @@ import { CoachCard } from "@/components/coach/CoachCard";
  *
  * Layout (top to bottom):
  *   1. Avg rating + rated brews header
- *   2. Coach insights — two-stage workflow:
+ *   2. Coach insights — the GENERAL coach: patterns in technique, habits
+ *      and taste across the whole log, never advice about one bag (that
+ *      card lives on /coffees/[id]). Two-stage workflow:
  *
  *      Stage 1 (status='new'):
  *        Save to try / Confirmed / Doesn't apply
@@ -208,7 +210,7 @@ export default function TastePage() {
         );
         setInsights(items);
         if (items.length === 0 && (d.corpusSize ?? 0) < 4) {
-          setInsightsError("Log and rate a few more brews — the coach needs at least four rated sessions to spot a cross-axis pattern.");
+          setInsightsError("Log and rate a few more brews — the coach needs at least four rated sessions to spot a pattern in how you brew and what you like.");
         }
       })
       .catch(() => {
