@@ -415,6 +415,16 @@ jobs:
               FROM insights i WHERE i.status IN ('trying','confirmed','doesnt-apply')
               ORDER BY i.created_at DESC LIMIT 15;" </dev/null | cut -c1-300 || echo "psql query failed"
 
+            section "COACH ROWS — what the general coach wrote (source=opus, newest first) + its error lines"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              SELECT to_char(created_at AT TIME ZONE 'Europe/Berlin','MM-DD HH24:MI') AS written, status, source, latest_session_ms,
+                     left(observation,160) AS observation, left(suggestion,120) AS suggestion
+              FROM insights ORDER BY created_at DESC LIMIT 20;" </dev/null | cut -c1-400 || echo "psql query failed"
+            docker compose logs --tail=5000 --no-color app 2>/dev/null </dev/null \
+              | grep -a -iE 'insights coach call failed|coachProvider|mistral|insights GET error' \
+              | cut -c1-300 | tail -40 \
+              || echo "no matching lines"
+
             section "OUTCOME LEDGER 8 — last 12 rated brews with the previous brew of the same coffee (the raw pairs)"
             docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
               WITH r AS (
