@@ -136,7 +136,7 @@ Rule (from CLAUDE.md): one substantive sentence, 40–60 words, grounded in a na
 
 ✓ "No coffees yet. Coffees you scan — and drip bags you log — appear here." (`/coffees`)
 ✓ "No archived conversations yet. Send a message on Home, leave the app idle for 30 minutes, and it lands here." (`/past-conversations`)
-✓ "Log and rate a few more brews — the coach needs at least four rated sessions to spot a cross-axis pattern." (`/taste`)
+✓ "Log and rate a few more brews — the coach needs at least four rated sessions to spot a pattern in how you brew and what you like." (`/taste`)
 ✓ "All clear. Coach is watching for the next pattern." (`/taste`, Coach empty)
 ✗ "Nothing here yet — check back soon!"
 ✗ "No data available."

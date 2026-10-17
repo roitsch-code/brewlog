@@ -1,28 +1,25 @@
 /**
- * BTTS Insights — multivariate coach pass over the full session corpus.
+ * BTTS Insights — the GENERAL coach over the full session corpus.
  *
- * Why this exists (and why it isn't `lessons.ts`):
- *   - Lessons writes one row per (level, scope) tuple, with each scope
- *     seeing only its own brews. That single-axis aggregation
- *     structurally cannot produce "low dose × delicate Pink Bourbons ×
- *     peak freshness → higher scores" — the observation lives across
- *     dose × variety × process × rating simultaneously, but lessons
- *     indexes by ONE axis at a time.
- *   - Insights runs Opus once over the whole corpus with the dormant
- *     multivariate pipeline (extractor + patterns + brewSignature)
- *     pre-computed, and asks it to spot the cross-axis stories.
+ * What it writes (since 2026-10-17): patterns in the owner's technique,
+ * habits and taste — never advice about one bag. Per-coffee advice lives in
+ * `coffeeInsight.ts` and shows on /coffees/[id]. The rows feed three surfaces:
+ * the /taste queue (Save to try / Confirmed / Doesn't apply), /recommend's
+ * COACH INSIGHTS block, and /greeting's COACH SIGNAL.
  *
  * Pipeline:
  *   1. Load all rated sessions (single indexed query).
- *   2. Build brew signatures + run extractor + detect patterns.
- *   3. Serialise the structured analysis into the prompt as evidence.
- *   4. Opus writes 5–8 insights (observation + suggestion, both one
- *      sentence each, REAL numbers required).
- *   5. Replace insights rows older than the current latest-session-ms.
+ *   2. Count the technique/habit/preference evidence (techniqueSummary.ts),
+ *      build brew signatures, run extractor + pattern detection.
+ *   3. Serialise all of it into the prompt as evidence, with the coach's own
+ *      earlier rows and the user's verdicts on them (coachPriors.ts).
+ *   4. The coach model writes 4–7 insights (observation + tip, one sentence
+ *      each, REAL counts required).
+ *   5. Replace the replaceable rows (status 'new'); keep everything the user
+ *      acted on.
  *
- * Cache key: latestSessionMs on the rows. The /api/insights endpoint
- * compares it against the corpus's latest session and only re-runs Opus
- * when new brews have arrived since.
+ * Cache key: latestSessionMs on the rows, plus COACH_PROMPT_CHANGED_AT_MS so a
+ * prompt change regenerates once without waiting for the next brew.
  */
 import { randomUUID } from "crypto";
 import { desc, gte, inArray } from "drizzle-orm";
@@ -40,6 +37,7 @@ import { detectPatterns } from "./patterns";
 import type { PatternAnalysis } from "./patterns";
 import { callCoachModel } from "@/lib/ai/coachProvider";
 import { formatPriorInsightsForCoach } from "./coachPriors";
+import { formatTechniqueSummary } from "./techniqueSummary";
 
 const InsightItemSchema = z.object({
   observation: z.string().min(10).max(400),
@@ -53,30 +51,61 @@ const InsightsResponseSchema = z.object({
 
 export type InsightItem = z.infer<typeof InsightItemSchema>;
 
-const SYSTEM_PROMPT = `You are the BrewLog Coach. You read a user's entire coffee brewing log and surface concrete, multivariate insights — observations that span TWO OR MORE axes (variety × process × freshness × method × dose × rating, etc.). Single-axis observations ("you like washed coffees") are forbidden.
+/**
+ * The GENERAL coach (2026-10-17). Until then this prompt asked for
+ * "multivariate" insights and every example it gave was about one bag ("Open
+ * the Hoppenworth Geisha tomorrow"), so the Taste Profile filled up with
+ * per-coffee advice that duplicated the card on /coffees/[id]. The owner's
+ * ask: kill the bag-specific coach here; detect patterns, behaviours, taste
+ * preferences and general tips instead ("pour more consistently — aggressive
+ * flows disturb the bed", "you tend to prefer washed Central and South
+ * Americans"). Per-coffee advice stays on the coffee's own page.
+ */
+const SYSTEM_PROMPT = `You are the BrewLog Coach. You read one person's entire coffee brewing log and tell them what THEY do — as a brewer and as a taster. You coach the person, not a bag of coffee.
+
+What an insight is about — exactly one of these
+- Technique: how they pour (steadiness, pace, running ahead of the plan), how their brew time lands against the plan, grind that drifts back and forth, agitation habits, whether following the recipe or changing it serves them better.
+- Habits: which brewers, waters, occasions and times of day they reach for, what they do when a cup misses, what they never vary.
+- Taste preferences: what kinds of coffee they keep rating high or low — by process, origin, variety, roast level, brewer, water — and the sensory shape of their favourites (body, acidity, sweetness, clarity).
+- A general tip that follows from one of the above.
+
+Never about one coffee
+- An insight is never about a single bag, roaster or coffee. It must hold across the log, or across at least two different coffees. If the only evidence is one coffee, drop it — the coffee's own page has a card for that.
+- A coffee may be NAMED only as one example inside a pattern that spans several ("…as with the Guji and the Tegu").
+- No "open X tomorrow", no "brew Y again", no recipe for a particular bag.
 
 Voice
-- Two short sentences per insight: the observation (with real counts), then the suggestion or open question.
-- No labels. No "Observation:", no "Hypothesis:", no "Suggestion:". The terminology shows up IN the writing, never as a header.
-- Direct, plain English. No emoji, no markdown, no exclamation marks.
+- Two short sentences per insight: the observation (with real counts from the log), then the tip or the question to test.
+- Speak to the person: "you pour", "you rate", "you tend to".
+- No labels. No "Observation:", no "Suggestion:". Direct, plain English. No emoji, no markdown, no exclamation marks.
 
 Concreteness — non-negotiable
-- Every observation cites at least one real count from the data. Examples of the shape:
-  - "19 of 28 washed brews scored 4★+ when in peak freshness; only 3 of 9 past-peak."
-  - "Your AeroPress 1:18 brews on naturals average 4.1★ across 7 sessions; your V60 1:16 on the same naturals average 2.9★."
-  - "Every 5★ you've logged on a Pink Bourbon used the championship water blend; the same beans on tap water average 3.4★."
-- If a candidate insight can be written as a single-axis statement, drop it.
-- If the data doesn't support 5–8 multivariate insights, return fewer. Do not invent.
+- Every observation cites at least one real count from the data. Shapes that work:
+  - "Your even pours average 4.3★ over 9 brews; the 5 uneven ones average 3.4★."
+  - "You pour at 4–6 g/s and the cups you rate 4★+ sit at the slow end of that range."
+  - "16 of your 21 washed Colombian and Guatemalan brews earned 4★ or more; naturals from anywhere sit at 3.5★ across 12."
+  - "You changed the recipe on 14 of the last 30 brews; those average 3.6★ against 4.1★ when you followed it."
+- The log is selection-biased: they buy the coffees they expect to like, so the absence of a flavour, origin or process is NOT evidence of a dislike. Say what they rate high; do not infer what they avoid.
+- If the data does not support 4–7 such insights, return fewer. Do not invent, do not pad.
 
-Suggestion line
-- Either a concrete next move ("Open the Hoppenworth Geisha tomorrow morning — your Geisha brews under 1:16.7 ratio score 4.5★ on average.")
-- Or a precise question the user could test ("Would the Tegu hit your usual mark if you brewed it past day 21 next time — only one past-peak brew is logged, scoring 3.0★.")
-- Never both. Never vague.
+Tip line
+- A general move for the next brews ("Pour the main pours at the slow end of your range and watch whether the 4★ share holds.")
+- Or a precise question they could test across several brews ("Does a washed natural from Ethiopia land where your Central Americans do if you brew it on the Orea instead of the V60?")
+- Never both. Never vague. Never aimed at one bag.
 
 CitationFields
-- List the 2–5 data fields the observation actually cites (e.g. ["variety", "freshness", "rating"], ["process", "method", "ratio"]). Used downstream to rank insights when the recommend flow sees a matching brew context.
+- List the 2–5 data fields the observation actually cites (e.g. ["method", "rating"], ["process", "origin", "rating"], ["pour", "rating"]). Used downstream to rank insights when the recommend flow sees a matching brew context.
 
 Output ONLY a JSON object: { "insights": [ { "observation": "...", "suggestion": "...", "citationFields": ["...", "..."] } ] }. No prose around it, no markdown fences.`;
+
+/**
+ * Rows the model wrote under the old per-coffee prompt are stale evidence, but
+ * the cache key (latestSessionMs) would keep serving them until the next rated
+ * brew. Any replaceable row (source 'opus', status 'new') created before this
+ * instant forces one regeneration. Rows the user acted on are untouched: they
+ * are his, whatever prompt wrote them. Bump when the prompt changes again.
+ */
+export const COACH_PROMPT_CHANGED_AT_MS = Date.parse("2026-10-17T00:00:00Z");
 
 interface CoffeeAggregate {
   name: string;
@@ -353,7 +382,10 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
     .orderBy(desc(insights.latestSessionMs), desc(insights.createdAt));
 
   const cachedLatest = existing[0]?.latestSessionMs ?? 0;
-  if (existing.length > 0 && cachedLatest >= corpusLatest && sessionList.length > 0) {
+  const writtenByOldPrompt = existing.some(
+    (r) => r.source === "opus" && r.status === "new" && r.createdAt.getTime() < COACH_PROMPT_CHANGED_AT_MS,
+  );
+  if (existing.length > 0 && cachedLatest >= corpusLatest && sessionList.length > 0 && !writtenByOldPrompt) {
     return {
       insights: existing,
       generated: false,
@@ -384,7 +416,12 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
     `Brew log — ${sessionList.length} rated sessions, most recent first.`,
     sessionList.map(serialiseSessionForCoach).join("\n"),
     "",
-    "── Structured analysis (multivariate signal) ──",
+    // The general coach's evidence: pour steadiness and pace, timing against
+    // the plan, recipe adherence, blame, and rating by attribute across bags —
+    // all counted, never estimated (techniqueSummary.ts).
+    formatTechniqueSummary(sessionList),
+    "",
+    "── Structured analysis ──",
     serialiseForEscher(extractorOutput),
     "",
     formatPatternAnalysis(patternOutput),
@@ -404,7 +441,7 @@ export async function getOrGenerateInsights(): Promise<GenerateInsightsResult> {
       })),
     ),
     "",
-    "Write 5–8 multivariate insights now. JSON only.",
+    "Write 4–7 insights about this person's technique, habits and taste now — none about a single coffee. JSON only.",
   ];
 
   const userMessage = promptSections.join("\n");
