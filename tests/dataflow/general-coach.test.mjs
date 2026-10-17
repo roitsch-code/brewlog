@@ -155,7 +155,9 @@ test("WIRING — the evidence block is in the coach's user message; old-prompt r
   assert.match(insightsSrc, /import \{ formatTechniqueSummary \} from "\.\/techniqueSummary"/);
   const promptSections = insightsSrc.slice(insightsSrc.indexOf("const promptSections = ["), insightsSrc.indexOf("const userMessage"));
   assert.match(promptSections, /formatTechniqueSummary\(sessionList\),/, "the block must be interpolated into promptSections");
-  assert.match(insightsSrc, /export const COACH_PROMPT_CHANGED_AT_MS = Date\.parse\("2026-10-17T00:00:00Z"\)/);
+  // The deploy time, not the day: a midnight value left rows written that
+  // morning under the old prompt counted as fresh (#639).
+  assert.match(insightsSrc, /export const COACH_PROMPT_CHANGED_AT_MS = Date\.parse\("2026-10-17T19:30:00Z"\)/);
   assert.match(
     insightsSrc,
     /r\.source === "opus" && r\.status === "new" && r\.createdAt\.getTime\(\) < COACH_PROMPT_CHANGED_AT_MS/,
