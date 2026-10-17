@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/lib/db/client";
-import { coffees, sessions } from "@/lib/db/schema";
+import { coffees, sessions, insights } from "@/lib/db/schema";
 import type { CoffeeCoachInsight } from "@/lib/db/schema";
 import { rowToCoffee, rowToSession } from "@/lib/db/helpers";
 import { generateCoffeeInsight } from "@/lib/claude/coffeeInsight";
@@ -162,6 +162,28 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       .update(coffees)
       .set({ coachInsight: next })
       .where(eq(coffees.id, params.id));
+
+    // A note saved from the chat or the post-brew card was written twice
+    // (POST /api/insights): into this card AND as a source='user-confirmed'
+    // insights row that /recommend reads as "[TRYING] …". Since 2026-10-17
+    // /taste no longer shows those rows, so this card is the only place the
+    // user can resolve them — carry the verdict over to the twin row (matched
+    // the way the POST dedups: first 80 characters of the observation).
+    const key = current.observation.slice(0, 80).toLowerCase();
+    const twins = (await db.select({ id: insights.id, observation: insights.observation }).from(insights)
+      .where(eq(insights.source, "user-confirmed")))
+      .filter((r) => r.observation.slice(0, 80).toLowerCase() === key);
+    for (const twin of twins) {
+      await db
+        .update(insights)
+        .set({
+          status: parsed.data.status,
+          snoozedUntil: next.snoozedUntil ? new Date(next.snoozedUntil) : null,
+          dismissedAt: parsed.data.status === "doesnt-apply" ? new Date() : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(insights.id, twin.id));
+    }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("coffee insight PATCH error:", err);

@@ -132,6 +132,25 @@ test("evidence — nothing measurable → empty string, never a header over noth
   assert.equal(formatTechniqueSummary([{ id: "x", createdAt: new Date().toISOString(), coffee: { name: "A" }, result: { rating: 4 } }]), "");
 });
 
+test("WIRING — /taste shows only what the coach wrote; a saved per-coffee note is resolved from its coffee page", async () => {
+  // The first deploy of the general coach showed nothing but "Wilmer
+  // Cubillos: 4★ · …" cards: notes the owner had saved from the post-brew
+  // card and the chat (source 'user-confirmed', pinned as 'trying', five-card
+  // cap). Those are one-coffee by construction and belong on /coffees/[id].
+  const page = await readFile(path.join(ROOT, "src/app/(light)/taste/page.tsx"), "utf8");
+  assert.match(
+    page,
+    /\(it\.status === "new" \|\| it\.status === "trying"\) && it\.source === "opus"/,
+    "/taste must drop source='user-confirmed' rows from the queue",
+  );
+  // …and because /taste no longer offers their chips, the coffee card's PATCH
+  // must carry the verdict to the twin insights row that /recommend reads.
+  const route = await readFile(path.join(ROOT, "src/app/api/coffees/[id]/insight/route.ts"), "utf8");
+  assert.match(route, /\.where\(eq\(insights\.source, "user-confirmed"\)\)/);
+  assert.match(route, /r\.observation\.slice\(0, 80\)\.toLowerCase\(\) === key/, "twin rows are matched the way POST dedups them");
+  assert.match(route, /\.update\(insights\)\s*\.set\(\{\s*status: parsed\.data\.status,/, "the twin row must take the same status");
+});
+
 test("WIRING — the evidence block is in the coach's user message; old-prompt rows force one regeneration", () => {
   assert.match(insightsSrc, /import \{ formatTechniqueSummary \} from "\.\/techniqueSummary"/);
   const promptSections = insightsSrc.slice(insightsSrc.indexOf("const promptSections = ["), insightsSrc.indexOf("const userMessage"));
