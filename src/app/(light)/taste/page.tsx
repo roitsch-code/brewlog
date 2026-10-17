@@ -205,8 +205,16 @@ export default function TastePage() {
         // only keep new + trying for the queue. Confirmed are dropped
         // here (the row still lives in DB to weight /recommend, but
         // the user has already resolved it visually).
+        //
+        // source='user-confirmed' rows are the notes the user saved from
+        // the post-brew card or the chat — each one is about ONE coffee
+        // ("Wilmer Cubillos: 4★ · …"). They are pinned as 'trying', so with
+        // the five-card cap they buried every general insight (2026-10-17,
+        // owner: "I see only crappy coffee notes"). They live on that
+        // coffee's page (coffees.coach_insight) and are resolved there;
+        // /taste shows only what the general coach wrote.
         const items: InsightItem[] = (d.insights ?? []).filter(
-          (it: InsightItem) => it.status === "new" || it.status === "trying",
+          (it: InsightItem) => (it.status === "new" || it.status === "trying") && it.source === "opus",
         );
         setInsights(items);
         if (items.length === 0 && (d.corpusSize ?? 0) < 4) {

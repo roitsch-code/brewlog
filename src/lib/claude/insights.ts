@@ -104,8 +104,12 @@ Output ONLY a JSON object: { "insights": [ { "observation": "...", "suggestion":
  * brew. Any replaceable row (source 'opus', status 'new') created before this
  * instant forces one regeneration. Rows the user acted on are untouched: they
  * are his, whatever prompt wrote them. Bump when the prompt changes again.
+ *
+ * Set it to the DEPLOY time, not the day: the first value (midnight UTC) left
+ * seven per-bag rows written at 09:00 that morning counted as fresh, and the
+ * new prompt never ran (#639).
  */
-export const COACH_PROMPT_CHANGED_AT_MS = Date.parse("2026-10-17T00:00:00Z");
+export const COACH_PROMPT_CHANGED_AT_MS = Date.parse("2026-10-17T19:30:00Z");
 
 interface CoffeeAggregate {
   name: string;
