@@ -99,14 +99,23 @@ test("a bigger pour takes LONGER in seconds — it does not keep the reference's
 });
 
 test("the grind follows the owner's measured law: +20° per DOUBLING, both ways", () => {
-  const ref = byId("kasuya-4-6-standard"); // Niche 390–400
+  const ref = byId("hoffmann-v60-better-one-cup"); // the owner's measured V60 380° (grind audit 2026-10-18)
   assert.equal(scaleGrind(ref, 2).deltaDeg, GRIND_DEG_PER_DOUBLING);
   assert.equal(scaleGrind(ref, 0.5).deltaDeg, -GRIND_DEG_PER_DOUBLING);
   assert.equal(scaleGrind(ref, 1).deltaDeg, 0);
   // 1.5× is NOT +10 — the law is logarithmic, which the old linear
   // `20 × (ratio − 1)` only got right at exactly 2×.
   assert.equal(scaleGrind(ref, 1.5).deltaDeg, Math.round(20 * Math.log2(1.5)));
-  assert.equal(scaleGrind(ref, 1.5).text, "402–412°");
+  assert.equal(scaleGrind(ref, 1.5).text, "392°");
+});
+
+test("the dose law is V60-only: another brewer's batch change is a measurement brew, no number", () => {
+  // Measured on the owner's V60 only (grind audit 2026-10-18).
+  const aero = scaleGrind(byId("wac-2024-stanica"), 1.5);
+  assert.equal(aero.deltaDeg, 0);
+  assert.equal(aero.nicheRange, null);
+  assert.match(aero.text, /^387° at the published batch; .*unmeasured — a measurement brew/);
+  assert.equal(scaleGrind(byId("wac-2024-stanica"), 1).text, "387°", "at its own batch the sourced value stands");
 });
 
 test("the Drip Assist offset rides on top of the batch adjustment", () => {

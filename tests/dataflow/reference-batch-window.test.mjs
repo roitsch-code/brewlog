@@ -124,9 +124,9 @@ test("the scaled line appears at exactly 450 g off a 500 g recipe (the k−1 > 0
 });
 
 test("the 1-Cup carries the owner's measured grind anchor and renders at Hoffmann's own cadence", () => {
-  assert.deepEqual(ONE_CUP.grind.nicheZeroDegrees, [375, 385]);
-  const v60 = M.NICHE_GRIND_SETTINGS.find((g) => g.method === "V60");
-  assert.deepEqual([v60.niche.min, v60.niche.max], ONE_CUP.grind.nicheZeroDegrees, "pinned to the measured V60 row in grindSettings.ts");
+  // The owner's measured anchor itself (15 g / 250 ml = 380°), with its source.
+  assert.equal(ONE_CUP.grind.nicheZeroDegrees, 380);
+  assert.equal(ONE_CUP.grind.nicheSource.kind, "owner-measured");
   const bloom = ONE_CUP.pourSequence[0];
   assert.equal(bloom.durationSec, 10, "50 g at his ~5 g/s is 10 s (0:00–0:10 in the video), not 5");
   const sched = M.pourScheduleFor(

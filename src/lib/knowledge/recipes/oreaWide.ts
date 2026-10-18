@@ -48,9 +48,11 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "26–28 clicks (coarse)",
-      nicheZeroDegrees: [390, 397],
       description:
         "Coarse: 26–28 Comandante clicks. Niche degrees derived via the app's anchored conversion (no OREA Niche value is published) — calibrate to the 2:20–2:40 finish.",
+      // Niche from the published clicks via the owner's MEASURED map (380° = 23, 400° = 29 clicks); audited 2026-10-18.
+      nicheZeroDegrees: [390, 397],
+      nicheSource: { kind: "published-clicks", quote: "THE SO Soft ONE CUP ... BREWER: V4 WIDE + APEX BOTTOM COFFEE: 16 GRAMS WATER: 250ML @ 92C GRIND SIZE : COARSE (26-28 CLIX)", url: "https://orea.uk/guides-v4" },
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 30, notes: "First 10 g circular, remaining 40 g central." },
@@ -95,10 +97,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 96, rangeC: [94, 96] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "20–24 clicks (medium, coarsened for Wide)",
-      nicheZeroDegrees: [370, 383],
+      referenceSetting: "Orea publishes 20–24 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium, 20–24 Comandante clicks (already a touch coarser for the Wide). Niche derived via the anchored conversion — calibrate to a 2:30–3:00 finish.",
+        "Medium, 20–24 Comandante clicks (already a touch coarser for the Wide). calibrate to a 2:30–3:00 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 30, notes: "Circular." },
@@ -139,10 +141,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 94, rangeC: [92, 95] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "22–26 clicks (medium-coarse, coarsened for Wide)",
-      nicheZeroDegrees: [377, 390],
+      referenceSetting: "Orea publishes 22–26 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium-coarse, 22–26 Comandante clicks. Niche derived via the anchored conversion — aim for a 2:30–3:00 finish.",
+        "Medium-coarse, 22–26 Comandante clicks. aim for a 2:30–3:00 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 40 },
@@ -186,10 +188,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 92, rangeC: [90, 93] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "20–24 clicks (medium, coarsened for Wide)",
-      nicheZeroDegrees: [370, 383],
+      referenceSetting: "Orea publishes 20–24 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium, 20–24 Comandante clicks. Niche derived via the anchored conversion — 2:30–3:00 finish.",
+        "Medium, 20–24 Comandante clicks. 2:30–3:00 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 40, durationSec: 40 },
@@ -230,10 +232,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 92, rangeC: [90, 93] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "22–26 clicks (medium-coarse, coarsened for Wide + batch)",
-      nicheZeroDegrees: [377, 390],
+      referenceSetting: "Orea publishes 22–26 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium-coarse, 22–26 Comandante clicks — a deeper two-cup bed wants a touch coarser. Niche derived via the anchored conversion — 2:50–3:30 finish.",
+        "Medium-coarse, 22–26 Comandante clicks — a deeper two-cup bed wants a touch coarser. 2:50–3:30 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 80, durationSec: 40 },
@@ -274,10 +276,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 96, rangeC: [94, 96] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "20–24 clicks (medium-coarse, coarsened for Wide)",
-      nicheZeroDegrees: [370, 383],
+      referenceSetting: "Orea publishes 20–24 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium-coarse, 20–24 Comandante clicks. Niche derived via the anchored conversion. The brewer only ever sees 260 g; the bypass goes to the carafe.",
+        "Medium-coarse, 20–24 Comandante clicks. The brewer only ever sees 260 g; the bypass goes to the carafe.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 40, notes: "Circular into central." },
@@ -318,10 +320,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 94, rangeC: [92, 95] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "23–26 clicks (medium-coarse, coarsened for Wide)",
-      nicheZeroDegrees: [380, 390],
+      referenceSetting: "Orea publishes 23–26 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Medium-coarse, 23–26 Comandante clicks. Niche derived via the anchored conversion — 2:30–3:00 finish.",
+        "Medium-coarse, 23–26 Comandante clicks. 2:30–3:00 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 40, durationSec: 30 },
@@ -365,9 +367,11 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "25–28 clicks (coarse)",
-      nicheZeroDegrees: [387, 397],
       description:
         "Coarse, 25–28 Comandante clicks. Niche derived via the anchored conversion — 2:30–3:20 finish. On Wave/Sibarist paper grind a touch finer.",
+      // Niche from the published clicks via the owner's MEASURED map (380° = 23, 400° = 29 clicks); audited 2026-10-18.
+      nicheZeroDegrees: [387, 397],
+      nicheSource: { kind: "published-clicks", quote: "GRIND SIZE : COARSE (25-28 CLIX) ... BREWER: V4 WIDE + FAST BOTTOM ... CLASSIC BOTTOM: grind a click coarser ... You can replicate it on the Wave and Sibarist but grind a little finer.", url: "https://orea.uk/guides-v4" },
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 70, durationSec: 40, notes: "Circular." },
@@ -411,10 +415,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 90, rangeC: [88, 91] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "17–20 clicks (fine)",
-      nicheZeroDegrees: [360, 370],
+      referenceSetting: "Orea publishes 17–20 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Fine, 17–20 Comandante clicks — the finest Orea recipe here; the Fast bottom keeps it from clogging. Niche derived via the anchored conversion — 2:30–3:00 finish.",
+        "Fine, 17–20 Comandante clicks — the finest Orea recipe here; the Fast bottom keeps it from clogging. 2:30–3:00 finish.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 40 },
@@ -453,10 +457,10 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     temperature: { celsius: 97, rangeC: [96, 98] },
     grind: {
       referenceGrinder: "Comandante C40",
-      referenceSetting: "26–30 clicks (coarse)",
-      nicheZeroDegrees: [390, 403],
+      referenceSetting: "Orea publishes 26–30 Comandante C40 clicks for the V4 NARROW; for the Wide only \"grind a little coarser\" (orea.uk/guides-v4)",
       description:
-        "Coarse, 26–30 Comandante clicks. Niche derived via the anchored conversion — 2:30–3:00 finish. Pour each pulse only when the bed looks dry.",
+        "Coarse, 26–30 Comandante clicks. 2:30–3:00 finish. Pour each pulse only when the bed looks dry.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 30 },

@@ -54,9 +54,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Various commercial grinders",
       referenceSetting: "medium-coarse, like coarse sea salt",
-      nicheZeroDegrees: [390, 400],
       description:
         "Coarser than a typical V60 grind — the longer total brew time compensates for the reduced surface area.",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -154,9 +154,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "EK43",
       referenceSetting: "medium (double-ground for even distribution)",
-      nicheZeroDegrees: [377, 387],
       description:
         "Du double-ground: a first coarse pass, then a second finer pass through the same hand grinder, to tighten the particle distribution.",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -238,9 +238,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Timemore Chestnut S3 (5.5) / Comandante (26 clicks)",
       referenceSetting: "medium-coarse, 850–950 microns",
-      nicheZeroDegrees: [387, 393],
       description:
-        "Niche derived from Medina's real Comandante 26 clicks via the user's measured map (26 clicks ≈ 390°). The published 26-click figure is kept verbatim.",
+        "The published 26-click figure is kept verbatim.",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -338,9 +338,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Mazzer ZM",
       referenceSetting: "490 microns",
-      nicheZeroDegrees: [380, 390],
       description:
-        "Real grind is 490 µm on a Mazzer ZM. The Comandante/Niche figures are our translations (no originator Comandante published): ~23–26 Comandante clicks; Niche shifted −21° to the user's re-based scale (estimate, calibrate empirically).",
+        "Real grind is 490 µm on a Mazzer ZM.",
+      // No Niche° number: published only in µm (no measured µm→Niche map) (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -430,9 +430,11 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "25 clicks (~750 µm)",
-      nicheZeroDegrees: [385, 392],
       description:
         "Comandante 25 clicks (~750 µm). Niche derived from the published clicks (~25 ≈ 387°); calibrate empirically.",
+      // Niche from the published clicks via the owner's MEASURED map (380° = 23, 400° = 29 clicks); audited 2026-10-18.
+      nicheZeroDegrees: 387,
+      nicheSource: { kind: "published-clicks", quote: "18g coffee, ground on Comandante at 25 clicks (approximately 750 microns)", url: "https://aeropress.com/blogs/w-a-c-aeropress-recipes/1st-george-stanica-romania-2024" },
     },
     pourSequence: [
       {
@@ -516,9 +518,9 @@ export const CHAMPIONSHIP_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante (Trailmaster x25, Tigershark burrs)",
       referenceSetting: "31 clicks, sifted at 200 µm",
-      nicheZeroDegrees: [403, 411],
       description:
-        "Comandante 31 clicks, fines sifted out at 200 µm and chaff blown off. Niche derived from the published clicks (~31 clicks ≈ 407°); calibrate empirically.",
+        "Comandante 31 clicks, fines sifted out at 200 µm and chaff blown off. calibrate empirically.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {

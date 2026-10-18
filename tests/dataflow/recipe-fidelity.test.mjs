@@ -72,7 +72,7 @@ test("resolveReference returns null for 'Own recipe' and gibberish", () => {
   assert.equal(resolveReference("xyzzy not a recipe"), null);
 });
 
-test("a mangled Kasuya Super Coarse is snapped back to the published recipe", () => {
+test("a mangled Kasuya Super Coarse gets the published clock back", () => {
   const { recipe, changed, reasons, reference } = reconcileToReference(
     mangledKasuya(),
     "Kasuya Super Coarse 10-Pour",
@@ -89,9 +89,11 @@ test("a mangled Kasuya Super Coarse is snapped back to the published recipe", ()
     `expected the scaled clock, got ${recipe.targetTimeSec}s`,
   );
 
-  // Grind snapped back into the super-coarse range (published 435–455°), NOT 412°.
-  const deg = Number(/(\d{2,3})/.exec(recipe.grindSize)[1]);
-  assert.ok(deg >= 430 && deg <= 460, `grind should be super-coarse, got ${recipe.grindSize}`);
+  // Grind audit 2026-10-18: Kasuya's 40–45 clicks were found only in a
+  // secondary source and lie outside the owner's measured 23–29 click map, so
+  // the reference carries NO Niche number — the guard has nothing to snap the
+  // grind to and leaves it as written (never an estimated "published" value).
+  assert.equal(recipe.grindSize, "412°");
 
   // The user's batch is preserved.
   assert.equal(recipe.doseGrams, 23);
@@ -100,12 +102,10 @@ test("a mangled Kasuya Super Coarse is snapped back to the published recipe", ()
   // Pours are the published cadence scaled to 350ml: final milestone lands on 350.
   const last = recipe.pourSteps.filter((s) => typeof s.waterGramsAtEnd === "number").pop();
   assert.equal(last.waterGramsAtEnd, 350);
-  // Published pour cadence is fast (5s pulses), NOT the 28s the model invented.
-  // (The drawdown DRAIN step is legitimately ~55s — exclude it; we check pours.)
-  const longestPour = Math.max(
-    ...recipe.pourSteps.filter((s) => s.action === "pour" || s.action === "bloom").map((s) => s.durationSec ?? 0),
-  );
-  assert.ok(longestPour <= 10, `pour pulses should be the published ~5s, got ${longestPour}s`);
+  // With the grind no longer a fidelity dial on this reference (no sourced
+  // Niche value), only the clock drifts, so the pours are not re-snapped here;
+  // pour SECONDS are set downstream by applyPourDurations from the verified
+  // reference's scaled times (tests/dataflow/pour-durations*.test.mjs).
 
   assert.ok(reasons.some((r) => /total time/.test(r)), "reasons should mention the time drift");
 });
@@ -197,16 +197,41 @@ test("temperature-only drift snaps the temperature and nothing else", () => {
   assert.equal(recipe.pourSteps.length, base.pourSteps.length, "pour plan must survive");
 });
 
-test("grind-only drift snaps the grind and nothing else", () => {
-  const base = faithfulKasuya();
-  const { recipe, changed } = reconcileToReference(
-    faithfulKasuya({ grindSize: "380°" }), // a normal V60 grind on a super-coarse recipe
+test("a reference without a sourced Niche value never snaps the grind", () => {
+  // Grind audit 2026-10-18: no published / owner-measured Niche number → the
+  // grind is not a fidelity dial at all.
+  const { recipe, changed, reasons } = reconcileToReference(
+    faithfulKasuya({ grindSize: "380°" }),
     "Kasuya Super Coarse 10-Pour",
   );
-  assert.equal(changed, true);
-  assert.notEqual(recipe.grindSize, "380°", "grind must be corrected");
-  assert.equal(recipe.waterTempC, base.waterTempC, "temp must survive a grind-only drift");
-  assert.equal(recipe.targetTimeSec, base.targetTimeSec, "time must survive a grind-only drift");
+  assert.equal(changed, false, reasons.join("; "));
+  assert.equal(recipe.grindSize, "380°");
+});
+
+test("grind-only drift against an owner-measured reference snaps the grind and nothing else", () => {
+  // Hoffmann Better 1 Cup carries the owner's MEASURED 380° at 15 g / 250 g.
+  const steps = [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 50, durationSec: 10 },
+    { label: "Wait", action: "wait", durationSec: 35 },
+    { label: "Pour 2", action: "pour", waterGramsAtEnd: 100, durationSec: 10 },
+    { label: "Wait", action: "wait", durationSec: 10 },
+    { label: "Pour 3", action: "pour", waterGramsAtEnd: 150, durationSec: 10 },
+    { label: "Wait", action: "wait", durationSec: 10 },
+    { label: "Pour 4", action: "pour", waterGramsAtEnd: 200, durationSec: 10 },
+    { label: "Wait", action: "wait", durationSec: 10 },
+    { label: "Pour 5", action: "final", waterGramsAtEnd: 250, durationSec: 10 },
+  ];
+  const ref = reconcileToReference(
+    { doseGrams: 15, waterGrams: 250, waterTempC: 95, grindSize: "380°", targetTimeSec: 180, pourSteps: steps },
+    "Hoffmann V60 — Better 1 Cup",
+  );
+  const drifted = reconcileToReference(
+    { ...ref.recipe, grindSize: "430°" },
+    "Hoffmann V60 — Better 1 Cup",
+  );
+  assert.equal(drifted.changed, true, "a 50° coarser grind against the measured 380° is drift");
+  assert.notEqual(drifted.recipe.grindSize, "430°");
+  assert.equal(drifted.recipe.waterTempC, ref.recipe.waterTempC, "temp must survive a grind-only drift");
 });
 
 test("percolation time-only drift snaps the clock but keeps the authored pours", () => {
@@ -228,8 +253,10 @@ test("two drifted fields still snap the whole mechanical signature", () => {
     "Kasuya Super Coarse 10-Pour",
   );
   assert.equal(changed, true);
-  assert.ok(reasons.length >= 2, `expected ≥2 drift reasons, got ${reasons}`);
-  assert.notEqual(recipe.grindSize, "380°");
+  // No sourced Niche value on this reference (grind audit 2026-10-18): only the
+  // clock is a drift; the grind is left as written.
+  assert.ok(reasons.length >= 1, `expected a drift reason, got ${reasons}`);
+  assert.equal(recipe.grindSize, "380°");
   assert.notEqual(recipe.targetTimeSec, 400);
 });
 
@@ -419,7 +446,7 @@ test("a clicks grind is compared as degrees, not as a tiny degree value", () => 
   );
 });
 
-test("a genuinely too-fine clicks grind is still caught", () => {
+test("a too-fine clicks grind is not judged against an unsourced reference grind", () => {
   // 16 clicks == ~357 degrees: a real AeroPress-fine setting on a Kasuya V60.
   const res = reconcileToReference(
     {
@@ -438,8 +465,7 @@ test("a genuinely too-fine clicks grind is still caught", () => {
     },
     "Kasuya 4:6",
   );
-  assert.ok(
-    res.reasons.some((r) => r.includes("grind")),
-    "a clicks value that really is too fine must still trip the window",
-  );
+  // Kasuya publishes only "coarse" for the 4:6 (grind audit 2026-10-18): there
+  // is no Niche window to trip, so the grind is never a drift reason here.
+  assert.ok(!res.reasons.some((r) => r.includes("grind")), res.reasons.join("; "));
 });

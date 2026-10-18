@@ -128,6 +128,13 @@ for (const r of ALL_RECIPES) {
   if (nz === undefined && !g.description && !g.referenceSetting) {
     W(id, "no grind info at all");
   } else if (nz !== undefined) {
+    // Owner rule 2026-10-18: no estimated grind numbers. A Niche value must say
+    // where it comes from (published Niche / published Comandante clicks inside
+    // the owner's measured 23–29 span / the owner's own measurement).
+    const src = g.nicheSource;
+    if (!src || !["published-niche", "published-clicks", "owner-measured"].includes(src.kind) || !src.quote) {
+      E(id, "nicheZeroDegrees without a nicheSource (kind + quote) — an unsourced grind number is an estimate");
+    }
     const vals = Array.isArray(nz) ? nz : [nz];
     if (Array.isArray(nz) && nz[0] > nz[1]) E(id, `niche degrees range reversed [${nz}]`);
     for (const v of vals) if (v < 300 || v > 470) W(id, `niche degrees ${v} outside 300–470`);

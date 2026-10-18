@@ -184,8 +184,23 @@ export function scaleGrind(
   method?: string,
 ): ScaledGrind {
   const disc = isDripAssistMethod(method) ? DRIP_ASSIST_GRIND_OFFSET_DEG : 0;
+  // The dose law is MEASURED on the owner's V60 only (grind audit 2026-10-18).
+  // On any other brewer a batch change moves the grind by an unmeasured amount,
+  // so no number is added — the line says so instead.
+  const lawApplies = ref.brewer === "v60";
   const batch =
-    doseRatio > 0 ? Math.round(GRIND_DEG_PER_DOUBLING * Math.log2(doseRatio)) : 0;
+    lawApplies && doseRatio > 0 ? Math.round(GRIND_DEG_PER_DOUBLING * Math.log2(doseRatio)) : 0;
+  if (!lawApplies && doseRatio > 0 && Math.abs(Math.log2(doseRatio)) > 0.05) {
+    const published = ref.grind?.referenceSetting ?? ref.grind?.description ?? "as published";
+    const range = nicheRangeOf(ref);
+    const base = range ? (range[0] === range[1] ? `${range[0]}°` : `${range[0]}–${range[1]}°`) : published;
+    return {
+      nicheRange: null,
+      deltaDeg: 0,
+      text: `${base} at the published batch; the grind change for this batch on a ${ref.brewer} is unmeasured — a measurement brew`,
+      prose: true,
+    };
+  }
   const deltaDeg = batch + disc;
   const range = nicheRangeOf(ref);
 
@@ -194,7 +209,7 @@ export function scaleGrind(
     const note =
       deltaDeg === 0
         ? published
-        : `${published} (≈${deltaDeg > 0 ? "+" : ""}${deltaDeg}° ${deltaDeg > 0 ? "coarser" : "finer"} than the published single-cup setting)`;
+        : `${published} (≈${deltaDeg > 0 ? "+" : ""}${deltaDeg}° ${deltaDeg > 0 ? "coarser" : "finer"} than the published setting, by the owner's measured V60 dose law)`;
     return { nicheRange: null, deltaDeg, text: note, prose: true };
   }
 
