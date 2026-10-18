@@ -306,7 +306,14 @@ export default function LightStepRecommend() {
             </div>
           )}
           <div className="border-t border-light-foreground/10 pt-4 grid grid-cols-2 gap-4 text-center">
-            <RecipeStat label="Grind" value={activeRecipe.grindSize} />
+            <div>
+              <RecipeStat label="Grind" value={activeRecipe.grindSize} />
+              {active?.grindProvenance && (
+                <p className="mt-1 text-[11px] leading-snug text-light-muted-foreground">
+                  {GRIND_PROVENANCE_LABEL[active.grindProvenance]}
+                </p>
+              )}
+            </div>
             <RecipeStat label={isColdSteep ? "Steep" : "Time"} value={formatDuration(activeRecipe.targetTimeSec)} />
           </div>
 
@@ -492,6 +499,15 @@ function gramsLabel(n: unknown): string {
   const v = Number(n);
   return Number.isFinite(v) ? `${v}g` : "—";
 }
+
+/** Where the grind number comes from (src/lib/claude/grindProvenance.ts). */
+const GRIND_PROVENANCE_LABEL: Record<NonNullable<RecommendationCandidate["grindProvenance"]>, string> = {
+  user: "your setting",
+  measured: "measured on your brews",
+  published: "published by the recipe",
+  "v60-anchor": "your measured V60 anchor",
+  "measurement-brew": "measurement brew — tap Done when the bed is dry",
+};
 
 function RecipeStat({ label, value }: { label: string; value: string }) {
   return (

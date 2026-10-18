@@ -79,7 +79,7 @@ const clampDrawdown = (sec: number) =>
   Math.max(MIN_DRAWDOWN_SEC, Math.min(MAX_DRAWDOWN_ABS_SEC, Math.round(sec)));
 
 /** When the last pour of a logged brew actually ended, or null if unknowable. */
-function pourPhaseEndOf(s: Session, recipe: BrewRecipe | undefined, method: string): number | null {
+export function pourPhaseEndOf(s: Session, recipe: BrewRecipe | undefined, method: string): number | null {
   const createdMs = Date.parse(s.createdAt);
   const schedule =
     recipe && !hasImmersionShape(recipe)

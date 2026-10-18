@@ -8,6 +8,11 @@
 
 ### ✅ Done
 
+**Grind slope from the owner's own brews + provenance on every grind (2026-10-18, night, PR C of the grind audit)**
+- **Owner's answer:** "AB jetzt, wenn es wirklich durchgelaufen und trocken ist" — he taps Done at a dry bed from now on. `brew.doneAtDryBed` marks those brews (his own Done tap only; the timer stop and the cold-brew fixed time never set it), and only they count as drawdown measurements.
+- **Shipped:** `grindSlope.ts` (pairs → s/° per brewer × batch, ≥2 pairs, interpolation from the newest measured brew; Chemex 750–800 g → the published 4:00–5:00 window), the YOUR MEASURED GRIND SLOPE prompt block, `grindProvenance.ts` + the label under the grind on the recipe screen, `dry_bed` in the recommend-logs GRIND vs TIME rows.
+- **Unverified** until two dry-bed brews of one coffee on one brewer × batch exist.
+
 **Grind table: estimates removed, dose law V60-only (2026-10-18, night, PR B of the grind audit)**
 - `grindSettings.ts` keeps only the owner's measured V60 (380° @ 250 ml, 400° @ 500 ml) and the owner-stated Drip Assist +5°; the 13 estimated per-brewer rows are gone. The /recommend NICHE° block, the generated Comandante line and the chat's grind block now say that every other brewer has no measured or published value → MEASURED GRIND, a recipe's sourced value, or a declared measurement brew. Convergence moves "same grind" with the batch only on a V60 base (`doseLawApplies`); elsewhere the grind move is a measurement brew and not "the one change". Pinned by the rewritten `grind-reference-consistency.test.mjs` (no unsourced degree anywhere in the system prompt).
 

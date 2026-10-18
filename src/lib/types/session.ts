@@ -141,6 +141,10 @@ export interface RecommendationCandidate {
    * "Own recipe" when it isn't based on a documented one. Populated by the
    * recommend model; shown on the brew screen and known to the chat. */
   basedOn?: string;
+  /** Where the grind number comes from (grindProvenance.ts, 2026-10-18):
+   * the owner's typed value, his measured brews, a published/sourced value,
+   * the measured V60 anchor, or a measurement brew. Shown under the grind. */
+  grindProvenance?: "user" | "measured" | "published" | "v60-anchor" | "measurement-brew";
   /** One sentence: why this candidate. The only per-candidate prose left. */
   whyChosen: string;
   /** One clause: the variable this candidate tests and what the cup shows if it
@@ -217,6 +221,11 @@ export interface BrewLog {
   followedRecipe?: boolean;
   modifications?: string;
   actualTimeSec?: number;
+  /** True when the owner tapped Done himself (not the timer running out).
+   * Owner, 2026-10-18: from now on he taps Done only when the bed is dry, so
+   * ONLY these brews make actualTimeSec a drawdown measurement (grindSlope.ts).
+   * Older brews are never reinterpreted. */
+  doneAtDryBed?: boolean;
   flow?: "too-fast" | "perfect" | "too-slow" | "na";
   timing?: "as-expected" | "faster" | "slower";
   grindSettingUsed?: string;         // actual grind used (pre-filled from recommendation)
