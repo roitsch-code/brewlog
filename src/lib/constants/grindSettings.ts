@@ -26,68 +26,43 @@ export interface GrindSetting {
   method: string;
   process?: string;
   niche: { min: number; max: number };
-  /** Comandante C40 clicks, derived from `niche` via the user's measured map. */
+  /** Comandante C40 clicks via the owner's measured map. */
   comandante: { min: number; max: number };
-  /** "measured" only for the V60 anchor; everything else is an estimate. */
-  confidence: "measured" | "estimate" | "recipe-anchored";
+  /** "measured": the owner measured it. "owner-stated": the owner gave the
+   * value himself (the Drip Assist offset). Nothing else belongs here. */
+  confidence: "measured" | "owner-stated";
   notes?: string;
 }
 
+// GRIND AUDIT (owner, 2026-10-18: "never estimate — research, calculate,
+// prove"). This table held a row per brewer; every row but the V60 was an
+// estimate carried over from an older baseline, never measured and never
+// published. They are gone. For every other brewer the grind comes from the
+// owner's own logged brews (src/lib/claude/measuredGrind.ts), from a reference
+// recipe's SOURCED value (grind.nicheSource), or it is a declared measurement
+// brew — see the NICHE° GRIND REFERENCE block in recommendPrompt.ts.
 export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
-  // V60 — the measured anchor (380° / 23 clicks = standard 15 g single cup).
+  // V60 — measured: 15 g / 250 ml = 380° = 23 clicks; 30 g / 500 ml = 400° = 29.
   {
     method: "V60",
-    niche: { min: 375, max: 385 },
-    comandante: { min: 22, max: 25 },
+    niche: { min: 380, max: 380 },
+    comandante: { min: 23, max: 23 },
     confidence: "measured",
-    notes: "Anchor: 15 g single cup = 380° / 23 clicks. Larger batches coarsen (see dose-scaling rule).",
+    notes: "Measured at 15 g / 250 ml. Also measured: 30 g / 500 ml = 400° / 29 clicks.",
   },
-  // V60 + Drip Assist (emergency / travel only — the disc adds flow
-  // resistance, so grind a little coarser than the standard V60 to keep
-  // drawdown in the same window. Magnitude is approximate; refine
-  // after a real travel brew. Direction confirmed by the user; ~+5°
-  // / +2 Comandante clicks is a small starting offset.
+  // The Hario Drip Assist offset as the owner states it (CLAUDE.md equipment
+  // profile: "When it IS in use: ~+5° coarser").
   {
     method: "V60 + Drip Assist",
-    niche: { min: 380, max: 390 },
-    comandante: { min: 24, max: 27 },
-    confidence: "estimate",
-    notes: "Emergency / travel only. Disc adds resistance → grind ~5° coarser than the standard V60 (one Comandante click). The disc smooths pour distribution at the cost of free flow; coarsen to compensate so timing matches the standard V60. Refine after first travel brew.",
+    niche: { min: 385, max: 385 },
+    comandante: { min: 25, max: 25 },
+    confidence: "owner-stated",
+    notes: "Owner-stated offset: about 5° coarser than the bare V60. Emergency / travel only.",
   },
-  { method: "Orea V4", niche: { min: 380, max: 390 }, comandante: { min: 23, max: 26 }, confidence: "estimate" },
-  // The individual Orea V4 bottoms. These lived ONLY inside the hardcoded
-  // NICHE° block in recommendPrompt.ts on the pre-May-2026 baseline that the
-  // rest of the app moved off (that block read Apex 403–407° etc. while the
-  // measured V60 anchor is 380°). Re-based onto the measured anchor by the same
-  // −21° the audit applied elsewhere, and pulled into the source table so the
-  // prompt block is generated-equivalent and can no longer drift from it
-  // (pinned by tests/dataflow/grind-reference-consistency.test.mjs). Estimates
-  // off the V60 anchor + relative bottom order, not directly measured.
-  { method: "Orea Apex", niche: { min: 382, max: 386 }, comandante: { min: 24, max: 25 }, confidence: "estimate", notes: "Clarity bottom — slowest of the four, finer end of the Orea range." },
-  { method: "Orea Classic", niche: { min: 385, max: 390 }, comandante: { min: 24, max: 26 }, confidence: "estimate", notes: "Sweetness bottom — middle of the Orea range." },
-  { method: "Orea Open", niche: { min: 381, max: 388 }, comandante: { min: 23, max: 25 }, confidence: "estimate", notes: "Open bed, max flow — tolerates the finer end because the bottom never restricts drawdown." },
-  { method: "Origami Dripper", process: "Washed", niche: { min: 380, max: 386 }, comandante: { min: 23, max: 25 }, confidence: "estimate" },
-  { method: "Origami Dripper", process: "Honey", niche: { min: 382, max: 387 }, comandante: { min: 24, max: 25 }, confidence: "estimate" },
-  { method: "Origami Dripper", process: "Natural", niche: { min: 383, max: 388 }, comandante: { min: 24, max: 25 }, confidence: "estimate" },
-  { method: "Clever Dripper", niche: { min: 395, max: 415 }, comandante: { min: 28, max: 34 }, confidence: "estimate" },
-  { method: "AeroPress", niche: { min: 356, max: 366 }, comandante: { min: 16, max: 18 }, confidence: "estimate" },
-  { method: "Moccamaster", niche: { min: 410, max: 420 }, comandante: { min: 32, max: 35 }, confidence: "estimate" },
-  // Kalita Wave: flat bed, three small holes — runs around the V60 baseline,
-  // a touch coarser to keep the bed from stalling. Chemex: thick filter +
-  // restricted drain → medium-coarse to avoid over-extraction on the slow flow.
-  // Both added May 2026 for the Markus-Additions recipes; estimates off the V60
-  // anchor + grind feel, not directly measured.
-  { method: "Kalita Wave", niche: { min: 384, max: 394 }, comandante: { min: 24, max: 27 }, confidence: "estimate" },
-  // Chemex: an ESTIMATE with no source. Since 2026-10-18 /recommend takes a
-  // Chemex grind only from the owner's measured Chemex brews at the batch
-  // (src/lib/claude/measuredChemex.ts); this row is due for removal in the
-  // grind-provenance audit.
-  { method: "Chemex", niche: { min: 398, max: 410 }, comandante: { min: 28, max: 32 }, confidence: "estimate", notes: "Unsourced estimate. /recommend uses the owner's measured Chemex brews instead (owner, 2026-10-18: 750 ml at 400° logged 440 s against a 299 s plan)." },
-  // Peng champ grind is anchored to his published ~Comandante 26 (≈390°), NOT the
-  // blanket −21° shift, which would have wrongly driven it to ~19 clicks.
-  { method: "Peng 2025 (Championship)", niche: { min: 385, max: 395 }, comandante: { min: 25, max: 28 }, confidence: "recipe-anchored" },
-  { method: "Kasuya 4:6", niche: { min: 390, max: 400 }, comandante: { min: 26, max: 29 }, confidence: "estimate" },
 ];
+
+/** The owner's second measured V60 point (30 g / 500 ml). */
+export const V60_DOUBLE_ANCHOR = { waterG: 500, niche: 400, clicks: 29 } as const;
 
 /** The +20°-per-doubling law as a number (same rule as DOSE_SCALING_RULE). */
 export const NICHE_DEG_PER_DOUBLING = 20;
@@ -105,7 +80,7 @@ export function batchGrindDeltaDeg(fromWaterG: number, toWaterG: number): number
  * Linear approximation between the two anchors — a guideline, not a hard table.
  */
 export const DOSE_SCALING_RULE =
-  "Larger batch = coarser grind: per doubling of dose (at the same ratio) go ~+20° Niche / +6 Comandante clicks coarser; halving goes the same amount finer. Measured anchors: 15 g = 380°/23 clicks, 30 g = 400°/29 clicks (V60).";
+  "V60 only (the only brewer it is measured on): per doubling of dose at the same ratio, +20° Niche / +6 Comandante clicks coarser; halving goes the same amount finer. Measured anchors: 15 g = 380°/23 clicks, 30 g = 400°/29 clicks. On every other brewer the batch effect on grind is unmeasured.";
 
 export const GRIND_FOOTNOTE =
   "Niche ↔ Comandante: ~3.3° per click (380°=23, 400°=29 clicks). " +
@@ -123,7 +98,10 @@ export const GRIND_FOOTNOTE =
 export function formatGrindSettingsForPrompt(): string {
   const lines = NICHE_GRIND_SETTINGS.map((s) => {
     const head = s.process ? `${s.method} (${s.process})` : s.method;
-    return `- ${head}: ${s.niche.min}–${s.niche.max}° Niche (~${s.comandante.min}–${s.comandante.max} Comandante clicks)`;
+    return `- ${head}: ${s.niche.min}° Niche (${s.comandante.min} Comandante clicks) — ${s.confidence}${s.notes ? `. ${s.notes}` : ""}`;
   });
+  lines.push(
+    "- Every other brewer: no measured or published Niche value exists. Use the owner's own logged grind on that brewer, or a recipe's sourced value; otherwise say plainly that the setting is a measurement brew — never present a number as a known value.",
+  );
   return lines.join("\n");
 }

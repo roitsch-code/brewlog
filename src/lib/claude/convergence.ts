@@ -192,11 +192,20 @@ export interface ConvergenceNoteOptions {
 /** ", and move the grind from 400° to 412° (dose law)" — or "" when the base
  * grind is not a number. Without it "same grind" carried a 500 ml setting
  * unchanged onto a 750 ml batch. */
-function scaledGrindNote(grindSize: string, fromWater: number, toWater: number): string {
+function scaledGrindNote(grindSize: string, fromWater: number, toWater: number, method: string): string {
   const g = grindValue(grindSize);
   const d = batchGrindDeltaDeg(fromWater, toWater);
   if (g === undefined || d === 0) return "";
+  // The dose law is measured on the owner's V60 only (grind audit 2026-10-18).
+  if (!doseLawApplies(method)) {
+    return `; how far the grind moves for this batch on a ${method} is unmeasured — choose it as a measurement brew and say so in whyChosen (it does not count as the one change)`;
+  }
   return `, and move the grind ${d > 0 ? "coarser" : "finer"} by the dose law: ${Math.round(g)}° → ${Math.round(g + d)}° (Niche; +20° per doubling of the batch)`;
+}
+
+/** The +20°-per-doubling dose law is MEASURED on the owner's V60 only. */
+export function doseLawApplies(method: string | undefined): boolean {
+  return brewMethodKey(method) === "v60";
 }
 
 /** The SESSION ARC block for the user message. */
@@ -219,7 +228,7 @@ RULE: a ${b.rating}★ cup is NOT a baseline. The FIRST candidate must be genuin
     opts.targetWaterGrams &&
     b.recipe.waterGrams > 0 &&
     Math.abs(opts.targetWaterGrams - b.recipe.waterGrams) / b.recipe.waterGrams > 0.05
-      ? `\nThe user asked for ${opts.targetWaterGrams}g today (the base was ${b.recipe.waterGrams}g): scale dose and milestones to ${opts.targetWaterGrams}g at the SAME ratio and pour count${scaledGrindNote(b.recipe.grindSize, b.recipe.waterGrams, opts.targetWaterGrams)}. Scaling is not the one change.`
+      ? `\nThe user asked for ${opts.targetWaterGrams}g today (the base was ${b.recipe.waterGrams}g): scale dose and milestones to ${opts.targetWaterGrams}g at the SAME ratio and pour count${scaledGrindNote(b.recipe.grindSize, b.recipe.waterGrams, opts.targetWaterGrams, b.method)}. Scaling is not the one change.`
       : "";
   return `\nSESSION ARC — THE LAST BREW OF THIS COFFEE WORKED (${b.rating}★ on ${b.dateLabel || "the last brew"}). Session ${state.count + 1}.
 ${describeBase(b)}
@@ -271,7 +280,7 @@ function agitationCount(steps?: BrewPourStep[]): number {
 }
 
 /** Which dials differ between the base and candidate 1. Exported for tests. */
-export function changedDials(base: BrewRecipe, cand: CandidateLike["recipe"]): string[] {
+export function changedDials(base: BrewRecipe, cand: CandidateLike["recipe"], method?: string): string[] {
   const changed: string[] = [];
   const bDose = base.doseGrams;
   const bWater = base.waterGrams;
@@ -290,10 +299,12 @@ export function changedDials(base: BrewRecipe, cand: CandidateLike["recipe"]): s
 
   const bG = grindValue(base.grindSize);
   const cG = grindValue(cand.grindSize);
-  if (bG !== undefined && cG !== undefined) {
-    // A different batch moves the grind by the dose law (+20° per doubling) —
-    // that is part of SCALING, not the one change. Comparing raw degrees held a
-    // 500 ml grind fixed at 750 ml (the owner's 400° Chemex, 2026-10-18).
+  if (!sameBatch && !doseLawApplies(method)) {
+    // A batch change on a brewer whose dose law is unmeasured: the grind move is
+    // a measurement brew, part of the scaling — never counted as the one change.
+  } else if (bG !== undefined && cG !== undefined) {
+    // A different batch moves the grind by the dose law (+20° per doubling,
+    // measured on the V60) — part of SCALING, not the one change.
     const expected = !sameBatch && cWater !== undefined ? bG + batchGrindDeltaDeg(bWater, cWater) : bG;
     if (Math.abs(cG - expected) > GRIND_TOLERANCE) changed.push("grind");
   } else if (typeof cand.grindSize === "string" && cand.grindSize.trim().toLowerCase() !== base.grindSize.trim().toLowerCase()) {
@@ -340,7 +351,7 @@ export function checkConvergence(
         changed: ["brewer"],
       };
     }
-    const changed = changedDials(b.recipe, first.recipe);
+    const changed = changedDials(b.recipe, first.recipe, b.method);
     if (changed.length > 1) {
       return {
         kind: "converge",

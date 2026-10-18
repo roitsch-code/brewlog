@@ -477,7 +477,7 @@ export async function generateRecommendation(
   const sessionGrinder = context.grinder || preferences.grinder || "Niche Zero";
   const isNiche = sessionGrinder.toLowerCase().includes("niche");
   const grinderNote = isNiche
-    ? `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value (e.g. "406°"). NO ranges. NEVER clicks.`
+    ? `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value (e.g. "380°"). NO ranges. NEVER clicks.`
     : `Grinder: ${sessionGrinder} → grindSize must be ONE specific click count (e.g. "26"). NO ranges. NEVER Niche°.`;
 
   const waterNote =
