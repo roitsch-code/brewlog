@@ -892,6 +892,8 @@ export function formatGrind(recipe: Recipe): string {
     );
   }
   if (g.referenceSetting) parts.push(`(${g.referenceSetting})`);
+  else if (g.description) parts.push(g.description);
+  if (g.nicheZeroDegrees === undefined && parts.length) parts.push("— no published Niche setting");
   return parts.join(" ") || "unspecified";
 }
 

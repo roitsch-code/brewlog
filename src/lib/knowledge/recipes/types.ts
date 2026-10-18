@@ -79,8 +79,22 @@ export interface GrindSpec {
   referenceGrinder?: string;
   /** Setting on that reference grinder ("58 clicks", "490 µm", "1.6 EK"). */
   referenceSetting?: string;
-  /** Approximate Niche Zero degrees — single value or working range. */
+  /** Niche Zero degrees — single value or working range. Only allowed with a
+   * `nicheSource` that says where the number comes from (owner rule
+   * 2026-10-18: no estimated grind numbers; enforced by validate.mjs). */
   nicheZeroDegrees?: number | [number, number];
+  /** Where `nicheZeroDegrees` comes from:
+   *  - "published-niche": the originator states a Niche Zero setting;
+   *  - "published-clicks": the originator states Comandante clicks, converted
+   *    with the owner's MEASURED map (380° = 23, 400° = 29) — only inside that
+   *    measured 23–29 click span, never extrapolated;
+   *  - "owner-measured": the owner's own measured setting for this recipe. */
+  nicheSource?: {
+    kind: "published-niche" | "published-clicks" | "owner-measured";
+    /** Verbatim quote of the published setting (or the owner's measurement). */
+    quote: string;
+    url?: string;
+  };
   /** Free-text descriptor for grind feel ("medium-fine, like table salt"). */
   description?: string;
 }
