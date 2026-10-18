@@ -8,6 +8,8 @@ import { canonicalRoasterSlug } from "@/lib/roasters/priors";
 import type { UserPreferences } from "@/lib/types/preferences";
 import type { RoasterPrior } from "@/lib/roasters/priors";
 import type { CoffeeIdentity, Recommendation, Session, SessionContext } from "@/lib/types/session";
+import { parseShownCandidates } from "@/lib/claude/shownGuard";
+import { cleanUserRequest, parseUserRequest, USER_BREWER_METHODS, type ParsedUserRequest } from "@/lib/claude/userRequest";
 
 /**
  * The full recommendation pipeline minus auth/HTTP: parallel DB lookups
@@ -102,12 +104,20 @@ export async function runRecommendation(body: {
   coffee: unknown;
   context: unknown;
   pastSessions?: unknown;
+  shownCandidates?: unknown;
 }): Promise<Recommendation> {
-  const { coffee, context, pastSessions } = body as {
+  const { coffee, context: rawContext, pastSessions } = body as {
     coffee: CoffeeIdentity;
     context: SessionContext;
     pastSessions?: Session[];
   };
+  const shown = parseShownCandidates(body.shownCandidates);
+  // The Context step's free text: one small Haiku parse, started now so it runs
+  // alongside the DB reads below. Never throws (raw text fallback).
+  const requestText = cleanUserRequest(rawContext?.userRequest);
+  const userRequestPromise: Promise<ParsedUserRequest | undefined> = requestText
+    ? parseUserRequest(requestText)
+    : Promise.resolve(undefined);
 
   let preferences: UserPreferences | null = null;
   try {
@@ -209,6 +219,19 @@ export async function runRecommendation(body: {
       }))
     : [];
 
+  // Fold what the free text fixes about the BREW ITSELF into the context, so
+  // every capacity / volume / lock path sees it: a typed water amount becomes
+  // the custom target, an insisted-on brewer becomes the method lock (only when
+  // the user did not already lock one by hand).
+  const userRequest = await userRequestPromise;
+  let context: SessionContext = rawContext;
+  if (userRequest?.params.waterG && context.occasion !== "summer-time") {
+    context = { ...context, amount: "custom", customWaterMl: Math.round(userRequest.params.waterG) };
+  }
+  if (userRequest?.requireBrewer && !context.preferredMethod) {
+    context = { ...context, preferredMethod: USER_BREWER_METHODS[userRequest.requireBrewer] ?? userRequest.requireBrewer };
+  }
+
   const { recommendation, usage } = await generateRecommendation(
     coffee,
     context,
@@ -218,6 +241,7 @@ export async function runRecommendation(body: {
     terrain || undefined,
     coffeeHistory,
     allInsights.length > 0 ? allInsights : undefined,
+    { shown, userRequest },
   );
   // The one number that says how long the user waited: output tokens are the
   // latency (~70 tok/s on Opus), `calls` says whether a repair round fired.

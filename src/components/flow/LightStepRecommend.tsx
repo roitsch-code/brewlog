@@ -14,7 +14,7 @@ import { buildCraftingPhases } from "@/lib/craftingPhases";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { MAX_CHARS } from "@/lib/insights/loadingInsightLint";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import type { BrewRecipe, RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
+import type { BrewRecipe, Recommendation, RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
 import { pourScheduleFor } from "@/lib/utils/pourSequence";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
 
@@ -66,6 +66,25 @@ const CONFIDENCE_LABELS: Record<CandidateConfidence, string> = {
   low: "Low confidence",
   exploratory: "Exploratory",
 };
+
+/** "Kasuya Super Coarse · no Clever Dripper · 92°C" — how the Context step's
+ * free text was read, so a misread is visible before brewing. */
+function appliedLine(a: Recommendation["userRequestApplied"]): string {
+  if (!a) return "";
+  const p = a.params ?? {};
+  const parts = [
+    a.recipe ?? "",
+    ...a.unresolved.map((u) => `${u} (not in the library — own take)`),
+    a.required ? `${a.required} only` : "",
+    ...a.excluded.map((b) => `no ${b}`),
+    p.tempC !== undefined ? `${p.tempC}°C` : "",
+    p.grind ? `grind ${p.grind}` : "",
+    p.doseG !== undefined ? `${p.doseG} g dose` : "",
+    p.waterG !== undefined ? `${p.waterG} g water` : "",
+    p.ratio !== undefined ? `1:${p.ratio}` : "",
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : a.text;
+}
 
 export default function LightStepRecommend() {
   const { draft, setStep, isRecommending, recommendError, setBrew } = useFlowStore();
@@ -216,6 +235,13 @@ export default function LightStepRecommend() {
         Suggested Recipe
         {draft.coffee?.name ? ` · ${draft.coffee.roaster ? `${draft.coffee.roaster} · ` : ""}${draft.coffee.name}` : ""}
       </p>
+
+      {appliedLine(rec.userRequestApplied) && (
+        <p className="mt-3 px-1 text-[13px] leading-relaxed text-light-foreground">
+          <span className="text-light-muted-foreground">Taken into account: </span>
+          {appliedLine(rec.userRequestApplied)}
+        </p>
+      )}
 
       {rec.reasoning && (
         <p className="mt-3 px-1 text-[14px] leading-relaxed text-light-foreground/85">

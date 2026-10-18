@@ -302,6 +302,13 @@ export interface RecipeSelectionInput {
    * occasion ("push methods or sequences you haven't tried on this coffee").
    */
   brewedOnThisCoffee?: BrewedOnThisCoffee;
+  /**
+   * Recipe ids that must NOT be on this turn's menu — the references the user
+   * was already shown in this flow and went back from (shownGuard.ts). A hard
+   * filter, unlike the tie-only demotions above; falls back to the unfiltered
+   * set if excluding would leave nothing.
+   */
+  excludeRecipeIds?: Set<string>;
 }
 
 export interface BrewedOnThisCoffee {
@@ -750,6 +757,10 @@ export function selectRecipes(
   // for a Clever out-of-menu instead. The recipe is never rewritten — just not
   // offered. Fall back to the full set if excluding would leave nothing.
   let scored = ordered;
+  if (input.excludeRecipeIds?.size) {
+    const kept = scored.filter((s) => !input.excludeRecipeIds!.has(s.recipe.id));
+    if (kept.length) scored = kept;
+  }
   // Special (the fast shot): offer only recipes whose published clock fits the
   // ceiling. Falls back to the full set if nothing fits, like every filter here.
   if (isSpecialTime(input.timeAvailable)) {

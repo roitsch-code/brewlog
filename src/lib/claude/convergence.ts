@@ -30,6 +30,7 @@ import type { BrewPourStep, BrewRecipe, Session } from "../types/session";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { brewMethodKey } from "../utils/brewMethodKey";
 import { parseGrindDegrees } from "./recipeFidelity";
+import { batchGrindDeltaDeg } from "../constants/grindSettings";
 
 /** A brew at or above this rating is reproduced; below it, the next brew diverges. */
 export const CONVERGE_MIN_RATING = 4;
@@ -188,6 +189,16 @@ export interface ConvergenceNoteOptions {
   targetWaterGrams?: number;
 }
 
+/** ", and move the grind from 400° to 412° (dose law)" — or "" when the base
+ * grind is not a number. Without it "same grind" carried a 500 ml setting
+ * unchanged onto a 750 ml batch. */
+function scaledGrindNote(grindSize: string, fromWater: number, toWater: number): string {
+  const g = grindValue(grindSize);
+  const d = batchGrindDeltaDeg(fromWater, toWater);
+  if (g === undefined || d === 0) return "";
+  return `, and move the grind ${d > 0 ? "coarser" : "finer"} by the dose law: ${Math.round(g)}° → ${Math.round(g + d)}° (Niche; +20° per doubling of the batch)`;
+}
+
 /** The SESSION ARC block for the user message. */
 export function formatConvergenceNote(state: ConvergenceState, opts: ConvergenceNoteOptions): string {
   const slot = opts.explorationSlot;
@@ -208,11 +219,11 @@ RULE: a ${b.rating}★ cup is NOT a baseline. The FIRST candidate must be genuin
     opts.targetWaterGrams &&
     b.recipe.waterGrams > 0 &&
     Math.abs(opts.targetWaterGrams - b.recipe.waterGrams) / b.recipe.waterGrams > 0.05
-      ? `\nThe user asked for ${opts.targetWaterGrams}g today (the base was ${b.recipe.waterGrams}g): scale dose and milestones to ${opts.targetWaterGrams}g at the SAME ratio and pour count. Scaling is not the one change.`
+      ? `\nThe user asked for ${opts.targetWaterGrams}g today (the base was ${b.recipe.waterGrams}g): scale dose and milestones to ${opts.targetWaterGrams}g at the SAME ratio and pour count${scaledGrindNote(b.recipe.grindSize, b.recipe.waterGrams, opts.targetWaterGrams)}. Scaling is not the one change.`
       : "";
   return `\nSESSION ARC — THE LAST BREW OF THIS COFFEE WORKED (${b.rating}★ on ${b.dateLabel || "the last brew"}). Session ${state.count + 1}.
 ${describeBase(b)}
-RULE — THE FIRST CANDIDATE IS THAT BREW REPRODUCED WITH EXACTLY ONE CHANGE. Same brewer, same ratio, same pour count and cadence, same temperature, same grind, same agitation — except for the ONE dial you move toward 4.5–5★. Pick the dial from what the cup told you (the taste reading, the user's note, the coach answer, MEASURED BREW FEEDBACK): one of water temperature, grind, ratio/dose, pour plan (count, sizes or cadence), agitation, or water source. Name it in \`experiment\` and the reason in whyChosen. Set basedOn EXACTLY to "${b.name}". Use the numbers above as written — the user already brewed them on this kit; do not re-derive them from a published recipe.${scaleNote}
+RULE — THE FIRST CANDIDATE IS THAT BREW REPRODUCED WITH EXACTLY ONE CHANGE. Same brewer, same ratio, same pour count and cadence, same temperature, same grind (moved by the dose law when the batch changes), same agitation — except for the ONE dial you move toward 4.5–5★. Pick the dial from what the cup told you (the taste reading, the user's note, the coach answer, MEASURED BREW FEEDBACK): one of water temperature, grind, ratio/dose, pour plan (count, sizes or cadence), agitation, or water source. Name it in \`experiment\` and the reason in whyChosen. Set basedOn EXACTLY to "${b.name}". Use the numbers above as written — the user already brewed them on this kit; do not re-derive them from a published recipe.${scaleNote}
 This rule overrides RECENTLY RECOMMENDED, METHOD FIT & FRESHNESS and PORTFOLIO DIVERSITY for the first candidate only: repeating a brew that earned ${b.rating}★ is the point, not a failure. The second candidate is the exploration slot and must differ from this base in brewer or reference.${slot}`;
 }
 
@@ -280,7 +291,11 @@ export function changedDials(base: BrewRecipe, cand: CandidateLike["recipe"]): s
   const bG = grindValue(base.grindSize);
   const cG = grindValue(cand.grindSize);
   if (bG !== undefined && cG !== undefined) {
-    if (Math.abs(cG - bG) > GRIND_TOLERANCE) changed.push("grind");
+    // A different batch moves the grind by the dose law (+20° per doubling) —
+    // that is part of SCALING, not the one change. Comparing raw degrees held a
+    // 500 ml grind fixed at 750 ml (the owner's 400° Chemex, 2026-10-18).
+    const expected = !sameBatch && cWater !== undefined ? bG + batchGrindDeltaDeg(bWater, cWater) : bG;
+    if (Math.abs(cG - expected) > GRIND_TOLERANCE) changed.push("grind");
   } else if (typeof cand.grindSize === "string" && cand.grindSize.trim().toLowerCase() !== base.grindSize.trim().toLowerCase()) {
     changed.push("grind");
   }

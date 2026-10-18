@@ -12,6 +12,7 @@ import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import { Brain, FlaskConical, Snowflake, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
 import type { CoachInsight } from "@/components/coach/CoachCard";
+import { USER_REQUEST_MAX_CHARS } from "@/lib/flow/userRequestLimit";
 
 /**
  * Light System fork of /components/flow/StepContext.tsx.
@@ -167,7 +168,7 @@ interface CoffeeMemory {
 }
 
 export default function LightStepContext() {
-  const { draft, setContext, setStep, setIsRecommending, setRecommendError, setRecommendJobId } = useFlowStore();
+  const { draft, setContext, setStep, setIsRecommending, setRecommendError, setRecommendJobId, shownCandidates } = useFlowStore();
   const ctx = (draft.context || {}) as Partial<SessionContext>;
   const [heroQuestion, setHeroQuestion] = useState("");
   useEffect(() => {
@@ -275,6 +276,7 @@ export default function LightStepContext() {
       // session + recommend prompt read coherently instead of an empty bucket.
       timeAvailable: isColdBrew ? "long-steep" : (ctx.timeAvailable ?? ""),
       customWaterMl: ctx.amount === "custom" ? Number(customMl) : undefined,
+      userRequest: (ctx.userRequest ?? "").trim() || undefined,
     };
     setIsRecommending(true);
     setRecommendError(null);
@@ -296,7 +298,9 @@ export default function LightStepContext() {
       const res = await fetch("/api/recommend/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coffee: draft.coffee, context: finalCtx, pastSessions }),
+        // Everything the recipe screen already showed in this flow — the
+        // server keeps those recipes off this answer (shownGuard.ts).
+        body: JSON.stringify({ coffee: draft.coffee, context: finalCtx, pastSessions, shownCandidates }),
       });
       if (!res.ok) throw new Error(`Recommendation failed (${res.status})`);
       const { jobId } = await res.json();
@@ -595,6 +599,26 @@ export default function LightStepContext() {
               </div>
             ))}
           </div>
+        </Section>
+
+        {/* WISHES — free text, optional (2026-10-18). Parsed server-side
+            (src/lib/claude/userRequest.ts): a named recipe leads candidate 1,
+            an excluded brewer leaves the menu, a typed number is held. */}
+        <Section
+          eyebrow="Anything else"
+          footnote={
+            <Footnote>Name a recipe, rule out a brewer, hold a number. It outranks everything above.</Footnote>
+          }
+        >
+          <textarea
+            value={ctx.userRequest ?? ""}
+            onChange={(e) => updateCtx({ userRequest: e.target.value.slice(0, USER_REQUEST_MAX_CHARS) })}
+            maxLength={USER_REQUEST_MAX_CHARS}
+            rows={3}
+            placeholder="e.g. Kasuya ten-pour · no Clever · 92°C"
+            aria-label="Anything else for this brew"
+            className="scroll-y-only block w-full resize-none rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 px-4 py-3 text-[16px] leading-snug text-light-foreground placeholder:text-light-muted-foreground outline-none"
+          />
         </Section>
       </div>
     </LightFlowShell>
