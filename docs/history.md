@@ -8,6 +8,13 @@
 
 ### ✅ Done
 
+**Grind audit: every corpus Niche° number checked against its originator (2026-10-18, night)**
+- **Owner:** "Niemals schätzen … recherchieren, rechnen, belegen."
+- **Done:** six parallel research passes opened the source of each of the 131 recipes carrying `nicheZeroDegrees`. Verdicts: 60 unreachable (mostly YouTube-only or no traceable originator), 42 description-only, 16 published Comandante clicks, 8 another grinder (EK43, 1Zpresso, Acaia Orbit, DM), 3 microns, 2 owner-measured, 0 published Niche values.
+- **Kept (5):** clicks only when PRIMARY, standard C40, for THIS brewer and inside the owner's measured 23–29 span — Stanica WAC 2024 25 → 387°, Orea So Soft (Wide + Apex) 26–28 → 390–397°, Orea Four Six (Wide + Fast) 25–28 → 387–397°; owner-measured Hoffmann 1-Cup 380° and Ultimate 400°. Everything else lost its number; the published description stays. Orea publishes its click ranges for the V4 NARROW — the corpus had filed them as "coarsened for Wide".
+- **Enforced:** `GrindSpec.nicheSource` + a `validate.mjs` hard error for a number without it; `formatGrind` says "no published Niche setting"; `scaleGrind` applies the dose law to V60 references only. Tests that leaned on the removed Kasuya numbers now use the sourced references.
+- **Found, not fixed:** content mismatches beyond the grind — CLAUDE.md Current status item 9.
+
 **Chemex: the V60-derived floor removed — measured brews only (2026-10-18, same evening)**
 - **Owner:** the 412° floor was V60 data carried onto a Chemex — "Chemex hat ganz anderes Papier als V60"; never estimate, research everything.
 - **Researched (primary sources, quoted in the session):** Chemex: "20-30% thicker paper than most of the competition", no flow numbers; Chemex FAQ: "Use a medium coarse grind", and when "filtering slowly" "Use a coarser grind"; 750–800 g targets: Baratza 50/800 "four and a half to five minutes", The Little Marionette 50/800 4.5 min, Barefoot 50/750 ~4:00 (Prima re-brew). Chemex recipes with a measurable grind (Comandante clicks: Ineffable 21, Sow 27 @ 34/500, Coffeevine 30–31 @ 30/550) stop at 550 g; no source gives a Niche° value for 750 g or any seconds-per-degree slope.

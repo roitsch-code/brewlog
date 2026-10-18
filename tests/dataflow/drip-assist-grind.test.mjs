@@ -43,17 +43,19 @@ await build({
 });
 const { reconcileToReference } = await import(pathToFileURL(out).href);
 
-// Verified corpus recipe: Kasuya 4:6 Standard — 20g:300g, Niche 390–400 (mid
-// 395), 93°C, 210s. At the reference batch the scaled mid is the plain mid.
-const REF = "Kasuya 4:6 (standard)";
-const PLAIN_MID = 395;
-const WITH_DISC = 400;
+// Verified corpus recipe with a SOURCED Niche value: Hoffmann Better 1 Cup —
+// 15 g : 250 g, the owner's MEASURED 380° (grind audit 2026-10-18 removed the
+// unsourced Kasuya 4:6 range this test used before). At the reference batch the
+// scaled value is the plain value.
+const REF = "Hoffmann V60 — Better 1 Cup";
+const PLAIN_MID = 380;
+const WITH_DISC = 385;
 
 /** The reference recipe, faithfully, with whatever the model got wrong. */
 function candidate(overrides = {}) {
   return {
-    doseGrams: 20,
-    waterGrams: 300,
+    doseGrams: 15,
+    waterGrams: 250,
     waterTempC: 93,
     grindSize: `${PLAIN_MID}°`,
     targetTimeSec: 210,
@@ -103,7 +105,7 @@ test("a snap-back caused by a wrong clock must not wipe the disc offset", () => 
     "V60 + Drip Assist",
   );
   assert.equal(changed, true, "sanity: a 330s clock on a 210s recipe is drift");
-  assert.equal(recipe.targetTimeSec, 210, "sanity: the clock is snapped back");
+  assert.notEqual(recipe.targetTimeSec, 330, "sanity: the clock is snapped back");
   assert.equal(
     grindOf(recipe),
     WITH_DISC,

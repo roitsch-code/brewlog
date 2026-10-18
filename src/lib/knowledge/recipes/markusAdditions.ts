@@ -38,8 +38,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 75 },
     grind: {
       referenceSetting: "slightly coarser than filter",
-      nicheZeroDegrees: [388, 398],
       description: "slightly coarser than filter (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Coffee + water", action: "pour", waterGramsAtEnd: 200, durationSec: 0, notes: "200ml @75°C onto 19.5–20g coffee" },
@@ -65,7 +65,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "official-competition", citation: "World AeroPress Championship official record — WAC 2009 entry", year: 2009 },
     ],
     verified: false,
-    notes: "Dose is a range 19.5–20 g; main dose taken as 19.5 g. Niche range estimated from the grind-feel description.",
+    notes: "Dose is a range 19.5–20 g; main dose taken as 19.5 g.",
   },
 
   {
@@ -87,8 +87,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     grind: {
       referenceGrinder: "DM Grinder 2",
       referenceSetting: "10/10 (very coarse) for the main 30 g + espresso-fine for the 1 g spike",
-      nicheZeroDegrees: [404, 418],
       description: "very coarse (main) + espresso-fine (1 g spike) (estimate from grind description, not published — range covers the coarse main bed)",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Coarse coffee in chamber", action: "wait", durationSec: 0, notes: "30g coarse coffee" },
@@ -116,7 +116,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "official-competition", citation: "World AeroPress Championship official record — WAC 2018 entry", year: 2018 },
     ],
     verified: false,
-    notes: "Compound recipe — three numbers to read carefully. Dose is 30 g coarse main + a 1 g espresso-fine spike (31 g total coffee); the 30 g main lives in dose.grams, the spike lives in the pour sequence. Water is 220 g brew + 50 g bypass = 270 g total. The published ratio \"1:9\" is the final drink ratio (30 g coffee : 270 g total water); the brew ratio (30 g : 220 g) is closer to 1:7.3, and the cup ratio inc. spike (31 g : 270 g) is ~1:8.7. Niche range estimated from the coarse-grind feel.",
+    notes: "Compound recipe — three numbers to read carefully. Dose is 30 g coarse main + a 1 g espresso-fine spike (31 g total coffee); the 30 g main lives in dose.grams, the spike lives in the pour sequence. Water is 220 g brew + 50 g bypass = 270 g total. The published ratio \"1:9\" is the final drink ratio (30 g coffee : 270 g total water); the brew ratio (30 g : 220 g) is closer to 1:7.3, and the cup ratio inc. spike (31 g : 270 g) is ~1:8.7.",
   },
 
   {
@@ -137,8 +137,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 84 },
     grind: {
       referenceSetting: "8/10 on a generic scale (medium-fine equivalent)",
-      nicheZeroDegrees: [368, 380],
       description: "medium-fine equivalent (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Coffee + water in inverted AP", action: "pour", waterGramsAtEnd: 150, durationSec: 15, notes: "35g coffee + 150g water" },
@@ -165,7 +165,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "official-competition", citation: "World AeroPress Championship official record — WAC 2017 entry", year: 2017 },
     ],
     verified: false,
-    notes: "Water 370 g is the brew water; the 160–200 g bypass is added on top. Niche range estimated from the grind-feel description.",
+    notes: "Water 370 g is the brew water; the 160–200 g bypass is added on top.",
   },
 
   {
@@ -188,8 +188,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "32 clicks",
-      nicheZeroDegrees: [406, 414],
-      description: "medium (derived from Comandante C40 @ 32 clicks via the user's measured Niche↔Comandante map: niche ≈ 380 + (32−23)×3.333 = 410°)",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, notes: "50g water + 18g coffee" },
@@ -238,8 +237,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 80, rangeC: [80, 85] },
     grind: {
       referenceSetting: "fine espresso-style",
-      nicheZeroDegrees: [345, 360],
       description: "fine espresso-style (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Assemble + level bed", action: "wait", durationSec: 0, notes: "filter in cap, AP on server, 1 scoop coffee in chamber, level the bed" },
@@ -268,7 +267,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "transcript", citation: "aeroprecipe.com transcription", url: "https://aeroprecipe.com" },
     ],
     verified: true,
-    notes: "Breaks the curated-8 AeroPress rule of Markus's collection — this is the inventor's reference recipe and a completely different paradigm from all 8 competition-filter-style AeroPress recipes. Decision is Markus's: keep as 9th reference, or replace one of the 8. Temperature 80°C (medium-dark) to 85°C (light). Dose 16g ≈ 1 scoop; water Level 1–1.5 ≈ 85–95g (taken as 90g). Niche range estimated from the fine-espresso grind feel.",
+    notes: "Breaks the curated-8 AeroPress rule of Markus's collection — this is the inventor's reference recipe and a completely different paradigm from all 8 competition-filter-style AeroPress recipes. Decision is Markus's: keep as 9th reference, or replace one of the 8. Temperature 80°C (medium-dark) to 85°C (light). Dose 16g ≈ 1 scoop; water Level 1–1.5 ≈ 85–95g (taken as 90g).",
   },
 
   // ── V60 ──────────────────────────────────────────────────────────────────
@@ -345,8 +344,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium-fine, light-roast tuned",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine, light-roast tuned (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 30, durationSec: 5 },
@@ -378,7 +377,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "report", citation: "Specialty Coffee Association archives, Scandinavian competition era 2014-2016." },
     ],
     verified: false,
-    notes: "Pre-dates the April-Coffee era. Distinct from the 'April Coffee House V60 (Rolf)' entry, which is Rolf's post-2018 published house recipe. Parameters here are interpreted from Scandi-era competition reporting — not from a primary source. Niche range estimated from the grind-feel description.",
+    notes: "Pre-dates the April-Coffee era. Distinct from the 'April Coffee House V60 (Rolf)' entry, which is Rolf's post-2018 published house recipe. Parameters here are interpreted from Scandi-era competition reporting — not from a primary source.",
   },
 
   {
@@ -401,8 +400,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium-fine",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom (central)", action: "pour", waterGramsAtEnd: 30, durationSec: 5 },
@@ -432,7 +431,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     ],
     verified: false,
     notes:
-      "Provenance corrected 2026-09-30. This entry was titled \"2022 World Brewers Cup Champion\" and cited the 2022 WBrC final. Anthony Douglas won the 2022 World BARISTA Championship (Melbourne); the 2022 World Brewers Cup went to Sherry (Shih Yuan) Hsu. No published filter recipe by Douglas was located, so these numbers have no known source. Owner decision 2026-09-30: kept in the corpus as an unsourced house V60 under this corrected name — do not re-raise. The Gesha/Sidra variety tags were removed because they rested on the false title. Niche range estimated from the grind-feel description.",
+      "Provenance corrected 2026-09-30. This entry was titled \"2022 World Brewers Cup Champion\" and cited the 2022 WBrC final. Anthony Douglas won the 2022 World BARISTA Championship (Melbourne); the 2022 World Brewers Cup went to Sherry (Shih Yuan) Hsu. No published filter recipe by Douglas was located, so these numbers have no known source. Owner decision 2026-09-30: kept in the corpus as an unsourced house V60 under this corrected name — do not re-raise. The Gesha/Sidra variety tags were removed because they rested on the false title.",
   },
 
   {
@@ -454,8 +453,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom 1", action: "pour", waterGramsAtEnd: 30, durationSec: 5 },
@@ -485,7 +484,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "video", citation: "Standout Coffee (Oskar Garberg) — Instagram + YouTube V60 demonstrations." },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -505,9 +503,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     water: { grams: 250, ratio: "1:16.7" },
     temperature: { celsius: 95 },
     grind: {
-      referenceSetting: "Gagné publishes no Niche degree; tune to ~3:30 drawdown",
-      nicheZeroDegrees: [380, 392],
-      description: "tune to ~3:30 drawdown (estimate — Gagné publishes no Niche degree)",
+      referenceSetting: "tune to ~3:30 drawdown",
+      description: "tune to ~3:30 drawdown (estimate",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Trench the dry bed", action: "agitate-bed", durationSec: 0, notes: "dig a small depression in the dry bed with a chopstick" },
@@ -539,7 +537,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "book", citation: "The Physics of Filter Coffee (Jonathan Gagné)" },
     ],
     verified: false,
-    notes: "Distinct from server's 'Gagné — Long-Brew AeroPress + Prismo' (AeroPress, not V60). The V60 trench method is published on coffeeadastra.com — a primary source but not fetched in-session. Niche range estimated (Gagné publishes no Niche degree).",
+    notes: "Distinct from server's 'Gagné — Long-Brew AeroPress + Prismo' (AeroPress, not V60). The V60 trench method is published on coffeeadastra.com — a primary source but not fetched in-session.",
   },
 
   {
@@ -559,8 +557,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 95 },
     grind: {
       referenceSetting: "slightly coarser than the standard Nordic Light (Wendelboe coarsens for big batches)",
-      nicheZeroDegrees: [388, 398],
       description: "slightly coarser than standard Nordic Light (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom (double the standard 40g)", action: "pour", waterGramsAtEnd: 80, durationSec: 8 },
@@ -588,7 +586,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "video", citation: "Tim Wendelboe YouTube — big-batch V60 scaling." },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -610,8 +607,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom (2× coffee weight, slow concentric)", action: "pour", waterGramsAtEnd: 50, durationSec: 10 },
@@ -640,7 +637,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "blog", citation: "firefortysix.com test recipe with specific parameters" },
     ],
     verified: false,
-    notes: "The theory and procedural framework are Cafec's; the specific dose/temp numbers (25g/400g/93°C) are a common test setup, not Cafec-published. Hatakeyama uses this technique on Cafec Flower Dripper (not Markus's kit) but it transfers to V60. Total time approximate (~3:30) — pour cadence is bubble-triggered, not timed. Niche range estimated from the grind-feel description.",
+    notes: "The theory and procedural framework are Cafec's; the specific dose/temp numbers (25g/400g/93°C) are a common test setup, not Cafec-published. Hatakeyama uses this technique on Cafec Flower Dripper (not Markus's kit) but it transfers to V60. Total time approximate (~3:30) — pour cadence is bubble-triggered, not timed.",
   },
 
   {
@@ -660,8 +657,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94, rangeC: [93, 96] },
     grind: {
       referenceSetting: "medium-fine",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 5, notes: "40-50g" },
@@ -687,7 +684,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Heart Coffee Roasters official brewguide", url: "https://heartroasters.com/pages/v60" },
     ],
     verified: false,
-    notes: "Temperature 93–96°C (boil + cool 45–60s), taken as 94°C working. Niche range estimated from the grind-feel description.",
+    notes: "Temperature 93–96°C (boil + cool 45–60s), taken as 94°C working.",
   },
 
   // ── Clever ───────────────────────────────────────────────────────────────
@@ -709,8 +706,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -737,7 +734,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Vesta Coffee Roasters brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -757,8 +753,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Pour all water into Clever first", action: "pour", waterGramsAtEnd: 350, durationSec: 15 },
@@ -783,7 +779,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Crema Coffee Roasters brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -802,8 +797,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -831,7 +826,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Hub Coffee Roasters brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -849,8 +843,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -878,7 +872,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Magnolia Coffee Co. brewguide" },
     ],
     verified: false,
-    notes: "Roast 'any' mapped to the full roast range. Niche range estimated from the grind-feel description.",
+    notes: "Roast 'any' mapped to the full roast range.",
   },
 
   {
@@ -897,8 +891,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 95 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 45, durationSec: 8 },
@@ -924,7 +918,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Subtext Coffee Roasters brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -943,8 +936,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 45, durationSec: 8 },
@@ -970,7 +963,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "video", citation: "Coffee and Water YouTube channel" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -989,8 +981,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -1017,7 +1009,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "interview", citation: "Houndstooth Coffee + Sean Dominy interviews/videos" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1037,8 +1028,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-fine (immersion-tolerant)",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine, immersion-tolerant (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Hot water + stir", action: "pour", waterGramsAtEnd: 330, durationSec: 15, notes: "330g hot water @96°C in Clever; stir to wet grounds" },
@@ -1067,7 +1058,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "video", citation: "James Hoffmann YouTube — iced Clever variants" },
     ],
     verified: false,
-    notes: "Water 500g total = 330g hot @96°C + 170g ice. Adjacent to server's 'Hoffmann Immersion Iced (Clever)' (37.5g/500g, 100°C); this is a slightly leaner variant. Niche range estimated from the grind-feel description.",
+    notes: "Water 500g total = 330g hot @96°C + 170g ice. Adjacent to server's 'Hoffmann Immersion Iced (Clever)' (37.5g/500g, 100°C); this is a slightly leaner variant.",
   },
 
   // ── Origami ──────────────────────────────────────────────────────────────
@@ -1089,8 +1080,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 75, durationSec: 10 },
@@ -1120,7 +1111,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Roasters Pack subscription brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1141,8 +1131,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 89, rangeC: [88, 90] },
     grind: {
       referenceSetting: "medium-fine",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine (estimate from grind description, not published)",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 40, durationSec: 8 },
@@ -1168,7 +1158,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Kurasu Kyoto — published Origami brewguide (kurasu.kyoto blog)" },
     ],
     verified: true,
-    notes: "Total 1:20 is the pour phase; drawdown runs in parallel. Produces ~170-180g in cup. Niche range estimated from the grind-feel description.",
+    notes: "Total 1:20 is the pour phase; drawdown runs in parallel. Produces ~170-180g in cup.",
   },
 
   {
@@ -1187,8 +1177,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 40, durationSec: 5 },
@@ -1214,7 +1204,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "transcript", citation: "Alexander Mills (Instagram). Transcription by pullandpourcoffee.com." },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1237,8 +1226,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     grind: {
       referenceGrinder: "1Zpresso ZP6 Special",
       referenceSetting: "4.1 (medium-fine)",
-      nicheZeroDegrees: [368, 382],
-      description: "medium-fine (estimate from grind description, not published — ZP6 dial not on the user's Niche map)",
+      description: "medium-fine (estimate from grind description, not published",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Pour 1", action: "pour", waterGramsAtEnd: 50, durationSec: 10 },
@@ -1268,7 +1257,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "transcript", citation: "1Zpresso Champion Recipe Database — Vuolo Neto BBC 2023 entry", url: "https://1zpresso.coffee/recipe/", year: 2023 },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description (1Zpresso ZP6 Special dial does not map to the user's Niche↔Comandante calibration).",
   },
 
   // ── Chemex ───────────────────────────────────────────────────────────────
@@ -1321,7 +1309,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Madcap Coffee brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1368,7 +1355,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Freeform Roasters brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1417,7 +1403,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "video", citation: "Manual Coffee Brewing channel + community brewguide compilation" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1437,8 +1422,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 95 },
     grind: {
       referenceSetting: "medium-fine",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Paper filter in Chemex, rinse, discard", action: "wait", durationSec: 0 },
@@ -1465,7 +1450,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Coava Coffee Roasters brewguide", url: "https://coavacoffee.com/brew-methods/chemex" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1515,7 +1499,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Sample Coffee Roasters brewguide (Reuben Mardan)", url: "https://samplecoffee.com.au" },
     ],
     verified: true,
-    notes: "For 3-Cup: 20g/320g. Niche range estimated from the grind-feel description.",
+    notes: "For 3-Cup: 20g/320g.",
   },
 
   {
@@ -1535,8 +1519,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse (kosher salt)",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse, like kosher salt (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Filter rinse, discard", action: "wait", durationSec: 0 },
@@ -1565,7 +1549,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Methodical Coffee brewguide", url: "https://methodicalcoffee.com" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1585,8 +1568,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94 },
     grind: {
       referenceSetting: "medium-coarse (kosher salt)",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse, like kosher salt (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Filter (3-fold side to spout) rinsed with boiling water", action: "wait", durationSec: 0 },
@@ -1615,7 +1598,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Crema Coffee brewguide — 'clean and crisp cup'", url: "https://crema-coffee.com" },
     ],
     verified: true,
-    notes: "Scales to 50g/800g for 2-Cup. Niche range estimated from the grind-feel description.",
+    notes: "Scales to 50g/800g for 2-Cup.",
   },
 
   {
@@ -1665,7 +1648,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Project Barista — 'tea-like brews'", url: "https://projectbarista.com/chemex-recipes" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1685,8 +1667,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse (kosher salt)",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse, like kosher salt (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Filter (double-layer side to spout) in Chemex", action: "wait", durationSec: 0 },
@@ -1718,7 +1700,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Penstock Coffee brewguide — explicit 'light-bodied, clean cup'", url: "https://penstockcoffee.com" },
     ],
     verified: true,
-    notes: "Yields 2 standard or 1× 12oz cup. Niche range estimated from the grind-feel description.",
+    notes: "Yields 2 standard or 1× 12oz cup.",
   },
 
   // ── Kalita ───────────────────────────────────────────────────────────────
@@ -1794,8 +1776,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom (2× coffee)", action: "pour", waterGramsAtEnd: 35, durationSec: 5 },
@@ -1825,7 +1807,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "The Coffee Collective brewguide" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1844,8 +1825,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -1873,7 +1854,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Sprudge Coffee Media — Kalita 185 brewing compilations" },
     ],
     verified: false,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1893,8 +1873,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-fine (sea salt)",
-      nicheZeroDegrees: [368, 382],
       description: "medium-fine, like sea salt (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -1922,7 +1902,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Stumptown Coffee brewguide", url: "https://stumptowncoffee.com/pages/brew-guide-kalita-wave" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1942,8 +1921,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium, slightly coarser than V60",
-      nicheZeroDegrees: [384, 394],
       description: "medium, slightly coarser than V60 (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 50, durationSec: 8 },
@@ -1973,7 +1952,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Subtext Coffee Roasters brewguide" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -1994,8 +1972,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94, rangeC: [92, 96] },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Filter rinse with hot water (preheats Kalita)", action: "wait", durationSec: 0 },
@@ -2026,7 +2004,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Drop Coffee Roasters brewguide", url: "https://dropcoffee.com" },
     ],
     verified: true,
-    notes: "Temperature 92–96°C (Drop's choice depends on roast), taken as 94°C working. Total 2:45–3:00. Niche range estimated from the grind-feel description.",
+    notes: "Temperature 92–96°C (Drop's choice depends on roast), taken as 94°C working. Total 2:45–3:00.",
   },
 
   {
@@ -2046,8 +2024,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium",
-      nicheZeroDegrees: [382, 392],
       description: "medium (estimate from grind description, not published)",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom", action: "pour", waterGramsAtEnd: 70, durationSec: 10 },
@@ -2078,7 +2056,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Tinker Coffee brewguide (via Indianapolis Coffee Guide Batch 1)" },
     ],
     verified: true,
-    notes: "Niche range estimated from the grind-feel description.",
   },
 
   {
@@ -2098,8 +2075,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 93 },
     grind: {
       referenceSetting: "medium, slightly finer than kosher salt",
-      nicheZeroDegrees: [384, 394],
       description: "medium, slightly finer than kosher salt (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Bloom — saturate all grounds", action: "pour", waterGramsAtEnd: 60, durationSec: 10 },
@@ -2127,7 +2104,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Counter Culture Coffee brewguide", url: "https://counterculturecoffee.com/pages/quick-easy-pour-over" },
     ],
     verified: true,
-    notes: "Temperature ~93°C (200°F). Niche range estimated from the grind-feel description.",
+    notes: "Temperature ~93°C (200°F).",
   },
 
   // ── Moccamaster ──────────────────────────────────────────────────────────
@@ -2150,8 +2127,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { rangeC: [92, 96] },
     grind: {
       referenceSetting: "slightly coarser than V60/Chemex",
-      nicheZeroDegrees: [392, 404],
       description: "slightly coarser than V60/Chemex (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Prep filter", action: "wait", durationSec: 0, notes: "Moccamaster paper No. 4 in basket, rinse with hot water (optional)" },
@@ -2180,7 +2157,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Sample Coffee Roasters brewguide", url: "https://samplecoffee.com.au/brewguides/moccamaster" },
     ],
     verified: true,
-    notes: "Temperature machine-controlled (~92–96°C at the bed). Dose scales 1:16 linearly 31g/500g up to 78g/1250g; main entry uses 31g/500g. Niche range estimated from the grind-feel description.",
+    notes: "Temperature machine-controlled (~92–96°C at the bed). Dose scales 1:16 linearly 31g/500g up to 78g/1250g; main entry uses 31g/500g.",
   },
 
   {
@@ -2201,8 +2178,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { rangeC: [92, 96] },
     grind: {
       referenceSetting: "coarser than pour-over, finer than plunger",
-      nicheZeroDegrees: [392, 404],
       description: "coarser than pour-over, finer than plunger (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Prep filter", action: "wait", durationSec: 0, notes: "fold along seams, place in basket, rinse with hot water" },
@@ -2231,7 +2208,7 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Market Lane Coffee brewguide — 'produces a clean, lighter-bodied, complex cup similar to pour over'", url: "https://marketlane.com.au/pages/how-to-make-coffee-with-a-moccamaster" },
     ],
     verified: true,
-    notes: "Temperature machine-controlled. Dose 30–75 g / 500–1250 g (1:16.67, 60g per 1L); main entry uses 30g/500g. Niche range estimated from the grind-feel description.",
+    notes: "Temperature machine-controlled. Dose 30–75 g / 500–1250 g (1:16.67, 60g per 1L); main entry uses 30g/500g.",
   },
 
   {
@@ -2251,8 +2228,8 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { rangeC: [92, 96] },
     grind: {
       referenceSetting: "medium-coarse (granulated sugar)",
-      nicheZeroDegrees: [392, 404],
       description: "medium-coarse, like granulated sugar (estimate from grind description, not published)",
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       { label: "Prep — clean filter holder + vessel", action: "wait", durationSec: 0, notes: "free of residue" },
@@ -2282,6 +2259,6 @@ export const MARKUS_ADDITIONS: Recipe[] = [
       { type: "article", citation: "Lykke Kaffegårdar brewguide", url: "https://lykkegardar.se/blogs/lykke-brew-guides/brew-guide-moccamaster" },
     ],
     verified: true,
-    notes: "Temperature machine-controlled. Niche range estimated from the grind-feel description.",
+    notes: "Temperature machine-controlled.",
   },
 ];

@@ -51,8 +51,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
       // the Ultimate entry carries his 400° at 30 g : 500 g. Until 2026-10-10
       // the entry had no number at all, so the model invented one and nothing
       // could check it (the SEY V60 of 10-10 went out on "26 clicks").
-      nicheZeroDegrees: [375, 385],
       description: "medium-fine; the Niche range is the owner's measured 380° at this exact batch, not Hoffmann's",
+      nicheZeroDegrees: 380,
+      nicheSource: { kind: "owner-measured", quote: "Owner-measured anchor (May 2026): V60, 15 g / 250 ml → Niche 380° = Comandante 23 clicks (src/lib/constants/grindSettings.ts)." },
     },
     pourSequence: [
       {
@@ -158,7 +159,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "medium-fine — finer than most expect for a steep brewer, close to a 2-cup V60",
-      nicheZeroDegrees: [400, 410],
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -240,7 +241,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "fine — finer than a pour-over, getting close to the espresso range (for light roasts)",
-      nicheZeroDegrees: [356, 366],
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -309,7 +310,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 96, rangeC: [92, 98] },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [410, 420],
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -380,7 +381,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "fairly fine — closer to a 2-cup pour-over than espresso; immersion tolerates it without channeling",
-      nicheZeroDegrees: [400, 410],
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -517,7 +518,7 @@ export const REFERENCE_RECIPES: Recipe[] = [
     temperature: { celsius: 93, rangeC: [83, 93] },
     grind: {
       referenceSetting: "medium-coarse",
-      nicheZeroDegrees: [390, 400],
+      // No Niche° number: the originator publishes only a description (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -605,9 +606,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "40–45 clicks (super coarse)",
-      nicheZeroDegrees: [435, 455],
       description:
-        "Super coarse — Comandante C40 at 40–45 clicks. In the 2026 video Kasuya calls 40 clicks the dependable default ('pretty hard to fail') and 45 'extreme' — it can come out thin/pale depending on the coffee (his own 45-click demo looked a little light). If the cup is too weak, go a notch finer (fewer clicks) or gently agitate the server during the brew. The Niche degree range here is DERIVED from the project's click→degree conversion (grind-settings.md, ~3.3°/click) and extrapolated well beyond the measured 23–29-click anchors, so calibrate it empirically against the ~3:30 finish rather than trusting the number.",
+        "Super coarse — Comandante C40 at 40–45 clicks. In the 2026 video Kasuya calls 40 clicks the dependable default ('pretty hard to fail') and 45 'extreme' — it can come out thin/pale depending on the coffee (his own 45-click demo looked a little light). If the cup is too weak, go a notch finer (fewer clicks) or gently agitate the server during the brew.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -1007,9 +1008,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "medium / medium-coarse (~800 µm, ~26 clicks)",
-      nicheZeroDegrees: [388, 396],
       description:
-        "Medium/medium-coarse, ~800 µm (~26 Comandante clicks). Niche derived from the clicks (~26 ≈ 392°); calibrate empirically.",
+        "Medium/medium-coarse, ~800 µm (~26 Comandante clicks). calibrate empirically.",
+      // No Niche° number: the published clicks are for another brewer, another click scale, or outside the owner's measured 23–29 span (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -1208,9 +1209,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceGrinder: "Comandante C40",
       referenceSetting: "coarse — Comandante 25–27 clicks",
-      nicheZeroDegrees: [387, 397],
       description:
-        "Coarse — he states ~900–1000 µm / Comandante 25–27 clicks. Niche derived from the published Comandante clicks via the owner's map (~26 clicks ≈ 392°); calibrate empirically.",
+        "Coarse — he states ~900–1000 µm / Comandante 25–27 clicks. calibrate empirically.",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -1303,9 +1304,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
     grind: {
       referenceSetting:
         "her everyday Kalita grind, then sieved to remove fines",
-      nicheZeroDegrees: [375, 385],
       description:
         "The only change from her daily bar routine is sieving off the fines so they can't over-extract.",
+      // No Niche° number: published only for another grinder (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       {
@@ -1385,9 +1386,9 @@ export const REFERENCE_RECIPES: Recipe[] = [
       referenceGrinder: "Comandante C40 / Kingrinder K-Ultra",
       referenceSetting:
         "medium — Comandante C40 23–28 clicks, K-Ultra 7–8 (a touch coarser than his Switch recipe). Asser stresses these vary by bean, grinder calibration and paper.",
-      nicheZeroDegrees: [380, 397],
       description:
-        "Niche degrees DERIVED from Asser's published Comandante 23–28 clicks via the project's measured map (380° = 23 clicks, ~3.3°/click). Clicks kept verbatim; the Niche range is a translation — calibrate empirically against the drawdown, since Asser publishes no Niche number.",
+        "Clicks kept verbatim;",
+      // No Niche° number: no originator publication could be opened (grind audit 2026-10-18; owner: no estimates).
     },
     pourSequence: [
       // The bloom pour + Asser's 45 s rest are folded into ONE `pour` step on
