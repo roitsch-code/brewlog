@@ -34,7 +34,7 @@ Two relationships fall out of those points:
 | Clever Dripper | any | 395–415° | 28–34 | estimate |
 | AeroPress | any | 356–366° | 16–18 | estimate |
 | Kalita Wave | any | 384–394° | 24–27 | estimate |
-| Chemex | any (row = ~500 ml) | 398–410° | 28–32 | estimate — larger batches +20°/doubling, never finer than the V60 of the same batch (750 ml ≥ 412°, `chemexNicheFloor`; owner 2026-10-18: 750 ml at 400° ran 141 s over) |
+| Chemex | any | 398–410° | 28–32 | unsourced estimate — NOT used by /recommend since 2026-10-18: a Chemex grind comes only from the owner's measured Chemex brews at the batch (`measuredChemex.ts`); owner: 50 g / 750 g at 400° logged 440 s vs 299 s planned |
 | Moccamaster | any | 410–420° | 32–35 | estimate |
 | Kasuya 4:6 | any | 390–400° | 26–29 | estimate |
 

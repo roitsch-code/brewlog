@@ -1290,11 +1290,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse (kosher salt)",
-      // Re-based 2026-10-18 onto the Chemex floor (the measured V60 anchor
-      // scaled to 750 g by the dose law — grindSettings.ts CHEMEX). Was [392, 404],
-      // a batch-blind feel estimate; 750 g at 400° drained 141 s over plan.
-      nicheZeroDegrees: [412, 422],
-      description: "medium-coarse, like kosher salt (estimate from grind description, not published)",
+      // No Niche° value: the number that stood here was an estimate from the
+      // grind description (removed 2026-10-18, owner: no estimates).
+      description: "medium-coarse, like kosher salt",
     },
     pourSequence: [
       { label: "Rinse filter, discard water", action: "wait", durationSec: 15 },
@@ -1341,11 +1339,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 94 },
     grind: {
       referenceSetting: "medium-coarse",
-      // Re-based 2026-10-18 onto the Chemex floor (the measured V60 anchor
-      // scaled to 750 g by the dose law — grindSettings.ts CHEMEX). Was [392, 404],
-      // a batch-blind feel estimate; 750 g at 400° drained 141 s over plan.
-      nicheZeroDegrees: [412, 422],
-      description: "medium-coarse (estimate from grind description, not published)",
+      // No Niche° value: the number that stood here was an estimate from the
+      // grind description (removed 2026-10-18, owner: no estimates).
+      description: "medium-coarse",
     },
     pourSequence: [
       { label: "Filter rinse, discard", action: "wait", durationSec: 0 },
@@ -1391,11 +1387,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse (slightly coarser than smaller Chemex)",
-      // Re-based 2026-10-18 onto the Chemex floor (the measured V60 anchor
-      // scaled to 1000 g by the dose law — grindSettings.ts CHEMEX). Was [396, 408],
-      // a batch-blind feel estimate; 750 g at 400° drained 141 s over plan.
-      nicheZeroDegrees: [420, 432],
-      description: "medium-coarse, slightly coarser than smaller Chemex (estimate from grind description, not published)",
+      // No Niche° value: the number that stood here was an estimate from the
+      // grind description (removed 2026-10-18, owner: no estimates).
+      description: "medium-coarse, slightly coarser than smaller Chemex",
     },
     pourSequence: [
       { label: "Filter rinse heavily (3×)", action: "wait", durationSec: 0 },
@@ -1492,11 +1486,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "medium-coarse",
-      // Re-based 2026-10-18 onto the Chemex floor (the measured V60 anchor
-      // scaled to 640 g by the dose law — grindSettings.ts CHEMEX). Was [392, 404],
-      // a batch-blind feel estimate; 750 g at 400° drained 141 s over plan.
-      nicheZeroDegrees: [407, 417],
-      description: "medium-coarse (estimate from grind description, not published)",
+      // No Niche° value: the number that stood here was an estimate from the
+      // grind description (removed 2026-10-18, owner: no estimates).
+      description: "medium-coarse",
     },
     pourSequence: [
       { label: "Filter (bleached, 3-fold side to spout), rinse, discard", action: "wait", durationSec: 0 },
@@ -1642,11 +1634,9 @@ export const MARKUS_ADDITIONS: Recipe[] = [
     temperature: { celsius: 96 },
     grind: {
       referenceSetting: "coarse",
-      // Re-based 2026-10-18 onto the Chemex floor (the measured V60 anchor
-      // scaled to 800 g by the dose law — grindSettings.ts CHEMEX). Was [404, 418],
-      // a batch-blind feel estimate; 750 g at 400° drained 141 s over plan.
-      nicheZeroDegrees: [414, 426],
-      description: "coarse (estimate from grind description, not published)",
+      // No Niche° value: the number that stood here was an estimate from the
+      // grind description (removed 2026-10-18, owner: no estimates).
+      description: "coarse",
     },
     pourSequence: [
       { label: "Filter (8-Cup size) rinse, discard", action: "wait", durationSec: 0 },

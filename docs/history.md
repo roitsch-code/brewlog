@@ -8,6 +8,11 @@
 
 ### ✅ Done
 
+**Chemex: the V60-derived floor removed — measured brews only (2026-10-18, same evening)**
+- **Owner:** the 412° floor was V60 data carried onto a Chemex — "Chemex hat ganz anderes Papier als V60"; never estimate, research everything.
+- **Researched (primary sources, quoted in the session):** Chemex: "20-30% thicker paper than most of the competition", no flow numbers; Chemex FAQ: "Use a medium coarse grind", and when "filtering slowly" "Use a coarser grind"; 750–800 g targets: Baratza 50/800 "four and a half to five minutes", The Little Marionette 50/800 4.5 min, Barefoot 50/750 ~4:00 (Prima re-brew). Chemex recipes with a measurable grind (Comandante clicks: Ineffable 21, Sow 27 @ 34/500, Coffeevine 30–31 @ 30/550) stop at 550 g; no source gives a Niche° value for 750 g or any seconds-per-degree slope.
+- **Shipped:** `chemexGrindFloor.ts` and `chemexNicheFloor` removed; the five re-based big-batch Chemex numbers removed (the source description stays); `measuredChemex.ts` hands the model the owner's measured Chemex brews at the batch + the FAQ rule, and a candidate at/finer than a setting that ran >10 % slow is repaired; the step is a declared measurement brew. Remaining estimates are Current status item 8 in CLAUDE.md.
+
 **Context free text, no re-shown recipes after Back, Chemex batch grind (2026-10-18)**
 - **Reports (owner, one message):** (1) a free-text field on the Context step to steer a brew — a recipe ("Ten Pour Recipe by Kasuya"), an exclusion ("KEIN Clever Dripper"), other numbers; (2) going Back from the recipe screen, changing three context settings and asking again returned the same recipes; (3) 750 ml Chemex at 400° on a fresh Brazil "made no sense".
 - **Measured (recommend-logs branch run, 2026-10-18):** the Chemex brew was "Freeform — Chemex 6-Cup", 50 g / 750 g, 400°, planned 299 s, actual 440 s (+141 s). The container had restarted with the #642 deploy at 20:10 Düsseldorf, so the morning's discarded recommendations were no longer in the logs — the repetition cause below is read from the code, not from production.

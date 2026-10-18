@@ -82,9 +82,8 @@ import {
   usesExcludedBrewer,
   type ParsedUserRequest,
 } from "./userRequest";
-import { guardChemexGrindFloor } from "../recipe/chemexGrindFloor";
+import { findTooFineChemex, formatMeasuredChemexBlock, measuredChemexAtBatch, slowestFloorDeg } from "./measuredChemex";
 import type { BrewerType } from "../knowledge/recipes";
-import { chemexNicheFloor, chemexNicheRangeFor } from "../constants/grindSettings";
 
 // Prose the model has to WRITE is prose the user has to WAIT for: /recommend is
 // a single blocking call, so nothing renders until the last token lands. This
@@ -950,16 +949,15 @@ export async function generateRecommendation(
   const offered = recentlyOfferedFamilies(pastSessions);
   const repeatRuleNote = repeatGuardActive ? formatRepeatRuleUpfront(offered) : "";
 
-  // Chemex grind for THIS batch (grindSettings.ts CHEMEX). The NICHE° table in
-  // the system prompt is a 500 ml row; at 750 ml it produced 400° and a drawdown
-  // that never ended. Enforced as a floor after generation (chemexGrindFloor.ts).
-  const chemexGrindNote =
+  // Chemex grind (measuredChemex.ts): the owner's MEASURED Chemex brews at
+  // this batch + Chemex's own published rule — never a table or V60-scaled
+  // number (no source publishes one for this batch).
+  const chemexMeasured =
     targetWaterMl && brewersAvailable.has("chemex") && context.occasion !== "cold-brew"
-      ? (() => {
-          const r = chemexNicheRangeFor(targetWaterMl);
-          return `\nCHEMEX GRIND AT THIS BATCH (${targetWaterMl} g): ${r.min}–${r.max}° Niche — never finer than ${chemexNicheFloor(targetWaterMl)}° (the app lifts a finer Chemex grind to that floor). This replaces the batch-blind Chemex row of the NICHE° table for this brew.`;
-        })()
-      : "";
+      ? measuredChemexAtBatch(pastSessions, targetWaterMl)
+      : null;
+  const chemexGrindNote = chemexMeasured && targetWaterMl ? formatMeasuredChemexBlock(chemexMeasured, targetWaterMl) : "";
+  const chemexSlowFloor = chemexMeasured ? slowestFloorDeg(chemexMeasured) : null;
   const equipmentForPrompt = excludedBrewers.size
     ? equipment.split(", ").filter((e) => !usesExcludedBrewer(e, excludedBrewers)).join(", ")
     : equipment;
@@ -1084,6 +1082,13 @@ Return valid JSON only.`;
     console.warn(`[recommend] user-request: candidate 1 basedOn "${raw.candidates[0]?.basedOn ?? "none"}" is not the requested ${requestedRecipe.id} — one repair round`);
     repairs.push(
       `\n\nREPAIR — REQUESTED RECIPE. The user asked for "${requestedRecipe.name}". The FIRST candidate must adapt exactly that recipe (basedOn "${requestedRecipe.name}", entry 1 of RELEVANT REFERENCE RECIPES). Keep the second candidate as it was unless it is the same recipe.`,
+    );
+  }
+  const tooFine = findTooFineChemex(raw.candidates, chemexSlowFloor);
+  if (tooFine.length) {
+    console.warn(`[recommend] chemex measured: ${tooFine.map((t) => `"${t.title}" ${t.grind}`).join("; ")} at or finer than the measured slow ${chemexSlowFloor}° — one repair round`);
+    repairs.push(
+      `\n\nREPAIR — CHEMEX GRIND. ${tooFine.map((t) => `Candidate ${t.index + 1} "${t.title}" grinds ${t.grind}`).join("; ")}, at or finer than ${Math.round(chemexSlowFloor ?? 0)}°, which the owner MEASURED running slow at this batch. Chemex's rule for slow filtering is a coarser grind: make it coarser than ${Math.round(chemexSlowFloor ?? 0)}°, call it a measurement brew in whyChosen, keep everything else.`,
     );
   }
   if (offenders.length) {
@@ -1309,18 +1314,14 @@ Return valid JSON only.`;
   //      last. Drops over-ceiling candidates; keeps all if all are over.
   const timeGuarded = guardSpecialTime(gapGuarded, context.timeAvailable);
 
-  //   8. CHEMEX FLOOR (chemexGrindFloor.ts) — a Chemex is never ground finer
-  //      than the V60 of the same batch. Then the user's own typed numbers,
-  //      last, so no guard can undo them (an explicit grind beats the floor).
-  const chemexFloored = guardChemexGrindFloor(timeGuarded);
-  for (const change of chemexFloored.changes) console.warn(`[recommend] chemex floor: ${change}`);
+  //   8. The user's own typed numbers, last, so no guard can undo them.
   const userParamsApplied = userReq
-    ? chemexFloored.candidates.map((c) => {
+    ? timeGuarded.map((c) => {
         const res = applyUserParams(c.recipe, userReq.params);
         for (const change of res.changes) console.log(`[recommend] user-request param: "${c.title ?? c.method}" ${change}`);
         return res.recipe === c.recipe ? c : { ...c, recipe: res.recipe };
       })
-    : chemexFloored.candidates;
+    : timeGuarded;
 
   const grindGuarded = userParamsApplied.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
