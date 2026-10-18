@@ -8,6 +8,9 @@
 
 ### ✅ Done
 
+**Grind table: estimates removed, dose law V60-only (2026-10-18, night, PR B of the grind audit)**
+- `grindSettings.ts` keeps only the owner's measured V60 (380° @ 250 ml, 400° @ 500 ml) and the owner-stated Drip Assist +5°; the 13 estimated per-brewer rows are gone. The /recommend NICHE° block, the generated Comandante line and the chat's grind block now say that every other brewer has no measured or published value → MEASURED GRIND, a recipe's sourced value, or a declared measurement brew. Convergence moves "same grind" with the batch only on a V60 base (`doseLawApplies`); elsewhere the grind move is a measurement brew and not "the one change". Pinned by the rewritten `grind-reference-consistency.test.mjs` (no unsourced degree anywhere in the system prompt).
+
 **Grind audit: every corpus Niche° number checked against its originator (2026-10-18, night)**
 - **Owner:** "Niemals schätzen … recherchieren, rechnen, belegen."
 - **Done:** six parallel research passes opened the source of each of the 131 recipes carrying `nicheZeroDegrees`. Verdicts: 60 unreachable (mostly YouTube-only or no traceable originator), 42 description-only, 16 published Comandante clicks, 8 another grinder (EK43, 1Zpresso, Acaia Orbit, DM), 3 microns, 2 owner-measured, 0 published Niche values.

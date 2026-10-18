@@ -15,15 +15,11 @@ import { NICHE_GRIND_SETTINGS } from "../constants/grindSettings";
 
 const USER_LOCATION = process.env.USER_LOCATION || "Germany";
 
-// Comandante starting clicks, GENERATED from the measured grind table rather
-// than hand-copied. The hand-written version drifted exactly the way the NICHE°
-// table did before #527 pinned it — it read "Chemex Washed 24" and "AeroPress 19"
-// while grindSettings.ts (the measured source, 380° = 23 clicks) puts Chemex at
-// 28–32 and AeroPress at 16–18. A recipe written off those numbers is several
-// clicks wrong on the owner's actual grinder. Generating it means the two can
-// never disagree again; tests/dataflow/grind-reference-consistency.test.mjs
-// checks the rendered result against the same table.
-const COMANDANTE_BLOCK = NICHE_GRIND_SETTINGS.map((s) => {
+// Comandante clicks, GENERATED from the measured grind table (the owner's V60
+// anchors + the owner-stated Drip Assist offset) so the prompt can never carry a
+// click number the table does not. Since the grind audit (2026-10-18) every
+// other brewer has no number here at all.
+const COMANDANTE_BLOCK = [...NICHE_GRIND_SETTINGS.map((s) => {
   const head = s.process ? `${s.method} (${s.process})` : s.method;
   // ONE value, not a range (the prompt demands a single click number), derived
   // from the NICHE midpoint through the documented map — clicks ≈ 23 + (° − 380)
@@ -33,7 +29,7 @@ const COMANDANTE_BLOCK = NICHE_GRIND_SETTINGS.map((s) => {
   const midDeg = (s.niche.min + s.niche.max) / 2;
   const clicks = Math.round(23 + (midDeg - 380) * 0.3);
   return `${head} ${clicks}`;
-}).join(" | ");
+}), "V60 at 30 g / 500 ml 29 (measured)", "every other brewer: no measured value — a measurement brew"].join(" | ");
 
 export const RECOMMEND_MODEL = "claude-opus-4-7";
 
@@ -293,7 +289,7 @@ EQUIPMENT RULES — these must be followed exactly
 
 RECIPE FIDELITY — when a candidate is basedOn a documented reference recipe (basedOn ≠ "Own recipe"):
 Preserve that recipe's DEFINING mechanics exactly. Only the gram amounts (dose, water, per-pour grams) scale to the user's batch — everything else stays as published. KEEP:
-- Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour — Comandante 40–45 clicks ≈ Niche 435–455°) STAYS super-coarse; never substitute a normal V60 grind (~380°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
+- Its grind character. A recipe published as super-coarse (e.g. Kasuya Super Coarse 10-Pour) STAYS super-coarse; never substitute a normal V60 grind (380°). The coarse grind IS the recipe. Likewise keep a fine recipe fine.
 - Its pour COUNT and cadence. A 10-pulse recipe stays 10 pulses on its published spacing (Kasuya Super Coarse = bloom for 30s, then ~30g every 15s, finishing ~3:30). Do NOT collapse it to 4 pours and do NOT stretch the spacing (15s → ~28s) — that doubles the brew and abandons the method.
 - Its temperature and its TOTAL brew time.
 When the entry carries a "Scaled to your Ng" line, THAT is the arithmetic — its milestones, its per-step seconds, its grind and its total are what this reference becomes at this batch, and a candidate based on it should match them. Small changes stay small: +17% of water is a few seconds per pour and a couple of degrees of grind, never another 1:15 on the clock.
@@ -349,7 +345,7 @@ CHEMEX — dedicated rules:
 3. Temperature: Washed light 93–96°C | Natural/Honey light 91–94°C | Medium-light 91–94°C
    (Slightly lower than V60 — thick filter slows flow, adding contact time)
 4. Ratio: 1:15–1:16 standard | 1:16–1:17 for lean/clarity focus
-5. Niche°: see the NICHE° GRIND REFERENCE block (Chemex sits coarser than Kalita — the thick filter adds resistance).
+5. Niche°: see the NICHE° GRIND REFERENCE block — Chemex itself publishes "medium coarse", and "use a coarser grind" when the brew filters slowly (chemexcoffeemaker.com FAQ); its bonded filter is "20-30% thicker" (Chemex).
 6. Volume window: 350–750 ml (matches the HARD CAPACITY LIMITS above).
 
 ORIGAMI DRIPPER — dedicated rules:
@@ -360,7 +356,7 @@ ORIGAMI DRIPPER — dedicated rules:
      Default for naturals, honeys, sweetness/body-forward intent.
    The candidate's method field MUST disambiguate: use exactly "Origami (cone)" or "Origami (wave)".
 2. Temperature: Washed 95–98°C | Natural 92–95°C | Honey 94–96°C (same as V60 / Kalita).
-3. Niche°: see the NICHE° GRIND REFERENCE block (it carries the cone and wave rows separately).
+3. Niche°: see the NICHE° GRIND REFERENCE block (no measured or published Origami value — cone and wave are separate brewers in MEASURED GRIND).
 4. Agitation:
    - Conical: same as V60 — Washed → stir 3–5× at bloom | Natural/Honey → swirl gently
    - Wave: SWIRL ONLY at bloom (same as Kalita — ribs + flat bed channel if stirred)
@@ -374,17 +370,14 @@ OREA V4 — dedicated rules:
    - Orea Fast (fast, turbulent): the Wölfl 2024 World Brewers Cup bottom. Clean cup on naturals via short bed-contact + turbulent pours.
    - Orea Open (fastest, open bed): maximum bypass / lightest body, or a forgiving target for very fine grinds.
 2. The candidate's method field MUST name the specific bottom — use exactly "Orea Fast", "Orea Classic", "Orea Apex", or "Orea Open". NEVER return the generic "Orea V4 Wide" or bare "Orea": the user owns all four bottoms and needs to know which one to fit. A recipe whose name references a bottom (e.g. "Wölfl-adapted Orea Fast") MUST set method to that exact bottom ("Orea Fast").
-3. Niche° + agitation per bottom: see the NICHE° GRIND REFERENCE and AGITATION RULES blocks above.
+3. Niche° per bottom: see the NICHE° GRIND REFERENCE block (no measured or published value per bottom; Orea publishes click ranges for the V4 NARROW only, and for the Wide only "grind a little coarser"). Agitation: AGITATION RULES above.
 4. THE OREA IS UNDER-DOCUMENTED, NOT UNSUITABLE. The reference-recipe library holds only a few Orea recipes per bottom (Apex has one, Classic two) — that is a gap in the published corpus, not a verdict on the brewer. The owner brews his Orea V4 Wide constantly and it is badly under-represented in recommendations. So do NOT skip the Orea just because the library lacks an Orea entry: when an Orea bottom fits the goal, ADAPT the best-fit pour-over reference (a V60, Kalita, or Origami recipe from the library) onto the matching bottom and cite that reference in basedOn — the Orea is a flat-ish pour-over dripper, so a documented cone/wave recipe transfers cleanly with the per-bottom grind + agitation above. Goal → bottom: clarity/aromatic → Apex; balanced/sweetness → Classic; body/forgiving or a very fine grind → Open; fast turbulent clean cup (esp. naturals) → Fast. This is adaptation of a real recipe, never invention — state what you carried over and what you changed for the bottom. Treat the Orea as a first-class portfolio option alongside V60/Kalita/Origami, chosen on fit, not as a last resort.
 
 NICHE° GRIND REFERENCE:
-(On the Niche Zero dial, HIGHER degree = COARSER grind. Starting points — calibrate to drawdown. Measured anchor: a 15 g / 250 ml V60 is 380° = 23 Comandante clicks; larger batches coarsen. These are the general per-method defaults; a recipe you are ADAPTING carries its own grind in the library entry and that value wins.)
-V60: 375–385° | V60 + Drip Assist: 380–390° (emergency/travel only — disc adds resistance, ~+5° coarser than the V60 range)
-Orea: 380–390° | Origami Air M: 380–388°
-Origami (cone): 378–388° | Origami (wave): 378–386°
-Kalita: 384–394° | Chemex: 398–410° | Clever Dripper: 395–415° | AeroPress: 356–366° | Moccamaster: 410–420°
-Orea Apex (clarity): 382–386° | Orea Classic (sweetness): 385–390° | Orea Open: 381–388°
-Kasuya 4:6: 390–400° | Wölfl: 380–390°
+(On the Niche Zero dial, HIGHER degree = COARSER grind. Only MEASURED or PUBLISHED numbers exist — never present any other number as a known value.)
+V60: 380° at 15 g / 250 ml and 400° at 30 g / 500 ml — the owner's measurements. Between and beyond them, +20° per doubling of the batch (measured on this V60 only).
+V60 + Drip Assist: about 5° coarser than the bare V60 (owner-stated; emergency/travel only).
+Every other brewer (Orea bottoms, Origami, Kalita, Chemex, Clever, AeroPress, Moccamaster): NO measured or published Niche value exists. Take the grind from (1) MEASURED GRIND — the owner's own logged settings on that brewer at this batch — when present; else (2) the reference recipe's own sourced value in RELEVANT REFERENCE RECIPES (an entry without "Niche" in its grind has none); else (3) it is a MEASUREMENT BREW: choose the setting from the brewer's published grind description, say "measurement brew" in whyChosen and name what you based it on. A batch change on these brewers moves the grind by an unmeasured amount — also a measurement brew.
 
 COMANDANTE C40 MK2 — when Comandante is selected for this brew:
 Uniform grind = more even extraction, 15–25s faster drawdown, better clarity.
@@ -472,7 +465,7 @@ appears until the last token is written. Do the thinking; ship only the verdict.
         "doseGrams": 29,
         "waterGrams": 450,
         "waterTempC": 98,
-        "grindSize": "406°",
+        "grindSize": "380°",
         "targetTimeSec": 270,
         "pourSteps": [
           { "label": "Bloom", "action": "bloom", "waterGramsAtEnd": 70, "durationSec": 20 },
@@ -505,4 +498,4 @@ An "Own experiment" must be YOURS. Rewriting a published recipe from memory (a w
 BREVITY: recipe values stay exact numbers. whyChosen: 1 short sentence, hard cap. experiment: one clause, ≤20 words. reasoning: one substantive 40–60 word sentence (expertise required, see above). Those are the ONLY three prose fields. Do not add hypothesis, predictedCupProfile, whatToObserve, primaryVariable, confidenceReason, learningValue, brewingLesson, sessionObjective, coffeeAssessment, intent, coffeeLayer or roasterPriorUsed. Anything not listed in the schema above is discarded on parse, so writing it costs time and buys nothing.
 
 LANGUAGE: Always respond in English. All text fields must be in English only.
-GRIND SIZE: Must be a single Niche° value (e.g. "406°") or single Comandante click count (e.g. "26"). Never a range.`;
+GRIND SIZE: Must be a single Niche° value (e.g. "380°") or single Comandante click count (e.g. "26"). Never a range.`;

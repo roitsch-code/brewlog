@@ -609,7 +609,7 @@ export default function LightStepLog() {
                   label="Grind used"
                   value={grindUsed}
                   onChange={setGrindUsed}
-                  placeholder={selectedRecipe?.grindSize ?? "e.g. 406°"}
+                  placeholder={selectedRecipe?.grindSize ?? "e.g. 380°"}
                 />
                 <LabeledInput
                   label="Temp (°C)"

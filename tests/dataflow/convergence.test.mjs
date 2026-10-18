@@ -205,3 +205,14 @@ test("recommend.ts is wired: derives the state, builds the arc from it, checks c
   assert.doesNotMatch(src, /Don't recycle what worked; push the boundary/);
   assert.doesNotMatch(src, /Expert territory\. Find the ceiling/);
 });
+
+test("grind audit: the dose law moves 'same grind' with the batch on a V60 only", () => {
+  // V60 base 352 g → 448 g: the grind must move +7° (the measured law).
+  const v60 = C.changedDials(RAO_RECIPE, { ...RAO_RECIPE, doseGrams: 28, waterGrams: 448, grindSize: "378°" }, "V60");
+  assert.ok(v60.includes("grind"), "a V60 batch change with an unmoved grind is a grind change");
+  // Same numbers on a Chemex: the batch effect is unmeasured — never counted.
+  const chemex = C.changedDials(RAO_RECIPE, { ...RAO_RECIPE, doseGrams: 28, waterGrams: 448, grindSize: "378°" }, "Chemex");
+  assert.ok(!chemex.includes("grind"), JSON.stringify(chemex));
+  assert.equal(C.doseLawApplies("V60"), true);
+  assert.equal(C.doseLawApplies("Chemex"), false);
+});
