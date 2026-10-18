@@ -43,9 +43,9 @@ export { resolveRecipeMention, resolveUserRequest, validateParsed, fallbackReque
 export { findReshown, parseShownCandidates } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/shownGuard.ts"))};
 export { resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
 export { selectRecipes, brewersAvailableFromEquipment, CANONICAL_EQUIPMENT } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
-export { chemexNicheFloor, chemexNicheRangeFor, batchGrindDeltaDeg, NICHE_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/constants/grindSettings.ts"))};
+export { batchGrindDeltaDeg, NICHE_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/constants/grindSettings.ts"))};
 export { GRIND_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
-export { guardChemexGrindFloor } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/chemexGrindFloor.ts"))};
+export { measuredChemexAtBatch, slowestFloorDeg, findTooFineChemex } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/measuredChemex.ts"))};
 `;
 const out = join(dir, "m.mjs");
 await build({
@@ -162,29 +162,33 @@ test("findReshown: same reference, or same brewer + same title, is an offender; 
 });
 
 // ── 3. Chemex ───────────────────────────────────────────────────────────────
-test("Chemex floor: the V60 anchor scaled by the dose law — 750 g never finer than 412°", () => {
+// The owner's measured 2026-10-18 Chemex: Freeform 6-Cup, 50 g / 750 g, 400°,
+// logged 440 s against a 299 s plan (recommend-logs branch run 39153592276).
+const CHEMEX_SESSION = {
+  id: "s-chemex", createdAt: "2026-10-18T09:39:00Z", createdAtMs: 1, mode: "home", type: "coffee",
+  coffee: COFFEE, context: {},
+  recommendation: { candidates: [{ method: "Chemex", title: "Freeform", basedOn: "Freeform — Chemex 6-Cup", role: "anchor", confidence: "high", whyChosen: "", recipe: { doseGrams: 50, waterGrams: 750, waterTempC: 94, grindSize: "400°", targetTimeSec: 299 } }], reasoning: "", generatedAt: "" },
+  brew: { selectedCandidateIdx: 0, methodUsed: "Chemex", grindSettingUsed: "400°", actualTimeSec: 440 },
+  result: { rating: 4 },
+};
+
+test("Chemex: only the owner's measured brews at this batch; a slow setting sets the direction", () => {
   assert.equal(M.NICHE_DEG_PER_DOUBLING, M.GRIND_DEG_PER_DOUBLING, "one dose law, two constants — keep them equal");
-  assert.equal(M.chemexNicheFloor(500), 400);
-  assert.equal(M.chemexNicheFloor(750), 412);
-  const r = M.chemexNicheRangeFor(750);
-  assert.ok(r.min >= 412 && r.max > r.min, JSON.stringify(r));
-  const { candidates, changes } = M.guardChemexGrindFloor([
-    { method: "Chemex", title: "Freeform", basedOn: "Freeform — Chemex 6-Cup", role: "anchor", confidence: "high", whyChosen: "", recipe: { doseGrams: 50, waterGrams: 750, waterTempC: 94, grindSize: "400°", targetTimeSec: 299 } },
-    { method: "Chemex", title: "Coarse already", role: "anchor", confidence: "high", whyChosen: "", recipe: { doseGrams: 50, waterGrams: 750, waterTempC: 94, grindSize: "420°", targetTimeSec: 299 } },
-    { method: "V60", title: "Not a Chemex", role: "anchor", confidence: "high", whyChosen: "", recipe: { doseGrams: 30, waterGrams: 750, waterTempC: 94, grindSize: "380°", targetTimeSec: 299 } },
-  ]);
-  assert.equal(candidates[0].recipe.grindSize, "412°");
-  assert.equal(candidates[1].recipe.grindSize, "420°");
-  assert.equal(candidates[2].recipe.grindSize, "380°");
-  assert.equal(changes.length, 1);
+  const ms = M.measuredChemexAtBatch([CHEMEX_SESSION], 750);
+  assert.equal(ms.length, 1);
+  assert.equal(ms[0].actualSec, 440);
+  assert.equal(M.slowestFloorDeg(ms), 400, "400° ran slow → a Chemex candidate must be coarser than 400°");
+  assert.equal(M.measuredChemexAtBatch([CHEMEX_SESSION], 450).length, 0, "a 750 g brew is not evidence for 450 g");
+  const bad = M.findTooFineChemex([{ title: "a", method: "Chemex", recipe: { grindSize: "400°" } }, { title: "b", method: "Chemex", recipe: { grindSize: "406°" } }, { title: "c", method: "V60", recipe: { grindSize: "380°" } }], 400);
+  assert.deepEqual(bad.map((b) => b.index), [0]);
 });
 
-test("the 750 g Chemex library entries no longer carry a 400° grind", async () => {
+test("the big-batch Chemex library entries carry no estimated Niche° number", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/markusAdditions.ts"), "utf8");
-  for (const id of ["madcap-chemex-6-cup", "freeform-chemex-6-cup"]) {
-    const block = src.slice(src.indexOf(`id: "${id}"`), src.indexOf(`id: "${id}"`) + 2000);
-    const m = /nicheZeroDegrees:\s*\[(\d+),\s*(\d+)\]/.exec(block);
-    assert.ok(m && Number(m[1]) >= 412, `${id}: ${m?.[0]}`);
+  for (const id of ["madcap-chemex-6-cup", "freeform-chemex-6-cup", "manual-coffee-brewing-chemex-1l-mega-batch", "project-barista-chemex-8-cup-big-batch", "sample-mardan-chemex-6-cup"]) {
+    const from = src.indexOf(`id: "${id}"`);
+    const grind = src.slice(src.indexOf("grind: {", from), src.indexOf("pourSequence", from));
+    assert.doesNotMatch(grind, /nicheZeroDegrees/, id);
   }
 });
 
@@ -244,9 +248,27 @@ test("E2E: shown candidates are named, kept off the menu and repaired", async ()
   assert.equal(calls.length, 2);
   assert.match(calls[1], /REPAIR — ALREADY SHOWN/);
   assert.match(rec.candidates[0].basedOn, /Madcap/);
-  // and the Chemex floor holds on the way out: 400° at 750 g → 412°
-  assert.equal(rec.candidates[0].recipe.grindSize, "412°");
-  assert.match(calls[0], /CHEMEX GRIND AT THIS BATCH \(750 g\): 41\d–4\d\d° Niche — never finer than 412°/);
+  // No measured Chemex in this fixture → the block says "measurement brew", gives no number.
+  assert.match(calls[0], /CHEMEX AT THIS BATCH \(750 g\)/);
+  assert.match(calls[0], /No measured Chemex brew at this batch yet/);
+  assert.doesNotMatch(calls[0], /never finer than \d+°/);
+});
+
+test("E2E: the measured slow Chemex reaches the prompt, and a candidate at that grind is repaired", async () => {
+  M.stub.calls.length = 0;
+  M.stub.queue.length = 0;
+  M.stub.queue.push(
+    { candidates: [cand("Same again", "Chemex", "Own experiment", 750, "400°"), cand("Explore", "V60", "Own experiment", 750)] },
+    { candidates: [cand("Coarser", "Chemex", "Own experiment", 750, "410°"), cand("Explore", "V60", "Own experiment", 750)] },
+  );
+  const res = await M.generateRecommendation(COFFEE, ctx({ amount: "custom", customWaterMl: 750 }), PREFS, [CHEMEX_SESSION], undefined, undefined, undefined, undefined, {});
+  const calls = M.stub.calls;
+  assert.match(calls[0], /2026-10-18: 400°, 50 g \/ 750 g, logged total 440 s vs planned 299 s \(\+141 s\), 4★ — RAN SLOW/);
+  assert.match(calls[0], /MUST be ground coarser than 400°/);
+  assert.match(calls[0], /chemexcoffeemaker\.com\/pages\/faq/);
+  assert.equal(calls.length, 2);
+  assert.match(calls[1], /REPAIR — CHEMEX GRIND/);
+  assert.equal(res.recommendation.candidates[0].recipe.grindSize, "410°", "the model's measurement step is kept, never overwritten by a computed number");
 });
 
 test("E2E: no free text, nothing shown → no extra blocks, no extra call", async () => {
