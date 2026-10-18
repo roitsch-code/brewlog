@@ -59,6 +59,14 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_BUCKET: ${S3_BUCKET}
       NEXT_PUBLIC_S3_PUBLIC_URL_PREFIX: ${NEXT_PUBLIC_S3_PUBLIC_URL_PREFIX}
+      # Nearby map basemap. CARTO stopped serving keyless raster tiles on
+      # 2026-09-25 (every tile = an "API KEY REQUIRED" placeholder). Free
+      # non-commercial key, host-restricted to bettertastethansorry.com in
+      # CARTO's dashboard, read at REQUEST time by the /cafes/map server page
+      # (a NEXT_PUBLIC_ var would be empty: .env is outside the build context).
+      # deploy.yml always-syncs it from the GitHub secret. Empty → the map
+      # falls back to a keyless basemap (Esri light gray).
+      CARTO_BASEMAP_KEY: ${CARTO_BASEMAP_KEY:-}
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_PIN: ${AUTH_PIN}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID}

@@ -85,9 +85,11 @@ function normalizeName(s: string): string {
   return s.trim().toLowerCase();
 }
 
-export default function CafeMap({ cafes, onSelect, initialSearch }: {
+export default function CafeMap({ cafes, onSelect, initialSearch, cartoKey }: {
   cafes: CafeSummary[];
   onSelect: (cafe: CafeSummary) => void;
+  /** CARTO basemap key (runtime env via the server page). Empty → keyless Esri fallback. */
+  cartoKey?: string;
   initialSearch?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -198,10 +200,22 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       // Voyager — Carto's colourful basemap (green parks, blue water, warm
       // roads). Real colour, graded warm toward the app's Field palette by the
       // tile-pane filter co-located in this component's <style jsx global>.
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
-        detectRetina: true,
-      }).addTo(map);
+      // CARTO serves raster tiles only WITH a key since 2026-09-25 (keyless =
+      // an "API KEY REQUIRED" placeholder on every tile). The key is public by
+      // nature (it rides on every tile URL) and host-restricted in CARTO's
+      // dashboard. Without one, fall back to Esri's keyless light-gray canvas
+      // so CI screenshots and a lost key still render a real map.
+      if (cartoKey) {
+        L.tileLayer(
+          `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoKey)}`,
+          { maxZoom: 19, detectRetina: true }
+        ).addTo(map);
+      } else {
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+          { maxZoom: 19, maxNativeZoom: 16 }
+        ).addTo(map);
+      }
 
       const pinIcon = L.divIcon({ html: PIN_HTML, className: "", iconSize: [28, 36], iconAnchor: [14, 36] });
       const pinSelectedIcon = L.divIcon({ html: PIN_SELECTED_HTML, className: "", iconSize: [32, 40], iconAnchor: [16, 40] });
@@ -377,7 +391,8 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
       selectedPlaceMarkerRef.current = null;
       setMapReady(false);
     };
-  }, []);
+    // cartoKey is request-constant (server prop); listed for accuracy only.
+  }, [cartoKey]);
 
   // Curated-place markers — re-render when the filter changes OR when a new
   // visit is logged (visitedNames change re-paints that place as a solid pin).
@@ -591,8 +606,9 @@ export default function CafeMap({ cafes, onSelect, initialSearch }: {
         )}
       </div>
 
+      {/* Attribution — a condition of both tile sources' free use. */}
       <div className="absolute bottom-2 right-2 z-[1000] text-light-foreground/35 pointer-events-none" style={{ fontSize: "9px" }}>
-        © OpenStreetMap · © CARTO
+        {cartoKey ? "© OpenStreetMap · © CARTO" : "© Esri"}
       </div>
 
       {/* Locate me button */}

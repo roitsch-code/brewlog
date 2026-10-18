@@ -1,72 +1,23 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { Menu } from "lucide-react";
-import type { CafeSummary } from "@/lib/types/cafes";
-import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
-
-// Leaflet needs `window`; lazy-load client-side only so SSR doesn't crash.
-const CafeMap = dynamic(() => import("@/components/cafes/CafeMap"), { ssr: false });
+import CafesMapClient from "./CafesMapClient";
 
 /**
- * Nearby — full-bleed map. The Light Coffee Library pattern (title left,
- * burger right) but anchored as floating chrome over an edge-to-edge map,
- * so there's no hard tonal cut between a cream header bar and the tiles.
- * The map fills 100dvh; a soft cream→transparent scrim at the top keeps
- * the title legible against the warm-tinted Positron tiles.
+ * Nearby — server entry. Its one job is to hand the CARTO basemap key to the
+ * client at REQUEST time.
+ *
+ * Why not NEXT_PUBLIC_…: the Docker build runs with `.env` excluded from the
+ * build context (.dockerignore) and no build-arg, so a NEXT_PUBLIC_ variable
+ * is always empty when the client bundle is compiled. Runtime env is the only
+ * channel that reaches production — hence a server component + force-dynamic
+ * (otherwise `next build` would prerender this page once with an empty key).
+ *
+ * CARTO stopped serving keyless raster tiles on 2026-09-25 (every tile became
+ * an "API KEY REQUIRED" placeholder). The key is free, non-commercial, and
+ * restricted to bettertastethansorry.com in CARTO's dashboard. Empty →
+ * CafeMap falls back to a keyless basemap, so CI screenshots and a lost key
+ * still show a real map instead of the watermark.
  */
+export const dynamic = "force-dynamic";
+
 export default function CafesMapPage() {
-  const router = useRouter();
-  const [cafes, setCafes] = useState<CafeSummary[]>([]);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/cafes", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data: CafeSummary[]) => setCafes(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
-
-  return (
-    <div className="h-dvh relative overflow-hidden">
-      {/* Edge-to-edge map */}
-      <div className="absolute inset-0">
-        <CafeMap
-          cafes={cafes}
-          onSelect={(cafe) => router.push(`/cafes/place/${encodeURIComponent(cafe.name)}`)}
-        />
-      </div>
-
-      {/* Top scrim — cream → transparent fade so the title reads cleanly
-          against the tiles without a hard banner edge. */}
-      <div
-        className="pointer-events-none absolute top-0 left-0 right-0 z-[1099]"
-        style={{
-          height: "calc(env(safe-area-inset-top) + 7rem)",
-          background:
-            "linear-gradient(to bottom, hsl(36 55% 96% / 0.88) 0%, hsl(36 55% 96% / 0.45) 55%, transparent 100%)",
-        }}
-      />
-
-      {/* Floating header — Coffee Library layout (title left, burger right).
-          Sits on top of the scrim so the map shows through softly behind. */}
-      <div
-        className="absolute top-0 left-0 right-0 z-[1100] px-5 flex items-center justify-between"
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 1.25rem)" }}
-      >
-        <h1 className="font-fraunces text-3xl text-light-foreground leading-none">Nearby</h1>
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Open menu"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-light-foreground text-light-text-on-dark shadow-light-float active:scale-95 transition-transform"
-        >
-          <Menu className="h-5 w-5" strokeWidth={1.5} />
-        </button>
-      </div>
-
-      <NavigationOverlay open={menuOpen} onClose={() => setMenuOpen(false)} />
-    </div>
-  );
+  return <CafesMapClient cartoKey={process.env.CARTO_BASEMAP_KEY ?? ""} />;
 }
