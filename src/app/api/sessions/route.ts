@@ -81,6 +81,7 @@ const SessionPostSchema = z.object({
     followedRecipe: z.boolean().optional(),
     modifications: z.string().max(1000).optional(),
     actualTimeSec: z.number().min(0).max(3600).optional(),
+    doneAtDryBed: z.boolean().optional(),
     flow: z.enum(["too-fast", "perfect", "too-slow", "na"]).optional(),
     timing: z.enum(["as-expected", "faster", "slower"]).optional(),
     grindSettingUsed: z.string().max(100).optional(),

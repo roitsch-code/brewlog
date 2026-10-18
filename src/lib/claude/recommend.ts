@@ -83,6 +83,9 @@ import {
   type ParsedUserRequest,
 } from "./userRequest";
 import { findTooFineChemex, formatMeasuredChemexBlock, measuredChemexAtBatch, slowestFloorDeg } from "./measuredChemex";
+import { formatGrindSlopeBlock, interpolateGrind } from "./grindSlope";
+import { grindProvenanceOf } from "./grindProvenance";
+import { batchWithinWindow } from "../recipe/batchWindow";
 import type { BrewerType } from "../knowledge/recipes";
 
 // Prose the model has to WRITE is prose the user has to WAIT for: /recommend is
@@ -956,7 +959,20 @@ export async function generateRecommendation(
     targetWaterMl && brewersAvailable.has("chemex") && context.occasion !== "cold-brew"
       ? measuredChemexAtBatch(pastSessions, targetWaterMl)
       : null;
-  const chemexGrindNote = chemexMeasured && targetWaterMl ? formatMeasuredChemexBlock(chemexMeasured, targetWaterMl) : "";
+  // With the owner's own slope (grindSlope.ts) the Chemex setting for the
+  // PUBLISHED 750–800 g target (4:00–5:00 total: Baratza 50 g / 800 g "four and
+  // a half to five minutes", Barefoot 50 g / 750 g ~4:00) is computed, not guessed.
+  const chemexInterp =
+    chemexMeasured && targetWaterMl && batchWithinWindow(750, targetWaterMl)
+      ? [interpolateGrind(pastSessions, "Chemex", targetWaterMl, 240), interpolateGrind(pastSessions, "Chemex", targetWaterMl, 300)]
+      : null;
+  const chemexInterpLine =
+    chemexInterp && chemexInterp[0] && chemexInterp[1]
+      ? `\n- COMPUTED from the owner's slope (${chemexInterp[0].slope.secPerDeg.toFixed(1)} s/° over ${chemexInterp[0].slope.pairs.length} measured pairs), from his ${chemexInterp[0].from.date} brew at ${Math.round(chemexInterp[0].from.deg)}° → ${Math.round(chemexInterp[0].from.totalSec)} s: the published 4:00–5:00 total lands at ${Math.min(chemexInterp[0].deg, chemexInterp[1].deg)}–${Math.max(chemexInterp[0].deg, chemexInterp[1].deg)}°. Use a value in that window; this is a computed setting, not a measurement brew.`
+      : "";
+  const chemexGrindNote =
+    chemexMeasured && targetWaterMl ? formatMeasuredChemexBlock(chemexMeasured, targetWaterMl) + chemexInterpLine : "";
+  const grindSlopeBlock = formatGrindSlopeBlock(pastSessions, targetWaterMl);
   const chemexSlowFloor = chemexMeasured ? slowestFloorDeg(chemexMeasured) : null;
   const equipmentForPrompt = excludedBrewers.size
     ? equipment.split(", ").filter((e) => !usesExcludedBrewer(e, excludedBrewers)).join(", ")
@@ -988,7 +1004,7 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}${measuredPaceBlock}
+${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}${grindSlopeBlock}${measuredPaceBlock}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +
@@ -1334,10 +1350,18 @@ Return valid JSON only.`;
 
   // Last: the pour-sequence string follows the steps the guards left behind
   // (fidelity snap, physics, agitation, pour durations all rewrite steps).
-  const candidates = grindGuarded.map((c) => ({
-    ...c,
-    recipe: { ...c.recipe, pourSequence: derivePourSequence(c.recipe.pourSteps) ?? c.recipe.pourSequence },
-  }));
+  const computedWindows =
+    chemexInterp && chemexInterp[0] && chemexInterp[1]
+      ? [{ methodKey: "chemex", min: Math.min(chemexInterp[0].deg, chemexInterp[1].deg), max: Math.max(chemexInterp[0].deg, chemexInterp[1].deg) }]
+      : [];
+  const candidates = grindGuarded.map((c) => {
+    const recipe = { ...c.recipe, pourSequence: derivePourSequence(c.recipe.pourSteps) ?? c.recipe.pourSequence };
+    return {
+      ...c,
+      recipe,
+      grindProvenance: grindProvenanceOf({ ...c, recipe }, { sessions: pastSessions, userGrind: userReq?.params.grind, computedWindows }),
+    };
+  });
 
   return {
     recommendation: {

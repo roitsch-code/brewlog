@@ -313,6 +313,8 @@ jobs:
             # GRIND vs TIME (2026-10-18): every home brew with a logged grind
             # and a measured total time, raw — so the seconds-per-degree slope
             # per brewer is COMPUTED from the owner's own brews, not estimated.
+            # dry_bed = true: the owner tapped Done at a dry bed (since 2026-10-18) —
+            # only those rows are a drawdown measurement (grindSlope.ts pairs).
             section "GRIND vs TIME — raw rows (home brews with grind + actual time)"
             docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -A -F '|' -c "
               WITH s AS (
@@ -337,7 +339,8 @@ jobs:
                      cand->'recipe'->>'targetTimeSec' AS target_sec,
                      left(COALESCE(coffee->>'process',''),12) AS process,
                      coffee->>'roastDate' AS roast_date,
-                     result->>'rating' AS rating
+                     result->>'rating' AS rating,
+                     COALESCE(brew->>'doneAtDryBed','') AS dry_bed
               FROM r
               WHERE brew->>'actualTimeSec' ~ '^[0-9.]+$'
                 AND COALESCE(brew->>'grindSettingUsed', cand->'recipe'->>'grindSize') ~ '[0-9]'

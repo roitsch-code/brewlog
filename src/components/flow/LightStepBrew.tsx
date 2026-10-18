@@ -184,6 +184,13 @@ export default function LightStepBrew() {
         methodUsed: method,
         followedRecipe: true,
         actualTimeSec: finalSec,
+        // The owner's own Done tap = the bed is dry (owner, 2026-10-18) — the
+        // drawdown measurement grindSlope.ts reads. Only when the time is the
+        // live elapsed clock: the cold-brew log passes a fixed steep time, and
+        // the timer's stop (handleTimerComplete) never sets it.
+        ...(finalSec === elapsed && !(typeof actualSec === "number" && Number.isFinite(actualSec))
+          ? { doneAtDryBed: true }
+          : {}),
         ...(analysis
           ? { flowAnalysis: analysis, flowSource: "measured", flow: analysis.derivedFlow }
           : {}),
