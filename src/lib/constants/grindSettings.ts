@@ -78,12 +78,50 @@ export const NICHE_GRIND_SETTINGS: GrindSetting[] = [
   // Both added May 2026 for the Markus-Additions recipes; estimates off the V60
   // anchor + grind feel, not directly measured.
   { method: "Kalita Wave", niche: { min: 384, max: 394 }, comandante: { min: 24, max: 27 }, confidence: "estimate" },
-  { method: "Chemex", niche: { min: 398, max: 410 }, comandante: { min: 28, max: 32 }, confidence: "estimate" },
+  // Chemex row = a 500 ml brew. Larger batches move by the dose law and never
+  // go below chemexNicheFloor (see the CHEMEX block below the table).
+  { method: "Chemex", niche: { min: 398, max: 410 }, comandante: { min: 28, max: 32 }, confidence: "estimate", notes: "For ~500 ml. Larger batches coarsen (+20° per doubling); never finer than the V60 of the same batch. Owner, 2026-10-18: 750 ml at 400° drained far too long." },
   // Peng champ grind is anchored to his published ~Comandante 26 (≈390°), NOT the
   // blanket −21° shift, which would have wrongly driven it to ~19 clicks.
   { method: "Peng 2025 (Championship)", niche: { min: 385, max: 395 }, comandante: { min: 25, max: 28 }, confidence: "recipe-anchored" },
   { method: "Kasuya 4:6", niche: { min: 390, max: 400 }, comandante: { min: 26, max: 29 }, confidence: "estimate" },
 ];
+
+/** The +20°-per-doubling law as a number (same rule as DOSE_SCALING_RULE). */
+export const NICHE_DEG_PER_DOUBLING = 20;
+
+/** How many Niche° coarser (positive) a brew of `toWaterG` grinds than the same
+ * recipe at `fromWaterG`, by the dose-scaling law. 0 when either is unknown. */
+export function batchGrindDeltaDeg(fromWaterG: number, toWaterG: number): number {
+  if (!(fromWaterG > 0) || !(toWaterG > 0)) return 0;
+  return Math.round(NICHE_DEG_PER_DOUBLING * Math.log2(toWaterG / fromWaterG));
+}
+
+// ── CHEMEX: batch-aware floor (2026-10-18) ──────────────────────────────────
+// Owner report: 750 ml Chemex at 400° on a fresh Brazil, "Durchlauf viel zu
+// lang". The Chemex row above was a batch-blind estimate, and nothing in code
+// ever moved it with the batch, so 400° was "inside the range" at 750 ml.
+//
+// The floor is the measured V60 anchor (30 g / 500 ml = 400°) scaled by the
+// dose law to this brew: a Chemex is never ground FINER than a V60 of the same
+// batch would be (its bonded filter is thicker and drains slower, so the true
+// value sits at or above this). 750 ml → 412°. This is a DERIVATION from the
+// two rules above, not a Chemex measurement — replace it with the owner's
+// measured Chemex drawdowns once they exist.
+export const CHEMEX_FLOOR_ANCHOR = { waterG: 500, niche: 400 } as const;
+/** The Chemex row above describes this batch. */
+export const CHEMEX_TABLE_WATER_G = 500;
+
+export function chemexNicheFloor(waterG: number): number {
+  return CHEMEX_FLOOR_ANCHOR.niche + batchGrindDeltaDeg(CHEMEX_FLOOR_ANCHOR.waterG, waterG);
+}
+
+/** The Chemex table range moved to this batch by the dose law. */
+export function chemexNicheRangeFor(waterG: number): { min: number; max: number } {
+  const row = NICHE_GRIND_SETTINGS.find((g) => g.method === "Chemex")!;
+  const d = batchGrindDeltaDeg(CHEMEX_TABLE_WATER_G, waterG);
+  return { min: Math.max(row.niche.min + d, chemexNicheFloor(waterG)), max: row.niche.max + d };
+}
 
 /**
  * Dose-scaling rule (user-measured, same method + ratio):

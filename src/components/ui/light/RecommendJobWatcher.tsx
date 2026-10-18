@@ -39,7 +39,7 @@ export default function RecommendJobWatcher() {
       const store = useFlowStore.getState();
       if (data.status === "done") {
         if (data.recommendation?.primaryMethod) {
-          store.setRecommendation(data.recommendation);
+          store.receiveRecommendation(data.recommendation);
         } else {
           store.setRecommendError("No recommendation returned");
         }

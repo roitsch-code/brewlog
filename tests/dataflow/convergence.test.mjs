@@ -134,9 +134,14 @@ test("converge check: exactly one changed dial passes; zero and two fail; anothe
     ],
   };
   assert.equal(C.checkConvergence(st, cand(morePours)), null);
-  // scaled to today's bigger batch at the same ratio is NOT a change
-  const scaled = { ...RAO_RECIPE, doseGrams: 28, waterGrams: 448, pourSteps: RAO_RECIPE.pourSteps.map((p) => (p.waterGramsAtEnd ? { ...p, waterGramsAtEnd: Math.round(p.waterGramsAtEnd * 448 / 352) } : p)) };
+  // scaled to today's bigger batch at the same ratio is NOT a change — and the
+  // grind moving by the dose law (+20°/doubling: 352→448 g = +7°, 378°→385°) is
+  // part of the scaling, not a second dial (2026-10-18, the 400° Chemex).
+  const scaled = { ...RAO_RECIPE, doseGrams: 28, waterGrams: 448, grindSize: "385°", pourSteps: RAO_RECIPE.pourSteps.map((p) => (p.waterGramsAtEnd ? { ...p, waterGramsAtEnd: Math.round(p.waterGramsAtEnd * 448 / 352) } : p)) };
   assert.equal(C.checkConvergence(st, cand({ ...scaled, waterTempC: 95 })), null);
+  // …while carrying the 352 g grind unchanged onto 448 g IS a grind change.
+  const unscaledGrind = C.checkConvergence(st, cand({ ...scaled, grindSize: "378°", waterTempC: 95 }));
+  assert.ok(unscaledGrind && unscaledGrind.changed.includes("grind"), JSON.stringify(unscaledGrind));
 
   // zero dials, nothing named → violation
   const zero = C.checkConvergence(st, cand(RAO_RECIPE, ""));

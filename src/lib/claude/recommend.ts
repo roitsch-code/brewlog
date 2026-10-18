@@ -67,6 +67,24 @@ import { formatPourPaceForPrompt, measuredPourPace } from "../brew/pourPace";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 import { formatInsightsBlock, type RecommendInsight } from "./insightsBlock";
+import {
+  findReshown,
+  formatReshownRepair,
+  formatShownUpfront,
+  shownReferenceIds,
+  type ShownCandidate,
+} from "./shownGuard";
+import {
+  applyUserParams,
+  formatUserRequestBlock,
+  resolveUserRequest,
+  toApplied,
+  usesExcludedBrewer,
+  type ParsedUserRequest,
+} from "./userRequest";
+import { guardChemexGrindFloor } from "../recipe/chemexGrindFloor";
+import type { BrewerType } from "../knowledge/recipes";
+import { chemexNicheFloor, chemexNicheRangeFor } from "../constants/grindSettings";
 
 // Prose the model has to WRITE is prose the user has to WAIT for: /recommend is
 // a single blocking call, so nothing renders until the last token lands. This
@@ -336,6 +354,12 @@ export async function generateRecommendation(
   escherTerrain?: string,
   coffeeHistory?: CoffeeHistory,
   insights?: RecommendInsight[],
+  opts: {
+    /** Candidates already shown in this flow (the user went Back and asked again). */
+    shown?: ShownCandidate[];
+    /** The Context step's free text, parsed (userRequest.ts). */
+    userRequest?: ParsedUserRequest;
+  } = {},
 ): Promise<{
   recommendation: Recommendation;
   usage: { input_tokens: number; output_tokens: number; calls: number };
@@ -627,6 +651,25 @@ export async function generateRecommendation(
             ? 750
             : undefined;
 
+  // The Context step's free text (userRequest.ts). Water and a required brewer
+  // were already folded into `context` by run.ts; here the recipe mention is
+  // resolved against the corpus and the exclusions take effect.
+  const userReq = opts.userRequest?.raw ? resolveUserRequest(opts.userRequest, targetWaterMl) : null;
+  const requestedRecipe = userReq?.recipe ?? null;
+  const excludedBrewers = userReq?.excludedBrewerTypes ?? new Set<BrewerType>();
+  if (userReq) {
+    console.log(
+      `[recommend] user-request parsed=${userReq.parsed} recipe=${requestedRecipe?.id ?? "none"} unresolved=${userReq.unresolvedMentions.length} ` +
+        `excluded=[${userReq.excludeBrewers.join(",")}] required=${userReq.requireBrewer ?? "none"} params=${Object.keys(userReq.params).join(",") || "none"}`,
+    );
+  }
+  // Already shown in this flow → off the menu (a hard filter), named up front,
+  // and repaired if a candidate repeats one anyway (shownGuard.ts).
+  const shown = opts.shown ?? [];
+  const shownIds = shownReferenceIds(shown, resolveReference);
+  if (requestedRecipe) shownIds.delete(requestedRecipe.id);
+  const allowIds = new Set<string>(requestedRecipe ? [requestedRecipe.id] : []);
+
   // ONE rotation seed for the whole turn: the recipe menu and the brewer-
   // freshness demotion must rotate together, or the two levers fight each other.
   //
@@ -663,10 +706,14 @@ export async function generateRecommendation(
   // saved row alone silently filtered out every Origami/Chemex recipe before
   // scoring. Single-user app — the canonical kit is the real, authoritative
   // equipment list (see CLAUDE.md). Method-lock filtering still narrows from here.
-  const brewersAvailable = brewersAvailableFromEquipment([
-    ...(preferences.equipment ?? []),
-    ...CANONICAL_EQUIPMENT,
-  ]);
+  const brewersAvailable = new Set(
+    Array.from(
+      brewersAvailableFromEquipment([
+        ...(preferences.equipment ?? []),
+        ...CANONICAL_EQUIPMENT,
+      ]),
+    ).filter((b) => !excludedBrewers.has(b)),
+  );
   // If the user locked a method in the flow, hard-filter recipe selection to
   // that method so the prompt only carries recipes for the brewer they chose.
   const lockedBrewers = brewersFromMethod(context.preferredMethod);
@@ -688,6 +735,14 @@ export async function generateRecommendation(
       if (!Array.from(baseBrewers).some((b) => lockedBrewers.has(b))) return { kind: "unrated", count: c.count };
     }
     if (partitionOf(base.occasion) !== partitionOf(context.occasion)) return { kind: "unrated", count: c.count };
+    // The user named a recipe, or excluded the base's brewer: their words win.
+    if (requestedRecipe) return { kind: "unrated", count: c.count };
+    if (usesExcludedBrewer(base.method, excludedBrewers)) return { kind: "unrated", count: c.count };
+    // Back-and-ask-again: a ≥4★ reproduction on that brewer was already shown
+    // in this flow; re-forcing it is exactly the repetition the user reported.
+    if (c.kind === "converge" && shown.some((x) => brewMethodKey(x.method) === brewMethodKey(base.method))) {
+      return { kind: "unrated", count: c.count };
+    }
     return c;
   })();
   const convergeBase = convergence.kind === "converge" ? convergence.base : null;
@@ -772,6 +827,7 @@ export async function generateRecommendation(
       timeAvailable: context.timeAvailable,
       // Experiment → steer toward brewers/references not yet used on this bag.
       brewedOnThisCoffee,
+      excludeRecipeIds: shownIds,
   };
   const selectedRecipes = selectRecipes(selectionInput, 4);
 
@@ -806,6 +862,19 @@ export async function generateRecommendation(
       4,
     );
   }
+  // The recipe the user asked for by name leads the menu, whatever the scorer
+  // thought of it (batch window included — it is scaled to this brew below and
+  // labelled with its published size).
+  if (requestedRecipe) {
+    recipesForPrompt = [
+      { recipe: requestedRecipe, score: Number.POSITIVE_INFINITY, reasons: ["requested by the user"] },
+      ...recipesForPrompt.filter((r) => r.recipe.id !== requestedRecipe.id),
+    ];
+  }
+  const requestedScaledNote =
+    requestedRecipe && targetWaterMl && !referenceAppliesAtBatch(requestedRecipe, targetWaterMl)
+      ? `published at ${requestedRecipe.water.grams} g, scaled to your ${targetWaterMl} g on request`
+      : undefined;
   const recipesBlock = recipesForPrompt.length
     ? `\n${
         lockedMethodHasNoRecipe
@@ -877,9 +946,25 @@ export async function generateRecommendation(
   // partition). The rule is also stated UP FRONT in the user message, so the
   // first answer can already honour it — a repair round doubles the wait.
   const repeatGuardActive =
-    !lockedMethodBase && (context.occasion ?? "").toLowerCase() !== "cold-brew";
+    !lockedMethodBase && !requestedRecipe && (context.occasion ?? "").toLowerCase() !== "cold-brew";
   const offered = recentlyOfferedFamilies(pastSessions);
   const repeatRuleNote = repeatGuardActive ? formatRepeatRuleUpfront(offered) : "";
+
+  // Chemex grind for THIS batch (grindSettings.ts CHEMEX). The NICHE° table in
+  // the system prompt is a 500 ml row; at 750 ml it produced 400° and a drawdown
+  // that never ended. Enforced as a floor after generation (chemexGrindFloor.ts).
+  const chemexGrindNote =
+    targetWaterMl && brewersAvailable.has("chemex") && context.occasion !== "cold-brew"
+      ? (() => {
+          const r = chemexNicheRangeFor(targetWaterMl);
+          return `\nCHEMEX GRIND AT THIS BATCH (${targetWaterMl} g): ${r.min}–${r.max}° Niche — never finer than ${chemexNicheFloor(targetWaterMl)}° (the app lifts a finer Chemex grind to that floor). This replaces the batch-blind Chemex row of the NICHE° table for this brew.`;
+        })()
+      : "";
+  const equipmentForPrompt = excludedBrewers.size
+    ? equipment.split(", ").filter((e) => !usesExcludedBrewer(e, excludedBrewers)).join(", ")
+    : equipment;
+  const userRequestBlock = userReq ? formatUserRequestBlock(userReq, requestedScaledNote) : "";
+  const shownBlock = formatShownUpfront(shown);
 
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
@@ -892,9 +977,9 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodRecency.note}${methodNote}${dripAssistNote}${goalNote}
+- Water: ${waterNote}${capacityConstraint}${methodRecency.note}${methodNote}${dripAssistNote}${goalNote}${chemexGrindNote}${userRequestBlock}${shownBlock}
 
-Equipment available: ${equipment}
+Equipment available: ${equipmentForPrompt}
 ${grinderNote}
 Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=${preferences.tasteProfile.preferredAcidityLevel}
 
@@ -977,6 +1062,30 @@ Return valid JSON only.`;
   const convergenceActive = convergence.kind === "converge" || convergence.kind === "diverge";
   const violation = convergenceActive ? checkConvergence(convergence, raw.candidates[0]) : null;
   const repairs: string[] = [];
+  const reshown = findReshown(raw.candidates, shown, resolveReference, allowIds);
+  if (reshown.length) {
+    console.warn(`[recommend] shown guard: ${reshown.map((o) => `"${o.title}" repeats "${o.matched}"`).join("; ")} — one repair round`);
+    repairs.push(formatReshownRepair(reshown));
+  }
+  const excludedUsed = raw.candidates
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => usesExcludedBrewer(c.method, excludedBrewers));
+  if (excludedUsed.length) {
+    console.warn(`[recommend] user-request: ${excludedUsed.map(({ c }) => `"${c.title}" (${c.method})`).join("; ")} on an excluded brewer — one repair round`);
+    repairs.push(
+      `\n\nREPAIR — EXCLUDED BREWER. The user excluded ${userReq?.excludeBrewers.join(", ")}:\n${excludedUsed
+        .map(({ c, i }) => `- Candidate ${i + 1} "${c.title}" uses ${c.method}.`)
+        .join("\n")}\nReplace ONLY those candidate(s) with a recipe on a brewer the user did not exclude; keep any other candidate exactly as it was.`,
+    );
+  }
+  const requestMissed =
+    requestedRecipe && resolveReference(raw.candidates[0]?.basedOn)?.id !== requestedRecipe.id;
+  if (requestMissed && requestedRecipe) {
+    console.warn(`[recommend] user-request: candidate 1 basedOn "${raw.candidates[0]?.basedOn ?? "none"}" is not the requested ${requestedRecipe.id} — one repair round`);
+    repairs.push(
+      `\n\nREPAIR — REQUESTED RECIPE. The user asked for "${requestedRecipe.name}". The FIRST candidate must adapt exactly that recipe (basedOn "${requestedRecipe.name}", entry 1 of RELEVANT REFERENCE RECIPES). Keep the second candidate as it was unless it is the same recipe.`,
+    );
+  }
   if (offenders.length) {
     console.warn(
       `[recommend] repeat guard: ${offenders
@@ -1042,6 +1151,14 @@ Return valid JSON only.`;
     }
   }
 
+  if (excludedBrewers.size) {
+    const allowed = raw.candidates.filter((c) => !usesExcludedBrewer(c.method, excludedBrewers));
+    if (allowed.length && allowed.length < raw.candidates.length) {
+      console.warn(`[recommend] user-request: dropped ${raw.candidates.length - allowed.length} candidate(s) still on an excluded brewer after repair`);
+      raw = { ...raw, candidates: allowed };
+    }
+  }
+
   const mapped: RecommendationCandidate[] = raw.candidates.map((c) => ({
     method: c.method,
     recipe: guardRecipeFidelity(sanitizeRecipe(c.recipe), c.basedOn, c.title, c.method, daysOld),
@@ -1073,7 +1190,11 @@ Return valid JSON only.`;
     const ref = resolveReference(c.basedOn);
     const water = c.recipe?.waterGrams;
     if (!ref || !(typeof water === "number" && water > 0) || referenceAppliesAtBatch(ref, water)) return c;
-    const relabel = `Own recipe (after ${ref.shortName || ref.name}, published at ${ref.water.grams} g)`;
+    // The user asked for this recipe by name: keep the name, say it was scaled.
+    const relabel =
+      requestedRecipe && ref.id === requestedRecipe.id
+        ? `${ref.name} (scaled from ${ref.water.grams} g on request)`
+        : `Own recipe (after ${ref.shortName || ref.name}, published at ${ref.water.grams} g)`;
     console.warn(
       `[recommend] batch window: "${c.title ?? c.method}" basedOn "${c.basedOn}" is published at ${ref.water.grams} g, ` +
         `this brew pours ${Math.round(water)} g — relabelled "${relabel}"`,
@@ -1188,7 +1309,20 @@ Return valid JSON only.`;
   //      last. Drops over-ceiling candidates; keeps all if all are over.
   const timeGuarded = guardSpecialTime(gapGuarded, context.timeAvailable);
 
-  const grindGuarded = timeGuarded.map((c) => {
+  //   8. CHEMEX FLOOR (chemexGrindFloor.ts) — a Chemex is never ground finer
+  //      than the V60 of the same batch. Then the user's own typed numbers,
+  //      last, so no guard can undo them (an explicit grind beats the floor).
+  const chemexFloored = guardChemexGrindFloor(timeGuarded);
+  for (const change of chemexFloored.changes) console.warn(`[recommend] chemex floor: ${change}`);
+  const userParamsApplied = userReq
+    ? chemexFloored.candidates.map((c) => {
+        const res = applyUserParams(c.recipe, userReq.params);
+        for (const change of res.changes) console.log(`[recommend] user-request param: "${c.title ?? c.method}" ${change}`);
+        return res.recipe === c.recipe ? c : { ...c, recipe: res.recipe };
+      })
+    : chemexFloored.candidates;
+
+  const grindGuarded = userParamsApplied.map((c) => {
     const fixed = normalizeGrindToGrinder(c.recipe.grindSize, sessionGrinder) ?? c.recipe.grindSize;
     if (fixed === c.recipe.grindSize) return c;
     console.warn(
@@ -1213,6 +1347,7 @@ Return valid JSON only.`;
       alternativeRecipe: candidates[1]?.recipe,
       reasoning: raw.reasoning ?? "",
       generatedAt: new Date().toISOString(),
+      ...(userReq ? { userRequestApplied: toApplied(userReq) } : {}),
     },
     usage,
   };

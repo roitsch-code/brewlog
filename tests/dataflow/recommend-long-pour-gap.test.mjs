@@ -125,7 +125,10 @@ test("recommend.ts imports the gap metric and feeds the guarded set to candidate
   );
   // … → normalizeGrindToGrinder (grindGuarded) → the pour-sequence re-derive
   // that yields `candidates` (2026-10-03). Every link must chain.
-  assert.match(src, /grindGuarded\s*=\s*timeGuarded\.map/, "the grind-unit pass must read the time-guarded set");
+  // … → the Chemex floor and the user's typed numbers (2026-10-18) → the unit pass.
+  assert.match(src, /guardChemexGrindFloor\(\s*timeGuarded\s*\)/, "the Chemex floor must read the time-guarded set");
+  assert.match(src, /userParamsApplied\s*=\s*userReq\s*\?\s*chemexFloored\.candidates/, "the user's numbers must read the Chemex-floored set");
+  assert.match(src, /grindGuarded\s*=\s*userParamsApplied\.map/, "the grind-unit pass must read the user-param set");
   assert.match(
     src,
     /candidates\s*=\s*grindGuarded\.map/,

@@ -61,6 +61,9 @@ export interface SessionContext {
   /** @deprecated Drip Assist support was removed; legacy sessions still reference this. Do not surface in current UI / prompts. */
   dripAssist?: boolean;
   intent?: string;
+  /** Free text from the Context step ("Wishes for this brew", ≤300 chars):
+   * a recipe, an exclusion, a fixed number — parsed by userRequest.ts. */
+  userRequest?: string;
   // "explore" | "safest" | "high-clarity" | "sweetness-forward"
   // | "body-forward" | "educational" | "repeat-best" | "compare" | "troubleshoot"
 }
@@ -184,6 +187,16 @@ export interface Recommendation {
    * /api/brew-insight reuses it instead of making the same model call again
    * on the Summary screen (2026-10-03). */
   terrain?: string;
+  /** How the Context step's free text ("Wishes for this brew") was read and
+   * applied — shown above the candidates. Absent when nothing was typed. */
+  userRequestApplied?: {
+    text: string;
+    recipe?: string;
+    excluded: string[];
+    required?: string;
+    params: { tempC?: number; grind?: string; doseG?: number; waterG?: number; ratio?: number };
+    unresolved: string[];
+  };
 }
 
 export interface BrewLog {
