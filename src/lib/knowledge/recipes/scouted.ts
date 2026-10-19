@@ -9,4 +9,89 @@
 // and lists it on the Context step's Fresh strip.
 import type { Recipe } from "./types";
 
-export const SCOUTED_RECIPES: Recipe[] = [];
+export const SCOUTED_RECIPES: Recipe[] = [
+  {
+    "id": "scout-daniel-yu-origami-wave-300",
+    "name": "Daniel Yu's Origami Wave Filter Recipe",
+    "shortName": "Yu Origami (wave)",
+    "attribution": {
+      "person": "Daniel Yu",
+      "title": "Writer / Coffee Enthusiast",
+      "affiliation": "Project Barista",
+      "year": 2021
+    },
+    "category": "reference",
+    "brewer": "origami-wave",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium fine"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 40,
+        "notes": "Pour 50ml in a circular motion over all grounds to saturate. Wait until 0:40."
+      },
+      {
+        "label": "Main continuous pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 50,
+        "notes": "Starting at 0:40, pour 200ml in a slow circular motion — 5 circles outward and 5 back inward — ending back at center. Pouring done by 1:30 mark."
+      },
+      {
+        "label": "Final pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 30,
+        "notes": "Third pour (at ~1:20 interval) to reach the total of 300ml. Inferred from recipe header totals and 'every 40 seconds' interval — not individually narrated in the step-by-step text."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "pulse-pouring"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "processes": [
+        "washed",
+        "natural"
+      ],
+      "goals": [
+        "balanced",
+        "high-clarity"
+      ]
+    },
+    "teaches": "The long-pour (continuous pour) technique applied to a flat-bottom wave filter on the Origami: a single slow, outward-then-inward spiral pour delivers more even extraction temperature and steadier extraction rate than pulse pouring, producing a balanced, sweet cup.",
+    "science": "Continuous pouring regulates brew temperature better than pulsing (no steep cooling between pours) and extracts at a steadier rate. The wave filter seats into the Origami's ribs, reducing bypass and extending contact time versus a cone filter, which shifts the cup toward sweetness and body.",
+    "whenToUse": "Use when you want a balanced, sweet cup from any light-to-medium roast coffee and prefer a hands-on long-pour workflow over pulse pouring.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Daniel Yu, '2 Versatile Recipes for the Origami Dripper', Project Barista, February 19, 2021.",
+        "url": "https://projectbarista.com/origami-dripper/",
+        "year": 2021
+      }
+    ],
+    "verified": false,
+    "notes": "Scouted 2026-10-19 by scripts/recipe-scout.mjs; every number quoted from the source and re-found on the page. Unverified until a session cross-checks it against the originator.",
+    "addedAt": "2026-10-19T18:53:23.896Z"
+  }
+];
