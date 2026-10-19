@@ -14,6 +14,7 @@ import { EXPANDED_RECIPES } from "./expanded";
 import { MARKUS_ADDITIONS } from "./markusAdditions";
 import { OREA_WIDE_RECIPES } from "./oreaWide";
 import { SCOUTED_RECIPES } from "./scouted";
+import { GOTA_RECIPES } from "./gota";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
@@ -22,6 +23,7 @@ export const ALL_RECIPES: Recipe[] = [
   ...MARKUS_ADDITIONS,
   ...OREA_WIDE_RECIPES,
   ...SCOUTED_RECIPES,
+  ...GOTA_RECIPES,
 ];
 
 /**
