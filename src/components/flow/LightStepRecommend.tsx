@@ -14,6 +14,9 @@ import CraftingStatus from "@/components/ui/light/CraftingStatus";
 import { buildCraftingPhases } from "@/lib/craftingPhases";
 import { COFFEE_HINTS } from "@/lib/coffeeHints";
 import { MAX_CHARS } from "@/lib/insights/loadingInsightLint";
+import { SEEN_KEY, buildDeckQueue, markSeen, readSeen, writeSeen } from "@/lib/insights/deckQueue";
+import { brewMethodKey } from "@/lib/utils/brewMethodKey";
+import type { DeckLine } from "@/lib/recommend/brewDeck";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import type { BrewRecipe, Recommendation, RecommendationCandidate, CandidateRole, CandidateConfidence } from "@/lib/types/session";
 import { pourScheduleFor } from "@/lib/utils/pourSequence";
@@ -38,9 +41,30 @@ import { basedOnReference } from "@/lib/utils/resolveRecipe";
  * over cream); revisit if it disappears visually.
  */
 
-function shuffleSubset(arr: string[], count: number): string[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+/** The device's memory of which pool lines it has shown (deckQueue.ts). */
+function loadSeen(): Set<string> {
+  try {
+    return readSeen(typeof localStorage !== "undefined" ? localStorage.getItem(SEEN_KEY) : null);
+  } catch {
+    return new Set();
+  }
+}
+function storeSeen(seen: Set<string>): void {
+  try {
+    localStorage.setItem(SEEN_KEY, writeSeen(seen));
+  } catch {
+    /* private mode / quota — the deck still runs, just without memory */
+  }
+}
+
+/** The deck lines that speak to the candidate the owner picked, else the first two. */
+function linesForCandidate(lines: DeckLine[], method?: string): DeckLine[] {
+  if (lines.length === 0) return [];
+  const key = brewMethodKey(method);
+  const about = lines.filter((l) => typeof l.about === "object" && "brewer" in l.about && brewMethodKey(l.about.brewer) === key);
+  const tech = lines.filter((l) => typeof l.about === "object" && "technique" in l.about);
+  const picked = [...about, ...tech, ...lines.filter((l) => !about.includes(l) && !tech.includes(l))];
+  return picked.slice(0, 2);
 }
 
 // Recipe-crafting insight animation — deliberately slow + calm (the earlier
@@ -104,36 +128,35 @@ export default function LightStepRecommend() {
     else disableWakeLock();
   }, [isRecommending, enableWakeLock, disableWakeLock]);
 
-  // Rotating insight deck for the crafting screen: a shuffled subset shown one
-  // at a time — big (Fraunces 40, like the welcome haiku), scattered-in, held
-  // long enough to read, then dissolved the OPPOSITE way (down) before the next
-  // sets up. Seeded synchronously from the code-canonical short COFFEE_HINTS so
-  // the big format always fits and the first frame paints instantly (offline
-  // too); the auto-refreshed pool is merged in below, purely additive.
-  const [insights, setInsights] = useState<string[]>(() => shuffleSubset(COFFEE_HINTS, 12));
+  // The insight deck for the crafting screen — big (Fraunces 40, like the
+  // welcome haiku), scattered-in, held long enough to read, then dissolved
+  // the OPPOSITE way (down) before the next sets up. Since 2026-10-19 it is
+  // built by deckQueue.ts: the lines written for THIS brew lead (brewDeck.ts,
+  // read off the job while the recipe is still being written), then the pool
+  // — the static COFFEE_HINTS seed plus /api/loading-insights — UNSEEN lines
+  // first, with a per-device memory of what has been shown (SEEN_KEY). The
+  // seed is the floor: instant, offline-safe; a fetch failure changes nothing.
+  const brewLines = useFlowStore((s) => s.recommendInsights);
+  const brewTexts = useMemo(() => brewLines.map((l) => l.text), [brewLines]);
+  const [pool, setPool] = useState<string[]>(COFFEE_HINTS);
+  const seenRef = useRef<Set<string> | null>(null);
+  if (seenRef.current === null) seenRef.current = loadSeen();
+  const [insights, setInsights] = useState<string[]>(() => buildDeckQueue([], COFFEE_HINTS, seenRef.current ?? new Set()).queue);
   const [insightIdx, setInsightIdx] = useState(0);
   const [insightVisible, setInsightVisible] = useState(true);
+  // How many lines the current queue has already shown — rebuilding the queue
+  // (brew lines arriving, the pool landing) keeps what is on screen and
+  // replaces only what is still to come.
+  const shownCountRef = useRef(0);
 
-  // Merge the auto-refreshed insight pool (/api/loading-insights) with the
-  // static seed. The seed is the floor — always present, instant, offline-safe
-  // — so DB rows only add, and any fetch failure leaves the seed-only shuffle
-  // in place. Length-capped defensively so a bad row can't break the headline.
   useEffect(() => {
     let cancelled = false;
     fetch("/api/loading-insights")
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { insights?: string[] } | null) => {
         if (cancelled || !data?.insights?.length) return;
-        const seen = new Set<string>();
-        const merged: string[] = [];
-        for (const s of [...data.insights, ...COFFEE_HINTS]) {
-          const key = s.trim().toLowerCase();
-          if (s.length <= MAX_CHARS && !seen.has(key)) {
-            seen.add(key);
-            merged.push(s);
-          }
-        }
-        if (merged.length > 0) setInsights(shuffleSubset(merged, 12));
+        const merged = [...data.insights, ...COFFEE_HINTS].filter((s) => s.length <= MAX_CHARS);
+        setPool(merged);
       })
       .catch(() => {});
     return () => {
@@ -141,7 +164,36 @@ export default function LightStepRecommend() {
     };
   }, []);
 
+  // Rebuild the queue when the brew lines or the pool change: brew lines go
+  // to the FRONT of what is still unshown, so a deck that arrives 10 s into
+  // the wait is read on the very next card.
+  useEffect(() => {
+    const seen = seenRef.current ?? new Set<string>();
+    setInsights((cur) => {
+      const shown = cur.slice(0, Math.min(shownCountRef.current + 1, cur.length));
+      const pendingBrew = brewTexts.filter((t) => !shown.includes(t));
+      const { queue, seen: nextSeen, resetPool } = buildDeckQueue(pendingBrew, pool, seen);
+      if (resetPool) {
+        seenRef.current = nextSeen;
+        storeSeen(nextSeen);
+      }
+      const rest = queue.filter((q) => !shown.includes(q));
+      return [...shown, ...rest];
+    });
+  }, [brewTexts, pool]);
+
   const currentInsight = insights[insightIdx] ?? "";
+  // Remember every pool line the moment it is on screen.
+  useEffect(() => {
+    if (!isRecommending || !currentInsight) return;
+    shownCountRef.current = insightIdx;
+    const seen = seenRef.current ?? new Set<string>();
+    const next = markSeen(seen, currentInsight, brewTexts);
+    if (next !== seen) {
+      seenRef.current = next;
+      storeSeen(next);
+    }
+  }, [currentInsight, insightIdx, isRecommending, brewTexts]);
   const insightWordCount = currentInsight.trim() === "" ? 0 : currentInsight.trim().split(/\s+/).length;
   // Visible window = entrance time + a generous read buffer, so it stands long
   // enough to read calmly before it starts to leave.
@@ -396,6 +448,25 @@ export default function LightStepRecommend() {
           <InfoRow label="Why" value={active.whyChosen} />
         </div>
       )}
+
+      {/* The deck lines about the brewer he picked (brewDeck.ts) — what went
+          past on the crafting screen stays readable here, so a line he half
+          caught is not gone. Stored with the recommendation. */}
+      {(() => {
+        const lines = linesForCandidate(rec.insights ?? brewLines, activeMethod);
+        return lines.length > 0 ? (
+          <div className="mt-6 rounded-3xl bg-light-card-default backdrop-blur-light-card backdrop-saturate-150 p-4">
+            <p className="label-eyebrow mb-3">While you waited</p>
+            <div className="space-y-2">
+              {lines.map((l) => (
+                <p key={l.text} className="text-[14px] leading-relaxed text-light-foreground">
+                  {l.text}
+                </p>
+              ))}
+            </div>
+          </div>
+        ) : null;
+      })()}
 
       <CTA onClick={handleUse}>Brew with {activeMethodLabel}</CTA>
     </LightFlowShell>

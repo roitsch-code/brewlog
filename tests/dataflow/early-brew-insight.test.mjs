@@ -74,7 +74,7 @@ test("resolveTerrain: a precomputed terrain short-circuits the builder; without 
 
 test("CONSUMERS: run.ts attaches the terrain, the route reads it through resolveTerrain and keeps the server-side history read as fallback", async () => {
   const run = await readFile(path.join(ROOT, "src/lib/recommend/run.ts"), "utf8");
-  assert.match(run, /return terrain \? \{ \.\.\.recommendation, terrain \} : recommendation;/);
+  assert.match(run, /const withTerrain = terrain \? \{ \.\.\.recommendation, terrain \} : recommendation;/);
   const types = await readFile(path.join(ROOT, "src/lib/types/session.ts"), "utf8");
   const rec = types.slice(types.indexOf("export interface Recommendation"), types.indexOf("export interface BrewLog"));
   assert.match(rec, /terrain\?: string;/);

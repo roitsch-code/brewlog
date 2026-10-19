@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/requireAuth";
 import { runRecommendation } from "@/lib/recommend/run";
-import { createJob, markDone, markError } from "@/lib/recommend/jobStore";
+import { createJob, markDone, markError, setInsights } from "@/lib/recommend/jobStore";
 
 export const dynamic = "force-dynamic";
 // The detached task does the ~1-min Opus call; keep the platform from capping
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   // Fire-and-forget — do NOT await. The promise keeps running on the event loop
   // after we respond; the result lands in the job store.
-  void runRecommendation(body)
+  void runRecommendation(body, { onInsights: (lines) => setInsights(jobId, lines) })
     .then((recommendation) => markDone(jobId, recommendation))
     .catch((err) => {
       console.error("recommend job error:", err);

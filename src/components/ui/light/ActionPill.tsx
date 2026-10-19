@@ -6,6 +6,7 @@ import { Coffee, MapPin, User, Crosshair, Globe, BookOpen, RotateCcw, Bookmark, 
 import type { NavAction } from "@/app/api/explore-agent/route";
 import { startBrewAgain, startBrewFromChat } from "@/lib/flow/brewAgain";
 import { chatBrewIdentity } from "@/lib/chat/chatBrewTarget";
+import { fetchCoffeeIdentity } from "@/lib/flow/coffeeIdentityFetch";
 import type { CoffeeIdentity } from "@/lib/types/session";
 
 /**
@@ -31,19 +32,6 @@ import type { CoffeeIdentity } from "@/lib/types/session";
  * on Step 3 (Context) with the bag already selected. (§6.3)
  */
 
-interface CoffeeRow {
-  id: string;
-  roaster: string;
-  name: string;
-  origin: string;
-  process: string;
-  components?: import("@/lib/types/session").BlendComponent[] | null;
-  latestRoastDate?: string;
-  bagPhotoUrl?: string;
-  // Generative Field v1.1 — present on the /api/coffees/[id] response
-  // via rowToCoffee, used for the Brew Again Field lift.
-  fieldZones?: import("@/lib/field/types").FieldZones | null;
-}
 
 function destinationToPath(action: NavAction): string {
   switch (action.destination) {
@@ -193,29 +181,12 @@ export default function ActionPill({ action }: { action: NavAction }) {
       let identity: CoffeeIdentity | null = null;
       let fieldZones: import("@/lib/field/types").FieldZones | null = null;
       if (action.id) {
-        try {
-          const res = await fetch(`/api/coffees/${action.id}`, { cache: "no-store" });
-          if (res.ok) {
-            const row = (await res.json()) as CoffeeRow | null;
-            if (row && row.id) {
-              identity = {
-                roaster: row.roaster,
-                name: row.name,
-                origin: row.origin,
-                process: row.process,
-                components: row.components ?? undefined,
-                roastLevel: "Light",
-                roastDate: row.latestRoastDate,
-                bagPhotoUrl: row.bagPhotoUrl,
-                aiExtracted: false,
-                coffeeId: row.id,
-              };
-              // Generative Field v1.1 — lift the persisted Field composition.
-              fieldZones = row.fieldZones ?? null;
-            }
-          }
-        } catch {
-          /* fall through — the roaster+name fallback below may still brew */
+        // The one library-row → identity mapping every brew start shares
+        // (coffeeIdentityFetch.ts); null falls through to the roaster+name path.
+        const fetched = await fetchCoffeeIdentity(action.id);
+        if (fetched) {
+          identity = fetched.identity;
+          fieldZones = fetched.fieldZones;
         }
       }
       // No library row (a bag not yet added, or an id whose fetch failed) —

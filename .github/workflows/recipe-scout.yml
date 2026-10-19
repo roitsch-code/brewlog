@@ -1,0 +1,50 @@
+name: Recipe scout
+
+# Weekly: find published recipes for the corpus's emptiest brewer × batch
+# cells, verify every number against its source page, and commit the ones
+# that pass straight to the branch the run is on — main on the schedule
+# (scripts/recipe-scout.mjs; owner 2026-10-19: "immer wieder neue Rezepte,
+# ohne dass ich danach suchen oder bitten muss"). The push goes out with
+# GH_PAT, not GITHUB_TOKEN, so it fires deploy.yml (and its smoke job) like
+# any other commit — a GITHUB_TOKEN push never triggers workflows. ~$1 per
+# run (4 Sonnet calls with web search). 0 entries = no commit, job green.
+#
+# A push to .github/recipe-scout-trigger runs it on THAT branch (the commit
+# lands on the branch, never on main) — the way to read a scout run before
+# a workflow change is merged.
+
+on:
+  schedule:
+    - cron: "5 6 * * 1" # Mondays 06:05 UTC = 08:05 Düsseldorf (summer)
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/recipe-scout-trigger"
+
+concurrency:
+  group: recipe-scout
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The PAT is what lets the push trigger the deploy; a missing PAT
+          # falls back to GITHUB_TOKEN (push works, nothing deploys).
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Scout, verify, gate, commit
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/recipe-scout.mjs

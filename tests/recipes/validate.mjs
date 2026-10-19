@@ -251,6 +251,14 @@ for (const r of ALL_RECIPES) {
   if (!r.sources?.length) W(id, "no sources");
   else for (const [i, s] of r.sources.entries()) if (!s.citation) W(id, `source ${i} missing citation`);
   if (typeof r.verified !== "boolean") E(id, "verified is not a boolean");
+  // Scouted entries (scripts/recipe-scout.mjs) carry addedAt and arrive
+  // unverified; one still unverified after 90 days is overdue for an
+  // in-session cross-check against its originator.
+  if (r.addedAt !== undefined) {
+    const t = Date.parse(r.addedAt);
+    if (!Number.isFinite(t)) E(id, `addedAt "${r.addedAt}" is not a date`);
+    else if (!r.verified && Date.now() - t > 90 * 86_400_000) W(id, `scouted ${Math.round((Date.now() - t) / 86_400_000)} days ago and still unverified — cross-check it against the originator`);
+  }
 }
 
 // ── Technique → recipe reverse check ────────────────────────────────────────

@@ -8,6 +8,7 @@
 
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
+import { skippedCandidateOf, type SkippedCandidate } from "../flow/skippedCandidate";
 
 export interface PreviousBrew {
   id: string;
@@ -31,6 +32,9 @@ export interface PreviousBrewSummary {
   /** Rated home brews of this coffee, newest first (≤ 5). */
   ratings: number[];
   count: number;
+  /** The candidate offered beside the one he brewed last time — the "Try the
+   * one you skipped" pill (src/lib/flow/skippedCandidate.ts). */
+  skipped?: SkippedCandidate | null;
 }
 
 export function sameCoffee(
@@ -63,7 +67,7 @@ export function pickPreviousBrew(
     .filter((r): r is number => typeof r === "number" && Number.isFinite(r))
     .slice(0, 5);
   const last = mine[0];
-  if (!last) return { previous: null, ratings, count };
+  if (!last) return { previous: null, ratings, count, skipped: null };
   const { recipe, method } = resolveBrewedRecipe(last);
   const cand = resolveBrewedRecipe(last).candidate;
   return {
@@ -85,5 +89,6 @@ export function pickPreviousBrew(
     },
     ratings,
     count,
+    skipped: skippedCandidateOf(last),
   };
 }

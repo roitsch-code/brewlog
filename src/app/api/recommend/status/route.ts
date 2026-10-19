@@ -22,11 +22,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ status: "error", error: "Recommendation expired" });
   }
 
+  // The per-brew deck (brewDeck.ts) rides along in every state it exists in:
+  // while running it feeds the crafting screen, on done it is also persisted
+  // on the recommendation itself.
+  const insights = job.insights ?? [];
   if (job.status === "done") {
-    return NextResponse.json({ status: "done", recommendation: job.recommendation });
+    return NextResponse.json({ status: "done", recommendation: job.recommendation, insights });
   }
   if (job.status === "error") {
     return NextResponse.json({ status: "error", error: job.error ?? "Recommendation failed" });
   }
-  return NextResponse.json({ status: "running" });
+  return NextResponse.json({ status: "running", insights });
 }

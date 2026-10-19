@@ -10,6 +10,10 @@ import type { RoasterPrior } from "@/lib/roasters/priors";
 import type { CoffeeIdentity, Recommendation, Session, SessionContext } from "@/lib/types/session";
 import { parseShownCandidates } from "@/lib/claude/shownGuard";
 import { cleanUserRequest, parseUserRequest, USER_BREWER_METHODS, type ParsedUserRequest } from "@/lib/claude/userRequest";
+import { generateBrewDeck, type DeckLine } from "@/lib/recommend/brewDeck";
+import { buildBrewerMenu } from "@/lib/knowledge/recipes/menu";
+import { CANONICAL_EQUIPMENT, brewersAvailableFromEquipment, normaliseGoal, normaliseProcess, normaliseRoastLevel } from "@/lib/knowledge/recipes/helpers";
+import { brewerRecency } from "@/lib/claude/methodRotation";
 
 /**
  * The full recommendation pipeline minus auth/HTTP: parallel DB lookups
@@ -100,12 +104,47 @@ async function loadCoffeeHistory(
   return undefined;
 }
 
-export async function runRecommendation(body: {
-  coffee: unknown;
-  context: unknown;
-  pastSessions?: unknown;
-  shownCandidates?: unknown;
-}): Promise<Recommendation> {
+/**
+ * The deck's view of today's menu: the same selector /recommend uses
+ * (buildBrewerMenu — roast, process, variety, goal, occasion, amount, recency),
+ * without the per-turn adjustments only the model needs (the free-text
+ * request, the shown-candidate exclusions). The deck talks about the brewers
+ * that lead the menu and the lessons of their recipes; a one-slot difference
+ * in rotation is not a wrong line.
+ */
+function deckMenu(coffee: CoffeeIdentity, context: SessionContext, sessions: Session[]) {
+  const water =
+    context.amount === "custom" && typeof context.customWaterMl === "number"
+      ? context.customWaterMl
+      : context.amount === "big"
+        ? 450
+        : context.amount === "small"
+          ? 350
+          : undefined;
+  return buildBrewerMenu({
+    brewersAvailable: brewersAvailableFromEquipment(CANONICAL_EQUIPMENT),
+    roastLevel: normaliseRoastLevel(coffee.roastLevel),
+    process: normaliseProcess(coffee.process),
+    variety: coffee.variety,
+    goal: normaliseGoal(context.intent),
+    occasion: context.occasion,
+    targetWaterGrams: context.occasion === "cold-brew" ? undefined : (water ?? 350),
+    lastOffered: brewerRecency(sessions).lastOffered,
+  });
+}
+
+export async function runRecommendation(
+  body: {
+    coffee: unknown;
+    context: unknown;
+    pastSessions?: unknown;
+    shownCandidates?: unknown;
+  },
+  hooks: {
+    /** Called once with the per-brew deck, usually long before the recipe is done. */
+    onInsights?: (lines: DeckLine[]) => void;
+  } = {},
+): Promise<Recommendation> {
   const { coffee, context: rawContext, pastSessions } = body as {
     coffee: CoffeeIdentity;
     context: SessionContext;
@@ -232,17 +271,41 @@ export async function runRecommendation(body: {
     context = { ...context, preferredMethod: USER_BREWER_METHODS[userRequest.requireBrewer] ?? userRequest.requireBrewer };
   }
 
-  const { recommendation, usage } = await generateRecommendation(
-    coffee,
-    context,
-    prefs,
-    sessions,
-    userRoasterPrior ?? undefined,
-    terrain || undefined,
-    coffeeHistory,
-    allInsights.length > 0 ? allInsights : undefined,
-    { shown, userRequest },
-  );
+  // The deck runs BESIDE the Opus call (brewDeck.ts): one Haiku call over the
+  // bag, his history with it and the brewers leading today's menu, gated
+  // line by line against its own source. It reaches the crafting screen
+  // through the job store while the recipe is still being written, and is
+  // persisted on the recommendation. It can never fail the recipe.
+  const deckPromise: Promise<DeckLine[]> = (async () => {
+    try {
+      const lines = await generateBrewDeck({ coffee, menu: deckMenu(coffee, context, sessions), pastSessions: sessions, coffeeHistory });
+      if (lines.length > 0) {
+        hooks.onInsights?.(lines);
+        console.log(`[recommend] deck: ${lines.length} lines — ${lines.map((l) => JSON.stringify(l.text)).join(" | ")}`);
+      } else {
+        console.log("[recommend] deck: 0 lines passed the gate");
+      }
+      return lines;
+    } catch (err) {
+      console.warn("[recommend] deck failed (recipe unaffected):", err instanceof Error ? err.message : err);
+      return [];
+    }
+  })();
+
+  const [{ recommendation, usage }, deck] = await Promise.all([
+    generateRecommendation(
+      coffee,
+      context,
+      prefs,
+      sessions,
+      userRoasterPrior ?? undefined,
+      terrain || undefined,
+      coffeeHistory,
+      allInsights.length > 0 ? allInsights : undefined,
+      { shown, userRequest },
+    ),
+    deckPromise,
+  ]);
   // The one number that says how long the user waited: output tokens are the
   // latency (~70 tok/s on Opus), `calls` says whether a repair round fired.
   // recommend-logs.yml greps the `[recommend]` prefix, so this is the
@@ -252,5 +315,6 @@ export async function runRecommendation(body: {
   );
   // The terrain rides on the recommendation so the post-brew insight can
   // reuse it — the Summary used to make the identical Sonnet call again.
-  return terrain ? { ...recommendation, terrain } : recommendation;
+  const withTerrain = terrain ? { ...recommendation, terrain } : recommendation;
+  return deck.length > 0 ? { ...withTerrain, insights: deck } : withTerrain;
 }

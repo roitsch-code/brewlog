@@ -248,6 +248,12 @@ export interface Recommendation {
    * /api/brew-insight reuses it instead of making the same model call again
    * on the Summary screen (2026-10-03). */
   terrain?: string;
+  /** The per-brew insight deck shown while this recipe was written
+   * (src/lib/recommend/brewDeck.ts, 2026-10-19): six grounded lines about the
+   * bag, his history with it, the brewers leading the menu and their
+   * techniques. Persisted so the "While you waited" card and the session page
+   * can show what he read. Absent on rows before the deck. */
+  insights?: { text: string; about: "coffee" | "history" | { brewer: string } | { technique: string } }[];
   /** How the Context step's free text ("Wishes for this brew") was read and
    * applied — shown above the candidates. Absent when nothing was typed. */
   userRequestApplied?: {
