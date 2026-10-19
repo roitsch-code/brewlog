@@ -8,6 +8,11 @@
 
 ### ✅ Done
 
+**An Orea on every menu (2026-10-19, same morning)**
+- **Owner:** the remaining gap (a natural at 450 g for sweetness got no Orea) — "Ändere das! Ich will es so!"
+- **Shipped:** `selectRecipes` — when the score leaves every Orea off an unlocked menu, the best-scoring Orea recipe that passed the hard filters takes the weakest slot (natural/sweetness/450 g → Two Aussies on Classic). Real selector over 300/350/450 g × process × goal × occasion: 216/216 menus with an Orea (500 g: none — the 450 ml cap). Coverage re-baselined; the slot costs Clever / Kalita / Origami a few menus (e.g. Clever 263 → 235 of 360 at 300 g), none lost half. `orea-menu.test.mjs` pins it (fails on the previous selector).
+- **Unverified** that the model picks the Orea — BREWER MIX in recommend-logs.
+
 **Orea back on the menu, on the bottom that fits (2026-10-19)**
 - **Reported:** "Warum werden keine Orea Rezepte mehr angeboten?" — and: the four bottoms are for different contexts.
 - **Measured:** recommend-logs (branch run 2026-10-19, 09:08 Düsseldorf): 0 Orea candidates in the 8 unlocked recommendations after 10-10, regular before. Cause: #621's ±20 % batch window; the Orea set was single-cup, so at 450 g only Dara for Two (Open) was eligible — the real selector put an Orea on 0 of 50 Big washed-sweetness menus.

@@ -72,6 +72,16 @@ test("the Orea bottom follows the context: body → Open, sweetness → not Open
   assert.ok(sweet.length > 0 && !sweet.includes("orea-open"), `sweetness menus offered ${[...new Set(sweet)]}`);
 });
 
+test("an Orea is on EVERY unlocked hot menu at 300 / 350 / 450 g (owner, 2026-10-19)", () => {
+  // Incl. the context no Orea recipe is tagged for: a natural at 450 g for sweetness.
+  for (const water of [300, 350, 450])
+    for (const p of ["Washed", "Natural", "Honey"])
+      for (const g of ["balanced", "clarity", "sweetness", "body", "aromatic", "explore"])
+        for (const o of ["morning-ritual", "focus", "social", "experiment"])
+          for (const m of menus(p, g, o, water).slice(0, 3))
+            assert.ok(oreaIn(m).length >= 1, `${water} g ${p}/${g}/${o}: ${m.map((s) => s.recipe.id)}`);
+});
+
 test("never more than one Orea bottom on an unlocked menu", () => {
   for (const [p, g, o, w] of [
     ["Washed", "body", "focus", 450],
