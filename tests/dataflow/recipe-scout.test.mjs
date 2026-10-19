@@ -43,10 +43,14 @@ test("the gap table: every owned hot brewer × the amounts its vessel holds, emp
   assert.ok(!table.some((r) => r.role === "moccamaster" && r.amount < 500), "no Moccamaster target under its 500 ml");
   assert.ok(!table.some((r) => r.role.startsWith("origami") && r.amount > 350), "the Origami Air S holds 350");
   for (let i = 1; i < table.length; i++) assert.ok(table[i - 1].count <= table[i].count, "sorted by how empty the cell is");
-  const targets = S.pickTargets(table, 4);
+  const targets = S.pickTargets(table, 4, 0);
   assert.equal(targets.length, 4);
   assert.equal(new Set(targets.map((t) => t.role)).size, 4, "one target per brewer, so a week spreads over the kit");
-  assert.equal(targets[0].count, table[0].count);
+  assert.equal(targets[0].count, table[0].count, "week 0 starts at the emptiest cell");
+  const nextWeek = S.pickTargets(table, 4, 1);
+  assert.notDeepEqual(nextWeek.map((t) => t.role), targets.map((t) => t.role), "another week starts elsewhere in the kit");
+  for (const t of nextWeek) assert.equal(t.count, Math.min(...table.filter((r) => r.role === t.role).map((r) => r.count)), "still the emptiest cell of its brewer");
+  assert.equal(S.isoWeek(new Date("2026-10-19T00:00:00Z")), 43);
 });
 
 test("the quote re-check: whitespace, case and quote style do not matter; a quote that is not on the page fails", () => {
@@ -58,6 +62,18 @@ test("the quote re-check: whitespace, case and quote style do not matter; a quot
   assert.ok(!S.quoteFound(page, "30g of coffee"));
   assert.ok(!S.quoteFound(page, "x()"), "script bodies are not page text");
   assert.ok(!S.quoteFound(page, "15g"), "a quote has to be more than a token");
+});
+
+test("the number gate: a paraphrase with the page's numbers passes, a number the page does not carry fails, nothing numeric fails", () => {
+  const page = S.htmlToText(`<p>Use 16 grams of coffee to 250 ml of water at 92&deg;C. Bloom with 50 g for 45 seconds, then pour to 150 g by 1:15 and to 250 g by 2:00. Total 2:45.</p>`);
+  assert.deepEqual(S.numbersIn("Dose: 16g, water 250g at 92°C"), ["16", "250", "92"]);
+  assert.ok(S.numbersSupported(page, "Dose: 16g, water 250g at 92°C"), "the numbers are on the page, the wording is not");
+  assert.ok(S.quoteSupported(page, "Coffee – 16 grams"));
+  assert.ok(!S.numbersSupported(page, "Dose: 18g"), "18 is not on the page");
+  assert.ok(!S.numbersSupported(page, "pour to 25 g"), "25 is only inside 250 — not a token");
+  assert.ok(S.numbersSupported(page, "finish at 2:45"), "2 and 45 as tokens");
+  assert.ok(!S.numbersSupported(page, "a gentle pour"), "no number, no support");
+  assert.ok(!S.quoteSupported(page, "a gentle pour"));
 });
 
 const target = { role: "v60", method: "V60", brewer: "v60", brewers: ["v60"], amount: 250, count: 3, techniqueIds };
