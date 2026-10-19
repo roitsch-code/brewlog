@@ -9,9 +9,10 @@ name: Recipe scout
 # any other commit — a GITHUB_TOKEN push never triggers workflows. ~$1 per
 # run (4 Sonnet calls with web search). 0 entries = no commit, job green.
 #
-# A push to .github/recipe-scout-trigger runs it on THAT branch (the commit
-# lands on the branch, never on main) — the way to read a scout run before
-# a workflow change is merged.
+# A push that ADDS or bumps .github/recipe-scout-trigger runs it on THAT
+# branch (the commit lands on the branch, never on main) — the way to read a
+# scout run before a workflow change is merged. The file is deleted again
+# before the merge so the merge itself does not spend a run (~$1).
 
 on:
   schedule:
