@@ -802,13 +802,33 @@ export function selectRecipes(
     else byBrewer.set(s.recipe.brewer, [s]);
   }
 
+  // ONE Orea bottom per menu. The four bottoms stay separate brewers (each its
+  // own recipes, grind, drawdown) — but with the two-cup OREA recipes a 450 g
+  // menu filled three of its four slots with Orea bottoms and pushed the V60 /
+  // Kalita off it. The first Orea reached here is the best-scoring bottom for
+  // this context (goal / process / roast), which is the one that belongs on it.
+  // Like every filter here it never shrinks the menu: when nothing else fits
+  // (a Special brew whose only fast recipes are Orea), the held-back bottoms
+  // fill the free slots in score order.
   const seenBrewers = new Set<BrewerType>();
+  let oreaTaken = false;
+  const heldBack: ScoredRecipe[] = [];
   const result: ScoredRecipe[] = [];
   for (const s of scored) {
     if (seenBrewers.has(s.recipe.brewer)) continue;
     seenBrewers.add(s.recipe.brewer);
+    const isOrea = s.recipe.brewer.startsWith("orea");
+    if (isOrea && oreaTaken) {
+      heldBack.push(s);
+      continue;
+    }
+    if (isOrea) oreaTaken = true;
     result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
     if (result.length >= limit) break;
+  }
+  for (const s of heldBack) {
+    if (result.length >= limit) break;
+    result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
   }
   // Substituting a representative can swap in a recipe scoring up to
   // REP_SCORE_TOLERANCE apart, which would leave the menu no longer in

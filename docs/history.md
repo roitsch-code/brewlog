@@ -8,6 +8,12 @@
 
 ### ✅ Done
 
+**Orea back on the menu, on the bottom that fits (2026-10-19)**
+- **Reported:** "Warum werden keine Orea Rezepte mehr angeboten?" — and: the four bottoms are for different contexts.
+- **Measured:** recommend-logs (branch run 2026-10-19, 09:08 Düsseldorf): 0 Orea candidates in the 8 unlocked recommendations after 10-10, regular before. Cause: #621's ±20 % batch window; the Orea set was single-cup, so at 450 g only Dara for Two (Open) was eligible — the real selector put an Orea on 0 of 50 Big washed-sweetness menus.
+- **Shipped:** OREA's own two-cup recipes from orea.uk/guides-v4 (Easy for Two, Fine for Two, Two Aussies, Fast bottom) + the Classic / Apex adaptations OREA prints for each (8 entries; The Hangover left out, 600 ml > the 450 ml Orea cap). An unlocked menu carries ONE Orea bottom — the best-scoring one for the context — and fills up with more only when nothing else fits. Simulated at 450 g: washed sweetness 50/50 menus with an Orea (Classic / Fast), body → Open, explore → all four. `tests/dataflow/orea-menu.test.mjs` fails on the old code.
+- **Gap:** a NATURAL sweetness brew at 450 g still gets no Orea (no published OREA two-cup recipe fits it). **Unverified** that the model then PICKS the Orea — read the offered candidates in recommend-logs after the next brews.
+
 **Grind slope from the owner's own brews + provenance on every grind (2026-10-18, night, PR C of the grind audit)**
 - **Owner's answer:** "AB jetzt, wenn es wirklich durchgelaufen und trocken ist" — he taps Done at a dry bed from now on. `brew.doneAtDryBed` marks those brews (his own Done tap only; the timer stop and the cold-brew fixed time never set it), and only they count as drawdown measurements.
 - **Shipped:** `grindSlope.ts` (pairs → s/° per brewer × batch, ≥2 pairs, interpolation from the newest measured brew; Chemex 750–800 g → the published 4:00–5:00 window), the YOUR MEASURED GRIND SLOPE prompt block, `grindProvenance.ts` + the label under the grind on the recipe screen, `dry_bed` in the recommend-logs GRIND vs TIME rows.

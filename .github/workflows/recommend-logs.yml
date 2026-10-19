@@ -204,6 +204,43 @@ jobs:
                    WITH ORDINALITY t(c, ord)
               ORDER BY s.created_at_ms DESC, ord;" </dev/null | cut -c1-300 || echo "psql query failed"
 
+            # BREWER MIX — the production tripwire for "a brewer vanished from
+            # the recommendations" (2026-10-19: the Orea went from regular to
+            # zero after #621 and nobody saw it for nine days). Offered
+            # candidates of UNLOCKED recommendations, per brewer (each Orea
+            # bottom on its own): last 14 days vs the 30 days before. A brewer
+            # with offers before and 0 now is flagged VANISHED. Read-only.
+            section "BREWER MIX — offered candidates, unlocked, last 14 d vs the 30 d before"
+            docker compose exec -T postgres psql -U brewlog -d brewlog -P pager=off -c "
+              WITH o AS (
+                SELECT CASE
+                    WHEN m LIKE '%orea%apex%' THEN 'orea-apex'
+                    WHEN m LIKE '%orea%classic%' THEN 'orea-classic'
+                    WHEN m LIKE '%orea%open%' THEN 'orea-open'
+                    WHEN m LIKE '%orea%fast%' THEN 'orea-fast'
+                    WHEN m LIKE '%orea%' THEN 'orea-unnamed'
+                    WHEN m LIKE '%origami%' THEN 'origami'
+                    WHEN m LIKE '%kalita%' THEN 'kalita'
+                    WHEN m LIKE '%clever%' THEN 'clever'
+                    WHEN m LIKE '%chemex%' THEN 'chemex'
+                    WHEN m LIKE '%aeropress%' THEN 'aeropress'
+                    WHEN m LIKE '%moccamaster%' THEN 'moccamaster'
+                    WHEN m LIKE '%v60%' THEN 'v60'
+                    ELSE 'other' END AS brewer,
+                  created_at >= now() - interval '14 days' AS recent
+                FROM (SELECT lower(c->>'method') AS m, s.created_at
+                      FROM sessions s
+                      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(s.recommendation->'candidates','[]'::jsonb)) c
+                      WHERE s.recommendation IS NOT NULL
+                        AND COALESCE(s.context->>'preferredMethod','') = ''
+                        AND s.created_at >= now() - interval '44 days') x)
+              SELECT brewer,
+                     count(*) FILTER (WHERE NOT recent) AS before_30d,
+                     count(*) FILTER (WHERE recent) AS last_14d,
+                     CASE WHEN count(*) FILTER (WHERE NOT recent) > 0 AND count(*) FILTER (WHERE recent) = 0
+                          THEN 'VANISHED' ELSE '' END AS flag
+              FROM o GROUP BY brewer ORDER BY flag DESC, brewer;" </dev/null | cut -c1-200 || echo "psql query failed"
+
             # The owner's ACTUAL pour pace (2026-10-10: "Who says my pace is
             # 4 g/s?"). POUR_RATE_GPS=4 was set by hand in June and re-stated
             # from ONE scale curve in October; the Acaia has recorded the mean
