@@ -40,17 +40,11 @@ import type { BrewPourStep } from "@/lib/types/session";
 import { DRIP_ASSIST_GRIND_OFFSET_DEG, isDripAssistMethod } from "@/lib/utils/dripAssist";
 import { MAX_POUR_RATE_GPS, MIN_POUR_RATE_GPS, POUR_RATE_GPS } from "@/lib/utils/pourSequence";
 
-/**
- * How the drawdown grows with the batch. ESTIMATE, and flagged as one: the only
- * verified pair of the same recipe at two sizes (Hoffmann's two V60 techniques)
- * moves 60 s → 105 s for 2× water, which is an exponent of ~0.8, while the
- * corpus's own big-batch entries are flat (Wendelboe 50→80 s, the Orea "Dara"
- * pair 30→30 s) and are `verified:false`. The square root sits between "flat"
- * and "linear" and under Hoffmann's measured pair, so it never over-promises the
- * clock. The owner's OWN measured brew times override it entirely once there are
- * two brews in the volume bucket (`drawdownFor`, src/lib/brew/drawdown.ts).
- */
-export const DRAWDOWN_SCALE_EXP = 0.5;
+// The √k drawdown law and the √k pour-rate law are GONE (2026-10-19): no
+// source publishes either slope, and inside the ±20 % window a reference's own
+// published drawdown is the honest number. Outside the window the drawdown
+// comes from the owner's measured brews or the corpus median at that size
+// (src/lib/brew/composeTimeline.ts).
 
 /** Owner-measured: +20° on the Niche per DOUBLING of dose, and the same amount
  * finer when halving (docs/grind-settings.md). Applied as log2, not linearly —
@@ -121,31 +115,6 @@ function referenceRateGPS(grams: number, authoredSec?: number): number {
   // (the Orea Wide / Christensen convention), not a pour time.
   if (rate < MIN_POUR_RATE_GPS) return POUR_RATE_GPS;
   return Math.min(rate, MAX_POUR_RATE_GPS);
-}
-
-/**
- * A bigger batch is poured FASTER, not only for longer.
- *
- * Hoffmann's own pair is the evidence, and it is the reason this exists: his
- * 15 g : 250 g pours its pulses at 3.3–5 g/s, his 30 g : 500 g pours at
- * 6.7–8 g/s. Holding the reference's rate through a doubling put the scaled
- * 1-Cup at 4:16 — 46 s LONGER than the 3:30 Hoffmann himself publishes for that
- * exact batch, which is the "you just stretched the clock" failure in miniature.
- * Gagné says the same thing mechanically: a bigger dose wants "more agitation
- * and more water column".
- *
- * Moves by sqrt(k), roughly HALF of what Hoffmann does (he ~doubles the rate for
- * a doubled batch), so a scaled recipe errs on the gentle side; and never past
- * MAX_POUR_RATE_GPS, his 8 g/s being the fastest pour anyone in this corpus
- * publishes. Scaling DOWN keeps the reference's rate: nothing published says a
- * smaller batch should be poured more slowly, and slowing it would be a real
- * change in agitation dressed up as arithmetic.
- */
-export const BATCH_RATE_EXP = 0.5;
-
-function batchPourRateGPS(refRate: number, doseRatio: number): number {
-  if (!(doseRatio > 1)) return refRate;
-  return Math.min(MAX_POUR_RATE_GPS, refRate * Math.pow(doseRatio, BATCH_RATE_EXP));
 }
 
 function refTempC(ref: Recipe): number | null {
@@ -279,12 +248,12 @@ export function scaleRecipe(
       const scaledGrams = Math.max(0, scaledCum - prevScaledCum);
       prevScaledCum = scaledCum;
       // The pour scales by RATE, never by the reference's seconds — keeping the
-      // seconds is what turned a 50g pulse into an 8 g/s firehose. The rate
-      // itself rises with the batch (see batchPourRateGPS), so a doubled brew
-      // pours bigger AND faster the way the published pairs do. Rounded UP, so
-      // the rounding can never push the pour past the rate it was given.
-      const rate = batchPourRateGPS(referenceRateGPS(refGrams, s.durationSec), doseRatio);
-      const durationSec = Math.max(1, Math.ceil(scaledGrams / rate));
+      // seconds is what turned a 50g pulse into an 8 g/s firehose. The rate is
+      // the author's own (2026-10-19: no √k batch law any more), applied to
+      // this batch's grams. Rounded UP, so the rounding can never push the
+      // pour past the rate it was given.
+      const rate = referenceRateGPS(refGrams, s.durationSec);
+      const durationSec = Math.max(1, Math.ceil(scaledGrams / rate - 1e-9));
       steps.push({
         label: rescaleLabel(s.label, s.waterGramsAtEnd as number, scaledCum),
         action: s.action as BrewPourStep["action"],
@@ -302,6 +271,14 @@ export function scaleRecipe(
     // the clock already holds it. On an immersion brew that same wait IS the
     // steep — the whole brew — so it stays a step.
     if (shape === "percolation" && i > lastWaterIdx && (s.action === "wait" || s.action === "drain")) {
+      // …unless the author agitates DURING the drain (Crema's Chemex "final
+      // swirl" at 3:45 of a 4:00 brew): then the drain stays as a wait so the
+      // swirl lands where he puts it, not right after the pour.
+      const agitationFollows = seq.slice(i + 1).some((x) => AGITATION_ACTIONS.has(x.action));
+      if (!agitationFollows) continue;
+      const d = Math.max(0, s.durationSec ?? 0);
+      steps.push({ label: s.label, action: "wait", ...(d ? { durationSec: d } : {}), ...(s.notes ? { notes: s.notes } : {}) });
+      clock += d;
       continue;
     }
 
@@ -355,10 +332,9 @@ export function scaleRecipe(
   })();
 
   const refDrawdown = Math.max(0, (ref.totalTimeSec ?? 0) - refPourPhaseEnd);
-  const drawdownSec =
-    shape === "immersion" || shape === "other"
-      ? refDrawdown
-      : Math.round(refDrawdown * Math.pow(Math.max(k, 0.01), DRAWDOWN_SCALE_EXP));
+  // The author's published drawdown, unscaled: inside the ±20 % window it is
+  // his number; outside it no number is honest and the caller says so.
+  const drawdownSec = refDrawdown;
 
   const totalTimeSec =
     shape === "immersion"

@@ -260,3 +260,58 @@ test("a fast slope while BEHIND the plan's ramp is catching up — never 'Slower
   // t=60, ramp expects ~106 g; 90 g at 8 g/s is closing the gap, not too fast.
   assert.notEqual(coachFlow(PERC, ELAPSED_MID, true, 90, ramp(8)).cue, "pour-slower");
 });
+
+// ── The Vanilla Gorilla brew (Origami wave, 350 g, 2 Oct 2026) — the three
+// coach rules its timeline anchored, moved here from the retired
+// vanilla-gorilla-timing test (its clock half is composeTimeline's now). The
+// steps are the REAL stored recipe; the timeline is the recipe's own cadence.
+const VG = {
+  doseGrams: 23,
+  waterGrams: 350,
+  waterTempC: 93,
+  grindSize: "393°",
+  targetTimeSec: 240,
+  pourSteps: [
+    { label: "Bloom", action: "bloom", waterGramsAtEnd: 55, durationSec: 15 },
+    { label: "Swirl", action: "swirl", durationSec: 5 },
+    { label: "Rest", action: "wait", durationSec: 30 },
+    { label: "Pour 2", action: "pour", waterGramsAtEnd: 140, durationSec: 20 },
+    { label: "Rest", action: "wait", durationSec: 15 },
+    { label: "Pour 3", action: "pour", waterGramsAtEnd: 220, durationSec: 20 },
+    { label: "Rest", action: "wait", durationSec: 15 },
+    { label: "Pour 4", action: "pour", waterGramsAtEnd: 290, durationSec: 20 },
+    { label: "Rest", action: "wait", durationSec: 15 },
+    { label: "Final pour", action: "final", waterGramsAtEnd: 350, durationSec: 15 },
+  ],
+};
+const VG_TL = buildBrewTimeline(VG, "2026-09-21", Date.parse("2026-10-02T06:50:00Z"), "Origami (wave)");
+/** Samples pouring at `rate` g/s for the 1.5 s before `elapsed`, ending at `grams`. */
+function vgSamples(rate, grams) {
+  const t = 1_000_000;
+  return Array.from({ length: 16 }, (_, i) => ({ atMs: t + i * 100, grams: grams - rate * (1.5 - i * 0.1) }));
+}
+
+test("VG: the timeline is the recipe's own cadence — pour 2 at 0:50, pour 3 at 1:25", () => {
+  const starts = VG_TL.steps.filter((s) => s.pourGrams > 0).map((s) => s.startSec);
+  assert.deepEqual(starts, [0, 50, 85, 120, 155]);
+});
+
+test("coach: no 'Slower' in the first 1.5 s of a pour (the kettle's opening surge)", () => {
+  const c = coachFlow(VG_TL, 1.0, true, 9, vgSamples(9, 9));
+  assert.notEqual(c.cue, "pour-slower");
+});
+
+test("coach: in the REST after a pour it never says 'Slower' — a late pour is late, not fast", () => {
+  // Pour 2 runs 50 → 70 s; at 75 s the plan is resting.
+  const c = coachFlow(VG_TL, 75, true, 125, vgSamples(9, 125));
+  assert.equal(c.cue, "keep-flow");
+  assert.equal(c.message, "Finish pour");
+});
+
+test("coach: 'Slower' needs the grams to be AHEAD of the plan, not just a fast slope", () => {
+  // 5 s into Pour 2 (which starts at 0:50) the ramp expects 55 + 85·5/20 ≈ 76 g.
+  const onRamp = coachFlow(VG_TL, 55, true, 78, vgSamples(9, 78));
+  assert.notEqual(onRamp.cue, "pour-slower");
+  const ahead = coachFlow(VG_TL, 55, true, 100, vgSamples(9, 100));
+  assert.equal(ahead.cue, "pour-slower");
+});

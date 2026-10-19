@@ -184,6 +184,9 @@ export default function LightStepBrew() {
         methodUsed: method,
         followedRecipe: true,
         actualTimeSec: finalSec,
+        // The timeline this brew ran against, snapshotted (2026-10-19) so a
+        // later renderer change never moves this brew's measured drawdown.
+        ...(recipe?.timeline ? { timeline: recipe.timeline } : {}),
         // The owner's own Done tap = the bed is dry (owner, 2026-10-18) — the
         // drawdown measurement grindSlope.ts reads. Only when the time is the
         // live elapsed clock: the cold-brew log passes a fixed steep time, and
@@ -197,7 +200,7 @@ export default function LightStepBrew() {
       });
       setStep("log");
     },
-    [draft.brew, method, elapsed, setBrew, setStep, disableWakeLock],
+    [draft.brew, method, elapsed, setBrew, setStep, disableWakeLock, recipe],
   );
 
   const handleTimerComplete = useCallback(

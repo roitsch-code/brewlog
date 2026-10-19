@@ -30,7 +30,6 @@ await build({
     contents: `
 export { normalizeGrindToGrinder } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/grindUnit.ts"))};
 export { reconcileToReference, refTempTarget, resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
-export { calibrateDrawdownClock } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recommend.ts"))};
 export { scaleRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
 export { pourScheduleFor } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 export { ALL_RECIPES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
@@ -118,27 +117,3 @@ test("a 93 °C Hoffmann 1-Cup is accepted; an 85 °C one snaps to 90, never to 1
 });
 
 // ---------- 3. the verified clock = pours end + published drawdown ----------
-
-test("calibrateDrawdownClock on a verified reference sets pours end + the scaled published drawdown", () => {
-  const recipe = {
-    doseGrams: 15,
-    waterGrams: 250,
-    waterTempC: 100,
-    grindSize: "380°",
-    // The model's clock: far too short for Hoffmann's drawdown.
-    targetTimeSec: 150,
-    pourSteps: stepsFrom(ONE_CUP),
-  };
-  const cand = { title: "t", method: "V60", basedOn: ONE_CUP.name, recipe };
-  // No measured V60 drawdowns → the estimate's source is "corpus", which is
-  // exactly the branch that used to keep the model's number.
-  const now = Date.UTC(2026, 9, 10, 8, 0, 0);
-  const [out] = M.calibrateDrawdownClock([cand], [], (m) => /v60/i.test(m ?? ""), undefined, now);
-  const schedule = M.pourScheduleFor(recipe, undefined, now, "V60");
-  const scaled = M.scaleRecipe(ONE_CUP, 250, { method: "V60" });
-  assert.ok(schedule && scaled);
-  const expected = schedule.pourPhaseEndSec + Math.round(scaled.drawdownSec);
-  assert.equal(out.recipe.targetTimeSec, expected, "pours end + Hoffmann's drawdown");
-  assert.notEqual(out.recipe.targetTimeSec, 150, "the model's clock is not kept");
-  assert.ok(out.recipe.targetTimeSec - schedule.pourPhaseEndSec >= 30, "a real drawdown, not the 5 s physics floor");
-});

@@ -24,7 +24,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const entry = `
-export { scaleRecipe, scaleGrind, formatScaledForPrompt, DRAWDOWN_SCALE_EXP, GRIND_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
+export { scaleRecipe, scaleGrind, formatScaledForPrompt, GRIND_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
 export { MAX_POUR_RATE_GPS } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 export { ALL_RECIPES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
 `;
@@ -85,10 +85,11 @@ test("a bigger pour takes LONGER in seconds — it does not keep the reference's
   const s = scaleRecipe(ref, 450); // 90g pours, k = 1.5
   const pours = waterSteps(s);
   for (const p of pours) {
-    // 90g at 6 g/s would be 15s; the batch lifts the rate by sqrt(1.5) to
-    // ~7.3 g/s, so 13s. Longer than the 10s it was authored at either way —
-    // that is the whole point — and never the verbatim copy.
-    assert.equal(p.durationSec, 13);
+    // 90 g at Kasuya's own 6 g/s is 15 s. Since 2026-10-19 the AUTHOR's rate
+    // holds at every batch (the √k "bigger batch pours faster" law is gone —
+    // it was a formula, not a measurement); longer than the 10 s it was
+    // authored at, never the verbatim copy.
+    assert.equal(p.durationSec, 15);
     assert.ok(p.durationSec > 10, "a 50% bigger pour cannot take the reference's seconds");
   }
   // And nothing is ever scheduled past what a person can pour.
@@ -146,8 +147,8 @@ test("scaling DOWN shortens the brew and grinds finer", () => {
   const half = scaleRecipe(ref, 125);
   const full = scaleRecipe(ref, 250);
   assert.ok(half.grind.deltaDeg < 0, "a smaller batch grinds finer");
-  assert.ok(half.totalTimeSec < full.totalTimeSec, "and finishes sooner");
-  assert.ok(half.drawdownSec < full.drawdownSec);
+  assert.ok(half.totalTimeSec < full.totalTimeSec, "and finishes sooner (smaller pours)");
+  assert.equal(half.drawdownSec, full.drawdownSec, "the published drawdown is NOT scaled — no source gives a drawdown-vs-batch law; a measured one replaces it in composeTimeline");
 });
 
 test("the total time is the SUM of the scaled steps, never a multiple of the original", () => {
@@ -164,7 +165,9 @@ test("the total time is the SUM of the scaled steps, never a multiple of the ori
   assert.equal(s.totalTimeSec, Math.max(s.pourPhaseEndSec + s.drawdownSec, s.totalTimeSec));
 });
 
-test("a bigger batch is poured faster, not only for longer — and never past 8 g/s", () => {
+test("the author's pour rate holds at every batch — never faster, never past 8 g/s", () => {
+  // Until 2026-10-19 a doubled batch was poured √2 faster, a formula with no
+  // published slope behind it. The rate is now the author's own at every size.
   const ref = byId("hoffmann-v60-better-one-cup");
   const pourRates = (scaled) => {
     let prev = 0;
@@ -179,19 +182,10 @@ test("a bigger batch is poured faster, not only for longer — and never past 8 
   };
   const refRates = pourRates(scaleRecipe(ref, 250));
   const bigRates = pourRates(scaleRecipe(ref, 500));
-  assert.equal(refRates.length, bigRates.length);
-  for (const [i, rate] of bigRates.entries()) {
-    // Hoffmann roughly DOUBLES the rate for a doubled batch (3.3-5 -> 6.7-8 g/s);
-    // we move by sqrt(k), so every pour must be faster than the reference's and
-    // still inside what an expert actually publishes.
-    assert.ok(rate > refRates[i], `pour ${i}: ${rate.toFixed(2)} not faster than ${refRates[i].toFixed(2)} g/s`);
-    assert.ok(rate <= 8 + 1e-9, `pour ${i} pours at ${rate.toFixed(2)} g/s — past the published ceiling`);
-  }
-  // Scaling DOWN keeps the reference's rate: no source says a smaller batch
-  // should be poured more gently, and inventing that would be a brewing
-  // decision wearing an arithmetic costume.
-  for (const [i, rate] of pourRates(scaleRecipe(ref, 150)).entries()) {
-    assert.ok(Math.abs(rate - refRates[i]) < 0.9, `pour ${i}: ${rate.toFixed(2)} vs ${refRates[i].toFixed(2)} g/s`);
+  assert.equal(bigRates.length, refRates.length);
+  for (let i = 0; i < refRates.length; i++) {
+    assert.ok(bigRates[i] <= refRates[i] + 0.3, `pour ${i}: ${bigRates[i].toFixed(2)} g/s is faster than the author's ${refRates[i].toFixed(2)} g/s`);
+    assert.ok(bigRates[i] <= MAX_POUR_RATE_GPS + 0.001);
   }
 });
 

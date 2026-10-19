@@ -304,11 +304,11 @@ Common-practice moves with no single originator (`verified: false` — the mecha
 | Dose | × the water factor (the ratio holds) | all of the above |
 | Every milestone | × the water factor | all |
 | Each pour's SECONDS | its new grams ÷ the pour's RATE — never the reference's seconds | Hoffmann's rates, Gagné targets 5 g/s |
-| Each pour's RATE | rises with the batch by ≈ √(water factor), capped at 8 g/s; scaling DOWN keeps the reference's rate | Hoffmann pours 3.3–5 g/s at 250 g and 6.7–8 g/s at 500 g — we move half as far; Gagné: a bigger dose wants "more agitation and more water column" |
+| Each pour's RATE | the AUTHOR's own rate, at every batch size (since 2026-10-19; the earlier "≈ √(water factor) faster" was a formula with no published slope behind it — Hoffmann's own pair shows he ~doubles the rate for a doubled batch, but he does it by redesigning the pours, which is the model's call, not arithmetic) | Hoffmann pours 3.3–5 g/s at 250 g and 6.7–8 g/s at 500 g; Gagné: a bigger dose wants "more agitation and more water column" |
 | Pour count | unchanged; add one only if a pour would need > 8 g/s | Kasuya 5, Rao 2, Hoffmann's Dara pair 4 |
 | Rests | unchanged | Kasuya 45 s at both sizes |
 | Grind | +20° on the Niche per DOUBLING of dose, same amount finer when halving | owner-measured (380° at 15 g, 400° at 30 g); direction from Wendelboe, Rao, Gagné |
-| Drawdown | ≈ × √(water factor) | between Hoffmann's measured ×1.75 and the corpus's flat big batches — an ESTIMATE, overridden by the owner's own measured brew times |
+| Drawdown | the author's published drawdown, UNSCALED, inside his ±20 % window; outside it the owner's own measured drawdowns on that exact brewer at that batch, else the corpus median at that batch — never a factor (since 2026-10-19; the earlier "× √(water factor)" was an estimate dressed as a law) | Hoffmann's measured ×1.75 for 2× water vs the corpus's flat big batches: no consistent slope exists to publish |
 | Total time | the SUM of the above, never a multiple of the original | Hoffmann +17 % for 2×; Gagné's bed-depth table +13 % to +26 % |
 
 **Where the model stops, honestly.** Scaling Hoffmann's 1 Cup to 500 g gives 3:53; he himself publishes 3:30 for that batch. The 23 s are structural, not arithmetic — he redesigns four pulses into two back-to-back pours, and `scaleRecipe` deliberately never restructures a pour plan it was handed. "Fewer, larger pours at a bigger batch" is in the `/recommend` prompt so the model can make that call with its reasons; the function only does the maths, and the physics guard makes either version brewable.

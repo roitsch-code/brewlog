@@ -1,13 +1,7 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
-import {
-  maxRenderedPourGapSec,
-  pourScheduleFor,
-} from "../utils/pourSequence";
-import { drawdownFor } from "../brew/drawdown";
-import { applyPourDurations } from "../recipe/pourDurations";
-import { scaleRecipe } from "../recipe/scaleRecipe";
+import { applyTimelineToSteps, composeTimeline } from "../brew/composeTimeline";
 import { isComandante, normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
@@ -54,7 +48,7 @@ import {
   formatVarietyPriorsForPrompt,
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
-import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, brewerMatchesReference, referenceAppliesAtBatch } from "./recipeFidelity";
+import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, referenceAppliesAtBatch } from "./recipeFidelity";
 import { brewerRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
 import { deriveConvergence, formatConvergenceInfo, type ConvergenceState } from "./convergence";
@@ -170,73 +164,6 @@ function guardRecipeFidelity(
     );
   }
   return fixed;
-}
-
-/**
- * The promised clock = when the last pour ends + how long THIS setup drains.
- *
- * Replaces two guards (Oct 2026). `calibrateTargetTimes` added the median
- * (actual − target) of past brews on the brewer to the model's clock — but past
- * brews had different pour phases, so a total-time delta does not carry over:
- * it turned a 4:00 model guess into 4:35 for a cup that was through at 3:44
- * (Vanilla Gorilla, Origami wave). `calibrateDripAssistFinish` trimmed the tail
- * as a share of a clock that was itself a guess. Both are now one rule: render
- * the pours, then add the drawdown from src/lib/brew/drawdown.ts — the owner's
- * own measured drawdowns first, the disc estimate, then the published-recipe
- * median for the brewer. A verified reference keeps its own published drawdown
- * until the owner has measured his own. Iced, cold steeps and immersion are
- * skipped (their time is the steep or the split build, not a drain).
- */
-export function calibrateDrawdownClock(
-  candidates: RecommendationCandidate[],
-  pastSessions: Session[],
-  isPercolation: (method?: string) => boolean,
-  roastDate?: string,
-  now: number = Date.now(),
-): RecommendationCandidate[] {
-  return candidates.map((c) => {
-    const t = c.recipe?.targetTimeSec;
-    if (typeof t !== "number" || !(t > 0) || t >= 3600) return c;
-    if (typeof c.recipe.iceGrams === "number" && c.recipe.iceGrams > 0) return c;
-    if (!isPercolation(c.method)) return c;
-    const schedule = pourScheduleFor(c.recipe, roastDate, now, c.method);
-    if (!schedule) return c;
-    const est = drawdownFor(pastSessions, c.method, c.recipe.waterGrams);
-    if (!est) return c;
-    // A verified reference keeps its own published drawdown — but only on the
-    // brewer it was published for (Wölfl's Orea FAST drawdown on a Classic
-    // bottom promised 4 s for a 48 s drain, 7 Oct 2026) — and "its own
-    // drawdown" means the PUBLISHED one scaled to this batch, added to where
-    // THIS recipe's pours end. Until 2026-10-10 this branch kept the MODEL's
-    // clock untouched, which with house-paced pours left as little as the 5 s
-    // physics floor of drawdown on a verified Hoffmann.
-    const ref = resolveReference(c.basedOn);
-    // …and only within the ±20 % batch window a reference applies in — outside
-    // it the published drawdown is not this batch's (the same rule as the
-    // fidelity snap and the pour-time copy, #621).
-    if (
-      est.source === "corpus" &&
-      ref?.verified &&
-      brewerMatchesReference(c.method, ref) &&
-      referenceAppliesAtBatch(ref, c.recipe.waterGrams)
-    ) {
-      const scaled = scaleRecipe(ref, c.recipe.waterGrams, { method: c.method });
-      const dd = scaled?.drawdownSec;
-      if (!(typeof dd === "number" && dd > 0)) return c;
-      const own = schedule.pourPhaseEndSec + Math.round(dd);
-      if (own === t) return c;
-      console.warn(
-        `[recommend] drawdown clock: "${c.title}" ${t}s → ${own}s (pours end ${schedule.pourPhaseEndSec}s + ${ref.shortName || ref.name}'s published drawdown ${Math.round(dd)}s scaled)`,
-      );
-      return { ...c, recipe: { ...c.recipe, targetTimeSec: own } };
-    }
-    const next = schedule.pourPhaseEndSec + est.sec;
-    if (next === t) return c;
-    console.warn(
-      `[recommend] drawdown clock: "${c.title}" ${t}s → ${next}s (pours end ${schedule.pourPhaseEndSec}s + drawdown ${est.sec}s, ${est.detail})`,
-    );
-    return { ...c, recipe: { ...c.recipe, targetTimeSec: next } };
-  });
 }
 
 /**
@@ -799,7 +726,7 @@ export async function generateRecommendation(
   const userMessage = `Coffee: ${coffee.name || "Unknown"} by ${coffee.roaster || "Unknown roaster"}
 Origin: ${coffee.origin || "Unknown"}${coffee.region ? `, ${coffee.region}` : ""}${coffee.variety ? ` · Variety: ${coffee.variety}` : ""}
 Process: ${coffee.process || "Unknown"}${coffee.fermentationStyle ? ` (${coffee.fermentationStyle})` : ""} | Roast: ${coffee.roastLevel || "Unknown"}${coffee.cuppingScore ? ` | Score: ${coffee.cuppingScore}` : ""}${blendNote}
-Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNoteText})` : ""}
+Roast date: ${coffee.roastDate ?? "unknown"}${daysOld !== null ? ` (${daysOld} days — ${freshnessNoteText}). The bloom for this age is YOURS to write — the app no longer shifts it by roast date; for reference its old table was ~50 s under 7 days, ~45 s at peak, ~30 s past three weeks. A recipe whose first pour is a pour (Kasuya) keeps it a pour.` : ""}
 Bag tasting notes: ${coffee.tastingNotesFromBag?.join(", ") || "none listed"}
 ${roasterBlock}${historyBlock}${coachCardBlock}${insightsBlock}${measuredFeedbackBlock}
 Context:
@@ -846,12 +773,12 @@ pourSteps — the structured step array IS the recipe's pour plan (do not write 
 - One object per physical step the brewer performs, in order.
 - action: one of bloom | pour | final | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed
 - waterGramsAtEnd: cumulative water in the brewer after a POUR step (omit on non-pour steps).
-- durationSec: how long the step takes, and the timer USES IT. Required on every step. POUR seconds are set by the app (grams ÷ the user's MEASURED pour pace — the MEASURED POUR PACE line above when present, 4 g/s only without one) unless you copy a verified reference's own scaled line, so write a plausible value and spend your care on the WAIT steps, which the app keeps exactly as written — a pour that takes longer at the user's pace pushes the next pour later, it never shortens the rest. Immersion / AeroPress: the timed (non-setup) steps MUST sum to targetTimeSec.
+- durationSec: how long the step takes, and the timer USES IT. Required on every step. A pour's seconds are kept when they are a real pour (2–8 g/s); over 8 g/s the app stretches it to 8; under 2 g/s or missing it pours at the user's MEASURED pace (the MEASURED POUR PACE line above, 4 g/s without one). A verified reference you adapt keeps its AUTHOR'S cadence: every pour starts where the author starts it. Your WAIT steps are kept exactly as written. Immersion / AeroPress: the timed (non-setup) steps MUST sum to targetTimeSec.
 - temperatureC: omit on every step. BrewLog brews at ONE constant temperature (the recipe's waterTempC) — never stage or ramp temperature across pours.
 - Do NOT emit notes on steps — the app supplies per-step hints. label + action + waterGramsAtEnd + durationSec is the whole step.
 - AGITATION IS AN EXPLICIT STEP, NOT A NOTE — and it must MIRROR the recipe you adapt. If the recipe you name in basedOn shows agitation in its pour sequence above — a bloom swirl, a between-pour stir, and ESPECIALLY a settle swirl/tap right before the drawdown — carry EACH of those into pourSteps as its own step ("action": "stir" | "swirl" | "agitate-bed") at the same point in the sequence. The end-of-brew settle swirl/tap (the one that flattens the bed just before drawdown) is part of the recipe — do NOT drop it; emit it as the last step before the "drain"/drawdown. The brew screen shows a stir/swirl prompt ONLY where such a step exists, so a dropped agitation step = a missing prompt mid-brew. EXCEPTION — explicitly minimal/reduced-agitation recipes (Orea Apex/Open, Origami, Chemex/Moccamaster post-bloom, or any recipe whose notes say "minimal/reduced agitation"): include NO agitation steps beyond what that recipe itself calls for — never add a trailing swirl such a recipe doesn't want.
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
-- PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are the pours, the agitation the reference calls for, AND the pauses between them as "wait" steps. Write the pauses — the timer runs your cadence, so without them the pours run back-to-back. A normal pause is 10–45 s. Do NOT emit a trailing "Drawdown" wait: the drawdown is targetTimeSec minus the end of your last pour, so you set it by choosing the total. Keep the pour count of the reference you adapt (a bigger batch means bigger pours, not more of them); add one only if a pour would otherwise need more than 8 g/s. The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
+- PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are the pours, the agitation the reference calls for, AND the pauses between them as "wait" steps. Write the pauses — the timer runs your cadence, so without them the pours run back-to-back (a recipe with no pauses at all gets 30 s ones, said so). A normal pause is 10–45 s. Do NOT emit a trailing "Drawdown" wait: the drawdown is NOT yours to set — it is the user's MEASURED drawdown on this exact brewer at this amount (or, without one, the corpus median, labelled as an estimate); the app composes the total from your steps plus that drawdown and shows where the number comes from. targetTimeSec is your estimate of the whole brew and is replaced by that total. Keep the pour count of the reference you adapt (a bigger batch means bigger pours, not more of them); add one only if a pour would otherwise need more than 8 g/s. The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
 
 basedOn — name the reference this candidate adapts: a recipe from the FULL TEXT in YOUR BREWERS TODAY (named exactly as written there), any recipe from the REFERENCE RECIPE INDEX in the system prompt (its exact name — then its pours are yours to reconstruct from the index line and the brewer rules, said so in whyChosen), or one of the user's own well-rated brews (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). If you designed the recipe yourself, set "Own experiment" — a legitimate answer with its own rules (see BASED-ON in the system prompt), not a fallback, and always better than reconstructing a published recipe from memory.
 
@@ -1010,31 +937,12 @@ Return valid JSON only.`;
     return { ...c, basedOn: relabel };
   });
 
-  //   0. POUR TIMES. The model gives grams and cadence; the seconds each pour
-  //      takes come from the verified reference it adapts (scaled), else the
-  //      owner's MEASURED pace (pourPace.ts; 4 g/s only with no history) in
-  //      whole 5-second steps (pourDurations.ts).
-  const pourTimed = batchChecked.map((c) => {
-    const pace = measuredPourPace(pastSessions, c.method);
-    const res = applyPourDurations(c.recipe, { basedOn: c.basedOn, method: c.method, pourRateGPS: pace.gps });
-    if (res.source === "house") console.log(`[recommend] pour pace: "${c.title ?? c.method}" ${pace.gps} g/s (${pace.detail})`);
-    for (const change of res.changes) {
-      console.warn(`[recommend] pour time: "${c.title ?? c.method}" ${change}`);
-    }
-    return res.recipe === c.recipe ? c : { ...c, recipe: res.recipe };
-  });
-
-  //   0a. PHYSICS. Before any clock tuning: the recipe's own numbers have to hold
-  //       together — milestones that increase, a headline water that matches the
-  //       pour plan, no pour scheduled faster than anyone pours, immersion steps
-  //       that sum to their clock, and a clock that leaves a real drawdown after
-  //       the last pour without padding it. Repaired in place; a recipe whose
-  //       milestones go backwards has no honest repair and is dropped.
-  const physicsChecked = pourTimed.map((c) => {
-    const res = enforceRecipePhysics(c.recipe, {
-      method: c.method,
-      roastDate: coffee.roastDate,
-    });
+  //   0a. PHYSICS. The recipe's own numbers have to hold together — milestones
+  //       that increase, a headline water that matches the pour plan, no pour
+  //       scheduled faster than anyone pours. A recipe whose milestones go
+  //       backwards has no honest repair and is dropped.
+  const physicsChecked = batchChecked.map((c) => {
+    const res = enforceRecipePhysics(c.recipe, { method: c.method });
     for (const change of res.changes) {
       console.warn(`[recommend] physics: "${c.title ?? c.method}" ${change}`);
     }
@@ -1050,22 +958,38 @@ Return valid JSON only.`;
 
   const capped = guardVesselCapacity(deSwirledSafe);
   const discGuarded = stripProactiveDripAssist(capped, Boolean(dripAssistLocked));
-  //   5. THE CLOCK. Pour phase + this setup's drawdown (measured first). Runs
-  //      after the disc guard because the brewer — disc or bare — decides the
-  //      drawdown. Never pads: the drawdown is clamped to MAX_DRAWDOWN_ABS_SEC.
-  const discTimed = calibrateDrawdownClock(
-    discGuarded,
-    pastSessions,
-    isPercolation,
-    coffee.roastDate,
-  );
+
+  //   5. THE TIMELINE — composed ONCE (src/lib/brew/composeTimeline.ts,
+  //      2026-10-19): a verified reference keeps its author's cadence and
+  //      published drawdown; otherwise the model's steps as written, pours
+  //      without plausible seconds at the owner's measured pace, waits kept
+  //      exactly; the drawdown from his measured brews on this EXACT brewer
+  //      (same roast-age bucket when he has three), else the corpus median at
+  //      this size, labelled. The clock IS finishSec; the client shows this
+  //      object verbatim and the session snapshots it on Done.
+  const composed = discGuarded.flatMap((c) => {
+    const res = composeTimeline(c.recipe, { method: c.method, basedOn: c.basedOn, pastSessions, roastDate: coffee.roastDate });
+    if (!res.ok) {
+      console.warn(`[recommend] timeline: dropped "${c.title ?? c.method}" — ${res.reason}`);
+      return [];
+    }
+    const t = res.timeline;
+    console.log(
+      `[recommend] timeline: "${c.title ?? c.method}" clock ${c.recipe.targetTimeSec}s → ${t.finishSec}s (pours end ${t.pourPhaseEndSec}s + drawdown ${t.drawdownSec}s ${t.drawdownSource}: ${t.drawdownBasis}; cadence ${t.cadenceSource})`,
+    );
+    return [{ ...c, recipe: { ...applyTimelineToSteps(c.recipe, t), targetTimeSec: t.finishSec, timeline: t } }];
+  });
+  const discTimed = composed.length ? composed : discGuarded;
 
   //   6. LONG POUR GAPS — logged, never dropped (2026-10-19): the prompt tells
   //      the model a wait over 75 s reads as a stalled brew; if it writes one
   //      anyway it is its recipe, and the brew screen shows it as written.
   for (const c of discTimed) {
-    if (!isPercolation(c.method)) continue;
-    const gap = maxRenderedPourGapSec(c.recipe, coffee.roastDate, undefined, c.method);
+    const t = c.recipe.timeline;
+    if (!t || t.shape !== "percolation") continue;
+    const water = t.steps.filter((st) => (st.pourGrams ?? 0) > 0);
+    let gap = 0;
+    for (let i = 0; i < water.length - 1; i++) gap = Math.max(gap, water[i + 1].startSec - (water[i].startSec + water[i].pourSec));
     if (gap > LONG_DESIGNED_WAIT_SEC) {
       console.warn(`[recommend] long-pour-gap: "${c.title ?? c.method}" has a ${Math.round(gap)}s gap between pours (> ${LONG_DESIGNED_WAIT_SEC}s) — kept as written`);
     }

@@ -404,6 +404,12 @@ export default function LightStepRecommend() {
 
 // ── PourSequence ─────────────────────────────────────────────────────────
 
+const DRAWDOWN_SOURCE_LABEL: Record<"published" | "measured" | "estimate", string> = {
+  published: "published",
+  measured: "your measured drawdown",
+  estimate: "estimate",
+};
+
 function getBloomAgitation(method?: string, process?: string): string | null {
   const m = (method ?? "").toLowerCase();
   const isWashed = process?.toLowerCase() === "washed";
@@ -433,6 +439,48 @@ function PourSequence({
   method?: string;
   process?: string;
 }) {
+  // The composed timeline (2026-10-19) is shown VERBATIM: the same seconds the
+  // brew screen runs, with the drawdown and where its number comes from.
+  if (recipe.timeline && recipe.timeline.shape === "percolation" && recipe.timeline.steps.length >= 2) {
+    const t = recipe.timeline;
+    const rows: { time: string; label: React.ReactNode }[] = [
+      { time: "", label: <span className="text-[13px] text-light-muted-foreground">Ready</span> },
+      ...t.steps
+        .filter((s) => !s.isSetup)
+        .map((s) => ({
+          time: s.startSec === 0 ? "0:00" : formatSeconds(s.startSec),
+          label: (
+            <div>
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="text-[14px] font-medium text-light-foreground">{s.label}</span>
+                {typeof s.pourGrams === "number" && s.pourGrams > 0 && (
+                  <span className="font-mono-num text-[12px] font-semibold text-light-foreground">+{s.pourGrams}g</span>
+                )}
+                {typeof s.gramsAtEnd === "number" && (
+                  <span className="font-mono-num text-[12px] text-light-muted-foreground">→ {s.gramsAtEnd}g</span>
+                )}
+              </div>
+              <span className="text-[12px] text-light-muted-foreground block mt-0.5">
+                {s.pourSec}s{s.restSec > 0 && s !== t.steps[t.steps.length - 1] ? ` · then wait ${s.restSec}s` : ""}
+              </span>
+            </div>
+          ),
+        })),
+      {
+        time: formatSeconds(t.finishSec),
+        label: (
+          <div>
+            <span className="text-[13px] text-light-muted-foreground">Drawdown complete</span>
+            <span className="text-[12px] text-light-muted-foreground block mt-0.5">
+              ~{t.drawdownSec}s · {DRAWDOWN_SOURCE_LABEL[t.drawdownSource]} — {t.drawdownBasis}
+            </span>
+          </div>
+        ),
+      },
+    ];
+    return <TimelineRows rows={rows} />;
+  }
+
   const sequence = recipe.pourSequence ?? "";
   const parts = sequence.split(/\s*[–—\-]\s*/).map((s) => s.trim());
   const isCumulative = parts.length >= 2 && parts.every((p) => /^\d+$/.test(p));
@@ -503,6 +551,10 @@ function PourSequence({
     },
   ];
 
+  return <TimelineRows rows={rows} />;
+}
+
+function TimelineRows({ rows }: { rows: { time: string; label: React.ReactNode; isFirst?: boolean }[] }) {
   return (
     <div className="relative">
       {rows.map((row, i) => {

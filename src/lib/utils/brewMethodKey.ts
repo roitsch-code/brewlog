@@ -37,6 +37,28 @@ const FAMILIES: Array<[RegExp, string]> = [
 
 const DRIP_ASSIST = /\bdrip[\s-]?assist\b/;
 
+/**
+ * The EXACT brewer — for the drawdown, which the bottom plate decides (2026-10-19).
+ *
+ * `brewMethodKey` pools every Orea bottom as "orea" on purpose (grind and pour
+ * pace are the same across bottoms). The drain is not: the owner measured ~10 s
+ * on the Fast bottom and ~48 s on the Classic, and a pooled median promised a
+ * Wölfl drawdown on a Classic. So the measured-drawdown pool is keyed here —
+ * orea-fast | orea-classic | orea-apex | orea-open, origami-cone | origami-wave,
+ * the rest as brewMethodKey — with the disc suffix kept.
+ */
+export function exactBrewerKey(method?: string): string {
+  const raw = (method ?? "").toLowerCase().trim();
+  const disc = DRIP_ASSIST.test(raw);
+  const withoutDisc = raw.replace(DRIP_ASSIST, " ");
+  const suffix = disc ? "+drip-assist" : "";
+  if (/orea/.test(withoutDisc)) {
+    const bottom = /\b(fast|classic|apex|open)\b/.exec(withoutDisc)?.[1];
+    return (bottom ? `orea-${bottom}` : "orea") + suffix;
+  }
+  return brewMethodKey(method);
+}
+
 export function brewMethodKey(method?: string): string {
   const raw = (method ?? "").toLowerCase().trim();
   if (!raw) return "unknown";

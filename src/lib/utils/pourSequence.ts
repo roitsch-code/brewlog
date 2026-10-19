@@ -484,6 +484,15 @@ export interface PourSchedule {
  * its own authored duration, so "swirl after the pour" is timed by the recipe
  * rather than guessed.
  */
+/**
+ * LEGACY renderer (sessions and recipes saved before 2026-10-19). A recipe
+ * that carries `recipe.timeline` (every /recommend and chat recipe since
+ * then — composed once in src/lib/brew/composeTimeline.ts) never reaches
+ * this: `buildBrewTimeline` lowers the timeline verbatim. This stays so an
+ * old session re-renders exactly as the owner saw it then (roast-age bloom
+ * shift, rests spread over the clock's spare), which is what its measured
+ * drawdown is read against.
+ */
 function buildPourSchedule(
   milestones: Milestone[],
   targetTimeSec: number,

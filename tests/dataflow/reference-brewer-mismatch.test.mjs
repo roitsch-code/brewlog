@@ -20,7 +20,6 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const entry = `
-export { calibrateDrawdownClock } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recommend.ts"))};
 export { brewerMatchesReference, resolveReference, reconcileToReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
 export { drawdownFor } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/drawdown.ts"))};
 export { pourScheduleFor } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
@@ -81,42 +80,9 @@ test("brewer match: same bottom yes, other Orea bottom no, other brewer no", () 
   assert.equal(K.brewerMatchesReference("Orea Fast + Drip Assist", ref), true, "the disc is an accessory");
 });
 
-test("Adelina on the CLASSIC bottom: the clock gets a real drawdown, not 4 s", () => {
-  const [c] = K.calibrateDrawdownClock([cand("Orea Classic")], [], isPercolation, ROAST, NOW);
-  const end = K.pourScheduleFor(ADELINA, ROAST, NOW, "Orea Classic").pourPhaseEndSec;
-  const est = K.drawdownFor([], "Orea Classic", 350);
-  assert.equal(est.source, "corpus");
-  assert.equal(c.recipe.targetTimeSec, end + est.sec);
-  assert.ok(c.recipe.targetTimeSec - end >= 20, `drawdown ${c.recipe.targetTimeSec - end}s`);
-});
-
-test("on the FAST bottom at 350 g (outside Wölfl's ±20 % window) the clock is pours end + the brewer's corpus drawdown", () => {
-  // Since 2026-10-10 the verified-reference branch no longer keeps the MODEL's
-  // clock (180 s here, 5 s of drawdown): it is pours end + the published
-  // drawdown scaled — and only within the batch window the reference applies
-  // in. 350 g is 1.3× Wölfl's 270 g, so the generic estimate decides.
-  const [c] = K.calibrateDrawdownClock([cand("Orea Fast")], [], isPercolation, ROAST, NOW);
-  const end = K.pourScheduleFor(ADELINA, ROAST, NOW, "Orea Fast").pourPhaseEndSec;
-  const est = K.drawdownFor([], "Orea Fast", 350);
-  assert.equal(c.recipe.targetTimeSec, end + est.sec);
-  assert.notEqual(c.recipe.targetTimeSec, 180, "the model's clock is not kept");
-});
-
-test("on the FAST bottom within the window (300 g) the clock is pours end + Wölfl's scaled drawdown", () => {
-  const k = 300 / 350;
-  const recipe = {
-    ...ADELINA,
-    waterGrams: 300,
-    pourSteps: ADELINA.pourSteps.map((s) =>
-      typeof s.waterGramsAtEnd === "number" ? { ...s, waterGramsAtEnd: Math.round(s.waterGramsAtEnd * k) } : s,
-    ),
-  };
-  const [c] = K.calibrateDrawdownClock([cand("Orea Fast", recipe)], [], isPercolation, ROAST, NOW);
-  const end = K.pourScheduleFor(recipe, ROAST, NOW, "Orea Fast").pourPhaseEndSec;
-  const scaled = K.scaleRecipe(K.resolveReference(WOLFL), 300, { method: "Orea Fast" });
-  assert.equal(c.recipe.targetTimeSec, end + Math.round(scaled.drawdownSec));
-  assert.ok(scaled.drawdownSec > 0);
-});
+// The three clock cases that lived here (Classic gets a real drawdown, Fast
+// outside the window gets the corpus drawdown, Fast inside it gets Wölfl's)
+// are composeTimeline's since 2026-10-19 — tests/dataflow/compose-timeline.test.mjs.
 
 test("fidelity no longer snaps a Classic clock back to the Fast recipe's time", () => {
   const model = { ...ADELINA, targetTimeSec: 215 };
@@ -144,7 +110,8 @@ test("…but on the Fast bottom a drifted clock is still caught (within the ±20
   assert.equal(outside.changed, false, "at 350 g the 270 g recipe does not apply — nothing to snap to");
 });
 
-test("wiring: recommend.ts gates the exemption on the brewer match", async () => {
-  const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(src, /ref\?\.verified &&\s*brewerMatchesReference\(c\.method, ref\) &&\s*referenceAppliesAtBatch\(ref, c\.recipe\.waterGrams\)/);
+test("wiring: the timeline composer gates the author-cadence path on the brewer match", async () => {
+  const src = await readFile(path.join(ROOT, "src/lib/brew/composeTimeline.ts"), "utf8");
+  assert.match(src, /brewerMatchesReference\(ctx\.method, ref\)/, "a Classic-bottom brew never inherits a Fast-bottom recipe's cadence or drawdown");
+  assert.match(src, /referenceAppliesAtBatch\(ref, recipe\.waterGrams\)/, "nor one published for a different batch");
 });

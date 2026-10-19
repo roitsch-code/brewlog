@@ -210,8 +210,13 @@ test("cleanChatRecipeDetailed reports the pour-time source and every change", ()
     pourSteps: PILL_RECIPE.pourSteps.map((s) => (s.action === "pour" ? { ...s, durationSec: 30 } : s)),
   };
   const c = cleanChatRecipeDetailed(raw, { basedOn: "Hoffmann V60 — 2024 Refinement", method: "V60" });
-  assert.equal(c.pourSource, "house", "an unverified reference gets the house pace");
-  assert.ok(c.pourChanges.length >= 2, JSON.stringify(c.pourChanges));
+  // Since the composed timeline (2026-10-19) an unverified reference keeps the
+  // MODEL's own cadence — its 30 s pours are a plausible 2–8 g/s and stand —
+  // and the clock becomes pours end + drawdown, reported as a change.
+  assert.equal(c.pourSource, "model", "an unverified reference keeps the model's cadence");
+  assert.ok(c.recipe.timeline, "the cleaned recipe carries the composed timeline");
+  assert.equal(c.recipe.targetTimeSec, c.recipe.timeline.finishSec, "the clock IS the timeline's finish");
+  assert.ok(c.pourChanges.some((x) => /clock/.test(x)), JSON.stringify(c.pourChanges));
 });
 
 // ── 5. the route runs the gate in BOTH branches, with the home grinder and the roast date
@@ -225,7 +230,7 @@ test("route: one start_brew gate, used in the action-only AND the mixed (data-to
   assert.ok((src.match(/vetStartBrew\(action\)/g) ?? []).length >= 2, "both branches call the gate");
   assert.match(src, /resolveStartBrewTarget\(action, knownCoffeeIds, knownBags\)/, "the names-vs-id check needs the library names");
   assert.match(src, /grinderFromConversation\(messages\) \?\? "Niche Zero"/, "no grinder named = the home grinder");
-  assert.match(src, /expectedChatClock\(action\.recipe, action\.method/, "the clock is computed server-side");
+  assert.match(src, /expectedChatClock\(\{ \.\.\.action\.recipe, targetTimeSec: modelClock \}, action\.method/, "the clock is computed server-side, against the model's own clock");
   assert.match(src, /roastDate,\n\s+expectedClock,/, "validator sees the bag's roast date and the clock");
   assert.match(src, /\[explore-agent\] start_brew accepted:/, "an accepted pill is logged");
   assert.match(src, /\[explore-agent\] lookup_recipe "/, "a lookup is logged");

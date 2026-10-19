@@ -122,7 +122,9 @@ test("the chat prompt carries the scaling model", () => {
   assert.match(PROMPT, /bigger pours, not more of them/i, "pour count holds when scaling");
   assert.match(PROMPT, /per DOUBLING of dose/i, "the grind law must be logarithmic");
   assert.match(PROMPT, /grind finer for less volume|grind finer than if you are brewing more volume/i, "and must cover scaling DOWN");
-  assert.match(PROMPT, /square root of the volume factor/i, "the drawdown growth must be stated");
+  assert.match(PROMPT, /no formula connects them/i, "the drawdown is measured or published, never a √k law (2026-10-19)");
+  assert.doesNotMatch(PROMPT, /square root of the volume factor|5-second steps|server raises the clock/i, "the old clock rules are gone");
+  assert.match(PROMPT, /composes ONE timeline/i);
 });
 
 test("the Drip Assist is never automatic — only once the user says he is brewing with it (owner, 2026-10-10)", () => {
@@ -186,7 +188,7 @@ test("start_brew's recipe is sanitized through cleanChatRecipe before anything r
   // Since the measured pour pace (2026-10-10) the cleaning happens inside the
   // start_brew gate, which has the owner's sessions; the raw recipe never
   // reaches a pill because the gate replaces it before accepting.
-  assert.match(ROUTE, /const cleaned = cleanStartBrewRecipe\(action, pace\.gps\);\s*\n\s*if \(!cleaned\) return \{ ok: false/, "the gate cleans the recipe and refuses an uncleanable one");
+  assert.match(ROUTE, /const cleaned = cleanStartBrewRecipe\(action, sessions, roastDate\);\s*\n\s*if \(!cleaned\) return \{ ok: false/, "the gate cleans the recipe (composing its timeline from his sessions) and refuses an uncleanable one");
   assert.match(ROUTE, /action\.recipe = cleaned;/, "the pill carries the CLEANED recipe");
   assert.match(
     ROUTE,
