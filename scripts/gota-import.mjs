@@ -271,7 +271,7 @@ export function toGotaRecipe(p, map, nowIso) {
   const steps = p.steps.filter((s) => s.startSec != null);
   const isImmersion = map.brewer === "aeropress" || map.brewer === "clever";
   const kinds = steps.map(stepKind);
-  const lastPour = kinds.lastIndexOf("pour");
+  const lastPour = kinds.map((k, i) => (k === "pour" && steps[i].cumGrams != null ? i : -1)).reduce((a, b) => Math.max(a, b), -1);
   const seq = [];
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i];
@@ -280,7 +280,8 @@ export function toGotaRecipe(p, map, nowIso) {
     const next = steps[i + 1];
     const windowSec = next && next.startSec != null ? next.startSec - s.startSec : null;
     const step = { label: s.label || (kind === "pour" ? "Pour" : kind), action: kind };
-    if (kind === "pour" || kind === "bypass") step.waterGramsAtEnd = s.cumGrams;
+    if ((kind === "pour" || kind === "bypass") && s.cumGrams == null) step.action = "wait"; // a "pour" without a measure chip is narration, not water
+    if (step.action === "pour" || step.action === "bypass") step.waterGramsAtEnd = s.cumGrams;
     // Pour + rest in one step (the corpus convention): a pour's duration is
     // the published window to the next step. The LAST pour of a percolation
     // recipe stays untimed — its window runs into the drawdown and Gota's own
@@ -372,12 +373,22 @@ export const GOTA_RECIPES: Recipe[] = `;
 // ── 4. Main ──────────────────────────────────────────────────────────────────
 
 const failures = new Map();
+const CACHE_DIR = process.env.GOTA_CACHE || "";
 async function fetchText(url, tries = 5) {
+  const cacheFile = CACHE_DIR ? path.join(CACHE_DIR, slug(url) + ".html") : "";
+  if (cacheFile) {
+    const hit = await readFile(cacheFile, "utf8").catch(() => null);
+    if (hit) return hit;
+  }
   let last = "network";
   for (let i = 0; i < tries; i++) {
     try {
       const res = await fetch(url, { headers: { "user-agent": UA }, redirect: "follow" });
-      if (res.ok) return await res.text();
+      if (res.ok) {
+        const body = await res.text();
+        if (cacheFile) await writeFile(cacheFile, body, "utf8").catch(() => {});
+        return body;
+      }
       last = String(res.status);
       if (res.status !== 429 && res.status < 500) break;
     } catch {
