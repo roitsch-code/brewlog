@@ -29,6 +29,7 @@ export { REFERENCE_RECIPES } from "./reference";
 export { EXPANDED_RECIPES } from "./expanded";
 export { MARKUS_ADDITIONS } from "./markusAdditions";
 export { OREA_WIDE_RECIPES } from "./oreaWide";
+export { SCOUTED_RECIPES } from "./scouted";
 
 export {
   ALL_RECIPES,

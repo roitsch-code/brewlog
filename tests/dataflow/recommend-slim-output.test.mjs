@@ -99,6 +99,6 @@ test("CONSUMERS: /recommend derives after sanitation AND after the guard chain; 
   assert.match(chat, /pourSequence: recipe\.pourSequence \?\? derivePourSequence\(pourSteps\)/);
   assert.match(chat, /pourSequence: derivePourSequence\(r\.pourSteps\) \?\? r\.pourSequence/);
   const run = await readFile(path.join(ROOT, "src/lib/recommend/run.ts"), "utf8");
-  assert.match(run, /const \{ recommendation, usage \} = await generateRecommendation\(/);
+  assert.match(run, /const \[\{ recommendation, usage \}, deck\] = await Promise\.all\(\[\s*generateRecommendation\(/);
   assert.match(run, /\[recommend\] usage in=\$\{usage\.input_tokens\} out=\$\{usage\.output_tokens\} calls=\$\{usage\.calls\}/);
 });

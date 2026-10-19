@@ -16,6 +16,7 @@
  * reads `error` and offers retry. Acceptable per spec.
  */
 import type { Recommendation } from "@/lib/types/session";
+import type { DeckLine } from "@/lib/recommend/brewDeck";
 
 export type RecommendJobStatus = "running" | "done" | "error";
 
@@ -24,6 +25,9 @@ export interface RecommendJob {
   recommendation?: Recommendation;
   error?: string;
   createdAt: number;
+  /** The per-brew insight deck (brewDeck.ts) — lands while the job is still
+   * running, so the crafting screen can show it before the recipe is done. */
+  insights?: DeckLine[];
 }
 
 const jobs = new Map<string, RecommendJob>();
@@ -57,6 +61,12 @@ export function markDone(id: string, recommendation: Recommendation): void {
   if (!job) return; // evicted (TTL) or superseded — nothing to update
   job.status = "done";
   job.recommendation = recommendation;
+}
+
+export function setInsights(id: string, insights: DeckLine[]): void {
+  const job = jobs.get(id);
+  if (!job) return;
+  job.insights = insights;
 }
 
 export function markError(id: string, error: string): void {

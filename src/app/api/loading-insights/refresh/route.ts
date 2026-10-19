@@ -11,6 +11,7 @@ import { VARIETY_PRIORS } from "@/lib/knowledge/varieties";
 import { TECHNIQUES } from "@/lib/knowledge/techniques";
 import { buildHistorySummary } from "@/lib/claude/historyUtils";
 import { lintLoadingInsight, normalizeForDedupe } from "@/lib/insights/loadingInsightLint";
+import { COFFEE_HINTS } from "@/lib/coffeeHints";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 180;
@@ -198,7 +199,9 @@ export async function POST(req: NextRequest) {
       .select({ text: loadingInsights.text })
       .from(loadingInsights)
       .where(eq(loadingInsights.status, "live"));
-    const existing = new Set(liveRows.map((r) => normalizeForDedupe(r.text)));
+    // …plus the static seed the screen always merges in, so the pool never
+    // re-learns a line the owner has read since June (2026-10-19).
+    const existing = new Set([...liveRows.map((r) => normalizeForDedupe(r.text)), ...COFFEE_HINTS.map(normalizeForDedupe)]);
 
     // 2. Build grounded snippets from the verified corpus.
     const snippets: Snippet[] = [];

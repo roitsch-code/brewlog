@@ -1,6 +1,6 @@
 name: Refresh loading insights
 
-# Monthly refresh of the recipe-creation loading-screen insight pool
+# Weekly refresh (monthly until 2026-10-19) of the recipe-creation loading-screen insight pool
 # (src/app/api/loading-insights/refresh). SSHes into the VPS with the SAME deploy
 # key the Deploy workflow uses, then triggers the refresh from INSIDE the app
 # container — exactly like the in-container Ofelia crons, reading the container's
@@ -13,7 +13,7 @@ name: Refresh loading insights
 
 on:
   schedule:
-    - cron: "0 5 1 * *" # 05:00 UTC, 1st of each month
+    - cron: "20 5 * * 1" # Mondays 05:20 UTC = 07:20 Düsseldorf (summer); weekly since 2026-10-19
   workflow_dispatch:
 
 concurrency:

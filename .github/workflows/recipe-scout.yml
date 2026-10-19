@@ -1,0 +1,61 @@
+name: Recipe scout
+
+# Weekly: find published recipes for the corpus's emptiest brewer × batch
+# cells, verify every number against its source page, and commit the ones
+# that pass straight to the branch the run is on — main on the schedule
+# (scripts/recipe-scout.mjs; owner 2026-10-19: "immer wieder neue Rezepte,
+# ohne dass ich danach suchen oder bitten muss"). The push goes out with
+# GH_PAT, not GITHUB_TOKEN, so it fires deploy.yml (and its smoke job) like
+# any other commit — a GITHUB_TOKEN push never triggers workflows. ~$1 per
+# run (4 Sonnet calls with web search). 0 entries = no commit, job green.
+#
+# A push that ADDS or bumps .github/recipe-scout-trigger runs it on THAT
+# branch (the commit lands on the branch, never on main) — the way to read a
+# scout run before a workflow change is merged. The file is deleted again
+# before the merge so the merge itself does not spend a run (~$1).
+
+on:
+  schedule:
+    - cron: "5 6 * * 1" # Mondays 06:05 UTC = 08:05 Düsseldorf (summer)
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/recipe-scout-trigger"
+
+concurrency:
+  group: recipe-scout
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GITHUB_TOKEN checks out and is the push fallback. The first
+          # branch run (2026-10-19) showed the existing GH_PAT cannot even
+          # read the repo over git ("could not read Username"), so the PAT
+          # is tried for the PUSH only, inside the script, and a refused PAT
+          # degrades to a GITHUB_TOKEN push (the recipes land, nothing
+          # deploys until the next push) with a warning naming the fix.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Scout, verify, gate, commit
+        # A push that DELETES the trigger file also matches the paths filter
+        # (2026-10-19: the clean-up commit before the merge spent a run); the
+        # paid step runs only when the file is present, or on the schedule.
+        if: github.event_name != 'push' || hashFiles('.github/recipe-scout-trigger') != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # A fine-grained PAT with Contents: read/write on this repo makes the
+          # scout's push fire deploy.yml. Without it the commit still lands.
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: node scripts/recipe-scout.mjs

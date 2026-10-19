@@ -13,6 +13,7 @@ import { Brain, FlaskConical, Snowflake, Users, CupSoda } from "lucide-react";
 import type { Session, SessionContext } from "@/lib/types/session";
 import type { CoachInsight } from "@/components/coach/CoachCard";
 import { USER_REQUEST_MAX_CHARS } from "@/lib/flow/userRequestLimit";
+import FreshStrip from "@/components/ui/light/FreshStrip";
 
 /**
  * Light System fork of /components/flow/StepContext.tsx.
@@ -321,6 +322,15 @@ export default function LightStepContext() {
       <Hero
         eyebrow={`Context${draft.coffee?.name ? ` · ${draft.coffee.name}` : ""}`}
         question={heroQuestion}
+      />
+
+      {/* What is new since the last open — a scouted recipe (tap → it leads
+          today's menu via "Anything else"), a coach line, a card for this bag.
+          Never on Home (owner, 2026-10-19). Renders nothing when nothing is new. */}
+      <FreshStrip
+        coffeeId={draft.coffee?.coffeeId}
+        waterMl={ctx.amount === "custom" ? Number(customMl) || undefined : ctx.amount === "big" ? 450 : ctx.amount === "small" ? 350 : undefined}
+        onPickRecipe={(name) => updateCtx({ userRequest: name.slice(0, USER_REQUEST_MAX_CHARS) })}
       />
 
       {coffeeMemory && (coffeeMemory.writtenSummary || coffeeMemory.whatToExplore) && (

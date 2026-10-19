@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { Coffee as CoffeeIcon } from "lucide-react";
 import type { NavAction } from "@/app/api/explore-agent/route";
 import ActionPill from "@/components/ui/light/ActionPill";
+import SkippedCandidatePill from "@/components/ui/light/SkippedCandidatePill";
 
 /**
  * BTTS Chat Thread — specs/home.md §4 + §6.
@@ -260,6 +261,11 @@ export default function ChatThread({ messages, loading }: ChatThreadProps) {
                       {m.actions.slice(0, 3).map((a, j) => (
                         <ActionPill key={j} action={a} />
                       ))}
+                      {/* Beside a "Brew again": the candidate he did not brew last
+                          time, straight to the timer (skippedCandidate.ts). */}
+                      {m.actions.slice(0, 3).map((a, j) =>
+                        a.destination === "brew_again" && a.id ? <SkippedCandidatePill key={`skipped-${j}`} coffeeId={a.id} /> : null,
+                      )}
                     </div>
                   )}
                 </div>

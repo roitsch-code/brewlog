@@ -16,6 +16,7 @@ import { rememberSessionField } from "@/lib/field/cache";
 import { gradientCreamScrim } from "@/lib/theme/gradients";
 import { useOnline } from "@/hooks/useOnline";
 import { startBrewAgain, startBrewAgainOffline } from "@/lib/flow/brewAgain";
+import SkippedCandidatePill from "@/components/ui/light/SkippedCandidatePill";
 import {
   cacheBrewableCoffee,
   getBrewableCoffee,
@@ -230,7 +231,7 @@ export default function CoffeeDetailPage() {
     : coffee.components ?? undefined;
   const isBlendCoffee = (blendComponents?.length ?? 0) >= 2;
 
-  const brewThis = () => {
+  const brewIdentity = (): CoffeeIdentity => {
     // Prefer the most-recent scanned CoffeeIdentity (it also carries tasting
     // notes), falling back to the aggregate when the coffee has no sessions —
     // which is now a real case: a bag added from the chat has never been brewed.
@@ -252,14 +253,16 @@ export default function CoffeeDetailPage() {
     // latest session is often a note-less "Brew Again" that carries no variety
     // or region, so spreading it alone would drop what the row knows — and
     // variety is what reaches getVarietyPriorsForBag() in /recommend.
-    const identity: CoffeeIdentity = {
+    return {
       ...base,
       bagPhotoUrl: base.bagPhotoUrl || coffee.bagPhotoUrl,
       variety: base.variety || variety,
       region: base.region || region,
       roastLevel: base.roastLevel || roastLevel || "Light",
     };
-    startBrewAgain(identity, coffee.fieldZones ?? null);
+  };
+  const brewThis = () => {
+    startBrewAgain(brewIdentity(), coffee.fieldZones ?? null);
     router.push("/brew/new");
   };
 
@@ -435,6 +438,9 @@ export default function CoffeeDetailPage() {
           >
             Brew this
           </button>
+        )}
+        {coffee.inRotation && (
+          <SkippedCandidatePill coffeeId={coffee.id} identity={brewIdentity()} fieldZones={coffee.fieldZones ?? null} variant="cta" />
         )}
       </div>
 

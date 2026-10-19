@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import type { DraftSession, SessionMode, CoffeeIdentity, SessionContext, Recommendation, BrewLog, TasteResult, ExternalPlace } from "@/lib/types/session";
 import type { FieldZones } from "@/lib/field/types";
 import { applyGrinderAnswer } from "@/lib/flow/grinderAnswer";
+import type { DeckLine } from "@/lib/recommend/brewDeck";
 
 export type FlowStep =
   | "scan"         // Photo + AI extraction + clarification (always first)
@@ -43,6 +44,11 @@ interface FlowState {
    * always-mounted RecommendJobWatcher polls it so generation survives the app
    * being backgrounded — see src/lib/recommend/jobStore.ts. */
   recommendJobId: string | null;
+  /** The per-brew insight deck of the running / finished job (brewDeck.ts):
+   * copied from /recommend/status by the job watcher while the recipe is
+   * still being written, so the crafting screen leads with lines about THIS
+   * brew; kept for the "While you waited" card. Cleared with the job. */
+  recommendInsights: DeckLine[];
   /** The post-brew insight, requested from the LOG screen the moment Save is
    * tapped (in parallel with the coach question) so the Summary does not start
    * the wait from zero. `key` = insightRequestKey(result, brew) of the draft it
@@ -110,6 +116,7 @@ interface FlowState {
   setIsRecommending: (v: boolean) => void;
   setRecommendError: (err: string | null) => void;
   setRecommendJobId: (id: string | null) => void;
+  setRecommendInsights: (lines: DeckLine[]) => void;
   setPendingInsight: (p: PendingInsight | null) => void;
   addClarificationMessage: (msg: ClarificationMessage) => void;
   clearClarifications: () => void;
@@ -164,7 +171,7 @@ export const useFlowStore = create<FlowState>()(
       isAnalyzing: false,
       isRecommending: false,
       recommendError: null,
-      recommendJobId: null,
+      recommendJobId: null, recommendInsights: [],
       pendingInsight: null,
       clarificationMessages: [],
 
@@ -190,6 +197,7 @@ export const useFlowStore = create<FlowState>()(
       receiveRecommendation: (recommendation) =>
         set((s) => ({
           draft: { ...s.draft, recommendation },
+          ...(recommendation.insights?.length ? { recommendInsights: recommendation.insights } : {}),
           shownCandidates: [
             ...s.shownCandidates,
             ...(recommendation.candidates ?? []).map((c) => ({
@@ -211,18 +219,19 @@ export const useFlowStore = create<FlowState>()(
       setIsRecommending: (v) => set({ isRecommending: v }),
       setRecommendError: (err) => set({ recommendError: err }),
       setRecommendJobId: (id) => set({ recommendJobId: id }),
+      setRecommendInsights: (lines) => set({ recommendInsights: lines }),
       setPendingInsight: (pendingInsight) => set({ pendingInsight }),
       addClarificationMessage: (msg) =>
         set((s) => ({ clarificationMessages: [...s.clarificationMessages, msg] })),
       clearClarifications: () => set({ clarificationMessages: [] }),
       reset: () =>
-        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false, shownCandidates: [] }),
+        set({ step: "scan", draft: initialDraft, fieldZones: null, skipScan: false, pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, recommendInsights: [], pendingInsight: null, clarificationMessages: [], pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false, shownCandidates: [] }),
       setPendingBrew: (pendingBrewId, brewedAt) => set({ pendingBrewId, brewedAt, pendingBrewSynced: false }),
       setPendingBrewSynced: (pendingBrewSynced) => set({ pendingBrewSynced }),
       resumeForRating: ({ id, brewedAt, draft, fieldZones }) =>
-        set({ step: "log", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: id, brewedAt, pendingBrewSynced: true, resumedForRating: true, shownCandidates: [] }),
+        set({ step: "log", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, recommendInsights: [], pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: id, brewedAt, pendingBrewSynced: true, resumedForRating: true, shownCandidates: [] }),
       resumeColdBrew: (draft, fieldZones) =>
-        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false, shownCandidates: [] }),
+        set({ step: "brew", draft, fieldZones, skipScan: true, isDripBag: false, isAnalyzing: false, isRecommending: false, recommendError: null, recommendJobId: null, recommendInsights: [], pendingInsight: null, clarificationMessages: [], pendingScanUrl: null, pendingChatUrl: null, pendingChatImageData: null, pendingVoiceChat: false, pendingBrewId: null, brewedAt: null, pendingBrewSynced: false, resumedForRating: false, shownCandidates: [] }),
     }),
     {
       // localStorage (not sessionStorage) so an in-flight brew survives a

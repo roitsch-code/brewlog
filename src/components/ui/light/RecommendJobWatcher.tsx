@@ -37,6 +37,11 @@ export default function RecommendJobWatcher() {
       // in flight — don't clobber a fresh run with a stale result.
       if (useFlowStore.getState().recommendJobId !== id) return;
       const store = useFlowStore.getState();
+      // The per-brew deck lands before the recipe does (brewDeck.ts runs
+      // beside the Opus call); the crafting screen reads it from the store.
+      if (Array.isArray(data.insights) && data.insights.length > 0 && store.recommendInsights.length === 0) {
+        store.setRecommendInsights(data.insights);
+      }
       if (data.status === "done") {
         if (data.recommendation?.primaryMethod) {
           store.receiveRecommendation(data.recommendation);
