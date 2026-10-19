@@ -830,6 +830,25 @@ export function selectRecipes(
     if (result.length >= limit) break;
     result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
   }
+  // An Orea is ALWAYS on the menu when one fits this brew at all (owner,
+  // 2026-10-19: "Ich will es so"). The Orea V4 Wide is his most-used brewer
+  // after the V60, and fit alone kept it off whole contexts — a natural at
+  // 450 g for sweetness had no Orea on any menu, because no Orea recipe carries
+  // that goal. When the score left it off, the best-scoring Orea that passed
+  // every hard filter (batch window, vessel, partition, Special) takes the
+  // weakest slot. No Orea recipe passes the filters → nothing is forced.
+  if (!result.some((s) => s.recipe.brewer.startsWith("orea"))) {
+    const bestOrea = scored.find((s) => s.recipe.brewer.startsWith("orea"));
+    if (bestOrea) {
+      const pick = pickRepresentative(byBrewer.get(bestOrea.recipe.brewer) ?? [bestOrea], input.rotationSeed ?? 0);
+      if (result.length < limit) result.push(pick);
+      else {
+        let weakest = result.length - 1;
+        for (let i = result.length - 1; i >= 0; i--) if (result[i].score < result[weakest].score) weakest = i;
+        result[weakest] = pick;
+      }
+    }
+  }
   // Substituting a representative can swap in a recipe scoring up to
   // REP_SCORE_TOLERANCE apart, which would leave the menu no longer in
   // best-fit order — and the prompt tells the model that the library order IS
