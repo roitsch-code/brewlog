@@ -10,7 +10,7 @@
  * Everything here is Next-free and pure apart from the corpus memo.
  * Byte-identical move; no behaviour change.
  */
-import { composeTimeline } from "@/lib/brew/composeTimeline";
+import { applyTimelineToSteps, composeTimeline } from "@/lib/brew/composeTimeline";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
@@ -180,7 +180,16 @@ export function cleanChatRecipeDetailed(
     t.finishSec !== reconciled.targetTimeSec
       ? [`clock ${reconciled.targetTimeSec}s → ${t.finishSec}s (pours end ${t.pourPhaseEndSec}s + drawdown ${t.drawdownSec}s ${t.drawdownSource}: ${t.drawdownBasis})`]
       : [];
-  const r: BrewRecipe = { ...reconciled, targetTimeSec: t.finishSec, timeline: t };
+  // The steps say what the timer runs: a pour the model wrote faster than
+  // anyone pours is stretched on the timeline, and the stored step follows.
+  const timed = applyTimelineToSteps(reconciled, t);
+  if (timed !== reconciled && Array.isArray(timed.pourSteps) && Array.isArray(reconciled.pourSteps)) {
+    timed.pourSteps.forEach((st, i) => {
+      const was = reconciled.pourSteps?.[i]?.durationSec;
+      if (st.durationSec !== was) changes.push(`"${st.label}" ${was ?? "untimed"} → ${st.durationSec}s`);
+    });
+  }
+  const r: BrewRecipe = { ...timed, targetTimeSec: t.finishSec, timeline: t };
   return {
     recipe: { ...r, pourSequence: derivePourSequence(r.pourSteps) ?? r.pourSequence },
     pourSource: t.cadenceSource,

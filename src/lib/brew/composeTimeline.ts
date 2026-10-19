@@ -23,7 +23,11 @@
  *      8 (nobody pours faster); one with none or under 2 g/s (a rest folded
  *      into the step) pours at the owner's MEASURED pace for that brewer, 4 g/s
  *      when nothing is measured. Waits are kept exactly. A recipe with no waits
- *      at all gets HOUSE_REST_SEC between its pours, said so.
+ *      at all ("N pours, T seconds") gets its rests spread evenly over ITS OWN
+ *      clock — targetTimeSec minus its pours and the drawdown — never under
+ *      MIN_SPREAD_REST_SEC; said so as cadenceSource "house". The clock the
+ *      model stated is then the clock it gets, which is the one reading of a
+ *      recipe that times its pours but not its pauses.
  *  (c) The drawdown without a reference is the owner's MEASURED median on this
  *      EXACT brewer (an Orea Fast is not an Orea Classic) at ±20 % water,
  *      preferring the same roast-age bucket when he has three brews there —
@@ -53,8 +57,9 @@ import {
 import { corpusDrawdownSec, measuredDrawdownSamples } from "./drawdown";
 import { measuredPourPace } from "./pourPace";
 
-/** The rest between pours when a recipe authored none at all — stated, never hidden. */
-export const HOUSE_REST_SEC = 30;
+/** The shortest rest a recipe that authored none gets between pours — Hoffmann's
+ * own inter-pulse pause, the shortest real one anyone publishes. */
+export const MIN_SPREAD_REST_SEC = 10;
 /** When nothing at all is known about a brewer's drain, the clock still has to end somewhere. */
 export const UNKNOWN_DRAWDOWN_SEC = 60;
 /** Measured drawdowns in the SAME roast-age bucket outrank the pooled ones from this many. */
@@ -290,7 +295,9 @@ export function composeTimeline(recipe: BrewRecipe, ctx: ComposeContext = {}): C
       const authored = s.durationSec;
       const r = authored && authored > 0 ? g / authored : 0;
       if (authored && r >= MIN_POUR_RATE_GPS && r <= MAX_POUR_RATE_GPS) sec = authored;
-      else if (authored && r > MAX_POUR_RATE_GPS) sec = g / MAX_POUR_RATE_GPS;
+      // Rounded UP: 225 g at 8 g/s is 28.1 s, and 28 s would be 8.04 g/s —
+      // faster than the cap the validator holds the stored step to.
+      else if (authored && r > MAX_POUR_RATE_GPS) sec = Math.ceil(g / MAX_POUR_RATE_GPS);
       else {
         sec = g / paceGps;
         usedPace = true;
@@ -330,8 +337,26 @@ export function composeTimeline(recipe: BrewRecipe, ctx: ComposeContext = {}): C
       }
     }
   });
+  // The drawdown is decided before the layout: a no-wait recipe's rests are
+  // what its own clock leaves after the pours and the drawdown.
+  const published =
+    authorCadence && ref && cadence ? Math.round((ref.totalTimeSec ?? 0) - cadence.pourEnd) : 0;
+  const dd =
+    authorCadence && ref && published >= MIN_PUBLISHED_DRAWDOWN_SEC
+      ? { sec: published, source: "published" as const, basis: `${ref.shortName || ref.name} publishes it` }
+      : drawdownWithSource(ctx.method, recipe.waterGrams, { pastSessions: ctx.pastSessions, roastDate: ctx.roastDate, now });
+  if (authorCadence && ref && published < MIN_PUBLISHED_DRAWDOWN_SEC) {
+    dd.basis = `${ref.shortName || ref.name} publishes no drain — ${dd.basis}`;
+  }
+
   const houseRests = !anyWait && !authorCadence && waterIdx.length > 1;
-  if (houseRests) for (let n = 0; n < waterIdx.length - 1; n++) restAfter[n] = HOUSE_REST_SEC;
+  if (houseRests) {
+    const active = pourSec.reduce((a, b) => a + b, 0) + agitationAfter.flat().reduce((a, x) => a + x.sec, 0);
+    const spare = (recipe.targetTimeSec > 0 ? recipe.targetTimeSec : 0) - active - Math.round(dd.sec);
+    const gaps = waterIdx.length - 1;
+    const rest = Math.max(MIN_SPREAD_REST_SEC, Math.round(spare / gaps));
+    for (let n = 0; n < gaps; n++) restAfter[n] = rest;
+  }
 
   // Lay the steps out. Author cadence: the next pour starts where the author
   // starts it, shifted only when this batch's pour cannot finish in time.
@@ -375,15 +400,6 @@ export function composeTimeline(recipe: BrewRecipe, ctx: ComposeContext = {}): C
     }
   });
 
-  const published =
-    authorCadence && ref && cadence ? Math.round((ref.totalTimeSec ?? 0) - cadence.pourEnd) : 0;
-  const dd =
-    authorCadence && ref && published >= MIN_PUBLISHED_DRAWDOWN_SEC
-      ? { sec: published, source: "published" as const, basis: `${ref.shortName || ref.name} publishes it` }
-      : drawdownWithSource(ctx.method, recipe.waterGrams, { pastSessions: ctx.pastSessions, roastDate: ctx.roastDate, now });
-  if (authorCadence && ref && published < MIN_PUBLISHED_DRAWDOWN_SEC) {
-    dd.basis = `${ref.shortName || ref.name} publishes no drain — ${dd.basis}`;
-  }
   let drawdownSec = Math.max(1, Math.round(dd.sec));
   let finishSec = pourPhaseEnd + drawdownSec;
   // Steps the recipe places inside the drawdown (a swirl during the drain).
@@ -421,4 +437,27 @@ export function composeTimeline(recipe: BrewRecipe, ctx: ComposeContext = {}): C
 /** The brewer family the measured pace pools on — exported for the prompt's provenance line. */
 export function paceFamilyOf(method?: string): string {
   return brewMethodKey(method);
+}
+
+/**
+ * The recipe's own steps, with every water step's `durationSec` set to the
+ * seconds the composed timeline runs it for — a 225 g pour the model wrote at
+ * 10 s is 29 s on the timer, and the stored recipe, the validator and the
+ * prose check all read the steps, so they must say the same. Waits and
+ * agitation are left as written (the timeline carries the spread rests of a
+ * no-wait recipe; the steps stay honest about what the model authored).
+ */
+export function applyTimelineToSteps(recipe: BrewRecipe, timeline: RecipeTimeline): BrewRecipe {
+  if (!Array.isArray(recipe.pourSteps) || timeline.shape !== "percolation") return recipe;
+  const pours = timeline.steps.filter((t) => typeof t.gramsAtEnd === "number" && (t.pourGrams ?? 0) >= 0 && WATER.has(t.action as string));
+  let n = 0;
+  let touched = false;
+  const steps = recipe.pourSteps.map((st) => {
+    if (!isWater(st)) return st;
+    const t = pours[n++];
+    if (!t || st.durationSec === t.pourSec) return st;
+    touched = true;
+    return { ...st, durationSec: t.pourSec };
+  });
+  return touched ? { ...recipe, pourSteps: steps } : recipe;
 }

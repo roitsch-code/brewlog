@@ -27,7 +27,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const entry = `
-export { composeTimeline, drawdownWithSource, ageBucketOf, HOUSE_REST_SEC, MIN_SAME_AGE_SAMPLES, MIN_MEASURED_SAMPLES } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/composeTimeline.ts"))};
+export { composeTimeline, drawdownWithSource, ageBucketOf, MIN_SPREAD_REST_SEC, MIN_SAME_AGE_SAMPLES, MIN_MEASURED_SAMPLES } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/composeTimeline.ts"))};
 export { scaleRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
 export { ALL_RECIPES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
 export { buildBrewTimeline } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/timeline.ts"))};
@@ -224,11 +224,21 @@ test("the owner's MEASURED pace times an untimed pour; a pour the model timed pl
   assert.equal(pours(t)[1], 30, "the model's own 30 s stands");
 });
 
-test("a recipe with no waits at all gets the stated house rest, and says so", () => {
-  const noWaits = { ...MODEL, pourSteps: MODEL.pourSteps.filter((s) => s.action !== "wait" && s.action !== "swirl") };
+test("a recipe with no waits at all ('4 pours, 3:00') gets its rests spread over ITS OWN clock, and says so", () => {
+  // Pours 10 + 30 + 13 + 25 = 78 s; the model says 180 s; the corpus drawdown
+  // for a V60 at 350 g fills the rest of the arithmetic: 3 equal rests.
+  const noWaits = { ...MODEL, targetTimeSec: 180, pourSteps: MODEL.pourSteps.filter((s) => s.action !== "wait" && s.action !== "swirl") };
   const t = compose(noWaits, { method: "V60", basedOn: "Own recipe" });
   assert.equal(t.cadenceSource, "house");
-  assert.deepEqual(starts(t), [0, 10 + M.HOUSE_REST_SEC, 10 + M.HOUSE_REST_SEC + 30 + M.HOUSE_REST_SEC, 10 + M.HOUSE_REST_SEC + 30 + M.HOUSE_REST_SEC + 13 + M.HOUSE_REST_SEC]);
+  const rest = Math.round((180 - 78 - t.drawdownSec) / 3);
+  assert.ok(rest >= M.MIN_SPREAD_REST_SEC, `rest ${rest}`);
+  assert.deepEqual(starts(t), [0, 10 + rest, 10 + rest + 30 + rest, 10 + rest + 30 + rest + 13 + rest]);
+  assert.ok(Math.abs(t.finishSec - 180) <= 2, `the model's own clock holds: ${t.finishSec}`);
+  // A clock too short for even 10 s rests: the rests floor at 10 s and the clock grows.
+  const tight = compose({ ...noWaits, targetTimeSec: 60 }, { method: "V60", basedOn: "Own recipe" });
+  const tightStarts = starts(tight);
+  assert.equal(tightStarts[1] - 10, M.MIN_SPREAD_REST_SEC);
+  assert.ok(tight.finishSec > 60);
 });
 
 test("NO roast-age shift: a 3-day-old and a 40-day-old bag get the identical schedule", () => {
@@ -338,7 +348,7 @@ test("buildBrewTimeline lowers a composed timeline without re-deriving anything:
 test("WIRING: /recommend composes every candidate and sets the clock from it; no other clock writer is left", async () => {
   const rec = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(rec, /composeTimeline\(c\.recipe, \{ method: c\.method, basedOn: c\.basedOn, pastSessions, roastDate: coffee\.roastDate \}\)/);
-  assert.match(rec, /recipe: \{ \.\.\.c\.recipe, targetTimeSec: t\.finishSec, timeline: t \}/, "the clock IS the composed finish");
+  assert.match(rec, /recipe: \{ \.\.\.applyTimelineToSteps\(c\.recipe, t\), targetTimeSec: t\.finishSec, timeline: t \}/, "the clock IS the composed finish, the steps follow the timeline");
   for (const gone of ["calibrateDrawdownClock", "applyPourDurations", "guardSpecialTime", "guardVolumeTarget"]) {
     assert.doesNotMatch(rec, new RegExp(gone), `${gone} must not write the clock any more`);
   }

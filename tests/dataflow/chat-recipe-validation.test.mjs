@@ -122,7 +122,9 @@ test("the chat prompt carries the scaling model", () => {
   assert.match(PROMPT, /bigger pours, not more of them/i, "pour count holds when scaling");
   assert.match(PROMPT, /per DOUBLING of dose/i, "the grind law must be logarithmic");
   assert.match(PROMPT, /grind finer for less volume|grind finer than if you are brewing more volume/i, "and must cover scaling DOWN");
-  assert.match(PROMPT, /square root of the volume factor/i, "the drawdown growth must be stated");
+  assert.match(PROMPT, /no formula connects them/i, "the drawdown is measured or published, never a √k law (2026-10-19)");
+  assert.doesNotMatch(PROMPT, /square root of the volume factor|5-second steps|server raises the clock/i, "the old clock rules are gone");
+  assert.match(PROMPT, /composes ONE timeline/i);
 });
 
 test("the Drip Assist is never automatic — only once the user says he is brewing with it (owner, 2026-10-10)", () => {

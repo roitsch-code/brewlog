@@ -1,7 +1,7 @@
 import { callRecommendModel } from "../ai/recommendProvider";
 import { vesselOverflow } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
-import { composeTimeline } from "../brew/composeTimeline";
+import { applyTimelineToSteps, composeTimeline } from "../brew/composeTimeline";
 import { isComandante, normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
@@ -977,7 +977,7 @@ Return valid JSON only.`;
     console.log(
       `[recommend] timeline: "${c.title ?? c.method}" clock ${c.recipe.targetTimeSec}s → ${t.finishSec}s (pours end ${t.pourPhaseEndSec}s + drawdown ${t.drawdownSec}s ${t.drawdownSource}: ${t.drawdownBasis}; cadence ${t.cadenceSource})`,
     );
-    return [{ ...c, recipe: { ...c.recipe, targetTimeSec: t.finishSec, timeline: t } }];
+    return [{ ...c, recipe: { ...applyTimelineToSteps(c.recipe, t), targetTimeSec: t.finishSec, timeline: t } }];
   });
   const discTimed = composed.length ? composed : discGuarded;
 

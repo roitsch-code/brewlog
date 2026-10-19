@@ -62,11 +62,11 @@ const BROKEN_RECIPE = {
 // Same brewer, same volume, same bag — five pours, so every pour has room.
 // Grind in Niche DEGREES: no grinder is named in these conversations, so the
 // home grinder is the default and clicks are a wrong unit (10-10-2026 — the
-// SEY pill carried "26 clicks" and the check never fired). targetTimeSec is
-// what the server computes on CI's empty database: the house-timed pours end
-// at 175 s and the disc estimate adds 10 s (0.21 of the published Orea
-// median at 450 g) — the chat's clock is pours + drawdown now, not the
-// model's number.
+// SEY pill carried "26 clicks" and the check never fired). No wait steps, so
+// the server spreads the rests over THIS clock (composeTimeline, 2026-10-19):
+// 115 s of pours + the disc-estimate drawdown (10 s on CI's empty database,
+// 0.21 of the published Orea median at 450 g) leaves 60 s → four 15 s rests,
+// and the composed clock is the model's own 185 s.
 const GOOD_CLOCK = 185;
 const GOOD_RECIPE = {
   doseGrams: 28,
@@ -309,7 +309,12 @@ try {
     check("one repair round", r.control.calls === 2, `calls=${r.control.calls}`);
     const msg = r.control.received[1]?.messages?.at(-1)?.content?.find?.((b) => b.type === "tool_result")?.content ?? "";
     check("the rejection names the wrong grind unit", /wrong unit for the Niche Zero/.test(msg), msg.slice(0, 200));
-    check("the rejection names the clock vs the drawdown", /drawdown on this brewer/.test(msg) && /3:05/.test(msg), msg.slice(0, 300));
+    // Since the composed timeline (2026-10-19) a recipe that writes no waits is
+    // read as "N pours in the clock it states" — its pauses are spread over that
+    // clock — so 4:00 is a legal reading of these five pours, not a clock error.
+    // What does go back is the wrong grind unit; the repaired recipe then
+    // carries its own 3:05.
+    check("the clock of a no-wait recipe is its own — not sent back", !/drawdown on this brewer/.test(msg), msg.slice(0, 300));
     const brew = r.actions.find((a) => a.destination === "start_brew");
     check("the repaired recipe reaches the Brew button in degrees", brew?.recipe?.grindSize === "398°", JSON.stringify(brew?.recipe?.grindSize));
     check("with the computed clock", brew?.recipe?.targetTimeSec === GOOD_CLOCK, `targetTimeSec=${brew?.recipe?.targetTimeSec}`);

@@ -120,7 +120,10 @@ function lowerPercolation(t: RecipeTimeline): PourStep[] {
         action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
         temperatureC: s.temperatureC,
         notes: s.notes,
-        pourDurationSec: s.authoredPourSec,
+        // The recipe's intended pour time IS the composed one: the coach
+        // targets the rate the timer runs (8 g/s for a stretched pour), never
+        // the impossible number the model first wrote.
+        pourDurationSec: s.pourSec,
         timingDurationSec: s.pourSec,
         pourEndSec: s.startSec + s.pourSec,
         restSec: s.restSec,
