@@ -21,6 +21,17 @@ The user runs this project from a phone, usually with no terminal. The thing to 
 
 ---
 
+## "Läuft alles, wie es soll?" — the health check (owner, 2026-10-19)
+
+When the owner asks whether everything works, the answer comes from THESE readouts, read in that session — never from memory, never "should be fine". A brewer vanishing from the recommendations (the Orea, 10-10 → 10-19, found by the owner, not by us) is the failure this exists to catch.
+
+1. **Pipelines:** the latest `deploy.yml` run on `main` incl. `smoke` + `verify-domain`, `ci.yml` on the latest PR, `backup-drill.yml` (last Monday), `migrate-on-push.yml` if a marker moved — each from its run/job endpoint.
+2. **Production readout:** bump `.github/recommend-logs-trigger` on a branch and read the branch run: recommend job errors, **BREWER MIX** (any `VANISHED` row = a defect to report and fix, not a footnote), the offered candidates, the OUTCOME LEDGER.
+3. **Menu coverage:** `node --test tests/dataflow/menu-coverage.test.mjs` on `main` — every owned brewer (each Orea bottom on its own) × 300 / 350 / 450 g against `menu-coverage.baseline.json`; it also runs in CI on every PR and fails a PR that takes a brewer off the menu or halves it. Known zero rows in the baseline (Moccamaster < 500 g, AeroPress over its cap, Origami wave at 350/450 g) are gaps to name, not news.
+4. **Report** green / red / unverified per line. A red line gets a fix in the same session.
+
+---
+
 ## Infrastructure
 
 | What | Detail |
