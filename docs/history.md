@@ -8,6 +8,11 @@
 
 ### ✅ Done
 
+#### 2026-10-19 — The north star in CLAUDE.md, the restart's open readouts (PR D)
+- **Shipped:** CLAUDE.md opens with the owner's north star (every change must make brewing better or more exciting; all brewers equal; taste as information; something new every brew, never on Home; one composed clock; measure, never estimate); "Current status" rewritten around what the restart left UNVERIFIED and how each readout is taken; the grind audit compressed to its state. The rule sections stay as they are — they are the data-honesty contract, not feature narrative.
+- **Readout of the scout (2026-10-19, two branch runs of #653):** 0 of 8 candidates passed — `artofbrew.coffee` has an expired TLS certificate, `jamesg.blog` answers a session with 200 but not the GitHub runner, two searches found nothing for Orea Open / Orea Classic, and four candidates carried "quotes" that were not on the page (Sonnet paraphrased). No commit, both jobs green. The deletion of the trigger file fired one extra run (a deleted path matches the filter) — the paid step is now skipped when the file is absent on a push.
+- **Verified:** CI on the docs-only PR. A docs-only merge does not deploy (`**/*.md` is paths-ignored).
+
 #### 2026-10-19 — Something new every brew, without asking (PR C of the restart)
 - **Reported (owner):** "Immer wieder Neues. Die Infos/Insights während das Rezept generiert wird — ist voll untergegangen. Immer wieder neue Rezepte, neue Erkenntnisse. Ohne dass ich danach suchen oder bitten muss." And: not on Home — "Home clean halten".
 - **Measured (code):** the crafting deck was 12 random lines from a global pool (59 static "June 2026" lines + DB), ~9 s a card, 3–7 seen per wait, no memory, nothing about the brew, nothing after the recipe; the pool refreshed monthly with no dedup against the seed; the corpus (146 → 154) grew only by hand, with no "new" marker; the second candidate of every recommendation was thrown away with the screen.

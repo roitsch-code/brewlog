@@ -8,3 +8,4 @@ redeploy: 2026-06-30.3  # sync MISTRAL_COACH_API_KEY onto VPS .env → coach fli
 2026-10-08 redeploy #611 (first deploy failed fetching Google Fonts during next build)
 redeploy #613 (Google Fonts fetch failure) 2026-10-10T07:34:47Z
 redeploy 2026-10-18: pick up CARTO_BASEMAP_KEY secret
+2026-10-19 — redeploy #653: the merge deploy died at SSH key exchange (connection reset by the VPS), nothing ran
