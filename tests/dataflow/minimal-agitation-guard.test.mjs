@@ -176,8 +176,11 @@ test("a serving swirl after the drawdown survives only when the reference has on
   assert.ok(!actionsOf(dropped).includes("swirl"), "Hoffmann's Chemex has no after-drawdown swirl");
 });
 
-test("recommend.ts hands the guard the reference resolver (wiring)", async () => {
+test("recommend.ts hands the guard a VERIFIED-only resolver and leaves unreferenced recipes alone (wiring)", async () => {
   const { readFile } = await import("node:fs/promises");
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(src, /stripMinimalAgitationSwirls\(\s*mapped\s*,\s*resolveReference\s*\)/);
+  // 2026-10-19: agitation is stripped only against a verified reference's
+  // published sequence; a model's own recipe keeps its agitation as written.
+  assert.match(src, /stripMinimalAgitationSwirls\(mapped, \(basedOn\) => \{[\s\S]*?ref\?\.verified \? ref : null/);
+  assert.match(src, /resolveReference\(c\.basedOn\)\?\.verified \? c : mapped\[i\]/);
 });

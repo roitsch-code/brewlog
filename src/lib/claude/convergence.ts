@@ -12,18 +12,13 @@
  * brewer at a different temperature and grind the next morning, so no cup
  * could be attributed to anything.
  *
- * The rule:
- *   - last brew ≥ 4★  → CONVERGE. Candidate 1 is that brew reproduced with
- *                        EXACTLY ONE named change toward 4.5–5★.
- *   - last brew < 4★  → DIVERGE. Candidate 1 is something genuinely different
- *                        (another brewer family or another reference), chosen
- *                        for fit. A missed cup is not a baseline.
- *   - no rated brew   → the first-brew arc, unchanged.
- *   - candidate 2 is ALWAYS the exploration slot, from the first brew.
- *
- * Two halves, like every guard here: a prompt block the model reads, and a
- * deterministic check on what it wrote (one repair round, then log and accept —
- * never a silent rewrite of a recipe the user is about to see).
+ * Since 2026-10-19 this is INFORMATION, not a rule (owner: preferences and
+ * history are things the model weighs and explains, never filters). The block
+ * describes the last brew of this coffee — its recipe as brewed, its rating,
+ * what he tasted and wrote — and names both honest answers: a one-dial
+ * follow-up on a brew that worked, or something new; a different approach
+ * after a brew that missed, or a corrected repeat. The model chooses and
+ * whyChosen says why. The deterministic check and its repair round are gone.
  */
 
 import type { BrewPourStep, BrewRecipe, Session } from "../types/session";
@@ -31,6 +26,7 @@ import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { brewMethodKey } from "../utils/brewMethodKey";
 import { parseGrindDegrees } from "./recipeFidelity";
 import { batchGrindDeltaDeg } from "../constants/grindSettings";
+import { grindInUnit } from "../knowledge/recipes/helpers";
 
 /** A brew at or above this rating is reproduced; below it, the next brew diverges. */
 export const CONVERGE_MIN_RATING = 4;
@@ -166,12 +162,12 @@ function pourPlanText(recipe: BrewRecipe): string {
   return recipe.pourSequence?.trim() || "(no pour plan logged)";
 }
 
-function describeBase(b: ConvergenceBase): string {
+export function describeBase(b: ConvergenceBase, grinder?: string): string {
   const r = b.recipe;
   const ratio = r.doseGrams > 0 ? (r.waterGrams / r.doseGrams).toFixed(1) : "?";
   const lines = [
     `  Brewer: ${b.method}${b.basedOn ? ` · based on "${b.basedOn}"` : ""}${b.title ? ` · "${b.title}"` : ""}`,
-    `  Recipe as brewed: ${r.doseGrams}g : ${r.waterGrams}g (1:${ratio}) at ${r.waterTempC}°C · grind ${r.grindSize} · clock ${mmss(r.targetTimeSec)}${b.actualTimeSec ? ` (actual ${mmss(b.actualTimeSec)})` : ""}`,
+    `  Recipe as brewed: ${r.doseGrams}g : ${r.waterGrams}g (1:${ratio}) at ${r.waterTempC}°C · grind ${grindInUnitFromString(r.grindSize, grinder)} · clock ${mmss(r.targetTimeSec)}${b.actualTimeSec ? ` (actual ${mmss(b.actualTimeSec)})` : ""}`,
     `  Pours: ${pourPlanText(r)}`,
     b.waterSource ? `  Water: ${b.waterSource}` : "",
     b.taste ? `  Taste reading: ${b.taste}` : "",
@@ -182,25 +178,25 @@ function describeBase(b: ConvergenceBase): string {
   return lines.filter(Boolean).join("\n");
 }
 
-export interface ConvergenceNoteOptions {
-  /** The exploration-slot sentence appended to every arc (always on). */
-  explorationSlot: string;
-  /** Today's requested water, when it differs from the base the dose scales. */
-  targetWaterGrams?: number;
-}
-
 /** ", and move the grind from 400° to 412° (dose law)" — or "" when the base
  * grind is not a number. Without it "same grind" carried a 500 ml setting
  * unchanged onto a 750 ml batch. */
-function scaledGrindNote(grindSize: string, fromWater: number, toWater: number, method: string): string {
+function scaledGrindNote(grindSize: string, fromWater: number, toWater: number, method: string, grinder?: string): string {
   const g = grindValue(grindSize);
   const d = batchGrindDeltaDeg(fromWater, toWater);
   if (g === undefined || d === 0) return "";
   // The dose law is measured on the owner's V60 only (grind audit 2026-10-18).
   if (!doseLawApplies(method)) {
-    return `; how far the grind moves for this batch on a ${method} is unmeasured — choose it as a measurement brew and say so in whyChosen (it does not count as the one change)`;
+    return `; how far the grind moves for this batch on a ${method} is unmeasured — a measurement brew, say so in whyChosen`;
   }
-  return `, and move the grind ${d > 0 ? "coarser" : "finer"} by the dose law: ${Math.round(g)}° → ${Math.round(g + d)}° (Niche; +20° per doubling of the batch)`;
+  return `, and the dose law moves the grind ${d > 0 ? "coarser" : "finer"}: ${grindInUnit(Math.round(g), grinder)} → ${grindInUnit(Math.round(g + d), grinder)} (+20° per doubling of the batch, measured on this V60)`;
+}
+
+/** A logged grind string ("406°", "26 clicks") in the brew's grinder unit. */
+function grindInUnitFromString(grindSize: string, grinder?: string): string {
+  const g = grindValue(grindSize);
+  if (g === undefined) return grindSize;
+  return grindInUnit(Math.round(g), grinder);
 }
 
 /** The +20°-per-doubling dose law is MEASURED on the owner's V60 only. */
@@ -208,41 +204,39 @@ export function doseLawApplies(method: string | undefined): boolean {
   return brewMethodKey(method) === "v60";
 }
 
-/** The SESSION ARC block for the user message. */
-export function formatConvergenceNote(state: ConvergenceState, opts: ConvergenceNoteOptions): string {
-  const slot = opts.explorationSlot;
+export interface ConvergenceNoteOptions {
+  /** Today's requested water, when it differs from the base the dose scales. */
+  targetWaterGrams?: number;
+  /** The brew's grinder, for the unit of every grind in the block. */
+  grinder?: string;
+}
+
+/** THIS COFFEE'S LAST BREW — information for the user message. */
+export function formatConvergenceInfo(state: ConvergenceState, opts: ConvergenceNoteOptions = {}): string {
   if (state.kind === "first") {
-    return `\nSESSION ARC: First brew of this coffee. Goal: characterize extraction behavior and establish a baseline. Pair two candidates with genuinely different extraction physics (e.g., fast-flow high agitation vs flat-bed minimal agitation, many small pours vs few large ones, or high-clarity vs body-forward) so the cup comparison is informative. Immersion is one option among these, not the default contrast.${slot}`;
+    return `\nTHIS COFFEE: first brew of this bag. Nothing to build on yet — characterise it: two candidates with genuinely different extraction physics so the cup comparison teaches something.`;
   }
   if (state.kind === "unrated") {
-    return `\nSESSION ARC: Session ${state.count + 1} of this coffee; the last brew was not rated, so there is no verdict to build on. Make the FIRST candidate the best-fit answer for this bean and context.${slot}`;
+    return `\nTHIS COFFEE: brew ${state.count + 1} of this bag; the last brew was not rated, so there is no verdict to build on.`;
   }
-  if (state.kind === "diverge") {
-    const b = state.last;
-    return `\nSESSION ARC — THE LAST BREW OF THIS COFFEE MISSED (${b.rating}★ on ${b.dateLabel || "the last brew"}). Session ${state.count + 1}.
-${describeBase(b)}
-RULE: a ${b.rating}★ cup is NOT a baseline. The FIRST candidate must be genuinely different from that brew — a different brewer family, or a different reference recipe on the same brewer — chosen for fit to this bean, not for contrast. Do not re-serve that recipe with a tweak. If the user's note or taste reading names the fault (sour / bitter / thin / muddy), aim the new approach at that fault and say so in whyChosen.${slot}`;
-  }
-  const b = state.base;
+  const b = state.kind === "converge" ? state.base : state.last;
   const scaleNote =
     opts.targetWaterGrams &&
     b.recipe.waterGrams > 0 &&
     Math.abs(opts.targetWaterGrams - b.recipe.waterGrams) / b.recipe.waterGrams > 0.05
-      ? `\nThe user asked for ${opts.targetWaterGrams}g today (the base was ${b.recipe.waterGrams}g): scale dose and milestones to ${opts.targetWaterGrams}g at the SAME ratio and pour count${scaledGrindNote(b.recipe.grindSize, b.recipe.waterGrams, opts.targetWaterGrams, b.method)}. Scaling is not the one change.`
+      ? `\nToday he asked for ${opts.targetWaterGrams} g (that brew was ${b.recipe.waterGrams} g): the same recipe at today's amount keeps the ratio and the pour count${scaledGrindNote(b.recipe.grindSize, b.recipe.waterGrams, opts.targetWaterGrams, b.method, opts.grinder)}.`
       : "";
-  return `\nSESSION ARC — THE LAST BREW OF THIS COFFEE WORKED (${b.rating}★ on ${b.dateLabel || "the last brew"}). Session ${state.count + 1}.
-${describeBase(b)}
-RULE — THE FIRST CANDIDATE IS THAT BREW REPRODUCED WITH EXACTLY ONE CHANGE. Same brewer, same ratio, same pour count and cadence, same temperature, same grind (moved by the dose law when the batch changes), same agitation — except for the ONE dial you move toward 4.5–5★. Pick the dial from what the cup told you (the taste reading, the user's note, the coach answer, MEASURED BREW FEEDBACK): one of water temperature, grind, ratio/dose, pour plan (count, sizes or cadence), agitation, or water source. Name it in \`experiment\` and the reason in whyChosen. Set basedOn EXACTLY to "${b.name}". Use the numbers above as written — the user already brewed them on this kit; do not re-derive them from a published recipe.${scaleNote}
-This rule overrides RECENTLY RECOMMENDED, METHOD FIT & FRESHNESS and PORTFOLIO DIVERSITY for the first candidate only: repeating a brew that earned ${b.rating}★ is the point, not a failure. The second candidate is the exploration slot and must differ from this base in brewer or reference.${slot}`;
+  if (state.kind === "diverge") {
+    return `\nTHIS COFFEE'S LAST BREW MISSED (${b.rating}★ on ${b.dateLabel || "the last brew"}; brew ${state.count + 1} of this bag):
+${describeBase(b, opts.grinder)}${scaleNote}
+Two honest answers: a different approach aimed at what the cup told you (sour / bitter / thin / muddy), or a corrected repeat if the fault is clearly one dial. Your call — say which and why in whyChosen.`;
+  }
+  return `\nTHIS COFFEE'S LAST BREW WORKED (${b.rating}★ on ${b.dateLabel || "the last brew"}; brew ${state.count + 1} of this bag):
+${describeBase(b, opts.grinder)}${scaleNote}
+Two honest answers: that brew reproduced with ONE named change toward 5★ (basedOn "${b.name}", the numbers above as brewed), or something genuinely new that this bag has not seen. Your call — say which and why in whyChosen.`;
 }
 
 // ─── Deterministic check ─────────────────────────────────────────────────────
-
-export interface ConvergenceViolation {
-  kind: "converge" | "diverge";
-  reason: string;
-  changed: string[];
-}
 
 type CandidateLike = {
   method: string;
@@ -327,78 +321,4 @@ export function changedDials(base: BrewRecipe, cand: CandidateLike["recipe"], me
     if (agitationCount(bSteps) !== agitationCount(cSteps)) changed.push("agitation");
   }
   return changed;
-}
-
-const WATER_WORDS = /\bwater\b|ppm|mineral|clarity blend|bwt|distilled|tap/i;
-
-/**
- * Check candidate 1 against the state. Returns null when it complies.
- * CONVERGE: same brewer family and at most one changed dial (zero is accepted
- * only when the named experiment is the water source, which the recipe
- * numbers cannot show). DIVERGE: not the same brewer family + same reference.
- */
-export function checkConvergence(
-  state: ConvergenceState,
-  first: CandidateLike | undefined,
-): ConvergenceViolation | null {
-  if (!first) return null;
-  if (state.kind === "converge") {
-    const b = state.base;
-    if (brewMethodKey(first.method) !== brewMethodKey(b.method)) {
-      return {
-        kind: "converge",
-        reason: `candidate 1 is on ${first.method}, the ${b.rating}★ base was ${b.method}`,
-        changed: ["brewer"],
-      };
-    }
-    const changed = changedDials(b.recipe, first.recipe, b.method);
-    if (changed.length > 1) {
-      return {
-        kind: "converge",
-        reason: `candidate 1 changes ${changed.length} dials at once (${changed.join(", ")})`,
-        changed,
-      };
-    }
-    if (changed.length === 0 && !WATER_WORDS.test(first.experiment ?? "")) {
-      return {
-        kind: "converge",
-        reason: "candidate 1 repeats the base with no change named",
-        changed,
-      };
-    }
-    return null;
-  }
-  if (state.kind === "diverge") {
-    const b = state.last;
-    const sameFamily = brewMethodKey(first.method) === brewMethodKey(b.method);
-    if (!sameFamily) return null;
-    const cRef = (first.basedOn ?? "").trim().toLowerCase();
-    const bRef = (b.basedOn ?? "").trim().toLowerCase();
-    const bothOwn = /^own (recipe|experiment)/.test(cRef) && /^own (recipe|experiment)/.test(bRef);
-    const sameRef =
-      !!cRef && !!bRef && (cRef === bRef || (cRef.length >= 6 && bRef.includes(cRef)) || (bRef.length >= 6 && cRef.includes(bRef)));
-    if (sameRef || bothOwn || !cRef) {
-      return {
-        kind: "diverge",
-        reason: `candidate 1 re-serves the ${b.rating}★ brew's approach (${b.method}, "${b.basedOn || "own"}")`,
-        changed: [],
-      };
-    }
-  }
-  return null;
-}
-
-/** The correction appended to the user message for the one repair round. */
-export function formatConvergenceRepair(state: ConvergenceState, v: ConvergenceViolation): string {
-  if (state.kind === "converge") {
-    const b = state.base;
-    return `
-
-REPAIR — CONVERGENCE. ${v.reason}. The last brew of this coffee earned ${b.rating}★; the FIRST candidate must be THAT brew (${b.method}, ${b.recipe.doseGrams}g : ${b.recipe.waterGrams}g at ${b.recipe.waterTempC}°C, grind ${b.recipe.grindSize}, pours ${pourPlanText(b.recipe)}) with EXACTLY ONE dial changed and named in \`experiment\`, basedOn "${b.name}". Keep the second candidate as the exploration.`;
-  }
-  if (state.kind !== "diverge") return "";
-  const b = state.last;
-  return `
-
-REPAIR — DIVERGENCE. ${v.reason}. That brew rated ${b.rating}★, so the FIRST candidate must be a genuinely different approach — another brewer family, or another reference recipe — chosen for fit. Keep the second candidate as the exploration.`;
 }

@@ -103,19 +103,16 @@ test("ANCHOR: the chat validator rejects a reference published for a different b
   assert.ok(!M.validateRecipe(ONE_CUP_AT(250), { method: "V60", basedOn: ONE_CUP.name }).some((x) => x.code === "reference-wrong-batch"));
 });
 
-test("the menu offers a reference only within ±20 % of its published water — both directions", () => {
-  const base = { roastLevel: "light", process: "washed", goal: "balanced", brewersAvailable: new Set(["v60", "clever", "kalita", "orea-classic", "origami-wave", "chemex"]) };
-  const at = (ml) => M.selectRecipes({ ...base, maxWaterMl: ml, serveVolumeMl: ml }, 12).map((s) => s.recipe.id);
-  assert.ok(!at(450).includes("hoffmann-v60-better-one-cup"), "the 1-Cup is not a 450 g reference");
-  assert.ok(!at(350).includes("hoffmann-v60-better-one-cup"), "nor a 350 g one");
-  assert.ok(!at(350).includes("hoffmann-v60-big-batch"), "the Ultimate is not a 350 g reference");
-  for (const ml of [250, 350, 450]) {
-    for (const id of at(ml)) {
-      const r = M.ALL_RECIPES.find((x) => x.id === id);
-      assert.ok(M.batchWithinWindow(r.water.grams, ml), `${id} (${r.water.grams} g) offered at ${ml} g`);
-    }
-    assert.ok(at(ml).length >= 2, `the menu at ${ml} g is not empty`);
-  }
+// 2026-10-19: the window is no longer a menu FILTER (every brewer stays on the
+// table); outside it the entry says so instead of carrying a scaled line.
+test("outside its ±20 % window a reference is shown with its factor and no scaled line; inside it, the scaled line", () => {
+  const oneCup = M.ALL_RECIPES.find((x) => x.id === "hoffmann-v60-better-one-cup");
+  const far = M.formatRecipeForPrompt(oneCup, { scaleTo: { targetWaterGrams: 450 } });
+  assert.match(far, /Published at 250 g — ×1\.80 to your 450 g, outside its ±20 % window/);
+  assert.doesNotMatch(far, /Scaled to your 450g/);
+  const near = M.formatRecipeForPrompt(oneCup, { scaleTo: { targetWaterGrams: 280 } });
+  assert.match(near, /Scaled to your 280g/);
+  assert.doesNotMatch(near, /outside its ±20 % window/);
 });
 
 test("the scaled line appears at exactly 450 g off a 500 g recipe (the k−1 > 0.1 hole)", () => {
@@ -140,9 +137,11 @@ test("WIRING: /recommend relabels an out-of-window reference; the chat validator
   const rec = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(rec, /referenceAppliesAtBatch\(ref, water\)/);
   assert.match(rec, /\[recommend\] batch window:/);
+  const helpersSrc = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"), "utf8");
+  assert.match(helpersSrc, /batchWithinWindow\(recipe\.water\.grams, scaleTo\.targetWaterGrams\)/, "the formatter decides scaled line vs factor label by the shared window");
+  assert.doesNotMatch(helpersSrc, /REFERENCE_BATCH_WINDOW/, "no window FILTER in the selector any more");
   assert.match(rec, /const pourTimed = batchChecked\.map/, "the relabelled candidates flow on to the pour timing");
   const val = await readFile(path.join(ROOT, "src/lib/recipe/validateRecipe.ts"), "utf8");
   assert.match(val, /problems\.push\(\.\.\.checkReferenceBatch\(recipe, ctx\)\)/);
   const helpers = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"), "utf8");
-  assert.match(helpers, /w < input\.maxWaterMl \/ \(1 \+ REFERENCE_BATCH_WINDOW\)/, "the menu's LOWER bound");
 });

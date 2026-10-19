@@ -20,7 +20,7 @@ test("the prompt no longer dismisses occasions as background", () => {
 
 test("each hot occasion carries the meaning its UI footnote promises", () => {
   for (const [id, phrase] of [
-    ["morning-ritual", /slower, deliberate pour/],
+    ["morning-ritual", /slower, deliberate brew/],
     ["focus", /clean, mid-strength cup/],
     ["social", /forgiving recipe that holds its character as it cools/],
     ["experiment", /NOT been brewed with yet/],
@@ -30,6 +30,7 @@ test("each hot occasion carries the meaning its UI footnote promises", () => {
   }
 });
 
-test("the prompt states the server-side Special ceiling", () => {
-  assert.match(src, /drops any candidate over 180 s on a special brew/);
+test("Special is stated as his time budget, never as a server-side drop (2026-10-19)", () => {
+  assert.match(src, /he has about three minutes in total/);
+  assert.doesNotMatch(src, /drops any candidate over 180 s/);
 });

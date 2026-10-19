@@ -145,6 +145,22 @@ export interface RecommendationCandidate {
    * the owner's typed value, his measured brews, a published/sourced value,
    * the measured V60 anchor, or a measurement brew. Shown under the grind. */
   grindProvenance?: "user" | "measured" | "published" | "v60-anchor" | "measurement-brew";
+  /** The model may PROPOSE the other grinder for this brew, with a reason
+   * (owner, 2026-10-19: "verwende doch mal den Comandante, weil …"). The owner
+   * answers on the recipe screen with one tap; nothing is regenerated.
+   * `recipe.grindSize` stays in the brew's grinder unit; `grindSize` here is
+   * the same setting in the PROPOSED grinder's unit, converted on the server. */
+  grinderSuggestion?: {
+    grinder: "Comandante C40" | "Niche Zero";
+    reason: string;
+    grindSize: string;
+    /** Clicks outside the owner's measured 23–29 span. */
+    extrapolated?: boolean;
+    /** Written by the client on tap; undefined = not answered. */
+    accepted?: boolean;
+    /** Client-side: the grinder before accepting, so declining restores it. */
+    previousGrinder?: string;
+  };
   /** One sentence: why this candidate. The only per-candidate prose left. */
   whyChosen: string;
   /** One clause: the variable this candidate tests and what the cup shows if it

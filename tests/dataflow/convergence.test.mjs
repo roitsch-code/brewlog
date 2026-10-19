@@ -114,94 +114,41 @@ test("last brew 3★ → DIVERGE (the real 10-03 Beshasha sequence)", () => {
   assert.equal(st.count, 3);
 });
 
-test("converge check: exactly one changed dial passes; zero and two fail; another brewer fails", () => {
-  const st = C.deriveConvergence([S_1001]);
-  const cand = (recipe, experiment = "2°C cooler to soften the sharpness") => ({ method: "V60", basedOn: st.base.name, experiment, recipe });
-
-  // one dial — temperature
-  assert.equal(C.checkConvergence(st, cand({ ...RAO_RECIPE, waterTempC: 95 })), null);
-  // one dial — grind
-  assert.equal(C.checkConvergence(st, cand({ ...RAO_RECIPE, grindSize: "384°" })), null);
-  // one dial — ratio (dose moves, water held)
-  assert.equal(C.checkConvergence(st, cand({ ...RAO_RECIPE, doseGrams: 23 })), null);
-  // one dial — pour plan (an extra pulse)
-  const morePours = {
-    ...RAO_RECIPE,
-    pourSteps: [
-      ...RAO_RECIPE.pourSteps.slice(0, 4),
-      { label: "Pour 3", action: "pour", waterGramsAtEnd: 280, durationSec: 20 },
-      ...RAO_RECIPE.pourSteps.slice(4),
-    ],
-  };
-  assert.equal(C.checkConvergence(st, cand(morePours)), null);
-  // scaled to today's bigger batch at the same ratio is NOT a change — and the
-  // grind moving by the dose law (+20°/doubling: 352→448 g = +7°, 378°→385°) is
-  // part of the scaling, not a second dial (2026-10-18, the 400° Chemex).
-  const scaled = { ...RAO_RECIPE, doseGrams: 28, waterGrams: 448, grindSize: "385°", pourSteps: RAO_RECIPE.pourSteps.map((p) => (p.waterGramsAtEnd ? { ...p, waterGramsAtEnd: Math.round(p.waterGramsAtEnd * 448 / 352) } : p)) };
-  assert.equal(C.checkConvergence(st, cand({ ...scaled, waterTempC: 95 })), null);
-  // …while carrying the 352 g grind unchanged onto 448 g IS a grind change.
-  const unscaledGrind = C.checkConvergence(st, cand({ ...scaled, grindSize: "378°", waterTempC: 95 }));
-  assert.ok(unscaledGrind && unscaledGrind.changed.includes("grind"), JSON.stringify(unscaledGrind));
-
-  // zero dials, nothing named → violation
-  const zero = C.checkConvergence(st, cand(RAO_RECIPE, ""));
-  assert.ok(zero && /no change named/.test(zero.reason));
-  // zero numeric dials but the water source is the named change → accepted
-  assert.equal(C.checkConvergence(st, cand(RAO_RECIPE, "switch to the ~73 ppm clarity blend water")), null);
-  // two dials → violation naming both
-  const two = C.checkConvergence(st, cand({ ...RAO_RECIPE, waterTempC: 94, grindSize: "390°" }));
-  assert.ok(two && two.changed.includes("temperature") && two.changed.includes("grind"), JSON.stringify(two));
-  // another brewer → violation
-  const other = C.checkConvergence(st, { method: "Clever Dripper", basedOn: "Hoffmann Ultimate Clever", recipe: RAO_RECIPE, experiment: "" });
-  assert.ok(other && other.changed.includes("brewer"));
-});
-
-test("diverge check: same brewer + same reference fails; a different brewer or reference passes", () => {
-  const st = C.deriveConvergence([S_1003]);
-  const again = C.checkConvergence(st, { method: "V60", basedOn: "Gagné — V60 Trench + Rao-Spin", recipe: RAO_RECIPE });
-  assert.ok(again && /re-serves/.test(again.reason));
-  assert.equal(C.checkConvergence(st, { method: "V60", basedOn: "Kasuya 4:6 Method — Standard", recipe: RAO_RECIPE }), null);
-  assert.equal(C.checkConvergence(st, { method: "Orea Classic", basedOn: "Easy Does It — Orea Wide Classic", recipe: RAO_RECIPE }), null);
-  // two "Own experiment"s on the same brewer cannot be told apart → fails
-  const ownLast = session("2026-10-03T08:56:00Z", 3, "Clever Dripper", "Own experiment");
-  const st2 = C.deriveConvergence([ownLast]);
-  assert.ok(C.checkConvergence(st2, { method: "Clever Dripper", basedOn: "Own experiment", recipe: RAO_RECIPE }));
-});
-
-test("the prompt block carries the base numbers, the exact basedOn and the one-change rule; the slot is always appended", () => {
-  const slot = " THE SECOND CANDIDATE IS THE EXPLORATION SLOT.";
-  const conv = C.formatConvergenceNote(C.deriveConvergence([S_1001]), { explorationSlot: slot, targetWaterGrams: 352 });
-  assert.match(conv, /LAST BREW OF THIS COFFEE WORKED \(4★/);
+// 2026-10-19: the convergence RULE ("exactly one change", the check, the
+// repair) is gone — the owner's history is information the model weighs. The
+// block describes the last brew and names both honest answers.
+test("the information block carries the base numbers, the quotable basedOn and BOTH honest answers — no rule", () => {
+  const conv = C.formatConvergenceInfo(C.deriveConvergence([S_1001]), { targetWaterGrams: 352 });
+  assert.match(conv, /THIS COFFEE'S LAST BREW WORKED \(4★/);
   assert.match(conv, /22g : 352g \(1:16\.0\) at 97°C · grind 378° · clock 3:30/);
-  assert.match(conv, /EXACTLY ONE CHANGE/);
-  assert.match(conv, /basedOn EXACTLY to "Your V60 — Santa Domenica Beshasha \(2026-10-01\)"/);
-  assert.match(conv, /overrides RECENTLY RECOMMENDED, METHOD FIT & FRESHNESS and PORTFOLIO DIVERSITY/);
-  assert.ok(conv.endsWith(slot));
-  assert.doesNotMatch(conv, /asked for 352g today/);
-  const scaledNote = C.formatConvergenceNote(C.deriveConvergence([S_1001]), { explorationSlot: slot, targetWaterGrams: 450 });
-  assert.match(scaledNote, /asked for 450g today .* SAME ratio/);
+  assert.match(conv, /basedOn "Your V60 — Santa Domenica Beshasha \(2026-10-01\)"/);
+  assert.match(conv, /Two honest answers/);
+  assert.match(conv, /Your call/);
+  assert.doesNotMatch(conv, /EXACTLY ONE CHANGE|RULE|overrides|must/i);
+  assert.doesNotMatch(conv, /asked for 352 g today/);
+  const scaledNote = C.formatConvergenceInfo(C.deriveConvergence([S_1001]), { targetWaterGrams: 450 });
+  assert.match(scaledNote, /asked for 450 g .* keeps the ratio and the pour count/);
+  // Comandante: the grinds in the block come in clicks.
+  const clicks = C.formatConvergenceInfo(C.deriveConvergence([S_1001]), { targetWaterGrams: 352, grinder: "Comandante C40" });
+  assert.match(clicks, /grind 22 clicks \(extrapolated\)/);
+  assert.doesNotMatch(clicks, /378°/);
 
-  const div = C.formatConvergenceNote(C.deriveConvergence([S_1003]), { explorationSlot: slot });
-  assert.match(div, /LAST BREW OF THIS COFFEE MISSED \(3★/);
-  assert.match(div, /NOT a baseline/);
-  assert.ok(div.endsWith(slot));
-  assert.ok(C.formatConvergenceNote({ kind: "first" }, { explorationSlot: slot }).endsWith(slot));
-  assert.ok(C.formatConvergenceNote({ kind: "unrated", count: 2 }, { explorationSlot: slot }).endsWith(slot));
+  const div = C.formatConvergenceInfo(C.deriveConvergence([S_1003]), {});
+  assert.match(div, /THIS COFFEE'S LAST BREW MISSED \(3★/);
+  assert.match(div, /Two honest answers/);
+  assert.doesNotMatch(div, /NOT a baseline|must/);
+  assert.match(C.formatConvergenceInfo({ kind: "first" }), /first brew of this bag/);
+  assert.match(C.formatConvergenceInfo({ kind: "unrated", count: 2 }), /brew 3 of this bag/);
 });
 
-test("recommend.ts is wired: derives the state, builds the arc from it, checks candidate 1, protects the base from the recency levers", async () => {
+test("recommend.ts is wired: derives the state, builds the information block from it, and checks nothing", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(src, /from "\.\/convergence"/, "must import the module");
   assert.match(src, /deriveConvergence\(sessionsForThisCoffee\)/, "must derive the state from THIS coffee's sessions");
-  assert.match(src, /const sessionArcNote = formatConvergenceNote\(convergence,/, "the arc text must come from the state");
-  assert.match(src, /explorationSlot:\s*EXPLORATION_SLOT/, "the exploration slot is always on");
-  assert.match(src, /checkConvergence\(convergence, raw\.candidates\[0\]\)/, "candidate 1 must be checked");
-  assert.match(src, /repairs\.push\(formatConvergenceRepair\(convergence, violation\)\)/, "the convergence repair joins the single merged repair call");
-  assert.doesNotMatch(src, /callRecommendModel\(\s*userMessage \+ formatConvergenceRepair/, "no standalone convergence-repair call");
-  assert.match(src, /recentReferenceNames\(pastSessions\)\.filter\(\(n\) => !isProtectedName\(n\)\)/, "the base's names are exempt from recent-reference demotion");
-  assert.match(src, /demoteBrewers:\s*freshnessBrewers/, "the base's brewer is exempt from menu demotion");
-  assert.match(src, /convergeBase \? \[\.\.\.ownReferenceNamesForTurn, convergeBase\.name\]/, "the base name counts as a menu name (repeat guard + binding)");
-  // The count-based arc is gone.
+  assert.match(src, /const sessionArcNote = formatConvergenceInfo\(convergence,/, "the block text must come from the state");
+  assert.match(src, /\+ EXPLORATION_SLOT/, "the exploration slot is always on");
+  assert.doesNotMatch(src, /checkConvergence|formatConvergenceRepair|isProtectedName|freshnessBrewers|demoteBrewers/, "no rule, no repair, no demotion");
+  assert.match(src, /convergeBase \? \[\.\.\.ownReferenceNamesForTurn, convergeBase\.name\]/, "the base name counts as a menu name (binding log)");
   assert.doesNotMatch(src, /Don't recycle what worked; push the boundary/);
   assert.doesNotMatch(src, /Expert territory\. Find the ceiling/);
 });

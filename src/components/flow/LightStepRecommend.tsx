@@ -6,6 +6,7 @@ import LightFlowShell from "@/components/ui/light/LightFlowShell";
 import Section from "@/components/ui/light/Section";
 import Chip from "@/components/ui/light/Chip";
 import CTA from "@/components/ui/light/CTA";
+import Footnote from "@/components/ui/light/Footnote";
 import { formatSeconds, formatDuration } from "@/lib/utils/formatTime";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import LiquidHeadline, { liquidEntranceMs, liquidExitMs } from "@/components/ui/light/LiquidHeadline";
@@ -87,7 +88,7 @@ function appliedLine(a: Recommendation["userRequestApplied"]): string {
 }
 
 export default function LightStepRecommend() {
-  const { draft, setStep, isRecommending, recommendError, setBrew } = useFlowStore();
+  const { draft, setStep, isRecommending, recommendError, setBrew, answerGrinderSuggestion } = useFlowStore();
   const rec = draft.recommendation;
   // Status walk for the loading screen — the real factors going into the recipe
   // for THIS coffee/context (personalized where the scanned bag has the data).
@@ -171,6 +172,13 @@ export default function LightStepRecommend() {
   const isColdSteep = (activeRecipe?.targetTimeSec ?? 0) >= 3600;
   const activeMethod = active?.method;
   const activeMethodLabel = activeMethod;
+  // The grinder this brew is set up with, before any accepted proposal.
+  const currentGrinderLabel = (() => {
+    const sug = active?.grinderSuggestion;
+    const base = sug?.accepted ? sug.previousGrinder || draft.context?.grinder : draft.context?.grinder;
+    if (base && base.trim()) return base;
+    return sug?.grinder === "Niche Zero" ? "Comandante C40" : "Niche Zero";
+  })();
 
   const handleUse = () => {
     if (!activeMethod || !activeRecipe) return;
@@ -316,6 +324,36 @@ export default function LightStepRecommend() {
             </div>
             <RecipeStat label={isColdSteep ? "Steep" : "Time"} value={formatDuration(activeRecipe.targetTimeSec)} />
           </div>
+
+          {/* The model proposed the other grinder for this brew (owner,
+              2026-10-19). One tap decides; the recipe's grind flips unit,
+              nothing is regenerated. Default = the grinder the brew is set up
+              with. */}
+          {active?.grinderSuggestion && (
+            <div className="border-t border-light-foreground/10 pt-4">
+              <p className="label-eyebrow mb-3">Grinder</p>
+              <div className="flex flex-wrap gap-2">
+                <Chip
+                  size="sm"
+                  selected={!active.grinderSuggestion.accepted}
+                  onClick={() => answerGrinderSuggestion(selectedIdx, false)}
+                >
+                  {currentGrinderLabel} · {active.grinderSuggestion.accepted ? active.grinderSuggestion.grindSize : activeRecipe.grindSize}
+                </Chip>
+                <Chip
+                  size="sm"
+                  selected={Boolean(active.grinderSuggestion.accepted)}
+                  onClick={() => answerGrinderSuggestion(selectedIdx, true)}
+                >
+                  {active.grinderSuggestion.grinder} · {active.grinderSuggestion.accepted ? activeRecipe.grindSize : active.grinderSuggestion.grindSize}
+                  {active.grinderSuggestion.extrapolated ? " (extrapolated)" : ""}
+                </Chip>
+              </div>
+              <Footnote>
+                {active.grinderSuggestion.grinder} would fit: {active.grinderSuggestion.reason}
+              </Footnote>
+            </div>
+          )}
 
           {/* Cold brew is a long steep, not timed pours — show the method as a
               simple ordered list (the pour-math table is meaningless here). */}

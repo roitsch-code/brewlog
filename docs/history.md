@@ -8,6 +8,13 @@
 
 ### ✅ Done
 
+#### 2026-10-19 — Every brewer on the table; preferences as information (PR A of the restart)
+- **Reported (owner):** "Brewer werden nicht in die Selection mit aufgenommen, weil du dir irgendeine Regel aufgebaut hast." And: all brewers are equal, each with a role and a limit; taste is a preference, never a rule; the Comandante is a real option, not a travel grinder; the Origami is the Air S (350 ml).
+- **Measured:** `menu-coverage.baseline.json` — AeroPress, Moccamaster, Origami wave on 0 of 360 Small menus, Chemex on 54; four hard filters in `selectRecipes` (±20 % batch window, vessel, one Orea, Special ceiling), 14 guard steps after the model, 6 of them dropping candidates, a user message of 34 blocks with ≥18 phrased as rules; `CANONICAL_PROFILE` never reached /recommend at all.
+- **Shipped:** `knowledge/brewers.ts` (roles + `VESSEL_CAPS` limits, the YOUR BREWERS block), `knowledge/recipes/menu.ts` (`buildBrewerMenu`: one entry per brewer, best-fit recipe, scale factor, reach path, recency; 8 least-recently-offered lead in full; cached REFERENCE RECIPE INDEX as a second system block), `preferenceBlock.ts`, `brewerRecency`, `formatConvergenceInfo`; deleted `repeatGuard.ts`, `guardVolumeTarget`, `guardSpecialTime`, `vesselCannotServe`, the convergence/shown/Chemex repairs, the FORBIDDEN list, "Primary brewer", "travel grinder", "dark = avoid", "anaerobic avoid"; `grinderSuggestion` (model proposes the Comandante with a reason, two chips on the recipe screen, `applyGrinderAnswer`); six prompt blocks render grind in the brew's grinder unit; Origami 500 → 350.
+- **Verified:** `tsc`, 653 dataflow tests (new: `brewer-menu`, `preferences-reach-recommend`, `grinder-suggestion`; deleted: `menu-coverage`, `method-rotation`, `orea-menu`, `repeat-guard`), corpus validator. **NOT verified:** what Opus does with the new menu on real brews — read BREWER MIX and the offered candidates in `recommend-logs` after the next brews; the `grinderSuggestion` has never been emitted by the model yet.
+
+
 **Orea back on the menu, on the bottom that fits (2026-10-19)**
 - **Reported:** "Warum werden keine Orea Rezepte mehr angeboten?" — and: the four bottoms are for different contexts.
 - **Measured:** recommend-logs (branch run 2026-10-19, 09:08 Düsseldorf): 0 Orea candidates in the 8 unlocked recommendations after 10-10, regular before. Cause: #621's ±20 % batch window; the Orea set was single-cup, so at 450 g only Dara for Two (Open) was eligible — the real selector put an Orea on 0 of 50 Big washed-sweetness menus.

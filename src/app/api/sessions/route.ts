@@ -66,6 +66,11 @@ const SessionPostSchema = z.object({
     location: z.string().max(300).optional(),
     methodServed: z.string().max(100).optional(),
   }).optional(),
+  // Both stay loose records ON PURPOSE: `context.grinder` (the grinder the brew
+  // was made with, incl. an accepted Comandante proposal) and
+  // `recommendation.candidates[].grinderSuggestion` (the proposal + its
+  // accepted flag) ride through here untouched. Pinned by
+  // tests/dataflow/grinder-suggestion.test.mjs.
   context: z.record(z.string(), z.unknown()).optional(),
   recommendation: z.record(z.string(), z.unknown()).optional(),
   brew: z.object({

@@ -66,7 +66,14 @@ function anthropic(): Anthropic {
   return anthropicClient;
 }
 
-async function callAnthropic(userMessage: string): Promise<{ text: string; usage: RecommendUsage }> {
+export interface CallOptions {
+  /** Process-constant blocks appended to the system prompt, each its own
+   * cache breakpoint (the REFERENCE RECIPE INDEX since 2026-10-19). Must be
+   * byte-identical across calls or the cache never hits. */
+  cachedBlocks?: string[];
+}
+
+async function callAnthropic(userMessage: string, opts: CallOptions = {}): Promise<{ text: string; usage: RecommendUsage }> {
   const res = await anthropic().messages.create({
     model: RECOMMEND_MODEL,
     max_tokens: MAX_TOKENS,
@@ -83,14 +90,17 @@ async function callAnthropic(userMessage: string): Promise<{ text: string; usage
     // and the deterministic guards (capacity, volume, fidelity, grind-unit,
     // drip-assist) are the net underneath. Pinned by
     // tests/dataflow/recommend-request-shape.test.mjs.
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+    system: [
+      { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+      ...(opts.cachedBlocks ?? []).map((text) => ({ type: "text" as const, text, cache_control: { type: "ephemeral" as const } })),
+    ],
     messages: [{ role: "user", content: userMessage }],
   });
   const text = res.content[0]?.type === "text" ? res.content[0].text : "{}";
   return { text, usage: { input_tokens: res.usage.input_tokens, output_tokens: res.usage.output_tokens } };
 }
 
-async function callMistral(userMessage: string): Promise<{ text: string; usage: RecommendUsage }> {
+async function callMistral(userMessage: string, opts: CallOptions = {}): Promise<{ text: string; usage: RecommendUsage }> {
   const res = await fetch("https://api.mistral.ai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -111,7 +121,7 @@ async function callMistral(userMessage: string): Promise<{ text: string; usage: 
       // JSON mode keeps the structured output the parser expects.
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: [SYSTEM_PROMPT, ...(opts.cachedBlocks ?? [])].join("\n\n") },
         { role: "user", content: userMessage },
       ],
     }),
@@ -138,18 +148,18 @@ async function callMistral(userMessage: string): Promise<{ text: string; usage: 
  * the rules above and falls back to Opus on a Mistral error. The caller parses +
  * validates the returned text exactly as before (provider-agnostic).
  */
-export async function callRecommendModel(userMessage: string): Promise<RecommendResult> {
+export async function callRecommendModel(userMessage: string, opts: CallOptions = {}): Promise<RecommendResult> {
   if (selectProvider() === "anthropic") {
-    return { ...(await callAnthropic(userMessage)), provider: "anthropic" };
+    return { ...(await callAnthropic(userMessage, opts)), provider: "anthropic" };
   }
   try {
-    return { ...(await callMistral(userMessage)), provider: "mistral" };
+    return { ...(await callMistral(userMessage, opts)), provider: "mistral" };
   } catch (err) {
     console.warn(
       `[recommend] Mistral call failed, falling back to Opus for this request: ${String(
         (err as Error)?.message ?? err,
       ).slice(0, 160)}`,
     );
-    return { ...(await callAnthropic(userMessage)), provider: "anthropic-fallback" };
+    return { ...(await callAnthropic(userMessage, opts)), provider: "anthropic-fallback" };
   }
 }

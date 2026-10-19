@@ -5,7 +5,7 @@
 // prompt forbidding it.
 //
 // Caps are owner-measured (2026-08-31), min AND max per vessel:
-//   AeroPress ≤230 · Clever ≤450 · Origami ≤500 · Kalita ≤450 · Orea ≤450
+//   AeroPress ≤230 · Clever ≤450 · Origami ≤350 (Air S) · Kalita ≤450 · Orea ≤450
 //   V60 ≤550 · Chemex 350–750 · Moccamaster 500–1000 · Cold-brew jar ≤1000
 //
 //   node --test tests/dataflow/vessel-capacity.test.mjs
@@ -20,7 +20,7 @@ import { join } from "node:path";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const entry = `export { vesselOverflow, vesselCannotServe } from ${JSON.stringify(
+const entry = `export { vesselOverflow } from ${JSON.stringify(
   path.join(ROOT, "src/lib/utils/vesselCapacity.ts"),
 )};`;
 const dir = await mkdtemp(join(tmpdir(), "vessel-"));
@@ -33,12 +33,12 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { vesselOverflow, vesselCannotServe } = await import(pathToFileURL(out).href);
+const { vesselOverflow } = await import(pathToFileURL(out).href);
 
 test("recipes within a vessel's window pass", () => {
   assert.equal(vesselOverflow("AeroPress", 200), null);
   assert.equal(vesselOverflow("Clever Dripper", 450), null); // exactly at max
-  assert.equal(vesselOverflow("Origami Air M", 500), null); // Origami now 500
+  assert.equal(vesselOverflow("Origami Air S", 350), null); // the Air S holds 350
   assert.equal(vesselOverflow("Kalita Wave", 450), null);
   assert.equal(vesselOverflow("Orea Classic", 450), null);
   assert.equal(vesselOverflow("V60", 550), null); // V60 now capped at 550
@@ -78,50 +78,12 @@ test("method match is case-insensitive and substring", () => {
   assert.equal(vesselOverflow("V60 (no Assist)", 350), null);
 });
 
-// vesselCannotServe — the SERVE guard (both directions). Catches a vessel that
-// physically can't serve the requested volume: above its max (the "450ml →
-// 180ml AeroPress" clamp bug) OR below a batch brewer's min (a 350ml Moccamaster).
-test("vessel too small for the requested volume is flagged", () => {
-  assert.match(vesselCannotServe("AeroPress", 450) ?? "", /AeroPress/);
-  assert.match(vesselCannotServe("Clever Dripper", 600) ?? "", /Clever/);
-  assert.match(vesselCannotServe("Origami Air M", 520) ?? "", /Origami/); // 520 > 500
-  assert.match(vesselCannotServe("Kalita Wave", 500) ?? "", /Kalita/); // 500 > 450
-});
-
-test("batch brewer below its min is flagged (single-cup on a Moccamaster)", () => {
-  assert.match(vesselCannotServe("Moccamaster", 350) ?? "", /Moccamaster/); // < 500
-  assert.match(vesselCannotServe("Chemex", 300) ?? "", /Chemex/); // < 350
-});
-
-test("the 450ml everyday amount keeps the owner's pour-over kit", () => {
-  // At the new "Big" = 450ml preset, these must all SERVE it (nothing excluded).
-  assert.equal(vesselCannotServe("V60", 450), null);
-  assert.equal(vesselCannotServe("Orea Classic", 450), null); // exactly at max
-  assert.equal(vesselCannotServe("Kalita Wave", 450), null); // exactly at max
-  assert.equal(vesselCannotServe("Clever Dripper", 450), null); // exactly at max
-  assert.equal(vesselCannotServe("Origami (cone)", 450), null);
-  assert.equal(vesselCannotServe("Chemex", 450), null);
-  // …and these two correctly drop out at 450.
-  assert.match(vesselCannotServe("AeroPress", 450) ?? "", /AeroPress/);
-  assert.match(vesselCannotServe("Moccamaster", 450) ?? "", /Moccamaster/);
-});
-
-test("vessel that CAN serve the volume is not flagged", () => {
-  assert.equal(vesselCannotServe("V60", 500), null);
-  assert.equal(vesselCannotServe("Chemex", 750), null); // exactly at max
-  assert.equal(vesselCannotServe("Chemex", 350), null); // exactly at min
-  assert.equal(vesselCannotServe("AeroPress", 200), null);
-});
-
-test("serve guard accepts BrewerType ids (corpus-filter path)", () => {
-  assert.match(vesselCannotServe("aeropress-prismo", 450) ?? "", /AeroPress/);
-  assert.match(vesselCannotServe("origami-cone", 520) ?? "", /Origami/);
-  assert.equal(vesselCannotServe("v60", 450), null);
-  assert.equal(vesselCannotServe("orea-classic", 450), null);
-});
-
-test("serve guard: missing / non-finite inputs are safe (return null)", () => {
-  assert.equal(vesselCannotServe(undefined, 450), null);
-  assert.equal(vesselCannotServe("AeroPress", undefined), null);
-  assert.equal(vesselCannotServe("AeroPress", NaN), null);
+// vesselCannotServe (the selector's hard filter) was removed 2026-10-19: a
+// vessel smaller than the amount is information on the menu, never a reason
+// to hide the brewer (src/lib/knowledge/brewers.ts reachFor).
+test("the serve filter is gone; the module exports only the overflow check", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = await readFile(path.join(ROOT, "src/lib/utils/vesselCapacity.ts"), "utf8");
+  assert.doesNotMatch(src, /export function vesselCannotServe/);
+  assert.match(src, /Origami", maxMl: 350/, "the Origami Air S holds 350 ml (owner, 2026-10-19)");
 });

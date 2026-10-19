@@ -32,7 +32,7 @@ await build({
   stdin: {
     contents: `
       export { selectRecipes, occasionAffinity, getRecipeById, ALL_RECIPES, brewersAvailableFromEquipment, CANONICAL_EQUIPMENT, normaliseGoal, normaliseRoastLevel, normaliseProcess } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
-      export { guardSpecialTime, SPECIAL_MAX_SEC } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/timeBudget.ts"))};
+      export { specialTimeNote, SPECIAL_MAX_SEC } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/timeBudget.ts"))};
     `,
     resolveDir: ROOT,
     loader: "ts",
@@ -65,8 +65,7 @@ const select = (c, goal, occasion, extra = {}) =>
       variety: c.variety,
       goal: M.normaliseGoal(goal),
       occasion,
-      maxWaterMl: 350,
-      serveVolumeMl: 350,
+      targetWaterGrams: 350,
       rotationSeed: 1,
       ...extra,
     },
@@ -106,7 +105,10 @@ test("occasionAffinity implements each footnote", () => {
   const r = (id) => M.getRecipeById(id);
   // Morning Ritual — "a slower, deliberate pour": multi-pour percolation, >= 3 min.
   assert.equal(M.occasionAffinity(r("kasuya-4-6-standard"), "morning-ritual"), 1);
-  assert.equal(M.occasionAffinity(r("hoffmann-clever-ultimate"), "morning-ritual"), 0, "immersion is not a deliberate pour");
+  // 2026-10-19: the brewer CLASS no longer decides — only the recipe's shape.
+  const clever = r("hoffmann-clever-ultimate");
+  const cleverPours = clever.pourSequence.filter((s) => s.action === "pour").length;
+  assert.equal(M.occasionAffinity(clever, "morning-ritual"), cleverPours >= 3 && clever.totalTimeSec >= 180 ? 1 : 0, "immersion is judged by shape, never excluded by class");
   assert.equal(M.occasionAffinity(r("wbrc-2019-du"), "morning-ritual"), 0, "a 1:45 fast recipe is not slow");
   // Deep Focus — "a clean, mid-strength cup": ratio 1:15–1:17, no bypass concentrate.
   assert.equal(M.occasionAffinity(r("hoffmann-v60-better-one-cup"), "focus"), 1);
@@ -144,34 +146,23 @@ test("Experiment steers away from brewers already used on this bag", () => {
   assert.ok(withHistory < plain, `expected fewer V60/Kalita once they were brewed on this bag (${plain} → ${withHistory})`);
 });
 
-test("Special (fast shot) keeps the menu to fast recipes, and never empties it", () => {
-  for (const c of COFFEES) {
-    const sel = select(c, "balanced", "morning-ritual", { timeAvailable: "special" });
-    assert.ok(sel.length >= 2, "the Special menu must not be empty");
-    for (const s of sel) assert.ok(s.recipe.totalTimeSec <= M.SPECIAL_MAX_SEC, `${s.recipe.id} is ${s.recipe.totalTimeSec}s`);
-  }
-  // Legacy "quick" is the same bucket.
-  const legacy = select(COFFEES[0], "balanced", "focus", { timeAvailable: "quick" });
-  for (const s of legacy) assert.ok(s.recipe.totalTimeSec <= M.SPECIAL_MAX_SEC);
+// 2026-10-19: Special is INFORMATION ("he has about three minutes"), never a
+// menu filter and never a drop. The menu is the same whatever the bucket.
+test("Special (fast shot) is a note to the model, not a filter on the menu", () => {
+  const normal = select(COFFEES[0], "balanced", "focus").map((s) => s.recipe.id);
+  const special = select(COFFEES[0], "balanced", "focus", { timeAvailable: "special" }).map((s) => s.recipe.id);
+  assert.deepEqual(special, normal, "the time bucket no longer touches the selector");
+  assert.match(M.specialTimeNote("special"), /about 3 minutes/);
+  assert.match(M.specialTimeNote("quick"), /about 3 minutes/, 'legacy "quick" is the same bucket');
+  assert.equal(M.specialTimeNote("normal"), "");
+  assert.doesNotMatch(M.specialTimeNote("special"), /drop|must/i);
 });
 
-test("guardSpecialTime drops slow candidates on a Special brew, keeps all if all are slow", () => {
-  const cand = (title, targetTimeSec) => ({ method: "V60", title, recipe: { targetTimeSec } });
-  const kept = M.guardSpecialTime([cand("fast", 150), cand("slow", 260)], "special");
-  assert.deepEqual(kept.map((c) => c.title), ["fast"]);
-  const allSlow = M.guardSpecialTime([cand("a", 240), cand("b", 260)], "special");
-  assert.equal(allSlow.length, 2, "never leave the user with no recipe");
-  const normal = M.guardSpecialTime([cand("slow", 260)], "normal");
-  assert.equal(normal.length, 1, "no-op outside Special");
-});
-
-test("recommend.ts wires occasion history, the time bucket and the Special guard", async () => {
+test("recommend.ts wires occasion history and the Special note; no Special guard", async () => {
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(src, /brewedOnThisCoffee\s*[,:]/, "selector must receive brewedOnThisCoffee");
-  assert.match(src, /timeAvailable:\s*context\.timeAvailable/, "selector must receive the time bucket");
-  assert.match(src, /guardSpecialTime\(/, "the post-parse Special guard must run");
-  // Since 2026-10-03 the exploration slot is ALWAYS on (slot 2, from brew 1,
-  // every occasion) — it is passed to the arc builder unconditionally.
-  assert.match(src, /explorationSlot:\s*EXPLORATION_SLOT/, "the exploration slot must be handed to the arc unconditionally");
+  assert.match(src, /specialTimeNote\(context\.timeAvailable\)/, "the Special note must reach the user message");
+  assert.doesNotMatch(src, /guardSpecialTime\(/, "no post-parse Special drop");
+  assert.match(src, /\+ EXPLORATION_SLOT/, "the exploration slot must be appended unconditionally");
   assert.doesNotMatch(src, /explorationAlways/, "the Experiment-only gate on the exploration slot is gone");
 });

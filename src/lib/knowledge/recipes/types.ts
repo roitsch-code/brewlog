@@ -202,4 +202,7 @@ export interface Recipe {
   verified: boolean;
   /** Caveats, known variants, source disagreements. */
   notes?: string;
+  /** ISO date the entry entered the corpus (the recipe scout writes it).
+   * Entries within NEW_RECIPE_DAYS are marked "NEW this month" on the menu. */
+  addedAt?: string;
 }

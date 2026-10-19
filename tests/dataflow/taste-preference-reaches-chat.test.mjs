@@ -100,7 +100,8 @@ test("the flavour dislike is distinguished from the process/roast Avoids line", 
   // A washed or honey coffee can be loudly pineapple and pass the existing
   // Avoids filter, which is about processing and roast. If the two lines ever
   // collapse into one, that distinction is what gets lost.
-  assert.match(block, /Avoids: extreme fermentation/, "the original process filter stays");
+  assert.match(block, /Has not enjoyed so far: extreme fermentation/, "the process/roast preference stays — as a preference, not a filter (2026-10-19)");
+  assert.match(block, /a preference he weighs, never a rule you enforce/i);
   assert.match(
     block,
     /FLAVOUR/,

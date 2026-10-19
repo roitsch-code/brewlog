@@ -218,35 +218,12 @@ export function buildOwnReferences(
 }
 
 /**
- * Format the own-reference block.
- *
- * `recentlyRecommended` — reference names that already appeared in the last few
- * sessions' candidates. An entry that matches gets an explicit "you have just
- * been served this, vary from it" marker. Without that, this block and the
- * RECENTLY RECOMMENDED note in the same user message pull in opposite
- * directions: one said "repeating a result they already loved is usually the
- * right answer" while the other asked for different references — and the
- * instruction carrying concrete numbers wins that argument every time.
- *
- * `dominantFamilies` — brewer-family keys (brewMethodKey form) that have led the
- * recent recommendation sets. A reference on a dominant family gets a WITHIN-
- * category "you have brewed this a lot lately, vary the recipe/technique" nudge
- * — never a cross-category "switch to a pour-over" push (immersion and pour-over
- * are not interchangeable). Fit still decides the category.
+ * YOUR OWN BREWS THAT SCORED WELL — the owner's ≥4★ brews beside the corpus.
+ * Information only since 2026-10-19: no "don't re-serve" tags, no dominance
+ * nudges — the model reads the brews and decides.
  */
-export function formatOwnReferencesForPrompt(
-  refs: OwnReference[],
-  recentlyRecommended: string[] = [],
-  dominantFamilies: Set<string> = new Set(),
-): string {
+export function formatOwnReferencesForPrompt(refs: OwnReference[]): string {
   if (refs.length === 0) return "";
-  const seenRecently = (name: string): boolean =>
-    recentlyRecommended.some((r) => {
-      const a = r.toLowerCase().trim();
-      const b = name.toLowerCase().trim();
-      if (!a || !b) return false;
-      return a === b || (a.length >= 6 && b.includes(a)) || (b.length >= 6 && a.includes(b));
-    });
   const lines = refs.map((r, i) => {
     const timing = [
       r.targetTimeSec ? `target ${mmss(r.targetTimeSec)}` : "",
@@ -260,16 +237,8 @@ export function formatOwnReferencesForPrompt(
         : r.relevance === 2
           ? "same origin + process"
           : "same brewer, different coffee";
-    const familyDominant = dominantFamilies.has(brewMethodKey(r.method));
-    const staleness = seenRecently(r.name)
-      ? " — ALREADY RECOMMENDED RECENTLY: build on it, don't re-serve it"
-      : familyDominant
-        ? r.category === "immersion"
-          ? " — YOU HAVE BREWED THIS IMMERSION APPROACH A LOT LATELY: if the bean still calls for immersion, vary the recipe/technique (bloom-first vs water-first, dose, grind) rather than re-serving this identical one. Do NOT switch to a pour-over just to be different — let fit decide the category."
-          : " — YOU HAVE BREWED THIS POUR-OVER A LOT LATELY: if the bean still calls for pour-over, vary the recipe/technique rather than re-serving this identical one. Do NOT switch to immersion just to be different — let fit decide the category."
-        : "";
     return [
-      `${i + 1}. ${r.name} — ${r.rating}★ (${scope})${staleness}`,
+      `${i + 1}. ${r.name} — ${r.rating}★ (${scope})`,
       `   ${r.doseGrams}g : ${r.waterGrams}g${r.waterTempC ? ` at ${r.waterTempC}°C` : ""}${r.grindSize ? ` · grind ${r.grindSize}` : ""}${timing ? ` · ${timing}` : ""}`,
       `   Pours: ${r.pourPlan}`,
       r.notes ? `   You wrote: "${r.notes.slice(0, 160)}"` : "",
@@ -280,7 +249,5 @@ export function formatOwnReferencesForPrompt(
 
   return `\nYOUR OWN BREWS THAT SCORED WELL (${refs.length}) — the user's real logged brews on their own kit, water and palate, rated ${MIN_RATING}★ or better. They rank alongside the documented recipes above, not below them: a documented recipe is evidence about coffee in general, one of these is evidence about THIS user.
 
-Treat one as a BASELINE TO BUILD ON, not a recipe to re-serve. A 4.5★ brew is the most informative thing in this prompt precisely because it already worked — so the useful question is "what is still missing from a 5★?", and the answer is a deliberate, named change to ONE variable, with the rest held steady so the comparison means something. Say what you changed and why.
-Re-serve one essentially unchanged only when the user asked to repeat it, or when this is the same bag in the same context AND the entry is not marked as recently recommended. You may name it in basedOn exactly as written.
-Do NOT copy one whose rating merely tied with a better-matching documented recipe, and never present it as authoritative on technique — it is one brew, not a published method.\n\n${lines.join("\n\n")}`;
+A 4.5★ brew is the most informative thing in this prompt precisely because it already worked. Building on it with one deliberate, named change is one good answer; something genuinely new is another — the choice is yours and whyChosen says why. You may name one in basedOn exactly as written. Never present one as authoritative on technique — it is one brew, not a published method.\n\n${lines.join("\n\n")}`;
 }

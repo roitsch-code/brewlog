@@ -12,15 +12,17 @@
  *   chemexcoffeemaker.com/pages/faq — "Use a medium coarse grind." and, when
  *   the coffee is "filtering slowly", "Use a coarser grind."
  *
- * The deterministic check enforces only that direction: a Chemex candidate may
- * not be ground at or finer than a measured setting that ran over its plan at
- * this batch. How far coarser is a measurement brew, said so in the recipe.
+ * Since 2026-10-19 this is information only — the repair that sent a candidate
+ * back for grinding at or finer than a slow setting was dropped with the
+ * other orchestration guards. The model reads the measurements and the
+ * published direction and decides.
  */
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { brewersFromMethod } from "../knowledge/recipes/helpers";
 import { batchWithinWindow } from "../recipe/batchWindow";
 import { grindStringToDegrees } from "./measuredGrind";
+import { grindInUnit } from "../knowledge/recipes/helpers";
 
 export const CHEMEX_FAQ_URL = "https://www.chemexcoffeemaker.com/pages/faq";
 /** A logged total this far over its planned clock counts as "filtering slowly". */
@@ -79,35 +81,18 @@ export function slowestFloorDeg(ms: ChemexMeasurement[]): number | null {
   return over.length ? Math.max(...over) : null;
 }
 
-export function formatMeasuredChemexBlock(ms: ChemexMeasurement[], waterGrams: number): string {
+export function formatMeasuredChemexBlock(ms: ChemexMeasurement[], waterGrams: number, grinder?: string): string {
   const head = `\nCHEMEX AT THIS BATCH (${waterGrams} g) — the owner's MEASURED Chemex brews only. No published source gives a Niche° value for a Chemex at this batch (the Chemex recipes that publish a measurable grind stop at 34 g / 550 g), and no source gives seconds per degree, so do NOT take a Chemex grind from the NICHE° table or scale one from the V60. Chemex's own rule (${CHEMEX_FAQ_URL}): "Use a medium coarse grind"; when the coffee is filtering slowly, "Use a coarser grind."`;
   if (!ms.length) {
     return `${head}\n- No measured Chemex brew at this batch yet. A Chemex candidate's grind is a MEASUREMENT BREW: say so in whyChosen ("measurement brew — first logged Chemex at ${waterGrams} g").`;
   }
   const lines = ms.slice(0, 5).map((m) => {
     const plan = m.plannedSec ? ` vs planned ${m.plannedSec} s (${m.actualSec > m.plannedSec ? "+" : ""}${Math.round(m.actualSec - m.plannedSec)} s)` : "";
-    return `- ${m.date}: ${m.grind}, ${m.doseGrams ?? "?"} g / ${Math.round(m.waterGrams)} g, logged total ${Math.round(m.actualSec)} s${plan}${m.rating ? `, ${m.rating}★` : ""}${ranOver(m) ? " — RAN SLOW" : ""}`;
+    return `- ${m.date}: ${m.grindDeg !== null ? grindInUnit(Math.round(m.grindDeg), grinder) : m.grind}, ${m.doseGrams ?? "?"} g / ${Math.round(m.waterGrams)} g, logged total ${Math.round(m.actualSec)} s${plan}${m.rating ? `, ${m.rating}★` : ""}${ranOver(m) ? " — RAN SLOW" : ""}`;
   });
   const floor = slowestFloorDeg(ms);
   const rule = floor !== null
-    ? `\nRULE: a Chemex candidate at this batch MUST be ground coarser than ${Math.round(floor)}° (that setting ran slow). How much coarser is not published anywhere — it is a MEASUREMENT BREW: name the measured brew it moves from and say "measurement brew" in whyChosen.`
+    ? `\n${grindInUnit(Math.round(floor), grinder)} ran slow at this batch; Chemex's published direction for that is coarser. How much coarser is not published anywhere — a move is a MEASUREMENT BREW: name the measured brew it moves from and say "measurement brew" in whyChosen.`
     : `\nA Chemex candidate starts from these measured settings; if it moves the grind, say "measurement brew" in whyChosen and name the brew it moves from.`;
   return `${head}\n${lines.join("\n")}${rule}`;
-}
-
-/** Candidates that break the measured direction: Chemex at or finer than a
- * setting that ran slow at this batch. Feeds the single repair round. */
-export function findTooFineChemex(
-  candidates: { title?: string; method: string; recipe: Record<string, unknown> }[],
-  floorDeg: number | null,
-): { index: number; title: string; grind: string }[] {
-  if (floorDeg === null) return [];
-  const out: { index: number; title: string; grind: string }[] = [];
-  candidates.forEach((c, index) => {
-    if (!isChemex(c.method)) return;
-    const g = typeof c.recipe?.grindSize === "string" ? c.recipe.grindSize : "";
-    const deg = grindStringToDegrees(g);
-    if (deg !== null && deg <= floorDeg) out.push({ index, title: c.title ?? c.method, grind: g });
-  });
-  return out;
 }

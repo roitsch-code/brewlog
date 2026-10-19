@@ -40,12 +40,12 @@ const entry = `
 export { generateRecommendation } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recommend.ts"))};
 export * as stub from "recommend-stub";
 export { resolveRecipeMention, resolveUserRequest, validateParsed, fallbackRequest, applyUserParams, formatUserRequestBlock } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/userRequest.ts"))};
-export { findReshown, parseShownCandidates } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/shownGuard.ts"))};
+export { parseShownCandidates } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/shownGuard.ts"))};
 export { resolveReference } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
 export { selectRecipes, brewersAvailableFromEquipment, CANONICAL_EQUIPMENT } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
 export { batchGrindDeltaDeg, NICHE_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/constants/grindSettings.ts"))};
 export { GRIND_DEG_PER_DOUBLING } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/scaleRecipe.ts"))};
-export { measuredChemexAtBatch, slowestFloorDeg, findTooFineChemex } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/measuredChemex.ts"))};
+export { measuredChemexAtBatch, slowestFloorDeg, ranOver } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/measuredChemex.ts"))};
 `;
 const out = join(dir, "m.mjs");
 await build({
@@ -134,31 +134,13 @@ test("a shown reference is off the menu; the requested one stays", () => {
   const base = {
     brewersAvailable: M.brewersAvailableFromEquipment(M.CANONICAL_EQUIPMENT),
     lockedBrewers: new Set(["v60"]),
-    maxWaterMl: 300,
     occasion: "morning-ritual",
   };
-  const menu = M.selectRecipes(base, 30).map((s) => s.recipe.id);
-  assert.ok(menu.includes("kasuya-4-6-standard"), "fixture: the 4:6 is on a 300 g V60 menu");
-  const without = M.selectRecipes({ ...base, excludeRecipeIds: new Set(["kasuya-4-6-standard"]) }, 30).map((s) => s.recipe.id);
+  const menu = M.selectRecipes(base, 100).map((s) => s.recipe.id);
+  assert.ok(menu.includes("kasuya-4-6-standard"), "fixture: the 4:6 is on a V60 menu");
+  const without = M.selectRecipes({ ...base, excludeRecipeIds: new Set(["kasuya-4-6-standard"]) }, 100).map((s) => s.recipe.id);
   assert.ok(!without.includes("kasuya-4-6-standard"));
   assert.equal(without.length, menu.length - 1);
-});
-
-test("findReshown: same reference, or same brewer + same title, is an offender; an explicit request is not", () => {
-  const shown = [{ title: "Freeform big batch", method: "Chemex", basedOn: "Freeform — Chemex 6-Cup" }, { title: "Clever water-first", method: "Clever Dripper", basedOn: "Own experiment" }];
-  const off = M.findReshown(
-    [
-      { title: "A new name", method: "Chemex", basedOn: "Freeform Chemex" },
-      { title: "Clever water-first", method: "Clever Dripper", basedOn: "Own experiment" },
-      { title: "Something else", method: "V60", basedOn: "Kasuya 4:6" },
-    ],
-    shown,
-    M.resolveReference,
-  );
-  assert.deepEqual(off.map((o) => o.index), [0, 1]);
-  const ref = M.resolveReference("Freeform Chemex");
-  assert.equal(M.findReshown([{ title: "x", method: "Chemex", basedOn: "Freeform Chemex" }], shown, M.resolveReference, new Set([ref.id])).length, 0);
-  assert.deepEqual(M.parseShownCandidates([{ title: "t", method: "V60" }, 3, null, { basedOn: 5 }]), [{ title: "t", method: "V60" }]);
 });
 
 // ── 3. Chemex ───────────────────────────────────────────────────────────────
@@ -177,10 +159,9 @@ test("Chemex: only the owner's measured brews at this batch; a slow setting sets
   const ms = M.measuredChemexAtBatch([CHEMEX_SESSION], 750);
   assert.equal(ms.length, 1);
   assert.equal(ms[0].actualSec, 440);
-  assert.equal(M.slowestFloorDeg(ms), 400, "400° ran slow → a Chemex candidate must be coarser than 400°");
+  assert.equal(M.slowestFloorDeg(ms), 400, "400° ran slow — the published direction from there is coarser");
+  assert.ok(M.ranOver(ms[0]));
   assert.equal(M.measuredChemexAtBatch([CHEMEX_SESSION], 450).length, 0, "a 750 g brew is not evidence for 450 g");
-  const bad = M.findTooFineChemex([{ title: "a", method: "Chemex", recipe: { grindSize: "400°" } }, { title: "b", method: "Chemex", recipe: { grindSize: "406°" } }, { title: "c", method: "V60", recipe: { grindSize: "380°" } }], 400);
-  assert.deepEqual(bad.map((b) => b.index), [0]);
 });
 
 test("the big-batch Chemex library entries carry no estimated Niche° number", async () => {
@@ -213,11 +194,11 @@ test("E2E: the free text reaches the prompt, leads the menu, and is enforced", a
   assert.match(prompt, /REQUESTED RECIPE: "Kasuya Super Coarse 10-Pour"/);
   assert.match(prompt, /EXCLUDED BY THE USER: Clever Dripper/);
   assert.match(prompt, /water temperature 92°C/);
-  assert.match(prompt, /Equipment available: V60, Chemex\n/, "the excluded brewer leaves the equipment line too");
-  // The requested recipe is entry 1 of the menu, scaled though it is published at 300 g.
-  const menu = prompt.slice(prompt.indexOf("RELEVANT REFERENCE RECIPES ("));
-  assert.match(menu, /\n1\. [^\n]*Kasuya Super Coarse 10-Pour/);
-  assert.doesNotMatch(menu.slice(0, menu.indexOf("AVAILABLE TECHNIQUES")), /Hoffmann Ultimate Clever|brewer: clever/i);
+  assert.doesNotMatch(prompt.match(/Equipment available:[^\n]*/)[0], /Clever/, "the excluded brewer leaves the equipment line too");
+  // The requested recipe leads as entry 0, scaled though it is published at 300 g.
+  const menu = prompt.slice(prompt.indexOf("YOUR BREWERS TODAY"));
+  assert.match(menu, /REQUESTED RECIPE[^\n]*\n0\. [^\n]*Kasuya Super Coarse 10-Pour/);
+  assert.doesNotMatch(menu.slice(0, menu.indexOf("AVAILABLE TECHNIQUES")), /Hoffmann Ultimate Clever|\(Clever Dripper\)/i, "an excluded brewer is off the menu entirely");
   assert.equal(calls.length, 2, "one repair round");
   assert.match(calls[1], /REPAIR — EXCLUDED BREWER/);
   assert.match(calls[1], /REPAIR — REQUESTED RECIPE/);
@@ -234,7 +215,7 @@ test("E2E: an excluded brewer still used after the repair is dropped", async () 
   assert.deepEqual(rec.candidates.map((c) => c.method), ["V60"]);
 });
 
-test("E2E: shown candidates are named, kept off the menu and repaired", async () => {
+test("E2E: shown candidates are named and kept off the menu (no repair)", async () => {
   const shown = [{ title: "Freeform big batch", method: "Chemex", basedOn: "Freeform — Chemex 6-Cup" }];
   const { rec, calls } = await run(
     ctx({ amount: "custom", customWaterMl: 750 }),
@@ -243,18 +224,18 @@ test("E2E: shown candidates are named, kept off the menu and repaired", async ()
     { candidates: [cand("Madcap", "Chemex", "Madcap — Chemex 6-Cup", 750, "400°"), cand("Explore", "V60", "Own experiment", 750)] },
   );
   assert.match(calls[0], /ALREADY SHOWN IN THIS SESSION/);
-  const menu = calls[0].slice(calls[0].indexOf("RELEVANT REFERENCE RECIPES ("), calls[0].indexOf("AVAILABLE TECHNIQUES"));
+  const menu = calls[0].slice(calls[0].indexOf("YOUR BREWERS TODAY"), calls[0].indexOf("AVAILABLE TECHNIQUES"));
   assert.doesNotMatch(menu, /Freeform — Chemex 6-Cup/, "the shown reference is off the menu");
-  assert.equal(calls.length, 2);
-  assert.match(calls[1], /REPAIR — ALREADY SHOWN/);
-  assert.match(rec.candidates[0].basedOn, /Madcap/);
+  // 2026-10-19: named up front and off the menu — no repair round any more.
+  assert.equal(calls.length, 1);
+  assert.match(rec.candidates[0].basedOn, /Freeform/);
   // No measured Chemex in this fixture → the block says "measurement brew", gives no number.
   assert.match(calls[0], /CHEMEX AT THIS BATCH \(750 g\)/);
   assert.match(calls[0], /No measured Chemex brew at this batch yet/);
   assert.doesNotMatch(calls[0], /never finer than \d+°/);
 });
 
-test("E2E: the measured slow Chemex reaches the prompt, and a candidate at that grind is repaired", async () => {
+test("E2E: the measured slow Chemex reaches the prompt as information (no repair)", async () => {
   M.stub.calls.length = 0;
   M.stub.queue.length = 0;
   M.stub.queue.push(
@@ -264,11 +245,11 @@ test("E2E: the measured slow Chemex reaches the prompt, and a candidate at that 
   const res = await M.generateRecommendation(COFFEE, ctx({ amount: "custom", customWaterMl: 750 }), PREFS, [CHEMEX_SESSION], undefined, undefined, undefined, undefined, {});
   const calls = M.stub.calls;
   assert.match(calls[0], /2026-10-18: 400°, 50 g \/ 750 g, logged total 440 s vs planned 299 s \(\+141 s\), 4★ — RAN SLOW/);
-  assert.match(calls[0], /MUST be ground coarser than 400°/);
+  assert.match(calls[0], /400° ran slow at this batch; Chemex's published direction for that is coarser/);
+  assert.doesNotMatch(calls[0], /MUST be ground coarser/);
   assert.match(calls[0], /chemexcoffeemaker\.com\/pages\/faq/);
-  assert.equal(calls.length, 2);
-  assert.match(calls[1], /REPAIR — CHEMEX GRIND/);
-  assert.equal(res.recommendation.candidates[0].recipe.grindSize, "410°", "the model's measurement step is kept, never overwritten by a computed number");
+  assert.equal(calls.length, 1, "information, no repair round");
+  assert.equal(res.recommendation.candidates[0].recipe.grindSize, "400°", "the model's own grind is kept, never overwritten");
 });
 
 test("E2E: no free text, nothing shown → no extra blocks, no extra call", async () => {

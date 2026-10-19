@@ -39,6 +39,13 @@ export {
   normaliseProcess,
   normaliseGoal,
   selectRecipes,
+  scoreAndOrder,
+  scoreRecipe,
+  rotateTies,
+  pickRepresentative,
+  recipeIndexLine,
+  isNewRecipe,
+  grindInUnit,
   getRecipeById,
   findRecipesByPerson,
   formatRecipeForPrompt,
@@ -54,3 +61,5 @@ export {
 } from "./helpers";
 
 export type { RecipeSelectionInput, ScoredRecipe } from "./helpers";
+export { buildBrewerMenu, formatMenuForPrompt, formatRecipeIndexBlock } from "./menu";
+export type { BrewerMenu, MenuEntry } from "./menu";

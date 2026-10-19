@@ -159,32 +159,13 @@ test("names are quotable and the block states what these are", () => {
 test("the block frames a well-rated brew as a baseline, not a repeat", () => {
   const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
   const block = formatOwnReferencesForPrompt(refs);
-  assert.match(block, /BASELINE TO BUILD ON/);
+  // 2026-10-19: both honest answers named, the choice left to the model.
+  assert.match(block, /Building on it with one deliberate, named change is one good answer; something genuinely new is another/);
   assert.ok(
     !/repeating a result they already loved is usually the right answer/i.test(block),
     "the old repeat-by-default instruction must be gone",
   );
-  // Repeating verbatim stays possible — it just needs a reason now.
-  assert.match(block, /asked to repeat it/);
-});
-
-test("an own reference just recommended is marked as one to vary from", () => {
-  const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
-  const fresh = formatOwnReferencesForPrompt(refs, []);
-  const stale = formatOwnReferencesForPrompt(refs, [refs[0].name]);
-  assert.ok(!/ALREADY RECOMMENDED RECENTLY/.test(fresh));
-  assert.match(stale, /ALREADY RECOMMENDED RECENTLY/);
-  // The entry itself survives — nothing is ever excluded (owner's rule).
-  assert.ok(stale.includes(refs[0].name));
-});
-
-test("the recently-recommended match tolerates the short form the model writes", () => {
-  const refs = buildOwnReferences([brew({ rating: 4.5 })], TARGET);
-  // The model echoes a shortened basedOn; an exact-only compare would miss it
-  // and the marker would silently never appear.
-  const shortForm = refs[0].name.slice(0, 20);
-  const marked = formatOwnReferencesForPrompt(refs, [shortForm]);
-  assert.match(marked, /ALREADY RECOMMENDED RECENTLY/);
+  assert.doesNotMatch(block, /don't re-serve|ALREADY RECOMMENDED|A LOT LATELY/, "no nudges, no tags — information only");
 });
 
 test("an own-reference name never binds to a published recipe", () => {
@@ -286,44 +267,5 @@ test("a same-bag reference is never dropped, even when it's outranked", () => {
   assert.ok(
     refs.some((r) => r.relevance === 3 && r.category === "immersion"),
     "the same-bag immersion brew must survive despite a higher-rated pour-over",
-  );
-});
-
-test("a dominant brewer family gets a within-category vary nudge, never a cross-category one", () => {
-  const refs = buildOwnReferences([brew({ rating: 4.5, method: "Clever Dripper" })], TARGET);
-  const nudged = formatOwnReferencesForPrompt(refs, [], new Set(["clever"]));
-  assert.match(nudged, /IMMERSION APPROACH A LOT LATELY/);
-  assert.match(nudged, /Do NOT switch to a pour-over/);
-  assert.ok(!/POUR-OVER A LOT LATELY/.test(nudged), "must not use the opposite-category wording");
-  // Not dominant → no nudge, but the entry still appears (nothing excluded).
-  const plain = formatOwnReferencesForPrompt(refs, [], new Set());
-  assert.ok(!/A LOT LATELY/.test(plain));
-  assert.ok(plain.includes(refs[0].name));
-});
-
-test("a dominant pour-over family gets the pour-over nudge, not the immersion one", () => {
-  const refs = buildOwnReferences([brew({ rating: 4.5, method: "V60" })], TARGET);
-  const nudged = formatOwnReferencesForPrompt(refs, [], new Set(["v60"]));
-  assert.match(nudged, /POUR-OVER A LOT LATELY/);
-  assert.match(nudged, /Do NOT switch to immersion/);
-  assert.ok(!/IMMERSION APPROACH/.test(nudged));
-});
-
-test("recommend.ts wires the brewer-freshness set into the own-reference block", async () => {
-  // Consumer wiring, not just the producer: this repo has twice shipped a
-  // function documented as feeding a prompt while the route never called it.
-  const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(
-    src,
-    /formatOwnReferencesForPrompt\([\s\S]*?freshnessBrewers[\s\S]*?brewMethodKey[\s\S]*?\)/,
-    "the dominant-family set (freshnessBrewers via brewMethodKey) must reach formatOwnReferencesForPrompt",
-  );
-  // Since the convergence policy (2026-10-03) the set handed down is
-  // methodRecency.recentBrewers MINUS the ≥4★ base's brewer — rating-aware
-  // freshness: a brewer that just earned 4★ on this bag is not "stale".
-  assert.match(
-    src,
-    /const freshnessBrewers = new Set\(\s*Array\.from\(methodRecency\.recentBrewers\)\.filter\(\(b\) => !protectedBrewers\.has\(b\)\)/,
-    "freshnessBrewers must be methodRecency.recentBrewers minus the protected (≥4★ base) brewer",
   );
 });

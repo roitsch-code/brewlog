@@ -1,5 +1,5 @@
 import { callRecommendModel } from "../ai/recommendProvider";
-import { vesselOverflow, vesselCannotServe, VESSEL_CAPS } from "../utils/vesselCapacity";
+import { vesselOverflow } from "../utils/vesselCapacity";
 import { stripProactiveDripAssist } from "../utils/dripAssist";
 import {
   maxRenderedPourGapSec,
@@ -8,10 +8,10 @@ import {
 import { drawdownFor } from "../brew/drawdown";
 import { applyPourDurations } from "../recipe/pourDurations";
 import { scaleRecipe } from "../recipe/scaleRecipe";
-import { normalizeGrindToGrinder } from "../utils/grindUnit";
+import { isComandante, normalizeGrindToGrinder } from "../utils/grindUnit";
 import { buildMeasuredGrind, formatMeasuredGrindForPrompt } from "./measuredGrind";
 import { stripMinimalAgitationSwirls } from "../utils/agitationGuard";
-import { guardSpecialTime } from "../utils/timeBudget";
+import { specialTimeNote } from "../utils/timeBudget";
 import { daysSinceRoast, freshnessBucket, freshnessNote } from "../coffee/freshness";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { enforceRecipePhysics } from "../recipe/enforceRecipePhysics";
@@ -35,8 +35,10 @@ import { brewMethodKey } from "../utils/brewMethodKey";
 import { buildOwnReferences, formatOwnReferencesForPrompt } from "./ownReferenceRecipes";
 import { getRoasterPrior, formatRoasterPriorForPrompt } from "../roasters/priors";
 import {
-  selectRecipes,
-  formatRecipesForPrompt,
+  buildBrewerMenu,
+  formatMenuForPrompt,
+  formatRecipeIndexBlock,
+  formatRecipeForPrompt,
   brewersAvailableFromEquipment,
   CANONICAL_EQUIPMENT,
   brewersFromMethod,
@@ -44,6 +46,7 @@ import {
   normaliseProcess,
   normaliseGoal,
   deriveRotationSeed,
+  grindInUnit,
   LONG_DESIGNED_WAIT_SEC,
 } from "../knowledge/recipes";
 import {
@@ -52,28 +55,16 @@ import {
 } from "../knowledge/varieties";
 import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, brewerMatchesReference, referenceAppliesAtBatch } from "./recipeFidelity";
-import { buildMethodRecency } from "./methodRotation";
+import { brewerRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
-import { findRepeatOffenders, formatRepeatRepair, formatRepeatRuleUpfront, recentlyOfferedFamilies, REPEAT_WINDOW } from "./repeatGuard";
-import {
-  deriveConvergence,
-  formatConvergenceNote,
-  checkConvergence,
-  formatConvergenceRepair,
-  type ConvergenceState,
-} from "./convergence";
+import { deriveConvergence, formatConvergenceInfo, type ConvergenceState } from "./convergence";
+import { formatPreferencesForRecommend } from "./preferenceBlock";
 import { derivePourSequence, sanitizePourSteps } from "../utils/pourSteps";
 import { formatPourPaceForPrompt, measuredPourPace } from "../brew/pourPace";
 import { componentsOf, describeBlend } from "../coffee/blend";
 import { parseClaudeJson, z } from "./parseJson";
 import { formatInsightsBlock, type RecommendInsight } from "./insightsBlock";
-import {
-  findReshown,
-  formatReshownRepair,
-  formatShownUpfront,
-  shownReferenceIds,
-  type ShownCandidate,
-} from "./shownGuard";
+import { formatShownUpfront, shownReferenceIds, type ShownCandidate } from "./shownGuard";
 import {
   applyUserParams,
   formatUserRequestBlock,
@@ -82,7 +73,7 @@ import {
   usesExcludedBrewer,
   type ParsedUserRequest,
 } from "./userRequest";
-import { findTooFineChemex, formatMeasuredChemexBlock, measuredChemexAtBatch, slowestFloorDeg } from "./measuredChemex";
+import { formatMeasuredChemexBlock, measuredChemexAtBatch } from "./measuredChemex";
 import { formatGrindSlopeBlock, interpolateGrind } from "./grindSlope";
 import { grindProvenanceOf } from "./grindProvenance";
 import { batchWithinWindow } from "../recipe/batchWindow";
@@ -116,6 +107,8 @@ const CandidateSchema = z.object({
   // model's own words. Optional so a response without it still parses.
   experiment: z.string().optional(),
   confidence: z.string(),
+  // The model may propose the other grinder, with a reason (owner, 2026-10-19).
+  grinderSuggestion: z.object({ grinder: z.string(), reason: z.string().max(200) }).optional(),
 });
 
 const RecommendationResponseSchema = z.object({
@@ -265,63 +258,40 @@ function guardVesselCapacity(
 }
 
 /**
- * Deterministic volume-fidelity backstop: the user asked for a specific brew
- * volume, so drop any candidate that can't honour it — a vessel too small to
- * serve the target (the "450ml request → 180ml AeroPress" bug, where the model
- * picked a small vessel and clamped the water down to fit it), or a recipe that
- * grossly under-pours the target on an otherwise-capable vessel. The prompt's
- * HARD CAPACITY CONSTRAINT already forbids the too-small vessel, but Mistral
- * leaks buried negatives where Opus held (#453) — this enforces it in code.
- *
- * Skipped entirely for iced (waterGrams is only the hot portion, ~60% of the
- * drink) and cold brew (concentrate + dilution), and when a method is locked
- * (the capacityConstraint USER OVERRIDE deliberately honours the user's vessel
- * AND volume together). Never returns empty — if every candidate fails, keep
- * them and log loudly rather than fail the recommendation.
+ * The model's grinder proposal, made real: dropped when it names an unknown
+ * grinder, the grinder the brew is already set up with, or a recipe whose
+ * grind has no number to convert; when the owner typed a grind in the free
+ * text his number wins and no proposal is made. Otherwise the recipe's grind
+ * is converted into the proposed grinder's unit (grindUnit.ts, the owner's
+ * measured anchors) and flagged when the clicks fall outside the measured
+ * 23–29 span. The recipe's own grindSize is untouched — the owner answers on
+ * the recipe screen with one tap.
  */
-function guardVolumeTarget(
-  candidates: RecommendationCandidate[],
-  targetMl: number | undefined,
-  skip: boolean,
-): RecommendationCandidate[] {
-  if (!targetMl || skip) return candidates;
-  const safe = candidates.filter((c) => {
-    const cannotServe = vesselCannotServe(c.method, targetMl);
-    if (cannotServe) {
-      console.warn(`[recommend] volume guard dropped "${c.title}" — ${cannotServe}`);
-      return false;
-    }
-    const water = c.recipe?.waterGrams as number | undefined;
-    if (typeof water === "number" && Number.isFinite(water) && water < targetMl * 0.7) {
-      console.warn(
-        `[recommend] volume guard dropped "${c.title}" — pours ${water}g but you asked for ${targetMl}ml`,
-      );
-      return false;
-    }
-    return true;
-  });
-  return safe.length ? safe : candidates;
-}
-
-function buildRecentRecipesNote(
-  sessions: import("../types/session").Session[],
-): string {
-  const names = recentReferenceNames(sessions);
-  if (names.length === 0) return "";
-  return `\nRECENTLY RECOMMENDED — across your last ${Math.min(sessions.length, 6)} sessions you have leaned on these reference recipes: ${names.join(", ")}. Unless this coffee genuinely calls for one of them again, base your two candidates on DIFFERENT reference recipes and/or brewers, so the portfolio doesn't repeat itself brew after brew. Varying the reference is not a licence to fabricate — pick a different documented recipe from the RELEVANT REFERENCE RECIPES block in this message that fits, don't invent one.`;
-}
-
-function buildDiversityNote(sessions: import("../types/session").Session[]): string {
-  const recent = sessions.slice(0, 8);
-  const anchors: Record<string, number> = {};
-  for (const s of recent) {
-    const method = s.recommendation?.primaryMethod;
-    if (method) anchors[method] = (anchors[method] ?? 0) + 1;
-  }
-  const sorted = Object.entries(anchors).sort((a, b) => b[1] - a[1]);
-  if (!sorted.length || sorted[0][1] < 3) return "";
-  const summary = sorted.map(([m, n]) => `${m} ×${n}`).join(", ");
-  return `\nPORTFOLIO DIVERSITY — anchor methods in last ${recent.length} sessions: ${summary}. Vary deliberately unless the coffee or terrain genuinely demands the same approach.`;
+function attachGrinderSuggestion(
+  c: RecommendationCandidate,
+  sessionGrinder: string,
+  userTypedGrind: boolean,
+): RecommendationCandidate {
+  const raw = c.grinderSuggestion;
+  if (!raw) return c;
+  const { grinderSuggestion: _drop, ...rest } = c;
+  const target: "Comandante C40" | "Niche Zero" | null = /comandante|c40/i.test(raw.grinder)
+    ? "Comandante C40"
+    : /niche/i.test(raw.grinder)
+      ? "Niche Zero"
+      : null;
+  if (!target || isComandante(target) === isComandante(sessionGrinder) || userTypedGrind) return rest;
+  const converted = normalizeGrindToGrinder(c.recipe.grindSize, target);
+  if (!converted || converted === c.recipe.grindSize) return rest;
+  const n = Number(/^\s*(\d+)/.exec(converted)?.[1]);
+  const extrapolated = isComandante(target) && Number.isFinite(n) && (n < 23 || n > 29);
+  console.log(
+    `[recommend] grinder-suggestion: "${c.title}" → ${target} (${raw.reason}) ${converted}${extrapolated ? " extrapolated" : ""}`,
+  );
+  return {
+    ...rest,
+    grinderSuggestion: { grinder: target, reason: raw.reason.slice(0, 200), grindSize: converted, ...(extrapolated ? { extrapolated } : {}) },
+  };
 }
 
 /**
@@ -366,9 +336,7 @@ export async function generateRecommendation(
   recommendation: Recommendation;
   usage: { input_tokens: number; output_tokens: number; calls: number };
 }> {
-  const equipment = preferences.equipment.length
-    ? preferences.equipment.join(", ")
-    : "V60, AeroPress, Bialetti";
+  const equipment = CANONICAL_EQUIPMENT.join(", ");
 
   const PERCOLATION_METHODS = new Set([
     "v60", "orea", "orea fast", "orea apex", "orea classic", "orea open",
@@ -422,7 +390,7 @@ export async function generateRecommendation(
   // third candidate is more waiting on every brew), so exploration lives inside
   // it: slot 1 converges or diverges on the last rating, slot 2 explores.
   const EXPLORATION_SLOT =
-    " The SECOND candidate is the exploration slot: it must test something this coffee's log shows untried — a brewer you have not used on this bag, a variable never moved, or an Own experiment. Exploration means drawing something new OUT OF THIS BEAN, not changing vessel for its own sake: name the lever (a technique id from AVAILABLE TECHNIQUES — fines removal, a single long continuous pour, central-pour, a high-agitation extraction push, concentrate-and-bypass, a different water, a pour-count change) and what it should reveal in this coffee. Swapping to whichever brewer contrasts most easily (an immersion vessel next to a pour-over, for instance) is not exploration. Its basedOn must not repeat one from RECENTLY RECOMMENDED unless nothing else fits, and its experiment line must name the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
+    "\nThe SECOND candidate is the exploration slot: something this coffee's log shows untried — a brewer this bag has not met, a variable never moved, or an Own experiment. Exploration means drawing something new OUT OF THIS BEAN: name the lever (a technique id from AVAILABLE TECHNIQUES, a different water, a pour-count change, a brewer with a different geometry) and what it should reveal; its experiment line names the thing being tried. The FIRST candidate stays the best-fit answer, so a disappointing experiment never costs the user their brew.";
 
   // The arc text itself is built further down, once the requested water is
   // known (a ≥4★ base scales to today's amount at the same ratio).
@@ -439,11 +407,11 @@ export async function generateRecommendation(
     // (Wölfl is 1:15.9, Medina 1:16.1, Kasuya 1:15), so the dose has to follow
     // from it. Capacity rules key off WATER, so nothing below changes.
     small:
-      "target ~350g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~21–25g) — state the ratio; do NOT default to a fixed 23g. Suitable: V60, Orea, Clever Dripper (350ml < 450ml ✓), Kalita, Chemex, Origami Air M (dose limit 30g). NOT AeroPress (max 230ml). NOT Moccamaster (batch only).",
+      "target ~350g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~21–25g) — state the ratio; do NOT default to a fixed 23g. Which brewers hold it, and what an AeroPress does about it, is in YOUR BREWERS TODAY.",
     big:
-      "target ~450g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~27–32g) — state the ratio; do NOT default to a fixed dose. Suitable: V60, Orea (any bottom), Clever Dripper (450ml = max ✓), Kalita, Chemex, Origami. NOT AeroPress (max 230ml). NOT Moccamaster (batch only, min 500ml).",
+      "target ~450g water. Dose = water ÷ the ratio of the reference you are adapting (typically 1:14–1:17, so ~27–32g) — state the ratio; do NOT default to a fixed dose. Which brewers hold it is in YOUR BREWERS TODAY.",
     batch:
-      "target ~750g water — Moccamaster ONLY; scale dose to ~50g.",
+      "target ~750g water — a batch brewer (YOUR BREWERS TODAY says which hold it); dose = water ÷ the reference's ratio.",
     custom: context.customWaterMl
       ? (context.occasion === "summer-time"
           ? `ICED + custom volume: the user typed ${context.customWaterMl}ml as the FINAL drink (hot brew + melted ice). Split it as ~60% hot brew / ~40% ice — so waterGrams (hot brew portion) should target ~${Math.round((context.customWaterMl ?? 350) * 0.6)}g (±30g), and the recipe MUST set iceGrams ≈ ${Math.round((context.customWaterMl ?? 350) * 0.4)}g (the ice the hot brew drains onto). The pour sequence describes pouring the hot water; the ice sits in the server. Dose at ~1:15 against the FINAL drink, hot water + ice (so ~${Math.round((context.customWaterMl ?? 350) / 15)}g dose — Hoffmann's Japanese iced is 65 g/L of final drink, i.e. the hot water alone runs ~1:9). BOTH candidates respect this split AND both include iceGrams. Reference iced recipes from the corpus (Hoffmann Immersion Iced, AeroPress Iced) supply the TECHNIQUE — scale dose + water + ice proportionally. Capacity tensions with the chosen method are handled separately (USER OVERRIDE block).`
@@ -479,9 +447,17 @@ export async function generateRecommendation(
 
   const sessionGrinder = context.grinder || preferences.grinder || "Niche Zero";
   const isNiche = sessionGrinder.toLowerCase().includes("niche");
-  const grinderNote = isNiche
-    ? `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value (e.g. "380°"). NO ranges. NEVER clicks.`
-    : `Grinder: ${sessionGrinder} → grindSize must be ONE specific click count (e.g. "26"). NO ranges. NEVER Niche°.`;
+  // Did he pick the grinder himself on the Context step? The picker writes ""
+  // on toggle-off, so an empty string is the reliable "no pick" signal; the DB
+  // row's grinder is a default, not a pick.
+  const grinderPicked = Boolean(context.grinder && context.grinder.trim());
+  const grinderNote =
+    (isNiche
+      ? `Grinder: ${sessionGrinder} → grindSize must be ONE specific Niche° value (e.g. "380°"). NO ranges. NEVER clicks.`
+      : `Grinder: ${sessionGrinder} → grindSize must be ONE specific click count (e.g. "26"). NO ranges. NEVER Niche°.`) +
+    (grinderPicked
+      ? ` He picked this grinder himself for this brew — propose the other one (grinderSuggestion) only if you have a specific reason, phrased "you picked ${sessionGrinder}; the other would fit because …".`
+      : ` This is the default, not his pick — you may propose the Comandante with a reason (grinderSuggestion, see COMANDANTE).`);
 
   const waterNote =
     context.waterSource === "championship"
@@ -494,80 +470,19 @@ export async function generateRecommendation(
   const daysOld = daysSinceRoast(coffee.roastDate);
   const freshnessNoteText = freshnessNote(freshnessBucket(daysOld));
 
-  const lockedMethodBase = (context.preferredMethod ?? "").trim();
-
-  const capacityConstraint = (() => {
-    const ml =
-      context.amount === "custom"
-        ? (context.customWaterMl ?? 350)
-        : context.amount === "big"
-        ? 450
-        : context.amount === "small"
-        ? 350
-        : null;
-    if (!ml) return "";
-    type Violation = { method: string; reason: string };
-    // Derived from VESSEL_CAPS (the single source of truth in vesselCapacity.ts)
-    // so the prompt's forbidden list can never drift from the deterministic
-    // guards again — they did drift before (UI "Clever 400ml" vs code 450).
-    const allViolations: Violation[] = [];
-    for (const cap of VESSEL_CAPS) {
-      if (cap.label === "Cold-brew jar") continue; // not a hot-brew method
-      if (cap.maxMl != null && ml > cap.maxMl) {
-        allViolations.push({ method: cap.label, reason: `max ${cap.maxMl}ml` });
-      } else if (cap.minMl != null && ml < cap.minMl) {
-        allViolations.push({ method: cap.label, reason: `batch only, min ${cap.minMl}ml` });
-      }
-    }
-
-    // If the user has explicitly locked a method that would normally be
-    // forbidden at this volume, exempt it — both their method choice and
-    // their volume are absolute user instructions. Note the trade-off but
-    // honor both. Without this exemption the AI silently swapped the
-    // method or clamped the ml (Markus' "450ml + Clever → recipe came
-    // back at 360ml" report). Match the locked method to its cap label via
-    // the same VESSEL_CAPS regex, so "Orea Classic" resolves to "Orea" etc.
-    const lockedLower = lockedMethodBase.toLowerCase();
-    const lockedLabel = lockedLower
-      ? VESSEL_CAPS.find((c) => c.match.test(lockedLower))?.label
-      : undefined;
-    const lockedViolation = lockedLabel
-      ? allViolations.find((v) => v.method === lockedLabel)
-      : undefined;
-    const enforced = lockedViolation
-      ? allViolations.filter((v) => v !== lockedViolation)
-      : allViolations;
-
-    const violationStrs = enforced.map((v) => `${v.method} (${v.reason})`);
-    let block = "";
-    if (violationStrs.length) {
-      block += `\nHARD CAPACITY CONSTRAINT — target ${ml}ml: FORBIDDEN methods: ${violationStrs.join(", ")}.`;
-    }
-    if (lockedViolation) {
-      block += `\nUSER OVERRIDE: ${lockedViolation.method} would normally be forbidden at ${ml}ml (${lockedViolation.reason}), but the user has explicitly locked ${lockedViolation.method} as preferredMethod AND typed this exact volume. Both are absolute user instructions — use ${lockedViolation.method} at exactly ${ml}ml. The vessel will be at its physical edge; mention the trade-off in reasoning (e.g. "pouring ${ml}ml in a ${lockedViolation.method.toLowerCase()} — fill close to the rim, slow pours") but DO NOT swap the method or change the ml.`;
-    }
-    return block;
-  })();
-
   const methodNote = context.preferredMethod
-    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different (but each constant) temperature (e.g. 95°C vs 88°C — never a staged ramp within one brew), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. The first candidate is still the best-fit (or convergence) answer, the second the exploration. Override the lock only if genuinely incompatible with the coffee chemistry (rare). Capacity tensions are NOT a valid reason to override — those are handled via the USER OVERRIDE block above.`
+    ? `\nLOCKED METHOD: "${context.preferredMethod}" — the user has explicitly locked this brewer. BOTH candidates MUST use ${context.preferredMethod}. Do NOT swap to a different vessel for the second candidate. The two candidates contrast through substantially different RECIPE PHYSICS on the same brewer — different pour pattern (e.g. 4:6 vs Rao thirds vs single continuous), different ratio (e.g. 1:15 vs 1:17), different (but each constant) temperature (e.g. 95°C vs 88°C — never a staged ramp within one brew), different agitation profile, inverted vs upright (AeroPress), bypass vs no-bypass, immersion-then-drain vs full-percolation, etc. The first candidate is still the best-fit (or convergence) answer, the second the exploration. Override the lock only if genuinely incompatible with the coffee chemistry (rare). If the amount is at or past this vessel's limit (YOUR BREWERS TODAY says so), honour BOTH the brewer and the amount and name the trade-off in whyChosen — never silently clamp the water or swap the vessel.`
     : "";
 
-  // Drip Assist routing — the disc is the user's emergency / travel
-  // backup, used only when no gooseneck kettle is around. It is NEVER
-  // recommended proactively. When the user has explicitly locked
-  // "V60 + Drip Assist", honor it with the coarser-grind instruction;
-  // otherwise, ban it outright so Opus doesn't surface it as an
-  // exploratory candidate (the "Drip Assist Slow-Flow Probe" failure
-  // mode where it picked the disc on its own).
+  // The Drip Assist disc is used only when HE locks it (owner rule, kept).
   const dripAssistLocked =
     context.preferredMethod && /drip\s*-?\s*assist/i.test(context.preferredMethod);
   const dripAssistNote = dripAssistLocked
-    ? `\nDRIP ASSIST GRIND OFFSET: The locked V60 + Drip Assist recipe MUST grind ~5° coarser than the V60 baseline in the NICHE° GRIND REFERENCE (use the "V60 + Drip Assist" range, not the standard V60 range). The disc smooths pour distribution but reduces free flow area; coarsen to compensate so total brew time matches a standard V60. Mention in reasoning that this is the disc-on emergency dial-in, not the user's preferred V60 setup. When you name the brewer, only ever write "V60 + Drip Assist" or "V60" — never "bare V60" or "V60 without the Drip Assist".`
-    : `\nDRIP ASSIST IS BANNED: Do NOT suggest "V60 + Drip Assist" as a candidate's primaryMethod. The Hario Drip Assist disc is the user's emergency/travel backup (used only when no gooseneck kettle is available). It is NEVER a proactive recommendation. If the user wanted it, they would have locked it as preferredMethod — they did not. Pick a plain "V60" (named exactly "V60", never "bare V60" or "V60 without the Drip Assist") or any other brewer the user owns instead.`;
+    ? `\nDRIP ASSIST: he locked the disc for this brew. Grind ~5° coarser than the bare V60 (the "V60 + Drip Assist" row in the NICHE° GRIND REFERENCE). Name the brewer exactly "V60 + Drip Assist".`
+    : `\nDRIP ASSIST: not locked for this brew, so no candidate uses the disc (he decides when it is on). Name a V60 simply "V60".`;
 
   const goal = context.intent || "balanced";
-  const goalNote = `\nGOAL: "${goal}" — the user's stated taste direction for this brew. The only user-stated bias allowed; everything else is science. See GOAL VOCABULARY in LAYER 1 for what this means and how it interacts with process defaults.`;
+  const goalNote = `\nGOAL: "${goal}" — what he asked for in this brew. See GOAL VOCABULARY in LAYER 1 for what it means and how it interacts with process defaults.`;
 
 
   // Roaster prior injection — user-saved profile overrides built-in list
@@ -670,7 +585,6 @@ export async function generateRecommendation(
   const shown = opts.shown ?? [];
   const shownIds = shownReferenceIds(shown, resolveReference);
   if (requestedRecipe) shownIds.delete(requestedRecipe.id);
-  const allowIds = new Set<string>(requestedRecipe ? [requestedRecipe.id] : []);
 
   // ONE rotation seed for the whole turn: the recipe menu and the brewer-
   // freshness demotion must rotate together, or the two levers fight each other.
@@ -688,20 +602,10 @@ export async function generateRecommendation(
     Date.now(),
   );
 
-  // METHOD FIT & FRESHNESS — the fix for "always V60 and Clever water-first".
-  // NO bans (owner's design rule: best fit always decides). Brewer families
-  // that dominated the last 6 recommendation sets are named in the prompt
-  // (they must EARN their slot with a stated fit advantage; equal-fit ties go
-  // to the least-recently-recommended brewer) and their recipes are demoted
-  // WITHIN equal-score groups in the injected menu — ties only, never an
-  // exclusion. Inactive when a method is locked or for cold brew. The
-  // percolation+immersion funnel itself is fixed in the system prompt
-  // (contrast no longer requires an immersion vessel). See methodRotation.ts.
-  const methodRecency = buildMethodRecency(pastSessions, {
-    lockedMethod: lockedMethodBase,
-    occasion: context.occasion,
-    rotationSeed,
-  });
+  // BREWER RECENCY — information, never a demotion (methodRotation.ts): how
+  // many brews ago each brewer was last offered or brewed. The menu lets the
+  // least recently offered brewers lead with their full recipe text.
+  const recency = brewerRecency(pastSessions);
 
   // Union the stored onboarding equipment with the owner's canonical kit.
   // The onboarding picker never offered Origami or Chemex, so keying off the
@@ -748,90 +652,48 @@ export async function generateRecommendation(
     return c;
   })();
   const convergeBase = convergence.kind === "converge" ? convergence.base : null;
-  // Freshness levers must not push the first candidate off a ≥4★ base: the
-  // base's brewer is exempt from the menu demotion and the own-reference
-  // "don't re-serve it" tag, and its names are exempt from the recent-reference
-  // demotion. Rating-aware recency — a 4★ brewer is not "stale", it earned it.
-  const protectedBrewers = convergeBase ? brewersFromMethod(convergeBase.method) : new Set<string>();
-  const freshnessBrewers = new Set(
-    Array.from(methodRecency.recentBrewers).filter((b) => !protectedBrewers.has(b)),
-  );
-  const protectedNames = convergeBase
-    ? [convergeBase.name, convergeBase.basedOn ?? ""].map((n) => n.toLowerCase().trim()).filter((n) => n.length >= 6)
-    : [];
-  const isProtectedName = (n: string) => {
-    const x = n.toLowerCase().trim();
-    return protectedNames.some((p) => p === x || x.includes(p) || p.includes(x));
-  };
-  // serveVolumeMl: vessel-capacity filter for plain hot brews only. Iced/cold
-  // opt out (the vessel holds the hot portion / a concentrate). A locked method
-  // also opts out — the user chose the vessel, so honour it with the volume.
-  const isHotBrew =
-    context.occasion !== "summer-time" && context.occasion !== "cold-brew";
-  const serveVolumeForOccasion = isHotBrew ? targetWaterMl : undefined;
-  const selectionInput = {
-      brewersAvailable,
-      lockedBrewers,
-      // Don't OFFER POUR-OVER recipes with a long designed wait between pours
-      // (Kasuya Mugen's 105s draw, Hedrick's 100s bypass gap) when the DISC is
-      // locked: the disc drains as fast as it is poured, so a recipe built around
-      // the bed sitting full is the wrong shape for it.
-      //
-      // This was widened to EVERY hot brew in #566, on the reading that Rao's
-      // designed 58s rest was the "2-minute hole" the owner reported. It was not:
-      // that hole was manufactured by the renderer, which reserved a third of the
-      // clock for drawdown and spread the remaining pours across what was left
-      // (see buildPourSchedule). With the renderer following the recipe's own
-      // cadence, Rao's rest renders as the 58s he designed — so the exclusion goes
-      // back to the disc, and Rao / Kasuya Mugen / the expert big-batch recipes
-      // are on the hot menu again. IMMERSION is exempt inside selectRecipes: a
-      // Clever/AeroPress steep IS the method, not a dead-gap.
-      excludeLongWaits: Boolean(dripAssistLocked),
-      roastLevel: normaliseRoastLevel(coffee.roastLevel),
-      process: normaliseProcess(coffee.process),
-      // Blend: score the process match against EVERY component's process, so a
-      // "Natural + Washed" blend credits recipes suited to either — the single
-      // `process` above (a comma-joined summary) would otherwise collapse to the
-      // first keyword. Empty for a single-origin bag.
-      processes: Array.from(
-        new Set(
-          componentsOf(coffee)
-            .map((c) => normaliseProcess(c.process))
-            .filter((p): p is NonNullable<typeof p> => !!p),
-        ),
+  // THE MENU (menu.ts, 2026-10-19): every owned brewer on the table, each
+  // with its best-fit recipe, the factor to today's amount, the reach path
+  // when the vessel is smaller than the amount, and when it was last offered.
+  // No batch window, no vessel filter, no brewer cap, no Special ceiling —
+  // those are information the model reads. The least recently offered
+  // brewers lead with full recipe text; the rest are index lines in the
+  // cached system block.
+  const menuInput = {
+    brewersAvailable,
+    lockedBrewers,
+    // The Drip Assist disc, when HE locked it, cannot honour a designed long
+    // steep / rest (owner: "das macht mit der Disc keinen Sinn"). Immersion
+    // is exempt inside the selector.
+    excludeLongWaits: Boolean(dripAssistLocked),
+    roastLevel: normaliseRoastLevel(coffee.roastLevel),
+    process: normaliseProcess(coffee.process),
+    // Blend: score the process match against EVERY component's process.
+    processes: Array.from(
+      new Set(
+        componentsOf(coffee)
+          .map((c) => normaliseProcess(c.process))
+          .filter((p): p is NonNullable<typeof p> => !!p),
       ),
-      variety: coffee.variety,
-      goal: normaliseGoal(context.intent),
-      occasion: context.occasion,
-      // Cold brew batches in a jar — the small/big DRINK amount must not filter
-      // out the 1L reference recipes; vessel capacity is enforced in the prompt.
-      maxWaterMl: context.occasion === "cold-brew" ? undefined : targetWaterMl,
-      // Exclude vessels too small to serve the requested volume — but only for
-      // plain hot brews. Iced (vessel holds the hot portion only), cold brew
-      // (concentrate + dilution) and a locked method (USER OVERRIDE honours the
-      // vessel + volume together) all opt out.
-      serveVolumeMl: lockedBrewers.size > 0 ? undefined : serveVolumeForOccasion,
-      // Rotate equal-scoring recipes per brew so the injected menu (and the
-      // per-brewer diversity winner — e.g. the Clever water-first) varies
-      // instead of repeating every session. Seeded by the LATEST session's
-      // timestamp, which strictly increases with every logged brew. The session
-      // COUNT does not work here: the client sends at most the last ~100
-      // sessions, so the count saturates at the cap and the rotation froze —
-      // the "same two recipes every Morning/Sweet brew" regression on #480.
-      rotationSeed,
-      // And demote references the user has JUST seen to the back of their tie
-      // group, so an equal-scored fresh recipe takes the injected slot.
-      recentReferenceNames: recentReferenceNames(pastSessions).filter((n) => !isProtectedName(n)),
-      // Same tie-break for recently-dominant BREWERS: an equal-scored recipe
-      // on a fresher brewer takes the menu slot (never an exclusion).
-      demoteBrewers: freshnessBrewers,
-      // Special (fast shot) → only recipes whose clock fits the ceiling.
-      timeAvailable: context.timeAvailable,
-      // Experiment → steer toward brewers/references not yet used on this bag.
-      brewedOnThisCoffee,
-      excludeRecipeIds: shownIds,
+    ),
+    variety: coffee.variety,
+    goal: normaliseGoal(context.intent),
+    occasion: context.occasion,
+    rotationSeed,
+    recentReferenceNames: recentReferenceNames(pastSessions),
+    brewedOnThisCoffee,
+    excludeRecipeIds: shownIds,
+    targetWaterGrams: context.occasion === "cold-brew" ? undefined : targetWaterMl,
+    lastOffered: recency.lastOffered,
   };
-  const selectedRecipes = selectRecipes(selectionInput, 4);
+  let menu = buildBrewerMenu(menuInput);
+  // A locked brewer the corpus has NO documented recipe for: show the nearest
+  // recipes on the other brewers (by fit) and tell the model to adapt by
+  // geometry rather than invent.
+  const lockedMethodHasNoRecipe = menu.locked && menu.leads.length === 0;
+  if (lockedMethodHasNoRecipe) {
+    menu = buildBrewerMenu({ ...menuInput, lockedBrewers: new Set(), leadCount: 3 });
+  }
 
   // MEASURED GRIND — the user's OWN logged grind settings for the brewers they
   // actually use at this batch size (2026-08-23). Every per-method row in
@@ -850,49 +712,27 @@ export async function generateRecommendation(
   const measuredPaceBlock = pace.source === "house" ? "" : `\n\n${formatPourPaceForPrompt(pace)}`;
 
 
-  // A locked method the corpus has NO documented recipe for (e.g. the Orea
-  // Apex/Classic/Open bottoms — the corpus holds recipes for none of them) used
-  // to inject an EMPTY recipe block, leaving the model to invent a recipe with
-  // nothing to anchor on. Instead, fall back to the general best-fit portfolio
-  // across the owner's kit and tell the model to transfer the nearest to the
-  // locked brewer (same filter geometry), rather than fabricate one.
-  let recipesForPrompt = selectedRecipes;
-  const lockedMethodHasNoRecipe = lockedBrewers.size > 0 && selectedRecipes.length === 0;
-  if (lockedMethodHasNoRecipe) {
-    recipesForPrompt = selectRecipes(
-      { ...selectionInput, lockedBrewers: new Set(), serveVolumeMl: serveVolumeForOccasion },
-      4,
-    );
-  }
-  // The recipe the user asked for by name leads the menu, whatever the scorer
-  // thought of it (batch window included — it is scaled to this brew below and
-  // labelled with its published size).
-  if (requestedRecipe) {
-    recipesForPrompt = [
-      { recipe: requestedRecipe, score: Number.POSITIVE_INFINITY, reasons: ["requested by the user"] },
-      ...recipesForPrompt.filter((r) => r.recipe.id !== requestedRecipe.id),
-    ];
-  }
+  // The recipe the user asked for by name leads, whatever the scorer thought of
+  // it (batch window included — it is scaled to this brew and labelled).
   const requestedScaledNote =
     requestedRecipe && targetWaterMl && !referenceAppliesAtBatch(requestedRecipe, targetWaterMl)
       ? `published at ${requestedRecipe.water.grams} g, scaled to your ${targetWaterMl} g on request`
       : undefined;
-  const recipesBlock = recipesForPrompt.length
-    ? `\n${
-        lockedMethodHasNoRecipe
-          ? `(No documented recipe exists specifically for ${context.preferredMethod}. The recipes below are the closest matches on your other cones — adapt the nearest to the ${context.preferredMethod}, keeping its filter geometry. Do NOT invent parameters.)\n`
-          : ""
-      }${formatRecipesForPrompt(
-        recipesForPrompt,
-        "RELEVANT REFERENCE RECIPES",
-        // Hand the model each reference ALREADY scaled to this brew. Doing the
-        // arithmetic in prose is what produced 8 g/s pours and single-cup clocks
-        // on a 450ml batch.
-        targetWaterMl
-          ? { scaleTo: { targetWaterGrams: targetWaterMl, method: context.preferredMethod } }
-          : undefined,
-      )}`
+  const requestedBlock = requestedRecipe
+    ? `\nREQUESTED RECIPE — he asked for this one by name; the FIRST candidate adapts it:\n0. ${formatRecipeForPrompt(requestedRecipe, {
+        scaleTo: targetWaterMl ? { targetWaterGrams: targetWaterMl, method: context.preferredMethod } : undefined,
+        grinder: sessionGrinder,
+        label: requestedScaledNote ? `(${requestedScaledNote})` : undefined,
+      })}\n`
     : "";
+  const menuBlock =
+    `\n${lockedMethodHasNoRecipe ? `(No documented recipe exists specifically for ${context.preferredMethod}. The recipes below are the closest matches on your other brewers — adapt the nearest to the ${context.preferredMethod}, keeping its filter geometry. Do NOT invent parameters.)\n` : ""}` +
+    formatMenuForPrompt(menu, { grinder: sessionGrinder, method: context.preferredMethod, lockedMethod: context.preferredMethod }) +
+    requestedBlock;
+  const menuRecipeNames = [
+    ...(requestedRecipe ? [requestedRecipe] : []),
+    ...menu.leads.flatMap((e) => (menu.locked ? e.recipes.slice(0, 5) : e.best ? [e.best] : []).map((s) => s.recipe)),
+  ].flatMap((r) => [r.name, ...(r.shortName ? [r.shortName] : [])]);
 
   // The user's own well-rated brews, offered as references beside the corpus.
   // Scoped to the brewers this session may actually use — a locked method
@@ -905,19 +745,7 @@ export async function generateRecommendation(
       : undefined,
   );
   const ownReferenceNamesForTurn = ownReferencesForTurn.map((r) => r.name);
-  const ownReferenceBlock = formatOwnReferencesForPrompt(
-    ownReferencesForTurn,
-    // So this block and the RECENTLY RECOMMENDED note stop contradicting each
-    // other: an own reference the user was just served is marked "build on it,
-    // don't re-serve it" rather than offered as the safe repeat.
-    selectionInput.recentReferenceNames,
-    // Carry the SAME brewer-freshness signal the menu uses into this block, as
-    // family keys: a reference on a brewer that has dominated recent recs gets a
-    // WITHIN-category "vary the recipe/technique" nudge (never a cross-category
-    // "switch to a pour-over"). Without this the freshness lever never reached
-    // the own-reference block — the actual driver of the Clever-water-first loop.
-    new Set(Array.from(freshnessBrewers).map((b) => brewMethodKey(b))),
-  );
+  const ownReferenceBlock = formatOwnReferencesForPrompt(ownReferencesForTurn);
 
   // Compact technique vocabulary — id + one-line description per technique.
   // The full mechanism for each is reachable via the recipe's `science`
@@ -936,21 +764,9 @@ export async function generateRecommendation(
     ? `\nBLEND — this bag is ${componentsOf(coffee).length} components: ${blendDesc}. There is no single origin or process. Reason about the composite cup: extract to serve the component that needs the MOST care (typically the lightest-roasted / washed / most delicate one) without under-serving the others, and name that trade-off in your reasoning. Do not treat it as a single-origin of just one component.`
     : "";
 
-  const sessionArcNote = formatConvergenceNote(convergence, {
-    explorationSlot: EXPLORATION_SLOT,
-    targetWaterGrams: targetWaterMl,
-  });
-
-  // Candidate-level repetition guard (repeatGuard.ts, owner decision
-  // 2026-10-03): a FREE-FORM candidate on a brewer the user was offered in ≥2 of
-  // the last 4 recommendations is sent back once. Inactive on a locked method
-  // (every candidate is that brewer by request) and on cold brew (a different
-  // partition). The rule is also stated UP FRONT in the user message, so the
-  // first answer can already honour it — a repair round doubles the wait.
-  const repeatGuardActive =
-    !lockedMethodBase && !requestedRecipe && (context.occasion ?? "").toLowerCase() !== "cold-brew";
-  const offered = recentlyOfferedFamilies(pastSessions);
-  const repeatRuleNote = repeatGuardActive ? formatRepeatRuleUpfront(offered) : "";
+  // THIS COFFEE'S LAST BREW — information (convergence.ts): the last brew as
+  // brewed, its rating, what he tasted; both honest answers named, his call.
+  const sessionArcNote = formatConvergenceInfo(convergence, { targetWaterGrams: targetWaterMl, grinder: sessionGrinder }) + EXPLORATION_SLOT;
 
   // Chemex grind (measuredChemex.ts): the owner's MEASURED Chemex brews at
   // this batch + Chemex's own published rule — never a table or V60-scaled
@@ -968,12 +784,12 @@ export async function generateRecommendation(
       : null;
   const chemexInterpLine =
     chemexInterp && chemexInterp[0] && chemexInterp[1]
-      ? `\n- COMPUTED from the owner's slope (${chemexInterp[0].slope.secPerDeg.toFixed(1)} s/° over ${chemexInterp[0].slope.pairs.length} measured pairs), from his ${chemexInterp[0].from.date} brew at ${Math.round(chemexInterp[0].from.deg)}° → ${Math.round(chemexInterp[0].from.totalSec)} s: the published 4:00–5:00 total lands at ${Math.min(chemexInterp[0].deg, chemexInterp[1].deg)}–${Math.max(chemexInterp[0].deg, chemexInterp[1].deg)}°. Use a value in that window; this is a computed setting, not a measurement brew.`
+      ? `\n- COMPUTED from the owner's slope (${chemexInterp[0].slope.secPerDeg.toFixed(1)} s/° over ${chemexInterp[0].slope.pairs.length} measured pairs), from his ${chemexInterp[0].from.date} brew at ${grindInUnit(Math.round(chemexInterp[0].from.deg), sessionGrinder)} → ${Math.round(chemexInterp[0].from.totalSec)} s: the published 4:00–5:00 total lands at ${grindInUnit(Math.min(chemexInterp[0].deg, chemexInterp[1].deg), sessionGrinder)}–${grindInUnit(Math.max(chemexInterp[0].deg, chemexInterp[1].deg), sessionGrinder)}. A value in that window is a computed setting, not a measurement brew.`
       : "";
   const chemexGrindNote =
-    chemexMeasured && targetWaterMl ? formatMeasuredChemexBlock(chemexMeasured, targetWaterMl) + chemexInterpLine : "";
-  const grindSlopeBlock = formatGrindSlopeBlock(pastSessions, targetWaterMl);
-  const chemexSlowFloor = chemexMeasured ? slowestFloorDeg(chemexMeasured) : null;
+    chemexMeasured && targetWaterMl ? formatMeasuredChemexBlock(chemexMeasured, targetWaterMl, sessionGrinder) + chemexInterpLine : "";
+  const grindSlopeBlock = formatGrindSlopeBlock(pastSessions, targetWaterMl, sessionGrinder);
+  const preferencesBlock = formatPreferencesForRecommend(preferences);
   const equipmentForPrompt = excludedBrewers.size
     ? equipment.split(", ").filter((e) => !usesExcludedBrewer(e, excludedBrewers)).join(", ")
     : equipment;
@@ -991,11 +807,10 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${sessionGrinder}
-- Water: ${waterNote}${capacityConstraint}${methodRecency.note}${methodNote}${dripAssistNote}${goalNote}${chemexGrindNote}${userRequestBlock}${shownBlock}
+- Water: ${waterNote}${specialTimeNote(context.timeAvailable)}${methodNote}${dripAssistNote}${goalNote}${chemexGrindNote}${userRequestBlock}${shownBlock}
 
 Equipment available: ${equipmentForPrompt}
-${grinderNote}
-Taste preferences: body=${preferences.tasteProfile.preferredBodyLevel}, acidity=${preferences.tasteProfile.preferredAcidityLevel}
+${grinderNote}${preferencesBlock}
 
 ${escherTerrain
   ? `Brew pattern terrain (use as case history — informs your hypothesis, does not override recipe physics):\n${escherTerrain}`
@@ -1004,17 +819,19 @@ ${escherTerrain
     : `${pastSessions.length} sessions logged. Terrain analysis not available for this request.`
 }
 ${sessionArcNote}
-${buildDiversityNote(pastSessions)}${buildRecentRecipesNote(pastSessions)}${repeatRuleNote}${measuredGrindBlock}${grindSlopeBlock}${measuredPaceBlock}
+${recency.line}${measuredGrindBlock}${grindSlopeBlock}${measuredPaceBlock}
 ${
   totalPercolationSamples > 0
     ? `\nTIMING CALIBRATION — per method (grind adjustment only — never temperature):\n` +
       Object.entries(timingStats)
         .map(([method, { delta, count }]) => {
+          const stepText = (deg: number) =>
+            isComandante(sessionGrinder) ? `about ${Math.max(1, Math.round(deg / 3.33))} click${Math.round(deg / 3.33) === 1 ? "" : "s"}` : `${deg}°`;
           const direction =
             delta > 20
-              ? `→ grind ${Math.ceil(delta / 15)}° coarser`
+              ? `→ grind ${stepText(Math.ceil(delta / 15))} coarser`
               : delta < -20
-              ? `→ grind ${Math.ceil(-delta / 15)}° finer`
+              ? `→ grind ${stepText(Math.ceil(-delta / 15))} finer`
               : "→ well-calibrated";
           return `  ${method}: avg ${delta > 0 ? "+" : ""}${delta}s vs target (${count} brew${count !== 1 ? "s" : ""}) ${direction}`;
         })
@@ -1023,7 +840,7 @@ ${
     : ""
 }
 
-${varietyBlock}${recipesBlock}${ownReferenceBlock}${techniquesBlock}
+${varietyBlock}${menuBlock}${ownReferenceBlock}${techniquesBlock}
 
 pourSteps — the structured step array IS the recipe's pour plan (do not write a separate pour-sequence string; the app derives it). It is what the in-app timer advances through step by step, so it must be complete and ordered.
 - One object per physical step the brewer performs, in order.
@@ -1036,7 +853,7 @@ pourSteps — the structured step array IS the recipe's pour plan (do not write 
 - Immersion/AeroPress: the steep is a single "wait" step carrying its full durationSec; the inverted setup is an "invert" step (durationSec 0); the flip-and-press is a "flip" or "press" step placed right after the steep.
 - PERCOLATION STRUCTURE (V60, Orea, Origami, Kalita, Chemex — anything you pour through a bed): pourSteps are the pours, the agitation the reference calls for, AND the pauses between them as "wait" steps. Write the pauses — the timer runs your cadence, so without them the pours run back-to-back. A normal pause is 10–45 s. Do NOT emit a trailing "Drawdown" wait: the drawdown is targetTimeSec minus the end of your last pour, so you set it by choosing the total. Keep the pour count of the reference you adapt (a bigger batch means bigger pours, not more of them); add one only if a pour would otherwise need more than 8 g/s. The bloom is 2–3× the dose (e.g. 45–70 g for a ~23 g dose) — never a large fraction of the total water.
 
-basedOn — name the reference this candidate adapts. Take it from what THIS TURN gave you: a recipe in the RELEVANT REFERENCE RECIPES block of this message (named exactly as written there), or one of the user's own well-rated brews (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). That library was scored and rotated for this exact coffee, volume and goal — it is not a sample of what exists, it is the shortlist. If you reach outside it because nothing there fits, say so in whyChosen. If you designed the recipe yourself, set "Own experiment" — a legitimate answer with its own rules (see BASED-ON in the system prompt), not a fallback, and always better than reconstructing a published recipe from memory.
+basedOn — name the reference this candidate adapts: a recipe from the FULL TEXT in YOUR BREWERS TODAY (named exactly as written there), any recipe from the REFERENCE RECIPE INDEX in the system prompt (its exact name — then its pours are yours to reconstruct from the index line and the brewer rules, said so in whyChosen), or one of the user's own well-rated brews (e.g. "Your Orea V4 Classic — DAK Berry Swirl (12 Aug 2026)"). If you designed the recipe yourself, set "Own experiment" — a legitimate answer with its own rules (see BASED-ON in the system prompt), not a fallback, and always better than reconstructing a published recipe from memory.
 
 RECIPE FIELD CONSISTENCY — the recipe's structured fields ARE the brew the user makes; the app shows them as the headline and feeds pourSteps to the timer. They must all describe ONE recipe:
 - doseGrams / waterGrams / waterTempC / grindSize / targetTimeSec are the recipe you are actually instructing. When you adapt a reference recipe, put the ADAPTED numbers here — NEVER leave the reference recipe's published dose/water/temp in these fields while the pourSteps and prose describe a different brew. (The failure to avoid: header reads 18g:225g:93°C copied from the reference, while the pour plan pours to 230g and the rationale says "1:15.3 at 90°C" — three different recipes in one candidate.)
@@ -1047,11 +864,19 @@ CANDIDATE TITLES must be DISTINCT across the candidates in one response — the 
 
 Return valid JSON only.`;
 
-  const first = await callRecommendModel(userMessage);
+  const cachedBlocks = [formatRecipeIndexBlock()];
+  const first = await callRecommendModel(userMessage, { cachedBlocks });
   let usage = { ...first.usage, calls: 1 };
 
   let raw = parseClaudeJson(first.text, RecommendationResponseSchema);
-  if (!raw) throw new Error("Failed to parse recommendation from Claude");
+  if (!raw) {
+    // One retry on unparseable JSON (2026-10-19; it used to throw outright).
+    console.warn("[recommend] first answer did not parse — one retry");
+    const again = await callRecommendModel(userMessage + "\n\nYour previous answer was not valid JSON. Return the complete JSON again, valid JSON only.", { cachedBlocks });
+    usage = { input_tokens: usage.input_tokens + again.usage.input_tokens, output_tokens: usage.output_tokens + again.usage.output_tokens, calls: 2 };
+    raw = parseClaudeJson(again.text, RecommendationResponseSchema);
+    if (!raw) throw new Error("Failed to parse recommendation from Claude");
+  }
 
   // Did the model actually use the menu it was given? Nothing checked this
   // before, which is why the menu could measurably rotate while the candidates
@@ -1059,28 +884,14 @@ Return valid JSON only.`;
   // salient. Never an exclusion (best fit decides, nothing is banned); this is
   // the signal that tells us whether rotating the menu can help at all.
   const menuNames = menuNamesOf(
-    recipesForPrompt,
+    menuRecipeNames.map((name) => ({ recipe: { name } })),
     convergeBase ? [...ownReferenceNamesForTurn, convergeBase.name] : ownReferenceNamesForTurn,
   );
 
-  // ONE merged repair round (2026-10-03, speed round). The repeat guard and the
-  // convergence check used to run back to back, each with its own second model
-  // call — worst case three sequential ~30 s generations. Both checks read the
-  // FIRST answer, their corrections are appended together, and one call fixes
-  // both. They cannot contradict each other: the convergence base's name is in
-  // `menuNames`, so the ≥4★ reproduction is never a repeat offender, and the
-  // repeat repair touches only the offending candidates.
-  const offenders = repeatGuardActive
-    ? findRepeatOffenders(raw.candidates, menuNames, offered)
-    : [];
-  const convergenceActive = convergence.kind === "converge" || convergence.kind === "diverge";
-  const violation = convergenceActive ? checkConvergence(convergence, raw.candidates[0]) : null;
+  // ONE repair round, for the two things only the user's own words decide
+  // (2026-10-19: the repeat, convergence, shown and Chemex repairs are gone —
+  // preferences and history are information the model weighs).
   const repairs: string[] = [];
-  const reshown = findReshown(raw.candidates, shown, resolveReference, allowIds);
-  if (reshown.length) {
-    console.warn(`[recommend] shown guard: ${reshown.map((o) => `"${o.title}" repeats "${o.matched}"`).join("; ")} — one repair round`);
-    repairs.push(formatReshownRepair(reshown));
-  }
   const excludedUsed = raw.candidates
     .map((c, i) => ({ c, i }))
     .filter(({ c }) => usesExcludedBrewer(c.method, excludedBrewers));
@@ -1097,32 +908,14 @@ Return valid JSON only.`;
   if (requestMissed && requestedRecipe) {
     console.warn(`[recommend] user-request: candidate 1 basedOn "${raw.candidates[0]?.basedOn ?? "none"}" is not the requested ${requestedRecipe.id} — one repair round`);
     repairs.push(
-      `\n\nREPAIR — REQUESTED RECIPE. The user asked for "${requestedRecipe.name}". The FIRST candidate must adapt exactly that recipe (basedOn "${requestedRecipe.name}", entry 1 of RELEVANT REFERENCE RECIPES). Keep the second candidate as it was unless it is the same recipe.`,
+      `\n\nREPAIR — REQUESTED RECIPE. The user asked for "${requestedRecipe.name}". The FIRST candidate must adapt exactly that recipe (basedOn "${requestedRecipe.name}", entry 0 under REQUESTED RECIPE). Keep the second candidate as it was unless it is the same recipe.`,
     );
-  }
-  const tooFine = findTooFineChemex(raw.candidates, chemexSlowFloor);
-  if (tooFine.length) {
-    console.warn(`[recommend] chemex measured: ${tooFine.map((t) => `"${t.title}" ${t.grind}`).join("; ")} at or finer than the measured slow ${chemexSlowFloor}° — one repair round`);
-    repairs.push(
-      `\n\nREPAIR — CHEMEX GRIND. ${tooFine.map((t) => `Candidate ${t.index + 1} "${t.title}" grinds ${t.grind}`).join("; ")}, at or finer than ${Math.round(chemexSlowFloor ?? 0)}°, which the owner MEASURED running slow at this batch. Chemex's rule for slow filtering is a coarser grind: make it coarser than ${Math.round(chemexSlowFloor ?? 0)}°, call it a measurement brew in whyChosen, keep everything else.`,
-    );
-  }
-  if (offenders.length) {
-    console.warn(
-      `[recommend] repeat guard: ${offenders
-        .map((o) => `"${o.title}" (${o.method}, ${o.basedOn || "no basedOn"}, offered ${o.timesOffered}/${REPEAT_WINDOW})`)
-        .join("; ")} — one repair round`,
-    );
-    repairs.push(formatRepeatRepair(offenders, offered));
-  }
-  if (violation) {
-    console.warn(`[recommend] convergence (${violation.kind}): ${violation.reason} — one repair round`);
-    repairs.push(formatConvergenceRepair(convergence, violation));
   }
   if (repairs.length) {
     try {
       const second = await callRecommendModel(
         userMessage + repairs.join("\n") + "\n\nReturn the complete JSON again.",
+        { cachedBlocks },
       );
       usage = {
         input_tokens: usage.input_tokens + second.usage.input_tokens,
@@ -1131,20 +924,6 @@ Return valid JSON only.`;
       };
       const repaired = parseClaudeJson(second.text, RecommendationResponseSchema);
       if (repaired) {
-        if (offenders.length) {
-          const left = findRepeatOffenders(repaired.candidates, menuNames, offered);
-          if (left.length) {
-            console.warn(`[recommend] repeat guard: still ${left.length} repeat(s) after repair — using the repaired answer anyway`);
-          }
-        }
-        if (violation) {
-          const left = checkConvergence(convergence, repaired.candidates[0]);
-          if (left) {
-            console.warn(`[recommend] convergence: still "${left.reason}" after repair — using the repaired answer anyway`);
-          } else {
-            console.log(`[recommend] convergence: repaired (${violation.kind})`);
-          }
-        }
         raw = repaired;
       } else {
         console.warn("[recommend] repair answer did not parse — keeping the first answer");
@@ -1154,12 +933,13 @@ Return valid JSON only.`;
         `[recommend] repair call failed — keeping the first answer: ${String((err as Error)?.message ?? err).slice(0, 160)}`,
       );
     }
-  } else if (convergenceActive) {
+  }
+  if (convergence.kind === "converge" || convergence.kind === "diverge") {
+    const base = convergence.kind === "converge" ? convergence.base : convergence.last;
+    const first0 = raw.candidates[0];
     console.log(
-      `[recommend] convergence: ${convergence.kind} ok — first candidate ${
-        convergence.kind === "converge"
-          ? `reproduces the ${convergence.base.rating}★ ${convergence.base.method} base (change: ${raw.candidates[0]?.experiment ?? "unnamed"})`
-          : `differs from the ${convergence.last.rating}★ ${convergence.last.method} brew`
+      `[recommend] last brew ${base.rating}★ on ${base.method} — candidate 1 is ${first0?.method} (basedOn "${first0?.basedOn ?? "none"}"): ${
+        brewMethodKey(first0?.method) === brewMethodKey(base.method) ? "builds on it" : "goes elsewhere"
       }`,
     );
   }
@@ -1189,17 +969,24 @@ Return valid JSON only.`;
     whyChosen: c.whyChosen,
     ...(c.experiment ? { experiment: c.experiment } : {}),
     confidence: c.confidence as CandidateConfidence,
+    // Raw proposal; made real (or dropped) by attachGrinderSuggestion after
+    // the user's own numbers and the grind-unit pass.
+    ...(c.grinderSuggestion
+      ? { grinderSuggestion: { grinder: c.grinderSuggestion.grinder as "Comandante C40" | "Niche Zero", reason: c.grinderSuggestion.reason, grindSize: "" } }
+      : {}),
   }));
 
-  // Deterministic backstops over what the model returned (the prompt forbids
-  // all of these, but a weaker model can still leak them — #453):
-  //   1. over-capacity vessels (too small for the water it pours);
-  //   2. vessels too small to SERVE the requested volume, or a recipe that
-  //      grossly under-pours it (the "450ml → 180ml AeroPress" bug);
-  //   3. any proactively-suggested Drip Assist.
-  //   4. swirl/stir steps a minimal-agitation brewer (Origami/Chemex/Moccamaster)
-  //      never wanted — incl. one sequenced after the drawdown.
-  const deSwirled = stripMinimalAgitationSwirls(mapped, resolveReference);
+  // What is left of the guard chain (2026-10-19): physics and the owner's own
+  // rules — the water fits the vessel, the disc only when he locked it, a
+  // VERIFIED reference's agitation stays as published, his typed numbers win,
+  // the grind is in his grinder's unit. Nothing here encodes a preference.
+  //   4. Agitation a model ADDED to a minimal-agitation brewer's recipe when a
+  //      VERIFIED reference says otherwise. Without a verified reference the
+  //      model's agitation stands (it is its own recipe).
+  const deSwirled = stripMinimalAgitationSwirls(mapped, (basedOn) => {
+    const ref = resolveReference(basedOn);
+    return ref?.verified ? ref : null;
+  }).map((c, i) => (resolveReference(c.basedOn)?.verified ? c : mapped[i]));
 
   //   -1. BATCH WINDOW. A candidate that names a reference published for a
   //       batch this brew is not within ±20 % of is not that recipe (owner
@@ -1262,16 +1049,7 @@ Return valid JSON only.`;
   const deSwirledSafe = (physicsKept.length ? physicsKept : physicsChecked).map((r) => r.candidate);
 
   const capped = guardVesselCapacity(deSwirledSafe);
-  const volumeSafe = guardVolumeTarget(
-    capped,
-    targetWaterMl,
-    // Skip when the model's volume semantics differ from the plain target, or
-    // when the user locked a method (USER OVERRIDE honours vessel + volume).
-    context.occasion === "summer-time" ||
-      context.occasion === "cold-brew" ||
-      Boolean(lockedMethodBase),
-  );
-  const discGuarded = stripProactiveDripAssist(volumeSafe, Boolean(dripAssistLocked));
+  const discGuarded = stripProactiveDripAssist(capped, Boolean(dripAssistLocked));
   //   5. THE CLOCK. Pour phase + this setup's drawdown (measured first). Runs
   //      after the disc guard because the brewer — disc or bare — decides the
   //      drawdown. Never pads: the drawdown is clamped to MAX_DRAWDOWN_ABS_SEC.
@@ -1282,41 +1060,17 @@ Return valid JSON only.`;
     coffee.roastDate,
   );
 
-  //   6. LONG POUR GAPS — the owner's "pour 2 was somehow 2 minutes" report.
-  //      The prompt's pour-vs-clock floor (recommendPrompt.ts) is the primary
-  //      fix, but the model can still author a recipe with too few pours for its
-  //      targetTimeSec, and buildPourOver then renders a >75s hole between pours
-  //      (a stalled brew that over-extracts and tastes bad). This reads the
-  //      RENDERED schedule — the derived gap, not the authored numbers — and
-  //      drops any percolation candidate over the threshold. Recipes are never
-  //      rewritten (owner rule: we don't falsify recipes — we don't OFFER the
-  //      bad ones). If every candidate trips it (a rare double-leak), keep the
-  //      single LEAST-bad so the user still gets a recipe.
-  const gaps = discTimed.map((c) =>
-    isPercolation(c.method)
-      ? maxRenderedPourGapSec(c.recipe, coffee.roastDate, undefined, c.method)
-      : 0,
-  );
-  const gapKept = discTimed.filter((_, i) => gaps[i] <= LONG_DESIGNED_WAIT_SEC);
-  let gapGuarded = discTimed;
-  if (gapKept.length && gapKept.length < discTimed.length) {
-    discTimed.forEach((c, i) => {
-      if (gaps[i] > LONG_DESIGNED_WAIT_SEC) {
-        console.warn(
-          `[recommend] long-pour-gap: dropped "${c.title ?? c.method}" — ${Math.round(gaps[i])}s dead gap between pours (> ${LONG_DESIGNED_WAIT_SEC}s)`,
-        );
-      }
-    });
-    gapGuarded = gapKept;
-  } else if (!gapKept.length && discTimed.length > 1) {
-    // Every candidate has a long gap — keep only the least-bad one.
-    let best = 0;
-    for (let i = 1; i < gaps.length; i++) if (gaps[i] < gaps[best]) best = i;
-    console.warn(
-      `[recommend] long-pour-gap: all candidates over ${LONG_DESIGNED_WAIT_SEC}s — kept least-bad "${discTimed[best].title ?? discTimed[best].method}" (${Math.round(gaps[best])}s)`,
-    );
-    gapGuarded = [discTimed[best]];
+  //   6. LONG POUR GAPS — logged, never dropped (2026-10-19): the prompt tells
+  //      the model a wait over 75 s reads as a stalled brew; if it writes one
+  //      anyway it is its recipe, and the brew screen shows it as written.
+  for (const c of discTimed) {
+    if (!isPercolation(c.method)) continue;
+    const gap = maxRenderedPourGapSec(c.recipe, coffee.roastDate, undefined, c.method);
+    if (gap > LONG_DESIGNED_WAIT_SEC) {
+      console.warn(`[recommend] long-pour-gap: "${c.title ?? c.method}" has a ${Math.round(gap)}s gap between pours (> ${LONG_DESIGNED_WAIT_SEC}s) — kept as written`);
+    }
   }
+  const gapGuarded = discTimed;
 
   // Grinder UNIT. The user picks the grinder in the flow and the prompt says
   // "NEVER Niche°" / "NEVER clicks" for the one they didn't pick, but a hard
@@ -1325,12 +1079,8 @@ Return valid JSON only.`;
   // wrong number: "406" on a Comandante isn't approximately right, it is a
   // setting the grinder does not have. Converted, not flagged, using the
   // owner's own measured anchors (grindSettings.ts).
-  //   7. SPECIAL (fast shot) — every guard above can lift a clock (physics floor,
-  //      fidelity snap, measured timing calibration), so the ceiling is enforced
-  //      last. Drops over-ceiling candidates; keeps all if all are over.
-  const timeGuarded = guardSpecialTime(gapGuarded, context.timeAvailable);
-
   //   8. The user's own typed numbers, last, so no guard can undo them.
+  const timeGuarded = gapGuarded;
   const userParamsApplied = userReq
     ? timeGuarded.map((c) => {
         const res = applyUserParams(c.recipe, userReq.params);
@@ -1356,11 +1106,15 @@ Return valid JSON only.`;
       : [];
   const candidates = grindGuarded.map((c) => {
     const recipe = { ...c.recipe, pourSequence: derivePourSequence(c.recipe.pourSteps) ?? c.recipe.pourSequence };
-    return {
-      ...c,
-      recipe,
-      grindProvenance: grindProvenanceOf({ ...c, recipe }, { sessions: pastSessions, userGrind: userReq?.params.grind, computedWindows }),
-    };
+    return attachGrinderSuggestion(
+      {
+        ...c,
+        recipe,
+        grindProvenance: grindProvenanceOf({ ...c, recipe }, { sessions: pastSessions, userGrind: userReq?.params.grind, computedWindows }),
+      },
+      sessionGrinder,
+      Boolean(userReq?.params.grind),
+    );
   });
 
   return {

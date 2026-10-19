@@ -288,7 +288,7 @@ test("WIRING: /recommend stamps pour times, then sets the clock from the drawdow
   assert.match(src, /applyPourDurations\(c\.recipe/);
   assert.match(src, /const physicsChecked\s*=\s*pourTimed\.map/);
   assert.match(src, /calibrateDrawdownClock\(\s*discGuarded/);
-  assert.match(src, /discTimed\.map\(/, "the clocked candidates must flow on to the gap guard");
+  assert.match(src, /for \(const c of discTimed\)/, "the clocked candidates must flow on to the gap report");
   assert.doesNotMatch(src, /calibrateTargetTimes\(|calibrateDripAssistFinish\(/);
 });
 
