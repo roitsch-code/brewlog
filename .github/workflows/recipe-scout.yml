@@ -49,6 +49,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Scout, verify, gate, commit
+        # A push that DELETES the trigger file also matches the paths filter
+        # (2026-10-19: the clean-up commit before the merge spent a run); the
+        # paid step runs only when the file is present, or on the schedule.
+        if: github.event_name != 'push' || hashFiles('.github/recipe-scout-trigger') != ''
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # A fine-grained PAT with Contents: read/write on this repo makes the
