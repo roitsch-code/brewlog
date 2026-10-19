@@ -488,4 +488,196 @@ export const OREA_WIDE_RECIPES: Recipe[] = [
     ],
     verified: false,
   },
+
+  // ── TWO-CUP RECIPES (orea.uk/guides-v4, read 2026-10-19) ──────────────────
+  // Since the ±20 % batch window (#621, 2026-10-10) a reference is offered only
+  // near its published water, and the set above is almost all single-cup: at a
+  // 450 g brew only Dara for Two survived, so Apex / Classic / Fast vanished from
+  // every Big menu (production: 0 Orea candidates in 8 unlocked recommendations
+  // after 10-10). OREA publishes four two-cup recipes for the V4 NARROW +
+  // FAST bottom, each with its own per-bottom note ("CLASSIC BOTTOM: grind
+  // coarser", "APEX BOTTOM: …central pours"); the Classic / Apex entries below
+  // are exactly those published adaptations, nothing more. Pours and drink times
+  // are OREA's; the last pour's seconds are its grams at the page's "around
+  // 5 G/S" default. The fourth, The Hangover (600 ml), is left out: the
+  // owner-measured Orea cap is 450 ml (VESSEL_CAPS), so it could never be offered.
+  // The bestFor tags are OURS (OREA tags no goal) — taken from
+  // the single-cup sibling above and the bottom roles in this file's header.
+  ...forTwo(),
 ];
+
+/** One OREA two-cup recipe, published for the Fast bottom, plus the bottom
+ * adaptations OREA itself prints for it. */
+function forTwo(): Recipe[] {
+  const src = (name: string) => [
+    { type: "blog" as const, citation: `OREA recipe '${name}' — V4 Narrow + Fast, two cups, with OREA's own Wide / Classic / Apex notes, orea.uk guides`, url: "https://orea.uk/guides-v4" },
+  ];
+  const wide = "Published for the V4 NARROW; OREA's Wide note: \"Grind a little coarser to adapt this recipe.\"";
+  const noNiche = (clicks: string, extra = "") => ({
+    referenceGrinder: "Comandante C40",
+    referenceSetting: `Orea publishes ${clicks} Comandante C40 clicks for the V4 NARROW + Fast; for the Wide only "grind a little coarser" (orea.uk/guides-v4)${extra}`,
+    // No Niche° number: Narrow clicks, no published Wide value (grind audit 2026-10-18; owner: no estimates).
+  });
+
+  const easyPours = (central: boolean) => [
+    { label: "Bloom", action: "pour" as const, waterGramsAtEnd: 100, durationSec: 40, notes: "Spiral." },
+    { label: "Pour 2", action: "pour" as const, waterGramsAtEnd: 175, durationSec: 45, notes: "Spiral — pour when the water level almost reaches the bed." },
+    { label: "Pour 3", action: "pour" as const, waterGramsAtEnd: 250, durationSec: 35, notes: "Spiral." },
+    { label: "Pour 4", action: "pour" as const, waterGramsAtEnd: 325, durationSec: 45, notes: central ? "Central (OREA's Apex note)." : "Spiral." },
+    { label: "Final pour", action: "pour" as const, waterGramsAtEnd: 400, durationSec: 15, notes: central ? "Central (OREA's Apex note)." : "Spiral." },
+    { label: "Drawdown", action: "drain" as const, durationSec: 30 },
+  ];
+  const easyBase = {
+    attribution: { person: "OREA", title: "V4 two-cup recipe", country: "UK" },
+    category: "reference" as const,
+    dose: { grams: 25 },
+    water: { grams: 400, ratio: "1:16" },
+    temperature: { celsius: 94 },
+    totalTimeSec: 210,
+    sources: src("Easy for Two"),
+    verified: false,
+    teaches: "OREA's Easy Does It scaled by OREA itself to a 400 ml batch: five even pulses, the next one when the water has almost reached the bed.",
+    science: "Even pulses keep the water level shallow and the bed level, so a two-cup bed extracts evenly without one long pour channelling through it.",
+    whenToUse: "Two cups of a washed coffee with the least fuss — OREA: \"EASY DOES IT but scaled up for two\".",
+  };
+
+  const finePours = (central: boolean) => [
+    { label: "Bloom", action: "pour" as const, waterGramsAtEnd: 120, durationSec: 40 },
+    { label: "Slow continuous pour", action: "pour" as const, waterGramsAtEnd: 400, durationSec: 95, notes: central ? "One long, steady CENTRAL pour at ~3 g/s (OREA's Apex note)." : "Pour very slowly, ~3 g/s." },
+    { label: "Drawdown", action: "drain" as const, durationSec: 75 },
+  ];
+  const fineBase = {
+    attribution: { person: "OREA", title: "V4 two-cup recipe", country: "UK" },
+    category: "reference" as const,
+    dose: { grams: 24 },
+    water: { grams: 400, ratio: "1:16.7" },
+    temperature: { celsius: 90 },
+    totalTimeSec: 210,
+    sources: src("Fine for Two"),
+    verified: false,
+    teaches: "The Fine at two cups: a big bloom, then one very slow pour — OREA's \"punchy juice\" at 400 ml.",
+    science: "A slow single pour keeps agitation low, so the finer bed does not compact while the higher extraction lands as juiciness.",
+    whenToUse: "A punchy, juicy two-cup brew of a bright washed coffee. OREA times it on Sibarist Fast Flat papers.",
+  };
+
+  const aussiePours = [
+    { label: "Bloom", action: "pour" as const, waterGramsAtEnd: 100, durationSec: 40 },
+    { label: "Pour 2", action: "pour" as const, waterGramsAtEnd: 200, durationSec: 30, notes: "Pour when the water has cleared the bed." },
+    { label: "Pour 3", action: "pour" as const, waterGramsAtEnd: 300, durationSec: 30, notes: "Pour when the water has cleared the bed." },
+    { label: "Pour 4", action: "pour" as const, waterGramsAtEnd: 400, durationSec: 30, notes: "Pour when the water has cleared the bed." },
+    { label: "Final pour", action: "pour" as const, waterGramsAtEnd: 500, durationSec: 20 },
+    { label: "Drawdown", action: "drain" as const, durationSec: 30 },
+  ];
+  const aussieBase = {
+    attribution: { person: "OREA", title: "V4 two-cup recipe (Australian Brewers Cup style)", country: "UK" },
+    category: "reference" as const,
+    dose: { grams: 27 },
+    water: { grams: 500, ratio: "1:18.5 (26–28 g)" },
+    temperature: { celsius: 97 },
+    totalTimeSec: 180,
+    sources: src("Two Aussies"),
+    verified: false,
+    teaches: "The Aussie at 500 ml: coarse, hot, five pulses, each when the bed has cleared.",
+    science: "Re-saturating a cleared bed each pulse extends contact without long submersion, which keeps a fermented coffee's loudest notes from turning muddy.",
+    whenToUse: "Two cups of a natural or fermented coffee you want clean and tea-like.",
+  };
+
+  return [
+    {
+      ...easyBase,
+      id: "orea-wide-easy-for-two",
+      name: "Easy for Two — Orea Wide Fast",
+      shortName: "Easy for Two",
+      brewer: "orea-v4-fast",
+      brewerNotes: `V4 WIDE + FAST bottom, OREA Flat paper + Negotiator (Wave / Sibarist Fast: slightly finer). ${wide}`,
+      grind: { ...noNiche("24–28"), description: "Coarse, 24–28 Comandante clicks on the Narrow; a little coarser on the Wide. Drink at 3:30–4:00." },
+      pourSequence: easyPours(false),
+      techniques: ["bloom", "pulse-pouring", "spiral-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed"], goals: ["balanced", "sweetness-forward"] },
+    },
+    {
+      ...easyBase,
+      id: "orea-wide-easy-for-two-classic",
+      name: "Easy for Two — Orea Wide Classic",
+      shortName: "Easy for Two (Classic)",
+      brewer: "orea-classic",
+      brewerNotes: `V4 WIDE + CLASSIC bottom. OREA's Classic note for this recipe: grind a bit coarser, same pouring pattern. ${wide}`,
+      grind: { ...noNiche("24–28", "; Classic: \"grind a bit coarser\""), description: "Coarser than the Fast version (OREA's Classic note). Drink at 3:30–4:00." },
+      pourSequence: easyPours(false),
+      techniques: ["bloom", "pulse-pouring", "spiral-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed", "honey"], goals: ["balanced", "sweetness-forward"] },
+    },
+    {
+      ...easyBase,
+      id: "orea-wide-easy-for-two-apex",
+      name: "Easy for Two — Orea Wide Apex",
+      shortName: "Easy for Two (Apex)",
+      brewer: "orea-apex",
+      brewerNotes: `V4 WIDE + APEX bottom. OREA's Apex note for this recipe: grind a bit finer, the final two pours central only. ${wide}`,
+      grind: { ...noNiche("24–28", "; Apex: \"grind a bit finer\""), description: "Finer than the Fast version (OREA's Apex note). Drink at 3:30–4:00." },
+      pourSequence: easyPours(true),
+      techniques: ["bloom", "pulse-pouring", "central-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed", "honey"], goals: ["high-clarity", "aromatic", "balanced"] },
+    },
+    {
+      ...fineBase,
+      id: "orea-wide-fine-for-two",
+      name: "Fine for Two — Orea Wide Fast",
+      shortName: "Fine for Two",
+      brewer: "orea-v4-fast",
+      brewerNotes: `V4 WIDE + FAST bottom, timed on Sibarist Fast Flat papers. ${wide}`,
+      grind: { ...noNiche("19–22"), description: "Medium-fine, 19–22 Comandante clicks on the Narrow; a little coarser on the Wide. Drink at 3:30–4:30." },
+      pourSequence: finePours(false),
+      techniques: ["bloom", "continuous-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed"], goals: ["sweetness-forward", "high-clarity"] },
+    },
+    {
+      ...fineBase,
+      id: "orea-wide-fine-for-two-classic",
+      name: "Fine for Two — Orea Wide Classic",
+      shortName: "Fine for Two (Classic)",
+      brewer: "orea-classic",
+      brewerNotes: `V4 WIDE + CLASSIC bottom. OREA's Classic note for this recipe: grind coarser. ${wide}`,
+      grind: { ...noNiche("19–22", "; Classic: \"grind coarser\""), description: "Coarser than the Fast version (OREA's Classic note). Drink at 3:30–4:30." },
+      pourSequence: finePours(false),
+      techniques: ["bloom", "continuous-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed", "honey"], goals: ["sweetness-forward", "balanced"] },
+    },
+    {
+      ...fineBase,
+      id: "orea-wide-fine-for-two-apex",
+      name: "Fine for Two — Orea Wide Apex",
+      shortName: "Fine for Two (Apex)",
+      brewer: "orea-apex",
+      brewerNotes: `V4 WIDE + APEX bottom. OREA's Apex note for this recipe: more central pouring, a long steady central pour for the big pour. ${wide}`,
+      grind: { ...noNiche("19–22"), description: "Medium-fine on the Narrow; a little coarser on the Wide. Drink at 3:30–4:30." },
+      pourSequence: finePours(true),
+      techniques: ["bloom", "continuous-pour", "central-pour"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["washed"], goals: ["high-clarity", "aromatic"] },
+    },
+    {
+      ...aussieBase,
+      id: "orea-wide-two-aussies",
+      name: "Two Aussies — Orea Wide Fast",
+      shortName: "Two Aussies",
+      brewer: "orea-v4-fast",
+      brewerNotes: `V4 WIDE + FAST bottom, OREA Flat paper + Negotiator (Wave / Sibarist Fast: slightly finer). ${wide}`,
+      grind: { ...noNiche("28–32"), description: "Coarse, 28–32 Comandante clicks on the Narrow; a little coarser on the Wide. Drink at 2:30–3:00." },
+      pourSequence: aussiePours,
+      techniques: ["bloom", "pulse-pouring"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["natural", "anaerobic", "experimental"], goals: ["body-forward", "explore"] },
+    },
+    {
+      ...aussieBase,
+      id: "orea-wide-two-aussies-classic",
+      name: "Two Aussies — Orea Wide Classic",
+      shortName: "Two Aussies (Classic)",
+      brewer: "orea-classic",
+      brewerNotes: `V4 WIDE + CLASSIC bottom. OREA's Classic note for this recipe: grind coarser. ${wide}`,
+      grind: { ...noNiche("28–32", "; Classic: \"grind coarser\""), description: "Coarser than the Fast version (OREA's Classic note). Drink at 2:30–3:00." },
+      pourSequence: aussiePours,
+      techniques: ["bloom", "pulse-pouring"],
+      bestFor: { roastLevels: ["light", "medium-light"], processes: ["natural", "anaerobic", "experimental"], goals: ["balanced", "body-forward"] },
+    },
+  ];
+}

@@ -64,7 +64,9 @@ test("matcher: exact name → full text; a person or a brewer → an index of na
   const v60 = M.lookupRecipe("V60");
   assert.equal(v60.kind, "index", "a brewer id is the whole group, not one recipe whose shortName is the same word");
   assert.ok(v60.matches > 20);
-  assert.equal(M.lookupRecipe("orea-classic").matches, 2);
+  // OG Base, Easy Does It + the Classic adaptations of OREA's two-cup
+  // Easy for Two / Fine for Two / Two Aussies (2026-10-19).
+  assert.equal(M.lookupRecipe("orea-classic").matches, 5);
 
   const none = M.lookupRecipe("xyzzy plugh");
   assert.equal(none.kind, "none");
