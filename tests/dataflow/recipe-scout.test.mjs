@@ -148,6 +148,26 @@ test("the written file round-trips through the corpus: SCOUTED_RECIPES is in ALL
   assert.match(wf, /\.github\/recipe-scout-trigger/, "a branch run before the workflow is merged");
 });
 
+test("the pour plan must be backed step by step: an invented pour, an unbacked milestone, or a water only in a 'total' line is refused", () => {
+  const ok = { ...good, quotes: { ...good.quotes, pours: ["Pour the initial 50ml to bloom", "After 40 seconds pour to 150g", "then pour to 250g"] } };
+  assert.deepEqual(S.pourPlanProblems(ok), []);
+  const byIncrement = { ...ok, quotes: { ...ok.quotes, pours: ["50ml bloom", "then 100ml", "then another 100ml"] } };
+  assert.deepEqual(S.pourPlanProblems(byIncrement), [], "an increment backs a milestone too");
+  // The third run's case: the page says 50 – 250, the header says 300ml, the model added a pour to 300.
+  const invented = {
+    ...ok,
+    water: 300,
+    pours: [...ok.pours, { label: "Final pour", action: "pour", waterGramsAtEnd: 300, durationSec: 30, notes: "Inferred from the header total — not individually narrated." }],
+    quotes: { ...ok.quotes, water: "Total amount: 300ml", pours: [...ok.quotes.pours, "Total amount: 300ml"] },
+  };
+  const problems = S.pourPlanProblems(invented);
+  assert.ok(problems.some((p) => /marked inferred/.test(p)), problems.join(" | "));
+  const unbacked = { ...ok, quotes: { ...ok.quotes, pours: ["50ml bloom", "a slow pour", "to the end"] } };
+  assert.ok(S.pourPlanProblems(unbacked).some((p) => /no pour quote carrying 150 or 100/.test(p)));
+  const totalOnly = { ...ok, pours: ok.pours.slice(0, 3), water: 250, quotes: { ...ok.quotes, pours: ["50ml bloom", "pour to 150g"] } };
+  assert.ok(S.pourPlanProblems(totalOnly).some((p) => /not reached by any quoted pour/.test(p)));
+});
+
 test("the candidate's quotes are flattened in a fixed order so a missing one names itself", () => {
   const q = S.candidateQuotes(good);
   assert.deepEqual(q.map((x) => x.key), ["dose", "water", "temp", "time", "pour1"]);

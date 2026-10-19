@@ -11,7 +11,7 @@ import type { Recipe } from "./types";
 
 export const SCOUTED_RECIPES: Recipe[] = [
   {
-    "id": "scout-daniel-yu-origami-wave-300",
+    "id": "scout-daniel-yu-origami-wave-250",
     "name": "Daniel Yu's Origami Wave Filter Recipe",
     "shortName": "Yu Origami (wave)",
     "attribution": {
@@ -26,8 +26,8 @@ export const SCOUTED_RECIPES: Recipe[] = [
       "grams": 20
     },
     "water": {
-      "grams": 300,
-      "ratio": "1:15"
+      "grams": 250,
+      "ratio": "1:12.5"
     },
     "temperature": {
       "celsius": 95
@@ -41,29 +41,21 @@ export const SCOUTED_RECIPES: Recipe[] = [
         "action": "pour",
         "waterGramsAtEnd": 50,
         "durationSec": 40,
-        "notes": "Pour 50ml in a circular motion over all grounds to saturate. Wait until 0:40."
+        "notes": "Pour the initial 50 ml to bloom; stirring or spinning is optional with a flat-bottom filter. Wait until 0:40."
       },
       {
-        "label": "Main continuous pour",
+        "label": "Long pour",
         "action": "pour",
         "waterGramsAtEnd": 250,
         "durationSec": 50,
-        "notes": "Starting at 0:40, pour 200ml in a slow circular motion — 5 circles outward and 5 back inward — ending back at center. Pouring done by 1:30 mark."
-      },
-      {
-        "label": "Final pour",
-        "action": "pour",
-        "waterGramsAtEnd": 300,
-        "durationSec": 30,
-        "notes": "Third pour (at ~1:20 interval) to reach the total of 300ml. Inferred from recipe header totals and 'every 40 seconds' interval — not individually narrated in the step-by-step text."
+        "notes": "After 40 seconds, one long and slow 200 ml pour: from the center, 5 circles outward and 5 back inward, ending at the center. Done by the 1:30 mark."
       }
     ],
     "totalTimeSec": 165,
     "techniques": [
       "bloom",
       "continuous-pour",
-      "spiral-pour",
-      "pulse-pouring"
+      "spiral-pour"
     ],
     "bestFor": {
       "roastLevels": [
@@ -91,7 +83,7 @@ export const SCOUTED_RECIPES: Recipe[] = [
       }
     ],
     "verified": false,
-    "notes": "Scouted 2026-10-19 by scripts/recipe-scout.mjs; every number quoted from the source and re-found on the page. Unverified until a session cross-checks it against the originator.",
+    "notes": "Scouted 2026-10-19 by scripts/recipe-scout.mjs and cross-checked in-session against the page: the page's recipe header says \"Total amount: 300ml\" but its own pouring pattern is \"50 \u2013 250\" and the narrated steps are a 50 ml bloom and one 200 ml long pour done by 1:30 \u2014 the entry follows the narrated steps (250 ml). The scout's first draft had invented a third pour to reach 300 ml; removed. Total time 2:45\u20133:00 on the page; 2:45 stored. Unverified beyond that one page.",
     "addedAt": "2026-10-19T18:53:23.896Z"
   }
 ];

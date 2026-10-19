@@ -308,7 +308,7 @@ Rules — a no-fabrication guarantee depends on them:
 - Use web_search. Prefer the author's own page, the roaster's page, a competition's official page, or a long-form article that reproduces the recipe in full. The page must be a normal web page (NOT a YouTube video, NOT a PDF, NOT an image): the recipe text must be readable in the page's HTML, because every quote will be re-found there by a script.
 - Every number you return (dose, water, temperature, total time, each pour's grams and seconds) must be ON that page. For each, put in "quotes" the line of the page that carries the number, COPIED as it stands (a script re-finds the numbers there; a paraphrase with the same numbers still passes, a number that is not on the page fails). If the page gives a range, return the range's lower value and quote the range. If a number is not on the page, do not invent it — leave it out and say so in "missing".
 - Look where recipes with numbers are actually published: the author's own site, roaster brew guides, Hario's and Kalita's recipe pages, Barista Hustle, competition routine write-ups, specialty-coffee magazines. A recipe at any water inside the given window is fine; a different author than the ones the corpus already has is the point.
-- Pour milestones are CUMULATIVE grams in the brewer; the last one equals the water. Actions: pour | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed.
+- Pour milestones are CUMULATIVE grams in the brewer; the last one equals the water. Every pour step must be narrated on the page — never add a step to make the pours reach a headline total; if the page's steps and its headline disagree, follow the steps and say so in "missing". Actions: pour | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed.
 - Grind as the author states it (grinder + setting + description) — never a Niche Zero number.
 - Techniques only from this list: TECHNIQUE_IDS.
 - If you cannot find a recipe that satisfies all of this, return {"none": true, "reason": "..."}.
@@ -325,7 +325,7 @@ Return ONLY JSON:
   "techniques": [],
   "bestFor": {"roastLevels": ["light"], "processes": ["washed"], "goals": ["high-clarity"]},
   "teaches": "", "science": "", "whenToUse": "",
-  "quotes": {"dose": "", "water": "", "temp": "", "time": "", "pours": [""]},
+  "quotes": {"dose": "", "water": "", "temp": "", "time": "", "pours": ["<ONE entry PER WATER step (bloom / pour / final — not waits), in order: the page's line that carries that step's amount (its running total or its increment)>"]},
   "missing": []
 }`;
 
@@ -356,6 +356,42 @@ async function searchCandidate(client, target, techniqueIds) {
   });
   const text = (resp?.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
   return extractJson(text);
+}
+
+/**
+ * The pour plan against its own quotes (2026-10-19, third run): the model
+ * had invented a third pour to reach a "300ml" header on a page whose
+ * pattern and steps say 50 – 250. So: one quote PER pour step, carrying that
+ * step's cumulative milestone or its increment; the water itself must be in
+ * a pour quote (a "total amount" line is not a pour); and a step the model
+ * marks as inferred, assumed or not narrated is a step it made up.
+ */
+export function pourPlanProblems(c) {
+  const problems = [];
+  const pours = Array.isArray(c?.pours) ? c.pours : [];
+  const pq = Array.isArray(c?.quotes?.pours) ? c.quotes.pours : [];
+  let prev = 0;
+  let waterSeen = false;
+  let w = 0; // quotes are one per WATER step (waits and swirls carry no grams)
+  const water = Number(c?.water);
+  pours.forEach((p, i) => {
+    if (/inferr|assum|not (?:individually )?narrated|estimat|guess/i.test(String(p?.notes ?? "") + " " + String(p?.label ?? ""))) {
+      problems.push(`"${p?.label ?? i}" is marked inferred / assumed by the model`);
+    }
+    if (typeof p?.waterGramsAtEnd !== "number") return;
+    const milestone = p.waterGramsAtEnd;
+    const increment = milestone - prev;
+    prev = milestone;
+    const nums = numbersIn(pq[w++] ?? "");
+    if (!nums.includes(String(milestone)) && !nums.includes(String(increment))) {
+      problems.push(`"${p.label ?? i}" (${milestone} g) has no pour quote carrying ${milestone} or ${increment}`);
+    }
+    if (milestone === water && (nums.includes(String(milestone)) || nums.includes(String(increment)))) waterSeen = true;
+  });
+  if (pours.some((p) => typeof p?.waterGramsAtEnd === "number") && !waterSeen) {
+    problems.push(`the water (${water} g) is not reached by any quoted pour — a "total amount" line is not a pour`);
+  }
+  return problems;
 }
 
 /** Every quote the candidate carries, flattened. */
@@ -440,6 +476,11 @@ export { TECHNIQUES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/t
     const missing = quotes.filter((q) => !quoteSupported(page, q.quote));
     if (missing.length > 0) {
       log.push(`${label}: ${missing.length} quote(s) whose numbers are not on the page (${missing.map((m) => m.key).join(", ")}) — dropped. First: ${JSON.stringify(missing[0].quote).slice(0, 120)}`);
+      continue;
+    }
+    const planProblems = pourPlanProblems(c);
+    if (planProblems.length > 0) {
+      log.push(`${label}: pour plan not backed by its quotes — dropped: ${planProblems.join("; ")}`);
       continue;
     }
     const entry = toRecipeEntry(c, { ...target, techniqueIds }, existing, nowIso);
