@@ -448,8 +448,28 @@ export { TECHNIQUES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/t
   execFileSync("git", ["config", "user.email", "recipe-scout@users.noreply.github.com"], { cwd: ROOT });
   execFileSync("git", ["add", SCOUTED_PATH], { cwd: ROOT });
   execFileSync("git", ["commit", "-m", `knowledge: scout ${date} — ${accepted.length} recipe${accepted.length === 1 ? "" : "s"} for ${gaps}`, "-m", body], { cwd: ROOT });
-  execFileSync("git", ["push", "origin", `HEAD:${branch}`], { cwd: ROOT, stdio: "inherit" });
-  console.log(`Committed and pushed to ${branch}.`);
+  // Push with GH_PAT when it is set and accepted — a PAT push fires deploy.yml,
+  // a GITHUB_TOKEN push never triggers a workflow. The PAT travels as an
+  // HTTP header through git's config env (never on the command line, never in
+  // output); a refused PAT falls back to the checkout's own credentials.
+  const pat = process.env.GH_PAT;
+  const repo = process.env.GITHUB_REPOSITORY;
+  let pushedWithPat = false;
+  if (pat && repo) {
+    const auth = Buffer.from(`x-access-token:${pat}`).toString("base64");
+    try {
+      execFileSync("git", ["push", `https://github.com/${repo}.git`, `HEAD:${branch}`], {
+        cwd: ROOT,
+        stdio: "pipe",
+        env: { ...process.env, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader", GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${auth}` },
+      });
+      pushedWithPat = true;
+    } catch {
+      console.log("::warning::GH_PAT was refused for the push — give that fine-grained token Contents: read/write on this repo so a scout commit deploys; falling back to GITHUB_TOKEN (the commit lands, nothing deploys until the next push)");
+    }
+  }
+  if (!pushedWithPat) execFileSync("git", ["push", "origin", `HEAD:${branch}`], { cwd: ROOT, stdio: "inherit" });
+  console.log(`Committed and pushed to ${branch}${pushedWithPat ? " with GH_PAT (deploys)" : " with GITHUB_TOKEN (no deploy until the next push)"}.`);
 }
 
 const isMain = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;

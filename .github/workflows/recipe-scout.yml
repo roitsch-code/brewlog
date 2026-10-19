@@ -35,9 +35,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The PAT is what lets the push trigger the deploy; a missing PAT
-          # falls back to GITHUB_TOKEN (push works, nothing deploys).
-          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN checks out and is the push fallback. The first
+          # branch run (2026-10-19) showed the existing GH_PAT cannot even
+          # read the repo over git ("could not read Username"), so the PAT
+          # is tried for the PUSH only, inside the script, and a refused PAT
+          # degrades to a GITHUB_TOKEN push (the recipes land, nothing
+          # deploys until the next push) with a warning naming the fix.
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -47,4 +50,7 @@ jobs:
       - name: Scout, verify, gate, commit
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # A fine-grained PAT with Contents: read/write on this repo makes the
+          # scout's push fire deploy.yml. Without it the commit still lands.
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: node scripts/recipe-scout.mjs

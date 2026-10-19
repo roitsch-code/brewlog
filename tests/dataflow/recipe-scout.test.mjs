@@ -125,7 +125,9 @@ test("the written file round-trips through the corpus: SCOUTED_RECIPES is in ALL
   const validate = await readFile(path.join(ROOT, "tests/recipes/validate.mjs"), "utf8");
   assert.match(validate, /still unverified — cross-check it against the originator/);
   const wf = await readFile(path.join(ROOT, ".github/workflows/recipe-scout.yml"), "utf8");
-  assert.match(wf, /token: \$\{\{ secrets\.GH_PAT \|\| secrets\.GITHUB_TOKEN \}\}/, "the push must come from the PAT to fire the deploy");
+  assert.match(wf, /GH_PAT: \$\{\{ secrets\.GH_PAT \}\}/, "the PAT reaches the script for the push that fires the deploy");
+  const script = await readFile(path.join(ROOT, "scripts/recipe-scout.mjs"), "utf8");
+  assert.match(script, /GIT_CONFIG_KEY_0: "http\.https:\/\/github\.com\/\.extraheader"/, "the PAT travels as a header, never on a command line");
   assert.match(wf, /cron: "5 6 \* \* 1"/);
   assert.match(wf, /\.github\/recipe-scout-trigger/, "a branch run before the workflow is merged");
 });
