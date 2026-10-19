@@ -247,7 +247,8 @@ test("every percolation recipe scales to 450ml without an unpourable step", () =
 test("WIRING: /recommend hands the model each reference already scaled", async () => {
   const { readFile } = await import("node:fs/promises");
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(src, /scaleTo:\s*\{\s*targetWaterGrams:\s*targetWaterMl/, "the target batch must reach the formatter");
+  assert.match(src, /targetWaterGrams:\s*targetWaterMl/, "the target batch must reach the formatter");
+  assert.match(src, /formatMenuForPrompt\(menu, \{ grinder: sessionGrinder/, "the menu is formatted with the brew's grinder");
   const fidelity = await readFile(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"), "utf8");
   assert.match(fidelity, /scaleRecipe|scaledReference/, "the guard must snap to the SCALED reference");
   assert.match(fidelity, /scaleGrind/, "the grind window must use the shared scaling law");

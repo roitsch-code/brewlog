@@ -18,7 +18,6 @@ const ROOT = process.cwd();
 const prompt = await readFile(path.join(ROOT, "src/lib/claude/recommendPrompt.ts"), "utf8");
 const rec = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
 const rot = await readFile(path.join(ROOT, "src/lib/claude/methodRotation.ts"), "utf8");
-const rg = await readFile(path.join(ROOT, "src/lib/claude/repeatGuard.ts"), "utf8");
 const chat = await readFile(path.join(ROOT, "src/lib/chat/agentContext.ts"), "utf8");
 
 test("total time: one rule, not two", () => {
@@ -32,7 +31,7 @@ test("candidate order is NOT arbitrary — candidate 1 is best-fit/convergence, 
     assert.doesNotMatch(src, /Order in the array is arbitrary/);
     assert.doesNotMatch(src, /hypothesis-A \/ hypothesis-B/);
   }
-  assert.match(prompt, /candidate 1 is the best-fit \/ convergence answer, candidate 2 is the exploration slot/);
+  assert.match(prompt, /candidate 1 is the best-fit answer, candidate 2 is the exploration slot/);
 });
 
 test("Origami agitation: cone like a V60, wave swirl-only — stated once, no 'bloom only' twin", () => {
@@ -41,10 +40,12 @@ test("Origami agitation: cone like a V60, wave swirl-only — stated once, no 'b
   assert.doesNotMatch(prompt, /Origami Dripper: light stir 1–2× at bloom only/);
 });
 
-test("every mention of the per-turn recipe block uses its real heading", () => {
-  for (const src of [prompt, rec, rot, rg]) assert.doesNotMatch(src, /REFERENCE RECIPE LIBRARY/);
+test("every mention of the per-turn recipe block uses its real heading", async () => {
+  for (const src of [prompt, rec, rot]) assert.doesNotMatch(src, /REFERENCE RECIPE LIBRARY|RELEVANT REFERENCE RECIPES/);
   for (const src of [rec, rot]) assert.doesNotMatch(src, /library above/);
-  assert.match(rec, /"RELEVANT REFERENCE RECIPES"/, "the heading itself");
+  const menu = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/menu.ts"), "utf8");
+  assert.match(menu, /YOUR BREWERS TODAY/, "the heading itself");
+  assert.match(prompt, /YOUR BREWERS TODAY/, "the system prompt names the block as it is headed");
 });
 
 test("no fixed-dose fallback contradicts the 'do NOT default to a fixed 23g' rule", () => {

@@ -187,7 +187,7 @@ export default function HomePage() {
     // day's cached line would sit there until the next time bucket.
     // v11: the bag is now picked in code and rotates per day/slot (it named
     // the same bag every time). Bump so today's cached repeat is dropped.
-    const key = `brewlog.starter.v11.${todayKey()}.${timeBucket()}`;
+    const key = `brewlog.starter.v12.${todayKey()}.${timeBucket()}`;
     try {
       const cached = window.localStorage.getItem(key);
       if (cached) {

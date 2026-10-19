@@ -115,11 +115,17 @@ test("the request is still the real recommend call (model, cached system prompt)
   assert.match(url, /api\.anthropic\.com/);
   assert.equal(body.model, "claude-opus-4-7");
   assert.equal(body.max_tokens, 5000);
-  // The system prompt must stay ONE cached block: the cache prefix is what keeps
-  // this ~40k-token call affordable (see recommend-cache-prefix.test.mjs).
+  // The system prompt is the first cached block; recommend.ts appends the
+  // REFERENCE RECIPE INDEX as a second cached block (2026-10-19). Without the
+  // option there is exactly one; every block carries its own breakpoint.
   assert.ok(Array.isArray(body.system) && body.system.length === 1);
   assert.equal(body.system[0].cache_control?.type, "ephemeral");
   assert.ok(body.system[0].text.length > 1000, "system prompt looks empty");
+  const src = await (await import("node:fs/promises")).readFile(path.join(ROOT, "src/lib/ai/recommendProvider.ts"), "utf8");
+  assert.match(src, /\.\.\.\(opts\.cachedBlocks \?\? \[\]\)\.map\(\(text\) => \(\{ type: "text" as const, text, cache_control: \{ type: "ephemeral" as const \} \}\)\)/);
+  const rec = await (await import("node:fs/promises")).readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
+  assert.match(rec, /const cachedBlocks = \[formatRecipeIndexBlock\(\)\];/);
+  assert.match(rec, /callRecommendModel\(userMessage, \{ cachedBlocks \}\)/);
 });
 
 test("the source carries no temperature line for the Anthropic path", async () => {

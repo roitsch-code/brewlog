@@ -1,5 +1,6 @@
 import { formatScaledForPrompt, scaleRecipe } from "@/lib/recipe/scaleRecipe";
-import { REFERENCE_BATCH_WINDOW } from "@/lib/recipe/batchWindow";
+import { batchWithinWindow } from "@/lib/recipe/batchWindow";
+import { isComandante, nicheToClicks } from "@/lib/utils/grindUnit";
 import type {
   Recipe,
   BrewerType,
@@ -7,8 +8,6 @@ import type {
   Process,
   Goal,
 } from "./types";
-import { vesselCannotServe } from "../../utils/vesselCapacity";
-import { isSpecialTime, SPECIAL_MAX_SEC } from "../../utils/timeBudget";
 import { CHAMPIONSHIP_RECIPES } from "./championship";
 import { REFERENCE_RECIPES } from "./reference";
 import { EXPANDED_RECIPES } from "./expanded";
@@ -235,14 +234,6 @@ export interface RecipeSelectionInput {
   variety?: string;
   goal: Goal;
   occasion?: string;
-  maxWaterMl?: number;
-  /**
-   * The exact drink volume the user asked for (ml). When set, recipes on a
-   * vessel that physically can't serve it are hard-excluded (e.g. AeroPress for
-   * 450ml). Set ONLY for plain hot brews — omitted for iced / cold brew (vessel
-   * holds less than the drink) and when a method is locked (USER OVERRIDE).
-   */
-  serveVolumeMl?: number;
   /**
    * When the user locks a specific brew method in the flow (preferredMethod),
    * pass the resolved BrewerType(s) here. Selection is then HARD-FILTERED to
@@ -271,15 +262,6 @@ export interface RecipeSelectionInput {
    */
   recentReferenceNames?: string[];
   /**
-   * Brewers that dominated the user's recent recommendation sets. Within each
-   * EQUAL-score group their recipes are moved to the back — an equally-good
-   * recipe on a fresher brewer takes the slot (and the per-brewer diversity
-   * win). Ties only, NEVER an exclusion: a recipe on a dominant brewer that
-   * genuinely outscores the field still leads (best fit always decides).
-   * Ignored when a method is locked.
-   */
-  demoteBrewers?: Set<BrewerType>;
-  /**
    * Exclude recipes whose DESIGN builds in a long wait — a steep or a long rest
    * between pours (see hasLongDesignedWait). Set when the user locked the Hario
    * Drip Assist disc: the disc distributes water across the whole bed so it
@@ -289,13 +271,6 @@ export interface RecipeSelectionInput {
    * to the unfiltered set if excluding would leave nothing.
    */
   excludeLongWaits?: boolean;
-  /**
-   * The flow's time bucket ("normal" | "special" | "long-steep"; legacy
-   * "quick"). "special" is the fast shot: the menu is hard-filtered to recipes
-   * whose published clock is within SPECIAL_MAX_SEC (falls back to the full set
-   * if nothing fits). Until 2026-09-30 the selector ignored this entirely.
-   */
-  timeAvailable?: string;
   /**
    * What this exact bag has already been brewed with — the brewers and the
    * `basedOn` reference names of its past sessions. Read ONLY by the Experiment
@@ -335,8 +310,6 @@ export interface ScoredRecipe {
 /** Brewers whose bed is forgiving of an imperfect pour: immersion, flat-bottom
  * and machine drip. Used by the Social occasion. */
 const FORGIVING_BREWERS = new Set<string>(["clever", "kalita-wave", "origami-wave", "orea-classic", "moccamaster"]);
-/** Brewers where the user does not pour at all during extraction. */
-const NON_POUR_BREWERS = new Set<string>(["clever", "aeropress", "aeropress-prismo", "moccamaster", "cold-brew-jar"]);
 
 /**
  * How well a recipe's SHAPE fits a hot occasion — 1 or 0. The specification is
@@ -344,8 +317,8 @@ const NON_POUR_BREWERS = new Set<string>(["clever", "aeropress", "aeropress-pris
  * user already reads, not a brewing rule invented here:
  *
  * - morning-ritual — "a slower, deliberate pour that anchors the start of a
- *   day": a hand-poured percolation with three or more pours and a clock of at
- *   least three minutes.
+ *   day": three or more pours and a clock of at least three minutes, whatever
+ *   the brewer.
  * - focus / deep-focus — "a clean, mid-strength cup": brew ratio 1:15–1:17, no
  *   bypass/concentrate build, and a balanced or clarity goal.
  * - social — "a forgiving recipe that holds its character as it cools": a
@@ -367,7 +340,9 @@ export function occasionAffinity(
   const pours = recipe.pourSequence.filter((s) => s.action === "pour").length;
   switch (o) {
     case "morning-ritual":
-      return !NON_POUR_BREWERS.has(recipe.brewer) && pours >= 3 && recipe.totalTimeSec >= 180 ? 1 : 0;
+      // The recipe's SHAPE only — never the brewer class. An immersion brew is
+      // as welcome on a morning as a cone (owner, 2026-10-19).
+      return pours >= 3 && recipe.totalTimeSec >= 180 ? 1 : 0;
     case "focus":
     case "deep-focus": {
       const ratio = recipe.water.grams / recipe.dose.grams;
@@ -405,7 +380,7 @@ export function matchesAnyName(recipe: Recipe, names: string[]): boolean {
  * Score a single recipe against the brew context. Higher = more relevant.
  * Recipes that fail the hard brewer filter return null (excluded entirely).
  */
-function scoreRecipe(
+export function scoreRecipe(
   recipe: Recipe,
   input: RecipeSelectionInput
 ): ScoredRecipe | null {
@@ -437,28 +412,11 @@ function scoreRecipe(
   const wantIced = input.occasion?.toLowerCase() === "summer-time";
   if (isIcedRecipe !== wantIced) return null;
 
-  // Hard filter: a recipe is offered only within ±20 % of its PUBLISHED
-  // water (the same REFERENCE_BATCH_WINDOW every adaptation step uses). Above
-  // the batch since #480; BELOW it since 2026-10-10 — a single-cup recipe
-  // stretched to a 450 g batch is not that recipe (owner decision: "don't
-  // scale the 1-cup, use the 2-cup").
-  if (input.maxWaterMl) {
-    const w = recipe.water.grams;
-    if (w > input.maxWaterMl * (1 + REFERENCE_BATCH_WINDOW) || w < input.maxWaterMl / (1 + REFERENCE_BATCH_WINDOW)) {
-      return null;
-    }
-  }
-
-  // Hard filter: exclude vessels that physically can't SERVE the requested
-  // drink volume (e.g. an AeroPress for a 450ml brew) so the model is never
-  // handed a forbidden-vessel reference and tempted to clamp the water down to
-  // fit it (the "450ml request → 180ml AeroPress" bug). Mirrors the prompt's
-  // HARD CAPACITY CONSTRAINT. The caller only sets serveVolumeMl for plain hot
-  // brews (omitted for iced / cold brew, where the vessel holds less than the
-  // drink volume) and never when a method is locked (USER OVERRIDE).
-  if (input.serveVolumeMl && vesselCannotServe(recipe.brewer, input.serveVolumeMl)) {
-    return null;
-  }
+  // No batch-window filter and no vessel filter here (removed 2026-10-19):
+  // a recipe published at another size, or a vessel smaller than the amount,
+  // is INFORMATION the menu states next to the entry (the scale factor, the
+  // concentrate-and-bypass path) — never a reason to hide a brewer. Whether a
+  // brewed recipe fits its vessel is still physics (guardVesselCapacity).
 
   let score = 0;
   const reasons: string[] = [];
@@ -545,7 +503,7 @@ export function normName(s: string): string {
  * back — an equal-scored fresh alternative gets the slot. Stable, ties only:
  * nothing ever crosses a score boundary.
  */
-function demoteWithinTies(
+export function demoteWithinTies(
   scored: ScoredRecipe[],
   isDemoted: (r: Recipe) => boolean,
 ): ScoredRecipe[] {
@@ -565,7 +523,7 @@ function demoteWithinTies(
  * Tie-break demotion of recipes the user has RECENTLY been recommended
  * (matched by name/shortName against the sessions' `basedOn` strings).
  */
-function demoteRecentWithinTies(
+export function demoteRecentWithinTies(
   scored: ScoredRecipe[],
   recentNames: string[] | undefined,
 ): ScoredRecipe[] {
@@ -620,7 +578,7 @@ export function deriveRotationSeed(latestSessionMs: number, nowMs: number): numb
   return s === 0 ? 1 : s;
 }
 
-function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
+export function rotateTies(scored: ScoredRecipe[], seed: number): ScoredRecipe[] {
   // Only a missing/zero seed means "don't rotate". A negative seed is a valid
   // seed (mixSeed takes its magnitude) — treating it as absent silently switched
   // rotation off for half of all brews (see deriveRotationSeed).
@@ -711,130 +669,71 @@ export function isImmersionRecipe(recipe: Recipe): boolean {
 }
 
 /**
- * Select the most relevant recipes for a brew. Returns up to `limit` recipes
- * sorted by score (descending). Diversity rule: never return more than one
- * recipe per brewer — we want the AI to see a varied portfolio, not five V60s.
- * Ties are rotated by `input.rotationSeed` so the injected menu varies between
- * brews instead of surfacing the same recipes every time.
+ * Score and order the corpus for a brew: partition (hot / iced / cold), the
+ * owner's kit, a method lock, then fit (roast / process / variety / goal /
+ * occasion) with equal scores rotated by seed and recently-seen references
+ * demoted within their tie group. No batch window, no vessel filter, no
+ * brewer cap — those became information on the /recommend menu (menu.ts).
  */
-export function selectRecipes(
-  input: RecipeSelectionInput,
-  limit = 5
-): ScoredRecipe[] {
+export function scoreAndOrder(input: RecipeSelectionInput): ScoredRecipe[] {
   const locked = input.lockedBrewers && input.lockedBrewers.size > 0
     ? input.lockedBrewers
     : null;
-
-  // Ordering passes, all tie-scoped (a higher score is NEVER demoted below a
-  // lower one — best fit always decides): rotate ties by seed, then demote
-  // recently-seen reference names, then demote recently-dominant brewers.
-  // The brewer pass runs LAST so brewer freshness dominates the final order
-  // within a tie group (it's the repetition the user actually perceives).
-  const demoteBrewers = !locked && input.demoteBrewers?.size ? input.demoteBrewers : null;
-  const ordered = demoteWithinTies(
-    demoteRecentWithinTies(
-      rotateTies(
-        ALL_RECIPES
-          // When a method is locked, hard-filter to recipes for that method only.
-          .filter((r) => (locked ? locked.has(r.brewer) : true))
-          .map((r) => scoreRecipe(r, input))
-          .filter((s): s is ScoredRecipe => s !== null)
-          .sort((a, b) => b.score - a.score),
-        input.rotationSeed ?? 0,
-      ),
-      input.recentReferenceNames,
+  let scored = demoteRecentWithinTies(
+    rotateTies(
+      ALL_RECIPES
+        .filter((r) => (locked ? locked.has(r.brewer) : true))
+        .map((r) => scoreRecipe(r, input))
+        .filter((s): s is ScoredRecipe => s !== null)
+        .sort((a, b) => b.score - a.score),
+      input.rotationSeed ?? 0,
     ),
-    (r) => (demoteBrewers ? demoteBrewers.has(r.brewer) : false),
+    input.recentReferenceNames,
   );
-
-  // Drop POUR-OVER recipes whose design builds in a long dead-gap between pours
-  // (Kasuya Mugen 105s draw, Hedrick bypass 100s gap, Rao Rule-of-Thirds 80s
-  // rest) — the Drip Assist disc can't honour them, and on any hot brew the
-  // owner has flagged such long waits as tasting bad. IMMERSION recipes are
-  // exempt: a Clever/AeroPress steep is a long `wait` BY DESIGN (it is the whole
-  // method, not a dead-gap), so lumping them in with pour-over long-waits wrongly
-  // stripped every immersion recipe from the hot menu and left the model to reach
-  // for a Clever out-of-menu instead. The recipe is never rewritten — just not
-  // offered. Fall back to the full set if excluding would leave nothing.
-  let scored = ordered;
+  // Already shown in this flow (Back-and-ask-again) — a hard exclude, with the
+  // usual fall-back when it would leave nothing.
   if (input.excludeRecipeIds?.size) {
     const kept = scored.filter((s) => !input.excludeRecipeIds!.has(s.recipe.id));
     if (kept.length) scored = kept;
   }
-  // Special (the fast shot): offer only recipes whose published clock fits the
-  // ceiling. Falls back to the full set if nothing fits, like every filter here.
-  if (isSpecialTime(input.timeAvailable)) {
-    const fast = scored.filter((s) => s.recipe.totalTimeSec <= SPECIAL_MAX_SEC);
-    if (fast.length) scored = fast;
-  }
+  // The Drip Assist disc, when the owner LOCKED it, cannot honour a designed
+  // long steep / rest (owner: "das macht mit der Disc keinen Sinn"). Immersion
+  // is exempt — its long wait IS the method.
   if (input.excludeLongWaits) {
     const kept = scored.filter(
       (s) => isImmersionRecipe(s.recipe) || !hasLongDesignedWait(s.recipe),
     );
     if (kept.length) scored = kept;
   }
+  return scored;
+}
 
-  // Locked method → return the best N recipes FOR THAT METHOD (no per-brewer
-  // cap; the user chose the brewer, they want the strongest matches on it).
-  if (locked) return scored.slice(0, limit);
-
-  // No lock → diversity portfolio: only one recipe per brewer, so the AI sees
-  // a varied set across the user's kit rather than five V60s.
-  //
-  // WHICH recipe represents a brewer is rotated per brew, and that is the fix
-  // for the repetition the owner reported over and over. Rotating ties alone
-  // could not touch it: reordering equal-scoring recipes changes their order,
-  // but this loop then takes each brewer's BEST one — which is the same recipe
-  // regardless of order, so the injected set never moved. Measured on the real
-  // selector: 1 distinct menu across 20 consecutive brews, both for a
-  // washed-SL28 morning and a natural-clarity brew.
-  //
-  // Fit still decides. A brewer is only ever represented by a recipe within
-  // REP_SCORE_TOLERANCE of that brewer's own best score, so this picks between
-  // genuinely interchangeable options for that vessel (Hedrick vs Wendelboe vs
-  // Kasuya on the V60) and never promotes a poor match. Which brewers appear,
-  // and in what order, is unchanged — that stays score + the freshness
-  // tie-breaks above.
+/**
+ * A small best-fit portfolio: locked method → its best N; otherwise one
+ * recipe per brewer (the representative rotated per seed), best fit first.
+ * Used by the chat's "today's angles" and the simulation scripts. /recommend
+ * builds its full-kit menu with buildBrewerMenu (menu.ts) instead.
+ */
+export function selectRecipes(
+  input: RecipeSelectionInput,
+  limit = 5
+): ScoredRecipe[] {
+  const scored = scoreAndOrder(input);
+  if (input.lockedBrewers && input.lockedBrewers.size > 0) return scored.slice(0, limit);
   const byBrewer = new Map<BrewerType, ScoredRecipe[]>();
   for (const s of scored) {
     const list = byBrewer.get(s.recipe.brewer);
     if (list) list.push(s);
     else byBrewer.set(s.recipe.brewer, [s]);
   }
-
-  // ONE Orea bottom per menu. The four bottoms stay separate brewers (each its
-  // own recipes, grind, drawdown) — but with the two-cup OREA recipes a 450 g
-  // menu filled three of its four slots with Orea bottoms and pushed the V60 /
-  // Kalita off it. The first Orea reached here is the best-scoring bottom for
-  // this context (goal / process / roast), which is the one that belongs on it.
-  // Like every filter here it never shrinks the menu: when nothing else fits
-  // (a Special brew whose only fast recipes are Orea), the held-back bottoms
-  // fill the free slots in score order.
-  const seenBrewers = new Set<BrewerType>();
-  let oreaTaken = false;
-  const heldBack: ScoredRecipe[] = [];
+  const seen = new Set<BrewerType>();
   const result: ScoredRecipe[] = [];
   for (const s of scored) {
-    if (seenBrewers.has(s.recipe.brewer)) continue;
-    seenBrewers.add(s.recipe.brewer);
-    const isOrea = s.recipe.brewer.startsWith("orea");
-    if (isOrea && oreaTaken) {
-      heldBack.push(s);
-      continue;
-    }
-    if (isOrea) oreaTaken = true;
+    if (seen.has(s.recipe.brewer)) continue;
+    seen.add(s.recipe.brewer);
     result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
     if (result.length >= limit) break;
   }
-  for (const s of heldBack) {
-    if (result.length >= limit) break;
-    result.push(pickRepresentative(byBrewer.get(s.recipe.brewer) ?? [s], input.rotationSeed ?? 0));
-  }
-  // Substituting a representative can swap in a recipe scoring up to
-  // REP_SCORE_TOLERANCE apart, which would leave the menu no longer in
-  // best-fit order — and the prompt tells the model that the library order IS
-  // meaningful. Re-sort so that promise stays true. The sort is stable, so the
-  // freshness demotions already applied within each tie group survive it.
   return result.sort((a, b) => b.score - a.score);
 }
 
@@ -852,7 +751,7 @@ const REP_SCORE_TOLERANCE = 1;
  * brewers in the same menu don't move in lockstep — otherwise every vessel
  * would jump to "its second recipe" on the same brew.
  */
-function pickRepresentative(candidates: ScoredRecipe[], seed: number): ScoredRecipe {
+export function pickRepresentative(candidates: ScoredRecipe[], seed: number): ScoredRecipe {
   if (candidates.length <= 1 || !seed) return candidates[0];
   const best = candidates[0].score;
   const eligible = candidates.filter((c) => c.score >= best - REP_SCORE_TOLERANCE);
@@ -901,14 +800,25 @@ export function formatTemperature(recipe: Recipe): string {
   return "unspecified";
 }
 
-export function formatGrind(recipe: Recipe): string {
+/** A Niche value in the unit the brew's grinder speaks (clicks on the
+ * Comandante, flagged "extrapolated" outside the owner's measured 23–29). */
+export function grindInUnit(deg: number, grinder?: string): string {
+  if (!isComandante(grinder)) return `${deg}°`;
+  const c = nicheToClicks(deg);
+  return `${c} clicks${c < 23 || c > 29 ? " (extrapolated)" : ""}`;
+}
+
+export function formatGrind(recipe: Recipe, grinder?: string): string {
   const g = recipe.grind;
   const parts: string[] = [];
   if (g.nicheZeroDegrees !== undefined) {
+    const n = g.nicheZeroDegrees;
     parts.push(
-      typeof g.nicheZeroDegrees === "number"
-        ? `Niche ${g.nicheZeroDegrees}°`
-        : `Niche ${g.nicheZeroDegrees[0]}–${g.nicheZeroDegrees[1]}°`
+      isComandante(grinder)
+        ? `Comandante ${typeof n === "number" ? grindInUnit(n, grinder) : `${nicheToClicks(n[0])}–${nicheToClicks(n[1])} clicks`}`
+        : typeof n === "number"
+          ? `Niche ${n}°`
+          : `Niche ${n[0]}–${n[1]}°`
     );
   }
   if (g.referenceSetting) parts.push(`(${g.referenceSetting})`);
@@ -941,14 +851,15 @@ export interface PromptScaleOptions {
  */
 export function formatRecipeForPrompt(
   recipe: Recipe,
-  opts?: { scaleTo?: PromptScaleOptions },
+  opts?: { scaleTo?: PromptScaleOptions; grinder?: string; label?: string },
 ): string {
   const verifiedTag = recipe.verified ? "" : " [pour sequence reconstructed]";
+  const newTag = isNewRecipe(recipe) ? " [NEW this month]" : "";
   const lines = [
-    `▸ ${recipe.name} — ${recipe.attribution.person}${recipe.attribution.year ? ` (${recipe.attribution.year})` : ""}${verifiedTag}`,
+    `▸ ${recipe.name} — ${recipe.attribution.person}${recipe.attribution.year ? ` (${recipe.attribution.year})` : ""}${verifiedTag}${newTag}`,
     `  ${recipe.attribution.title ?? ""}${recipe.attribution.country ? `, ${recipe.attribution.country}` : ""}`,
     `  Brewer: ${recipe.brewer}${recipe.brewerNotes ? ` — ${recipe.brewerNotes}` : ""}`,
-    `  Recipe: ${recipe.dose.grams}g : ${recipe.water.grams}g (${recipe.water.ratio}) | ${formatTemperature(recipe)} | ${formatGrind(recipe)} | total ${Math.floor(recipe.totalTimeSec / 60)}:${(recipe.totalTimeSec % 60).toString().padStart(2, "0")}`,
+    `  Recipe: ${recipe.dose.grams}g : ${recipe.water.grams}g (${recipe.water.ratio}) | ${formatTemperature(recipe)} | ${formatGrind(recipe, opts?.grinder)} | total ${Math.floor(recipe.totalTimeSec / 60)}:${(recipe.totalTimeSec % 60).toString().padStart(2, "0")}`,
     `  Sequence: ${formatPourSequence(recipe)}`,
     `  Techniques: ${recipe.techniques.join(", ")}`,
     `  Teaches: ${recipe.teaches}`,
@@ -958,20 +869,34 @@ export function formatRecipeForPrompt(
 
   const scaleTo = opts?.scaleTo;
   if (scaleTo) {
-    const scaled = scaleRecipe(recipe, scaleTo.targetWaterGrams, { method: scaleTo.method });
-    // Only worth a line when the batch genuinely differs, and only for a recipe
-    // whose cadence scales — an iced or bypass build splits its water on purpose.
-    // `> 0.1` used to miss exactly 450 g off a 500 g recipe (k − 1 = −0.0999…),
-    // so the model scaled Hoffmann's Ultimate itself, unguarded. Any batch
-    // that differs gets the line; beyond the window the recipe isn't offered.
-    if (
-      scaled &&
-      Math.abs(scaled.k - 1) > 0.01 &&
-      (scaled.shape === "percolation" || scaled.shape === "immersion")
-    ) {
-      lines.splice(5, 0, `  Scaled to your ${Math.round(scaleTo.targetWaterGrams)}g: ${formatScaledForPrompt(scaled)}`);
+    const target = Math.round(scaleTo.targetWaterGrams);
+    if (batchWithinWindow(recipe.water.grams, scaleTo.targetWaterGrams)) {
+      const scaled = scaleRecipe(recipe, scaleTo.targetWaterGrams, { method: scaleTo.method });
+      // Only worth a line when the batch genuinely differs, and only for a
+      // recipe whose cadence scales — an iced or bypass build splits its water
+      // on purpose. `> 0.1` used to miss exactly 450 g off a 500 g recipe.
+      if (
+        scaled &&
+        Math.abs(scaled.k - 1) > 0.01 &&
+        (scaled.shape === "percolation" || scaled.shape === "immersion")
+      ) {
+        lines.splice(5, 0, `  Scaled to your ${target}g: ${formatScaledForPrompt(scaled, opts?.grinder)}`);
+      }
+    } else {
+      // Outside the ±20 % window the author's numbers are not this batch's:
+      // the entry stays on the menu (every brewer is on the table) and says
+      // so — ratio, pour count and rests hold; the pours grow; the grind and
+      // the drawdown at this size are unmeasured, so a candidate built on it
+      // is an own recipe after this author (the server relabels it).
+      const k = scaleTo.targetWaterGrams / recipe.water.grams;
+      lines.splice(
+        5,
+        0,
+        `  Published at ${recipe.water.grams} g — ×${k.toFixed(2)} to your ${target} g, outside its ±20 % window: keep the ratio, the pour count and the rests, size the pours; the grind and drawdown at this size are unmeasured — say so in whyChosen.`,
+      );
     }
   }
+  if (opts?.label) lines.splice(1, 0, `  ${opts.label}`);
   return lines.filter(Boolean).join("\n");
 }
 
@@ -983,7 +908,7 @@ export function formatRecipeForPrompt(
 export function formatRecipesForPrompt(
   selected: ScoredRecipe[],
   header = "RELEVANT REFERENCE RECIPES",
-  opts?: { scaleTo?: PromptScaleOptions },
+  opts?: { scaleTo?: PromptScaleOptions; grinder?: string },
 ): string {
   if (!selected.length) return "";
   const scaleNote = opts?.scaleTo
@@ -994,4 +919,25 @@ export function formatRecipesForPrompt(
     .map((s, i) => `${i + 1}. ${formatRecipeForPrompt(s.recipe, opts)}`)
     .join("\n\n");
   return `${intro}\n\n${blocks}`;
+}
+
+// ── Index lines ──────────────────────────────────────────────────────────
+
+/** Added to the corpus within the last 30 days (the scout's `addedAt`). */
+export const NEW_RECIPE_DAYS = 30;
+export function isNewRecipe(r: Recipe, now: number = Date.now()): boolean {
+  if (!r.addedAt) return false;
+  const t = Date.parse(r.addedAt);
+  return Number.isFinite(t) && now - t <= NEW_RECIPE_DAYS * 86_400_000;
+}
+
+/** One index line: enough to CHOOSE a recipe, never enough to quote its pours.
+ * Shared by the chat's Reference Recipe Index and /recommend's cached index. */
+export function recipeIndexLine(r: Recipe): string {
+  const mm = Math.floor(r.totalTimeSec / 60);
+  const ss = String(r.totalTimeSec % 60).padStart(2, "0");
+  const year = r.attribution.year ? ` (${r.attribution.year})` : "";
+  const tag = r.verified ? "" : " [reconstructed]";
+  const fresh = isNewRecipe(r) ? " [NEW this month]" : "";
+  return `- ${r.name} — ${r.attribution.person}${year} · ${r.brewer} · ${r.dose.grams}g:${r.water.grams}g (${r.water.ratio}) · ${formatTemperature(r)} · ${mm}:${ss}${tag}${fresh}`;
 }

@@ -114,15 +114,12 @@ test("recommend.ts imports the gap metric and feeds the guarded set to candidate
   const src = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
   assert.match(src, /maxRenderedPourGapSec/, "recommend.ts must import the gap metric");
   assert.match(src, /LONG_DESIGNED_WAIT_SEC/, "recommend.ts must compare against the shared threshold");
-  // The guarded set — not the raw discTimed — must be what the final candidates map over.
-  assert.match(src, /gapGuarded/, "recommend.ts must build a gap-guarded candidate set");
-  // Since 2026-09-30 the Special (fast-shot) ceiling runs after the gap guard,
-  // so the chain is gapGuarded → guardSpecialTime → candidates.
-  assert.match(
-    src,
-    /timeGuarded\s*=\s*guardSpecialTime\(\s*gapGuarded/,
-    "the gap-guarded set MUST feed the Special guard, or the gap guard is dead code",
-  );
+  // 2026-10-19: a long gap is LOGGED, never dropped — the recipe is the
+  // model's and the brew screen shows it as written. The chain still links.
+  assert.match(src, /kept as written/, "the gap is reported, not enforced");
+  assert.doesNotMatch(src, /long-pour-gap: dropped/);
+  assert.match(src, /const gapGuarded = discTimed;/);
+  assert.match(src, /const timeGuarded = gapGuarded;/);
   // … → normalizeGrindToGrinder (grindGuarded) → the pour-sequence re-derive
   // that yields `candidates` (2026-10-03). Every link must chain.
   // … → the user's typed numbers (2026-10-18) → the unit pass.

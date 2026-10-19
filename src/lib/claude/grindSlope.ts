@@ -12,6 +12,8 @@
  * different grinds (≥3° apart), both measured. Slope = Δ total time / Δ degree.
  * Fewer than MIN_PAIRS pairs for a brewer × batch → no number at all.
  */
+import { isComandante } from "../utils/grindUnit";
+import { grindInUnit } from "../knowledge/recipes/helpers";
 import type { Session } from "../types/session";
 import { resolveBrewedRecipe } from "../utils/resolveRecipe";
 import { brewMethodKey } from "../utils/brewMethodKey";
@@ -125,7 +127,10 @@ export function interpolateGrind(
 }
 
 /** YOUR MEASURED GRIND SLOPE — "" when no brewer × batch has ≥ MIN_PAIRS pairs. */
-export function formatGrindSlopeBlock(sessions: Session[], waterGrams: number | undefined): string {
+/** ~3.3° per Comandante click (owner-measured anchors 380°=23, 400°=29). */
+const DEG_PER_CLICK = 10 / 3;
+
+export function formatGrindSlopeBlock(sessions: Session[], waterGrams: number | undefined, grinder?: string): string {
   if (!waterGrams) return "";
   const brews = measuredBrews(sessions).filter((b) => batchWithinWindow(b.waterGrams, waterGrams));
   const keys = Array.from(new Set(brews.map((b) => b.methodKey)));
@@ -134,10 +139,12 @@ export function formatGrindSlopeBlock(sessions: Session[], waterGrams: number | 
     const pairs = slopePairs(brews.filter((b) => b.methodKey === key));
     if (pairs.length < MIN_PAIRS) continue;
     const m = median(pairs.map((p) => p.secPerDeg));
+    const clicks = isComandante(grinder);
+    const unitSlope = clicks ? `${(m * DEG_PER_CLICK).toFixed(1)} s per click` : `${m.toFixed(1)} s per degree`;
     lines.push(
-      `- ${key} at ~${waterGrams} g: ${m.toFixed(1)} s per degree (median of ${pairs.length} pairs: ${pairs
+      `- ${key} at ~${waterGrams} g: ${unitSlope} (median of ${pairs.length} pairs: ${pairs
         .slice(0, 4)
-        .map((p) => `${p.a.coffeeLabel} ${Math.round(p.a.deg)}°→${Math.round(p.a.totalSec)} s vs ${Math.round(p.b.deg)}°→${Math.round(p.b.totalSec)} s`)
+        .map((p) => `${p.a.coffeeLabel} ${grindInUnit(Math.round(p.a.deg), grinder)}→${Math.round(p.a.totalSec)} s vs ${grindInUnit(Math.round(p.b.deg), grinder)}→${Math.round(p.b.totalSec)} s`)
         .join("; ")})`,
     );
   }

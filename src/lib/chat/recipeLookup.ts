@@ -12,20 +12,14 @@
 import {
   ALL_RECIPES,
   formatRecipeForPrompt,
-  formatTemperature,
   matchesAnyName,
   normName,
+  recipeIndexLine,
   type Recipe,
 } from "../knowledge/recipes";
 
-/** One index line: enough to CHOOSE a recipe, never enough to quote its pours. */
-export function recipeIndexLine(r: Recipe): string {
-  const mm = Math.floor(r.totalTimeSec / 60);
-  const ss = String(r.totalTimeSec % 60).padStart(2, "0");
-  const year = r.attribution.year ? ` (${r.attribution.year})` : "";
-  const tag = r.verified ? "" : " [reconstructed]";
-  return `- ${r.name} — ${r.attribution.person}${year} · ${r.brewer} · ${r.dose.grams}g:${r.water.grams}g (${r.water.ratio}) · ${formatTemperature(r)} · ${mm}:${ss}${tag}`;
-}
+/** One index line — shared with /recommend's cached index (helpers.ts). */
+export { recipeIndexLine };
 
 /**
  * Recipes answering to `query`, most specific match first:

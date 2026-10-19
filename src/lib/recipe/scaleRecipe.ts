@@ -34,6 +34,7 @@
  * takes), the grind, and the drawdown — and the total time is the SUM of those,
  * never a multiple of the original.
  */
+import { isComandante, nicheToClicks } from "../utils/grindUnit";
 import type { Recipe, PourStep as RefPourStep } from "@/lib/knowledge/recipes/types";
 import type { BrewPourStep } from "@/lib/types/session";
 import { DRIP_ASSIST_GRIND_OFFSET_DEG, isDripAssistMethod } from "@/lib/utils/dripAssist";
@@ -392,7 +393,17 @@ const clock = (sec: number) =>
  * One line the model can copy instead of doing the arithmetic itself: the
  * reference, already scaled to this brew, with every step's grams and seconds.
  */
-export function formatScaledForPrompt(scaled: ScaledRecipe): string {
+export function formatScaledForPrompt(scaled: ScaledRecipe, grinder?: string): string {
+  // The grind in the unit the brew's grinder speaks: a Comandante has no
+  // degrees, and six blocks used to print them anyway (fixed 2026-10-19).
+  const grindText =
+    isComandante(grinder) && scaled.grind.nicheRange
+      ? (() => {
+          const [a, b] = scaled.grind.nicheRange.map(nicheToClicks);
+          const extra = a < 23 || b > 29 ? " (extrapolated beyond the measured 23–29)" : "";
+          return a === b ? `${a} clicks${extra}` : `${a}–${b} clicks${extra}`;
+        })()
+      : scaled.grind.text;
   const steps = scaled.pourSteps
     .map((s) => {
       const bits: string[] = [s.label ?? s.action];
@@ -402,7 +413,7 @@ export function formatScaledForPrompt(scaled: ScaledRecipe): string {
     })
     .join(" · ");
   return (
-    `${scaled.doseGrams}g : ${scaled.waterGrams}g | grind ${scaled.grind.text} | ` +
+    `${scaled.doseGrams}g : ${scaled.waterGrams}g | grind ${grindText} | ` +
     `${steps} · drawdown ~${scaled.drawdownSec}s · total ${clock(scaled.totalTimeSec)}`
   );
 }

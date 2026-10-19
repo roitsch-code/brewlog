@@ -81,9 +81,10 @@ const SYSTEM_PROMPT = `You are writing the opening line of a personal coffee app
 THE SHAPE (this is the whole point)
 Pair a specific bag from the user's rotation with a brewing method, and give a one-clause reason. Examples of the target voice (style only — never copy):
 - "Burundi in the Clever Dripper — that'd be a smart next move for its body."
-- "Warm afternoon — why not take the La Coipa over ice with a Japanese iced V60?"
-- "Hoffmann swears by the V60 for Ethiopians; worth trying yours that way today."
-- "The washed Kenya is built for clarity — V60, gentle pours, let it sing."
+- "Warm afternoon — why not take the La Coipa over ice with a Japanese iced Kalita?"
+- "Sunday for two: the Guatemala on the Moccamaster, 500 g, and let the machine do the work."
+- "The washed Kenya is built for clarity — Orea Apex, gentle pours, let it sing."
+- "Small cup, big idea: the Gesha as an AeroPress concentrate with bypass."
 
 RULES
 - One sentence, 10 to 22 words. A trailing question mark is fine; never an exclamation mark.
@@ -93,9 +94,9 @@ RULES
 - BREWER NAMING: always call the V60 simply "V60". NEVER write "bare V60", "V60 without the Drip Assist", "plain V60", or any other qualifier — the Drip Assist is an invisible travel backup that is never mentioned to the user. The only time "Drip Assist" may appear is never; just say "V60".
 
 BREWING SCIENCE — pair intelligently (this is what makes it smart, not random):
-- Washed light African (Ethiopia, Kenya, Burundi, Rwanda): clarity-forward. V60, Origami cone, or Chemex. Hoffmann's V60 is the canonical move for Ethiopians. High temp, gentle agitation.
+- Washed light African (Ethiopia, Kenya, Burundi, Rwanda): clarity-forward. V60, Orea Apex, Origami cone, or Chemex — all equal; pick the one not used lately. High temp, gentle agitation.
 - Naturals & honeys: sweetness/body-forward. Clever Dripper (immersion sweetness), Origami wave, or Kalita. Lower-ish temp, fewer pours.
-- Dense high-grown or competition lots: Kasuya 4:6 to tune acidity vs sweetness across the pour, or a high-extraction V60.
+- Dense high-grown or competition lots: Kasuya 4:6 to tune acidity vs sweetness across the pour (on any cone), or a high-extraction pour-over.
 - Experimental/anaerobic: short bed-contact + turbulence keeps it clean — Orea Fast (Wölfl 2024 WAC method).
 - Hot weather / warm afternoon or midday: suggest iced — Japanese iced V60/Kalita (brew hot onto ice, keeps aromatics) or an iced AeroPress concentrate. Best on fruit-forward naturals/honeys.
 - Body-forward mood or a chocolatey/nutty bag: immersion (Clever) or Origami wave.

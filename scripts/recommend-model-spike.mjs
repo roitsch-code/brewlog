@@ -261,7 +261,7 @@ function buildUserMessage(coffee, context, preferences) {
   const varietyBlock = varietyPriors.length ? `\n${K.formatVarietyPriorsForPrompt(varietyPriors)}` : "";
 
   const brewersAvailable = K.brewersAvailableFromEquipment([...(preferences.equipment ?? []), ...K.CANONICAL_EQUIPMENT]);
-  const selectedRecipes = K.selectRecipes({
+  const selectedRecipes = K.buildBrewerMenu({
     brewersAvailable,
     lockedBrewers: K.brewersFromMethod(context.preferredMethod),
     roastLevel: K.normaliseRoastLevel(coffee.roastLevel),
@@ -269,9 +269,9 @@ function buildUserMessage(coffee, context, preferences) {
     variety: coffee.variety,
     goal: K.normaliseGoal(context.intent),
     occasion: context.occasion,
-    maxWaterMl: context.occasion === "cold-brew" ? undefined : (targetMl ?? undefined),
-  }, 4);
-  const recipesBlock = selectedRecipes.length ? `\n${K.formatRecipesForPrompt(selectedRecipes)}` : "";
+    targetWaterGrams: context.occasion === "cold-brew" ? undefined : (targetMl ?? undefined),
+  });
+  const recipesBlock = `\n${K.formatMenuForPrompt(selectedRecipes, { method: context.preferredMethod, lockedMethod: context.preferredMethod })}`;
 
   const techniquesBlock =
     "\nAVAILABLE TECHNIQUES (atomic moves you can compose with — cite by id when adapting a recipe):\n" +

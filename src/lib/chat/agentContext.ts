@@ -60,7 +60,7 @@ export function recipeLibraryBlock(): string {
     `nothing else. ${ALL_RECIPES.length} recipes across ${groups.length} brewers: ` +
     groups.map(([b, rs]) => `${b} ${rs.length}`).join(", ") + `. ` +
     `The V60 is over-represented because it is the most written-about brewer on earth; the Orea V4 Wide — one of ` +
-    `the user's primary cones — has ${groups.filter(([b]) => /orea/i.test(b)).reduce((n, [, rs]) => n + rs.length, 0)} entries ` +
+    `the user's cones, all of them equal — has ${groups.filter(([b]) => /orea/i.test(b)).reduce((n, [, rs]) => n + rs.length, 0)} entries ` +
     `across its four bottoms. Choose the brewer for the BEAN and the goal, then adapt the ` +
     `nearest recipe to it — a recipe published on a V60 usually transfers to another cone with the same geometry. ` +
     `Never pick a brewer because this index happens to hold more recipes for it.\n`;

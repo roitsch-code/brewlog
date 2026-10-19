@@ -35,6 +35,9 @@ const entry = `
 export { SYSTEM_PROMPT, RECOMMEND_MODEL } from ${JSON.stringify(
   path.join(ROOT, "src/lib/claude/recommendPrompt.ts"),
 )};
+export { formatRecipeIndexBlock } from ${JSON.stringify(
+  path.join(ROOT, "src/lib/knowledge/recipes/index.ts"),
+)};
 `;
 const dir = await mkdtemp(join(tmpdir(), "rec-cache-verify-"));
 const out = join(dir, "b.mjs");
@@ -46,13 +49,16 @@ await build({
   outfile: out,
   logLevel: "silent",
 });
-const { SYSTEM_PROMPT, RECOMMEND_MODEL } = await import(pathToFileURL(out).href);
+const { SYSTEM_PROMPT, RECOMMEND_MODEL, formatRecipeIndexBlock } = await import(pathToFileURL(out).href);
+const INDEX_BLOCK = formatRecipeIndexBlock();
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Exactly what recommend.ts sends: one static system block with the breakpoint.
+// Exactly what recommend.ts sends (2026-10-19): the static system prompt and
+// the REFERENCE RECIPE INDEX, each a cached block with its own breakpoint.
 const systemBlock = [
   { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+  { type: "text", text: INDEX_BLOCK, cache_control: { type: "ephemeral" } },
 ];
 
 const fmt = (x) =>
@@ -64,7 +70,7 @@ const fmt = (x) =>
 // --- 0) prefix token count vs the cache minimum ---
 const counted = await client.messages.countTokens({
   model: RECOMMEND_MODEL,
-  system: [{ type: "text", text: SYSTEM_PROMPT }],
+  system: [{ type: "text", text: SYSTEM_PROMPT }, { type: "text", text: INDEX_BLOCK }],
   messages: [{ role: "user", content: "x" }],
 });
 const aboveMin = counted.input_tokens >= OPUS_47_CACHE_MIN_TOKENS;

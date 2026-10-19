@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { DraftSession, SessionMode, CoffeeIdentity, SessionContext, Recommendation, BrewLog, TasteResult, ExternalPlace } from "@/lib/types/session";
 import type { FieldZones } from "@/lib/field/types";
+import { applyGrinderAnswer } from "@/lib/flow/grinderAnswer";
 
 export type FlowStep =
   | "scan"         // Photo + AI extraction + clarification (always first)
@@ -99,6 +100,10 @@ interface FlowState {
    * candidates as shown. (Brew-again restores go through setRecommendation.) */
   receiveRecommendation: (rec: Recommendation) => void;
   setBrew: (brew: BrewLog) => void;
+  /** The owner's one-tap answer to a candidate's grinder proposal: accept
+   * swaps the recipe's grind into the proposed grinder's unit and sets the
+   * brew's grinder; decline restores both. Reversible, nothing regenerated. */
+  answerGrinderSuggestion: (candidateIdx: number, accepted: boolean) => void;
   setResult: (result: TasteResult) => void;
   setFieldZones: (zones: FieldZones | null) => void;
   setIsAnalyzing: (v: boolean) => void;
@@ -195,6 +200,11 @@ export const useFlowStore = create<FlowState>()(
           ].slice(-MAX_SHOWN),
         })),
       setBrew: (brew) => set((s) => ({ draft: { ...s.draft, brew } })),
+      answerGrinderSuggestion: (candidateIdx, accepted) =>
+        set((s) => {
+          const next = applyGrinderAnswer(s.draft, candidateIdx, accepted);
+          return next ? { draft: next } : {};
+        }),
       setResult: (result) => set((s) => ({ draft: { ...s.draft, result } })),
       setFieldZones: (fieldZones) => set({ fieldZones }),
       setIsAnalyzing: (v) => set({ isAnalyzing: v }),

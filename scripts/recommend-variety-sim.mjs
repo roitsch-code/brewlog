@@ -54,12 +54,12 @@ const BREWS = 20;
 const entry = `
 export { SYSTEM_PROMPT } from ${q("src/lib/claude/recommendPrompt.ts")};
 export {
-  selectRecipes, formatRecipesForPrompt, brewersAvailableFromEquipment,
+  buildBrewerMenu, formatMenuForPrompt, brewersAvailableFromEquipment,
   CANONICAL_EQUIPMENT, brewersFromMethod, normaliseRoastLevel,
   normaliseProcess, normaliseGoal, deriveRotationSeed,
 } from ${q("src/lib/knowledge/recipes/index.ts")};
 export { ALL_RECIPES } from ${q("src/lib/knowledge/recipes/index.ts")};
-export { buildMethodRecency } from ${q("src/lib/claude/methodRotation.ts")};
+export { brewerRecency } from ${q("src/lib/claude/methodRotation.ts")};
 export { buildOwnReferences, formatOwnReferencesForPrompt, ownRefCategory } from ${q("src/lib/claude/ownReferenceRecipes.ts")};
 export { brewMethodKey } from ${q("src/lib/utils/brewMethodKey.ts")};
 export { getVarietyPriorsForBag, formatVarietyPriorsForPrompt } from ${q("src/lib/knowledge/varieties/index.ts")};
@@ -185,11 +185,7 @@ function selectionFor(scenario, pastSessions) {
     }, 0) || pastSessions.length;
   const rotationSeed = K.deriveRotationSeed(latestMs, START_MS + pastSessions.length * DAY);
 
-  const methodRecency = K.buildMethodRecency(pastSessions, {
-    lockedMethod: undefined,
-    occasion: context.occasion,
-    rotationSeed,
-  });
+  const recency = K.brewerRecency(pastSessions);
 
   const brewersAvailable = K.brewersAvailableFromEquipment([
     ...PREFS.equipment,
@@ -209,14 +205,15 @@ function selectionFor(scenario, pastSessions) {
     variety: coffee.variety,
     goal: K.normaliseGoal(context.intent),
     occasion: context.occasion,
-    maxWaterMl: targetWaterMl,
-    serveVolumeMl: targetWaterMl,
     rotationSeed,
     recentReferenceNames: recentReferenceNames(pastSessions),
-    demoteBrewers: methodRecency.recentBrewers,
+    targetWaterGrams: targetWaterMl,
+    lastOffered: recency.lastOffered,
   };
 
-  return { selected: K.selectRecipes(input, 4), methodRecency, targetWaterMl };
+  const menu = K.buildBrewerMenu(input);
+  const selected = menu.leads.flatMap((e) => (e.best ? [e.best] : []));
+  return { selected, menu, recency, targetWaterMl };
 }
 
 // Ported verbatim from recommend.ts (not exported).
@@ -264,20 +261,16 @@ function buildUserMessage(scenario, pastSessions, sel) {
     roasterPrior.confidence !== "fallback" ? `\n${K.formatRoasterPriorForPrompt(roasterPrior)}` : "";
   const varietyPriors = K.getVarietyPriorsForBag(coffee.variety);
   const varietyBlock = varietyPriors.length ? `\n${K.formatVarietyPriorsForPrompt(varietyPriors)}` : "";
-  const recipesBlock = sel.selected.length ? `\n${K.formatRecipesForPrompt(sel.selected)}` : "";
-  const ownReferenceBlock = K.formatOwnReferencesForPrompt(
-    K.buildOwnReferences(pastSessions, coffee, undefined),
-    recentReferenceNames(pastSessions),
-    new Set(Array.from(sel.methodRecency.recentBrewers).map((b) => K.brewMethodKey(b))),
-  );
+  const recipesBlock = `\n${K.formatMenuForPrompt(sel.menu)}`;
+  const ownReferenceBlock = K.formatOwnReferencesForPrompt(K.buildOwnReferences(pastSessions, coffee, undefined));
   const techniquesBlock =
     "\nAVAILABLE TECHNIQUES (atomic moves you can compose with — cite by id when adapting a recipe):\n" +
     K.TECHNIQUES.map((t) => `  - ${t.id}: ${t.description}`).join("\n");
 
   const guide =
     context.amount === "big"
-      ? "target ~450g water / ~29g dose (1:15.5). Suitable: V60, Orea, Clever Dripper, Kalita, Chemex, Origami. NOT AeroPress (max 230ml). NOT Moccamaster (batch only)."
-      : "target ~350g water / 23g dose (1:15.2). Suitable: V60, Orea, Clever Dripper, Kalita, Chemex, Origami Air M. NOT AeroPress (max 230ml). NOT Moccamaster (batch only).";
+      ? "target ~450g water / ~29g dose (1:15.5). Which brewers hold it is in YOUR BREWERS TODAY."
+      : "target ~350g water / 23g dose (1:15.2). Which brewers hold it is in YOUR BREWERS TODAY.";
   const waterNote =
     context.waterSource === "championship"
       ? "Clarity blend (~73ppm TDS, KH ~1.3°dH) — near-zero buffering, ideal for washed florals & championship methods"
@@ -300,7 +293,7 @@ Context:
 - Amount: ${context.amount} (${guide})
 - Time available: ${context.timeAvailable}
 - Grinder: ${context.grinder}
-- Water: ${waterNote}${sel.methodRecency.note ?? ""}
+- Water: ${waterNote}${sel.recency.line ?? ""}
 GOAL: "${context.intent}" — the user's stated taste direction for this brew.
 
 Equipment available: ${PREFS.equipment.join(", ")}
