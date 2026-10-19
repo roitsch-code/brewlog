@@ -14,17 +14,18 @@
  *
  * So the clock is now:   end of the pour phase + the drawdown for this setup,
  * where the drawdown is, in order:
- *   1. MEASURED — the median of the owner's own drawdowns on the same brewer
- *      family (brewMethodKey, which separates Origami wave from cone and keeps
- *      the Drip Assist its own bucket) at a similar volume (±20 % / ±60 g),
- *      at least 2 brews. The end of the pour phase is read off the Acaia curve
- *      when there is one (`flowAnalysis.perPour`), else rendered from the recipe.
+ *   1. MEASURED — the median of the owner's own drawdowns on the same EXACT
+ *      brewer (exactBrewerKey: each Orea bottom on its own, Origami wave vs
+ *      cone, the Drip Assist its own bucket) at a similar volume (±20 % /
+ *      ±60 g), at least 2 brews. The end of the pour phase is read off the
+ *      Acaia curve when there is one (`flowAnalysis.perPour`), else the
+ *      timeline the brew was composed with, else rendered from the recipe.
  *   2. DISC — with the Drip Assist and no disc history: the bare drawdown kept
  *      at DRIP_ASSIST_DRAWDOWN_KEEP (an estimate; direction owner-confirmed).
  *   3. CORPUS — the median rendered drawdown of the published recipes for this
- *      brewer, scaled by √(water ratio) (scaleRecipe's DRAWDOWN_SCALE_EXP); with
- *      fewer than 3 such recipes, the brewer's geometry group (flat-bed: Kalita,
- *      Origami wave, Orea; cone: V60, Origami cone, …).
+ *      brewer within ±20 % of the water, unscaled (no source gives a slope);
+ *      with fewer than 3 such recipes, the brewer at any size, then its
+ *      geometry group (flat-bed: Kalita, Origami wave, Orea; cone: V60, …).
  *
  * What is NOT modelled, deliberately: no slope from grind, temperature, water
  * hardness or bean age to drain time exists in any source this repo cites, and
@@ -33,9 +34,10 @@
  * contain his grinder, his water and his beans.
  */
 import { ALL_RECIPES } from "@/lib/knowledge/recipes";
-import { DRAWDOWN_SCALE_EXP } from "@/lib/recipe/scaleRecipe";
+import { batchWithinWindow } from "@/lib/recipe/batchWindow";
+import { daysSinceRoast, freshnessBucket } from "@/lib/coffee/freshness";
 import type { BrewRecipe, Session } from "@/lib/types/session";
-import { brewMethodKey } from "@/lib/utils/brewMethodKey";
+import { brewMethodKey, exactBrewerKey } from "@/lib/utils/brewMethodKey";
 import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 import {
   MAX_DRAWDOWN_ABS_SEC,
@@ -81,6 +83,10 @@ const clampDrawdown = (sec: number) =>
 /** When the last pour of a logged brew actually ended, or null if unknowable. */
 export function pourPhaseEndOf(s: Session, recipe: BrewRecipe | undefined, method: string): number | null {
   const createdMs = Date.parse(s.createdAt);
+  // The timeline the brew was actually run against (snapshotted at save since
+  // 2026-10-19) beats any re-render: a renderer change can never move the
+  // owner's historical drawdowns again.
+  const snap = s.brew?.timeline ?? recipe?.timeline;
   const schedule =
     recipe && !hasImmersionShape(recipe)
       ? pourScheduleFor(recipe, s.coffee?.roastDate, Number.isFinite(createdMs) ? createdMs : Date.now(), method)
@@ -92,35 +98,62 @@ export function pourPhaseEndOf(s: Session, recipe: BrewRecipe | undefined, metho
     // The scale saw the last gram land. Anything the recipe does AFTER the last
     // pour before the drawdown (a final swirl) is pour phase, not drainage.
     let trailing = 0;
-    if (schedule) {
+    if (snap && snap.shape === "percolation") {
+      const water = snap.steps.filter((p) => (p.pourGrams ?? 0) > 0);
+      const last = water[water.length - 1];
+      if (last) trailing = Math.max(0, snap.pourPhaseEndSec - (last.startSec + last.pourSec));
+    } else if (schedule) {
       const water = schedule.steps.filter((p) => p.pourGrams > 0);
       const last = water[water.length - 1];
       if (last) trailing = Math.max(0, schedule.pourPhaseEndSec - (last.startTimeSec + last.timingDurationSec));
     }
     return lastReach + trailing;
   }
+  if (snap && snap.shape === "percolation") return snap.pourPhaseEndSec;
   if (schedule && Number.isFinite(createdMs) && createdMs >= CADENCE_FIRST_SINCE_MS) {
     return schedule.pourPhaseEndSec;
   }
   return null;
 }
 
-/** The owner's own measured drawdowns for this brewer family at this volume. */
-export function measuredDrawdowns(
+/** One measured drawdown of the owner's, with the roast-age bucket of that brew. */
+export interface MeasuredDrawdownSample {
+  drawdownSec: number;
+  ageBucket: "fresh" | "peak" | "older" | "unknown";
+  sessionId: string;
+}
+
+function ageBucketAt(roastDate: string | undefined, atMs: number): MeasuredDrawdownSample["ageBucket"] {
+  const b = freshnessBucket(daysSinceRoast(roastDate, atMs));
+  if (b === "unknown") return "unknown";
+  if (b === "too-fresh" || b === "very-fresh") return "fresh";
+  if (b === "peak") return "peak";
+  return "older";
+}
+
+/**
+ * The owner's own measured drawdowns on this EXACT brewer (exactBrewerKey —
+ * an Orea Fast is not an Orea Classic, 2026-10-19) at ±20 % water, each with
+ * the roast-age bucket of that brew. The pour-phase end is the Acaia's last
+ * reach when there is one, else the timeline the brew was composed with
+ * (`brew.timeline`, snapshotted at save since 2026-10-19), else the legacy
+ * renderer for sessions since the cadence-first schedule.
+ */
+export function measuredDrawdownSamples(
   pastSessions: Session[],
   method: string | undefined,
   waterGrams: number | undefined,
-): number[] {
+): MeasuredDrawdownSample[] {
   if (!method || typeof waterGrams !== "number" || !(waterGrams > 0)) return [];
-  const key = brewMethodKey(method);
+  const key = exactBrewerKey(method);
   const tol = Math.max(60, waterGrams * 0.2);
-  const out: number[] = [];
+  const out: MeasuredDrawdownSample[] = [];
   for (const s of pastSessions) {
     const actual = s.brew?.actualTimeSec;
     if (typeof actual !== "number" || !(actual > 0)) continue;
     const resolved = resolveBrewedRecipe(s);
     const m = s.brew?.methodUsed || resolved.method;
-    if (brewMethodKey(m) !== key) continue;
+    if (exactBrewerKey(m) !== key) continue;
     const water = resolved.recipe?.waterGrams;
     if (typeof water !== "number" || Math.abs(water - waterGrams) > tol) continue;
     if (resolved.recipe && (resolved.recipe.iceGrams ?? 0) > 0) continue;
@@ -128,9 +161,21 @@ export function measuredDrawdowns(
     if (end == null) continue;
     const dd = actual - end;
     // A drawdown past the absolute ceiling is a timer left running, not a bed.
-    if (dd > 0 && dd <= MAX_DRAWDOWN_ABS_SEC) out.push(dd);
+    if (dd > 0 && dd <= MAX_DRAWDOWN_ABS_SEC) {
+      const createdMs = Date.parse(s.createdAt);
+      out.push({ drawdownSec: dd, ageBucket: ageBucketAt(s.coffee?.roastDate, Number.isFinite(createdMs) ? createdMs : Date.now()), sessionId: s.id });
+    }
   }
   return out;
+}
+
+/** The owner's own measured drawdowns for this exact brewer at this volume (numbers only). */
+export function measuredDrawdowns(
+  pastSessions: Session[],
+  method: string | undefined,
+  waterGrams: number | undefined,
+): number[] {
+  return measuredDrawdownSamples(pastSessions, method, waterGrams).map((x) => x.drawdownSec);
 }
 
 // ── Corpus defaults ──────────────────────────────────────────────────────────
@@ -191,25 +236,32 @@ export function corpusDrawdownSamples(): CorpusSample[] {
   return out;
 }
 
-/** The published-recipe drawdown for this brewer, scaled to this volume. */
+/**
+ * The published-recipe drawdown for this brewer at about this volume: the
+ * median of the brewer's recipes within ±20 % water, UNSCALED (2026-10-19 —
+ * no source publishes a drawdown-vs-volume slope, so none is applied); with
+ * fewer than 3 such recipes the brewer at any volume, then its geometry group.
+ */
 export function corpusDrawdownSec(
   method: string | undefined,
   waterGrams: number,
 ): { sec: number; count: number; basis: string } | null {
   const family = brewMethodKey(method).replace(/\+drip-assist$/, "");
   const all = corpusDrawdownSamples();
-  let pool = all.filter((s) => s.family === family);
-  let basis = family;
+  const near = (s: CorpusSample) => batchWithinWindow(s.waterGrams, waterGrams);
+  let pool = all.filter((s) => s.family === family && near(s));
+  let basis = `${family} at ~${Math.round(waterGrams)} g`;
+  if (pool.length < 3) {
+    pool = all.filter((s) => s.family === family);
+    basis = `${family} at any size`;
+  }
   if (pool.length < 3) {
     const g = geometryOf(family);
     pool = all.filter((s) => geometryOf(s.family) === g);
     basis = `${g} geometry`;
   }
   if (pool.length === 0) return null;
-  const dd = median(pool.map((s) => s.drawdownSec));
-  const w = median(pool.map((s) => s.waterGrams));
-  const k = waterGrams > 0 && w > 0 ? waterGrams / w : 1;
-  return { sec: dd * Math.pow(k, DRAWDOWN_SCALE_EXP), count: pool.length, basis };
+  return { sec: median(pool.map((s) => s.drawdownSec)), count: pool.length, basis };
 }
 
 /**
@@ -227,7 +279,7 @@ export function drawdownFor(
       sec: clampDrawdown(median(measured)),
       source: "measured",
       count: measured.length,
-      detail: `median of ${measured.length} measured ${brewMethodKey(method)} drawdowns at ~${waterGrams}g`,
+      detail: `median of ${measured.length} measured ${exactBrewerKey(method)} drawdowns at ~${waterGrams}g`,
     };
   }
 
@@ -250,6 +302,6 @@ export function drawdownFor(
     sec: clampDrawdown(corpus.sec),
     source: "corpus",
     count: corpus.count,
-    detail: `published-recipe median for ${corpus.basis} (${corpus.count} recipes), scaled to ${waterGrams}g`,
+    detail: `published-recipe median for ${corpus.basis} (${corpus.count} recipes)`,
   };
 }

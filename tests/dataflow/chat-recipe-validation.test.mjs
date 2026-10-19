@@ -186,7 +186,7 @@ test("start_brew's recipe is sanitized through cleanChatRecipe before anything r
   // Since the measured pour pace (2026-10-10) the cleaning happens inside the
   // start_brew gate, which has the owner's sessions; the raw recipe never
   // reaches a pill because the gate replaces it before accepting.
-  assert.match(ROUTE, /const cleaned = cleanStartBrewRecipe\(action, pace\.gps\);\s*\n\s*if \(!cleaned\) return \{ ok: false/, "the gate cleans the recipe and refuses an uncleanable one");
+  assert.match(ROUTE, /const cleaned = cleanStartBrewRecipe\(action, sessions, roastDate\);\s*\n\s*if \(!cleaned\) return \{ ok: false/, "the gate cleans the recipe (composing its timeline from his sessions) and refuses an uncleanable one");
   assert.match(ROUTE, /action\.recipe = cleaned;/, "the pill carries the CLEANED recipe");
   assert.match(
     ROUTE,

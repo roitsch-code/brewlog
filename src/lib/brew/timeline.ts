@@ -20,7 +20,7 @@
  * golden-equivalence test (tests/dataflow/brew-timeline.test.mjs) locks that the
  * renderer arrays and the cue boundaries are unchanged across the recipe corpus.
  */
-import type { BrewRecipe, BrewStepAction } from "@/lib/types/session";
+import type { BrewRecipe, BrewStepAction, RecipeTimeline } from "@/lib/types/session";
 import {
   buildGuideSteps,
   stepPourSec,
@@ -96,6 +96,53 @@ export interface BrewTimeline {
   hasGramsCurve: boolean;
 }
 
+/** The composed percolation timeline as the renderer's PourStep[] — same
+ * fields the brew screen, the flow coach, the haptics and the flow analysis
+ * always read; the numbers are the composed ones. */
+function lowerPercolation(t: RecipeTimeline): PourStep[] {
+  const water = t.steps.filter((s) => (s.pourGrams ?? 0) > 0 || typeof s.gramsAtEnd === "number");
+  const n = water.length;
+  let cumulative = 0;
+  const out: PourStep[] = [];
+  let waterIdx = 0;
+  for (const s of t.steps) {
+    const isWater = typeof s.gramsAtEnd === "number";
+    const ag: AgitationAction | null = s.action === "swirl" ? "swirl" : s.action === "stir" ? "stir" : s.action === "agitate-bed" ? "tap" : null;
+    if (isWater) {
+      cumulative = s.gramsAtEnd as number;
+      const i = waterIdx++;
+      out.push({
+        index: out.length,
+        label: s.label,
+        cumulativeGrams: cumulative,
+        pourGrams: s.pourGrams ?? 0,
+        startTimeSec: s.startSec,
+        action: i === 0 ? "bloom" : i === n - 1 ? "final" : "pour",
+        temperatureC: s.temperatureC,
+        notes: s.notes,
+        pourDurationSec: s.authoredPourSec,
+        timingDurationSec: s.pourSec,
+        pourEndSec: s.startSec + s.pourSec,
+        restSec: s.restSec,
+      });
+    } else if (ag) {
+      out.push({
+        index: out.length,
+        label: s.label,
+        cumulativeGrams: cumulative,
+        pourGrams: 0,
+        startTimeSec: s.startSec,
+        action: ag,
+        notes: s.notes,
+        timingDurationSec: s.pourSec,
+        pourEndSec: s.startSec + s.pourSec,
+        restSec: s.restSec,
+      });
+    }
+  }
+  return out;
+}
+
 const isAgitationGuideAction = (a: BrewStepAction): boolean =>
   a === "stir" || a === "swirl" || a === "agitate-bed";
 
@@ -153,6 +200,25 @@ export function buildBrewTimeline(
   method?: string,
 ): BrewTimeline {
   const targetTimeSec = recipe.targetTimeSec;
+
+  // A composed timeline (2026-10-19) is THE timeline: lowered into the renderer
+  // arrays verbatim, never re-derived — the server's numbers are the screen's.
+  if (recipe.timeline && recipe.timeline.shape === "percolation" && recipe.timeline.steps.length >= 2) {
+    const pourSteps = lowerPercolation(recipe.timeline);
+    return {
+      shape: "percolation",
+      pourSteps,
+      guideSteps: null,
+      proseSequence: null,
+      steps: pourSteps.map((p, i) => fromPourStep(p, pourSteps, i, recipe.timeline!.finishSec)),
+      setupSteps: [],
+      targetTimeSec,
+      pourPhaseEndSec: recipe.timeline.pourPhaseEndSec,
+      drawdownSec: recipe.timeline.drawdownSec,
+      finishSec: recipe.timeline.finishSec,
+      hasGramsCurve: true,
+    };
+  }
 
   const guideSteps = hasImmersionShape(recipe) ? buildGuideSteps(recipe) : null;
   if (guideSteps) {

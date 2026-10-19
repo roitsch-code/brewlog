@@ -104,6 +104,45 @@ export interface BrewPourStep {
   notes?: string;
 }
 
+/** One step of the composed timeline (src/lib/brew/composeTimeline.ts). */
+export interface RecipeTimelineStep {
+  label: string;
+  action: BrewStepAction;
+  /** Seconds since brew start when this step begins. */
+  startSec: number;
+  /** Seconds the step is ACTIVE (pouring / agitating / a timed immersion step). */
+  pourSec: number;
+  /** Seconds of rest after it, before the next step; on the last step, the drawdown. */
+  restSec: number;
+  gramsAtEnd?: number;
+  pourGrams?: number;
+  /** The model's / author's own pour seconds, when it wrote any. */
+  authoredPourSec?: number;
+  temperatureC?: number;
+  notes?: string;
+  isSetup?: boolean;
+}
+
+/**
+ * THE timeline of a recipe — composed once on the server, shown verbatim on
+ * the brew screen, snapshotted into the session at save (2026-10-19). Every
+ * clock the owner sees comes from here; nothing re-derives it.
+ */
+export interface RecipeTimeline {
+  shape: "percolation" | "immersion";
+  steps: RecipeTimelineStep[];
+  pourPhaseEndSec: number;
+  drawdownSec: number;
+  /** published = the verified reference's own; measured = his brews on this exact brewer; estimate = corpus / placeholder. */
+  drawdownSource: "published" | "measured" | "estimate";
+  /** One clause the recipe screen shows next to the drawdown. */
+  drawdownBasis: string;
+  /** author = a verified reference's cadence; model = the model's own seconds; measured = his pace filled the gaps; house = house rests / pace. */
+  cadenceSource: "author" | "model" | "measured" | "house";
+  finishSec: number;
+  composedAt: string;
+}
+
 export interface BrewRecipe {
   doseGrams: number;
   waterGrams: number;
@@ -118,6 +157,8 @@ export interface BrewRecipe {
   pourSequence?: string;
   /** Structured, per-step sequence — preferred source for the brew timer. */
   pourSteps?: BrewPourStep[];
+  /** The composed timeline (composeTimeline.ts); absent on sessions before 2026-10-19. */
+  timeline?: RecipeTimeline;
 }
 
 export type CandidateRole =
@@ -254,6 +295,9 @@ export interface BrewLog {
   /** Whether `flow` came from the scale curve or the user's self-report. When
    * "measured", flow = flowAnalysis.derivedFlow. */
   flowSource?: "measured" | "self-report";
+  /** The timeline this brew was run against, snapshotted on Done (2026-10-19)
+   * so a later renderer change never moves this brew's measured drawdown. */
+  timeline?: RecipeTimeline;
 }
 
 export interface TasteResult {

@@ -10,13 +10,13 @@
  * Everything here is Next-free and pure apart from the corpus memo.
  * Byte-identical move; no behaviour change.
  */
-import { applyPourDurations } from "@/lib/recipe/pourDurations";
+import { composeTimeline } from "@/lib/brew/composeTimeline";
 import type { CompactCoffee } from "@/lib/claude/coffeeLibrary";
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import { ALL_RECIPES, formatRecipeForPrompt } from "@/lib/knowledge/recipes";
 import { recipeIndexLine } from "@/lib/chat/recipeLookup";
 import { buildTodaysAngles, selectTodaysAngles } from "@/lib/chat/todaysAngles";
-import type { BrewRecipe } from "@/lib/types/session";
+import type { BrewRecipe, Session } from "@/lib/types/session";
 import { derivePourSequence, sanitizePourSteps } from "@/lib/utils/pourSteps";
 
 /**
@@ -132,24 +132,32 @@ export function formatLibraryForAgent(library: CompactCoffee[]): string {
  *   3. snap the headline water to the actual pour plan (the "too much water"
  *      header-vs-plan mismatch /recommend already corrects).
  */
+export interface CleanChatRecipeContext {
+  basedOn?: string;
+  method?: string;
+  /** The owner's sessions — the measured pace and drawdown come from them. */
+  pastSessions?: Session[];
+  roastDate?: string;
+}
+
 export function cleanChatRecipe(
   recipe: BrewRecipe | undefined,
-  ctx: { basedOn?: string; method?: string; pourRateGPS?: number } = {},
+  ctx: CleanChatRecipeContext = {},
 ): BrewRecipe | undefined {
   return cleanChatRecipeDetailed(recipe, ctx)?.recipe;
 }
 
 export interface CleanedChatRecipe {
   recipe: BrewRecipe;
-  /** Where the pour seconds came from (src/lib/recipe/pourDurations.ts). */
-  pourSource: "reference" | "house" | "none";
-  /** Every pour time the app changed — /recommend logs these, the chat never did. */
+  /** Where the cadence came from (src/lib/brew/composeTimeline.ts). */
+  pourSource: "author" | "model" | "measured" | "house" | "none";
+  /** What the app changed — /recommend logs these, the chat never did. */
   pourChanges: string[];
 }
 
 export function cleanChatRecipeDetailed(
   recipe: BrewRecipe | undefined,
-  ctx: { basedOn?: string; method?: string; pourRateGPS?: number } = {},
+  ctx: CleanChatRecipeContext = {},
 ): CleanedChatRecipe | undefined {
   if (!recipe) return undefined;
   const pourSteps = sanitizePourSteps(recipe.pourSteps);
@@ -158,16 +166,25 @@ export function cleanChatRecipeDetailed(
     ...(pourSteps ? { pourSteps } : {}),
     pourSequence: recipe.pourSequence ?? derivePourSequence(pourSteps),
   };
-  // 4. Pour TIMES are the app's, not the model's — the same rule /recommend
-  //    applies (src/lib/recipe/pourDurations.ts): a verified reference's own
-  //    scaled times, else the owner's measured pace in 5-second steps.
-  const timed = applyPourDurations(reconcileWaterToPourPlan(out), ctx);
-  // 5. The string follows the (re-timed) steps, as in /recommend.
-  const r = timed.recipe;
+  // 4. ONE timeline, the same composer /recommend uses (2026-10-19): the
+  //    author's cadence for a verified reference, else the model's steps with
+  //    the owner's measured pace where seconds are missing, and the owner's
+  //    measured drawdown for this exact brewer. The clock IS finishSec.
+  const reconciled = reconcileWaterToPourPlan(out);
+  const res = composeTimeline(reconciled, { method: ctx.method, basedOn: ctx.basedOn, pastSessions: ctx.pastSessions, roastDate: ctx.roastDate });
+  if (!res.ok) {
+    return { recipe: { ...reconciled, pourSequence: derivePourSequence(reconciled.pourSteps) ?? reconciled.pourSequence }, pourSource: "none", pourChanges: [res.reason] };
+  }
+  const t = res.timeline;
+  const changes =
+    t.finishSec !== reconciled.targetTimeSec
+      ? [`clock ${reconciled.targetTimeSec}s → ${t.finishSec}s (pours end ${t.pourPhaseEndSec}s + drawdown ${t.drawdownSec}s ${t.drawdownSource}: ${t.drawdownBasis})`]
+      : [];
+  const r: BrewRecipe = { ...reconciled, targetTimeSec: t.finishSec, timeline: t };
   return {
     recipe: { ...r, pourSequence: derivePourSequence(r.pourSteps) ?? r.pourSequence },
-    pourSource: timed.source,
-    pourChanges: timed.changes,
+    pourSource: t.cadenceSource,
+    pourChanges: changes,
   };
 }
 

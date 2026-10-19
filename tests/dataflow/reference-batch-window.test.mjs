@@ -27,7 +27,7 @@ await build({
     contents: `
 export { REFERENCE_BATCH_WINDOW, batchWithinWindow } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/batchWindow.ts"))};
 export { resolveReference, reconcileToReference, referenceAppliesAtBatch } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/recipeFidelity.ts"))};
-export { applyPourDurations } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/pourDurations.ts"))};
+export { composeTimeline } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/composeTimeline.ts"))};
 export { validateRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/validateRecipe.ts"))};
 export { selectRecipes, formatRecipeForPrompt } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"))};
 export { ALL_RECIPES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
@@ -83,13 +83,18 @@ const ONE_CUP_AT = (water) => ({
   ],
 });
 
-test("the fidelity snap and the pour-time copy stop at the window", () => {
-  // Inside: the verified 1-Cup's own scaled pour times are used.
-  const inside = M.applyPourDurations(ONE_CUP_AT(250), { basedOn: ONE_CUP.name, method: "V60", pourRateGPS: 2.4 });
-  assert.equal(inside.source, "reference");
-  // Outside: the owner's pace, and no snap against a recipe that does not apply.
-  const outside = M.applyPourDurations(ONE_CUP_AT(450), { basedOn: ONE_CUP.name, method: "V60", pourRateGPS: 2.4 });
-  assert.equal(outside.source, "house");
+test("the fidelity snap and the author-cadence timeline stop at the window", () => {
+  // Inside: the verified 1-Cup's own cadence and published drawdown.
+  const inside = M.composeTimeline(ONE_CUP_AT(250), { basedOn: ONE_CUP.name, method: "V60", pastSessions: [] });
+  assert.ok(inside.ok);
+  assert.equal(inside.timeline.cadenceSource, "author");
+  assert.equal(inside.timeline.drawdownSource, "published");
+  // Outside: the model's steps as written, the drawdown an estimate — and no
+  // snap against a recipe that does not apply.
+  const outside = M.composeTimeline(ONE_CUP_AT(450), { basedOn: ONE_CUP.name, method: "V60", pastSessions: [] });
+  assert.ok(outside.ok);
+  assert.notEqual(outside.timeline.cadenceSource, "author");
+  assert.notEqual(outside.timeline.drawdownSource, "published");
   const drifted = { ...ONE_CUP_AT(450), waterTempC: 88, targetTimeSec: 320 };
   assert.equal(M.reconcileToReference(drifted, ONE_CUP.name, "V60").changed, false, "no snap outside the window");
 });
@@ -140,7 +145,7 @@ test("WIRING: /recommend relabels an out-of-window reference; the chat validator
   const helpersSrc = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"), "utf8");
   assert.match(helpersSrc, /batchWithinWindow\(recipe\.water\.grams, scaleTo\.targetWaterGrams\)/, "the formatter decides scaled line vs factor label by the shared window");
   assert.doesNotMatch(helpersSrc, /REFERENCE_BATCH_WINDOW/, "no window FILTER in the selector any more");
-  assert.match(rec, /const pourTimed = batchChecked\.map/, "the relabelled candidates flow on to the pour timing");
+  assert.match(rec, /const physicsChecked = batchChecked\.map/, "the relabelled candidates flow on down the chain");
   const val = await readFile(path.join(ROOT, "src/lib/recipe/validateRecipe.ts"), "utf8");
   assert.match(val, /problems\.push\(\.\.\.checkReferenceBatch\(recipe, ctx\)\)/);
   const helpers = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"), "utf8");

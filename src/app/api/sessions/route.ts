@@ -5,7 +5,7 @@ import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { sessions, coffees, pendingBrews } from "@/lib/db/schema";
 import { rowToSession } from "@/lib/db/helpers";
-import type { BrewLog, CoffeeIdentity, Session, TasteResult } from "@/lib/types/session";
+import type { BrewLog, CoffeeIdentity, Session, TasteResult, RecipeTimeline } from "@/lib/types/session";
 import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
 import { FieldZonesSchema } from "@/lib/field/schema";
 import { pushCaffeineToHealthSync } from "@/lib/health/healthsyncPush";
@@ -102,6 +102,12 @@ const SessionPostSchema = z.object({
       .custom<FlowAnalysis>((v) => typeof v === "object" && v !== null)
       .optional(),
     flowSource: z.enum(["measured", "self-report"]).optional(),
+    // The timeline this brew ran against (composeTimeline.ts), snapshotted on
+    // Done — loose for the same reason as flowAnalysis: the shape is owned by
+    // src/lib/types/session.ts and a field-by-field copy would strip the next field.
+    timeline: z
+      .custom<RecipeTimeline>((v) => typeof v === "object" && v !== null)
+      .optional(),
   }).optional(),
   result: z.object({
     rating: z.number().min(0).max(5),

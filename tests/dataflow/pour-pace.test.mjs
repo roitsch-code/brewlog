@@ -25,8 +25,7 @@ await build({
   stdin: {
     contents: `
 export { measuredPourPace, measuredPaceSamples, MIN_PACE_SAMPLES_BREWER, MIN_PACE_SAMPLES_ALL } from ${JSON.stringify(path.join(ROOT, "src/lib/brew/pourPace.ts"))};
-export { applyPourDurations } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/pourDurations.ts"))};
-export { housePourSec, POUR_RATE_GPS } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
+export { POUR_RATE_GPS } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 export { buildChatMeasuredBlock } from ${JSON.stringify(path.join(ROOT, "src/lib/chat/measuredContext.ts"))};
 `,
     resolveDir: ROOT,
@@ -89,43 +88,9 @@ test("fewer than 3 brews on a brewer → the overall median; fewer than 5 overal
   assert.equal(M.measuredPourPace([], "V60").gps, 4);
 });
 
-test("housePourSec takes the pace: 70 g at 2.7 g/s is 25 s, at 4 g/s 20 s (whole 5-second steps)", () => {
-  assert.equal(M.housePourSec(70, 2.7), 25);
-  assert.equal(M.housePourSec(70, 4), 20);
-  assert.equal(M.housePourSec(70), 20, "no pace given = the house fallback");
-});
-
-// Hoffmann-shaped pulses at 350 g, as a chat writes them: 10 s pours, 10 s pauses.
-const PULSES = {
-  doseGrams: 21, waterGrams: 350, waterTempC: 94, grindSize: "380°", targetTimeSec: 200,
-  pourSteps: [
-    { label: "Bloom", action: "bloom", waterGramsAtEnd: 70, durationSec: 10 },
-    { label: "Swirl", action: "swirl", durationSec: 5 },
-    { label: "Rest", action: "wait", durationSec: 30 },
-    { label: "Pulse 1", action: "pour", waterGramsAtEnd: 140, durationSec: 10 },
-    { label: "Pause", action: "wait", durationSec: 10 },
-    { label: "Pulse 2", action: "pour", waterGramsAtEnd: 210, durationSec: 10 },
-    { label: "Pause", action: "wait", durationSec: 10 },
-    { label: "Pulse 3", action: "pour", waterGramsAtEnd: 280, durationSec: 10 },
-    { label: "Pause", action: "wait", durationSec: 10 },
-    { label: "Pulse 4", action: "pour", waterGramsAtEnd: 350, durationSec: 10 },
-  ],
-};
-const steps = (r) => r.pourSteps.map((s) => `${s.action}${s.waterGramsAtEnd ? ":" + s.waterGramsAtEnd : ""}@${s.durationSec}`).join(" ");
-
-test("ANCHOR: pauses are never eaten — a longer pour pushes the next pour later", () => {
-  const r = M.applyPourDurations(PULSES, { basedOn: "Own recipe", method: "V60", pourRateGPS: 2.7 }).recipe;
-  assert.equal(steps(r), "bloom:70@25 swirl@5 wait@30 pour:140@25 wait@10 pour:210@25 wait@10 pour:280@25 wait@10 pour:350@25");
-  const waits = r.pourSteps.filter((s) => s.action === "wait").map((s) => s.durationSec);
-  assert.deepEqual(waits, [30, 10, 10, 10], "every authored pause survives at its own length");
-});
-
-test("a SHORTER pour hands its spare seconds to the rest, so the next pour starts where the recipe put it", () => {
-  const slow = { ...PULSES, pourSteps: PULSES.pourSteps.map((s) => (s.action === "pour" ? { ...s, durationSec: 40 } : s)) };
-  const r = M.applyPourDurations(slow, { basedOn: "Own recipe", method: "V60", pourRateGPS: 4 }).recipe;
-  const waits = r.pourSteps.filter((s) => s.action === "wait").map((s) => s.durationSec);
-  assert.deepEqual(waits, [30, 30, 30, 30], "40 s → 20 s pours give 20 s each to the following pause");
-});
+// housePourSec / applyPourDurations are gone (2026-10-19): the pace reaches a
+// recipe through src/lib/brew/composeTimeline.ts only, for a pour the model
+// wrote without plausible seconds — tests/dataflow/compose-timeline.test.mjs.
 
 test("the chat's measured block carries the pace once it is measured, never the house fallback", () => {
   const block = M.buildChatMeasuredBlock(SESSIONS, []);
@@ -134,13 +99,15 @@ test("the chat's measured block carries the pace once it is measured, never the 
   assert.doesNotMatch(M.buildChatMeasuredBlock(OLD_SESSIONS, []), /MEASURED POUR PACE/, "the old record never produces a pace line");
 });
 
-test("WIRING: /recommend and the chat time pours at the measured pace", async () => {
+test("WIRING: the timeline composer reads the measured pace, and /recommend and the chat compose through it", async () => {
+  const ct = await readFile(path.join(ROOT, "src/lib/brew/composeTimeline.ts"), "utf8");
+  assert.match(ct, /const pace = measuredPourPace\(ctx\.pastSessions \?\? \[\], ctx\.method\)/);
   const rec = await readFile(path.join(ROOT, "src/lib/claude/recommend.ts"), "utf8");
-  assert.match(rec, /const pace = measuredPourPace\(pastSessions, c\.method\)/);
-  assert.match(rec, /applyPourDurations\(c\.recipe, \{ basedOn: c\.basedOn, method: c\.method, pourRateGPS: pace\.gps \}\)/);
-  const route = await readFile(path.join(ROOT, "src/app/api/explore-agent/route.ts"), "utf8");
-  assert.match(route, /const pace = measuredPourPace\(sessions, action\.method\)/);
-  assert.match(route, /cleanStartBrewRecipe\(action, pace\.gps\)/);
+  assert.match(rec, /composeTimeline\(c\.recipe, \{ method: c\.method, basedOn: c\.basedOn, pastSessions, roastDate: coffee\.roastDate \}\)/);
+  assert.doesNotMatch(rec, /applyPourDurations|housePourSec/, "no second pour-time writer");
   const ctx = await readFile(path.join(ROOT, "src/lib/chat/agentContext.ts"), "utf8");
-  assert.match(ctx, /applyPourDurations\(reconcileWaterToPourPlan\(out\), ctx\)/, "the chat cleaner passes its ctx (incl. pourRateGPS) through");
+  assert.match(ctx, /composeTimeline\(reconciled, \{ method: ctx\.method, basedOn: ctx\.basedOn, pastSessions: ctx\.pastSessions, roastDate: ctx\.roastDate \}\)/, "the chat cleaner composes the same timeline from the same sessions");
+  const route = await readFile(path.join(ROOT, "src/app/api/explore-agent/route.ts"), "utf8");
+  assert.match(route, /cleanStartBrewRecipe\(action, sessions, roastDate\)/);
+  assert.doesNotMatch(route, /measuredPourPace/, "the route no longer times pours itself");
 });

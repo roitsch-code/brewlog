@@ -28,7 +28,6 @@ import { reconcileWaterToPourPlan, resolveReference } from "@/lib/claude/recipeF
 import { validateRecipe, formatProblemsForModel } from "@/lib/recipe/validateRecipe";
 import { resolveStartBrewTarget, type KnownBag } from "@/lib/chat/chatBrewTarget";
 import { expectedChatClock, CHAT_CLOCK_TOLERANCE_SEC } from "@/lib/chat/chatClock";
-import { measuredPourPace } from "@/lib/brew/pourPace";
 import { createEmojiStripper } from "@/lib/chat/stripEmoji";
 import { AGENT_SYSTEM_PROMPT, TOOLS } from "@/lib/chat/agentPrompt";
 import {
@@ -181,13 +180,13 @@ function toNavAction(toolName: string, input: NavAction, attachedImageUrl?: stri
  * whether the pours were the reference's or the house pace, or what the app
  * had rewritten. /recommend has logged all three for weeks.
  */
-function cleanStartBrewRecipe(input: NavAction, pourRateGPS: number): BrewRecipe | undefined {
-  const cleaned = cleanChatRecipeDetailed(input.recipe, { basedOn: input.basedOn, method: input.method, pourRateGPS });
+function cleanStartBrewRecipe(input: NavAction, pastSessions: Session[], roastDate?: string): BrewRecipe | undefined {
+  const cleaned = cleanChatRecipeDetailed(input.recipe, { basedOn: input.basedOn, method: input.method, pastSessions, roastDate });
   if (!cleaned) return undefined;
   const ref = resolveReference(input.basedOn);
   console.log(
     `[explore-agent] start_brew cleaned: basedOn="${input.basedOn ?? ""}" ` +
-      `bound=${ref ? `${ref.id} (verified=${ref.verified})` : "none"} pours=${cleaned.pourSource} pace=${pourRateGPS}g/s` +
+      `bound=${ref ? `${ref.id} (verified=${ref.verified})` : "none"} cadence=${cleaned.pourSource}` +
       (cleaned.pourChanges.length ? ` changes=${JSON.stringify(cleaned.pourChanges)}` : ""),
   );
   return cleaned.recipe;
@@ -755,15 +754,18 @@ export async function POST(req: NextRequest) {
             if (!action.recipe) return { ok: true, action };
 
             const sessions = await sessionsForClock();
-            const pace = measuredPourPace(sessions, action.method);
-            const cleaned = cleanStartBrewRecipe(action, pace.gps);
+            const roastDate = roastDateOf(action.id);
+            // The model's own clock, before the composer replaces it — kept so
+            // a prose "about 4:00" that disagrees with the timer goes back for
+            // repair (#198: the message and the timer never split).
+            const modelClock = action.recipe.targetTimeSec;
+            const cleaned = cleanStartBrewRecipe(action, sessions, roastDate);
             if (!cleaned) return { ok: false, problem: "start_brew needs a recipe with at least two steps.", kind: "recipe", codes: ["recipe"] };
             action.recipe = cleaned;
 
-            const roastDate = roastDateOf(action.id);
             const expectedClock =
-              expectedChatClock(action.recipe, action.method, sessions, roastDate) ?? undefined;
-            const problems = validateRecipe(action.recipe, {
+              expectedChatClock({ ...action.recipe, targetTimeSec: modelClock }, action.method, sessions, roastDate) ?? undefined;
+            const problems = validateRecipe({ ...action.recipe, targetTimeSec: modelClock }, {
               method: action.method,
               basedOn: action.basedOn,
               grinder: grinderInHand,
@@ -773,15 +775,14 @@ export async function POST(req: NextRequest) {
             if (problems.length > 0) {
               return { ok: false, problem: formatProblemsForModel(problems), kind: "recipe", codes: problems.map((pr) => pr.code) };
             }
-            // Within tolerance the server sets the exact clock: pours end +
-            // the owner's measured drawdown, as /recommend does.
-            if (expectedClock && action.recipe.targetTimeSec !== expectedClock.sec) {
+            // Within tolerance the composed clock stands (the cleaner already
+            // set targetTimeSec = finishSec and attached the timeline).
+            if (expectedClock && modelClock !== expectedClock.sec) {
               console.log(
-                `[explore-agent] start_brew clock: ${action.recipe.targetTimeSec}s → ${expectedClock.sec}s ` +
+                `[explore-agent] start_brew clock: ${modelClock}s → ${expectedClock.sec}s ` +
                   `(pours end ${expectedClock.pourPhaseEndSec}s + drawdown ${expectedClock.drawdownSec}s, ${expectedClock.detail}; ` +
                   `within ${CHAT_CLOCK_TOLERANCE_SEC}s)`,
               );
-              action.recipe = { ...action.recipe, targetTimeSec: expectedClock.sec };
             }
             console.log(
               `[explore-agent] start_brew accepted: id=${action.id ?? "(names)"} method="${action.method ?? ""}" ` +

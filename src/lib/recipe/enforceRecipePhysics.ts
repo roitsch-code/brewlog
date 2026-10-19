@@ -10,10 +10,8 @@
  *
  *   1. water milestones strictly increase (a pour can't remove water);
  *   2. the headline `waterGrams` equals what the pour plan actually pours;
- *   3. no pour is scheduled faster than anyone pours (MAX_POUR_RATE_GPS);
- *   4. an immersion recipe's own step durations sum to its clock;
- *   5. the clock leaves at least the drawdown floor after the last pour;
- *   6. the clock isn't padded with a drawdown longer than any published one.
+ *   3. no pour is scheduled faster than anyone pours (MAX_POUR_RATE_GPS).
+ * The clock itself (the old 4–6) is composed once in composeTimeline.ts.
  *
  * This REPAIRS in place, which is right for `/recommend` (the user never sees
  * the model's draft, only the corrected result) and deliberately unlike the chat,
@@ -22,16 +20,7 @@
  */
 import { reconcileWaterToPourPlan } from "@/lib/claude/recipeFidelity";
 import type { BrewPourStep, BrewRecipe } from "@/lib/types/session";
-import {
-  MAX_POUR_RATE_GPS,
-  defaultDuration,
-  hasImmersionShape,
-  isSetupAction,
-  maxDrawdownSec,
-  maxTargetTimeSec,
-  minDrawdownSec,
-  pourScheduleFor,
-} from "@/lib/utils/pourSequence";
+import { MAX_POUR_RATE_GPS, hasImmersionShape } from "@/lib/utils/pourSequence";
 
 const WATER_ACTIONS = new Set(["bloom", "pour", "final", "melodrip"]);
 
@@ -66,7 +55,6 @@ export function enforceRecipePhysics(
   if (isOutOfScope(recipe)) return { recipe, dropped: false, changes };
 
   let out: BrewRecipe = recipe;
-  const now = ctx.now ?? Date.now();
 
   // 1. Milestones must strictly increase. A plan that goes 250 → 180 describes a
   //    brew that removes water; there is no honest repair, so the candidate goes.
@@ -120,42 +108,8 @@ export function enforceRecipePhysics(
     if (touched) out = { ...out, pourSteps: fixed };
   }
 
-  // 4. Immersion: the steps ARE the clock, so their sum must be the clock.
-  const schedule = pourScheduleFor(out, ctx.roastDate, now, ctx.method);
-  if (!schedule) {
-    if (Array.isArray(out.pourSteps) && out.pourSteps.length > 0) {
-      const timed = out.pourSteps.filter((s) => !isSetupAction(s.action, s.label ?? ""));
-      const sum = timed.reduce(
-        (acc, s) => acc + (typeof s.durationSec === "number" ? s.durationSec : defaultDuration(s.action)),
-        0,
-      );
-      if (sum > 0 && Math.abs(sum - out.targetTimeSec) > 5) {
-        changes.push(`immersion clock ${out.targetTimeSec}s → ${sum}s (its own steps sum to that)`);
-        out = { ...out, targetTimeSec: sum };
-      }
-    }
-    return { recipe: out, dropped: false, changes };
-  }
-
-  // 5/6. The clock has to hold the pour phase plus a real drawdown, and must not
-  //      be padded with a drawdown longer than any published recipe's.
-  const floor = minDrawdownSec(ctx.method);
-  const needed = schedule.pourPhaseEndSec + floor;
-  if (out.targetTimeSec < needed) {
-    changes.push(
-      `clock ${out.targetTimeSec}s → ${needed}s (pours run to ${schedule.pourPhaseEndSec}s, drawdown needs ${floor}s)`,
-    );
-    out = { ...out, targetTimeSec: needed };
-  } else {
-    const drawdown = out.targetTimeSec - schedule.pourPhaseEndSec;
-    if (drawdown > maxDrawdownSec(out.targetTimeSec)) {
-      const trimmed = maxTargetTimeSec(schedule.pourPhaseEndSec);
-      changes.push(
-        `clock ${out.targetTimeSec}s → ${trimmed}s (a ${drawdown}s drawdown is padding, not draining)`,
-      );
-      out = { ...out, targetTimeSec: trimmed };
-    }
-  }
-
+  // 4–6 (the clock) are GONE (2026-10-19): the clock is composed once in
+  // src/lib/brew/composeTimeline.ts — pours end + the owner's measured drawdown
+  // for this exact brewer — and nothing here or on the client re-derives it.
   return { recipe: out, dropped: false, changes };
 }

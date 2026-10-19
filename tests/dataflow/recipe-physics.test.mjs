@@ -20,7 +20,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const entry = `
 export { enforceRecipePhysics } from ${JSON.stringify(path.join(ROOT, "src/lib/recipe/enforceRecipePhysics.ts"))};
-export { pourScheduleFor, MAX_POUR_RATE_GPS, MIN_DRAWDOWN_SEC, maxDrawdownSec } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
+export { pourScheduleFor, MAX_POUR_RATE_GPS } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/pourSequence.ts"))};
 `;
 const dir = await mkdtemp(join(tmpdir(), "physics-"));
 const out = join(dir, "p.mjs");
@@ -33,7 +33,7 @@ await build({
   logLevel: "silent",
   external: ["pg", "pg-native", "drizzle-orm", "drizzle-orm/*"],
 });
-const { enforceRecipePhysics, pourScheduleFor, MAX_POUR_RATE_GPS, MIN_DRAWDOWN_SEC, maxDrawdownSec } =
+const { enforceRecipePhysics, pourScheduleFor, MAX_POUR_RATE_GPS } =
   await import(pathToFileURL(out).href);
 
 const NOW = Date.UTC(2026, 8, 29);
@@ -111,48 +111,9 @@ test("an impossible pour rate is stretched to something a person can pour", () =
   }
 });
 
-test("a clock that ends before the pours do is raised, never the pours cut", () => {
-  const recipe = base({ targetTimeSec: 120 });
-  const before = pourScheduleFor(recipe, undefined, NOW, "V60");
-  const res = enforceRecipePhysics(recipe, { method: "V60", now: NOW });
-  assert.ok(res.recipe.targetTimeSec >= before.pourPhaseEndSec + MIN_DRAWDOWN_SEC);
-  assert.match(res.changes.join(" "), /clock/);
-  // The pours themselves are untouched — only the clock moved.
-  const after = pourScheduleFor(res.recipe, undefined, NOW, "V60");
-  assert.deepEqual(
-    after.steps.map((s) => s.startTimeSec),
-    before.steps.map((s) => s.startTimeSec),
-  );
-});
-
-test("a clock padded with an absurd drawdown is trimmed", () => {
-  const recipe = base({ targetTimeSec: 900 });
-  const res = enforceRecipePhysics(recipe, { method: "V60", now: NOW });
-  const schedule = pourScheduleFor(res.recipe, undefined, NOW, "V60");
-  assert.ok(schedule.drawdownSec <= maxDrawdownSec(res.recipe.targetTimeSec));
-  assert.match(res.changes.join(" "), /padding, not draining/);
-});
-
-test("an immersion recipe's clock is set to what its own steps add up to", () => {
-  const res = enforceRecipePhysics(
-    {
-      doseGrams: 18,
-      waterGrams: 250,
-      waterTempC: 94,
-      grindSize: "medium",
-      targetTimeSec: 400,
-      pourSequence: "",
-      pourSteps: [
-        { label: "Add water", action: "pour", waterGramsAtEnd: 250, durationSec: 40 },
-        { label: "Steep", action: "wait", durationSec: 120 },
-        { label: "Drain", action: "drain", durationSec: 40 },
-      ],
-    },
-    { method: "Clever Dripper", now: NOW },
-  );
-  assert.equal(res.recipe.targetTimeSec, 200);
-  assert.match(res.changes.join(" "), /immersion clock/);
-});
+// The clock checks that lived here as steps 4–6 (raise a short clock, trim a
+// padded one, immersion = Σ steps) moved to src/lib/brew/composeTimeline.ts on
+// 2026-10-19 — tests/dataflow/compose-timeline.test.mjs covers them.
 
 test("a cold steep and an iced build are left alone", () => {
   const cold = base({ targetTimeSec: 43200 });
@@ -166,7 +127,7 @@ test("WIRING: recommend.ts runs the guard and uses its output", async () => {
   assert.match(src, /enforceRecipePhysics/, "recommend.ts must import the guard");
   assert.match(
     src,
-    /const physicsChecked\s*=\s*pourTimed\.map/,
+    /const physicsChecked\s*=\s*batchChecked\.map/,
     "every candidate must go through the guard",
   );
   assert.match(
