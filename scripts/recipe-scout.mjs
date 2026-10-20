@@ -10,10 +10,14 @@
 // 2. SEARCH. One Sonnet call per target with web_search: find ONE published
 //    recipe by a named author for that brewer near that batch, and return it
 //    as JSON with a VERBATIM quote for every number.
-// 3. VERIFY. Fetch every source URL and re-find every quote in the page's
-//    text. A quote that is not on the page kills the candidate — that is
-//    the whole no-fabrication guarantee. YouTube-only sources can never be
-//    fetched, so they never enter.
+// 3. VERIFY. Fetch every source URL (directly, then through a reader
+//    service when the site blocks GitHub's runners) and check every quote
+//    against the page's text: the quote as written, or — since the first
+//    runs showed the model paraphrasing the sentence around a correct number
+//    — every NUMBER in the quote present on the page as its own token. A
+//    number that is not on the page kills the candidate; that is the whole
+//    no-fabrication guarantee. YouTube-only sources can never be read, so
+//    they never enter.
 // 4. GATE. Only owned brewers, no duplicate of a corpus entry, a pour plan
 //    that reaches the water at ≤ 12 g/s, never a Niche° number (a scouted
 //    grind is prose only). Then the corpus validator and tsc on the written
@@ -64,17 +68,28 @@ export function gapTable(recipes, roles, amounts = AMOUNTS) {
   return rows.sort((a, b) => a.count - b.count || a.amount - b.amount || a.role.localeCompare(b.role));
 }
 
-/** The emptiest cells, one per brewer role, so a week spreads over the kit. */
-export function pickTargets(table, n = 4) {
-  const out = [];
-  const seenRole = new Set();
-  for (const row of table) {
-    if (seenRole.has(row.role)) continue;
-    seenRole.add(row.role);
-    out.push(row);
-    if (out.length >= n) break;
-  }
-  return out;
+/**
+ * One cell per brewer role (its emptiest), the roles rotated by `seed` (the
+ * ISO week by default) so every week starts somewhere else in the kit: the
+ * first runs spent all four targets on Orea bottoms, where little is
+ * published, and found nothing. Still emptiest-first within a role.
+ */
+export function pickTargets(table, n = 4, seed = isoWeek(new Date())) {
+  const perRole = new Map();
+  for (const row of table) if (!perRole.has(row.role)) perRole.set(row.role, row);
+  const roles = Array.from(perRole.keys());
+  if (roles.length === 0) return [];
+  const start = ((seed % roles.length) + roles.length) % roles.length;
+  const rotated = [...roles.slice(start), ...roles.slice(0, start)];
+  return rotated.slice(0, n).map((r) => perRole.get(r));
+}
+
+export function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = Date.UTC(t.getUTCFullYear(), 0, 1);
+  return Math.ceil(((t - yearStart) / 86_400_000 + 1) / 7);
 }
 
 // ── 3. Verify ────────────────────────────────────────────────────────────────
@@ -111,21 +126,52 @@ export function quoteFound(pageText, quote) {
   return normalizeText(pageText).includes(q);
 }
 
-async function fetchPageText(url) {
+/** The numbers a quote asserts ("16g", "92°C", "2:30", "1:15.6"), as strings. */
+export function numbersIn(quote) {
+  return Array.from(String(quote ?? "").matchAll(/\d+(?:[.,]\d+)?/g)).map((m) => m[0].replace(",", "."));
+}
+
+/** Every number of the quote appears on the page as its own token (not inside another number). */
+export function numbersSupported(pageText, quote) {
+  const nums = numbersIn(quote);
+  if (nums.length === 0) return false;
+  const page = normalizeText(pageText).replace(/(\d),(\d)/g, "$1.$2");
+  return nums.every((n) => new RegExp(`(?<![\\d.])${n.replace(".", "\\.")}(?![\\d.])`).test(page));
+}
+
+/** The gate a quote has to pass: as written, or every number of it on the page. */
+export function quoteSupported(pageText, quote) {
+  return quoteFound(pageText, quote) || numbersSupported(pageText, quote);
+}
+
+async function fetchOnce(url, timeoutMs = 20_000) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 20_000);
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { "user-agent": "Mozilla/5.0 (BTTS recipe scout; +https://bettertastethansorry.com)" }, redirect: "follow" });
     if (!res.ok) return null;
     const type = res.headers.get("content-type") ?? "";
     if (!/text\/html|text\/plain|application\/xhtml/.test(type)) return null;
-    const raw = await res.text();
-    return htmlToText(raw.slice(0, 2_000_000));
+    return await res.text();
   } catch {
     return null;
   } finally {
     clearTimeout(t);
   }
+}
+
+/**
+ * The page as text: fetched directly, else through the r.jina.ai reader
+ * (plain text, follows redirects) — the first runs found a blog that answers
+ * a browser but not GitHub's runners. The reader's own error banner ("Target
+ * URL returned error 404") counts as unreadable.
+ */
+async function fetchPageText(url) {
+  const direct = await fetchOnce(url);
+  if (direct) return htmlToText(direct.slice(0, 2_000_000));
+  const viaReader = await fetchOnce(`https://r.jina.ai/${url}`, 30_000);
+  if (!viaReader || /^Warning: Target URL returned error/m.test(viaReader)) return null;
+  return viaReader.slice(0, 2_000_000);
 }
 
 // ── 4. Gate → a corpus entry ─────────────────────────────────────────────────
@@ -260,8 +306,9 @@ const SCOUT_SYSTEM = `You find ONE published pour-over / immersion coffee recipe
 
 Rules — a no-fabrication guarantee depends on them:
 - Use web_search. Prefer the author's own page, the roaster's page, a competition's official page, or a long-form article that reproduces the recipe in full. The page must be a normal web page (NOT a YouTube video, NOT a PDF, NOT an image): the recipe text must be readable in the page's HTML, because every quote will be re-found there by a script.
-- Every number you return (dose, water, temperature, total time, each pour's grams and seconds) must appear VERBATIM on that page. Put the exact supporting text in "quotes". If the page gives a range, return the range's lower value and quote the range. If a number is not on the page, do not invent it — leave it out and say so in "missing".
-- Pour milestones are CUMULATIVE grams in the brewer; the last one equals the water. Actions: pour | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed.
+- Every number you return (dose, water, temperature, total time, each pour's grams and seconds) must be ON that page. For each, put in "quotes" the line of the page that carries the number, COPIED as it stands (a script re-finds the numbers there; a paraphrase with the same numbers still passes, a number that is not on the page fails). If the page gives a range, return the range's lower value and quote the range. If a number is not on the page, do not invent it — leave it out and say so in "missing".
+- Look where recipes with numbers are actually published: the author's own site, roaster brew guides, Hario's and Kalita's recipe pages, Barista Hustle, competition routine write-ups, specialty-coffee magazines. A recipe at any water inside the given window is fine; a different author than the ones the corpus already has is the point.
+- Pour milestones are CUMULATIVE grams in the brewer; the last one equals the water. Every pour step must be narrated on the page — never add a step to make the pours reach a headline total; if the page's steps and its headline disagree, follow the steps and say so in "missing". Actions: pour | stir | swirl | wait | press | invert | flip | drain | bypass | melodrip | agitate-bed.
 - Grind as the author states it (grinder + setting + description) — never a Niche Zero number.
 - Techniques only from this list: TECHNIQUE_IDS.
 - If you cannot find a recipe that satisfies all of this, return {"none": true, "reason": "..."}.
@@ -278,7 +325,7 @@ Return ONLY JSON:
   "techniques": [],
   "bestFor": {"roastLevels": ["light"], "processes": ["washed"], "goals": ["high-clarity"]},
   "teaches": "", "science": "", "whenToUse": "",
-  "quotes": {"dose": "", "water": "", "temp": "", "time": "", "pours": [""]},
+  "quotes": {"dose": "", "water": "", "temp": "", "time": "", "pours": ["<ONE entry PER WATER step (bloom / pour / final — not waits), in order: the page's line that carries that step's amount (its running total or its increment)>"]},
   "missing": []
 }`;
 
@@ -309,6 +356,42 @@ async function searchCandidate(client, target, techniqueIds) {
   });
   const text = (resp?.content ?? []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
   return extractJson(text);
+}
+
+/**
+ * The pour plan against its own quotes (2026-10-19, third run): the model
+ * had invented a third pour to reach a "300ml" header on a page whose
+ * pattern and steps say 50 – 250. So: one quote PER pour step, carrying that
+ * step's cumulative milestone or its increment; the water itself must be in
+ * a pour quote (a "total amount" line is not a pour); and a step the model
+ * marks as inferred, assumed or not narrated is a step it made up.
+ */
+export function pourPlanProblems(c) {
+  const problems = [];
+  const pours = Array.isArray(c?.pours) ? c.pours : [];
+  const pq = Array.isArray(c?.quotes?.pours) ? c.quotes.pours : [];
+  let prev = 0;
+  let waterSeen = false;
+  let w = 0; // quotes are one per WATER step (waits and swirls carry no grams)
+  const water = Number(c?.water);
+  pours.forEach((p, i) => {
+    if (/inferr|assum|not (?:individually )?narrated|estimat|guess/i.test(String(p?.notes ?? "") + " " + String(p?.label ?? ""))) {
+      problems.push(`"${p?.label ?? i}" is marked inferred / assumed by the model`);
+    }
+    if (typeof p?.waterGramsAtEnd !== "number") return;
+    const milestone = p.waterGramsAtEnd;
+    const increment = milestone - prev;
+    prev = milestone;
+    const nums = numbersIn(pq[w++] ?? "");
+    if (!nums.includes(String(milestone)) && !nums.includes(String(increment))) {
+      problems.push(`"${p.label ?? i}" (${milestone} g) has no pour quote carrying ${milestone} or ${increment}`);
+    }
+    if (milestone === water && (nums.includes(String(milestone)) || nums.includes(String(increment)))) waterSeen = true;
+  });
+  if (pours.some((p) => typeof p?.waterGramsAtEnd === "number") && !waterSeen) {
+    problems.push(`the water (${water} g) is not reached by any quoted pour — a "total amount" line is not a pour`);
+  }
+  return problems;
 }
 
 /** Every quote the candidate carries, flattened. */
@@ -390,9 +473,14 @@ export { TECHNIQUES } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/t
       log.push(`${label}: could not read ${url} (video / PDF / blocked) — dropped`);
       continue;
     }
-    const missing = quotes.filter((q) => !quoteFound(page, q.quote));
+    const missing = quotes.filter((q) => !quoteSupported(page, q.quote));
     if (missing.length > 0) {
-      log.push(`${label}: ${missing.length} quote(s) not on the page (${missing.map((m) => m.key).join(", ")}) — dropped. First: ${JSON.stringify(missing[0].quote).slice(0, 120)}`);
+      log.push(`${label}: ${missing.length} quote(s) whose numbers are not on the page (${missing.map((m) => m.key).join(", ")}) — dropped. First: ${JSON.stringify(missing[0].quote).slice(0, 120)}`);
+      continue;
+    }
+    const planProblems = pourPlanProblems(c);
+    if (planProblems.length > 0) {
+      log.push(`${label}: pour plan not backed by its quotes — dropped: ${planProblems.join("; ")}`);
       continue;
     }
     const entry = toRecipeEntry(c, { ...target, techniqueIds }, existing, nowIso);
