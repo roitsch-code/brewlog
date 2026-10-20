@@ -137,7 +137,7 @@ test("the written file round-trips through the corpus: SCOUTED_RECIPES is in ALL
   assert.match(text, /export const SCOUTED_RECIPES: Recipe\[\] = \[\n/);
   assert.ok(Array.isArray(K.SCOUTED_RECIPES));
   const helpers = await readFile(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"), "utf8");
-  assert.match(helpers, /\.\.\.SCOUTED_RECIPES,\n\];/);
+  assert.match(helpers, /\.\.\.SCOUTED_RECIPES,\n(?:  \.\.\.GOTA_RECIPES,\n)?\];/);
   const validate = await readFile(path.join(ROOT, "tests/recipes/validate.mjs"), "utf8");
   assert.match(validate, /still unverified — cross-check it against the originator/);
   const wf = await readFile(path.join(ROOT, ".github/workflows/recipe-scout.yml"), "utf8");

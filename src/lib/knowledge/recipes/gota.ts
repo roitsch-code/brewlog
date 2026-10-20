@@ -11,4 +11,13607 @@
 // `addedAt` on purpose — a bulk import must not wear "[NEW this month]".
 import type { Recipe } from "./types";
 
-export const GOTA_RECIPES: Recipe[] = [];
+export const GOTA_RECIPES: Recipe[] = [
+  {
+    "id": "gota-aeropress-aeropress-bypass",
+    "name": "Bypass (ACE Coffee Roasters, AeroPress)",
+    "shortName": "Roasters AeroPress (Gota)",
+    "attribution": {
+      "person": "ACE Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 35
+    },
+    "water": {
+      "grams": 330,
+      "ratio": "1:9.4"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 15,
+        "notes": "Pour 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 55,
+        "notes": "Stir 3–4 times to wet every ground. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 35,
+        "notes": "Press down slowly and evenly."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 330,
+        "durationSec": 20,
+        "notes": "Add 180g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 130,
+    "techniques": [
+      "immersion-steep",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Ace Coffee's competition-style AeroPress guide brews a compact concentrate with a coarse grind, then opens it with hot bypass water. This separation of extraction and strength targets a very clean, tea-like cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 330 g, transcribed by Gota from acecoffeeroasters.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Bypass\" for AeroPress by ACE Coffee Roasters, transcribed by Gota from acecoffeeroasters.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-bypass"
+      },
+      {
+        "type": "article",
+        "citation": "ACE Coffee Roasters — the originator page Gota names (acecoffeeroasters.com); not cross-checked by a session",
+        "url": "https://acecoffeeroasters.com/blogs/brew-guides/aeropress-bypass-method"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names acecoffeeroasters.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-competition-2024",
+    "name": "WAC Style 2024 (AeroPress, AeroPress)",
+    "shortName": "AeroPress \"WAC Style 2024\" (Gota)",
+    "attribution": {
+      "person": "AeroPress",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:11.1"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 10,
+        "notes": "Fill the chamber briskly."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir 5 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 45,
+        "notes": "Insert the plunger to create a vacuum seal. Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 25,
+        "notes": "Press down slowly and evenly."
+      }
+    ],
+    "totalTimeSec": 85,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "AeroPress presents this as a modern World AeroPress Championship-style brew: upright, medium-ground, and intentionally quick. The compact contact time and simple agitation seek a balanced, sweet cup with clean competition character.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from aeropress.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC Style 2024\" for AeroPress by AeroPress, transcribed by Gota from aeropress.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-competition-2024"
+      },
+      {
+        "type": "article",
+        "citation": "AeroPress — the originator page Gota names (aeropress.com); not cross-checked by a session",
+        "url": "https://aeropress.com/pages/wac-recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeropress.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-espresso-style",
+    "name": "Espresso-Style (AeroPress, AeroPress)",
+    "shortName": "AeroPress \"Espresso-Style\" (Gota)",
+    "attribution": {
+      "person": "AeroPress",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 78,
+      "ratio": "1:4.3"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 78,
+        "durationSec": 25,
+        "notes": "Pour 78g and stir vigorously to saturate the bed. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press all the way through the hiss for full yield."
+      }
+    ],
+    "totalTimeSec": 50,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "AeroPress recipe mimicking espresso concentration. Fine grind, minimal water, and a firm press produce a full-bodied ~50ml shot suitable for lattes, cappuccinos, or drinking as a short black.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 78 g, transcribed by Gota from aeropress.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Espresso-Style\" for AeroPress by AeroPress, transcribed by Gota from aeropress.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-espresso-style"
+      },
+      {
+        "type": "article",
+        "citation": "AeroPress — the originator page Gota names (aeropress.com); not cross-checked by a session",
+        "url": "https://aeropress.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeropress.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-iced-flash",
+    "name": "Iced Flash Brew (Alexander Mills, AeroPress)",
+    "shortName": "Mills AeroPress (Gota)",
+    "attribution": {
+      "person": "Alexander Mills",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:7.5"
+    },
+    "temperature": {
+      "celsius": 99
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 14,
+        "notes": "Pour 50g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 16,
+        "notes": "Stir vigorously. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 18,
+        "notes": "Finish gently over the centre of the bed to 150g."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 37,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Fit the cap with 2 paper filters and flip the brewer onto the ice-filled server."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press gently with the weight of your hand."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Alexander Mills' inverted AeroPress flash brew presses a concentrated extraction directly over an equal share of ice. Double paper filtration and immediate chilling produce a crisp, bright iced cup with high clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from pullandpourcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced Flash Brew\" for AeroPress by Alexander Mills, transcribed by Gota from pullandpourcoffee.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-iced-flash"
+      },
+      {
+        "type": "article",
+        "citation": "Alexander Mills — the originator page Gota names (pullandpourcoffee.com); not cross-checked by a session",
+        "url": "https://pullandpourcoffee.com/iced-aeropress-recipe/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names pullandpourcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-japanese-iced",
+    "name": "Japanese Iced (AeroPress, AeroPress)",
+    "shortName": "AeroPress \"Japanese Iced\" (Gota)",
+    "attribution": {
+      "person": "AeroPress",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:9.4"
+    },
+    "temperature": {
+      "celsius": 94
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 10,
+        "notes": "Pour 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir vigorously."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 95,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ]
+    },
+    "teaches": "AeroPress's Japanese-style iced method brews a concentrated hot extraction directly over ice, where immediate chilling preserves volatile aromatics. The result is a bright, complex cold cup rather than a long-steeped cold brew.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from aeropress.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Japanese Iced\" for AeroPress by AeroPress, transcribed by Gota from aeropress.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-japanese-iced"
+      },
+      {
+        "type": "article",
+        "citation": "AeroPress — the originator page Gota names (aeropress.com); not cross-checked by a session",
+        "url": "https://aeropress.com/blogs/aeropress-recipes/japanese-inspired-iced-coffee"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeropress.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-official",
+    "name": "Official Recipe (AeroPress, AeroPress)",
+    "shortName": "AeroPress \"Official Recipe\" (Gota)",
+    "attribution": {
+      "person": "AeroPress",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 17
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:11.8"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 10,
+        "notes": "Pour 200g gently over the centre of the bed."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 7,
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 112,
+    "techniques": [
+      "central-pour",
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "The standard recipe included with every AeroPress uses one heaping scoop (17g) of medium-ground coffee, a short stir, and a gentle press. Use 80°C for dark roasts or 85°C for medium and light roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from aeropress.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official Recipe\" for AeroPress by AeroPress, transcribed by Gota from aeropress.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-official"
+      },
+      {
+        "type": "article",
+        "citation": "AeroPress — the originator page Gota names (aeropress.com); not cross-checked by a session",
+        "url": "https://aeropress.com/pages/how-to-use"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeropress.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-aeropress-prismo",
+    "name": "Prismo Espresso (Fellow, AeroPress)",
+    "shortName": "Fellow AeroPress (Gota)",
+    "attribution": {
+      "person": "Fellow",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 50,
+      "ratio": "1:2.5"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 10,
+        "notes": "Pour 50g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 45,
+        "notes": "Stir gently until every ground is wet. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press down firmly."
+      }
+    ],
+    "totalTimeSec": 80,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Fellow's guide uses its Prismo attachment to turn the AeroPress into a compact, espresso-style brewer. A fine grind, low water volume, and pressure-actuated valve produce an intense, crema-like shot suited to drinking neat or with milk.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 50 g, transcribed by Gota from fellowproducts.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Prismo Espresso\" for AeroPress by Fellow, transcribed by Gota from fellowproducts.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/aeropress-prismo"
+      },
+      {
+        "type": "article",
+        "citation": "Fellow — the originator page Gota names (fellowproducts.com); not cross-checked by a session",
+        "url": "https://fellowproducts.com/blogs/brew-guides/how-to-dial-in-your-prismo-to-pull-the-best-shot"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names fellowproducts.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-april-aeropress",
+    "name": "Light & Juicy (April Coffee Roasters, AeroPress)",
+    "shortName": "Roasters AeroPress (Gota)",
+    "attribution": {
+      "person": "April Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 13
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:15.4"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 8,
+        "notes": "Pour 50g and stir gently to saturate the bed."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 22,
+        "notes": "Rest the plunger on the surface — don't press down. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Remove the plunger."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 5,
+        "notes": "Pour the final 150g gently to 200g."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 50,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 125,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Published by April Coffee, this upright AeroPress method pairs a low dose with a gentle bloom held beneath a seated plunger, followed by one main pour. It targets a light, juicy cup from bright Kenyan or Ethiopian light roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Light & Juicy\" for AeroPress by April Coffee Roasters, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/april-aeropress"
+      },
+      {
+        "type": "article",
+        "citation": "April Coffee Roasters — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/coffee-with-april"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-go-aeropress-go-concentrate",
+    "name": "Hoffmann Concentrate (James Hoffmann, AeroPress Go)",
+    "shortName": "Hoffmann AeroPress (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "brewerNotes": "AeroPress Go",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 90,
+      "ratio": "1:5"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 8,
+        "notes": "Fill the chamber gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 8,
+        "notes": "Stir vigorously 10 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 4,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 92,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 8,
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press gently with the weight of your hand."
+      }
+    ],
+    "totalTimeSec": 155,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "James Hoffmann's AeroPress concentrate — the \"espresso\" component he uses for milk drinks at home. Invert, steep for 90 seconds, then press right through the bubbling hiss so you keep every last gram of liquid.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 90 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Hoffmann Concentrate\" for AeroPress Go by James Hoffmann, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress-go/aeropress-go-concentrate"
+      },
+      {
+        "type": "article",
+        "citation": "James Hoffmann — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/james-hoffmann"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-go-aeropress-go-espresso",
+    "name": "Jung In-sung Espresso Style (Jung In-sung, AeroPress Go)",
+    "shortName": "In-sung AeroPress (Gota)",
+    "attribution": {
+      "person": "Jung In-sung",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "brewerNotes": "AeroPress Go",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 80,
+      "ratio": "1:4"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 5,
+        "notes": "Fill the chamber gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 35,
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press gently with the weight of your hand."
+      }
+    ],
+    "totalTimeSec": 90,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Jung In-sung's espresso-style method on the AeroPress Go, from the 2013 Korea Brewers Cup champion. A small dose of water, a long stir and a slow press build a rich, chocolatey concentrate for americanos, lattes, or a straight shot.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 80 g, transcribed by Gota from coffee4m.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Jung In-sung Espresso Style\" for AeroPress Go by Jung In-sung, transcribed by Gota from coffee4m.com",
+        "url": "https://gota.cafe/en/recipes/aeropress-go/aeropress-go-espresso"
+      },
+      {
+        "type": "article",
+        "citation": "Jung In-sung — the originator page Gota names (coffee4m.com); not cross-checked by a session",
+        "url": "https://coffee4m.com/aeropress-recipes-jung-in-sung"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names coffee4m.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-go-aeropress-go-iced",
+    "name": "Iced (AeroPress, AeroPress Go)",
+    "shortName": "AeroPress \"Iced\" (Gota)",
+    "attribution": {
+      "person": "AeroPress",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "brewerNotes": "AeroPress Go",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 120,
+      "ratio": "1:6.7"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 10,
+        "notes": "Pour 120g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir vigorously."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 20,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 35,
+        "notes": "Press down slowly and evenly."
+      }
+    ],
+    "totalTimeSec": 80,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ]
+    },
+    "teaches": "AeroPress's official iced method for the Go: a strong 1:6.7 concentrate brewed with boiling water and pressed straight onto ice. The flash chill locks in a bright, clean, fruity cup without watering the flavour down.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 120 g, transcribed by Gota from aeropress.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced\" for AeroPress Go by AeroPress, transcribed by Gota from aeropress.com",
+        "url": "https://gota.cafe/en/recipes/aeropress-go/aeropress-go-iced"
+      },
+      {
+        "type": "article",
+        "citation": "AeroPress — the originator page Gota names (aeropress.com); not cross-checked by a session",
+        "url": "https://aeropress.com/pages/how-to-brew"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeropress.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-hedrick-stock-zuppa",
+    "name": "Stock Zuppa Lunga (Lance Hedrick, AeroPress)",
+    "shortName": "Hedrick AeroPress (Gota)",
+    "attribution": {
+      "person": "Lance Hedrick",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 20,
+        "notes": "Pour 150g gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 40,
+        "notes": "Press gently with the weight of your hand."
+      }
+    ],
+    "totalTimeSec": 65,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Lance Hedrick's clear-column \"Zuppa\" percolation on a completely stock AeroPress — no attachment. A second paper filter disperses the pour and the plunger doubles as a tamper, brewing the clean, high-extraction 1:10 cup that usually needs a Joe Presso or Prismo.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Stock Zuppa Lunga\" for AeroPress by Lance Hedrick, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/hedrick-stock-zuppa"
+      },
+      {
+        "type": "video",
+        "citation": "Lance Hedrick — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=1pc1P435Chs"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-hedrick-zuppa-lunga",
+    "name": "Zuppa Lunga (Lance Hedrick, AeroPress)",
+    "shortName": "Hedrick AeroPress (Gota)",
+    "attribution": {
+      "person": "Lance Hedrick",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 7,
+        "notes": "Pour 150g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 5,
+        "notes": "Tap the side to knock grounds off the wall."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 3,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 35,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 50,
+    "techniques": [
+      "immersion-steep",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "goals": [
+        "sweetness-forward",
+        "balanced",
+        "body-forward"
+      ]
+    },
+    "teaches": "Lance Hedrick's diluted \"Zuppa\" technique adapted to the AeroPress with a portafilter attachment. A 1:10 ratio with coarser grind delivers the syrupy, high-TDS character of a Zuppa in a longer, sippable cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Zuppa Lunga\" for AeroPress by Lance Hedrick, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/hedrick-zuppa-lunga"
+      },
+      {
+        "type": "video",
+        "citation": "Lance Hedrick — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=xrKsjy7nh8Y"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-hoffmann-aeropress-espresso",
+    "name": "Inverted Shot (James Hoffmann, AeroPress)",
+    "shortName": "Hoffmann AeroPress (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 90,
+      "ratio": "1:5"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "extra fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 8,
+        "notes": "Pour 90g gently over the centre of the bed."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir vigorously to break up any clumps."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 72,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 8,
+        "notes": "Gently swirl to knock the grounds off the sides."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 133,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "James Hoffmann's inverted AeroPress concentrate is intended as an espresso-style base for milk drinks. An extra-fine grind and low water volume create a compact, forceful cup that remains present under steamed milk.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 90 g, transcribed by Gota from aeromatic.app.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Inverted Shot\" for AeroPress by James Hoffmann, transcribed by Gota from aeromatic.app",
+        "url": "https://gota.cafe/en/recipes/aeropress/hoffmann-aeropress-espresso"
+      },
+      {
+        "type": "article",
+        "citation": "James Hoffmann — the originator page Gota names (aeromatic.app); not cross-checked by a session",
+        "url": "https://aeromatic.app/recipes/james-hoffmann-espresso-aeropress-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeromatic.app as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-it-2026-maculotti",
+    "name": "Italy 2026 Runner-Up (Mattia Maculotti, AeroPress)",
+    "shortName": "Maculotti AeroPress (Gota)",
+    "attribution": {
+      "person": "Mattia Maculotti",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 172,
+      "ratio": "1:11.5"
+    },
+    "temperature": {
+      "celsius": 86
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 115,
+        "durationSec": 10,
+        "notes": "Pour 115g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 125,
+        "notes": "Stir gently 10 times. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 15,
+        "notes": "Press down slowly and evenly."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 172,
+        "durationSec": 5,
+        "notes": "Add 57g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 160,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Mattia Maculotti took second at the 2026 Italian AeroPress Championship with an inverted concentrate he diluted to taste. He wanted a balanced cup with good body and no bitterness; the judges found it very close to the winner's.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 172 g, transcribed by Gota from coffeehow.co.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Italy 2026 Runner-Up\" for AeroPress by Mattia Maculotti, transcribed by Gota from coffeehow.co",
+        "url": "https://gota.cafe/en/recipes/aeropress/it-2026-maculotti"
+      },
+      {
+        "type": "article",
+        "citation": "Mattia Maculotti — the originator page Gota names (coffeehow.co); not cross-checked by a session",
+        "url": "https://coffeehow.co/italian-aeropress-championship-2026/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names coffeehow.co as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-kruve-sifted",
+    "name": "Sifted (Kruve, AeroPress)",
+    "shortName": "Kruve AeroPress (Gota)",
+    "attribution": {
+      "person": "Kruve",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 220,
+      "ratio": "1:14.7"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 220,
+        "durationSec": 15,
+        "notes": "Pour 220g briskly."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Rinse the filter."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 109,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 2,
+        "notes": "Shake gently to settle the bed."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 3,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 1,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 160,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "swirl-not-stir"
+    ],
+    "bestFor": {},
+    "teaches": "Kruve's sifted AeroPress method starts with extra ground coffee, then removes fines and boulders before an inverted immersion. Brewing only the middle particle band promotes even extraction, clarity, and a more uniform cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 220 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Sifted\" for AeroPress by Kruve, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/kruve-sifted"
+      },
+      {
+        "type": "article",
+        "citation": "Kruve — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/kruves-sifted-aeropress-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-noriko-sunaga-steady-press",
+    "name": "Steady Press (Noriko Sunaga, AeroPress)",
+    "shortName": "Sunaga AeroPress (Gota)",
+    "attribution": {
+      "person": "Noriko Sunaga",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 14
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:14.3"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "extra fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 10,
+        "notes": "Fill the chamber briskly."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 45,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 90,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {},
+    "teaches": "Noriko Sunaga of MANLY COFFEE shares the upright AeroPress recipe she has used since 2010: extra-fine coffee, a one-minute immersion, and a straight, steady press stopped at the hiss for a direct, aromatic cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Steady Press\" for AeroPress by Noriko Sunaga, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/noriko-sunaga-steady-press"
+      },
+      {
+        "type": "article",
+        "citation": "Noriko Sunaga — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/p/DcCpSakvbgF/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-pt-2018-muhel",
+    "name": "Portugal 2018 (Kata Muhel, AeroPress)",
+    "shortName": "Muhel AeroPress (Gota)",
+    "attribution": {
+      "person": "Kata Muhel",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:11.5"
+    },
+    "temperature": {
+      "celsius": 81
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 70,
+        "durationSec": 5,
+        "notes": "Pour in a spiral to 70g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 35,
+        "notes": "Pour the final 160g gently to 230g. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 20,
+        "notes": "Put the cap on. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 10,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 15,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 105,
+    "techniques": [
+      "spiral-pour",
+      "immersion-steep",
+      "aeropress-inversion",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ]
+    },
+    "teaches": "Kata Muhel won the 2018 Portuguese AeroPress Championship with an inverted, low-temperature recipe. A short steep and quick flip-and-press finish are tuned to foreground vivid fruit acidity in light-roast coffee.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 230 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Portugal 2018\" for AeroPress by Kata Muhel, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/pt-2018-muhel"
+      },
+      {
+        "type": "article",
+        "citation": "Kata Muhel — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/love-me-some-acid"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-rueller-aeropress",
+    "name": "Juicy Creamy (Ralf Rüller, AeroPress)",
+    "shortName": "Rüller AeroPress (Gota)",
+    "attribution": {
+      "person": "Ralf Rüller",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:15.3"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 45,
+        "durationSec": 13,
+        "notes": "Pour 45g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 17,
+        "notes": "Stir gently. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 30,
+        "notes": "Pour the final 185g gently to 230g. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 30,
+        "notes": "Cap the chamber and press out the air before flipping. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press down slowly and evenly."
+      }
+    ],
+    "totalTimeSec": 115,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Ralf Rueller, founder of The Barn, developed this personal inverted AeroPress recipe around a V60-style bloom, double paper filtration, and a short, slow press. It aims for juicy fruit with a creamy mouthfeel.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 230 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Juicy Creamy\" for AeroPress by Ralf Rüller, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/rueller-aeropress"
+      },
+      {
+        "type": "article",
+        "citation": "Ralf Rüller — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/ralf-ruellers-personal-aeropress-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-shin-vietnamese",
+    "name": "Vietnamese (Shin Kaoju, AeroPress)",
+    "shortName": "Kaoju AeroPress (Gota)",
+    "attribution": {
+      "person": "Shin Kaoju",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:13.3"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 5,
+        "notes": "Pour 200g gently over the centre of the bed."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 250,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press down slowly and evenly."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "An inverted, long-immersion brew that recreates the bold, chocolaty character of a traditional Vietnamese phin in a fraction of the time. Coarse grounds and a slow press produce a heavy cup suited to condensed milk and ice.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Vietnamese\" for AeroPress by Shin Kaoju, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/shin-vietnamese"
+      },
+      {
+        "type": "article",
+        "citation": "Shin Kaoju — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/shin-vietnamese-aeropress"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2009-jensen",
+    "name": "WAC 2009 Third (Alexander Scheen Jensen, AeroPress)",
+    "shortName": "Jensen AeroPress (Gota)",
+    "attribution": {
+      "person": "Alexander Scheen Jensen",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 10,
+        "notes": "Pour 50g gently. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 20,
+        "notes": "Pour 100g gently to 150g. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 5,
+        "notes": "Pour the final 50g gently to 200g."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 50,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 90,
+    "techniques": [
+      "pulse-pouring",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Alexander Scheen Jensen's third-place method from the 2009 World AeroPress Championship uses an inverted brewer preheated from both ends. Circulating near-boiling water through the grounds promotes a hot, even extraction.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2009 Third\" for AeroPress by Alexander Scheen Jensen, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2009-jensen"
+      },
+      {
+        "type": "article",
+        "citation": "Alexander Scheen Jensen — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2009-jura",
+    "name": "WAC 2009 (Łukasz Jura, AeroPress)",
+    "shortName": "Jura AeroPress (Gota)",
+    "attribution": {
+      "person": "Łukasz Jura",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 75
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 5,
+        "notes": "Pour 200g briskly."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir 4 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 45,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 60,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Lukasz Jura's winning recipe from the 2009 World AeroPress Championship uses an inverted brewer, cool water, and exceptionally brief contact. Its rapid extraction is designed for a vivid, light-bodied competition cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2009\" for AeroPress by Łukasz Jura, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2009-jura"
+      },
+      {
+        "type": "article",
+        "citation": "Łukasz Jura — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2009-kaminsky",
+    "name": "WAC 2009 Runner-Up (Ben Kaminsky, AeroPress)",
+    "shortName": "Kaminsky AeroPress (Gota)",
+    "attribution": {
+      "person": "Ben Kaminsky",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 14
+    },
+    "water": {
+      "grams": 190,
+      "ratio": "1:13.6"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 95,
+        "durationSec": 5,
+        "notes": "Pour 95g gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Add 14g of grounds."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir gently until every ground is wet."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 190,
+        "durationSec": 35,
+        "notes": "Finish gently over the centre of the bed to 190g. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 25,
+        "notes": "Press until you hear the hiss."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "After the hiss, pull the plunger back and briefly invert the AeroPress again."
+      }
+    ],
+    "totalTimeSec": 85,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "World AeroPress Championship 2009 runner-up. Inverted, blind-press preheat with boiling water and a quick, efficient stir.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 190 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2009 Runner-Up\" for AeroPress by Ben Kaminsky, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2009-kaminsky"
+      },
+      {
+        "type": "article",
+        "citation": "Ben Kaminsky — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2010-hagemeister",
+    "name": "WAC 2010 (Marie Hagemeister, AeroPress)",
+    "shortName": "Hagemeister AeroPress (Gota)",
+    "attribution": {
+      "person": "Marie Hagemeister",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:11.5"
+    },
+    "temperature": {
+      "celsius": 80
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 10,
+        "notes": "Pour 230g gently over the centre of the bed."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir continuously."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 15,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 55,
+        "notes": "Press until you hear the hiss."
+      }
+    ],
+    "totalTimeSec": 90,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Marie Hagemeister became the first woman to win the World AeroPress Championship with this 2010 inverted method. Full immersion and relatively cool water shape a sweet, approachable cup with restrained bitterness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 230 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2010\" for AeroPress by Marie Hagemeister, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2010-hagemeister"
+      },
+      {
+        "type": "article",
+        "citation": "Marie Hagemeister — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2010-hasager",
+    "name": "WAC 2010 Runner-Up (Jeppe Hasager, AeroPress)",
+    "shortName": "Hasager AeroPress (Gota)",
+    "attribution": {
+      "person": "Jeppe Hasager",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:12.8"
+    },
+    "temperature": {
+      "celsius": 75
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 10,
+        "notes": "Pour slowly to 230g while continuously rotating the AeroPress base."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 40,
+        "notes": "Stir gently all the way to the bottom of the chamber. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 22,
+        "notes": "Put the cap on. Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 3,
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press gently and stop as soon as the coffee grounds break the water surface."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 8,
+        "notes": "Stir up and down."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 7,
+        "notes": "Decant about 200g into the cup, leaving the sediment and remainder behind."
+      }
+    ],
+    "totalTimeSec": 125,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Jeppe Hasager's runner-up method from the 2010 World AeroPress Championship is an inverted, low-temperature brew. Gentle agitation reaching the chamber floor supports even extraction and a soft, restrained cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 230 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2010 Runner-Up\" for AeroPress by Jeppe Hasager, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2010-hasager"
+      },
+      {
+        "type": "article",
+        "citation": "Jeppe Hasager — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2013-varady",
+    "name": "WAC 2013 Third (Tibor Varady, AeroPress)",
+    "shortName": "Varady AeroPress (Gota)",
+    "attribution": {
+      "person": "Tibor Varady",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 5,
+        "notes": "Pour 50g gently over the centre of the bed."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 25,
+        "notes": "Stir vigorously 5 times. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 5,
+        "notes": "Finish gently over the centre of the bed to 200g."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 25,
+        "notes": "Cap the chamber and press out the air before flipping. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 10,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 50,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Use your body weight to press as slowly as possible."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "central-pour",
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Tibor Varady earned third place at the 2013 World AeroPress Championship with this inverted, low-dose preparation. Its defining character comes from full immersion followed by an exceptionally slow, body-weight press.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2013 Third\" for AeroPress by Tibor Varady, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2013-varady"
+      },
+      {
+        "type": "article",
+        "citation": "Tibor Varady — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2015-zahradnik",
+    "name": "WAC 2015 (Lukas Zahradnik, AeroPress)",
+    "shortName": "Zahradnik AeroPress (Gota)",
+    "attribution": {
+      "person": "Lukas Zahradnik",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:11.5"
+    },
+    "temperature": {
+      "celsius": 79
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 5,
+        "notes": "Pour 60g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Swirl vigorously. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 10,
+        "notes": "Pour the final 170g gently to 230g."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 45,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 95,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "World AeroPress Championship 2015 winner. This inverted method uses a low brewing temperature, vigorous agitation followed by a steep, and a quick final pour before the brewer is flipped and pressed.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 230 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2015\" for AeroPress by Lukas Zahradnik, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2015-zahradnik"
+      },
+      {
+        "type": "article",
+        "citation": "Lukas Zahradnik — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2016-kucharczyk",
+    "name": "WAC 2016 (Filip Kucharczyk, AeroPress)",
+    "shortName": "Kucharczyk AeroPress (Gota)",
+    "attribution": {
+      "person": "Filip Kucharczyk",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 35
+    },
+    "water": {
+      "grams": 260,
+      "ratio": "1:7.4"
+    },
+    "temperature": {
+      "celsius": 81
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 15,
+        "notes": "Pour 150g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 15,
+        "notes": "Stir continuously."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 25,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 10,
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 15,
+        "notes": "Press down."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 260,
+        "durationSec": 10,
+        "notes": "Add 110g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 100,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "World AeroPress Championship 2016 winner. This inverted recipe combines a coarse grind and unusually high dose to make a short concentrate, then uses bypass water to dilute the pressed coffee to taste.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 260 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2016\" for AeroPress by Filip Kucharczyk, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2016-kucharczyk"
+      },
+      {
+        "type": "article",
+        "citation": "Filip Kucharczyk — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2017-miczka",
+    "name": "WAC 2017 (Paulina Miczka, AeroPress)",
+    "shortName": "Miczka AeroPress (Gota)",
+    "attribution": {
+      "person": "Paulina Miczka",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 35
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:4.3"
+    },
+    "temperature": {
+      "celsius": 84
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 15,
+        "notes": "Pour 150g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 20,
+        "notes": "Stir continuously."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 30,
+        "notes": "Put the cap on. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 25,
+        "notes": "Press down."
+      },
+      {
+        "label": "Bypass",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Add 160g – 200g of hot bypass water to taste."
+      }
+    ],
+    "totalTimeSec": 105,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "World AeroPress Championship 2017 winner. This inverted recipe pairs a coarse grind and high dose with continuous stirring, then yields ~90ml of concentrated coffee at 4.5% TDS for dilution.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2017\" for AeroPress by Paulina Miczka, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2017-miczka"
+      },
+      {
+        "type": "article",
+        "citation": "Paulina Miczka — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2017-narisawa",
+    "name": "WAC 2017 Runner-Up (Yusuke Narisawa, AeroPress)",
+    "shortName": "Narisawa AeroPress (Gota)",
+    "attribution": {
+      "person": "Yusuke Narisawa",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 29.5
+    },
+    "water": {
+      "grams": 245,
+      "ratio": "1:8.3"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 70,
+        "durationSec": 5,
+        "notes": "Pour 70g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 25,
+        "notes": "Stir 20 times."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 5,
+        "notes": "Pour the final 100g gently to 170g."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 10,
+        "notes": "Fit the cap with 2 rinsed paper filters and flip the brewer onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 65,
+        "notes": "Press down slowly and evenly."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 245,
+        "durationSec": 5,
+        "notes": "Add 75g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 115,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "Yusuke Narisawa's runner-up recipe from the 2017 World AeroPress Championship layers coarse and ultra-fine coffee in an inverted brewer. Double filtration and a slow press build intensity while retaining clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 245 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2017 Runner-Up\" for AeroPress by Yusuke Narisawa, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2017-narisawa"
+      },
+      {
+        "type": "article",
+        "citation": "Yusuke Narisawa — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2017-park",
+    "name": "WAC 2017 Third (Jeongsu Park, AeroPress)",
+    "shortName": "Park AeroPress (Gota)",
+    "attribution": {
+      "person": "Jeongsu Park",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 86
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 5,
+        "notes": "Pour 75g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 60,
+        "notes": "Stir 6 times. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 5,
+        "notes": "Pour the final 75g gently to 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir 5 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 55,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 15,
+        "notes": "Press down."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 300,
+        "durationSec": 5,
+        "notes": "Add 150g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "immersion-steep",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "World AeroPress Championship 2017 third place, by Jeongsu Park. Upright with a metal-and-paper filter stack on a fine grind, brewed as a concentrate and diluted with an equal pour of hot water after the press.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 300 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2017 Third\" for AeroPress by Jeongsu Park, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2017-park"
+      },
+      {
+        "type": "article",
+        "citation": "Jeongsu Park — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2018-pinchukov",
+    "name": "WAC 2018 Third (Evgeni Pinchukov, AeroPress)",
+    "shortName": "Pinchukov AeroPress (Gota)",
+    "attribution": {
+      "person": "Evgeni Pinchukov",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 220,
+      "ratio": "1:7.3"
+    },
+    "temperature": {
+      "celsius": 80
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 15,
+        "notes": "Pour 100g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 15,
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 5,
+        "notes": "Pour the final 70g gently to 170g."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Sprinkle 1g of finely ground coffee over the top."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 45,
+        "notes": "Press down."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 220,
+        "durationSec": 5,
+        "notes": "Add 50g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 95,
+    "techniques": [
+      "immersion-steep",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "Evgeni Pinchukov took third at the 2018 World AeroPress Championship with an upright variation on Xiaobo Zhang's dual-grind concept. Paired filters and post-press dilution keep the added-fines body controlled.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 220 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2018 Third\" for AeroPress by Evgeni Pinchukov, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2018-pinchukov"
+      },
+      {
+        "type": "article",
+        "citation": "Evgeni Pinchukov — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2019-gagnaire",
+    "name": "WAC 2019 Third (Alexis Gagnaire, AeroPress)",
+    "shortName": "Gagnaire AeroPress (Gota)",
+    "attribution": {
+      "person": "Alexis Gagnaire",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 255,
+      "ratio": "1:8.5"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 25,
+        "notes": "Pour 75g gently. Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir 3 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Remove the plunger."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 135,
+        "durationSec": 20,
+        "notes": "Pour 60g gently to 135g. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 15,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 15,
+        "notes": "Press gently with the weight of your hand."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 255,
+        "durationSec": 5,
+        "notes": "Add 120g of bypass water directly to the cup to dilute the concentrate."
+      }
+    ],
+    "totalTimeSec": 100,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "Alexis Gagnaire placed third at the 2019 World AeroPress Championship with an inverted vacuum-soak method. Removing the plunger between phases and adding hot-and-cool bypass produces a layered, adjustable cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 255 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2019 Third\" for AeroPress by Alexis Gagnaire, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2019-gagnaire"
+      },
+      {
+        "type": "article",
+        "citation": "Alexis Gagnaire — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2021-merikanto",
+    "name": "WAC 2021 (Tuomas Merikanto, AeroPress)",
+    "shortName": "Merikanto AeroPress (Gota)",
+    "attribution": {
+      "person": "Tuomas Merikanto",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:11.1"
+    },
+    "temperature": {
+      "celsius": 80
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 10,
+        "notes": "Pour 50g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir gently 3 times front to back, never in circles."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 15,
+        "notes": "Pour the final 150g gently to 200g."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 20,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir gently 3 times front to back, never in circles."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Fit the cap with 2 rinsed paper filters and press out the air before flipping."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 35,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press gently with the weight of your hand."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Swirl to chill."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Pour the coffee from height into another server to aerate it."
+      }
+    ],
+    "totalTimeSec": 155,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Tuomas Merikanto's winning 2021 World AeroPress Championship recipe uses an inverted brewer, paired paper filters, and no bypass. It aims for a clean, aerated cup shaped by controlled cooling and a high pour.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2021\" for AeroPress by Tuomas Merikanto, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2021-merikanto"
+      },
+      {
+        "type": "article",
+        "citation": "Tuomas Merikanto — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2021-smith",
+    "name": "WAC 2021 Third (Brandon Smith, AeroPress)",
+    "shortName": "Smith AeroPress (Gota)",
+    "attribution": {
+      "person": "Brandon Smith",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 220,
+      "ratio": "1:12.2"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 140,
+        "durationSec": 10,
+        "notes": "Pour 140g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir gently 5 times front to back, never in circles."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Remove the kettle lid and take the kettle off its base for the later bypass."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Cap the chamber and press out the air before flipping."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 55,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Flip the brewer onto the cup and give it one gentle swirl."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press all the way through the hiss for full yield."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 220,
+        "durationSec": 15,
+        "notes": "Add 80g of hot bypass water to dilute the brew."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 15,
+        "notes": "Swirl to chill."
+      },
+      {
+        "label": "Settle",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Let it settle."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "Brandon Smith's third-place recipe from the 2021 World AeroPress Championship combines inverted brewing, an extended press, and hot open-kettle bypass. It aims for an integrated cup with softened concentration.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 220 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2021 Third\" for AeroPress by Brandon Smith, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2021-smith"
+      },
+      {
+        "type": "article",
+        "citation": "Brandon Smith — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2022-derutter",
+    "name": "WAC 2022 Runner-Up (Simon Derutter, AeroPress)",
+    "shortName": "Derutter AeroPress (Gota)",
+    "attribution": {
+      "person": "Simon Derutter",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 156,
+      "ratio": "1:8.7"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 140,
+        "durationSec": 10,
+        "notes": "Pour 140g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir 3 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 45,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press until you hear the hiss."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 156,
+        "durationSec": 5,
+        "notes": "Add bypass water until the drink reaches 156g."
+      }
+    ],
+    "totalTimeSec": 110,
+    "techniques": [
+      "immersion-steep",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {},
+    "teaches": "Simon De Rutter's runner-up method at the 2022 World AeroPress Championship uses the brewer upright with a dry Aesir filter and a plunger-created vacuum. It targets a controlled immersion and clean concentrate.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 156 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2022 Runner-Up\" for AeroPress by Simon Derutter, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2022-derutter"
+      },
+      {
+        "type": "article",
+        "citation": "Simon Derutter — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2022-ho",
+    "name": "WAC 2022 Third (Jennifer Rui Ping Ho, AeroPress)",
+    "shortName": "Ho AeroPress (Gota)",
+    "attribution": {
+      "person": "Jennifer Rui Ping Ho",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:11.1"
+    },
+    "temperature": {
+      "celsius": 84
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 5,
+        "notes": "Pour 100g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 25,
+        "notes": "Stir gently until every ground is wet. Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 21,
+        "notes": "Finish pouring to 200g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 34,
+        "notes": "Stir gently. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 5,
+        "notes": "Cap the brewer and flip it onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press down."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion"
+    ],
+    "bestFor": {},
+    "teaches": "Jennifer Rui Ping Ho's third-place recipe from the 2022 World AeroPress Championship keeps the inverted format deliberately spare: a bloom, one main pour, and a dry classic paper filter. The finish favors clarity and lift.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 200 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2022 Third\" for AeroPress by Jennifer Rui Ping Ho, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2022-ho"
+      },
+      {
+        "type": "article",
+        "citation": "Jennifer Rui Ping Ho — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wac-2022-little",
+    "name": "WAC 2022 (Jibbi Little, AeroPress)",
+    "shortName": "Little AeroPress (Gota)",
+    "attribution": {
+      "person": "Jibbi Little",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:8.3"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 94,
+        "durationSec": 20,
+        "notes": "Pour 94g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 9,
+        "notes": "Stir gently 35 times."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 51,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 10,
+        "notes": "Cap the chamber and press out the air before flipping."
+      },
+      {
+        "label": "Prepare",
+        "action": "flip",
+        "durationSec": 10,
+        "notes": "Flip onto the cup."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 30,
+        "notes": "Press gently with the weight of your hand."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 150,
+        "durationSec": 5,
+        "notes": "Add bypass water until the drink reaches 150g."
+      }
+    ],
+    "totalTimeSec": 135,
+    "techniques": [
+      "immersion-steep",
+      "aeropress-inversion",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "World AeroPress Championship 2022 winner. This inverted method uses a double-grind preparation and sifted coffee for a concentrated extraction, then adds hot bypass water to reach 150g.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 150 g, transcribed by Gota from worldaeropresschampionship.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"WAC 2022\" for AeroPress by Jibbi Little, transcribed by Gota from worldaeropresschampionship.com",
+        "url": "https://gota.cafe/en/recipes/aeropress/wac-2022-little"
+      },
+      {
+        "type": "article",
+        "citation": "Jibbi Little — the originator page Gota names (worldaeropresschampionship.com); not cross-checked by a session",
+        "url": "https://worldaeropresschampionship.com/pages/recipes"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldaeropresschampionship.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-aeropress-wendelboe-aeropress-strong",
+    "name": "Strong 1:6 (Tim Wendelboe, AeroPress)",
+    "shortName": "Wendelboe AeroPress (Gota)",
+    "attribution": {
+      "person": "Tim Wendelboe",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "aeropress",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 120,
+      "ratio": "1:6"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 10,
+        "notes": "Fill the chamber briskly."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir vigorously 3 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Insert the plunger to create a vacuum seal."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Remove the plunger."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 5,
+        "notes": "Stir vigorously 3 times."
+      },
+      {
+        "label": "Press",
+        "action": "press",
+        "durationSec": 20,
+        "notes": "Press down firmly."
+      }
+    ],
+    "totalTimeSec": 50,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "Tim Wendelboe's concentrated AeroPress method uses a high coffee dose, limited water, and a fine grind as an espresso-style alternative. It produces an intense short cup designed to stand up in milk or dilution.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An AeroPress recipe near 120 g, transcribed by Gota from timwendelboe.no.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Strong 1:6\" for AeroPress by Tim Wendelboe, transcribed by Gota from timwendelboe.no",
+        "url": "https://gota.cafe/en/recipes/aeropress/wendelboe-aeropress-strong"
+      },
+      {
+        "type": "article",
+        "citation": "Tim Wendelboe — the originator page Gota names (timwendelboe.no); not cross-checked by a session",
+        "url": "https://timwendelboe.no/pages/how-to-brew-with-an-aeropress"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names timwendelboe.no as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-10-chemex-10-iced",
+    "name": "Iced 10-Cup (Chemex, Chemex 10 Cup)",
+    "shortName": "Chemex \"Iced 10-Cup\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 10-cup",
+    "dose": {
+      "grams": 60
+    },
+    "water": {
+      "grams": 650,
+      "ratio": "1:10.8"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 24,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 21,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "durationSec": 75,
+        "notes": "Pour in a spiral to 350g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 650,
+        "notes": "Pour in a spiral to 650g."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Chemex's brew guide supports this 10-cup flash-chilled batch, brewed at elevated strength directly over ice for group service. Immediate cooling and clean filtration preserve aroma while delivering a bright, refreshing cup at proper dilution.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 650 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced 10-Cup\" for Chemex 10 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-10/chemex-10-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-3-blue-bottle-chemex-3",
+    "name": "Spiral Pour (Blue Bottle Coffee, Chemex 3 Cup)",
+    "shortName": "Coffee Chemex (Gota)",
+    "attribution": {
+      "person": "Blue Bottle Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 3-cup",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 45,
+        "notes": "For the bloom, pour 50g in a spiral from the centre out, then spiral back to the centre. Keep the stream over the coffee bed and off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 45,
+        "notes": "Pour 150g to 200g from the centre out and back to the centre, keeping the stream over the coffee bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "notes": "Pour the final 200g to 400g from the centre out and back to the centre, keeping the stream over the coffee bed."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Blue Bottle Coffee's Chemex guide is scaled to the 3-cup brewer around a steady outward spiral and a finer grind suited to a small bed. The controlled flow is meant to build even extraction, clean structure, and balanced sweetness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 400 g, transcribed by Gota from bluebottlecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Spiral Pour\" for Chemex 3 Cup by Blue Bottle Coffee, transcribed by Gota from bluebottlecoffee.com",
+        "url": "https://gota.cafe/en/recipes/chemex-3/blue-bottle-chemex-3"
+      },
+      {
+        "type": "article",
+        "citation": "Blue Bottle Coffee — the originator page Gota names (bluebottlecoffee.com); not cross-checked by a session",
+        "url": "https://bluebottlecoffee.com/us/eng/brew-guides/chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names bluebottlecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-3-chemex-3-light-roast",
+    "name": "Light Roast 3-Cup (Chemex, Chemex 3 Cup)",
+    "shortName": "Chemex \"Light Roast 3-Cup\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 3-cup",
+    "dose": {
+      "grams": 22
+    },
+    "water": {
+      "grams": 350,
+      "ratio": "1:15.9"
+    },
+    "temperature": {
+      "celsius": 97
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 14,
+        "notes": "Pour 50g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 31,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 180g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "notes": "Pour in a spiral to 350g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Chemex's brew guide is tuned here for light-roasted coffee in the 3-cup model, using hotter water and a somewhat finer grind to work with dense beans. The desired result is tea-like clarity, vivid acidity, and developed sweetness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 350 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Light Roast 3-Cup\" for Chemex 3 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-3/chemex-3-light-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-3-chemex-3-pulse",
+    "name": "Pulse Pour (Chemex, Chemex 3 Cup)",
+    "shortName": "Chemex \"Pulse Pour\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 3-cup",
+    "dose": {
+      "grams": 26
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:15.4"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 11,
+        "notes": "Pour 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 19,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 120g. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 200g. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 280,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 280g. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 360,
+        "durationSec": 15,
+        "notes": "Pour in a spiral to 360g. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "notes": "Pour in a spiral to 400g. Keep the water below the rim; do not overfill it."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced"
+      ]
+    },
+    "teaches": "Chemex's guidance is shaped into a pulse method for the compact 3-cup brewer, using consistent additions at regular intervals near its practical capacity. The repeated pours seek uniform extraction and a crisp, balanced cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 400 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Pulse Pour\" for Chemex 3 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-3/chemex-3-pulse"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-6-concentrate",
+    "name": "6-Cup Concentrate (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"6-Cup Concentrate\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 55
+    },
+    "water": {
+      "grams": 500,
+      "ratio": "1:9.1"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 45,
+        "notes": "Pour 100g and stir to saturate the bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 75,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "notes": "Pour in a spiral to 500g."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "The Chemex 6-cup brewed as a concentrate: a tighter 1:9 ratio builds a strong, sediment-free base made for dilution — stretched with hot water for an americano-style cup or poured over ice.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 500 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"6-Cup Concentrate\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-6-concentrate"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-6-light-roast",
+    "name": "Light Roast 6-Cup (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Light Roast 6-Cup\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 40
+    },
+    "water": {
+      "grams": 650,
+      "ratio": "1:16.3"
+    },
+    "temperature": {
+      "celsius": 97
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 80g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 25,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "durationSec": 75,
+        "notes": "Pour in a spiral to 350g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 650,
+        "notes": "Pour in a spiral to 650g."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Chemex's brew guide informs this 6-cup treatment for dense, light-roasted beans, pairing hotter water with a more extraction-focused setup. It seeks lively sweetness and articulate acidity in a tea-like, low-sediment cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 650 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Light Roast 6-Cup\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-6-light-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-clasica",
+    "name": "Classic (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Classic\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 500,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 75g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 350g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "notes": "Pour in a spiral to 500g."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Chemex's brewing guidance anchors this classic approach, using the brewer's bonded paper to hold back oils and fine sediment. The goal is a bright, transparent cup with crisp flavor separation and a light body.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 500 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Classic\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-clasica"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-concentrate",
+    "name": "Coffee Concentrate (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Coffee Concentrate\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 42
+    },
+    "water": {
+      "grams": 420,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 84,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 84g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 210g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 420,
+        "notes": "Pour in a spiral to 420g."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Chemex provides the basis for this concentrated Chemex 6-cup brew, made to be diluted or combined with milk rather than served unchanged. Heavy paper keeps the strong base polished, with substantial flavor but little sediment or oil.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 420 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Coffee Concentrate\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-concentrate"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-dark-roast",
+    "name": "Dark Roast (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Dark Roast\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 28
+    },
+    "water": {
+      "grams": 475,
+      "ratio": "1:17"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 60g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 250g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 475,
+        "notes": "Pour in a spiral to 475g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ]
+    },
+    "teaches": "Chemex's classic guidance is adjusted here for dark-roasted coffee through gentler heat and a quicker extraction. The bonded filter softens heavy oils, while the recipe targets a smooth, clear cup without harsh roast bitterness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 475 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-dark-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-iced",
+    "name": "Iced Coffee (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Iced Coffee\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 35
+    },
+    "water": {
+      "grams": 350,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 70,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 70g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "notes": "Pour in a spiral to 350g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Based on Chemex brewing guidance, this Japanese-style iced preparation sends hot coffee directly onto ice in the carafe. Rapid chilling protects volatile aromas and produces a vivid, clean cold cup rather than a muted chilled brew.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 350 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced Coffee\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-chemex-pulse",
+    "name": "Pulse Pour (Chemex, Chemex 6 Cup)",
+    "shortName": "Chemex \"Pulse Pour\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 32
+    },
+    "water": {
+      "grams": 512,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 64,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 64g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 170g."
+      },
+      {
+        "label": "Drawdown",
+        "action": "wait",
+        "durationSec": 30,
+        "notes": "Wait for the level to drop."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 340,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 340g."
+      },
+      {
+        "label": "Drawdown",
+        "action": "wait",
+        "durationSec": 25,
+        "notes": "Wait for the level to drop."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 512,
+        "notes": "Pour in a spiral to 512g."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Chemex's brewing guidance informs this pulse-pour method, breaking water delivery into controlled additions rather than a continuous stream. It offers an easy way to manage slurry depth and contact, aiming for an even, balanced, clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 512 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Pulse Pour\" for Chemex 6 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/chemex-pulse"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-counter-culture-chemex",
+    "name": "Timed Pulses (Counter Culture Coffee, Chemex 6 Cup)",
+    "shortName": "Coffee Chemex (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 45
+    },
+    "water": {
+      "grams": 750,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g. Aim at any dark or dry patches. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 200g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 300g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 450g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 600,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 600g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 750,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 750g. Keep the stream over the coffee bed and off the filter."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced"
+      ]
+    },
+    "teaches": "Counter Culture Coffee's quick Chemex guide pairs a bloom with evenly timed pulse pours and a moderately strong brew ratio. It is designed for an orderly extraction that yields a clean, sweet cup with balanced strength.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 750 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Timed Pulses\" for Chemex 6 Cup by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/counter-culture-chemex"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/pages/quick-easy-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-hedrick-chemex",
+    "name": "Two Hacks (Lance Hedrick, Chemex 6 Cup)",
+    "shortName": "Hedrick Chemex (Gota)",
+    "attribution": {
+      "person": "Lance Hedrick",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 40
+    },
+    "water": {
+      "grams": 650,
+      "ratio": "1:16.3"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 12,
+        "notes": "Pour 100g in an outward spiral for the bloom."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 18,
+        "notes": "Move a thin stir stick gently in spirals from the edge to the centre until no dry clumps remain. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 17,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 13,
+        "notes": "Move a thin stir stick gently in spirals from the edge to the centre until no dry clumps remain. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "durationSec": 36,
+        "notes": "Pour 200g in concentric rings to 400g. Pour with energy. Keep the stream near the centre."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 5,
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "wait",
+        "durationSec": 19,
+        "notes": "Let the water drop through."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 550,
+        "durationSec": 28,
+        "notes": "Pour in a spiral to 550g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 32,
+        "notes": "Swirl gently. Let the water drop through."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 650,
+        "notes": "Pour in a spiral to 650g. Keep the pour gentle."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 100,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Lance Hedrick reworks the Chemex 6-cup with a balanced filter fold and sealed pouring chute before using long, low-agitation brewing. His approach seeks reliable extraction from a coarse bed, yielding clarity without relying on elaborate pouring.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 650 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Two Hacks\" for Chemex 6 Cup by Lance Hedrick, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/hedrick-chemex"
+      },
+      {
+        "type": "video",
+        "citation": "Lance Hedrick — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=4tQG_aMcCL0"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-rao-chemex",
+    "name": "Spoon-Dug Bloom (Scott Rao, Chemex 6 Cup)",
+    "shortName": "Rao Chemex (Gota)",
+    "attribution": {
+      "person": "Scott Rao",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 510,
+      "ratio": "1:17"
+    },
+    "temperature": {
+      "celsius": 97
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 45,
+        "durationSec": 12,
+        "notes": "Pour 45g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 23,
+        "notes": "Dig gently into the bed with a spoon to break up dry clumps. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 510,
+        "notes": "Pour in a spiral to 510g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Hold the whole brewer and swirl it in a slow circular motion."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 135,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 255,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced"
+      ]
+    },
+    "teaches": "Scott Rao's Chemex method uses a spoon-worked bloom followed by continuous pouring to counter uneven saturation and slow drainage. While candid about the brewer's extraction limits, Rao targets a more uniform, clear, well-developed cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 510 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Spoon-Dug Bloom\" for Chemex 6 Cup by Scott Rao, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/rao-chemex"
+      },
+      {
+        "type": "video",
+        "citation": "Scott Rao — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=BjsGf3R9mc0"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-6-stumptown-chemex",
+    "name": "Oscillating Pour (Stumptown Coffee Roasters, Chemex 6 Cup)",
+    "shortName": "Roasters Chemex (Gota)",
+    "attribution": {
+      "person": "Stumptown Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 6-cup",
+    "dose": {
+      "grams": 42
+    },
+    "water": {
+      "grams": 700,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 29,
+        "notes": "Pour 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 16,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "durationSec": 60,
+        "notes": "Pour in a zig-zag to 450g. Keep the pour gentle. Keep the stream over the coffee bed and off the filter. Aim at any dark or dry patches."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 700,
+        "notes": "Pour in a spiral to 700g. Keep the stream over the coffee bed and off the filter. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Lift the filter now. If you still need more volume, hover briefly; then remove it and let it drain aside."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Serve",
+        "action": "wait",
+        "notes": "Serve into the cup."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 13,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 253,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Stumptown Coffee Roasters' Chemex guide combines a generous dose, a stirred bloom, and an oscillating pour that repeatedly integrates slurry and fresh water. It aims for an evenly extracted cup with clarity, sweetness, and ample presence.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 700 g, transcribed by Gota from stumptowncoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Oscillating Pour\" for Chemex 6 Cup by Stumptown Coffee Roasters, transcribed by Gota from stumptowncoffee.com",
+        "url": "https://gota.cafe/en/recipes/chemex-6/stumptown-chemex"
+      },
+      {
+        "type": "article",
+        "citation": "Stumptown Coffee Roasters — the originator page Gota names (stumptowncoffee.com); not cross-checked by a session",
+        "url": "https://www.stumptowncoffee.com/pages/brew-guide-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names stumptowncoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-chemex-8-four-pour",
+    "name": "Four Pour (Chemex, Chemex 8 Cup)",
+    "shortName": "Chemex \"Four Pour\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 45
+    },
+    "water": {
+      "grams": 700,
+      "ratio": "1:15.6"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 100g. Keep the stream over the coffee bed and off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 45,
+        "notes": "Wait until the slurry returns to the same level as before the previous pour. Pour in a spiral to 300g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "durationSec": 45,
+        "notes": "Wait until the slurry returns to the same level as before the previous pour. Pour in a spiral to 500g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 700,
+        "notes": "Wait until the slurry returns to the same level as before the previous pour. Pour in a spiral to 700g. Keep the stream over the coffee bed and off the filter."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced"
+      ]
+    },
+    "teaches": "Chemex's brewing instructions underpin this evenly staged approach for the Chemex 8-cup. Repeated, similarly sized additions manage the deep bed and extraction pace, targeting a consistent shared batch with clean flavor and balanced strength.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 700 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Four Pour\" for Chemex 8 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-8/chemex-8-four-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/pages/how-to-brew-with-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-chemex-8-hoffmann",
+    "name": "Two-Pour (James Hoffmann, Chemex 8 Cup)",
+    "shortName": "Hoffmann Chemex (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 40
+    },
+    "water": {
+      "grams": 640,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 17,
+        "notes": "Pour 80g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 28,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 380,
+        "durationSec": 60,
+        "notes": "Pour in a spiral to 380g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 640,
+        "notes": "Pour in a spiral to 640g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 115,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "James Hoffmann's pour-over technique is scaled here for the Chemex 8-cup, combining deliberate saturation with a simple main-pour structure. The heavy paper and controlled agitation aim for a sweet, balanced batch with high clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 640 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Two-Pour\" for Chemex 8 Cup by James Hoffmann, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/chemex-8/chemex-8-hoffmann"
+      },
+      {
+        "type": "video",
+        "citation": "James Hoffmann — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=AI4ynXzkSQo"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-chemex-8-iced",
+    "name": "Iced 8-Cup (Chemex, Chemex 8 Cup)",
+    "shortName": "Chemex \"Iced 8-Cup\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 50
+    },
+    "water": {
+      "grams": 530,
+      "ratio": "1:10.6"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 20,
+        "notes": "Stir gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 75,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 530,
+        "notes": "Pour in a spiral to 530g."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Chemex's guide informs this Japanese-style flash brew for the Chemex 8-cup, extracting hot coffee directly over ice for rapid chilling. The goal is a bright, clean batch for sharing, with vivid aromatics and controlled dilution.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 530 g, transcribed by Gota from chemexcoffeemaker.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced 8-Cup\" for Chemex 8 Cup by Chemex, transcribed by Gota from chemexcoffeemaker.com",
+        "url": "https://gota.cafe/en/recipes/chemex-8/chemex-8-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (chemexcoffeemaker.com); not cross-checked by a session",
+        "url": "https://www.chemexcoffeemaker.com/brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names chemexcoffeemaker.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-chemex-8-nordic",
+    "name": "Nordic Light Extraction (Chemex, Chemex 8 Cup)",
+    "shortName": "Chemex \"Nordic Light Extraction\" (Gota)",
+    "attribution": {
+      "person": "Chemex",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 36
+    },
+    "water": {
+      "grams": 600,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 97
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 70,
+        "durationSec": 45,
+        "notes": "Pour 70g and stir to saturate the bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 250g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 420,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 420g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 600,
+        "notes": "Pour in a spiral to 600g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 140,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "This Chemex-attributed 8-cup recipe comes through Tim and Sebastian's brew guidance, applying assertive extraction to very light Nordic-style roasts. It seeks transparent origin flavor, pronounced sweetness, and bright, structured acidity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 600 g, transcribed by Gota from timandsebastians.dk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Nordic Light Extraction\" for Chemex 8 Cup by Chemex, transcribed by Gota from timandsebastians.dk",
+        "url": "https://gota.cafe/en/recipes/chemex-8/chemex-8-nordic"
+      },
+      {
+        "type": "article",
+        "citation": "Chemex — the originator page Gota names (timandsebastians.dk); not cross-checked by a session",
+        "url": "https://timandsebastians.dk/brew-guides"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names timandsebastians.dk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-chemex-8-single-origin",
+    "name": "Fine Grind (Counter Culture Coffee, Chemex 8 Cup)",
+    "shortName": "Coffee Chemex (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 45
+    },
+    "water": {
+      "grams": 750,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 15,
+        "notes": "Pour 100g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 15,
+        "notes": "Stir gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 450g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 600,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 600g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 750,
+        "notes": "Pour in a spiral to 750g."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Counter Culture Coffee's Chemex guidance is scaled to the Chemex 8-cup with a relatively fine grind and disciplined flow. It is geared toward light-roasted single-origin coffee, emphasizing sweetness, aromatic detail, and clean separation.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 750 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Fine Grind\" for Chemex 8 Cup by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/chemex-8/chemex-8-single-origin"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/pages/quick-easy-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-chemex-8-stumptown-chemex-8",
+    "name": "Official (Stumptown Coffee Roasters, Chemex 8 Cup)",
+    "shortName": "Roasters Chemex (Gota)",
+    "attribution": {
+      "person": "Stumptown Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "chemex",
+    "brewerNotes": "Chemex 8-cup",
+    "dose": {
+      "grams": 42
+    },
+    "water": {
+      "grams": 700,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 25,
+        "notes": "Pour 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 20,
+        "notes": "Stir gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "durationSec": 60,
+        "notes": "Pour in a spiral to 450g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 700,
+        "notes": "Pour in a spiral to 700g."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Stumptown Coffee's Chemex method is scaled for the Chemex 8-cup, beginning with thorough saturation before moving into substantial staged pours. It favors a clean, developed batch with even sweetness and enough presence for a larger serving.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Chemex recipe near 700 g, transcribed by Gota from stumptowncoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official\" for Chemex 8 Cup by Stumptown Coffee Roasters, transcribed by Gota from stumptowncoffee.com",
+        "url": "https://gota.cafe/en/recipes/chemex-8/stumptown-chemex-8"
+      },
+      {
+        "type": "article",
+        "citation": "Stumptown Coffee Roasters — the originator page Gota names (stumptowncoffee.com); not cross-checked by a session",
+        "url": "https://www.stumptowncoffee.com/pages/brew-guide-chemex"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names stumptowncoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-classic",
+    "name": "Classic (Clever, Clever Dripper L)",
+    "shortName": "Clever \"Classic\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "durationSec": 5,
+        "notes": "Pour 320g and stir gently to saturate the bed."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 125,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 75,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Clever's own standard recipe: a full-immersion steep, then set the dripper on your cup to release through paper. Twenty grams of coffee to 320 of water, a 1:16 that lands medium-bodied and sweet — the everyday brew the dripper was built to make.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 320 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Classic\" for Clever Dripper L by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-classic"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-coarse-1-15",
+    "name": "Coarse 1:15 (Equator Coffees, Clever Dripper L)",
+    "shortName": "Coffees Clever (Gota)",
+    "attribution": {
+      "person": "Equator Coffees",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 375,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 375,
+        "durationSec": 30,
+        "notes": "Pour 375g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir 2 times."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Put the cap on."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 75,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 90,
+        "notes": "Set it on the cup."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Equator Coffees' Clever guide pairs a medium-coarse grind with a short immersion and an early circumferential stir. The fast, even extraction aims for a clean cup while preserving sweetness and an uncomplicated drawdown.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 375 g, transcribed by Gota from equatorcoffees.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Coarse 1:15\" for Clever Dripper L by Equator Coffees, transcribed by Gota from equatorcoffees.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-coarse-1-15"
+      },
+      {
+        "type": "article",
+        "citation": "Equator Coffees — the originator page Gota names (equatorcoffees.com); not cross-checked by a session",
+        "url": "https://www.equatorcoffees.com/blogs/guides/clever"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names equatorcoffees.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-cold-flash",
+    "name": "Clever Flash Iced (Kaldi's Coffee, Clever Dripper L)",
+    "shortName": "Coffee Clever (Gota)",
+    "attribution": {
+      "person": "Kaldi's Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 28
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:10.7"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Pour 50g and stir gently to saturate the bed."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 35,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 90,
+        "notes": "Finish gently in a spiral to 300g."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 15,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Set the brewer on the vessel containing 150g of ice to open the valve and release the coffee."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 10,
+        "notes": "Swirl to chill."
+      }
+    ],
+    "totalTimeSec": 220,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "immersion-steep",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Kaldi's Coffee adapts the Clever Dripper for flash-iced coffee by brewing hot at concentrated strength and releasing over ice. Rapid chilling retains bright aromatics, while controlled meltwater creates a lively alternative to cold brew.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 300 g, transcribed by Gota from kaldiscoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Clever Flash Iced\" for Clever Dripper L by Kaldi's Coffee, transcribed by Gota from kaldiscoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-cold-flash"
+      },
+      {
+        "type": "article",
+        "citation": "Kaldi's Coffee — the originator page Gota names (kaldiscoffee.com); not cross-checked by a session",
+        "url": "https://kaldiscoffee.com/blogs/news/16039304-how-to-brew-iced-coffee-with-the-clever-dripper"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kaldiscoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-counter-culture",
+    "name": "Adjustable Time (Counter Culture Coffee, Clever Dripper L)",
+    "shortName": "Coffee Clever (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Pour 30g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 20,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "durationSec": 15,
+        "notes": "Pour the final 370g briskly to 400g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 10,
+        "notes": "Break the crust with a spoon."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 65,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Counter Culture Coffee's Clever guide starts with a stirred bloom, then moves into full immersion before release. Its adjustable steep lets the brewer trade a lighter, cleaner profile for more body while remaining repeatable.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 400 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Adjustable Time\" for Clever Dripper L by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-counter-culture"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/pages/quick-easy-pour-over"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-crema",
+    "name": "Official (Crema Coffee Roasters, Clever Dripper L)",
+    "shortName": "Roasters Clever (Gota)",
+    "attribution": {
+      "person": "Crema Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "durationSec": 50,
+        "notes": "Lift it off the cup. Pour 400g gently."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 70,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Break the crust with a spoon. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "immersion-steep",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Crema Coffee Roasters' Clever Dripper guide combines a coarser grind with a longer immersion and a single crust-breaking stir. The approach favors a clean, sweet, balanced cup without demanding a complicated pouring pattern.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 400 g, transcribed by Gota from crema-coffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official\" for Clever Dripper L by Crema Coffee Roasters, transcribed by Gota from crema-coffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-crema"
+      },
+      {
+        "type": "article",
+        "citation": "Crema Coffee Roasters — the originator page Gota names (crema-coffee.com); not cross-checked by a session",
+        "url": "https://crema-coffee.com/pages/clever-dripper-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names crema-coffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-dark-roast",
+    "name": "Clever Dark Roast (Kaldi's Coffee, Clever Dripper L)",
+    "shortName": "Coffee Clever (Gota)",
+    "attribution": {
+      "person": "Kaldi's Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 15,
+        "notes": "Lift it off the cup. Pour 300g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir gently until every ground is wet."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 95,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 45,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Kaldi's Coffee tailors this Clever Dripper method to highly soluble dark roasts through cooler water, a coarser grind, and shorter immersion. The restrained extraction seeks smooth chocolate notes without ashy bitterness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 300 g, transcribed by Gota from kaldiscoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Clever Dark Roast\" for Clever Dripper L by Kaldi's Coffee, transcribed by Gota from kaldiscoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-dark-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Kaldi's Coffee — the originator page Gota names (kaldiscoffee.com); not cross-checked by a session",
+        "url": "https://kaldiscoffee.com/blogs/recipes/clever-dripper-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kaldiscoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-hoffmann",
+    "name": "Grounds on Top (James Hoffmann, Clever Dripper L)",
+    "shortName": "Hoffmann Clever (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 12,
+        "notes": "Lift it off the cup. Pour 250g of water into the empty brewer."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 8,
+        "notes": "Add 15g of grounds."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir gently until every ground is wet."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 100,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Gently swirl to knock the grounds off the sides. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 220,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "James Hoffmann's water-first Clever method adds grounds on top of the brewing water, then stirs them into suspension. This loading order limits filter clogging and speeds drawdown while preserving even immersion extraction.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 250 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Grounds on Top\" for Clever Dripper L by James Hoffmann, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-hoffmann"
+      },
+      {
+        "type": "video",
+        "citation": "James Hoffmann — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=RpOdennxP24"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-hoffmann-ultimate",
+    "name": "Ultimate Clever (James Hoffmann, Clever Dripper L)",
+    "shortName": "Hoffmann Clever (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 65,
+        "durationSec": 45,
+        "notes": "Lift it off the cup. Pour in a spiral to 65g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 34,
+        "notes": "Finish pouring to 250g."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 71,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "James Hoffmann's Ultimate Clever technique uses a separate bloom before the remaining water and a controlled immersion before release. The staged wetting is designed for dependable saturation, an easy drawdown, and a clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 250 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Ultimate Clever\" for Clever Dripper L by James Hoffmann, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-hoffmann-ultimate"
+      },
+      {
+        "type": "video",
+        "citation": "James Hoffmann — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=RpOdennxP24"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-iced",
+    "name": "Iced Coffee (Clever, Clever Dripper L)",
+    "shortName": "Clever \"Iced Coffee\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 22
+    },
+    "water": {
+      "grams": 220,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 220,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Pour 220g and stir to saturate the bed."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 110,
+        "notes": "Let it steep undisturbed."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 80,
+        "notes": "Set the brewer on the vessel containing 150g of ice to open the valve and release the coffee."
+      }
+    ],
+    "totalTimeSec": 200,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Clever's iced method: a concentrated full-immersion steep released straight onto ice. The valve holds coffee and water together for two minutes, then drains a sweet, citric concentrate that the ice melts down to drinking strength.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 220 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced Coffee\" for Clever Dripper L by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-light-roast",
+    "name": "Light Roast Tea-Style (Clever, Clever Dripper L)",
+    "shortName": "Clever \"Light Roast Tea-Style\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 270,
+      "ratio": "1:16.9"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Pour 270g gently. Do not agitate afterwards."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 182,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 78,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "A delicate immersion approach for light roasts, using boiling water and a long, undisturbed steep to develop the coffee fully. The gentle process emphasizes floral, fruity, and citric notes without added agitation.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 270 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Light Roast Tea-Style\" for Clever Dripper L by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-light-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-quick",
+    "name": "Quick Brew (Clever, Clever Dripper L)",
+    "shortName": "Clever \"Quick Brew\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 280,
+      "ratio": "1:15.6"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 280,
+        "durationSec": 35,
+        "notes": "Pour 280g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 25,
+        "notes": "Stir 5 times. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 90,
+        "notes": "Set it on the cup."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "The Clever brand's Quick Brew shortens immersion and compensates with a finer grind. Intended for a fast single-cup routine, it still uses the brewer's controlled steep and paper-filtered release to pursue a balanced result.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 280 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Quick Brew\" for Clever Dripper L by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-quick"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-clever-strong",
+    "name": "Strong Brew (Clever, Clever Dripper L)",
+    "shortName": "Clever \"Strong Brew\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:12"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Pour 300g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 15,
+        "notes": "Stir 10 times."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 170,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 1,
+        "notes": "Stir once."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 74,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "The Clever brand's Strong Brew uses a larger coffee dose and extended immersion to produce a concentrated cup. Its emphasis is body and sweetness rather than maximum clarity, making it especially compatible with dark roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 300 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Strong Brew\" for Clever Dripper L by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/clever-strong"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-l-george-howell-clever",
+    "name": "1:18 Long Immersion (George Howell, Clever Dripper L)",
+    "shortName": "Howell Clever (Gota)",
+    "attribution": {
+      "person": "George Howell",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever L",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 270,
+      "ratio": "1:18"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "durationSec": 39,
+        "notes": "Lift it off the cup. Fill the chamber gently."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 81,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 10,
+        "notes": "Gently break the crust with a spoon."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 110,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "immersion-steep",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "George Howell Coffee's Clever Dripper recipe. Simple immersion method: pour all water, stir at the midpoint, release at 4 minutes. The paper filter gives a cleaner cup than French press with similar ease.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 270 g, transcribed by Gota from georgehowellcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1:18 Long Immersion\" for Clever Dripper L by George Howell, transcribed by Gota from georgehowellcoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-l/george-howell-clever"
+      },
+      {
+        "type": "article",
+        "citation": "George Howell — the originator page Gota names (georgehowellcoffee.com); not cross-checked by a session",
+        "url": "https://georgehowellcoffee.com/pages/brew-guide-clever-dripper"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names georgehowellcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-cafeshi",
+    "name": "Stir at Three (Cafeshi, Clever Dripper S)",
+    "shortName": "Cafeshi Clever (Gota)",
+    "attribution": {
+      "person": "Cafeshi",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 36,
+        "notes": "Lift it off the cup. Fill the chamber briskly."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 144,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Break the crust with one spoon stir."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 50,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 40,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 280,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Cafeshi's Clever recipe from their filter coffee guide. No bloom, full immersion, single mid-steep stir to break the crust — the easiest forgiving cup the dripper makes.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 250 g, transcribed by Gota from cafeshi.es.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Stir at Three\" for Clever Dripper S by Cafeshi, transcribed by Gota from cafeshi.es",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-cafeshi"
+      },
+      {
+        "type": "article",
+        "citation": "Cafeshi — the originator page Gota names (cafeshi.es); not cross-checked by a session",
+        "url": "https://cafeshi.es/blogs/blog/tu-guia-sencilla-para-el-cafe-de-filtro"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names cafeshi.es as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-counter-culture",
+    "name": "Adjustable Time (Counter Culture Coffee, Clever Dripper S)",
+    "shortName": "Coffee Clever (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 240,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 20,
+        "durationSec": 8,
+        "notes": "Lift it off the cup. Pour 20g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 22,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 240,
+        "durationSec": 38,
+        "notes": "Finish pouring to 240g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir once."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 42,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Counter Culture's Clever Dripper recipe scaled for the small brewer. A stirred bloom, full immersion fill, and timed release retain the original bloom-steep-release structure while producing one balanced, sweet cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 240 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Adjustable Time\" for Clever Dripper S by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-counter-culture"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/pages/quick-easy-pour-over"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-crema",
+    "name": "Official (Crema Coffee Roasters, Clever Dripper S)",
+    "shortName": "Roasters Clever (Gota)",
+    "attribution": {
+      "person": "Crema Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 240,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 240,
+        "durationSec": 35,
+        "notes": "Lift it off the cup. Fill the chamber gently."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 85,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Break the crust with a spoon. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "immersion-steep",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Crema Coffee Roasters' immersion recipe scaled for the smaller Clever Dripper. A coarse grind and longer steep build sweetness and balance, while one crust-breaking stir prepares the brew for a clean release.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 240 g, transcribed by Gota from crema-coffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official\" for Clever Dripper S by Crema Coffee Roasters, transcribed by Gota from crema-coffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-crema"
+      },
+      {
+        "type": "article",
+        "citation": "Crema Coffee Roasters — the originator page Gota names (crema-coffee.com); not cross-checked by a session",
+        "url": "https://crema-coffee.com/pages/clever-dripper-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names crema-coffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-george-howell",
+    "name": "1:18 Long Immersion (George Howell, Clever Dripper S)",
+    "shortName": "Howell Clever (Gota)",
+    "attribution": {
+      "person": "George Howell",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 10
+    },
+    "water": {
+      "grams": 180,
+      "ratio": "1:18"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 28,
+        "notes": "Lift it off the cup. Fill the chamber gently."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 92,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 10,
+        "notes": "Stir gently."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 110,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 50,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 290,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "George Howell Coffee's Clever recipe scaled for the small brewer. A long immersion with one midpoint stir promotes even extraction before the brew releases through paper for a balanced, sweet, and clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 180 g, transcribed by Gota from georgehowellcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1:18 Long Immersion\" for Clever Dripper S by George Howell, transcribed by Gota from georgehowellcoffee.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-george-howell"
+      },
+      {
+        "type": "article",
+        "citation": "George Howell — the originator page Gota names (georgehowellcoffee.com); not cross-checked by a session",
+        "url": "https://georgehowellcoffee.com/pages/brew-guide-clever-dripper"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names georgehowellcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-hoffmann",
+    "name": "Bloom and Steep (James Hoffmann, Clever Dripper S)",
+    "shortName": "Hoffmann Clever (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 10
+    },
+    "water": {
+      "grams": 170,
+      "ratio": "1:17"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 45,
+        "notes": "Lift it off the cup. Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 31,
+        "notes": "Finish pouring to 170g."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 74,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 50,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 200,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "James Hoffmann's Clever Dripper technique scaled for the small brewer. A brief spiral bloom precedes the main immersion fill and timed release, producing an exceptionally consistent single cup with sweet, balanced character.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 170 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Bloom and Steep\" for Clever Dripper S by James Hoffmann, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-hoffmann"
+      },
+      {
+        "type": "video",
+        "citation": "James Hoffmann — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=RpOdennxP24"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-japanese",
+    "name": "Japanese Immersion (Clever, Clever Dripper S)",
+    "shortName": "Clever \"Japanese Immersion\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 14
+    },
+    "water": {
+      "grams": 230,
+      "ratio": "1:16.4"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 20,
+        "notes": "Lift it off the cup. Pour 100g and stir gently to saturate the bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 26,
+        "notes": "Finish pouring to 230g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 4,
+        "notes": "Stir once."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Place the lid on the brewer."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 125,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 60,
+        "notes": "Place it on the cup."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "aromatic",
+        "balanced"
+      ]
+    },
+    "teaches": "Clever's Japanese Immersion profile for the Clever S credits Hitsuji Coffee with a cooler, medium-coarse steep. Gentle staged pouring favors sweetness over bitterness, aiming for a rounded cup with clean filtration and restrained roast character.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 230 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Japanese Immersion\" for Clever Dripper S by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-japanese"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-red-poison",
+    "name": "No-Stir (Red Poison, Clever Dripper S)",
+    "shortName": "Poison Clever (Gota)",
+    "attribution": {
+      "person": "Red Poison",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:12.5"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 10,
+        "notes": "Lift it off the cup. Fill the chamber briskly. Do not agitate afterwards."
+      },
+      {
+        "label": "Steep",
+        "action": "wait",
+        "durationSec": 245,
+        "notes": "Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 44,
+        "notes": "Place it on the cup."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 1,
+        "notes": "Remove the brewer just before the last liquid drains."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "aromatic",
+        "balanced"
+      ]
+    },
+    "teaches": "RED POISON Coffee's Japanese Clever S method relies on one forceful pour rather than manual stirring. Pour energy distributes the grounds, while immersion builds sweetness and body for a distinctive cup that remains clean when drained early.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 200 g, transcribed by Gota from aeroprecipe.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"No-Stir\" for Clever Dripper S by Red Poison, transcribed by Gota from aeroprecipe.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-red-poison"
+      },
+      {
+        "type": "article",
+        "citation": "Red Poison — the originator page Gota names (aeroprecipe.com); not cross-checked by a session",
+        "url": "https://aeroprecipe.com/recipes/red-poison-clever-dripper"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names aeroprecipe.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-clever-s-clever-s-single",
+    "name": "Single Cup (Clever, Clever Dripper S)",
+    "shortName": "Clever \"Single Cup\" (Gota)",
+    "attribution": {
+      "person": "Clever",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "clever",
+    "brewerNotes": "Clever S",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 10,
+        "notes": "Pour 200g gently."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 120,
+        "notes": "Stir once. Let it steep."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 65,
+        "notes": "Set it on the cup."
+      }
+    ],
+    "totalTimeSec": 195,
+    "techniques": [
+      "immersion-steep"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "The Clever brand's Single Cup recipe is scaled for the smaller Clever Dripper S and its compact bed. It retains straightforward immersion and paper-filtered release, aiming for a clean, dependable serving without excess volume.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Clever recipe near 200 g, transcribed by Gota from clevercoffeedripper.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Cup\" for Clever Dripper S by Clever, transcribed by Gota from clevercoffeedripper.com",
+        "url": "https://gota.cafe/en/recipes/clever-s/clever-s-single"
+      },
+      {
+        "type": "article",
+        "citation": "Clever — the originator page Gota names (clevercoffeedripper.com); not cross-checked by a session",
+        "url": "https://www.clevercoffeedripper.com/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names clevercoffeedripper.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-counter-culture-kalita-155",
+    "name": "1 cm Drain Rule (Counter Culture Coffee, Kalita Wave 155)",
+    "shortName": "Coffee Kalita (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 21
+    },
+    "water": {
+      "grams": 340,
+      "ratio": "1:16.2"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 13,
+        "notes": "Pour 50g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 17,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 130g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 210g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 280,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 280g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 340,
+        "notes": "Wait for the water level to fall by about 1 cm. Pour in a spiral to 340g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Counter Culture Coffee's everyday Kalita Wave 155 recipe: a steady pulse pour-over anyone can repeat. The flat-bottom bed and even, unfussy pours give a sweet, balanced cup with minimal technique.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 340 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 cm Drain Rule\" for Kalita Wave 155 by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/counter-culture-kalita-155"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/pages/quick-easy-pour-over"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-bypass",
+    "name": "Concentrate Bypass (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Concentrate Bypass\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 280,
+      "ratio": "1:14"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 80g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 160,
+        "durationSec": 18,
+        "notes": "Pour in a spiral to 160g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Wait",
+        "action": "wait",
+        "notes": "Let the bed draw down completely."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 280,
+        "notes": "Add 80g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 30,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 160,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kalita's Korean-style Wave 155 method brews a compact concentrate before a hot-water bypass. Slow early pours favor sweetness, while quicker later pours build body, yielding a strong cup whose final intensity is easy to tune.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 280 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Concentrate Bypass\" for Kalita Wave 155 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-bypass"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-concentrate",
+    "name": "Concentrate (Kaldi's Coffee, Kalita Wave 155)",
+    "shortName": "Coffee Kalita (Gota)",
+    "attribution": {
+      "person": "Kaldi's Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 9,
+        "notes": "Pour in a spiral to 30g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 21,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "notes": "Pour in a spiral to 150g."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "Kaldi's Coffee presents a strong concentrate for the compact Kalita Wave 155, brewed as a flavorful base for hot-water or ice dilution. The method aims to preserve aroma, sweetness, and structure once brought to serving strength.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 150 g, transcribed by Gota from kaldiscoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Concentrate\" for Kalita Wave 155 by Kaldi's Coffee, transcribed by Gota from kaldiscoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-concentrate"
+      },
+      {
+        "type": "article",
+        "citation": "Kaldi's Coffee — the originator page Gota names (kaldiscoffee.com); not cross-checked by a session",
+        "url": "https://www.kaldiscoffee.com/blogs/news/kalita-wave-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kaldiscoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-dark",
+    "name": "Dark Roast (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Dark Roast\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 13
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:15.4"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 25,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 25g. Keep the spout close to the coffee bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 110,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 110g. Keep the spout close to the coffee bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g. Keep the spout close to the coffee bed."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Presented through Kalita's Wave 155 product guidance, this dark-roast approach uses gentle, cooler extraction in the compact flat-bottom brewer. It targets a smooth single cup with developed sweetness, full body, and restrained bitterness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 200 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast\" for Kalita Wave 155 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-dark"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/products/wave-155"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-hoffmann",
+    "name": "Ultimate Technique (James Hoffmann, Kalita Wave 155)",
+    "shortName": "Hoffmann Kalita (Gota)",
+    "attribution": {
+      "person": "James Hoffmann",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 12,
+        "notes": "Pour in a spiral to 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 33,
+        "notes": "Swirl gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Pour in a spiral to 250g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently to settle the bed flat."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 80,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "This Wave 155 adaptation applies James Hoffmann's pour-over principles to a small, flat coffee bed. Controlled pouring and a finishing swirl encourage uniform drainage, aiming for a sweet, balanced cup with an even, tidy extraction.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 250 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Ultimate Technique\" for Kalita Wave 155 by James Hoffmann, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-hoffmann"
+      },
+      {
+        "type": "video",
+        "citation": "James Hoffmann — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=AI4ynXzkSQo"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-iced",
+    "name": "Iced 155 (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Iced 155\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Frothy Monkey's guide supplies this Kalita-attributed Wave 155 flash-brew method. A hot, concentrated extraction lands directly on ice, preserving bright aromatics while producing a clean, sweet, refreshing iced single cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 200 g, transcribed by Gota from frothymonkey.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced 155\" for Kalita Wave 155 by Kalita, transcribed by Gota from frothymonkey.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (frothymonkey.com); not cross-checked by a session",
+        "url": "https://frothymonkey.com/blog/iced-kalita-wave-brewing-guide/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names frothymonkey.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-nordic",
+    "name": "Nordic Style (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Nordic Style\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 260,
+      "ratio": "1:16.3"
+    },
+    "temperature": {
+      "celsius": 94
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 30,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 260,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 260g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Kalita's Nordic-style Wave 155 recipe keeps the slurry continuously wet to sustain temperature and extraction in the small brewer. Tuned for light roasts, it emphasizes bright acidity, transparent flavor, and a clean, articulate finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 260 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Nordic Style\" for Kalita Wave 155 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-nordic"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-single",
+    "name": "Single Cup (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Single Cup\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 13
+    },
+    "water": {
+      "grams": 210,
+      "ratio": "1:16.2"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 35,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 35g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 110,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 110g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "notes": "Pour in a spiral to 210g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kalita's small-format Wave 155 recipe is designed for one balanced serving. The shallow, flat bed supports an even extraction at a modest dose, aiming for a clean, rounded cup with enough sweetness and body for daily brewing.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 210 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Cup\" for Kalita Wave 155 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-single"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-155-kalita-155-single-pour",
+    "name": "Single Pour (Kalita, Kalita Wave 155)",
+    "shortName": "Kalita \"Single Pour\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 155",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 25,
+        "durationSec": 9,
+        "notes": "Pour in a spiral to 25g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 26,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g. Keep the stream near the centre. Keep the water level nearly constant throughout the pour."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 90,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "central-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Attributed to Kalita and sourced from Origin Coffee's Wave guide, this Wave 155 technique follows the bloom with one uninterrupted pour. It favors repeatability and a level flat bed, producing a balanced, approachable single cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 200 g, transcribed by Gota from origincoffee.co.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Pour\" for Kalita Wave 155 by Kalita, transcribed by Gota from origincoffee.co.uk",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-155/kalita-155-single-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (origincoffee.co.uk); not cross-checked by a session",
+        "url": "https://www.origincoffee.co.uk/pages/kalita-wave-brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names origincoffee.co.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-coffee-chronicler-gabi",
+    "name": "Three-Phase Gabi (Asser Christensen, Kalita Wave 185)",
+    "shortName": "Christensen Kalita (Gota)",
+    "attribution": {
+      "person": "Asser Christensen",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 94
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 75g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 15,
+        "notes": "Stir 2 times. Let it settle."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "durationSec": 5,
+        "notes": "Set the Gabi Master B on top of the dripper — you pour into its reservoir, not onto the coffee."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "durationSec": 20,
+        "notes": "Pour to 320g. Fill both rings of the distributor so the water drips over the whole bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "notes": "Finish pouring to 400g. Keep the distributor's inner ring topped up so the water keeps dripping over the centre of the bed."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {},
+    "teaches": "Asser Christensen's Kalita Wave method splits the brew into three phases: a bloom without stirring, a kettle pour with two stirs that does all the agitation, and a quiet percolation through the Gabi Master B. Keeping the agitation the same from brew to brew is meant to give a clean cup with a very long finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 400 g, transcribed by Gota from coffeechronicler.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Three-Phase Gabi\" for Kalita Wave 185 by Asser Christensen, transcribed by Gota from coffeechronicler.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/coffee-chronicler-gabi"
+      },
+      {
+        "type": "article",
+        "citation": "Asser Christensen — the originator page Gota names (coffeechronicler.com); not cross-checked by a session",
+        "url": "https://coffeechronicler.com/pour-over-coffee-instructions/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names coffeechronicler.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-george-howell-kalita",
+    "name": "Six Timed Pulses (George Howell, Kalita Wave 185)",
+    "shortName": "Howell Kalita (Gota)",
+    "attribution": {
+      "person": "George Howell",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 390,
+      "ratio": "1:15.6"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 60g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 130g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 195,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 195g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 260,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 260g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 325,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 325g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 390,
+        "notes": "Pour in a spiral to 390g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "George Howell Coffee's Kalita Wave 185 guide builds the brew through regularly timed pulses rather than an extended bloom. Keeping the slurry low promotes even contact and layered extraction, with fruit, sweetness, and complexity in the cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 390 g, transcribed by Gota from georgehowellcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Six Timed Pulses\" for Kalita Wave 185 by George Howell, transcribed by Gota from georgehowellcoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/george-howell-kalita"
+      },
+      {
+        "type": "article",
+        "citation": "George Howell — the originator page Gota names (georgehowellcoffee.com); not cross-checked by a session",
+        "url": "https://georgehowellcoffee.com/pages/brew-guide-kalita-185"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names georgehowellcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-185-classic",
+    "name": "Classic (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Classic\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 140,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 140g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 230g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "notes": "Pour in a spiral to 320g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kalita's house method for the Wave 185: a bloom and three gentle pulse pours that keep the flat bed evenly saturated for a sweet, balanced, repeatable cup. The wavy filter and three-hole base do the rest.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 320 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Classic\" for Kalita Wave 185 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-185-classic"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-185-dark",
+    "name": "Dark Roast — Slow Centered Pour (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Dark Roast — Slow Centered Pour\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 30,
+        "notes": "For the bloom, pour 40g in a spiral from the centre out, then spiral back to the centre. Keep the spout close to the coffee bed and the pour gentle, with the stream off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 45,
+        "notes": "Pour 110g to 150g from the centre out and back to the centre, keeping the stream over the coffee bed. Keep the spout close to the coffee bed and the pour gentle."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 45,
+        "notes": "Pour 80g to 230g from the centre out and back to the centre, keeping the stream over the coffee bed. Keep the spout close to the coffee bed and the pour gentle."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "notes": "Pour the final 90g to 320g in a spiral from the centre out, then spiral back to the centre. Keep the spout close to the coffee bed and the pour gentle. Take the stream out to the edge of the coffee bed."
+      }
+    ],
+    "totalTimeSec": 195,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Kalita's Wave 185 product guidance supports this gentle dark-roast method using cooler water and slow, centered pours. Its broad bed and restricted outlets encourage stable flow, seeking a mellow, rounded cup without abrasive roast bitterness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 320 g, transcribed by Gota from takeoffcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast — Slow Centered Pour\" for Kalita Wave 185 by Kalita, transcribed by Gota from takeoffcoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-185-dark"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (takeoffcoffee.com); not cross-checked by a session",
+        "url": "https://takeoffcoffee.com"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names takeoffcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-185-dark-roast",
+    "name": "Dark Roast 185 (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Dark Roast 185\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 22
+    },
+    "water": {
+      "grams": 350,
+      "ratio": "1:15.9"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 75,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "notes": "Pour in a spiral to 350g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Kalita's Wave 185 brewing guide adapts the forgiving flat-bottom brewer to dark roasts with cooler water, a coarse grind, and simple pours. The combination aims for even extraction, chocolate-led sweetness, and a smooth finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 350 g, transcribed by Gota from pullandpourcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast 185\" for Kalita Wave 185 by Kalita, transcribed by Gota from pullandpourcoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-185-dark-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (pullandpourcoffee.com); not cross-checked by a session",
+        "url": "https://pullandpourcoffee.com/dark-roast-kalita-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names pullandpourcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-185-single-pour",
+    "name": "Single Pour (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Single Pour\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 12,
+        "notes": "Pour in a spiral to 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 23,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 95,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kalita's Wave 185 single-pour recipe is presented through Origin Coffee's guide: a bloom followed by one continuous addition. With the flat bed supporting uniform contact, it aims for an even, sweet, balanced cup with little fuss.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 300 g, transcribed by Gota from origincoffee.co.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Pour\" for Kalita Wave 185 by Kalita, transcribed by Gota from origincoffee.co.uk",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-185-single-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (origincoffee.co.uk); not cross-checked by a session",
+        "url": "https://www.origincoffee.co.uk/pages/kalita-wave-brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names origincoffee.co.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-center-pour",
+    "name": "Center Pour (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Center Pour\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 94
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 45,
+        "notes": "Pour in the centre to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 55,
+        "notes": "Pour in the centre to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in the centre to 300g."
+      }
+    ],
+    "totalTimeSec": 220,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kalita's center-pour approach uses the Wave's flat bed and restricted outlets to extract with minimal agitation. A narrow stream keeps the technique simple and controlled, producing a calm, rounded cup with consistent balance and clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 300 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Center Pour\" for Kalita Wave 185 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-center-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-dark-roast",
+    "name": "Dark Roast — 3-Pour (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Dark Roast — 3-Pour\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 340,
+      "ratio": "1:17"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 170g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 340,
+        "notes": "Pour in a spiral to 340g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Kalita's dark-roast Wave recipe favors cooler water, restrained agitation, and a short staged extraction. The flat-bottom bed helps moderate concentrated roast flavors, aiming for a smooth, full cup with sweetness instead of harshness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 340 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast — 3-Pour\" for Kalita Wave 185 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-dark-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kalita-iced",
+    "name": "Iced (Kalita, Kalita Wave 185)",
+    "shortName": "Kalita \"Iced\" (Gota)",
+    "attribution": {
+      "person": "Kalita",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 22
+    },
+    "water": {
+      "grams": 220,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 130g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 220,
+        "notes": "Pour in a spiral to 220g."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Kalita's guidance is adapted here into a Japanese-style iced brew for the Wave. Hot coffee extracts over a level flat bed before chilling and diluting on ice, aiming for lively aromatics, balanced strength, and a crisp finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 220 g, transcribed by Gota from kalita.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced\" for Kalita Wave 185 by Kalita, transcribed by Gota from kalita.co.jp",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kalita-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Kalita — the originator page Gota names (kalita.co.jp); not cross-checked by a session",
+        "url": "https://www.kalita.co.jp/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kalita.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-kurasu-kalita-185",
+    "name": "Low-Temp Pours (Kurasu, Kalita Wave 185)",
+    "shortName": "Kurasu Kalita (Gota)",
+    "attribution": {
+      "person": "Kurasu",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 91
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Wait until the slurry surface settles. Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 170,
+        "durationSec": 30,
+        "notes": "Wait until the slurry surface settles. Pour in a spiral to 170g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Wait until the slurry surface settles. Pour in a spiral to 250g."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Kurasu Kyoto's updated Kalita Wave 185 guide uses cooler water, a modest dose, and staged pours in a Japanese brewing style. It is tailored to delicate light-roast coffees, seeking tea-like body, clear aromatics, and gentle sweetness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 250 g, transcribed by Gota from kurasu.kyoto.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Low-Temp Pours\" for Kalita Wave 185 by Kurasu, transcribed by Gota from kurasu.kyoto",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/kurasu-kalita-185"
+      },
+      {
+        "type": "article",
+        "citation": "Kurasu — the originator page Gota names (kurasu.kyoto); not cross-checked by a session",
+        "url": "https://kurasu.kyoto/blogs/kurasu-journal/how-to-brew-with-kalita-wave-2023"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kurasu.kyoto as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-kalita-wave-185-verve-kalita-185",
+    "name": "Long Pours (Verve Coffee, Kalita Wave 185)",
+    "shortName": "Coffee Kalita (Gota)",
+    "attribution": {
+      "person": "Verve Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "kalita-wave",
+    "brewerNotes": "Kalita Wave 185",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 10,
+        "notes": "Pour in the centre to 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Shake gently to settle the bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 220,
+        "durationSec": 60,
+        "notes": "Pour in a spiral to 220g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "notes": "Pour in a spiral to 400g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Verve Coffee Roasters' home guide uses a bloom followed by a pair of broad pours in the Kalita Wave 185. The intentionally simple pattern relies on the flat bed and restricted flow to build even extraction and a balanced, approachable cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A Kalita recipe near 400 g, transcribed by Gota from vervecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Long Pours\" for Kalita Wave 185 by Verve Coffee, transcribed by Gota from vervecoffee.com",
+        "url": "https://gota.cafe/en/recipes/kalita-wave-185/verve-kalita-185"
+      },
+      {
+        "type": "article",
+        "citation": "Verve Coffee — the originator page Gota names (vervecoffee.com); not cross-checked by a session",
+        "url": "https://www.vervecoffee.com/blogs/the-verve-blog/how-to-brew-at-home-kalita-wave"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names vervecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-official-v4",
+    "name": "Official V4 (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"Official V4\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 260,
+      "ratio": "1:16.3"
+    },
+    "temperature": {
+      "celsius": 94
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 16,
+        "notes": "Pour 60g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 24,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 110,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 110g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 160,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 160g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 210g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 260,
+        "notes": "Pour in a spiral to 260g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "The official Orea V4 guide sends even pulse pours across the Wide basket's flat bed, using controlled flow to build extraction in repeatable layers. The method targets a uniform, transparent cup and accommodates cone or flat papers.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 260 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official V4\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-official-v4"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/guides-v4"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-four-six",
+    "name": "The Four Six (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"The Four Six\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 70,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 70g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 210g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Tetsu Kasuya's championship Four Six framework is adapted here by Orea for the V4 Wide. Early pours tune sweetness against acidity, while later divisions shape strength, giving a clear cup that is easy to customize.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 300 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"The Four Six\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-four-six"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/pages/brew-guides"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-iced",
+    "name": "V4 Wide Iced (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"V4 Wide Iced\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 160,
+      "ratio": "1:8.9"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 10,
+        "notes": "Pour in the centre to 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 20,
+        "notes": "Pour in the centre to 80g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 160,
+        "notes": "Pour in the centre to 160g."
+      }
+    ],
+    "totalTimeSec": 135,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ]
+    },
+    "teaches": "Built for Orea's V4 Wide, this iced profile uses the broad, fast-draining base to brew a concentrated extraction directly over ice. It makes a brisk, aromatic cold cup with bright definition, enough strength for chilling, and little dilution.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 160 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"V4 Wide Iced\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/guides-v4"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-pulse",
+    "name": "V4 Wide Pulse (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"V4 Wide Pulse\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 10,
+        "notes": "Pour in a spiral to 40g. Keep the spout at the same height throughout the pour."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 20,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 90g. Keep the spout at the same height throughout the pour."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 140,
+        "durationSec": 20,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 140g. Keep the spout at the same height throughout the pour."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 195,
+        "durationSec": 20,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 195g. Keep the spout at the same height throughout the pour."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Wait until the water is close to the coffee bed without exposing it. Pour in a spiral to 250g. Keep the spout at the same height throughout the pour."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "This Orea guide applies separated pulse pours to the fast-draining V4 Wide. Allowing each addition to fall through turns its broad bed into a crisp percolation brew, emphasizing clarity, even extraction, and articulate flavor separation.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 250 g, transcribed by Gota from ofrfrst.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"V4 Wide Pulse\" for Orea V4 Wide by Orea, transcribed by Gota from ofrfrst.com",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-pulse"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (ofrfrst.com); not cross-checked by a session",
+        "url": "https://ofrfrst.com/orea-v4-wide-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names ofrfrst.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-single-pour",
+    "name": "V4 Wide Single Pour (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"V4 Wide Single Pour\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 260,
+      "ratio": "1:16.3"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 15,
+        "notes": "Pour in a spiral to 60g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 25,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 260,
+        "notes": "Pour the final 200g to 260g in a spiral from the centre out, then spiral back to the centre. Keep the water level nearly constant throughout the pour."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 70,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "central-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "One uninterrupted addition matches the V4 Wide's rapid drainage in Orea's single-pour profile. This simple pattern minimizes thermal swings and repeated agitation, producing a quick, clean cup with even body and direct flavor presentation.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 260 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"V4 Wide Single Pour\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-single-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/guides-v4"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-so-soft",
+    "name": "The So Soft (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"The So Soft\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:15.6"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 30,
+        "notes": "Pour continuously to 50g: the first 10g in circles, then the rest in the centre."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Pour in the centre to 250g."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Mordy's So Soft recipe, presented in Orea's V4 Wide guides, combines a coarser grind and cooler water with a deliberate sequence of circular and central pouring. The broad bed and staged trajectory aim for a soft, exceptionally clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 250 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"The So Soft\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-so-soft"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/pages/brew-guides"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-orea-v4-wide-orea-v4-wide-std",
+    "name": "Standard (Orea, Orea V4 Wide)",
+    "shortName": "Orea Wide \"Standard\" (Gota)",
+    "attribution": {
+      "person": "Orea",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "orea-v4-wide",
+    "brewerNotes": "Orea V4 Wide — bottom not stated by Gota",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 60g. Keep the stream over the coffee bed and off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 180g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "notes": "Pour in a spiral to 320g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 94,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 200,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "In Orea's standard V4 Wide guide, the broader basket handles a generous batch with an even, shallow coffee bed. Compatibility with cone or flat papers makes this a practical house profile for two clean, balanced cups.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Orea Wide recipe near 320 g, transcribed by Gota from orea.uk.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Standard\" for Orea V4 Wide by Orea, transcribed by Gota from orea.uk",
+        "url": "https://gota.cafe/en/recipes/orea-v4-wide/orea-v4-wide-std"
+      },
+      {
+        "type": "article",
+        "citation": "Orea — the originator page Gota names (orea.uk); not cross-checked by a session",
+        "url": "https://www.orea.uk/pages/brew-guides"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names orea.uk as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-origami-air-s-origami-cup-canada-2026-rohrbacher",
+    "name": "ORIGAMI Cup Canada 2026 (Andrew Rohrbacher, Origami Air S)",
+    "shortName": "Rohrbacher Origami cone (Gota)",
+    "attribution": {
+      "person": "Andrew Rohrbacher",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "origami-cone",
+    "brewerNotes": "Origami Air S, cone filter",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:12.5"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 60,
+        "notes": "Pour in a spiral to 60g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 160,
+        "durationSec": 15,
+        "notes": "Pour to 160g through the Melodrip, keeping the stream soft and even over the bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Make the last pour to 250g through the Melodrip, keeping the bed calm."
+      }
+    ],
+    "totalTimeSec": 105,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Andrew Rohrbacher won the 2026 ORIGAMI Cup Canada in Toronto on the ORIGAMI Air S with cone papers. A saturating first pour, then two quick pours through a Melodrip in small circles, finish in 1:45 at a low 85°C.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "An Origami cone recipe near 250 g, transcribed by Gota from roguewavecoffee.ca.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"ORIGAMI Cup Canada 2026\" for Origami Air S by Andrew Rohrbacher, transcribed by Gota from roguewavecoffee.ca",
+        "url": "https://gota.cafe/en/recipes/origami-air-s/origami-cup-canada-2026-rohrbacher"
+      },
+      {
+        "type": "article",
+        "citation": "Andrew Rohrbacher — the originator page Gota names (roguewavecoffee.ca); not cross-checked by a session",
+        "url": "https://roguewavecoffee.ca/blogs/news-updates/origami-cup-canada-2026-recap"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names roguewavecoffee.ca as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-aoma-v60",
+    "name": "Coarse & Slow (aoma coffee, V60 01)",
+    "shortName": "coffee V60 (Gota)",
+    "attribution": {
+      "person": "aoma coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 13
+    },
+    "water": {
+      "grams": 208,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 12,
+        "notes": "Pour in a spiral to 40g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 28,
+        "notes": "Nudge the brewer gently up and down to saturate the whole bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 208,
+        "notes": "Pour in a spiral to 208g."
+      }
+    ],
+    "totalTimeSec": 130,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Hiroshi Aono's everyday V60 from aoma coffee: an orthodox 1:16 built on a coarse grind and a slow, unhurried extraction for a clean, light cup with a long finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 208 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Coarse & Slow\" for V60 01 by aoma coffee, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/aoma-v60"
+      },
+      {
+        "type": "video",
+        "citation": "aoma coffee — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=K2kcARXZQO4"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-doha-1-3-9",
+    "name": "1 · 3 · 9 (Doha Coffee, V60 01)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 210,
+      "ratio": "1:14"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 15,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 15g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 40g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 55,
+        "durationSec": 70,
+        "notes": "Pour in the centre to 55g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "notes": "Pour in the centre to 75g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Lift the dripper off once you have the volume you want."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 210,
+        "notes": "Add 135g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 7,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 185,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip technique from Doha Coffee: a concentrated 1 · 3 · 9 build — bloom once, brew a strong center-poured concentrate, then dilute with a large bypass — for a clean, syrupy, sweet cup from medium and dark roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 210 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 3 · 9\" for V60 01 by Doha Coffee, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/doha-1-3-9"
+      },
+      {
+        "type": "article",
+        "citation": "Doha Coffee — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/p/DamaDVeS6f5/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-doha-1-5-5",
+    "name": "1 · 5 · 5 (Doha Coffee, V60 01)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 180,
+      "ratio": "1:12"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 15,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 15g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 45,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 45g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 80,
+        "notes": "Pour in the centre to 75g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 105,
+        "notes": "Pour in the centre to 105g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Remove the dripper immediately when the cup reaches 75g."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 180,
+        "notes": "Add 75g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 12,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 200,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip from Doha Coffee tuned for light roasts: a 1 · 5 · 5 build — bloom once, draw a longer concentrate, then a lighter bypass — for a clean, sweet, delicate cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 180 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 5 · 5\" for V60 01 by Doha Coffee, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/doha-1-5-5"
+      },
+      {
+        "type": "video",
+        "citation": "Doha Coffee — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=OuyH0SSzqsg"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-kurasu-v60",
+    "name": "Kyoto (Kurasu, V60 01)",
+    "shortName": "Kurasu V60 (Gota)",
+    "attribution": {
+      "person": "Kurasu",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 13
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:15.4"
+    },
+    "temperature": {
+      "celsius": 91
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 30g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g."
+      }
+    ],
+    "totalTimeSec": 130,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Kurasu Kyoto's house V60 guide uses a brisk, lower-temperature approach shaped for Japanese specialty light roasts. Its compact pour structure aims for a clear, sweet cup with restrained bitterness and an efficient drawdown.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 200 g, transcribed by Gota from kurasu.kyoto.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Kyoto\" for V60 01 by Kurasu, transcribed by Gota from kurasu.kyoto",
+        "url": "https://gota.cafe/en/recipes/v60-01/kurasu-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Kurasu — the originator page Gota names (kurasu.kyoto); not cross-checked by a session",
+        "url": "https://kurasu.kyoto/blogs/kurasu-journal/hario-v60-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names kurasu.kyoto as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-concentrate",
+    "name": "Concentrate (Heart Coffee Roasters, V60 01)",
+    "shortName": "Roasters V60 (Gota)",
+    "attribution": {
+      "person": "Heart Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 30g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "notes": "Pour in a spiral to 150g."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "Heart Coffee Roasters' V60 guidance inspires this concentrated V60-01 brew for later dilution with hot water or ice. The compact dripper produces a strong, aromatic base intended to retain sweetness and definition after bypass.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 150 g, transcribed by Gota from heartroasters.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Concentrate\" for V60 01 by Heart Coffee Roasters, transcribed by Gota from heartroasters.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-concentrate"
+      },
+      {
+        "type": "article",
+        "citation": "Heart Coffee Roasters — the originator page Gota names (heartroasters.com); not cross-checked by a session",
+        "url": "https://www.heartroasters.com/pages/v60"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names heartroasters.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-dark",
+    "name": "Dark Roast (Hario, V60 01)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 180,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 25,
+        "durationSec": 35,
+        "notes": "Pour in the centre to 25g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "notes": "Pour in a spiral to 180g."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Presented as a Hario V60-01 preparation for dark-roasted coffee, this method combines cooler water, a coarser grind, and gentle pouring. It is designed to produce one clean, rounded cup without exposing smoky or bitter edges.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 180 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast\" for V60 01 by Hario, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-dark"
+      },
+      {
+        "type": "video",
+        "citation": "Hario — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=AI4ynXzkSQo"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-iced",
+    "name": "Japanese Iced (Hario, V60 01)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 150,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 30g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "notes": "Pour in a spiral to 150g."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Hario's official V60 guide adapts Japanese iced coffee to the compact V60-01, brewing a concentrated single serving directly over ice. Fine grinding and hot water target vivid aromatics, clean sweetness, and refreshing strength.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 150 g, transcribed by Gota from hario-usa.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Japanese Iced\" for V60 01 by Hario, transcribed by Gota from hario-usa.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario-usa.com); not cross-checked by a session",
+        "url": "https://www.hario-usa.com/pages/v60-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario-usa.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-japanese",
+    "name": "Japanese (Hario, V60 01)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 40,
+        "notes": "Pour in the centre to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 20,
+        "notes": "Pour in the centre to 80g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 20,
+        "notes": "Pour in the centre to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 180g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 240,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 240g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Prepare",
+        "action": "wait",
+        "notes": "Remove the brewer just before the last liquid drains."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 10,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Featured in Hario's recipe collection, THE COFFEESHOP Tokyo's V60-01 method moves from slow saturation to circular pouring. The changing flow builds balanced extraction while preserving a clean, composed cup with gentle sweetness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Japanese\" for V60 01 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-japanese"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-single",
+    "name": "Quick Single Cup (Hario, V60 01)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 36,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 36g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl once."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 67,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "From Hario's recipe collection, this straightforward V60-01 method is built for a quick personal serving. The small cone and slightly finer grind support efficient extraction, producing a convenient cup that remains clean and balanced.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 200 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Quick Single Cup\" for V60 01 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-single"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-01-v60-01-single-origin",
+    "name": "Single Origin (Hario, V60 01)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 01 (small cone)",
+    "dose": {
+      "grams": 12
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 10,
+        "notes": "Pour in a spiral to 30g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently to settle the bed flat."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 51,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 135,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "Hario's V60 brewing guide informs this precise V60-01 recipe for tasting single-origin coffees. A fine grind and measured staged pours suit the short, personal-size brew, emphasizing clarity, origin character, and a clean finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 200 g, transcribed by Gota from hario-usa.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Origin\" for V60 01 by Hario, transcribed by Gota from hario-usa.com",
+        "url": "https://gota.cafe/en/recipes/v60-01/v60-01-single-origin"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario-usa.com); not cross-checked by a session",
+        "url": "https://www.hario-usa.com/pages/v60-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario-usa.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-battefeld-v60",
+    "name": "Five Equal Pours (Nicole Battefeld-Montgomery, V60 02)",
+    "shortName": "Battefeld-Montgomery V60 (Gota)",
+    "attribution": {
+      "person": "Nicole Battefeld-Montgomery",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 60g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 180g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 240,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 240g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g."
+      }
+    ],
+    "totalTimeSec": 195,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "2018 German Barista Champion Nicole Battefeld's V60 recipe uses 5 count equal pours with slow circular coverage. Designed for honest flavor, it preserves body while allowing natural acidity, sweetness, and origin character to stay distinct.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from nicolebattefeld.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Five Equal Pours\" for V60 02 by Nicole Battefeld-Montgomery, transcribed by Gota from nicolebattefeld.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/battefeld-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Nicole Battefeld-Montgomery — the originator page Gota names (nicolebattefeld.com); not cross-checked by a session",
+        "url": "https://www.nicolebattefeld.com/post/v60-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names nicolebattefeld.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-blue-bottle-v60",
+    "name": "Single Circular Pour (Blue Bottle Coffee, V60 02)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Blue Bottle Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 21
+    },
+    "water": {
+      "grams": 350,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 40,
+        "notes": "For the bloom, pour 50g in 3 circles out from the centre, then 3 circles back in. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour 100g to 150g in 5 circles out from the centre, then 5 circles back in."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 30,
+        "notes": "Pour 100g to 250g in 5 circles out from the centre, then 5 circles back in."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "notes": "Pour the final 100g to 350g in 5 circles out from the centre, then 5 circles back in."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Blue Bottle Coffee's official pour-over guide uses a full bloom and a measured circular main pour, keeping the method approachable and repeatable. Its emphasis on recently roasted, freshly ground beans supports a balanced, aromatic, clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 350 g, transcribed by Gota from bluebottlecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Circular Pour\" for V60 02 by Blue Bottle Coffee, transcribed by Gota from bluebottlecoffee.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/blue-bottle-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Blue Bottle Coffee — the originator page Gota names (bluebottlecoffee.com); not cross-checked by a session",
+        "url": "https://bluebottlecoffee.com/us/eng/brew-guides/pour-over"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names bluebottlecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-counter-culture-v60",
+    "name": "Constant Spirals (Counter Culture Coffee, V60 02)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Counter Culture Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 30g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Pour in a spiral to 250g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Counter Culture Coffee's V60 guide builds extraction through steady spiral pours from the center outward, maintaining repeatable coverage without washing the paper. The method targets an even, balanced cup with clear sweetness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 250 g, transcribed by Gota from counterculturecoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Constant Spirals\" for V60 02 by Counter Culture Coffee, transcribed by Gota from counterculturecoffee.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/counter-culture-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Counter Culture Coffee — the originator page Gota names (counterculturecoffee.com); not cross-checked by a session",
+        "url": "https://counterculturecoffee.com/blogs/brew-guides/hario-v60"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names counterculturecoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-doha-1-3-9",
+    "name": "1 · 3 · 9 (Doha Coffee, V60 02)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 280,
+      "ratio": "1:14"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 20,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 20g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 55,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 55g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 70,
+        "notes": "Pour in the centre to 75g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "notes": "Pour in the centre to 100g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Lift the dripper off once you have the volume you want."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 280,
+        "notes": "Add 180g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 7,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 185,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip technique from Doha Coffee: a concentrated 1 · 3 · 9 build — bloom once, brew a strong center-poured concentrate, then dilute with a large bypass — for a clean, syrupy, sweet cup from medium and dark roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 280 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 3 · 9\" for V60 02 by Doha Coffee, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/doha-1-3-9"
+      },
+      {
+        "type": "article",
+        "citation": "Doha Coffee — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/p/DamaDVeS6f5/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-doha-1-5-5",
+    "name": "1 · 5 · 5 (Doha Coffee, V60 02)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 240,
+      "ratio": "1:12"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 20,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 20g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 60g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 80,
+        "notes": "Pour in the centre to 100g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 140,
+        "notes": "Pour in the centre to 140g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Remove the dripper immediately when the cup reaches 100g."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 240,
+        "notes": "Add 100g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 12,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 202,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip from Doha Coffee tuned for light roasts: a 1 · 5 · 5 build — bloom once, draw a longer concentrate, then a lighter bypass — for a clean, sweet, delicate cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 240 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 5 · 5\" for V60 02 by Doha Coffee, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/doha-1-5-5"
+      },
+      {
+        "type": "video",
+        "citation": "Doha Coffee — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=OuyH0SSzqsg"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-gabi-master-b-official",
+    "name": "Gabi Master B (The Gabi, V60 02)",
+    "shortName": "Gabi V60 (Gota)",
+    "attribution": {
+      "person": "The Gabi",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 25,
+        "notes": "Pour 50g. Pour into the distributor's inner ring only, so the water drips over the centre of the bed. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Finish pouring to 300g. Fill both rings of the distributor so the water drips over the whole bed, topping them up as they drain without letting them overflow."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "central-pour"
+    ],
+    "bestFor": {},
+    "teaches": "The recipe printed in the Gabi Master B manual, provided by Korea's Coffee Critics Association. A short bloom drips through the distributor's inner ring, then the rest of the water fills both rings while the Master B meters it onto the bed. The manual draws it over a Hario, Kalita, Kono or Melitta dripper.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from blog.hroyer.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Gabi Master B\" for V60 02 by The Gabi, transcribed by Gota from blog.hroyer.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/gabi-master-b-official"
+      },
+      {
+        "type": "article",
+        "citation": "The Gabi — the originator page Gota names (blog.hroyer.com); not cross-checked by a session",
+        "url": "https://blog.hroyer.com/post/676902712864079872/official-gabi-drip-master-b-recipe"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names blog.hroyer.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-gagne-v60",
+    "name": "Jonathan Gagné (Jonathan Gagné, V60 02)",
+    "shortName": "Gagné V60 (Gota)",
+    "attribution": {
+      "person": "Jonathan Gagné",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 22
+    },
+    "water": {
+      "grams": 374,
+      "ratio": "1:17"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 77,
+        "durationSec": 21,
+        "notes": "Pour 77g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 24,
+        "notes": "Stir gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 55,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 374,
+        "notes": "Pour in a spiral to 374g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 125,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Coffee ad Astra author Jonathan Gagne developed this V60 approach for high, even extraction, combining boiling water, a nest-shaped bloom, and a slow flower-pattern pour. It seeks exceptional clarity, sweetness, and flavor definition.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 374 g, transcribed by Gota from coffeeadastra.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Jonathan Gagné\" for V60 02 by Jonathan Gagné, transcribed by Gota from coffeeadastra.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/gagne-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Jonathan Gagné — the originator page Gota names (coffeeadastra.com); not cross-checked by a session",
+        "url": "https://coffeeadastra.com/2021/09/07/reaching-high-extractions-on-the-v60/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names coffeeadastra.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-george-howell-v60",
+    "name": "Official (George Howell, V60 02)",
+    "shortName": "Howell V60 (Gota)",
+    "attribution": {
+      "person": "George Howell",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 26
+    },
+    "water": {
+      "grams": 390,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 60g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 195,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 195g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 300g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 390,
+        "notes": "Pour in a spiral to 390g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "George Howell Coffee's official pour-over guide applies a drip-fine grind and gentle V60 pouring to light-roast single origins. The restrained extraction emphasizes transparent fruit and floral detail in a sweet, polished cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 390 g, transcribed by Gota from georgehowellcoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official\" for V60 02 by George Howell, transcribed by Gota from georgehowellcoffee.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/george-howell-v60"
+      },
+      {
+        "type": "article",
+        "citation": "George Howell — the originator page Gota names (georgehowellcoffee.com); not cross-checked by a session",
+        "url": "https://www.georgehowellcoffee.com/brew-guide/pourover/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names georgehowellcoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-hario-official-v60",
+    "name": "Official Recipe (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 16
+    },
+    "water": {
+      "grams": 270,
+      "ratio": "1:16.9"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 130g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "notes": "Pour in a spiral to 270g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Hario's official V60 recipe establishes the brewer's standard approach: a proper bloom followed by 3 count circular pours that maintain even contact across the bed. It is intended as a practical baseline for a balanced, clean cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 270 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Official Recipe\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/hario-official-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-intelligentsia-v60",
+    "name": "Spiral Pulses (Intelligentsia Coffee, V60 02)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Intelligentsia Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 26
+    },
+    "water": {
+      "grams": 415,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 52,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 52g. Keep the stream over the coffee bed and off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 150g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 250g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 340,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 340g. Keep the stream over the coffee bed and off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 415,
+        "notes": "Pour in a spiral to 415g. Keep the stream over the coffee bed and off the filter."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Intelligentsia Coffee's official V60 guide uses a bloom followed by staged spiral pulses, moving from the center outward. Its measured structure encourages uniform saturation and a sweet, articulate cup with polished acidity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 415 g, transcribed by Gota from intelligentsiacoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Spiral Pulses\" for V60 02 by Intelligentsia Coffee, transcribed by Gota from intelligentsiacoffee.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/intelligentsia-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Intelligentsia Coffee — the originator page Gota names (intelligentsiacoffee.com); not cross-checked by a session",
+        "url": "https://www.intelligentsiacoffee.com/learn-do/education/brew-guides/v60-pourover-brew-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names intelligentsiacoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-onyx-v60",
+    "name": "Two Stirred Pours (Onyx Coffee Lab, V60 02)",
+    "shortName": "Lab V60 (Gota)",
+    "attribution": {
+      "person": "Onyx Coffee Lab",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 14,
+        "notes": "Pour 60g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 31,
+        "notes": "Stir vigorously until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 190,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 190g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "notes": "Pour in a spiral to 320g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently to settle the bed flat."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 70,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Onyx Coffee Lab's streamlined two-pour V60: a high-agitation bloom stirred to erase dry pockets, then two even spiral pours and a flattening swirl into a clean drawdown. Built for bright, fruit-forward light roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 320 g, transcribed by Gota from onyxcoffeelab.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Two Stirred Pours\" for V60 02 by Onyx Coffee Lab, transcribed by Gota from onyxcoffeelab.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/onyx-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Onyx Coffee Lab — the originator page Gota names (onyxcoffeelab.com); not cross-checked by a session",
+        "url": "https://onyxcoffeelab.com/blogs/brew-guides/hario-v60"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names onyxcoffeelab.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-osmotic-flow-v60",
+    "name": "Osmotic Flow (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 45,
+        "notes": "Pour in the centre to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 75,
+        "notes": "Pour in the centre to 120g. Keep only a shallow layer of water above the coffee bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 80,
+        "notes": "Pour in the centre to 200g. Keep only a shallow layer of water above the coffee bed."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in the centre to 300g. Keep only a shallow layer of water above the coffee bed."
+      }
+    ],
+    "totalTimeSec": 300,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Hario's source demonstrates the Japanese osmotic-flow style, using an exceptionally slow center pour while holding water barely above the coffee bed. Minimal disturbance encourages a concentrated, rounded cup with sweetness and gentle clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Osmotic Flow\" for V60 02 by Hario, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/osmotic-flow-v60"
+      },
+      {
+        "type": "video",
+        "citation": "Hario — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=eLqLNIguFE4"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-roca-4th-wave-iced",
+    "name": "4th Wave Iced (ROCA Coffee Roasters, V60 02)",
+    "shortName": "Roasters V60 (Gota)",
+    "attribution": {
+      "person": "ROCA Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 180,
+      "ratio": "1:9"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 40,
+        "notes": "Pour in the centre to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 25,
+        "notes": "Pour in the centre to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 20,
+        "notes": "Pour in the centre to 130g. Do not exceed the water height reached on the second pour."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "notes": "Pour in the centre to 180g. Do not exceed the water height reached on the second pour."
+      },
+      {
+        "label": "Serve",
+        "action": "wait",
+        "notes": "Pour the chilled coffee over fresh ice."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "notes": "Stir to chill."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 10,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 115,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ],
+      "goals": [
+        "aromatic"
+      ]
+    },
+    "teaches": "ROCA Coffee Roasters' iced V60 built for fourth-wave clarity: gentle 88°C water, a stronger 1:9 brew ratio, and four center pours dripping straight onto ice. Bright and aromatic, it keeps the delicate fruit and florals that boiling water would flatten.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 180 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"4th Wave Iced\" for V60 02 by ROCA Coffee Roasters, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/roca-4th-wave-iced"
+      },
+      {
+        "type": "article",
+        "citation": "ROCA Coffee Roasters — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/p/DX1WxWpRVvd/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-stumptown-v60",
+    "name": "Slow Continuous Pour (Stumptown Coffee Roasters, V60 02)",
+    "shortName": "Roasters V60 (Gota)",
+    "attribution": {
+      "person": "Stumptown Coffee Roasters",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 21
+    },
+    "water": {
+      "grams": 360,
+      "ratio": "1:17.1"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium-fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 360,
+        "notes": "Pour continuously in a slow, even spiral to 360g, adding water every 10–15 seconds to keep the slurry level nearly constant. Keep the water level nearly constant throughout the pour."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Stumptown Coffee Roasters' official V60 guide relies on a slow, continuous pour rather than many stages, with medium-fine coffee and water just off the boil. The steady slurry depth is designed for a clean, balanced, dependable cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 360 g, transcribed by Gota from stumptowncoffee.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Slow Continuous Pour\" for V60 02 by Stumptown Coffee Roasters, transcribed by Gota from stumptowncoffee.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/stumptown-v60"
+      },
+      {
+        "type": "article",
+        "citation": "Stumptown Coffee Roasters — the originator page Gota names (stumptowncoffee.com); not cross-checked by a session",
+        "url": "https://www.stumptowncoffee.com/pages/brew-guide-hario-v60"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names stumptowncoffee.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-tawansunshine23-four-pour",
+    "name": "Four-Pour Zig-Zag (Tawans Nui, V60 02)",
+    "shortName": "Nui V60 (Gota)",
+    "attribution": {
+      "person": "Tawans Nui",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 25
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:12"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 30g. Keep the stream over the coffee bed and off the filter. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 130g. Cover the whole coffee bed evenly, keeping the stream off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 30,
+        "notes": "Pour in a zig-zag to 230g. Cover the whole coffee bed evenly, keeping the stream off the filter."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g. Keep the stream over the coffee bed and off the filter."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Tawansunshine23's Kawah-style V60 uses 4 count measured pours, placing a zig-zag pass between circular additions. The changing gestures distribute water across the bed for an evenly extracted cup with defined sweetness and body.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Four-Pour Zig-Zag\" for V60 02 by Tawans Nui, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/tawansunshine23-four-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Tawans Nui — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/tawansunshine23/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-tawansunshine23-iced-zigzag",
+    "name": "Zig-Zag on Ice (Tawans Nui, V60 02)",
+    "shortName": "Nui V60 (Gota)",
+    "attribution": {
+      "person": "Tawans Nui",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 125,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 125g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Finish in a zig-zag to 200g."
+      }
+    ],
+    "totalTimeSec": 120,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Tawansunshine23's Kawah-style iced pour-over combines circular saturation with a fast zig-zag finish, brewing a concentrated V60 directly onto 120g. It aims for rapid extraction, vivid aromatics, and a crisp, even cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 200 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Zig-Zag on Ice\" for V60 02 by Tawans Nui, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/tawansunshine23-iced-zigzag"
+      },
+      {
+        "type": "article",
+        "citation": "Tawans Nui — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/tawansunshine23/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-tawansunshine23-zigzag",
+    "name": "Zig-Zag (Tawans Nui, V60 02)",
+    "shortName": "Nui V60 (Gota)",
+    "attribution": {
+      "person": "Tawans Nui",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 200,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 90
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 40g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 125,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 125g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "notes": "Finish in a zig-zag to 200g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Remove the dripper as soon as the steady stream turns into distinct drips."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 5,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 95,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Shared by Tawansunshine23, this Kawah-style pour-over begins with circular saturation and ends with a deliberate zig-zag pour after the stream becomes a drip. The concentrated structure aims for a compact, sweet, clearly defined cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 200 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Zig-Zag\" for V60 02 by Tawans Nui, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/tawansunshine23-zigzag"
+      },
+      {
+        "type": "article",
+        "citation": "Tawans Nui — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/tawansunshine23/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-competition",
+    "name": "Competition Standard V60 (WBrC, V60 02)",
+    "shortName": "WBrC V60 (Gota)",
+    "attribution": {
+      "person": "WBrC",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 270,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 54,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 54g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 108,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 108g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 162,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 162g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 216,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 216g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "notes": "Pour in a spiral to 270g."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "This World Brewers Cup-sourced competition baseline uses 5 count equal V60 pours at regular intervals. Its repeatable structure exposes a coffee's balance clearly, making acidity, sweetness, and finish easy to assess while dialing in.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 270 g, transcribed by Gota from worldbrewerscup.org.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Competition Standard V60\" for V60 02 by WBrC, transcribed by Gota from worldbrewerscup.org",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-competition"
+      },
+      {
+        "type": "article",
+        "citation": "WBrC — the originator page Gota names (worldbrewerscup.org); not cross-checked by a session",
+        "url": "https://worldbrewerscup.org/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names worldbrewerscup.org as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-dark-roast",
+    "name": "Dark Roast (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 240,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 88
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 40,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 40g. Keep the pour gentle. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 130,
+        "durationSec": 30,
+        "notes": "Pour in a spiral to 130g. Keep the pour gentle."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 240,
+        "notes": "Pour in a spiral to 240g. Keep the pour gentle."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 65,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "central-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Hario's V60 recipe collection supports this dark-roast adaptation, which lowers heat, opens the grind, and shortens contact compared with a standard pour-over. The goal is a rounded, sweet cup without burnt bitterness or ashiness.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 240 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-dark-roast"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-dark-roast-low-temp",
+    "name": "Dark Roast Low-Temp V60 (Barista Hustle, V60 02)",
+    "shortName": "Hustle V60 (Gota)",
+    "attribution": {
+      "person": "Barista Hustle",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 290,
+      "ratio": "1:16.1"
+    },
+    "temperature": {
+      "celsius": 85
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 12,
+        "notes": "Pour 50g. Keep the pour gentle."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 33,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 290,
+        "notes": "Pour in a spiral to 290g. Keep the pour gentle."
+      }
+    ],
+    "totalTimeSec": 150,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "dark"
+      ],
+      "goals": [
+        "body-forward"
+      ]
+    },
+    "teaches": "Barista Hustle's dark-roast V60 guidance pairs 85°C water with a coarse grind and 2 count low-agitation pours. The restrained extraction favors chocolate and caramel sweetness without bitter, smoky, or ashy edges.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 290 g, transcribed by Gota from baristahustle.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Dark Roast Low-Temp V60\" for V60 02 by Barista Hustle, transcribed by Gota from baristahustle.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-dark-roast-low-temp"
+      },
+      {
+        "type": "article",
+        "citation": "Barista Hustle — the originator page Gota names (baristahustle.com); not cross-checked by a session",
+        "url": "https://www.baristahustle.com/blog/the-dark-roast-dilemma/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names baristahustle.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-iced-japanese",
+    "name": "Japanese Iced Coffee (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 180,
+      "ratio": "1:9"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 120g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "notes": "Pour in a spiral to 180g."
+      }
+    ],
+    "totalTimeSec": 135,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Hario's recipe collection features the classic Japanese iced V60 format: a concentrated hot extraction lands directly on 120g for immediate cooling and dilution. It produces a crisp, aromatic cup with lively acidity and a clean finish.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 180 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Japanese Iced Coffee\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-iced-japanese"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-one-pour",
+    "name": "V60 One-Pour Method (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 250,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 10,
+        "notes": "Pour in a spiral to 30g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 20,
+        "notes": "Swirl gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "notes": "Pour in a spiral to 250g. Keep the pour gentle. Keep the water below the rim; do not overfill it."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "notes": "Stir once."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 95,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 165,
+    "techniques": [
+      "bloom",
+      "continuous-pour",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Credited to Hario and linked to James Hoffmann's V60 video, this method follows the bloom with 1 count continuous pour. The rising slurry supplies agitation, targeting a balanced, repeatable everyday cup with few technique variables.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 250 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"V60 One-Pour Method\" for V60 02 by Hario, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-one-pour"
+      },
+      {
+        "type": "video",
+        "citation": "Hario — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=AI4ynXzkSQo"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-pulse-pour",
+    "name": "Pulse Pour Method (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 18
+    },
+    "water": {
+      "grams": 300,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 50,
+        "durationSec": 35,
+        "notes": "Pour in a spiral to 50g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 100,
+        "durationSec": 10,
+        "notes": "Pour in a spiral to 100g."
+      },
+      {
+        "label": "Drawdown",
+        "action": "wait",
+        "durationSec": 30,
+        "notes": "Wait for the level to drop."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 160,
+        "durationSec": 10,
+        "notes": "Pour in a spiral to 160g."
+      },
+      {
+        "label": "Drawdown",
+        "action": "wait",
+        "durationSec": 30,
+        "notes": "Wait for the level to drop."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "durationSec": 25,
+        "notes": "Pour in a spiral to 230g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 300,
+        "notes": "Pour in a spiral to 300g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Hario's V60 recipe collection offers this measured pulse-pour method, separating the brew into gentle additions with short drawdowns between them. The controlled agitation promotes even extraction, clean sweetness, and reliable clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 300 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Pulse Pour Method\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-pulse-pour"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-sweet-spot",
+    "name": "Sweet Spot (Beginner) (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 15
+    },
+    "water": {
+      "grams": 225,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 45,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 45g. Cover the whole coffee bed evenly. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 120,
+        "durationSec": 45,
+        "notes": "Wait until the slurry returns to the same level as before the previous pour. Pour in a spiral to 120g. Cover the whole coffee bed evenly."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 225,
+        "notes": "Wait until the slurry returns to the same level as before the previous pour. Pour in a spiral to 225g. Cover the whole coffee bed evenly."
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "From Hario's recipe collection, this beginner-oriented V60 simplifies brewing into a bloom and 3 count manageable pours. Its forgiving structure prioritizes repeatability over perfect kettle patterns and produces a sweet, balanced cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 225 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Sweet Spot (Beginner)\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-sweet-spot"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-02-v60-two-cup",
+    "name": "Two Cup (Hario, V60 02)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 02",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 500,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 75,
+        "durationSec": 16,
+        "notes": "Pour in a spiral to 75g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 29,
+        "notes": "Swirl gently. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 200,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 200g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 350,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 350g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "notes": "Pour in a spiral to 500g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 110,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 270,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Hario's V60 recipe collection scales the brewer for 2 count cups in a single pass, balancing increased dose and bed depth with a slightly quicker pour. The method is intended to deliver a clean, cohesive carafe for sharing.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 500 g, transcribed by Gota from hario.co.jp.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Two Cup\" for V60 02 by Hario, transcribed by Gota from hario.co.jp",
+        "url": "https://gota.cafe/en/recipes/v60-02/v60-two-cup"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario.co.jp); not cross-checked by a session",
+        "url": "https://www.hario.co.jp/v60recipe.html"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario.co.jp as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-doha-1-3-9",
+    "name": "1 · 3 · 9 (Doha Coffee, V60 03)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 420,
+      "ratio": "1:14"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 30g. Keep the pour gentle. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 80g. Keep the pour gentle."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 110,
+        "durationSec": 70,
+        "notes": "Pour in the centre to 110g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "notes": "Pour in the centre to 150g. Pour with energy."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Lift the dripper off once you have the volume you want."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 420,
+        "notes": "Add 270g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 4,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 185,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "dark"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "body-forward"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip technique from Doha Coffee: a concentrated 1 · 3 · 9 build — bloom once, brew a strong center-poured concentrate, then dilute with a large bypass — for a clean, syrupy, sweet cup from medium and dark roasts.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 420 g, transcribed by Gota from instagram.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 3 · 9\" for V60 03 by Doha Coffee, transcribed by Gota from instagram.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/doha-1-3-9"
+      },
+      {
+        "type": "article",
+        "citation": "Doha Coffee — the originator page Gota names (instagram.com); not cross-checked by a session",
+        "url": "https://www.instagram.com/p/DamaDVeS6f5/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names instagram.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-doha-1-5-5",
+    "name": "1 · 5 · 5 (Doha Coffee, V60 03)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Doha Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 360,
+      "ratio": "1:12"
+    },
+    "temperature": {
+      "celsius": 92
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 30,
+        "durationSec": 30,
+        "notes": "Pour in the centre to 30g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 60,
+        "notes": "Pour in the centre to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 80,
+        "notes": "Pour in the centre to 150g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 210,
+        "notes": "Pour in the centre to 210g."
+      },
+      {
+        "label": "Prepare",
+        "action": "drain",
+        "notes": "Remove the dripper immediately when the cup reaches 150g."
+      },
+      {
+        "label": "Bypass",
+        "action": "bypass",
+        "waterGramsAtEnd": 360,
+        "notes": "Add 150g of bypass water directly to the cup to dilute the concentrate."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 12,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 202,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "central-pour",
+      "concentrate-and-bypass"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light"
+      ]
+    },
+    "teaches": "A Japanese-tradition hand-drip from Doha Coffee tuned for light roasts: a 1 · 5 · 5 build — bloom once, draw a longer concentrate, then a lighter bypass — for a clean, sweet, delicate cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 360 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"1 · 5 · 5\" for V60 03 by Doha Coffee, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/doha-1-5-5"
+      },
+      {
+        "type": "video",
+        "citation": "Doha Coffee — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=OuyH0SSzqsg"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-v60-03-iced",
+    "name": "Iced Batch (Hario, V60 03)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 40
+    },
+    "water": {
+      "grams": 400,
+      "ratio": "1:10"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "fine (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 80,
+        "durationSec": 12,
+        "notes": "Pour in a spiral to 80g."
+      },
+      {
+        "label": "Swirl",
+        "action": "stir",
+        "durationSec": 33,
+        "notes": "Stir gently until every ground is wet. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 250,
+        "durationSec": 60,
+        "notes": "Pour in a spiral to 250g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 400,
+        "notes": "Pour in a spiral to 400g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium"
+      ]
+    },
+    "teaches": "Hario USA's V60 brewing guide adapts the larger V60-03 for iced batch coffee, extracting a concentrated hot brew directly over 350g. The rapid chill preserves fragrance while yielding a bright, refreshing shareable cup.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 400 g, transcribed by Gota from hario-usa.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Iced Batch\" for V60 03 by Hario, transcribed by Gota from hario-usa.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/v60-03-iced"
+      },
+      {
+        "type": "article",
+        "citation": "Hario — the originator page Gota names (hario-usa.com); not cross-checked by a session",
+        "url": "https://www.hario-usa.com/pages/v60-brewing-guide"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names hario-usa.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-v60-03-kasuya",
+    "name": "4:6 (Tetsu Kasuya, V60 03)",
+    "shortName": "Kasuya V60 (Gota)",
+    "attribution": {
+      "person": "Tetsu Kasuya",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 450,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 90g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 180g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 270g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 360,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 360g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "notes": "Pour in a spiral to 450g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Tetsu Kasuya's 4:6 method scaled for the V60 03. Five equal 90g pours for batch brew.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 450 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"4:6\" for V60 03 by Tetsu Kasuya, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/v60-03-kasuya"
+      },
+      {
+        "type": "video",
+        "citation": "Tetsu Kasuya — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=wmCW8xSWGZY"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-v60-03-kasuya-46",
+    "name": "4:6 Scaled (Tetsu Kasuya, V60 03)",
+    "shortName": "Kasuya V60 (Gota)",
+    "attribution": {
+      "person": "Tetsu Kasuya",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 450,
+      "ratio": "1:15"
+    },
+    "temperature": {
+      "celsius": 95
+    },
+    "grind": {
+      "description": "coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 90,
+        "durationSec": 45,
+        "notes": "Pour in a spiral to 90g. Let it bloom."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 180,
+        "durationSec": 40,
+        "notes": "Pour in a spiral to 180g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 270,
+        "durationSec": 40,
+        "notes": "Wait for the water level to fall a little. Pour in a spiral to 270g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 360,
+        "durationSec": 30,
+        "notes": "Wait for the water level to fall a little. Pour in a spiral to 360g."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "notes": "Wait for the water level to fall a little. Pour in a spiral to 450g."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward",
+        "balanced"
+      ]
+    },
+    "teaches": "Honest Coffee Guide presents Tetsu Kasuya's 4:6 method at V60-03 scale with 5 count equal pulses and a coarse grind. Its split brewing structure keeps sweetness, acidity, and strength easy to tune in a clean batch.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 450 g, transcribed by Gota from honestcoffeeguide.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"4:6 Scaled\" for V60 03 by Tetsu Kasuya, transcribed by Gota from honestcoffeeguide.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/v60-03-kasuya-46"
+      },
+      {
+        "type": "article",
+        "citation": "Tetsu Kasuya — the originator page Gota names (honestcoffeeguide.com); not cross-checked by a session",
+        "url": "https://honestcoffeeguide.com/brew-recipes/tetsu-kasuya-4-6-method/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names honestcoffeeguide.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-v60-03-sample",
+    "name": "High Agitation (Sample Coffee, V60 03)",
+    "shortName": "Coffee V60 (Gota)",
+    "attribution": {
+      "person": "Sample Coffee",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 500,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 100
+    },
+    "grind": {
+      "description": "medium-coarse (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "durationSec": 28,
+        "notes": "Pour in a spiral to 150g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 7,
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 275,
+        "durationSec": 24,
+        "notes": "Pour in a spiral to 275g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 21,
+        "notes": "Swirl gently. Let the water drop through."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 375,
+        "durationSec": 20,
+        "notes": "Pour in a spiral to 375g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 30,
+        "notes": "Swirl gently. Let the water drop through."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 450,
+        "durationSec": 16,
+        "notes": "Pour in a spiral to 450g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "durationSec": 34,
+        "notes": "Swirl gently. Let the water drop through."
+      },
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "notes": "Pour in a spiral to 500g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 49,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 240,
+    "techniques": [
+      "pulse-pouring",
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Sample Coffee Australia's V60-03 approach uses 5 count progressively smaller pours, each followed by deliberate agitation. The energetic method suits a coarse grind and seeks high, even extraction with pronounced sweetness and clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 500 g, transcribed by Gota from samplecoffee.com.au.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"High Agitation\" for V60 03 by Sample Coffee, transcribed by Gota from samplecoffee.com.au",
+        "url": "https://gota.cafe/en/recipes/v60-03/v60-03-sample"
+      },
+      {
+        "type": "article",
+        "citation": "Sample Coffee — the originator page Gota names (samplecoffee.com.au); not cross-checked by a session",
+        "url": "https://www.samplecoffee.com.au/"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names samplecoffee.com.au as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  },
+  {
+    "id": "gota-v60-03-v60-03-single-pour",
+    "name": "Single Pour (Hario, V60 03)",
+    "shortName": "Hario V60 (Gota)",
+    "attribution": {
+      "person": "Hario",
+      "affiliation": "via Gota"
+    },
+    "category": "reference",
+    "brewer": "v60",
+    "brewerNotes": "V60 03 (large cone)",
+    "dose": {
+      "grams": 30
+    },
+    "water": {
+      "grams": 500,
+      "ratio": "1:16.7"
+    },
+    "temperature": {
+      "celsius": 93
+    },
+    "grind": {
+      "description": "medium (Gota's word; no grinder setting published)"
+    },
+    "pourSequence": [
+      {
+        "label": "Pour",
+        "action": "pour",
+        "waterGramsAtEnd": 500,
+        "notes": "Pour in a spiral to 500g."
+      },
+      {
+        "label": "Swirl",
+        "action": "swirl",
+        "notes": "Swirl gently to settle the bed flat."
+      },
+      {
+        "label": "Drawdown",
+        "action": "drain",
+        "durationSec": 124,
+        "notes": "Finish when the coffee stops dripping (the published total)."
+      }
+    ],
+    "totalTimeSec": 210,
+    "techniques": [
+      "spiral-pour",
+      "swirl-not-stir"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "medium",
+        "light"
+      ],
+      "goals": [
+        "balanced",
+        "sweetness-forward"
+      ]
+    },
+    "teaches": "Credited to Hario and linked to James Hoffmann's V60 video, this V60-03 brew uses one uninterrupted pour without a separate bloom. Its batch bed maintains contact for an even, dependable 2 count-cup result with balanced clarity.",
+    "science": "Mechanism not stated by Gota; the originator's own page may say more.",
+    "whenToUse": "A V60 recipe near 500 g, transcribed by Gota from youtube.com.",
+    "sources": [
+      {
+        "type": "article",
+        "citation": "Gota (gota.cafe) — \"Single Pour\" for V60 03 by Hario, transcribed by Gota from youtube.com",
+        "url": "https://gota.cafe/en/recipes/v60-03/v60-03-single-pour"
+      },
+      {
+        "type": "video",
+        "citation": "Hario — the originator page Gota names (youtube.com); not cross-checked by a session",
+        "url": "https://www.youtube.com/watch?v=AI4ynXzkSQo"
+      }
+    ],
+    "verified": false,
+    "notes": "Imported from gota.cafe on 2026-10-20 by scripts/gota-import.mjs. Gota names youtube.com as the originator; NOT cross-checked against it by a session. Gota's own pour seconds were dropped; each step's duration is the published window to the next step, so the clock is the published one."
+  }
+];

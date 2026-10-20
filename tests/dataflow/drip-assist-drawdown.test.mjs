@@ -151,8 +151,9 @@ test("disc selection excludes long-wait recipes; a normal lock keeps them", () =
   assert.ok(v60.has("v60"), "the disc method resolves to the v60 brewer");
   const base = { brewersAvailable: v60, lockedBrewers: v60, goal: "balanced", rotationSeed: 0 };
 
-  const withWaits = selectRecipes({ ...base, excludeLongWaits: false }, 50).map((s) => s.recipe.id);
-  const noWaits = selectRecipes({ ...base, excludeLongWaits: true }, 50).map((s) => s.recipe.id);
+  const withWaitsSel = selectRecipes({ ...base, excludeLongWaits: false }, 500);
+  const withWaits = withWaitsSel.map((s) => s.recipe.id);
+  const noWaits = selectRecipes({ ...base, excludeLongWaits: true }, 500).map((s) => s.recipe.id);
 
   // Present when NOT excluding (proves the flag is what removes them)...
   assert.ok(withWaits.includes("kasuya-mugen-flat"));
@@ -163,5 +164,10 @@ test("disc selection excludes long-wait recipes; a normal lock keeps them", () =
   // Plenty of ordinary V60 recipes remain, and a normal one survives.
   assert.ok(noWaits.length >= 20, `only ${noWaits.length} left — over-pruned`);
   assert.ok(noWaits.includes("kasuya-4-6-standard"));
-  assert.equal(withWaits.length - noWaits.length, 3, "exactly the 3 long-wait designs are removed");
+  // Exactly the long-wait designs are removed — the three named ones and, since
+  // the Gota import (2026-10-20), any imported V60 recipe whose published
+  // window between pours is that long; nothing else.
+  const removed = withWaitsSel.filter((s) => !noWaits.includes(s.recipe.id));
+  assert.ok(removed.length >= 3, `at least the 3 named designs: ${removed.length}`);
+  for (const s of removed) assert.ok(hasLongDesignedWait(s.recipe), `${s.recipe.id} removed without a long designed wait`);
 });

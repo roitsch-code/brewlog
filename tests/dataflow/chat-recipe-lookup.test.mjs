@@ -112,9 +112,9 @@ test("shortlist: today's angles followed by the FULL text of exactly those recip
   assert.equal(M.buildRecipeShortlist([], 20_000), "");
 });
 
-test("the cached chat prefix dropped from ~207k to under 60k chars (prompt + index)", () => {
+test("the cached chat prefix dropped from ~207k to under 90k chars (prompt + index; the Gota import of 2026-10-20 added ~150 index lines)", () => {
   const prefix = M.AGENT_SYSTEM_PROMPT.length + M.recipeLibraryBlock().length;
-  assert.ok(prefix < 60_000, `prefix is ${prefix} chars`);
+  assert.ok(prefix < 90_000, `prefix is ${prefix} chars`);
 });
 
 test("CONSUMERS: the tool exists and sits before suggest_navigation; the route dispatches it; the prompt tells the model to call it", async () => {

@@ -72,6 +72,8 @@ const CATEGORY_PRIORITY = Object.keys(CATEGORY_MAP);
 export const CAPS = { v60: 550, aeropress: 230, clever: 450, "kalita-wave": 450, chemex: 750, "orea-v4-wide": 450, "origami-cone": 350, "origami-wave": 350 };
 /** Batch-brewer floors (VESSEL_CAPS minMl): below this the vessel does not brew well. */
 export const FLOORS = { chemex: 350 };
+/** validateRecipe's dead-gap rule (src/lib/knowledge/recipes/helpers.ts LONG_DESIGNED_WAIT_SEC). */
+export const LONG_DESIGNED_WAIT_SEC = 75;
 
 export const ALLOWED_ACTIONS = new Set(["pour", "stir", "swirl", "wait", "press", "invert", "flip", "drain", "bypass", "melodrip", "agitate-bed"]);
 const TECHNIQUE_IDS_USED = ["bloom", "pulse-pouring", "continuous-pour", "spiral-pour", "central-pour", "immersion-steep", "aeropress-inversion", "concentrate-and-bypass", "swirl-not-stir"];
@@ -207,6 +209,21 @@ export function dropReason(p, map) {
   }
   if (Math.abs(cum - p.water) > 0.5) return "pour plan does not reach the water";
   if (steps.some((s) => s.tempC != null && s.tempC !== p.tempC)) return "staged temperature (single-temperature rule)";
+  if (!["aeropress", "clever"].includes(map.brewer)) {
+    // A rest over LONG_DESIGNED_WAIT_SEC between two pours is a stalled brew on
+    // a percolation brewer (validateRecipe's dead-gap rule); such a transcription
+    // would be dropped by the app's own guard, so it does not enter.
+    let rest = 0;
+    let sawPour = false;
+    for (const s of steps) {
+      const kind = stepKind(s);
+      if (kind === "pour" && s.cumGrams != null) {
+        if (sawPour && rest > LONG_DESIGNED_WAIT_SEC) return `rest over ${LONG_DESIGNED_WAIT_SEC} s between pours (dead gap)`;
+        sawPour = true;
+        rest = 0;
+      } else if (sawPour && kind !== "done" && s.windowSec != null) rest += s.windowSec;
+    }
+  }
   const cap = CAPS[map.brewer];
   if (cap && inVessel > cap) return `water over the ${map.brewer} cap (${cap} ml)`;
   const floor = FLOORS[map.brewer];
