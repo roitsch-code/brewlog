@@ -8,6 +8,12 @@
 
 ### ✅ Done
 
+#### 2026-10-27 — The post-brew line called the Orea an immersion brewer
+- **Reported (owner, screenshot):** after a 4★ Orea Apex brew (28 g / 450 g / 91 °C) the insight card said "that softness is the Orea doing what immersion brewers do best, and it tracks with your Clever's higher ratings". The Orea is a percolation cone.
+- **Cause:** `/api/brew-insight` gave Haiku only the bare name ("Method: Orea Apex") — nothing about what the brewer is — plus the log-wide background that mentions his Clever. `/api/coach-question` had the same bare line.
+- **Shipped:** `brewerRoleForMethod` + `formatMethodForPrompt` in `knowledge/brewers.ts` (keyed via `exactBrewerKey`, so each Orea bottom / Origami filter keeps its own role); both post-brew prompts now read "Orea Apex (percolation — Orea V4 Wide with the Apex bottom — flat bed; …)"; the brew-insight prompt also says never to swap percolation/immersion or credit the cup to another brewer from the background. Pinned by `tests/dataflow/post-brew-brewer-facts.test.mjs`.
+- **NOT verified:** Haiku's actual line on the next Orea brew — read it on the Summary card.
+
 #### 2026-10-20 — The Gota import, the scout's step-by-step gate, the verified source list
 - **Reported:** the Sonnet scout passed 0 of 8 candidates, then 1 (and that one with an invented third pour, caught by hand). The owner: an autonomous agent that composes recipes and names the source, no chat; first "a really, really good source list", then he asked whether gota.cafe is readable.
 - **Measured:** `docs/recipe-sources.md` — 237 source rows fetched from the runner on 2026-10-19 (own checker + four research passes): creators and where their recipe TEXT lives (a YouTube `watch` page through the reader proxy carries the description — Hoffmann writes the recipe there, Hedrick/Rowsell/Winton do not; the Data API needs an owner-created key), WBrC/WAC per person and year, makers, roasters by region, magazines, forums, German sources, dead ends. gota.cafe crawled: 1,059 recipes, 1,044 parsed, 953 with a named originator, 6 of 6 originator spot-checks matched; Gota's own additions identified (pour seconds, silent scalings, "Gota Team", clones, source-less templates). For his three emptiest cells (Orea bottoms, Origami wave 350, Moccamaster) Gota has next to nothing.
