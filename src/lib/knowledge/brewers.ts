@@ -12,6 +12,7 @@
  */
 import { VESSEL_CAPS, type VesselCap } from "../utils/vesselCapacity";
 import type { BrewerType } from "./recipes/types";
+import { exactBrewerKey } from "../utils/brewMethodKey";
 
 export type BrewerRoleKey =
   | "v60"
@@ -201,6 +202,33 @@ export function formatBrewerRolesBlock(): string {
     ...lines,
     "Write the method field exactly as the brewer is named here (an Orea always names its bottom; an Origami always names its filter).",
   ].join("\n");
+}
+
+/**
+ * The role for a method string as the flow or the chat writes it ("Orea Apex",
+ * "Orea V4 Classic", "V60 + Drip Assist", "Origami (cone)"). Keyed through
+ * exactBrewerKey so the Orea bottoms and Origami filters stay apart.
+ */
+export function brewerRoleForMethod(method?: string): BrewerRole | undefined {
+  const exact = exactBrewerKey(method).replace(/\+drip-assist$/, "");
+  const key = exact === "kalita" ? "kalita-wave" : exact === "orea" ? "orea-fast" : exact;
+  const role = BREWER_ROLE_BY_KEY.get(key as BrewerRoleKey);
+  if (role) return role;
+  // "Origami Air M" names no filter — still a percolation cone-or-wave, never immersion.
+  if (exact === "origami") return BREWER_ROLE_BY_KEY.get("origami-cone");
+  return undefined;
+}
+
+/**
+ * The method line for a short post-brew prompt: the name plus what the brewer
+ * IS. A bare "Orea Apex" let Haiku call the Orea an immersion brewer
+ * (2026-10-27); the style word is what stops that.
+ */
+export function formatMethodForPrompt(method?: string): string {
+  if (!method) return "unknown";
+  const role = brewerRoleForMethod(method);
+  if (!role) return method;
+  return `${method} (${role.style} — ${role.role})`;
 }
 
 /** One line per role for the chat / greeting prompts. */

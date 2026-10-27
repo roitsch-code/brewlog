@@ -4,6 +4,7 @@ import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { buildEscherTerrain } from "@/lib/claude/escher";
 import { resolveTerrain, clipToSentences } from "@/lib/claude/insightTerrain";
 import type { Session } from "@/lib/types/session";
+import { formatMethodForPrompt } from "@/lib/knowledge/brewers";
 
 export const dynamic = "force-dynamic";
 
@@ -202,7 +203,7 @@ Write 1–2 sentences of personal, specific insight about this coffee — what m
 This session:
 - Coffee: ${coffee.name} by ${coffee.roaster || "?"}
 - Origin: ${[coffee.origin, coffee.region].filter(Boolean).join(", ") || "unknown"} | Process: ${coffee.process || "unknown"}
-- Method: ${brewedMethod || "unknown"}
+- Method: ${formatMethodForPrompt(brewedMethod)}
 - Rating: ${result.rating}/5
 - Flavor notes: ${result.flavorNotes?.join(", ") || "none"}
 - Free notes: ${result.freeNotes || "none"}
@@ -210,7 +211,7 @@ ${brewedRecipe ? `- Recipe: ${brewedRecipe.doseGrams}g / ${brewedRecipe.waterGra
 ${brew?.grindSettingUsed ? `- Grind used: ${brew.grindSettingUsed}` : ""}
 ${brew?.followedAgitation ? `- Agitation: ${brew.followedAgitation}` : ""}
 ${history ? `\nBackground — a pattern across their whole log (use it only if it bears on THIS brew, never restate it): ${history}\n` : ""}
-Write 1–2 sentences (max 40 words) of personal, specific insight about this session. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis).
+Write 1–2 sentences (max 40 words) of personal, specific insight about this session. Describe the brewer only as the Method line says it is — never call a percolation brewer immersion, or the other way round, and never credit this cup to a different brewer from the background. No generic praise. No emojis. Speak like a knowledgeable coffee friend. Reference an expert only when it genuinely adds value (Rao, Perger, Gagné, Solis).
 
 Do NOT restate the recipe's temperature, dose, water, grind, or time back to the brewer — not as digits AND not as spelled-out words (never write "96", "ninety-six degrees", "15 grams", etc.). Give the DIRECTION to change instead (hotter/cooler, finer/coarser, longer/shorter, a richer/leaner ratio). The recipe line above is context for your reasoning only.`;
 

@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { parseClaudeJson } from "@/lib/claude/parseJson";
 import { loadRecentSessions } from "@/lib/claude/sessionCorpus";
 import { isRepeatQuestion } from "@/lib/coach/questionRepeat";
+import { formatMethodForPrompt } from "@/lib/knowledge/brewers";
 
 /**
  * Coach micro-dialogue. Called by LightStepLog AFTER the user has rated
@@ -127,7 +128,7 @@ export async function POST(req: NextRequest) {
     const asked = await alreadyAsked();
     const userMessage = [
       `Coffee: ${context.coffeeName ?? "unknown"}`,
-      context.methodUsed ? `Method: ${context.methodUsed}` : "",
+      context.methodUsed ? `Method: ${formatMethodForPrompt(context.methodUsed)}` : "",
       `Rating: ${context.rating ?? "?"}★`,
       "",
       "Signals that fired the question:",
