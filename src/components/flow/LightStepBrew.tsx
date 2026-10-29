@@ -26,6 +26,7 @@ import ColdBrewSteep from "@/components/flow/ColdBrewSteep";
 import { useAcaiaScale } from "@/hooks/useAcaiaScale";
 import { coachFlow, type WeightSample, type FlowComparison } from "@/lib/brew/flowCoach";
 import { analyzeFlow, type FlowCurvePoint } from "@/lib/brew/flowAnalysis";
+import { foldLiveMass, LIVE_MASS_START, type LiveMassState } from "@/lib/brew/liveMass";
 import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 
 /**
@@ -109,6 +110,11 @@ export default function LightStepBrew() {
   // returns (a swirl → ignore) or holds (a real vessel change → fold). So the
   // live path never counts a movement as flow.
   const tareBaselineRef = useRef<number | null>(null);
+  // Mass set onto the brewer after a pour reached its target (the Clever lid,
+  // a hand) — the live coach subtracts it; see liveMass.ts. `pourDoneRef` is
+  // written each render from the coach's own reading.
+  const liveMassRef = useRef<LiveMassState>(LIVE_MASS_START);
+  const pourDoneRef = useRef(false);
   const lastSampleMsRef = useRef(0);
   const lastCurveMsRef = useRef(0);
   const pushSample = useCallback((grams: number, atMs: number) => {
@@ -121,11 +127,14 @@ export default function LightStepBrew() {
     // starts (baseline still null) this is the raw reading — the live coach only
     // runs once started, so pre-start values are never compared to a target.
     const net = grams - (tareBaselineRef.current ?? 0);
+    if (brewStartMsRef.current > 0) {
+      liveMassRef.current = foldLiveMass(liveMassRef.current, grams, atMs, pourDoneRef.current);
+    }
     // Live-coach window: ~5 Hz, keep the last 6 s.
     if (atMs - lastSampleMsRef.current >= 200) {
       lastSampleMsRef.current = atMs;
       const buf = samplesRef.current;
-      buf.push({ atMs, grams: net });
+      buf.push({ atMs, grams: net - liveMassRef.current.offset });
       const cutoff = atMs - 6000;
       while (buf.length > 0 && buf[0].atMs < cutoff) buf.shift();
     }
@@ -149,6 +158,8 @@ export default function LightStepBrew() {
       fullCurveRef.current = [];
       brewStartMsRef.current = 0;
       tareBaselineRef.current = null;
+      liveMassRef.current = LIVE_MASS_START;
+      pourDoneRef.current = false;
       lastCurveMsRef.current = 0;
     }
   }, [elapsed]);
@@ -159,7 +170,9 @@ export default function LightStepBrew() {
   // nothing to "freeze" — the step advances on time. The top ScalePanel keeps the
   // RAW reading so it mirrors the physical Acaia; the pour cards show net water.
   const progressGrams =
-    scale.weight == null ? null : scale.weight - (tareBaselineRef.current ?? 0);
+    scale.weight == null
+      ? null
+      : scale.weight - (tareBaselineRef.current ?? 0) - liveMassRef.current.offset;
 
   // The current timeline, in a ref, so handleDone can analyse without being
   // re-created every render (timeline is a fresh object each render).
@@ -264,6 +277,9 @@ export default function LightStepBrew() {
     samplesRef.current,
     isDripAssistMethod(method),
   );
+  pourDoneRef.current =
+    coach.currentStepTargetG == null ||
+    (coach.liveGrams != null && coach.liveGrams >= coach.currentStepTargetG - 3);
   // Live Activity — live brew timer on the lock screen / Dynamic Island. The
   // timer + progress tick natively; the step label updates on step change.
   // Native-only no-op.

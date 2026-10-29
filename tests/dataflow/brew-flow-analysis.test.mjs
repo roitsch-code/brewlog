@@ -109,10 +109,52 @@ test("flow-rate + steadiness are computed", () => {
   assert.equal(a.finalGrams, 500);
 });
 
-test("overshoot is positive when the pour runs ahead of plan", () => {
-  // CURVE reaches each milestone earlier than the intended schedule → ahead.
-  const a = analyzeFlow(PERC, CURVE, 210);
-  assert.ok(a.overshootG > 0, `expected positive overshoot, got ${a.overshootG}`);
+// A 2 Hz curve like the live capture: each pour at 5 g/s, then flat rests.
+function hzCurve(segments) {
+  const out = [{ tSec: 0, grams: 0 }];
+  let g = 0;
+  let t = 0.5;
+  for (const [toGrams, untilSec] of segments) {
+    while (t <= untilSec) {
+      if (g < toGrams) g = Math.min(toGrams, g + 2.5);
+      out.push({ tSec: t, grams: g });
+      t += 0.5;
+    }
+  }
+  return out;
+}
+
+test("pouring AHEAD of the clock but stopping on every target is NOT an over-pour (owner, 2026-10-29)", () => {
+  // Each target reached early (fast hand), every rest flat on the target. The
+  // old metric (max of actual − planned-at-that-instant) called this +tens of g.
+  const early = hzCurve([[50, 30], [180, 60], [320, 100], [500, 200]]);
+  const a = analyzeFlow(PERC, early, 210);
+  assert.equal(a.overPourG, 0);
+  assert.equal(a.overshootG, undefined, "the legacy clock metric is no longer written");
+});
+
+test("a touch on the brewer (+35 g for one second, then back) is NOT an over-pour", () => {
+  const curve = hzCurve([[50, 30], [180, 60], [320, 100], [500, 200]]);
+  // Hand on the brewer during the last rest: ramps up and back over ~1.5 s,
+  // slow enough per sample that the jump filter does not see it.
+  for (const p of curve) {
+    if (p.tSec >= 150 && p.tSec <= 151.5) p.grams = 500 + 35 * (1 - Math.abs(p.tSec - 150.75) / 0.75);
+  }
+  const a = analyzeFlow(PERC, curve, 210);
+  assert.equal(a.overPourG, 0);
+});
+
+test("water that STAYS above a target is reported as the over-pour", () => {
+  // Pour 2 stops at 215 g instead of 180 g and sits there through the rest.
+  const curve = hzCurve([[50, 30], [215, 70], [320, 110], [500, 200]]);
+  const a = analyzeFlow(PERC, curve, 210);
+  assert.equal(a.overPourG, 35);
+});
+
+test("a final pour that ends 12 g heavy reads +12 g", () => {
+  const curve = hzCurve([[50, 30], [180, 60], [320, 100], [512, 200]]);
+  const a = analyzeFlow(PERC, curve, 210);
+  assert.equal(a.overPourG, 12);
 });
 
 test("samples are capped at 80", () => {
@@ -133,10 +175,10 @@ test("un-tared scale: a constant vessel offset is normalized out", () => {
   const a = analyzeFlow(PERC, untared, 210);
   const tared = analyzeFlow(PERC, CURVE, 210);
   assert.equal(a.finalGrams, tared.finalGrams); // 500, not ~1083
-  assert.equal(a.overshootG, tared.overshootG); // sane, not +583
+  assert.equal(a.overPourG, tared.overPourG); // sane, not +583
   assert.equal(a.avgFlowRateGPS, tared.avgFlowRateGPS); // ~5 g/s, not 56
   assert.equal(a.perPour[0].actualSec, 10); // reaches 50g at 10s, not t≈0
-  assert.ok(a.overshootG < 100, `overshoot should be sane, got ${a.overshootG}`);
+  assert.ok(a.overPourG == null || a.overPourG < 100, `over-pour should be sane, got ${a.overPourG}`);
 });
 
 test("a lone spike (bump / lift) is NOT judged as overshoot or an early reach", () => {
@@ -169,7 +211,7 @@ test("a lone spike (bump / lift) is NOT judged as overshoot or an early reach", 
   const a = analyzeFlow(PERC, clean, 210);
   const b = analyzeFlow(PERC, spiked, 210);
   // The spike doesn't inflate overshoot (without the guard b would be ~+150 more).
-  assert.ok(Math.abs(b.overshootG - a.overshootG) < 5, `spike leaked into overshoot: ${a.overshootG} vs ${b.overshootG}`);
+  assert.equal(b.overPourG, a.overPourG, `spike leaked into over-pour: ${a.overPourG} vs ${b.overPourG}`);
   // The 320g pour is still reached at 150s, not at the 65s bump.
   assert.equal(b.perPour[2].targetGrams, 320);
   assert.equal(b.perPour[2].actualSec, 150);
@@ -196,7 +238,7 @@ test("a carafe placed on the scale MID-BREW is a baseline shift, not poured wate
   assert.equal(a.finalGrams, 500, "final water must be 500g, not 800g");
   assert.equal(a.perPour[3].targetGrams, 500);
   assert.equal(a.perPour[3].actualSec, 180, "final pour reached at 180s, not early");
-  assert.ok(a.overshootG == null || a.overshootG < 100, `phantom overshoot: +${a.overshootG}g`);
+  assert.ok(a.overPourG == null || a.overPourG < 100, `phantom over-pour: +${a.overPourG}g`);
   assert.ok(a.avgFlowRateGPS != null && a.avgFlowRateGPS < 15, `absurd flow rate: ${a.avgFlowRateGPS} g/s`);
 });
 
@@ -264,10 +306,7 @@ test("a swirl lasting SECONDS is a transient, not a mass event", () => {
   // The brew is the same brew: the swirl must not change what was poured.
   assert.equal(b.finalGrams, a.finalGrams, "the swirl shifted the baseline");
   // …nor invent an overshoot…
-  assert.ok(
-    Math.abs(b.overshootG - a.overshootG) < 5,
-    `swirl leaked into overshoot: ${a.overshootG} vs ${b.overshootG}`,
-  );
+  assert.equal(b.overPourG, a.overPourG, `swirl leaked into over-pour: ${a.overPourG} vs ${b.overPourG}`);
   // …nor make a later pour look like it was hit during the swirl.
   assert.deepEqual(
     b.perPour.map((p) => p.actualSec),

@@ -103,11 +103,13 @@ export function formatTechniqueSummary(sessions: Session[]): string {
           `range ${Math.min(...rates).toFixed(1)}–${Math.max(...rates).toFixed(1)} g/s over ${rates.length} brews.`,
       );
     }
-    const over = measured.filter((s) => (s.brew!.flowAnalysis!.overshootG ?? 0) > OVERSHOOT_REPORT_G);
+    // overPourG only: the legacy overshootG measured running ahead of the
+    // clock, not water past a target, and is not evidence of anything.
+    const over = measured.filter((s) => (s.brew!.flowAnalysis!.overPourG ?? 0) > OVERSHOOT_REPORT_G);
     if (over.length > 0) {
       const rest = measured.filter((s) => !over.includes(s));
       pour.push(
-        `Ran more than ${OVERSHOOT_REPORT_G} g ahead of the plan in ${over.length} of ${measured.length} measured brews` +
+        `Poured more than ${OVERSHOOT_REPORT_G} g past a pour target in ${over.length} of ${measured.length} measured brews` +
           (rest.length >= 2
             ? ` (those average ${star(avg(over.map((s) => s.result!.rating)))}, the rest ${star(avg(rest.map((s) => s.result!.rating)))}).`
             : "."),

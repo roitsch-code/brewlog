@@ -49,7 +49,7 @@ function session({
   const flowAnalysis = cv != null || rate != null || overshoot != null
     ? { totalTimeSec: 200, targetTimeSec: 210, finalGrams: 250, perPour: [], avgFlowRateGPS: 2.4,
         avgPourRateGPS: rate ?? null, peakFlowRateGPS: 6, pourSteadiness: cv ?? null,
-        overshootG: overshoot ?? null, derivedFlow: "perfect", samples: [] }
+        overPourG: overshoot ?? null, derivedFlow: "perfect", samples: [] }
     : undefined;
   return {
     id: `s${seq}`,
@@ -94,7 +94,7 @@ test("evidence — pour steadiness, pace, overshoot, timing, adherence and blame
   assert.match(block, /2 even, 1 in between, 2 uneven; median CV 0\.20\./);
   assert.match(block, /Rating when the pour was even: 4\.5★ over 2; when uneven: 3\.0★ over 2\./);
   assert.match(block, /median 5\.0 g\/s, range 4\.2–6\.8 g\/s over 5 brews/);
-  assert.match(block, /Ran more than 15 g ahead of the plan in 2 of 5 measured brews \(those average 3\.0★, the rest 4\.3★\)/);
+  assert.match(block, /Poured more than 15 g past a pour target in 2 of 5 measured brews \(those average 3\.0★, the rest 4\.3★\)/);
   assert.match(block, /Own timing verdicts over 5 brews: 2 as expected \(4\.5★\), 2 faster than planned \(3\.0★\), 1 slower than planned \(4\.0★\)\./);
   assert.match(block, /Recipe adherence: 3 followed as written \(4\.3★\), 2 changed something \(3\.0★\)\./);
   assert.match(block, /What held a low-rated cup back \(his own verdict, 3 cups\): own execution 2, the recipe 1\./);

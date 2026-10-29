@@ -42,16 +42,16 @@ function session(flowAnalysis) {
 test("formatMeasuredPour labels channeling and stays silent without a curve", () => {
   assert.equal(formatMeasuredPour(undefined), "");
   assert.equal(formatMeasuredPour(null), "");
-  assert.match(formatMeasuredPour({ pourSteadiness: 0.42, overshootG: 22 }), /uneven — channeling risk/);
-  assert.match(formatMeasuredPour({ pourSteadiness: 0.42, overshootG: 22 }), /ran 22g ahead/);
-  assert.match(formatMeasuredPour({ pourSteadiness: 0.08, overshootG: 3 }), /even/);
-  // Overshoot below the report threshold is not named; a mid-range CV is unlabelled.
-  assert.doesNotMatch(formatMeasuredPour({ pourSteadiness: 0.25, overshootG: 3 }), /ahead|even|uneven/);
+  assert.match(formatMeasuredPour({ pourSteadiness: 0.42, overPourG: 22 }), /uneven — channeling risk/);
+  assert.match(formatMeasuredPour({ pourSteadiness: 0.42, overPourG: 22 }), /poured 22g past a target/);
+  assert.match(formatMeasuredPour({ pourSteadiness: 0.08, overPourG: 3 }), /even/);
+  // An over-pour below the report threshold is not named; a mid-range CV is unlabelled.
+  assert.doesNotMatch(formatMeasuredPour({ pourSteadiness: 0.25, overPourG: 3 }), /past a target|even|uneven/);
 });
 
 test("buildHistorySummary carries the measured pour into the /recommend prompt", () => {
-  const withCurve = buildHistorySummary([session({ pourSteadiness: 0.42, overshootG: 22 })]);
-  assert.match(withCurve, /measured pour: steadiness CV 0\.42 \(uneven — channeling risk\), ran 22g ahead/);
+  const withCurve = buildHistorySummary([session({ pourSteadiness: 0.42, overPourG: 22 })]);
+  assert.match(withCurve, /measured pour: steadiness CV 0\.42 \(uneven — channeling risk\), poured 22g past a target/);
 
   const noCurve = buildHistorySummary([session(undefined)]);
   assert.doesNotMatch(noCurve, /measured pour/);
