@@ -1,7 +1,7 @@
 /**
  * Post-brew flow analysis — turns the captured weight curve into objective
  * numbers that teach: did each pour land on time, was the pour steady or jerky
- * (channeling risk), did you overshoot, and was the whole brew too fast / too
+ * (channeling risk), did you pour past a target, and was the whole brew too fast / too
  * slow. The total-time judgment is the classic grind signal (the scale can't
  * see drawdown rate directly — mass is conserved when you're not pouring — so
  * total time vs target is how "drawdown too slow/fast" is diagnosed).
@@ -61,8 +61,17 @@ export interface FlowAnalysis {
   peakFlowRateGPS: number | null;
   /** Coefficient of variation of per-pour rates — lower = steadier (channeling risk when high). */
   pourSteadiness: number | null;
-  /** Max amount the actual curve ran ahead of the intended curve (g). */
-  overshootG: number | null;
+  /** How far the water SETTLED above a pour's target (g), the worst pour —
+   *  read off the first flat stretch (≥ SETTLE_SEC, ≤ RISE_G of movement)
+   *  after each target was reached, so pouring ahead of the clock or a
+   *  touch on the brewer is never counted. 0 = every pour stopped on its
+   *  target; null = no pour had a measurable rest. Written since 2026-10-29. */
+  overPourG?: number | null;
+  /** LEGACY (sessions before 2026-10-29): the most the curve ever ran ahead
+   *  of the planned CLOCK — not water above a target. A faster-than-planned
+   *  pour or a one-second touch read as "+35 g overshoot". No longer written
+   *  and read by nothing; kept so old rows still type-check. */
+  overshootG?: number | null;
   /** Measured total-time grade, replacing the self-reported flow. */
   derivedFlow: "too-fast" | "perfect" | "too-slow";
   /** Downsampled curve for storage / a sparkline. Capped. */
@@ -74,6 +83,28 @@ const REACH_TOL_G = 1.5; // treat the target as "reached" within this many grams
  *  above scale noise and a settling drip, below the first second of any pour. */
 const RISE_G = 3;
 const MAX_STORED_POINTS = 80;
+/** How long the level must sit still to count as where a pour ENDED. The
+ *  capture is 2 Hz, so this is ~6 samples: a hand on the brewer, a tap or a
+ *  swirl moves the reading inside any 3 s window and is never read as water. */
+const SETTLE_SEC = 3;
+
+/** The level the curve settled at after `fromSec` and before `limitSec`: the
+ *  median of the first SETTLE_SEC window whose readings move ≤ RISE_G. Null
+ *  when the level never sat still in that span (continuous pouring). */
+function settledLevel(curve: FlowCurvePoint[], fromSec: number, limitSec: number): number | null {
+  for (let i = 0; i < curve.length; i++) {
+    const t0 = curve[i].tSec;
+    if (t0 < fromSec) continue;
+    if (t0 + SETTLE_SEC > limitSec) break;
+    const win: number[] = [];
+    for (let j = i; j < curve.length && curve[j].tSec <= t0 + SETTLE_SEC; j++) win.push(curve[j].grams);
+    if (win.length < 2) continue;
+    if (Math.max(...win) - Math.min(...win) > RISE_G) continue;
+    win.sort((a, b) => a - b);
+    return win[Math.floor(win.length / 2)];
+  }
+  return null;
+}
 
 /**
  * Max plausible POURING rate between two samples. A kettle pours ≤~10 g/s (the
@@ -342,24 +373,23 @@ export function analyzeFlow(
     pourSteadiness = Math.sqrt(variance) / avgFlowRateGPS; // coefficient of variation
   }
 
-  // Max amount the actual curve ran ahead of the intended curve — but a point
-  // only counts if an adjacent sample corroborates it, so a lone spike (a bump,
-  // a BLE glitch) can't manufacture a phantom overshoot. `ahead[i]` is credited
-  // as min(ahead[i], best neighbour) → a one-sample outlier collapses to its
-  // (much lower) neighbour; a sustained run keeps its full height.
-  const ahead: (number | null)[] = curve.map((p) => {
-    const expected = expectedGramsAt(timeline, p.tSec);
-    return expected == null ? null : p.grams - expected;
+  // Over-pour = water that STAYED above a target. Per pour: the level the
+  // curve settled at after the target was reached and before the next target
+  // was, minus the target. Not the old "how far the curve ever ran ahead of
+  // the clock" — that called a faster-than-planned pour, or a one-second
+  // touch on the brewer, a "+35 g overshoot" (owner, 2026-10-29: "there
+  // wasn't"). A pour with no flat stretch before the next one is skipped.
+  let overPourG: number | null = null;
+  perPour.forEach((p, k) => {
+    if (p.actualSec == null) return;
+    const nextReach = perPour.slice(k + 1).find((q) => q.actualSec != null)?.actualSec;
+    const limit = nextReach ?? curve[curve.length - 1].tSec;
+    const level = settledLevel(curve, p.actualSec, limit);
+    if (level == null) return;
+    const over = Math.max(0, level - p.targetGrams);
+    if (overPourG == null || over > overPourG) overPourG = over;
   });
-  let overshootG: number | null = null;
-  for (let i = 0; i < ahead.length; i++) {
-    const a = ahead[i];
-    if (a == null) continue;
-    const neighbour = Math.max(ahead[i - 1] ?? -Infinity, ahead[i + 1] ?? -Infinity);
-    const corroborated = Number.isFinite(neighbour) ? Math.min(a, neighbour) : a;
-    if (overshootG == null || corroborated > overshootG) overshootG = corroborated;
-  }
-  if (overshootG != null) overshootG = Math.round(overshootG * 10) / 10;
+  if (overPourG != null) overPourG = Math.round(overPourG);
 
   return {
     totalTimeSec: actualTimeSec,
@@ -370,7 +400,7 @@ export function analyzeFlow(
     avgPourRateGPS: avgPourRateGPS != null ? Math.round(avgPourRateGPS * 10) / 10 : null,
     peakFlowRateGPS: peakFlowRateGPS != null ? Math.round(peakFlowRateGPS * 10) / 10 : null,
     pourSteadiness: pourSteadiness != null ? Math.round(pourSteadiness * 100) / 100 : null,
-    overshootG,
+    overPourG,
     derivedFlow: gradeFromTime(actualTimeSec, timeline.targetTimeSec),
     samples: downsample(curve),
   };
@@ -380,7 +410,7 @@ export function analyzeFlow(
 // parameters. pourSteadiness is the coefficient of variation of the per-pour
 // rates (lower = steadier). A CV at/below EVEN_CV reads as an even pour, at/above
 // UNEVEN_CV as an uneven one (a direct channeling signal); in between is left
-// unlabelled so a borderline pour isn't over-claimed. Overshoot is only worth
+// unlabelled so a borderline pour isn't over-claimed. An over-pour is only worth
 // naming above OVERSHOOT_REPORT_G — below that it's within normal pour variance.
 export const EVEN_POUR_CV = 0.15;
 export const UNEVEN_POUR_CV = 0.35;
@@ -389,7 +419,7 @@ export const OVERSHOOT_REPORT_G = 15;
 /**
  * Compact core summary of the MEASURED pour from a connected Acaia scale, for
  * the coach + recommend prompts. Until now this objective curve — steadiness
- * (channeling signal) and overshoot — was captured, stored, and read by NO
+ * (channeling signal) and over-pour — was captured, stored, and read by NO
  * prompt: only the coarse three-way `derivedFlow` reached the model. This turns
  * the real measurement into a phrase the model can reason on ("was that
  * thinness channeling, or the bean?"). Returns "" when no curve was captured;
@@ -407,8 +437,8 @@ export function formatMeasuredPour(fa: FlowAnalysis | undefined | null): string 
           : "";
     bits.push(`steadiness CV ${fa.pourSteadiness}${word}`);
   }
-  if (fa.overshootG != null && fa.overshootG > OVERSHOOT_REPORT_G) {
-    bits.push(`ran ${fa.overshootG}g ahead of plan`);
+  if (fa.overPourG != null && fa.overPourG > OVERSHOOT_REPORT_G) {
+    bits.push(`poured ${fa.overPourG}g past a target`);
   }
   return bits.join(", ");
 }

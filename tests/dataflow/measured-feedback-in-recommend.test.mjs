@@ -52,7 +52,7 @@ function session({ name = "Berry Swirl", roaster = "DAK", coachAnswer, flowAnaly
 }
 
 const ASKED = { question: "Was it sour-sharp, or just weak?", answer: "Just weak" };
-const UNEVEN = { pourSteadiness: 0.42, overshootG: 31 };
+const UNEVEN = { pourSteadiness: 0.42, overPourG: 31 };
 
 test("no qualifying session → empty string (prompt unchanged)", () => {
   assert.equal(buildMeasuredFeedback([session(), session()], CURRENT), "");
@@ -67,7 +67,7 @@ test("coachAnswer session appears with the verbatim Q→A", () => {
 
 test("flowAnalysis session appears with steadiness + overshoot", () => {
   const block = buildMeasuredFeedback([session({ flowAnalysis: UNEVEN })], CURRENT);
-  assert.match(block, /measured pour: steadiness CV 0\.42 \(uneven — channeling risk\), ran 31g ahead of plan/);
+  assert.match(block, /measured pour: steadiness CV 0\.42 \(uneven — channeling risk\), poured 31g past a target/);
 });
 
 test("current coffee's sessions come first, other bags after", () => {

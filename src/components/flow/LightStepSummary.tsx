@@ -10,7 +10,7 @@ import LightStarRating from "@/components/ui/light/StarRating";
 import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import Chip from "@/components/ui/light/Chip";
-import type { FlowAnalysis } from "@/lib/brew/flowAnalysis";
+import { OVERSHOOT_REPORT_G, type FlowAnalysis } from "@/lib/brew/flowAnalysis";
 import { isDripAssistMethod } from "@/lib/utils/dripAssist";
 import { insightRequestKey } from "@/lib/brew/insightKey";
 
@@ -562,12 +562,12 @@ function PourAnalysisCard({
         {(analysis.avgPourRateGPS ?? analysis.avgFlowRateGPS) != null && (
           <AnalysisStat label="Avg pour" value={`${analysis.avgPourRateGPS ?? analysis.avgFlowRateGPS} g/s`} />
         )}
-        {analysis.overshootG != null && (
+        {analysis.overPourG != null && (
           <AnalysisStat
-            label="Overshoot"
-            value={`+${Math.max(0, analysis.overshootG)}g`}
+            label="Over-pour"
+            value={analysis.overPourG >= 2 ? `+${analysis.overPourG}g` : "None"}
             accent={
-              !discMetered && analysis.overshootG > 20
+              !discMetered && analysis.overPourG > OVERSHOOT_REPORT_G
                 ? "text-light-accent-overtime"
                 : undefined
             }
