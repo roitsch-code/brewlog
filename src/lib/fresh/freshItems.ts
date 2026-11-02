@@ -48,7 +48,11 @@ export function freshRecipes(recipes: Recipe[], opts: { since?: number; waterMl?
     if (!Number.isFinite(t) || t < floor || t > now) continue;
     if (opts.since !== undefined && t <= opts.since) continue;
     const role = BREWER_TYPE_TO_ROLE.get(r.brewer);
-    if (role && opts.waterMl && reachFor(role, opts.waterMl).how === "not-for-this-size") continue;
+    // Only a brewer that HOLDS today's amount makes a recipe fresh for it. A
+    // 230 ml AeroPress recipe offered for a 350 g brew would be brewed as a
+    // concentrate + bypass — a different brew wearing its author's name
+    // (owner, 2026-11-02). It is fresh for a 230 ml brew, and only there.
+    if (role && opts.waterMl && reachFor(role, opts.waterMl).how !== "fits") continue;
     out.push({
       t,
       item: {
