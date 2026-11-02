@@ -31,6 +31,7 @@ export { MARKUS_ADDITIONS } from "./markusAdditions";
 export { OREA_WIDE_RECIPES } from "./oreaWide";
 export { SCOUTED_RECIPES } from "./scouted";
 export { GOTA_RECIPES } from "./gota";
+export { RELAYED_RECIPES } from "./relayed";
 
 export {
   ALL_RECIPES,
