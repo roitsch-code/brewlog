@@ -1,4 +1,4 @@
 # Bump this file (change the line below) and merge to main to kick an iOS
 # TestFlight build — see the `push` trigger in .github/workflows/ios-testflight.yml.
 # Used when a session cannot reach the Actions "Run workflow" UI / workflow_dispatch.
-build: 2026-08-29T02 — RETIRE the Apple Watch app: remove the BTTSWatch target + BrewWatchPlugin (background haptics never worked + drained the battery)
+build: 2026-11-02T01 — re-run the monthly TestFlight build after the owner accepted Apple's updated Program License Agreement (the 2026-11-01 scheduled run failed with "PLA Update available", no code change)
