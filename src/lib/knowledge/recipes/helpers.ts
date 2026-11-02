@@ -15,6 +15,7 @@ import { MARKUS_ADDITIONS } from "./markusAdditions";
 import { OREA_WIDE_RECIPES } from "./oreaWide";
 import { SCOUTED_RECIPES } from "./scouted";
 import { GOTA_RECIPES } from "./gota";
+import { RELAYED_RECIPES } from "./relayed";
 
 export const ALL_RECIPES: Recipe[] = [
   ...CHAMPIONSHIP_RECIPES,
@@ -22,6 +23,9 @@ export const ALL_RECIPES: Recipe[] = [
   ...EXPANDED_RECIPES,
   ...MARKUS_ADDITIONS,
   ...OREA_WIDE_RECIPES,
+  ...RELAYED_RECIPES,
+  // The two GENERATED files stay last — recipe-scout.test and gota-import.test
+  // pin this exact tail to prove the generated files are wired in.
   ...SCOUTED_RECIPES,
   ...GOTA_RECIPES,
 ];
