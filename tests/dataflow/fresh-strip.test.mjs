@@ -58,13 +58,20 @@ test("`since` narrows to what arrived after the last open", () => {
   assert.deepEqual(items.map((i) => i.key), ["recipe:a"]);
 });
 
-test("today's amount decides: a Moccamaster recipe is not fresh for a 350 g brew, an AeroPress one still is (concentrate + bypass)", () => {
+test("today's amount decides: only a brewer that HOLDS the amount makes a recipe fresh — a 230 ml AeroPress recipe is fresh at 230 g, never at 350 g (owner, 2026-11-02: no concentrate + bypass under an author's name)", () => {
   const recipes = [{ ...mocca, id: "m", addedAt: at(1) }, { ...aero, id: "ae", addedAt: at(1) }, { ...base, id: "v", addedAt: at(1) }];
   const keys = F.freshRecipes(recipes, { now: NOW, waterMl: 350 }).map((i) => i.key);
   assert.ok(!keys.includes("recipe:m"), keys.join(","));
-  assert.ok(keys.includes("recipe:ae"), keys.join(","));
+  assert.ok(!keys.includes("recipe:ae"), `an AeroPress recipe is not fresh for 350 g: ${keys.join(",")}`);
   assert.ok(keys.includes("recipe:v"));
+  assert.ok(F.freshRecipes(recipes, { now: NOW, waterMl: 230 }).map((i) => i.key).includes("recipe:ae"), "at 230 g it is");
   assert.ok(F.freshRecipes(recipes, { now: NOW, waterMl: 750 }).map((i) => i.key).includes("recipe:m"));
+  // The real entry that raised this: Arthur's (Cupsight) 230 ml AeroPress.
+  const arthur = F.ALL_RECIPES.find((r) => r.id === "cupsight-arthur-aeropress-upright-75c");
+  assert.ok(arthur, "the relayed recipe is in the corpus");
+  const now = Date.parse(arthur.addedAt) + day;
+  for (const w of [350, 450]) assert.equal(F.freshRecipes([arthur], { now, waterMl: w }).length, 0, `${w} g`);
+  assert.equal(F.freshRecipes([arthur], { now, waterMl: 230 }).length, 1);
 });
 
 test("an unverified (scouted) recipe says so in its line", () => {

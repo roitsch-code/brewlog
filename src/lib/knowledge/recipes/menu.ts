@@ -67,6 +67,12 @@ export const DEFAULT_LEAD_COUNT = 8;
 export const DEFAULT_LOCKED_LIMIT = 5;
 export const RECENCY_WINDOW = 10;
 
+/** A recipe whose author built it as a concentrate diluted in the cup — the
+ * only kind that serves an amount above its brewer's chamber. */
+export function isConcentrateBypass(recipe: Recipe): boolean {
+  return recipe.techniques.includes("concentrate-and-bypass") || recipe.pourSequence.some((s) => s.action === "bypass");
+}
+
 function hashKey(key: string): number {
   return Array.from(key).reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 }
@@ -94,10 +100,20 @@ export function buildBrewerMenu(input: BrewerMenuInput): BrewerMenu {
   });
 
   const entries: MenuEntry[] = roles.map((brewer) => {
-    const recipes = byRole.get(brewer.key) ?? [];
+    const reach = reachFor(brewer.key, input.targetWaterGrams);
+    const all = byRole.get(brewer.key) ?? [];
+    // Above the chamber only a recipe BUILT as concentrate + bypass is a recipe
+    // for this amount. A full-chamber recipe stretched past the chamber is a
+    // different brew wearing its author's name (owner, 2026-11-02: Arthur's
+    // 230 ml AeroPress is "not a recipe for that") — it stays in the index for
+    // its own size and leaves this entry. The brewer itself stays on the table.
+    const concentrate = reach.how === "concentrate-bypass";
+    const recipes = concentrate ? all.filter((s) => isConcentrateBypass(s.recipe)) : all;
     const best = recipes.length ? pickRepresentative(recipes, seed) : null;
+    // A concentrate's extraction water is the chamber's; the bypass fills the
+    // cup. Nothing about it scales to the cup size.
     const scaleFactor =
-      best && input.targetWaterGrams && best.recipe.water.grams > 0
+      !concentrate && best && input.targetWaterGrams && best.recipe.water.grams > 0
         ? input.targetWaterGrams / best.recipe.water.grams
         : 1;
     return {
@@ -106,7 +122,7 @@ export function buildBrewerMenu(input: BrewerMenuInput): BrewerMenu {
       recipes,
       best,
       scaleFactor,
-      reach: reachFor(brewer.key, input.targetWaterGrams),
+      reach,
       lastOffered: input.lastOffered?.get(brewer.key) ?? null,
       lead: false,
     };
@@ -151,9 +167,16 @@ export function formatMenuForPrompt(
   const target = menu.targetWaterGrams;
   const lines = menu.entries.map((e) => {
     const bits: string[] = [`- ${e.brewer.method}`];
-    if (!e.recipes.length) bits.push("no documented recipe for this brewer — adapt the nearest by geometry and say so");
-    else {
-      bits.push(`${e.recipes.length} recipe${e.recipes.length === 1 ? "" : "s"} fit`);
+    const concentrate = e.reach.how === "concentrate-bypass";
+    if (!e.recipes.length) {
+      bits.push(
+        concentrate
+          ? "no documented concentrate + bypass recipe for this brewer — its full-chamber recipes are for its own size, not this amount"
+          : "no documented recipe for this brewer — adapt the nearest by geometry and say so",
+      );
+    } else {
+      const n = e.recipes.length;
+      bits.push(concentrate ? `${n} concentrate + bypass recipe${n === 1 ? "" : "s"}` : `${n} recipe${n === 1 ? "" : "s"} fit`);
       if (e.best) {
         const b = e.best.recipe;
         const scale =
@@ -185,7 +208,8 @@ export function formatMenuForPrompt(
       i += 1;
       blocks.push(
         `${i}. ${formatRecipeForPrompt(s.recipe, {
-          scaleTo: target ? { targetWaterGrams: target, method: opts.method ?? e.brewer.method } : undefined,
+          // A concentrate is brewed at its own water; only the cup is bigger.
+          scaleTo: target && e.reach.how !== "concentrate-bypass" ? { targetWaterGrams: target, method: opts.method ?? e.brewer.method } : undefined,
           grinder: opts.grinder,
           label: `(${e.brewer.method})`,
         })}`,

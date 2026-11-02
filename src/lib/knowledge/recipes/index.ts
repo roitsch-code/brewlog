@@ -64,5 +64,5 @@ export {
 } from "./helpers";
 
 export type { RecipeSelectionInput, ScoredRecipe } from "./helpers";
-export { buildBrewerMenu, formatMenuForPrompt, formatRecipeIndexBlock } from "./menu";
+export { buildBrewerMenu, formatMenuForPrompt, formatRecipeIndexBlock, isConcentrateBypass } from "./menu";
 export type { BrewerMenu, MenuEntry } from "./menu";
