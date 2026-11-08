@@ -145,12 +145,59 @@ function sampleZone(
  * the same delta. Hues, saturation, lightness are untouched.
  */
 export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): string {
-  const zones = [...fieldZones.zones].sort((a, b) => b.weight - a.weight);
-  if (zones.length === 0) {
+  const layers = composeFieldLayers(fieldZones, rotationDeg);
+  if (!layers) {
     // Degenerate input — caller should have used DEFAULT_FIELD_ZONES.
     // Return a neutral warm cream so we never render transparent.
     return "hsl(30 60% 92%)";
   }
+  const pct = (n: number) => n.toFixed(0);
+  const radial = (r: FieldRadialLayer) =>
+    `radial-gradient(${r.shape === "circle" ? "circle" : `ellipse ${pct(r.rxPct)}% ${pct(r.ryPct)}%`} at ${pct(r.cxPct)}% ${pct(r.cyPct)}%, ${r.color} 0%, transparent ${pct(r.fadePct)}%)`;
+  const base = `linear-gradient(${pct(layers.base.angleDeg)}deg, ${layers.base.stops
+    .map((s) => `${s.color} ${pct(s.pct)}%`)
+    .join(", ")})`;
+  // CSS background-image is reverse-painter (first item = on top): ribbon
+  // over the two masses over the diagonal base.
+  return [...layers.radials].reverse().map(radial).concat(base).join(", ");
+}
+
+/** One colour stop of the Field's linear base. */
+export interface FieldGradientStop {
+  color: string;
+  pct: number;
+}
+
+/** One radial layer of the Field: a soft mass or ribbon fading to transparent. */
+export interface FieldRadialLayer {
+  shape: "circle" | "ellipse";
+  cxPct: number;
+  cyPct: number;
+  /** Ellipse radii in % of the viewport width / height (ellipse only). */
+  rxPct: number;
+  ryPct: number;
+  /** hsl(...) colour string carrying its own alpha. */
+  color: string;
+  /** The stop (in %) at which the layer is fully transparent. */
+  fadePct: number;
+}
+
+/** The Field as structured layers — what `composeFieldGradient` serialises to
+ * CSS and what a canvas painter (the shareable brew card) draws itself. */
+export interface FieldLayers {
+  /** CSS-angle linear base (0° = up, 90° = right). */
+  base: { angleDeg: number; stops: FieldGradientStop[] };
+  /** Painter order: the first is painted first (lowest). */
+  radials: FieldRadialLayer[];
+}
+
+/**
+ * The same composition as `composeFieldGradient`, as data. Null for the
+ * degenerate zero-zone input. Pure + deterministic.
+ */
+export function composeFieldLayers(fieldZones: FieldZones, rotationDeg = 0): FieldLayers | null {
+  const zones = [...fieldZones.zones].sort((a, b) => b.weight - a.weight);
+  if (zones.length === 0) return null;
 
   const mods = fieldZones.modifiers;
   const z0: ZoneWeight = zones[0];
@@ -173,26 +220,41 @@ export function composeFieldGradient(fieldZones: FieldZones, rotationDeg = 0): s
   const cA = baseDim(sampleZone(z0.id, 0.5, 0.85, 0.52));
   const cB = baseDim(sampleZone(z1.id, 0.5, 0.85, 0.6));
   const cC = z2 ? baseDim(sampleZone(z2.id, 0.5, 0.7, 0.6)) : cB;
-  const layerBase = `linear-gradient(${baseAngle.toFixed(0)}deg, ${hslToCss(cA)} 0%, ${hslToCss(cB)} 58%, ${hslToCss(cC)} 100%)`;
+  const base = {
+    angleDeg: baseAngle,
+    stops: [
+      { color: hslToCss(cA), pct: 0 },
+      { color: hslToCss(cB), pct: 58 },
+      { color: hslToCss(cC), pct: 100 },
+    ],
+  };
 
   // Corner mass A — deepen one end, set the diagonal seam (large + soft).
   const massA = applyMods(sampleZone(z0.id, 0.5, 1.0, 0.5), mods);
   const massAPos = rotatePos(16, 86, rotationDeg);
-  const layerMassA = `radial-gradient(circle at ${massAPos.x.toFixed(0)}% ${massAPos.y.toFixed(0)}%, ${hslToCss(massA, boostAlpha(0.78))} 0%, transparent 72%)`;
+  const layerMassA: FieldRadialLayer = {
+    shape: "circle", cxPct: massAPos.x, cyPct: massAPos.y, rxPct: 0, ryPct: 0,
+    color: hslToCss(massA, boostAlpha(0.78)), fadePct: 72,
+  };
 
   // Corner mass B — the second dominant colour into the opposite corner.
   const massB = applyMods(sampleZone(z1.id, 0.5, 0.95, 0.62), mods);
   const massBPos = rotatePos(88, 24, rotationDeg);
-  const layerMassB = `radial-gradient(circle at ${massBPos.x.toFixed(0)}% ${massBPos.y.toFixed(0)}%, ${hslToCss(massB, boostAlpha(0.68))} 0%, transparent 66%)`;
+  const layerMassB: FieldRadialLayer = {
+    shape: "circle", cxPct: massBPos.x, cyPct: massBPos.y, rxPct: 0, ryPct: 0,
+    color: hslToCss(massB, boostAlpha(0.68)), fadePct: 66,
+  };
 
   // Pale light-ribbon — broad soft highlight sweeping diagonally (depth).
   const ribbon = applyMods({ h: sampleZone(z0.id, 0.5, 0.5, 0.5).h, s: 38, l: 90 }, mods);
   const ribbonPos = rotatePos(58, 20, rotationDeg);
-  const layerRibbon = `radial-gradient(ellipse 78% 50% at ${ribbonPos.x.toFixed(0)}% ${ribbonPos.y.toFixed(0)}%, ${hslToCss(ribbon, 0.55)} 0%, transparent 60%)`;
+  const layerRibbon: FieldRadialLayer = {
+    shape: "ellipse", cxPct: ribbonPos.x, cyPct: ribbonPos.y, rxPct: 78, ryPct: 50,
+    color: hslToCss(ribbon, 0.55), fadePct: 60,
+  };
 
-  // CSS background-image is reverse-painter (first item = on top): ribbon
-  // over the two masses over the diagonal base.
-  return [layerRibbon, layerMassB, layerMassA, layerBase].join(", ");
+  // Painter order (lowest first): mass A, mass B, then the ribbon on top.
+  return { base, radials: [layerMassA, layerMassB, layerRibbon] };
 }
 
 export interface FieldBlob {
