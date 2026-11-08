@@ -5,14 +5,17 @@
  *
  * The background is the coffee's own Field, drawn from the SAME layer data the
  * app's background is composed from (`composeFieldLayers`), so the card wears
- * the bag's colours. Everything on top is the Light System at phone scale:
- * the card is an 844 pt phone screen drawn 1920 px tall (× 2.27), so every
- * size below is a Light token or primitive times that factor — the Hero (Fraunces 600
- * 40 px, leading 1.05, tracking −0.01 em), the Headline (Fraunces 3xl), the
- * `.label-eyebrow`, the detail page's Section title and Stat cell, the Card
- * radius (3xl), the two-line wordmark. Little on it, on purpose.
- * The colours are the Light tokens of tailwind.config.ts as literals — the
- * canvas cannot read a class. Keep both in step.
+ * the bag's colours. On it ONE object: a cream Card (card-default, rounded-3xl)
+ * holding a two-column list — label left, value right, the same grammar for
+ * the numbers and for the steps — between the coffee's name above and the
+ * wordmark below. No nested boxes, no uppercase labels, two type voices
+ * (Fraunces for the names, Chivo for the rest; Geist Mono only for the
+ * clock and the grams). Owner, 2026-11-08, on the first two layouts: "alles
+ * wie Kraut und Rüben, unruhig" — calm is the brief.
+ *
+ * Sizes are the Light tokens at phone scale: an 844 pt screen drawn 1920 px
+ * tall (× 2.27). Colours are the tokens of tailwind.config.ts as literals —
+ * the canvas cannot read a class. Keep both in step.
  */
 
 import { composeFieldLayers, fieldBlobColors } from "@/lib/field/composeGradient";
@@ -30,17 +33,13 @@ const px = (phonePx: number) => Math.round(phonePx * S);
 
 // ── Light tokens (tailwind.config.ts `light.*`, globals.css) ───────────────
 const INK = "hsl(0 0% 14%)"; // light-foreground
-const INK_90 = "hsl(0 0% 14% / 0.9)"; // .label-eyebrow colour
-const INK_80 = "hsl(0 0% 14% / 0.8)"; // text-light-foreground/80
 const INK_70 = "hsl(0 0% 14% / 0.7)"; // text-light-foreground/70
 const INK_15 = "hsl(0 0% 14% / 0.15)"; // border-light-foreground/15
-const MUTED = "hsl(0 0% 16%)"; // light-muted-foreground
 const GLASS = "hsl(36 55% 96% / 0.55)"; // light-card-default
 
 const GUTTER = px(20); // px-5
 const INNER_W = CARD_W - GUTTER * 2;
 const RADIUS_CARD = px(24); // rounded-3xl (Card)
-const RADIUS_STAT = px(16); // rounded-2xl (Stat cell)
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -143,16 +142,6 @@ function cardSurface(ctx: Ctx, x: number, y: number, w: number, h: number): void
   ctx.fill();
 }
 
-/** The detail page's `Stat` cell: cream glass, rounded-2xl, foreground/15 border. */
-function statSurface(ctx: Ctx, x: number, y: number, w: number, h: number): void {
-  roundRect(ctx, x, y, w, h, RADIUS_STAT);
-  ctx.fillStyle = GLASS;
-  ctx.fill();
-  ctx.lineWidth = px(1);
-  ctx.strokeStyle = INK_15;
-  ctx.stroke();
-}
-
 function wrap(ctx: Ctx, text: string, maxWidth: number, maxLines: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
@@ -189,176 +178,92 @@ function fitFont(ctx: Ctx, text: string, family: string, weight: number, start: 
   return min;
 }
 
-/** Tracked uppercase label. `letterSpacing` is a newer canvas property —
- * where it is missing the label simply loses its tracking. */
-function tracked(ctx: Ctx, str: string, x: number, y: number, font: string, color: string, spacingPx: number, align: CanvasTextAlign = "left"): void {
-  ctx.font = font;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.letterSpacing = `${spacingPx}px`;
-  ctx.fillText(str.toUpperCase(), x, y);
-  ctx.letterSpacing = "0px";
-  ctx.textAlign = "left";
-}
-
-/** `.label-eyebrow`: Chivo 600 11 px, 0.14 em, foreground/90. */
-function labelEyebrow(ctx: Ctx, f: Fonts, str: string, x: number, y: number): void {
-  const size = px(11);
-  tracked(ctx, str, x, y, `600 ${size}px ${f.chivo}`, INK_90, size * 0.14);
-}
-
-/** The detail page's Section title: text-xs uppercase tracking-widest muted. */
-function sectionTitle(ctx: Ctx, f: Fonts, str: string, x: number, y: number): void {
-  const size = px(12);
-  tracked(ctx, str, x, y, `400 ${size}px ${f.chivo}`, MUTED, size * 0.1);
-}
-
-/** The Stat cell label: text-[10px] uppercase tracking-widest muted, centred. */
-function statLabel(ctx: Ctx, f: Fonts, str: string, cx: number, y: number): void {
-  const size = px(10);
-  tracked(ctx, str, cx, y, `400 ${size}px ${f.chivo}`, MUTED, size * 0.1, "center");
-}
-
 async function loadFonts(f: Fonts): Promise<void> {
   if (typeof document === "undefined" || !("fonts" in document)) return;
   const faces = [
-    `600 ${px(40)}px ${f.fraunces}`,
-    `400 ${px(30)}px ${f.fraunces}`,
-    `400 ${px(14)}px ${f.chivo}`,
-    `500 ${px(14)}px ${f.chivo}`,
-    `600 ${px(11)}px ${f.chivo}`,
-    `500 ${px(18)}px ${f.mono}`,
+    `600 ${px(34)}px ${f.fraunces}`,
+    `400 ${px(26)}px ${f.fraunces}`,
+    `400 ${px(15)}px ${f.chivo}`,
+    `500 ${px(15)}px ${f.chivo}`,
+    `500 ${px(15)}px ${f.mono}`,
     `400 ${px(14)}px ${f.mono}`,
   ];
   await Promise.all(faces.map((face) => document.fonts.load(face).catch(() => undefined)));
 }
 
-/** A text run the layout either measures or paints — one code path for both. */
-interface Pen {
-  paint: boolean;
-  y: number;
+/** One row of the list: a label on the left, a value on the right. */
+interface Row {
+  label: string;
+  value: string;
+  /** Numbers set in mono-num; words in Chivo. */
+  mono: boolean;
+  /** A clock position in front of the label (the steps). */
+  at?: string;
 }
 
-function text(ctx: Ctx, pen: Pen, str: string, x: number, font: string, color: string, align: CanvasTextAlign = "left"): void {
-  if (!pen.paint) return;
-  ctx.font = font;
-  ctx.fillStyle = color;
-  ctx.textAlign = align;
-  ctx.fillText(str, x, pen.y);
-  ctx.textAlign = "left";
-}
-
-/** Panel 1 — brewer (Headline), recipe name, the four Stat cells, the grind.
- * Returns the panel height; with `paint` false nothing is drawn. */
-function panelRecipe(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, paint: boolean): number {
-  const pad = px(16);
-  const x = GUTTER + pad;
-  const w = INNER_W - pad * 2;
-  const pen: Pen = { paint, y: top + pad };
-
-  // Headline: font-fraunces text-3xl leading-none.
-  const headline = px(30);
-  pen.y += headline;
-  ctx.font = `400 ${headline}px ${f.fraunces}`;
-  text(ctx, pen, wrap(ctx, card.method, w, 1)[0], x, `400 ${headline}px ${f.fraunces}`, INK);
-  if (card.basedOn) {
-    // text-light-foreground/80 text-sm mt-1.5 font-medium — the reference this brew follows
-    const sm = px(14);
-    pen.y += px(6) + sm * 1.4;
-    ctx.font = `500 ${sm}px ${f.chivo}`;
-    text(ctx, pen, wrap(ctx, `After ${card.basedOn}`, w, 1)[0], x, `500 ${sm}px ${f.chivo}`, INK_80);
-  }
-  pen.y += px(16);
-
-  // Stat cells: Dose · Water · Ratio · Temp (gap-3).
-  const cells: { label: string; value: string }[] = [
-    { label: "Dose", value: `${card.doseG}g` },
-    { label: card.iceG ? "Hot water" : "Water", value: `${card.waterG}g` },
-    { label: "Ratio", value: card.ratio || "—" },
-    { label: "Temp", value: `${card.tempC}°C` },
+/** The whole list the card shows, in order: the numbers, a rule, the steps. */
+function rowsOf(card: BrewCardData): { numbers: Row[]; steps: Row[] } {
+  const numbers: Row[] = [
+    { label: "Dose", value: `${card.doseG}g`, mono: true },
+    { label: card.iceG ? "Hot water" : "Water", value: `${card.waterG}g`, mono: true },
   ];
-  const cellGap = px(12);
-  const cellW = (w - cellGap * 3) / 4;
-  const cellH = px(54);
-  if (paint) {
-    cells.forEach((c, i) => {
-      const cx = x + i * (cellW + cellGap);
-      statSurface(ctx, cx, pen.y, cellW, cellH);
-      statLabel(ctx, f, c.label, cx + cellW / 2, pen.y + px(18));
-      // font-mono-num text-lg font-medium
-      ctx.font = `500 ${px(18)}px ${f.mono}`;
-      ctx.fillStyle = INK;
-      ctx.textAlign = "center";
-      ctx.fillText(c.value, cx + cellW / 2, pen.y + px(41));
-      ctx.textAlign = "left";
-    });
-  }
-  pen.y += cellH;
-  if (card.iceG) {
-    pen.y += px(12) + px(14);
-    text(ctx, pen, `Onto ${card.iceG}g of ice · ${card.waterG + card.iceG}g in the cup`, x, `400 ${px(14)}px ${f.chivo}`, MUTED);
-  }
-
-  // Grind — one line: the word, then the chart's comparison, muted.
-  if (card.grind) {
-    pen.y += px(20);
-    if (paint) sectionTitle(ctx, f, "Grind", x, pen.y);
-    pen.y += px(10) + px(15);
-    const wordFont = `500 ${px(15)}px ${f.chivo}`;
-    text(ctx, pen, card.grind.word, x, wordFont, INK);
-    ctx.font = wordFont;
-    const wordW = ctx.measureText(card.grind.word).width;
-    text(ctx, pen, `· ${card.grind.like}`, x + wordW + px(4), `400 ${px(15)}px ${f.chivo}`, INK_70);
-  }
-  pen.y += pad;
-  return pen.y - top;
+  if (card.iceG) numbers.push({ label: "Ice", value: `${card.iceG}g`, mono: true });
+  numbers.push({ label: "Ratio", value: card.ratio || "—", mono: true });
+  numbers.push({ label: "Temperature", value: `${card.tempC}°C`, mono: true });
+  if (card.grind) numbers.push({ label: "Grind", value: `${card.grind.word}, ${card.grind.like}`, mono: false });
+  const steps: Row[] = card.steps.map((s) => ({ at: s.at, label: s.label, value: s.detail, mono: true }));
+  steps.push({ at: card.finish, label: "Done", value: "", mono: true });
+  return { numbers, steps };
 }
 
-/** Panel 2 — the steps. Sized to its rows inside `maxHeight`; the rows
- * shrink to 16 phone-px before any step is dropped. Returns the height. */
-function panelSteps(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, maxHeight: number): number {
-  const pad = px(16);
-  const headH = pad + px(12) + px(12);
-  const available = maxHeight - headH - pad;
-  const MIN_ROW = px(16);
-  const MAX_ROW = px(22);
-  const maxRows = Math.max(3, Math.floor(available / MIN_ROW));
-  let rows = card.steps;
-  if (rows.length > maxRows) {
-    rows = [...rows.slice(0, maxRows - 1), { at: "", label: `+ ${rows.length - maxRows + 1} more steps`, detail: "" }];
-  }
-  const rowH = Math.max(MIN_ROW, Math.min(MAX_ROW, Math.floor(available / Math.max(1, rows.length))));
-  const height = headH + rows.length * rowH + pad;
-  cardSurface(ctx, GUTTER, top, INNER_W, height);
-  let sy = top + pad + px(12);
-  sectionTitle(ctx, f, `Steps · done at ${card.finish}`, GUTTER + pad, sy);
-  sy += px(12);
-  // Card title size (text-[15px] font-medium) on roomy rows, text-sm when tight.
-  const fontPx = rowH >= px(22) ? px(15) : px(14);
-  const colAt = GUTTER + pad;
-  const colLabel = colAt + px(54);
-  const right = GUTTER + INNER_W - pad;
-  for (const s of rows) {
-    sy += rowH;
-    const base = sy - rowH * 0.3;
-    ctx.font = `500 ${fontPx}px ${f.mono}`;
-    ctx.fillStyle = MUTED;
-    ctx.fillText(s.at, colAt, base);
-    ctx.font = `400 ${fontPx}px ${f.mono}`;
-    const detailW = s.detail ? ctx.measureText(s.detail).width + px(14) : 0;
-    ctx.font = `500 ${fontPx}px ${f.chivo}`;
-    ctx.fillStyle = INK;
-    const labelX = s.at ? colLabel : colAt;
-    ctx.fillText(wrap(ctx, s.label, right - labelX - detailW, 1)[0], labelX, base);
-    if (s.detail) {
-      ctx.font = `400 ${fontPx}px ${f.mono}`;
-      ctx.fillStyle = MUTED;
+const ROW_H = px(30);
+const CARD_PAD = px(20);
+
+/** Measure the Card's height for its rows (header + rules + rows + padding). */
+function cardHeight(ctx: Ctx, f: Fonts, card: BrewCardData, rows: ReturnType<typeof rowsOf>): number {
+  let h = CARD_PAD;
+  h += px(26); // brewer, Fraunces 3xl-ish on its own line
+  if (card.basedOn) h += px(6) + px(15) * 1.4;
+  h += px(18); // to the first rule
+  h += px(12) + rows.numbers.length * ROW_H + px(12);
+  h += px(12) + rows.steps.length * ROW_H;
+  h += CARD_PAD;
+  void ctx;
+  void f;
+  return h;
+}
+
+function rule(ctx: Ctx, x: number, y: number, w: number): void {
+  ctx.fillStyle = INK_15;
+  ctx.fillRect(x, Math.round(y), w, Math.max(1, Math.round(px(0.5))));
+}
+
+function paintRows(ctx: Ctx, f: Fonts, rows: Row[], x: number, top: number, w: number): number {
+  let y = top;
+  const atW = px(52);
+  for (const r of rows) {
+    const base = y + ROW_H * 0.68;
+    let labelX = x;
+    if (r.at !== undefined) {
+      ctx.font = `400 ${px(14)}px ${f.mono}`;
+      ctx.fillStyle = INK_70;
+      ctx.fillText(r.at, x, base);
+      labelX = x + atW;
+    }
+    ctx.font = r.mono ? `500 ${px(15)}px ${f.mono}` : `500 ${px(15)}px ${f.chivo}`;
+    const valueW = r.value ? ctx.measureText(r.value).width : 0;
+    if (r.value) {
+      ctx.fillStyle = r.at !== undefined ? INK_70 : INK;
       ctx.textAlign = "right";
-      ctx.fillText(s.detail, right, base);
+      ctx.fillText(r.value, x + w, base);
       ctx.textAlign = "left";
     }
+    ctx.font = r.at !== undefined ? `500 ${px(15)}px ${f.chivo}` : `400 ${px(15)}px ${f.chivo}`;
+    ctx.fillStyle = r.at !== undefined ? INK : INK_70;
+    ctx.fillText(wrap(ctx, r.label, w - (labelX - x) - valueW - px(12), 1)[0], labelX, base);
+    y += ROW_H;
   }
-  return height;
+  return y;
 }
 
 /**
@@ -377,50 +282,77 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   paintField(ctx, fieldZones ?? DEFAULT_FIELD_ZONES);
   ctx.textBaseline = "alphabetic";
 
-  // ── Hero: eyebrow (roaster), the coffee, origin ───────────────────────
-  let y = px(44);
+  // ── Header: roaster, the coffee ───────────────────────────────────────
+  let y = px(56);
   if (card.roaster) {
-    labelEyebrow(ctx, f, card.roaster, GUTTER, y);
-    y += px(12); // mb-3
+    ctx.font = `500 ${px(14)}px ${f.chivo}`;
+    ctx.fillStyle = INK_70;
+    ctx.fillText(wrap(ctx, card.roaster, INNER_W, 1)[0], GUTTER, y);
+    y += px(10);
   }
-  // font-fraunces font-semibold text-[40px] leading-[1.05] tracking-[-0.01em]
-  const heroSize = fitFont(ctx, card.name, f.fraunces, 600, px(40), px(26), INNER_W, 2);
-  ctx.font = `600 ${heroSize}px ${f.fraunces}`;
+  const nameSize = fitFont(ctx, card.name, f.fraunces, 600, px(34), px(24), INNER_W, 2);
+  ctx.font = `600 ${nameSize}px ${f.fraunces}`;
   ctx.fillStyle = INK;
-  ctx.letterSpacing = `${-0.01 * heroSize}px`;
-  const heroLines = wrap(ctx, card.name, INNER_W, 2);
-  y += heroSize * 0.85;
-  for (const l of heroLines) {
+  ctx.letterSpacing = `${-0.01 * nameSize}px`;
+  const nameLines = wrap(ctx, card.name, INNER_W, 2);
+  y += nameSize * 0.85;
+  for (const l of nameLines) {
     ctx.fillText(l, GUTTER, y);
-    y += heroSize * 1.05;
+    y += nameSize * 1.05;
   }
   ctx.letterSpacing = "0px";
-  y -= heroSize * 1.05;
-  y += px(24);
+  const headerBottom = y - nameSize * 1.05 + px(8);
 
-  // ── Panel 1 (measure, surface, paint) ─────────────────────────────────
-  const p1Top = y;
-  const p1H = panelRecipe(ctx, f, card, p1Top, false);
-  cardSurface(ctx, GUTTER, p1Top, INNER_W, p1H);
-  panelRecipe(ctx, f, card, p1Top, true);
-  y = p1Top + p1H + px(12); // gap-3 between cards
-
-  // ── Footer geometry: the two-line wordmark and the date ──────────────
-  const wordmarkSize = px(30); // font-fraunces text-3xl leading-[1.05]
+  // ── Footer geometry ───────────────────────────────────────────────────
+  const wordmarkSize = px(26);
   const footerH = wordmarkSize * 1.05 * 2;
-  const footerTop = CARD_H - px(32) - footerH;
+  const footerTop = CARD_H - px(36) - footerH;
 
-  // ── Panel 2: the steps ────────────────────────────────────────────────
-  panelSteps(ctx, f, card, y, footerTop - px(24) - y);
+  // ── The Card, centred between header and footer ───────────────────────
+  const rows = rowsOf(card);
+  const maxH = footerTop - px(24) - (headerBottom + px(24));
+  // Too many steps for one screen: keep the first ones and say how many follow.
+  const maxStepRows = Math.max(3, Math.floor((maxH - cardHeight(ctx, f, card, { numbers: rows.numbers, steps: [] })) / ROW_H));
+  if (rows.steps.length > maxStepRows) {
+    const kept = rows.steps.slice(0, maxStepRows - 1);
+    kept.push({ label: `${rows.steps.length - kept.length} more steps`, value: "", mono: false, at: "" });
+    rows.steps = kept;
+  }
+  const cardH = Math.min(maxH, cardHeight(ctx, f, card, rows));
+  const cardTop = Math.round(headerBottom + px(24) + (maxH - cardH) / 2);
+  cardSurface(ctx, GUTTER, cardTop, INNER_W, cardH);
 
-  // ── Footer ────────────────────────────────────────────────────────────
+  const x = GUTTER + CARD_PAD;
+  const w = INNER_W - CARD_PAD * 2;
+  let cy = cardTop + CARD_PAD;
+  // Brewer (Fraunces), the reference under it.
+  cy += px(26) * 0.78;
+  ctx.font = `400 ${px(26)}px ${f.fraunces}`;
+  ctx.fillStyle = INK;
+  ctx.fillText(wrap(ctx, card.method, w, 1)[0], x, cy);
+  cy += px(26) * 0.22;
+  if (card.basedOn) {
+    cy += px(6) + px(15) * 1.4;
+    ctx.font = `400 ${px(15)}px ${f.chivo}`;
+    ctx.fillStyle = INK_70;
+    ctx.fillText(wrap(ctx, `After ${card.basedOn}`, w, 1)[0], x, cy - px(15) * 0.3);
+  }
+  cy += px(18);
+  rule(ctx, x, cy, w);
+  cy += px(12);
+  cy = paintRows(ctx, f, rows.numbers, x, cy, w);
+  cy += px(12);
+  rule(ctx, x, cy, w);
+  cy += px(12);
+  paintRows(ctx, f, rows.steps, x, cy, w);
+
+  // ── Footer: the wordmark, the date ────────────────────────────────────
   let fy = footerTop + wordmarkSize * 0.85;
   ctx.font = `400 ${wordmarkSize}px ${f.fraunces}`;
   ctx.fillStyle = INK;
   ctx.fillText("Better taste", GUTTER, fy);
   fy += wordmarkSize * 1.05;
   ctx.fillText("than sorry.", GUTTER, fy);
-  // Date: text-light-foreground/70 text-xs, on the wordmark's last line.
   ctx.font = `400 ${px(12)}px ${f.chivo}`;
   ctx.fillStyle = INK_70;
   ctx.textAlign = "right";
