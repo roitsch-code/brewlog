@@ -314,7 +314,7 @@ function panelRecipe(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, paint:
     // text-light-foreground/80 text-sm mt-1.5 font-medium
     const sm = px(14);
     ctx.font = `500 ${sm}px ${f.chivo}`;
-    const lines = wrap(ctx, card.recipeName, w, 1);
+    const lines = wrap(ctx, card.recipeName, w, 2);
     pen.y += px(6);
     for (const l of lines) {
       pen.y += sm * 1.4;
@@ -356,11 +356,17 @@ function panelRecipe(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, paint:
   pen.y += px(18);
   if (paint) sectionTitle(ctx, f, "Grind", x, pen.y);
   pen.y += px(10) + px(18);
-  const grindLine = card.grind.grinder ? `${card.grind.value}  ${card.grind.grinder}` : card.grind.value;
-  text(ctx, pen, grindLine, x, `500 ${px(18)}px ${f.mono}`, INK);
+  text(ctx, pen, card.grind.value, x, `500 ${px(18)}px ${f.mono}`, INK);
+  if (card.grind.grinder) {
+    ctx.font = `500 ${px(18)}px ${f.mono}`;
+    const valueW = ctx.measureText(card.grind.value).width;
+    // text-light-foreground/70 text-sm beside the number
+    text(ctx, pen, card.grind.grinder, x + valueW + px(8), `400 ${px(14)}px ${f.chivo}`, INK_70);
+  }
   if (card.grind.alsoOn) {
-    pen.y += px(20);
-    text(ctx, pen, `≈ ${card.grind.alsoOn}`, x, `400 ${px(13)}px ${f.mono}`, MUTED);
+    // text-light-muted-foreground text-xs (the page's "Actual time" line)
+    pen.y += px(18);
+    text(ctx, pen, `About ${card.grind.alsoOn}`, x, `400 ${px(12)}px ${f.chivo}`, MUTED);
   }
   if (card.grind.description) {
     // text-light-foreground/75 text-sm leading-relaxed (the page's quote style)

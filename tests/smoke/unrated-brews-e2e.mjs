@@ -118,8 +118,19 @@ async function main() {
   // 5. Dismiss keeps the brew but drops the reminder.
   await parkBrew(page, "E2E Gesha");
   await page.goto(`${BASE}/brew/unrated`, { waitUntil: "domcontentloaded" });
+  // The "Dismissed" section is ALREADY on the page here (step 0 dismissed the
+  // rescued draft), so waiting for its heading proves nothing — wait for the
+  // PATCH this click sends and for the row to flip to "Remind me" instead.
+  // Reading the API before the PATCH landed was a race (CI run 461, 2026-11-08).
+  const patch = page.waitForResponse(
+    (r) => /\/api\/pending-brews\/[^/]+$/.test(r.url()) && r.request().method() === "PATCH",
+    { timeout: 60000 },
+  );
   await page.getByRole("button", { name: "Dismiss" }).first().click({ timeout: 60000 });
+  const patchRes = await patch;
+  assert.equal(patchRes.status(), 200, `pending-brews PATCH → ${patchRes.status()}`);
   await page.getByText("Dismissed", { exact: true }).waitFor({ timeout: 15000 });
+  await page.getByRole("button", { name: "Remind me" }).first().waitFor({ timeout: 15000 });
   open = await json(ctx, "/api/pending-brews");
   assert.ok(!open.some((r) => r.coffeeName === "E2E Gesha"), "dismissed brew still counted on Home");
   const all = await json(ctx, "/api/pending-brews?all=true");
