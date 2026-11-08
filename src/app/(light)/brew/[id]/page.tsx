@@ -6,6 +6,7 @@ import CoffeeBeanGlow from "@/components/ui/light/CoffeeBeanGlow";
 import StarRating from "@/components/ui/light/StarRating";
 import BrewMethodIcon from "@/components/ui/BrewMethodIcon";
 import NavigationOverlay from "@/components/ui/light/NavigationOverlay";
+import ShareBrewCardButton from "@/components/session/ShareBrewCard";
 import type { Session } from "@/lib/types/session";
 import type { Coffee } from "@/lib/types/coffee";
 import { resolveBrewedRecipe, brewedRecipeName } from "@/lib/utils/resolveRecipe";
@@ -152,6 +153,10 @@ export default function SessionDetailPage() {
         >
           <Menu className="w-5 h-5" strokeWidth={1.5} />
         </button>
+
+        {/* Share — the brew as a one-screen card (PNG) for someone with the
+            same bag. Only when there is a recipe to put on it. */}
+        {recipe && <ShareBrewCardButton sessionId={session.id} />}
 
         {/* Headline overlay — brew method is the primary fact for a
             session detail; coffee name + date sit as context underneath. */}
