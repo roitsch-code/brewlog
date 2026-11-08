@@ -191,6 +191,16 @@ async function loadFonts(f: Fonts): Promise<void> {
   await Promise.all(faces.map((face) => document.fonts.load(face).catch(() => undefined)));
 }
 
+/** Draw `str` so its INK starts at `x` — every face has its own side
+ * bearing, so lines set at the same origin never sit on one line. */
+function flush(ctx: Ctx, str: string, x: number, y: number, font: string, color: string): void {
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = "left";
+  const m = ctx.measureText(str);
+  ctx.fillText(str, x + m.actualBoundingBoxLeft, y);
+}
+
 /** One row of the list: a label on the left, a value on the right. */
 interface Row {
   label: string;
@@ -245,9 +255,7 @@ function paintRows(ctx: Ctx, f: Fonts, rows: Row[], x: number, top: number, w: n
     const base = y + ROW_H * 0.68;
     let labelX = x;
     if (r.at !== undefined) {
-      ctx.font = `400 ${px(14)}px ${f.mono}`;
-      ctx.fillStyle = INK_70;
-      ctx.fillText(r.at, x, base);
+      flush(ctx, r.at, x, base, `400 ${px(14)}px ${f.mono}`, INK_70);
       labelX = x + atW;
     }
     ctx.font = r.mono ? `500 ${px(15)}px ${f.mono}` : `500 ${px(15)}px ${f.chivo}`;
@@ -258,9 +266,9 @@ function paintRows(ctx: Ctx, f: Fonts, rows: Row[], x: number, top: number, w: n
       ctx.fillText(r.value, x + w, base);
       ctx.textAlign = "left";
     }
-    ctx.font = r.at !== undefined ? `500 ${px(15)}px ${f.chivo}` : `400 ${px(15)}px ${f.chivo}`;
-    ctx.fillStyle = r.at !== undefined ? INK : INK_70;
-    ctx.fillText(wrap(ctx, r.label, w - (labelX - x) - valueW - px(12), 1)[0], labelX, base);
+    const labelFont = r.at !== undefined ? `500 ${px(15)}px ${f.chivo}` : `400 ${px(15)}px ${f.chivo}`;
+    ctx.font = labelFont;
+    flush(ctx, wrap(ctx, r.label, w - (labelX - x) - valueW - px(12), 1)[0], labelX, base, labelFont, r.at !== undefined ? INK : INK_70);
     y += ROW_H;
   }
   return y;
@@ -282,22 +290,24 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   paintField(ctx, fieldZones ?? DEFAULT_FIELD_ZONES);
   ctx.textBaseline = "alphabetic";
 
+  // ── ONE text column for everything: the card's inner edge ─────────────
+  const col = GUTTER + CARD_PAD;
+  const colW = INNER_W - CARD_PAD * 2;
+
   // ── Header: roaster, the coffee ───────────────────────────────────────
   let y = px(56);
   if (card.roaster) {
     ctx.font = `500 ${px(14)}px ${f.chivo}`;
-    ctx.fillStyle = INK_70;
-    ctx.fillText(wrap(ctx, card.roaster, INNER_W, 1)[0], GUTTER, y);
+    flush(ctx, wrap(ctx, card.roaster, colW, 1)[0], col, y, `500 ${px(14)}px ${f.chivo}`, INK_70);
     y += px(10);
   }
-  const nameSize = fitFont(ctx, card.name, f.fraunces, 600, px(34), px(24), INNER_W, 2);
+  const nameSize = fitFont(ctx, card.name, f.fraunces, 600, px(34), px(24), colW, 2);
   ctx.font = `600 ${nameSize}px ${f.fraunces}`;
-  ctx.fillStyle = INK;
   ctx.letterSpacing = `${-0.01 * nameSize}px`;
-  const nameLines = wrap(ctx, card.name, INNER_W, 2);
+  const nameLines = wrap(ctx, card.name, colW, 2);
   y += nameSize * 0.85;
   for (const l of nameLines) {
-    ctx.fillText(l, GUTTER, y);
+    flush(ctx, l, col, y, `600 ${nameSize}px ${f.fraunces}`, INK);
     y += nameSize * 1.05;
   }
   ctx.letterSpacing = "0px";
@@ -328,14 +338,12 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   // Brewer (Fraunces), the reference under it.
   cy += px(26) * 0.78;
   ctx.font = `400 ${px(26)}px ${f.fraunces}`;
-  ctx.fillStyle = INK;
-  ctx.fillText(wrap(ctx, card.method, w, 1)[0], x, cy);
+  flush(ctx, wrap(ctx, card.method, w, 1)[0], x, cy, `400 ${px(26)}px ${f.fraunces}`, INK);
   cy += px(26) * 0.22;
   if (card.subtitle) {
     cy += px(6) + px(15) * 1.4;
     ctx.font = `400 ${px(15)}px ${f.chivo}`;
-    ctx.fillStyle = INK_70;
-    ctx.fillText(wrap(ctx, card.subtitle, w, 1)[0], x, cy - px(15) * 0.3);
+    flush(ctx, wrap(ctx, card.subtitle, w, 1)[0], x, cy - px(15) * 0.3, `400 ${px(15)}px ${f.chivo}`, INK_70);
   }
   cy += px(18);
   rule(ctx, x, cy, w);
@@ -348,11 +356,9 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
 
   // ── Footer: the wordmark ──────────────────────────────────────────────
   let fy = footerTop + wordmarkSize * 0.85;
-  ctx.font = `400 ${wordmarkSize}px ${f.fraunces}`;
-  ctx.fillStyle = INK;
-  ctx.fillText("Better taste", GUTTER, fy);
+  flush(ctx, "Better taste", col, fy, `400 ${wordmarkSize}px ${f.fraunces}`, INK);
   fy += wordmarkSize * 1.05;
-  ctx.fillText("than sorry.", GUTTER, fy);
+  flush(ctx, "than sorry.", col, fy, `400 ${wordmarkSize}px ${f.fraunces}`, INK);
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/png");
