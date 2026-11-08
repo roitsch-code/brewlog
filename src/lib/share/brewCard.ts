@@ -126,8 +126,11 @@ export function buildCardGrind(args: { grindSize: string | undefined; grinder: s
   return deg == null ? undefined : grindWordsFromAnchor(deg, args.waterG);
 }
 
-function stepLabel(label: string, action: string): string {
-  const l = label.trim();
+/** The step's label; a corpus label's own "(→ 50 g)" / "(50 g)" tail is
+ * dropped when the grams column says the same thing. */
+function stepLabel(label: string, action: string, hasGrams = false): string {
+  let l = label.trim();
+  if (hasGrams) l = l.replace(/\s*\((?:→|->)?\s*\d+(?:[.,]\d+)?\s*g\)\s*$/i, "").trim();
   if (l) return l;
   return action.charAt(0).toUpperCase() + action.slice(1);
 }
@@ -147,10 +150,11 @@ export function buildBrewCardData(session: Session, now: number = Date.now()): B
   if (timeline.shape === "percolation" && timeline.pourSteps) {
     for (const s of timeline.pourSteps) {
       const isWater = s.action === "bloom" || s.action === "pour" || s.action === "final";
+      const hasGrams = isWater && s.pourGrams > 0;
       steps.push({
         at: formatSeconds(Math.round(s.startTimeSec)),
-        label: stepLabel(s.label, s.action),
-        detail: isWater && s.pourGrams > 0 ? `+${Math.round(s.pourGrams)}g → ${Math.round(s.cumulativeGrams)}g` : "",
+        label: stepLabel(s.label, s.action, hasGrams),
+        detail: hasGrams ? `+${Math.round(s.pourGrams)}g → ${Math.round(s.cumulativeGrams)}g` : "",
       });
     }
     if (timeline.drawdownSec > 0) {
@@ -168,7 +172,7 @@ export function buildBrewCardData(session: Session, now: number = Date.now()): B
             : "";
       steps.push({
         at: s.isSetup ? "" : formatSeconds(Math.round(s.startSec)),
-        label: stepLabel(s.label, s.action),
+        label: stepLabel(s.label, s.action, typeof grams === "number" && grams > 0),
         detail,
       });
     }

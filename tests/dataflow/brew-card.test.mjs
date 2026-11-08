@@ -105,6 +105,14 @@ test("the steps come from the composed timeline, with the clock and a drawdown r
   );
 });
 
+test("a corpus label's own \"(→ 50g)\" tail is dropped when the grams column shows it", () => {
+  const rec = session().recommendation;
+  const tl = { ...TIMELINE, steps: [{ ...TIMELINE.steps[0], label: "Bloom (→ 60g)" }, ...TIMELINE.steps.slice(1)] };
+  const s = session({ recommendation: { ...rec, candidates: [rec.candidates[0], { ...rec.candidates[1], recipe: { ...rec.candidates[1].recipe, timeline: tl } }] } });
+  const card = M.buildBrewCardData(s, Date.parse("2026-11-08T07:00:00Z"));
+  assert.deepEqual([card.steps[0].label, card.steps[0].detail], ["Bloom", "+60g → 60g"]);
+});
+
 test("a swirl or stir is its own row at its clock position, without grams", () => {
   const withSwirl = {
     ...TIMELINE,
