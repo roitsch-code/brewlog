@@ -110,8 +110,7 @@ export default function ShareBrewCardButton({ sessionId }: { sessionId: string }
               <img
                 src={state.url}
                 alt="The brew as a card"
-                className="max-h-full max-w-full rounded-2xl shadow-light-float"
-                style={{ aspectRatio: "9 / 16" }}
+                className="max-h-full max-w-full aspect-[9/16] rounded-3xl shadow-light-float"
               />
             )}
           </div>
