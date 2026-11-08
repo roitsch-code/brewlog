@@ -23,7 +23,7 @@
 import type { Session } from "@/lib/types/session";
 import { resolveBrewedRecipe } from "@/lib/utils/resolveRecipe";
 import { buildBrewTimeline } from "@/lib/brew/timeline";
-import { formatSeconds, formatDuration, formatDate } from "@/lib/utils/formatTime";
+import { formatSeconds, formatDuration } from "@/lib/utils/formatTime";
 import { isComandante, clicksToNiche } from "@/lib/utils/grindUnit";
 import { NICHE_GRIND_SETTINGS, batchGrindDeltaDeg } from "@/lib/constants/grindSettings";
 import { basedOnReference } from "@/lib/utils/resolveRecipe";
@@ -47,8 +47,9 @@ export interface BrewCardData {
   roaster: string;
   name: string;
   method: string;
-  /** The reference recipe this brew follows, when it follows one ("Kasuya 4:6"). */
-  basedOn?: string;
+  /** Always a line under the brewer: "After Kasuya 4:6" when the brew follows a
+   * reference, else the name the model gave this brew. */
+  subtitle?: string;
   doseG: number;
   waterG: number;
   iceG?: number;
@@ -60,7 +61,6 @@ export interface BrewCardData {
   steps: BrewCardStep[];
   /** The composed clock's end, "M:SS" (or "12h" for a steep). */
   finish: string;
-  date: string;
 }
 
 /** The owner's measured V60 single-cup anchor (380° at 250 g). */
@@ -186,7 +186,12 @@ export function buildBrewCardData(session: Session, now: number = Date.now()): B
     roaster: (coffee?.roaster ?? "").trim(),
     name: (coffee?.name ?? "").trim() || "Coffee",
     method,
-    basedOn: basedOnReference(candidate?.basedOn, candidate?.title),
+    subtitle: (() => {
+      const ref = basedOnReference(candidate?.basedOn, candidate?.title);
+      if (ref) return `After ${ref}`;
+      const title = candidate?.title?.trim();
+      return title || undefined;
+    })(),
     doseG,
     waterG,
     iceG: recipe.iceGrams && recipe.iceGrams > 0 ? recipe.iceGrams : undefined,
@@ -195,6 +200,5 @@ export function buildBrewCardData(session: Session, now: number = Date.now()): B
     grind,
     steps,
     finish: formatDuration(Math.round(timeline.finishSec)),
-    date: formatDate(session.createdAt),
   };
 }

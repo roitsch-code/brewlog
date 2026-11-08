@@ -223,7 +223,7 @@ const CARD_PAD = px(20);
 function cardHeight(ctx: Ctx, f: Fonts, card: BrewCardData, rows: ReturnType<typeof rowsOf>): number {
   let h = CARD_PAD;
   h += px(26); // brewer, Fraunces 3xl-ish on its own line
-  if (card.basedOn) h += px(6) + px(15) * 1.4;
+  if (card.subtitle) h += px(6) + px(15) * 1.4;
   h += px(18); // to the first rule
   h += px(12) + rows.numbers.length * ROW_H + px(12);
   h += px(12) + rows.steps.length * ROW_H;
@@ -331,11 +331,11 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   ctx.fillStyle = INK;
   ctx.fillText(wrap(ctx, card.method, w, 1)[0], x, cy);
   cy += px(26) * 0.22;
-  if (card.basedOn) {
+  if (card.subtitle) {
     cy += px(6) + px(15) * 1.4;
     ctx.font = `400 ${px(15)}px ${f.chivo}`;
     ctx.fillStyle = INK_70;
-    ctx.fillText(wrap(ctx, `After ${card.basedOn}`, w, 1)[0], x, cy - px(15) * 0.3);
+    ctx.fillText(wrap(ctx, card.subtitle, w, 1)[0], x, cy - px(15) * 0.3);
   }
   cy += px(18);
   rule(ctx, x, cy, w);
@@ -346,18 +346,13 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   cy += px(12);
   paintRows(ctx, f, rows.steps, x, cy, w);
 
-  // ── Footer: the wordmark, the date ────────────────────────────────────
+  // ── Footer: the wordmark ──────────────────────────────────────────────
   let fy = footerTop + wordmarkSize * 0.85;
   ctx.font = `400 ${wordmarkSize}px ${f.fraunces}`;
   ctx.fillStyle = INK;
   ctx.fillText("Better taste", GUTTER, fy);
   fy += wordmarkSize * 1.05;
   ctx.fillText("than sorry.", GUTTER, fy);
-  ctx.font = `400 ${px(12)}px ${f.chivo}`;
-  ctx.fillStyle = INK_70;
-  ctx.textAlign = "right";
-  ctx.fillText(card.date, GUTTER + INNER_W, fy);
-  ctx.textAlign = "left";
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/png");

@@ -76,7 +76,7 @@ test("the card carries the BREWED candidate's numbers, not the primary recipe or
   const card = M.buildBrewCardData(session(), Date.parse("2026-11-08T07:00:00Z"));
   assert.ok(card);
   assert.equal(card.method, "V60");
-  assert.equal(card.basedOn, "Kasuya 4:6");
+  assert.equal(card.subtitle, "After Kasuya 4:6");
   assert.equal(card.doseG, 20);
   assert.equal(card.waterG, 320);
   assert.equal(card.tempC, 93);
@@ -84,13 +84,12 @@ test("the card carries the BREWED candidate's numbers, not the primary recipe or
   assert.equal(card.roaster, "SEY");
   assert.equal(card.name, "Susan Meneses");
   assert.equal(card.finish, "3:20");
-  assert.equal(card.date, "Nov 7, 2026");
-  // Owner, 2026-11-08: no rating, no actual time, no origin line, no AI title, no footnotes.
-  for (const gone of ["rating", "actualTime", "originLine", "recipeName"]) assert.ok(!(gone in card), `${gone} is back on the card`);
+  // Owner, 2026-11-08: no rating, no actual time, no origin line, no date, no footnotes.
+  for (const gone of ["rating", "actualTime", "originLine", "recipeName", "date"]) assert.ok(!(gone in card), `${gone} is back on the card`);
   assert.deepEqual(Object.keys(card.grind).sort(), ["like", "word"]);
-  // "Own recipe" is not a reference.
+  // "Own recipe" is not a reference → the subtitle is the brew's own name, so the line is always there.
   const own = M.buildBrewCardData(session({ recommendation: { ...session().recommendation, candidates: [session().recommendation.candidates[0], { ...session().recommendation.candidates[1], basedOn: "Own recipe" }] } }));
-  assert.equal(own.basedOn, undefined);
+  assert.equal(own.subtitle, "Three pours, open");
 });
 
 test("the steps come from the composed timeline, with the clock and a drawdown row", () => {
@@ -104,6 +103,35 @@ test("the steps come from the composed timeline, with the clock and a drawdown r
       ["2:00", "Drawdown", ""],
     ],
   );
+});
+
+test("a swirl or stir is its own row at its clock position, without grams", () => {
+  const withSwirl = {
+    ...TIMELINE,
+    steps: [
+      TIMELINE.steps[0],
+      { label: "Swirl", action: "swirl", startSec: 10, pourSec: 5, restSec: 30 },
+      ...TIMELINE.steps.slice(1),
+    ],
+  };
+  const rec = session().recommendation;
+  const s = session({ recommendation: { ...rec, candidates: [rec.candidates[0], { ...rec.candidates[1], recipe: { ...rec.candidates[1].recipe, timeline: withSwirl } }] } });
+  const card = M.buildBrewCardData(s, Date.parse("2026-11-08T07:00:00Z"));
+  const swirl = card.steps.find((st) => st.label === "Swirl");
+  assert.ok(swirl, `no swirl row: ${JSON.stringify(card.steps)}`);
+  assert.equal(swirl.at, "0:10");
+  assert.equal(swirl.detail, "");
+  // Immersion: the Clever's stir is a row too.
+  const clever = M.buildBrewCardData(session({
+    recommendation: { primaryMethod: "Clever", primaryRecipe: { doseGrams: 18, waterGrams: 300, waterTempC: 92, grindSize: "410°", targetTimeSec: 240, pourSteps: [
+      { label: "Pour all", action: "pour", waterGramsAtEnd: 300, durationSec: 30 },
+      { label: "Add the coffee, stir", action: "stir", durationSec: 10 },
+      { label: "Steep", action: "wait", durationSec: 150 },
+      { label: "Drain", action: "drain", durationSec: 60 },
+    ] }, candidates: [], reasoning: "" },
+    brew: { methodUsed: "Clever Dripper" },
+  }), Date.parse("2026-11-08T07:00:00Z"));
+  assert.ok(clever.steps.some((st) => /stir/i.test(st.label) && st.at === "0:30"), JSON.stringify(clever.steps));
 });
 
 test("grind: one of five words with the chart's comparison, anchored on the measured V60 setting", () => {
