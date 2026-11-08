@@ -10,7 +10,7 @@
  * size below is a Light token or primitive times that factor — the Hero (Fraunces 600
  * 40 px, leading 1.05, tracking −0.01 em), the Headline (Fraunces 3xl), the
  * `.label-eyebrow`, the detail page's Section title and Stat cell, the Card
- * radius (3xl), the StarRating colours, the Footnote, the two-line wordmark.
+ * radius (3xl), the two-line wordmark. Little on it, on purpose.
  * The colours are the Light tokens of tailwind.config.ts as literals — the
  * canvas cannot read a class. Keep both in step.
  */
@@ -32,13 +32,10 @@ const px = (phonePx: number) => Math.round(phonePx * S);
 const INK = "hsl(0 0% 14%)"; // light-foreground
 const INK_90 = "hsl(0 0% 14% / 0.9)"; // .label-eyebrow colour
 const INK_80 = "hsl(0 0% 14% / 0.8)"; // text-light-foreground/80
-const INK_75 = "hsl(0 0% 14% / 0.75)"; // text-light-foreground/75
 const INK_70 = "hsl(0 0% 14% / 0.7)"; // text-light-foreground/70
 const INK_15 = "hsl(0 0% 14% / 0.15)"; // border-light-foreground/15
 const MUTED = "hsl(0 0% 16%)"; // light-muted-foreground
 const GLASS = "hsl(36 55% 96% / 0.55)"; // light-card-default
-const STAR_FILL = "hsl(0 0% 14%)"; // StarRating FILLED_FILL
-const STAR_EMPTY = "hsl(0 0% 14% / 0.25)"; // StarRating EMPTY_STROKE
 
 const GUTTER = px(20); // px-5
 const INNER_W = CARD_W - GUTTER * 2;
@@ -222,52 +219,6 @@ function statLabel(ctx: Ctx, f: Fonts, str: string, cx: number, y: number): void
   tracked(ctx, str, cx, y, `400 ${size}px ${f.chivo}`, MUTED, size * 0.1, "center");
 }
 
-// StarRating's polygon (viewBox 24), drawn at the component's `sm` size (w-5).
-const STAR_POINTS = [
-  [12, 2], [15.09, 8.26], [22, 9.27], [17, 14.14], [18.18, 21.02],
-  [12, 17.77], [5.82, 21.02], [7, 14.14], [2, 9.27], [8.91, 8.26],
-] as const;
-
-function starPath(ctx: Ctx, x: number, y: number, size: number): void {
-  const k = size / 24;
-  ctx.beginPath();
-  STAR_POINTS.forEach(([sx, sy], i) => {
-    if (i === 0) ctx.moveTo(x + sx * k, y + sy * k);
-    else ctx.lineTo(x + sx * k, y + sy * k);
-  });
-  ctx.closePath();
-}
-
-/** `StarRating` readonly sm: five 20 px stars, gap-1; filled anthracite,
- * empty a 25 % stroke, half = the left half filled. Returns the row width. */
-function paintStars(ctx: Ctx, rating: number, x: number, top: number): number {
-  const size = px(20);
-  const gap = px(4);
-  for (let i = 0; i < 5; i++) {
-    const sx = x + i * (size + gap);
-    const fill = Math.max(0, Math.min(1, rating - i));
-    starPath(ctx, sx, top, size);
-    ctx.lineWidth = px(1.5) * (24 / 20);
-    ctx.strokeStyle = STAR_EMPTY;
-    ctx.stroke();
-    if (fill >= 1) {
-      starPath(ctx, sx, top, size);
-      ctx.fillStyle = STAR_FILL;
-      ctx.fill();
-    } else if (fill > 0) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(sx, top, size / 2, size);
-      ctx.clip();
-      starPath(ctx, sx, top, size);
-      ctx.fillStyle = STAR_FILL;
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-  return 5 * size + 4 * gap;
-}
-
 async function loadFonts(f: Fonts): Promise<void> {
   if (typeof document === "undefined" || !("fonts" in document)) return;
   const faces = [
@@ -310,16 +261,12 @@ function panelRecipe(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, paint:
   pen.y += headline;
   ctx.font = `400 ${headline}px ${f.fraunces}`;
   text(ctx, pen, wrap(ctx, card.method, w, 1)[0], x, `400 ${headline}px ${f.fraunces}`, INK);
-  if (card.recipeName) {
-    // text-light-foreground/80 text-sm mt-1.5 font-medium
+  if (card.basedOn) {
+    // text-light-foreground/80 text-sm mt-1.5 font-medium — the reference this brew follows
     const sm = px(14);
+    pen.y += px(6) + sm * 1.4;
     ctx.font = `500 ${sm}px ${f.chivo}`;
-    const lines = wrap(ctx, card.recipeName, w, 2);
-    pen.y += px(6);
-    for (const l of lines) {
-      pen.y += sm * 1.4;
-      text(ctx, pen, l, x, `500 ${sm}px ${f.chivo}`, INK_80);
-    }
+    text(ctx, pen, wrap(ctx, `After ${card.basedOn}`, w, 1)[0], x, `500 ${sm}px ${f.chivo}`, INK_80);
   }
   pen.y += px(16);
 
@@ -352,36 +299,16 @@ function panelRecipe(ctx: Ctx, f: Fonts, card: BrewCardData, top: number, paint:
     text(ctx, pen, `Onto ${card.iceG}g of ice · ${card.waterG + card.iceG}g in the cup`, x, `400 ${px(14)}px ${f.chivo}`, MUTED);
   }
 
-  // Grind — a Section of its own.
-  pen.y += px(18);
-  if (paint) sectionTitle(ctx, f, "Grind", x, pen.y);
-  pen.y += px(10) + px(18);
-  text(ctx, pen, card.grind.value, x, `500 ${px(18)}px ${f.mono}`, INK);
-  if (card.grind.grinder) {
-    ctx.font = `500 ${px(18)}px ${f.mono}`;
-    const valueW = ctx.measureText(card.grind.value).width;
-    // text-light-foreground/70 text-sm beside the number
-    text(ctx, pen, card.grind.grinder, x + valueW + px(8), `400 ${px(14)}px ${f.chivo}`, INK_70);
-  }
-  if (card.grind.alsoOn) {
-    // text-light-muted-foreground text-xs (the page's "Actual time" line)
-    pen.y += px(18);
-    text(ctx, pen, `About ${card.grind.alsoOn}`, x, `400 ${px(12)}px ${f.chivo}`, MUTED);
-  }
-  if (card.grind.description) {
-    // text-light-foreground/75 text-sm leading-relaxed (the page's quote style)
-    const sm = px(14);
-    ctx.font = `400 ${sm}px ${f.chivo}`;
-    pen.y += px(6);
-    for (const l of wrap(ctx, card.grind.description, w, 2)) {
-      pen.y += sm * 1.5;
-      text(ctx, pen, l, x, `400 ${sm}px ${f.chivo}`, INK_75);
-    }
-    // Footnote: text-[12px] muted
-    pen.y += px(8) + px(12);
-    ctx.font = `400 ${px(12)}px ${f.chivo}`;
-    const note = card.grind.descriptionSource === "author" ? "The recipe author's own words." : "Relative to a measured V60 setting on this grinder.";
-    text(ctx, pen, wrap(ctx, note, w, 1)[0], x, `400 ${px(12)}px ${f.chivo}`, MUTED);
+  // Grind — one line: the word, then the chart's comparison, muted.
+  if (card.grind) {
+    pen.y += px(20);
+    if (paint) sectionTitle(ctx, f, "Grind", x, pen.y);
+    pen.y += px(10) + px(15);
+    const wordFont = `500 ${px(15)}px ${f.chivo}`;
+    text(ctx, pen, card.grind.word, x, wordFont, INK);
+    ctx.font = wordFont;
+    const wordW = ctx.measureText(card.grind.word).width;
+    text(ctx, pen, `· ${card.grind.like}`, x + wordW + px(4), `400 ${px(15)}px ${f.chivo}`, INK_70);
   }
   pen.y += pad;
   return pen.y - top;
@@ -469,13 +396,6 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   }
   ctx.letterSpacing = "0px";
   y -= heroSize * 1.05;
-  if (card.originLine) {
-    // text-light-foreground/70 text-sm mt-1.5
-    y += px(6) + px(14) * 1.4;
-    ctx.font = `400 ${px(14)}px ${f.chivo}`;
-    ctx.fillStyle = INK_70;
-    ctx.fillText(wrap(ctx, card.originLine, INNER_W, 1)[0], GUTTER, y);
-  }
   y += px(24);
 
   // ── Panel 1 (measure, surface, paint) ─────────────────────────────────
@@ -485,24 +405,16 @@ export async function renderBrewCard(card: BrewCardData, fieldZones: FieldZones 
   panelRecipe(ctx, f, card, p1Top, true);
   y = p1Top + p1H + px(12); // gap-3 between cards
 
-  // ── Footer geometry: stars row, two-line wordmark, date ───────────────
+  // ── Footer geometry: the two-line wordmark and the date ──────────────
   const wordmarkSize = px(30); // font-fraunces text-3xl leading-[1.05]
-  const footerH = px(20) + px(12) + wordmarkSize * 1.05 * 2 + px(4);
-  const footerTop = CARD_H - px(28) - footerH;
+  const footerH = wordmarkSize * 1.05 * 2;
+  const footerTop = CARD_H - px(32) - footerH;
 
   // ── Panel 2: the steps ────────────────────────────────────────────────
   panelSteps(ctx, f, card, y, footerTop - px(24) - y);
 
   // ── Footer ────────────────────────────────────────────────────────────
-  let fy = footerTop;
-  const starW = typeof card.rating === "number" ? paintStars(ctx, card.rating, GUTTER, fy) : 0;
-  if (card.actualTime) {
-    // text-light-muted-foreground text-xs (the page's "Actual time" line)
-    ctx.font = `400 ${px(12)}px ${f.chivo}`;
-    ctx.fillStyle = MUTED;
-    ctx.fillText(`Brewed in ${card.actualTime}`, GUTTER + starW + (starW ? px(10) : 0), fy + px(14));
-  }
-  fy += px(20) + px(12) + wordmarkSize * 0.85;
+  let fy = footerTop + wordmarkSize * 0.85;
   ctx.font = `400 ${wordmarkSize}px ${f.fraunces}`;
   ctx.fillStyle = INK;
   ctx.fillText("Better taste", GUTTER, fy);
