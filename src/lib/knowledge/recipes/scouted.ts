@@ -83,7 +83,96 @@ export const SCOUTED_RECIPES: Recipe[] = [
       }
     ],
     "verified": false,
-    "notes": "Scouted 2026-10-19 by scripts/recipe-scout.mjs and cross-checked in-session against the page: the page's recipe header says \"Total amount: 300ml\" but its own pouring pattern is \"50 \u2013 250\" and the narrated steps are a 50 ml bloom and one 200 ml long pour done by 1:30 \u2014 the entry follows the narrated steps (250 ml). The scout's first draft had invented a third pour to reach 300 ml; removed. Total time 2:45\u20133:00 on the page; 2:45 stored. Unverified beyond that one page.",
+    "notes": "Scouted 2026-10-19 by scripts/recipe-scout.mjs and cross-checked in-session against the page: the page's recipe header says \"Total amount: 300ml\" but its own pouring pattern is \"50 – 250\" and the narrated steps are a 50 ml bloom and one 200 ml long pour done by 1:30 — the entry follows the narrated steps (250 ml). The scout's first draft had invented a third pour to reach 300 ml; removed. Total time 2:45–3:00 on the page; 2:45 stored. Unverified beyond that one page.",
     "addedAt": "2026-10-19T18:53:23.896Z"
+  },
+  {
+    "id": "scout-alvin-origami-cone-320",
+    "name": "Alvin's Origami Dripper Recipe",
+    "shortName": "Alvin Origami (cone)",
+    "attribution": {
+      "person": "Alvin",
+      "title": "Barista / Recipe Author",
+      "affiliation": "Bean Bros",
+      "country": "Singapore",
+      "year": 2021
+    },
+    "category": "reference",
+    "brewer": "origami-cone",
+    "dose": {
+      "grams": 20
+    },
+    "water": {
+      "grams": 320,
+      "ratio": "1:16"
+    },
+    "temperature": {
+      "celsius": 96
+    },
+    "grind": {
+      "description": "Medium fine"
+    },
+    "pourSequence": [
+      {
+        "label": "Bloom",
+        "action": "pour",
+        "waterGramsAtEnd": 60,
+        "durationSec": 37,
+        "notes": "Pour ~60g (1:3 water-to-coffee ratio) in a bloom; wait 35–40 seconds"
+      },
+      {
+        "label": "Second pour",
+        "action": "pour",
+        "waterGramsAtEnd": 150,
+        "notes": "Slow and low, gentle circular pours up to 150g cumulative"
+      },
+      {
+        "label": "Third pour",
+        "action": "pour",
+        "waterGramsAtEnd": 230,
+        "notes": "Same slow and low, gentle circular pours up to 230g cumulative"
+      },
+      {
+        "label": "Final pour",
+        "action": "pour",
+        "waterGramsAtEnd": 320,
+        "notes": "Same technique, up to 320g total"
+      }
+    ],
+    "totalTimeSec": 180,
+    "techniques": [
+      "bloom",
+      "pulse-pouring",
+      "spiral-pour",
+      "low-mineral-water"
+    ],
+    "bestFor": {
+      "roastLevels": [
+        "light",
+        "medium-light",
+        "medium"
+      ],
+      "processes": [
+        "washed",
+        "natural"
+      ],
+      "goals": [
+        "high-clarity"
+      ]
+    },
+    "teaches": "A declining-temperature, four-pour pulse method on the Origami cone that ramps from bloom through three measured pours, letting each pour rest before adding the next to build extraction gently and cleanly.",
+    "science": "Declining water temperature (96–99°C → allowed to drop) limits over-extraction of bitter compounds in later pours; the 1:3 bloom ratio (60g on 20g) fully saturates the bed and purges CO₂ before extraction pours begin; pulse pouring controls agitation and allows partial drawdown between pours for even contact time.",
+    "whenToUse": "Best for medium-fine ground light-to-medium roasts when you want a sweet, clean, balanced cup with good body and no harshness; especially effective with washed or honey-process single origins.",
+    "sources": [
+      {
+        "type": "blog",
+        "citation": "Bean Bros – 'Brewing with the Origami Dripper', Recipe by Alvin",
+        "url": "https://beanbros.co/blogs/brew-guides/brewing-with-the-origami-dripper",
+        "year": 2021
+      }
+    ],
+    "verified": false,
+    "notes": "Scouted 2026-11-09 by scripts/recipe-scout.mjs; every number quoted from the source and re-found on the page. Unverified until a session cross-checks it against the originator.",
+    "addedAt": "2026-11-09T15:46:44.614Z"
   }
 ];
