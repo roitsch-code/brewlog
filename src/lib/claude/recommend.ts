@@ -51,6 +51,7 @@ import { TECHNIQUES } from "../knowledge/techniques";
 import { reconcileToReference, reconcileWaterToPourPlan, resolveReference, referenceAppliesAtBatch } from "./recipeFidelity";
 import { brewerRecency } from "./methodRotation";
 import { isInMenu, menuNamesOf } from "./menuBinding";
+import { guardAeropressReach } from "./aeropressReach";
 import { deriveConvergence, formatConvergenceInfo, type ConvergenceState } from "./convergence";
 import { formatPreferencesForRecommend } from "./preferenceBlock";
 import { derivePourSequence, sanitizePourSteps } from "../utils/pourSteps";
@@ -921,7 +922,14 @@ Return valid JSON only.`;
   //       longer offers such a reference, but the model can still reach for
   //       one from memory. The recipe stays; the name stops claiming a
   //       published recipe at a size it was never published for.
-  const batchChecked = deSwirled.map((c) => {
+  //   -2. AEROPRESS REACH — before the batch relabel renames basedOn.
+  const apEntry = menu.entries.find((e) => e.role === "aeropress");
+  const apAllowed =
+    targetWaterMl && apEntry && apEntry.reach.how !== "fits"
+      ? new Set(apEntry.recipes.map((r) => r.recipe.id))
+      : null;
+  const reachGuarded = guardAeropressReach(deSwirled, apAllowed, (b) => resolveReference(b)?.id, requestedRecipe?.id);
+  const batchChecked = reachGuarded.map((c) => {
     const ref = resolveReference(c.basedOn);
     const water = c.recipe?.waterGrams;
     if (!ref || !(typeof water === "number" && water > 0) || referenceAppliesAtBatch(ref, water)) return c;

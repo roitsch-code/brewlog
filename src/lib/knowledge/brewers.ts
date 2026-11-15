@@ -173,7 +173,7 @@ export function reachFor(key: BrewerRoleKey, targetMl: number | undefined): Reac
     if (key === "aeropress") {
       return {
         how: "concentrate-bypass",
-        text: `holds ${cap.maxMl} ml — for ${targetMl} g brew a concentrate and add bypass water in the cup, and say so`,
+        text: `holds ${cap.maxMl} ml — for ${targetMl} g only a documented concentrate + bypass recipe whose published cup is within ±20 % of ${targetMl} g, scaled by no more than that, and say so`,
       };
     }
     return { how: "not-for-this-size", text: `holds ${cap.maxMl} ml — not for ${targetMl} g` };
@@ -198,7 +198,7 @@ function capText(key: BrewerRoleKey): string {
 export function formatBrewerRolesBlock(): string {
   const lines = BREWER_ROLES.map((r) => `- ${r.method} — ${r.style}; ${r.role}. Holds ${capText(r.key)}.`);
   return [
-    "YOUR BREWERS — every one of them is on the table, equally. Each has a role and a physical limit; none is a default and none is preferred. Choose by the coffee, the amount, the occasion and the goal, and say in one clause of whyChosen why THIS brewer today. The AeroPress above its limit brews a concentrate and adds bypass water in the cup; a batch brewer below its floor is simply not for that amount.",
+    "YOUR BREWERS — every one of them is on the table, equally. Each has a role and a physical limit; none is a default and none is preferred. Choose by the coffee, the amount, the occasion and the goal, and say in one clause of whyChosen why THIS brewer today. The AeroPress above its limit serves an amount ONLY through a documented concentrate + bypass recipe whose author published a cup within ±20 % of it — never a full-chamber recipe stretched, never a concentrate you size up yourself; with no such recipe on the menu it is not for that amount. A batch brewer below its floor is simply not for that amount.",
     ...lines,
     "Write the method field exactly as the brewer is named here (an Orea always names its bottom; an Origami always names its filter).",
   ].join("\n");
