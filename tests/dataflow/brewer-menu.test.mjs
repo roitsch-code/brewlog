@@ -22,7 +22,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const dir = await mkdtemp(join(tmpdir(), "menu-"));
 const entry = `
-export { buildBrewerMenu, formatMenuForPrompt, formatRecipeIndexBlock, isConcentrateBypass, brewersAvailableFromEquipment, CANONICAL_EQUIPMENT, normaliseGoal, normaliseRoastLevel, normaliseProcess, ALL_RECIPES, isNewRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
+export { buildBrewerMenu, formatMenuForPrompt, formatRecipeIndexBlock, isConcentrateBypass, concentrateServes, publishedCupGrams, chamberGrams, brewersAvailableFromEquipment, CANONICAL_EQUIPMENT, normaliseGoal, normaliseRoastLevel, normaliseProcess, ALL_RECIPES, isNewRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/index.ts"))};
 export { BREWER_ROLES, BREWER_TYPE_TO_ROLE, reachFor, brewerCap, formatBrewerRolesBlock } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/brewers.ts"))};
 export { VESSEL_CAPS } from ${JSON.stringify(path.join(ROOT, "src/lib/utils/vesselCapacity.ts"))};
 export { brewerRecency, roleFromMethod } from ${JSON.stringify(path.join(ROOT, "src/lib/claude/methodRotation.ts"))};
@@ -82,31 +82,46 @@ test("every hot role has at least one documented recipe, and the entry carries i
   for (const e of menu.entries) {
     assert.ok(e.recipes.length > 0, `${e.role} has no recipe — the corpus lost one`);
     assert.ok(e.best, `${e.role} has no best fit`);
-    if (e.reach.how === "concentrate-bypass") assert.equal(e.scaleFactor, 1, `${e.role}: a concentrate brews at its own water`);
+    if (e.reach.how === "concentrate-bypass") assert.equal(e.scaleFactor, 350 / M.publishedCupGrams(e.best.recipe), `${e.role}: a concentrate scales by its published cup`);
     else assert.equal(e.scaleFactor, 350 / e.best.recipe.water.grams);
   }
 });
 
-test("above the chamber only concentrate + bypass recipes are on the AeroPress entry; a full-chamber recipe is for its own size (owner, 2026-11-02)", () => {
+test("above the chamber the AeroPress serves only a concentrate + bypass recipe published for a cup within ±20 % — never a small concentrate sized up (owner, 2026-11-02 / 2026-11-15)", () => {
   const ARTHUR = "cupsight-arthur-aeropress-upright-75c";
-  for (const water of [350, 450]) {
+  for (const water of [300, 350, 450]) {
     for (let seed = 1; seed <= 5; seed++) {
       const menu = menuFor(water, "high-clarity", "washed", "morning-ritual", { rotationSeed: seed * 7919 });
       const ap = menu.entries.find((e) => e.role === "aeropress");
-      assert.equal(ap.reach.how, "concentrate-bypass");
-      assert.ok(ap.recipes.length > 0, `the AeroPress keeps its concentrate recipes at ${water} g`);
-      for (const s of ap.recipes) assert.ok(M.isConcentrateBypass(s.recipe), `${s.recipe.id} is a full-chamber recipe on a ${water} g menu`);
+      assert.ok(ap, `the AeroPress is listed at ${water} g`);
+      for (const s of ap.recipes) {
+        assert.ok(M.isConcentrateBypass(s.recipe), `${s.recipe.id} is a full-chamber recipe on a ${water} g menu`);
+        const cup = M.publishedCupGrams(s.recipe);
+        assert.ok(cup && water / cup >= 0.8 - 1e-9 && water / cup <= 1.2 + 1e-9, `${s.recipe.id} (cup ${cup} g) sized up to ${water} g`);
+        assert.ok(M.chamberGrams(s.recipe) * (water / cup) <= 230 + 1e-9, `${s.recipe.id} overfills the chamber at ${water} g`);
+      }
       assert.ok(!ap.recipes.some((s) => s.recipe.id === ARTHUR), `Arthur's 230 ml recipe on a ${water} g AeroPress entry`);
-      assert.equal(ap.scaleFactor, 1);
+      if (ap.recipes.length) {
+        assert.equal(ap.reach.how, "concentrate-bypass");
+        assert.equal(ap.scaleFactor, water / M.publishedCupGrams(ap.best.recipe));
+      } else {
+        assert.equal(ap.reach.how, "not-for-this-size", `no recipe at ${water} g → the AeroPress is not for it`);
+        assert.equal(ap.best, null);
+      }
       const text = M.formatMenuForPrompt(menu, { grinder: "Niche Zero" });
       assert.doesNotMatch(text, /Cupsight|Arthur/, `the ${water} g prompt names Arthur's recipe`);
       const full = text.slice(text.indexOf("FULL TEXT"));
-      if (full.includes("(AeroPress)")) {
-        const block = full.slice(full.indexOf("(AeroPress)"));
-        assert.doesNotMatch(block.slice(0, block.indexOf("\n\n")), new RegExp(`to your ${water} g`), "an AeroPress concentrate is printed at its own water, never scaled past the chamber");
-      }
+      if (!ap.recipes.length) assert.doesNotMatch(full, /\(AeroPress\)/, `no AeroPress recipe in full text at ${water} g`);
     }
   }
+  // 450 g: no AeroPress concentrate in the corpus publishes a cup in 360–540 g.
+  const big = menuFor(450, "balanced", "washed", "morning-ritual").entries.find((e) => e.role === "aeropress");
+  assert.equal(big.recipes.length, 0);
+  assert.match(M.formatMenuForPrompt(menuFor(450, "balanced", "washed", "morning-ritual")), /- AeroPress · holds 230 ml — no documented concentrate \+ bypass recipe publishes a cup near 450 g, so not for 450 g/);
+  // A concentrate with no number on its bypass ("dilute to taste") names no cup and serves no amount above the chamber.
+  const adler = M.ALL_RECIPES.find((r) => r.id === "adler-original-aeropress");
+  assert.equal(M.publishedCupGrams(adler), null);
+  assert.equal(M.concentrateServes(adler, 350, 230), false);
   // At the chamber's own size the full-chamber recipes are back, Arthur's among them.
   const fits = menuFor(230, "high-clarity", "washed", "morning-ritual", { rotationSeed: 7919 });
   const ap = fits.entries.find((e) => e.role === "aeropress");
@@ -117,7 +132,7 @@ test("above the chamber only concentrate + bypass recipes are on the AeroPress e
 
 test("the reach path is physics from VESSEL_CAPS: AeroPress → concentrate + bypass, batch brewers → not for this size", () => {
   assert.equal(M.reachFor("aeropress", 350).how, "concentrate-bypass");
-  assert.match(M.reachFor("aeropress", 350).text, /holds 230 ml .* concentrate and add bypass water/);
+  assert.match(M.reachFor("aeropress", 350).text, /holds 230 ml .* documented concentrate \+ bypass recipe whose published cup is within ±20 % of 350 g/);
   assert.equal(M.reachFor("moccamaster", 350).how, "not-for-this-size");
   assert.match(M.reachFor("moccamaster", 350).text, /needs at least 500 ml/);
   assert.equal(M.reachFor("chemex", 300).how, "not-for-this-size");
@@ -202,7 +217,7 @@ test("the prompt block: one line per brewer with reach + recency, then the leads
   const menu = menuFor(350, "balanced", "washed", "morning-ritual", { lastOffered: recency });
   const text = M.formatMenuForPrompt(menu, { grinder: "Niche Zero" });
   assert.match(text, new RegExp(`YOUR BREWERS TODAY \\(${HOT_ROLES.length}\\)`));
-  assert.match(text, /- AeroPress · \d+ concentrate \+ bypass recipes? · best fit: [^\n]* · holds 230 ml — for 350 g brew a concentrate/);
+  assert.match(text, /- AeroPress · \d+ concentrate \+ bypass recipes? · best fit: [^\n]*\(published cup \d+ g from \d+ g through the chamber[^\n]* · holds 230 ml — for 350 g only a documented concentrate/);
   assert.match(text, /- Moccamaster · [^\n]*needs at least 500 ml — not for 350 g/);
   assert.match(text, /- V60 · [^\n]*offered on your last brew/);
   assert.match(text, /- Clever Dripper · [^\n]*last offered 2 brews ago/);

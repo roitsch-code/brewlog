@@ -19,6 +19,7 @@ const ROOT = process.cwd();
 const entry = `
 export { generateBrewDeck, deckSnippets, gateDeckLines, DECK_MAX_LINES } from ${JSON.stringify(path.join(ROOT, "src/lib/recommend/brewDeck.ts"))};
 export { buildBrewerMenu } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/menu.ts"))};
+export { getTechniquesForRecipe } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/techniques/index.ts"))};
 export { CANONICAL_EQUIPMENT, brewersAvailableFromEquipment } from ${JSON.stringify(path.join(ROOT, "src/lib/knowledge/recipes/helpers.ts"))};
 export { COFFEE_HINTS } from ${JSON.stringify(path.join(ROOT, "src/lib/coffeeHints.ts"))};
 `;
@@ -74,7 +75,10 @@ test("the snippets are about THIS brew: the bag, his history with it, the leadin
   assert.equal(kinds[0], "coffee");
   assert.equal(kinds[1], "history");
   assert.ok(kinds.filter((k) => k === "brewer").length === 3, kinds.join(","));
-  assert.ok(kinds.filter((k) => k === "technique").length >= 1, kinds.join(","));
+  // A technique line exists exactly when one of the three leading recipes is cross-referenced by a technique.
+  const m = menu();
+  const leadTech = (m.leads.length ? m.leads : m.entries).filter((e) => e.best).slice(0, 3).some((e) => M.getTechniquesForRecipe(e.best.recipe.id).length > 0);
+  assert.equal(kinds.some((k) => k === "technique"), leadTech, kinds.join(","));
   assert.match(snippets[0].sourceText, /Pink Bourbon/);
   assert.match(snippets[1].sourceText, /brewed Susan Meneses 2 times at home, average rating 3\.5 of 5/);
   assert.match(snippets[1].sourceText, /best cup so far was 4 of 5 on the V60/);

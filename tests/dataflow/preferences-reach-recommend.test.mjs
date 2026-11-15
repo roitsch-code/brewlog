@@ -98,7 +98,7 @@ test("the user message carries HIS PREFERENCES as a paragraph to weigh, every br
   assert.match(msg, /has not enjoyed Anaerobic so far/, "the saved profile's avoid list arrives as a preference");
   assert.match(msg, /YOUR BREWERS TODAY \(12\)/);
   for (const r of M.BREWER_ROLES.filter((x) => !x.coldOnly)) assert.match(msg, new RegExp(`\\n- ${r.method.replace(/[()]/g, "\\$&")} · `), `${r.method} line`);
-  assert.match(msg, /- AeroPress · [^\n]*concentrate and add bypass water/);
+  assert.match(msg, /- AeroPress · [^\n]*holds 230 ml — for 350 g only a documented concentrate \+ bypass recipe whose published cup is within ±20 %/);
   assert.match(msg, /- Moccamaster · [^\n]*needs at least 500 ml — not for 350 g/);
   assert.match(msg, /BREWER RECENCY over your last 2 brews — information, not a rule/);
   assert.match(msg, /THIS COFFEE'S LAST BREW WORKED \(4★/);

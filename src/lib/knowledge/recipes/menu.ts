@@ -21,6 +21,7 @@
 import {
   BREWER_ROLES,
   BREWER_TYPE_TO_ROLE,
+  brewerCap,
   reachFor,
   type BrewerRole,
   type BrewerRoleKey,
@@ -28,6 +29,7 @@ import {
 } from "../brewers";
 import { CANONICAL_EQUIPMENT, brewersAvailableFromEquipment, formatRecipeForPrompt, mixSeed, pickRepresentative, recipeIndexLine, scoreAndOrder, type RecipeSelectionInput, type ScoredRecipe } from "./helpers";
 import { ALL_RECIPES } from "./helpers";
+import { batchWithinWindow } from "../../recipe/batchWindow";
 import type { Recipe } from "./types";
 
 export interface MenuEntry {
@@ -73,6 +75,36 @@ export function isConcentrateBypass(recipe: Recipe): boolean {
   return recipe.techniques.includes("concentrate-and-bypass") || recipe.pourSequence.some((s) => s.action === "bypass");
 }
 
+/** The cup a concentrate + bypass recipe publishes: the highest grams any of
+ * its steps reaches once the bypass is in. Null when the bypass has no number
+ * ("dilute to taste", "to 8 oz") — such a recipe names no cup size. */
+export function publishedCupGrams(recipe: Recipe): number | null {
+  const bypass = recipe.pourSequence.filter((s) => s.action === "bypass" && typeof s.waterGramsAtEnd === "number");
+  if (!bypass.length) return null;
+  return Math.max(recipe.water.grams, ...bypass.map((s) => s.waterGramsAtEnd as number));
+}
+
+/** The water that goes through the chamber: the last milestone before the bypass. */
+export function chamberGrams(recipe: Recipe): number {
+  const brew = recipe.pourSequence.filter((s) => s.action !== "bypass" && typeof s.waterGramsAtEnd === "number");
+  return brew.length ? Math.max(...brew.map((s) => s.waterGramsAtEnd as number)) : recipe.water.grams;
+}
+
+/**
+ * Does this concentrate + bypass recipe serve a `targetGrams` cup? Only when its
+ * author published a cup within ±20 % of it (the batch window every reference
+ * lives by) and the chamber water, scaled by the same factor, still fits the
+ * chamber. Owner, 2026-11-15: "if there is no dedicated recipe you cannot
+ * hallucinate a recipe up to 350 or 450 ml … in small dimensions you can
+ * scale, but not like this." A 90 g Adler concentrate is not a 450 g cup.
+ */
+export function concentrateServes(recipe: Recipe, targetGrams: number, chamberMaxMl: number): boolean {
+  if (!isConcentrateBypass(recipe)) return false;
+  const cup = publishedCupGrams(recipe);
+  if (!cup || !batchWithinWindow(cup, targetGrams)) return false;
+  return chamberGrams(recipe) * (targetGrams / cup) <= chamberMaxMl + 1e-9;
+}
+
 function hashKey(key: string): number {
   return Array.from(key).reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 }
@@ -100,22 +132,30 @@ export function buildBrewerMenu(input: BrewerMenuInput): BrewerMenu {
   });
 
   const entries: MenuEntry[] = roles.map((brewer) => {
-    const reach = reachFor(brewer.key, input.targetWaterGrams);
+    let reach = reachFor(brewer.key, input.targetWaterGrams);
     const all = byRole.get(brewer.key) ?? [];
-    // Above the chamber only a recipe BUILT as concentrate + bypass is a recipe
-    // for this amount. A full-chamber recipe stretched past the chamber is a
-    // different brew wearing its author's name (owner, 2026-11-02: Arthur's
-    // 230 ml AeroPress is "not a recipe for that") — it stays in the index for
-    // its own size and leaves this entry. The brewer itself stays on the table.
-    const concentrate = reach.how === "concentrate-bypass";
-    const recipes = concentrate ? all.filter((s) => isConcentrateBypass(s.recipe)) : all;
+    // Above the chamber only a recipe BUILT as concentrate + bypass for a cup
+    // near today's amount is a recipe for it. A full-chamber recipe stretched
+    // past the chamber (owner, 2026-11-02: Arthur's 230 ml AeroPress is "not a
+    // recipe for that"), or a small concentrate blown up to a big cup (owner,
+    // 2026-11-15), is a different brew wearing its author's name — it stays in
+    // the index for its own size and leaves this entry. With none left, the
+    // brewer is "not for this size": still listed, never served.
+    const target = input.targetWaterGrams;
+    const concentrate = reach.how === "concentrate-bypass" && !!target;
+    const capMl = brewerCap(brewer.key).maxMl ?? Number.POSITIVE_INFINITY;
+    const recipes = concentrate ? all.filter((s) => concentrateServes(s.recipe, target!, capMl)) : all;
+    if (concentrate && !recipes.length) {
+      reach = {
+        how: "not-for-this-size",
+        text: `holds ${capMl} ml — no documented concentrate + bypass recipe publishes a cup near ${target} g, so not for ${target} g`,
+      };
+    }
     const best = recipes.length ? pickRepresentative(recipes, seed) : null;
-    // A concentrate's extraction water is the chamber's; the bypass fills the
-    // cup. Nothing about it scales to the cup size.
-    const scaleFactor =
-      !concentrate && best && input.targetWaterGrams && best.recipe.water.grams > 0
-        ? input.targetWaterGrams / best.recipe.water.grams
-        : 1;
+    // A concentrate scales by its published CUP (within ±20 %), never by the
+    // chamber water; everything else by its published water.
+    const base = best ? (concentrate ? publishedCupGrams(best.recipe) ?? 0 : best.recipe.water.grams) : 0;
+    const scaleFactor = best && target && base > 0 ? target / base : 1;
     return {
       role: brewer.key,
       brewer,
@@ -169,18 +209,22 @@ export function formatMenuForPrompt(
     const bits: string[] = [`- ${e.brewer.method}`];
     const concentrate = e.reach.how === "concentrate-bypass";
     if (!e.recipes.length) {
-      bits.push(
-        concentrate
-          ? "no documented concentrate + bypass recipe for this brewer — its full-chamber recipes are for its own size, not this amount"
-          : "no documented recipe for this brewer — adapt the nearest by geometry and say so",
-      );
+      // A brewer too small for the amount with no recipe built for it is not
+      // offered at all — nothing to adapt, the reach line says why.
+      if (e.reach.how !== "not-for-this-size") bits.push("no documented recipe for this brewer — adapt the nearest by geometry and say so");
     } else {
       const n = e.recipes.length;
       bits.push(concentrate ? `${n} concentrate + bypass recipe${n === 1 ? "" : "s"}` : `${n} recipe${n === 1 ? "" : "s"} fit`);
       if (e.best) {
         const b = e.best.recipe;
-        const scale =
-          target && Math.abs(e.scaleFactor - 1) > 0.01
+        const cup = concentrate ? publishedCupGrams(b) : null;
+        const scale = cup
+          ? ` (published cup ${cup} g from ${chamberGrams(b)} g through the chamber${
+              target && Math.abs(e.scaleFactor - 1) > 0.01
+                ? ` · ×${e.scaleFactor.toFixed(2)} to your ${Math.round(target)} g — dose, chamber water and bypass alike`
+                : ""
+            })`
+          : target && Math.abs(e.scaleFactor - 1) > 0.01
             ? ` (published at ${b.water.grams} g · ×${e.scaleFactor.toFixed(2)} to your ${Math.round(target)} g)`
             : "";
         bits.push(`best fit: ${b.shortName || b.name}${scale}`);
